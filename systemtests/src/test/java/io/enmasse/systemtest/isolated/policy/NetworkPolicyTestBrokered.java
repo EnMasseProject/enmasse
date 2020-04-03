@@ -20,7 +20,6 @@ import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
@@ -41,6 +40,7 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilde
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeer;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeerBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -49,12 +49,14 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(ISOLATED)
 @OpenShift(version = OpenShiftVersion.OCP4)
-class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokered {
+class NetworkPolicyTestBrokered extends TestBase {
     private UserCredentials credentials = new UserCredentials("test", "test");
     private String blockedSpace = "blocked-namespace";
     private String allowedSpace = "allowed-namespace";
@@ -181,7 +183,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                         .build())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createInfraConfig(brokeredInfraConfig);
+        resourceManager.createInfraConfig(brokeredInfraConfig);
         return brokeredInfraConfig;
     }
 
@@ -199,7 +201,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .withAddressPlans(Stream.of(addressPlan).map(addressPlan1 -> addressPlan1.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
         return exampleSpacePlan;
     }
 
@@ -207,7 +209,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
         AddressPlan exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        isolatedResourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
         return exampleAddressPlan;
     }
 
@@ -219,7 +221,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .withLabels(Collections.singletonMap("allowed", "true"))
                 .endMetadata()
                 .withNewSpec()
-                .withType(getAddressSpaceType().toString())
+                .withType(AddressSpaceType.BROKERED.toString())
                 .withPlan(addressSpacePlan.getMetadata().getName())
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
@@ -227,8 +229,8 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(exampleAddressSpace);
-        isolatedResourcesManager.createOrUpdateUser(exampleAddressSpace, credentials);
+        resourceManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createOrUpdateUser(exampleAddressSpace, credentials);
         return exampleAddressSpace;
     }
 
@@ -245,7 +247,7 @@ class NetworkPolicyTestBrokered extends TestBase implements ITestIsolatedBrokere
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
         return dest;
     }
 }

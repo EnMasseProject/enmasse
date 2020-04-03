@@ -27,9 +27,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@Tag(ISOLATED)
 class ConnectorsTest extends BridgingBase {
 
     private static final String BASIC_QUEUE1 = "basic1";
@@ -90,7 +92,7 @@ class ConnectorsTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(space);
+        resourceManager.createAddressSpace(space);
         Assertions.assertThrows(IllegalStateException.class, () -> {
             AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space, new TimeoutBudget(1, TimeUnit.MINUTES));
         });
@@ -128,7 +130,7 @@ class ConnectorsTest extends BridgingBase {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(space, false);
+        resourceManager.createAddressSpace(space, false);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressSpaceUtils.waitForAddressSpaceStatusMessage(space, "Invalid address space connector name", budget);
     }
@@ -165,7 +167,7 @@ class ConnectorsTest extends BridgingBase {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(space, false);
+        resourceManager.createAddressSpace(space, false);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressSpaceUtils.waitForAddressSpaceStatusMessage(space, "Invalid address space connector address rule", budget);
     }
@@ -175,7 +177,7 @@ class ConnectorsTest extends BridgingBase {
         AddressSpace space = createAddressSpace("restart-broker", BASIC_QUEUES_PATTERN, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
@@ -197,7 +199,7 @@ class ConnectorsTest extends BridgingBase {
         AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultTls(), defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
@@ -211,7 +213,7 @@ class ConnectorsTest extends BridgingBase {
         AddressSpace space = createAddressSpace("tls-test", BASIC_QUEUES_PATTERN, defaultMutualTls(), null);
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
         String[] remoteQueues = new String [] {BASIC_QUEUE1};
@@ -224,7 +226,7 @@ class ConnectorsTest extends BridgingBase {
         AddressSpace space = createAddressSpace("send-to-connector", addressRule, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
 
@@ -235,7 +237,7 @@ class ConnectorsTest extends BridgingBase {
         AddressSpace space = createAddressSpace("receive-from-connector", addressRule, null, defaultCredentials());
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
 
@@ -244,7 +246,7 @@ class ConnectorsTest extends BridgingBase {
 
     private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send through connector
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {
@@ -270,7 +272,7 @@ class ConnectorsTest extends BridgingBase {
         }
 
         //receive through connector
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {

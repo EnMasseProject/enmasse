@@ -5,24 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_EVENT;
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_TELEMETRY;
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonList;
-
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.function.Function;
-
 import com.google.common.collect.Lists;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent;
@@ -41,7 +24,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.iot.ITestIoTBase;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
@@ -56,6 +38,22 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Function;
+
+import static io.enmasse.systemtest.iot.IoTConstants.IOT_ADDRESS_EVENT;
+import static io.enmasse.systemtest.iot.IoTConstants.IOT_ADDRESS_TELEMETRY;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonList;
 
 public final class IoTTestSession implements AutoCloseable {
 
@@ -460,7 +458,7 @@ public final class IoTTestSession implements AutoCloseable {
         var project = new IoTProjectBuilder(
                 IoTUtils.getBasicIoTProjectObject(
                         name, name,
-                        ITestIoTBase.IOT_PROJECT_NAMESPACE,
+                        IoTConstants.IOT_PROJECT_NAMESPACE,
                         AddressSpacePlans.STANDARD_SMALL));
 
         // done

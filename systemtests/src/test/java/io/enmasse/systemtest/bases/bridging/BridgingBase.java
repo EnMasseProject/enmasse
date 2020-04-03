@@ -19,7 +19,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -41,7 +40,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.Base64;
 
-public abstract class BridgingBase extends TestBase implements ITestIsolatedStandard {
+public abstract class BridgingBase extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -126,7 +125,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                 .withConnectors(connectorBuilder.build())
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(space);
+        resourceManager.createAddressSpace(space);
         AddressSpaceUtils.waitForAddressSpaceConnectorsReady(space);
         return space;
     }
@@ -146,7 +145,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                 .setUsername(remoteBrokerUsername)
                 .setPassword(remoteBrokerPassword);
 
-        return getAmqpClientFactory().createClient(connectOptions);
+        return resourceManager.getAmqpClientFactory().createClient(connectOptions);
     }
 
     protected AddressSpaceSpecConnectorCredentials defaultCredentials() {

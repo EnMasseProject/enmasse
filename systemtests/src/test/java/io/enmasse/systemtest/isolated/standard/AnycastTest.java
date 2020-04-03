@@ -12,13 +12,13 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,10 +29,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class AnycastTest extends TestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+public class AnycastTest extends TestBase {
 
     private AddressSpace addressSpace;
     private UserCredentials userCredentials = new UserCredentials("test", "test");
@@ -73,7 +75,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
     }
 
     @Test
@@ -91,14 +93,14 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
-        resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
+        resourceManager.createOrUpdateUser(addressSpace, userCredentials);
+        resourceManager.initFactories(addressSpace, userCredentials);
 
-        AmqpClient client1 = getAmqpClientFactory().createQueueClient();
-        AmqpClient client2 = getAmqpClientFactory().createQueueClient();
-        AmqpClient client3 = getAmqpClientFactory().createQueueClient();
+        AmqpClient client1 = resourceManager.getAmqpClientFactory().createQueueClient();
+        AmqpClient client2 = resourceManager.getAmqpClientFactory().createQueueClient();
+        AmqpClient client3 = resourceManager.getAmqpClientFactory().createQueueClient();
 
         runAnycastTest(dest, client1, client2, client3);
     }
@@ -149,23 +151,23 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build());
         }
-        resourcesManager.setAddresses(dest.toArray(new Address[0]));
+        resourceManager.setAddresses(dest.toArray(new Address[0]));
 
         waitForRouterReplicas(addressSpace, 3);
 
-        resourcesManager.createOrUpdateUser(addressSpace, userCredentials);
-        isolatedResourcesManager.initFactories(addressSpace, userCredentials);
+        resourceManager.createOrUpdateUser(addressSpace, userCredentials);
+        resourceManager.initFactories(addressSpace, userCredentials);
 
         //simple send/receive
-        AmqpClient client1 = getAmqpClientFactory().createQueueClient();
-        AmqpClient client2 = getAmqpClientFactory().createQueueClient();
+        AmqpClient client1 = resourceManager.getAmqpClientFactory().createQueueClient();
+        AmqpClient client2 = resourceManager.getAmqpClientFactory().createQueueClient();
         for (int i = 0; i < destCount; i = i + 5) {
             runAnycastTest(dest.get(i), client1, client2);
         }
 
         //remove part of destinations
         int removeCount = 120;
-        resourcesManager.deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0]));
+        resourceManager.deleteAddresses(dest.subList(0, removeCount).toArray(new Address[0]));
         waitForRouterReplicas(addressSpace, 2);
 
         //simple send/receive
@@ -174,7 +176,7 @@ public class AnycastTest extends TestBase implements ITestIsolatedStandard {
         }
 
         //remove all destinations
-        resourcesManager.setAddresses();
+        resourceManager.setAddresses();
         waitForRouterReplicas(addressSpace, 2);
     }
 }

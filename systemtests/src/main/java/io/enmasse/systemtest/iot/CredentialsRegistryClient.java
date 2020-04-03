@@ -4,6 +4,13 @@
  */
 package io.enmasse.systemtest.iot;
 
+import io.enmasse.systemtest.Endpoint;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.Json;
+import org.eclipse.hono.service.management.credentials.CommonCredential;
+import org.eclipse.hono.service.management.credentials.PasswordCredential;
+import org.eclipse.hono.service.management.credentials.PasswordSecret;
+
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -18,14 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
-
-import org.eclipse.hono.service.management.credentials.CommonCredential;
-import org.eclipse.hono.service.management.credentials.PasswordCredential;
-import org.eclipse.hono.service.management.credentials.PasswordSecret;
-
-import io.enmasse.systemtest.Endpoint;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.Json;
 
 public class CredentialsRegistryClient extends HonoApiClient {
 

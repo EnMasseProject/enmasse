@@ -4,22 +4,21 @@
  */
 package io.enmasse.systemtest.listener;
 
-import org.junit.platform.launcher.TestExecutionListener;
-import org.junit.platform.launcher.TestPlan;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
+import org.junit.platform.launcher.TestExecutionListener;
+import org.junit.platform.launcher.TestPlan;
+import org.slf4j.Logger;
 
 /**
  * Execution listener useful for safety cleanups of the test environment after test suite execution
@@ -118,7 +117,7 @@ public class JunitExecutionListener implements TestExecutionListener {
                 LOGGER.info("address space '{}' will be removed", addrSpace);
                 try {
                     AddressSpaceUtils.deleteAddressSpaceAndWait(addrSpace, logCollector);
-                    IsolatedResourcesManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
+                    ResourceManager.getInstance().tearDown(TestInfo.getInstance().getActualTest());
                 } catch (Exception e) {
                     LOGGER.warn("Cleanup failed or no clean is needed");
                 }

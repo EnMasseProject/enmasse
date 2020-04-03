@@ -5,9 +5,13 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.buffer.Buffer;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -16,13 +20,8 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.time.WaitPhase;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.buffer.Buffer;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public class MqttAdapterClient implements AutoCloseable {
 

@@ -9,8 +9,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.Phase;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.manager.IsolatedIoTManager;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -110,6 +108,6 @@ public class UserUtils {
     }
 
     public static boolean userExist(AddressSpace addressSpace, String username) {
-        return IsolatedResourcesManager.getInstance().getUser(addressSpace, username) != null;
+        return ResourceManager.getInstance().getUser(addressSpace, username) != null;
     }
 }

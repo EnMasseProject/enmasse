@@ -9,7 +9,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -30,7 +29,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Tag(TestTag.ISOLATED)
-class RestartTest extends SoakTestBase implements ITestBaseIsolated {
+class RestartTest extends SoakTestBase {
     private static Logger log = CustomLogger.getLogger();
     private ScheduledExecutorService deleteService;
 
@@ -76,18 +75,18 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
-        resourcesManager.createOrUpdateUser(brokered, user);
-        resourcesManager.createOrUpdateUser(standard, user);
+        resourceManager.createAddressSpace(standard, brokered);
+        resourceManager.createOrUpdateUser(brokered, user);
+        resourceManager.createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
         List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
-        resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
-        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
 
         //set up restart scheduler
         deleteService.scheduleAtFixedRate(() -> {
@@ -109,16 +108,16 @@ class RestartTest extends SoakTestBase implements ITestBaseIsolated {
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
         log.info("Check if system works");
-        TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(brokered.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> resourcesManager.getAddressSpace(standard.getMetadata().getName()));
-        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
-        TestUtils.runUntilPass(60, () -> resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
+        TestUtils.runUntilPass(60, () -> resourceManager.getAddressSpace(brokered.getMetadata().getName()));
+        TestUtils.runUntilPass(60, () -> resourceManager.getAddressSpace(standard.getMetadata().getName()));
+        TestUtils.runUntilPass(60, () -> resourceManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda")));
+        TestUtils.runUntilPass(60, () -> resourceManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura")));
         TestUtils.runUntilPass(60, () -> {
-            getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourcesManager);
+            getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourceManager);
             return true;
         });
         TestUtils.runUntilPass(60, () -> {
-            getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourcesManager);
+            getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourceManager);
             return true;
         });
     }

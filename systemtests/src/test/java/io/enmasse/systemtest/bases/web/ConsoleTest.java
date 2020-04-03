@@ -13,9 +13,9 @@ import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -35,9 +35,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.platform.cluster.OpenShiftCluster;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -113,7 +111,7 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestCreateDeleteAddressSpace(AddressSpace addressSpace) throws Exception {
-        resourcesManager.addToAddressSpaces(addressSpace);
+        resourceManager.addToAddressSpaces(addressSpace);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
@@ -127,7 +125,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
-        resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
+        resourceManager.deleteAddressSpaceWithoutWait(addressSpace);
         selenium.getDriverWait().withTimeout(Duration.ofMinutes(22))
                 .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceTitle()));
         assertNotNull(consolePage.getNotFoundPage());
@@ -142,11 +140,11 @@ public abstract class ConsoleTest extends TestBase {
         Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_SMALL_QUEUE);
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
-        resourcesManager.deleteAddresses(address);
+        resourceManager.deleteAddresses(address);
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
                 .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
         assertNotNull(consolePage.getNotFoundPage());
-        resourcesManager.deleteAddressSpace(addressSpace);
+        resourceManager.deleteAddressSpace(addressSpace);
     }
 
     protected void doTestSnippetClient(AddressSpaceType addressSpaceType) throws Exception {
@@ -163,14 +161,14 @@ public abstract class ConsoleTest extends TestBase {
         getAndExecAddressSpaceDeploymentSnippet(addressSpace);
         assertTrue(AddressSpaceUtils.addressSpaceExists(Kubernetes.getInstance().getInfraNamespace(),
                 addressSpace.getMetadata().getName()));
-        resourcesManager.waitForAddressSpaceReady(addressSpace);
-        resourcesManager.deleteAddressSpace(addressSpace);
+        resourceManager.waitForAddressSpaceReady(addressSpace);
+        resourceManager.deleteAddressSpace(addressSpace);
     }
 
 
     protected void doTestCreateAddrSpaceWithCustomAuthService() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        resourcesManager.createAuthService(standardAuth);
+        resourceManager.createAuthService(standardAuth);
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -185,7 +183,7 @@ public abstract class ConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.addToAddressSpaces(addressSpace);
+        resourceManager.addToAddressSpaces(addressSpace);
 
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
@@ -208,7 +206,7 @@ public abstract class ConsoleTest extends TestBase {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
@@ -291,7 +289,7 @@ public abstract class ConsoleTest extends TestBase {
             consolePage.createAddressSpace(addressSpace);
             waitUntilAddressSpaceActive(addressSpace);
 
-            resourcesManager.createOrUpdateUser(addressSpace, messagingUser);
+            resourceManager.createOrUpdateUser(addressSpace, messagingUser);
 
             consolePage.openAddressList(addressSpace);
 
@@ -368,7 +366,7 @@ public abstract class ConsoleTest extends TestBase {
             consolePage.createAddressSpace(addressSpace);
             waitUntilAddressSpaceActive(addressSpace);
 
-            resourcesManager.createOrUpdateUser(addressSpace, messagingUser);
+            resourceManager.createOrUpdateUser(addressSpace, messagingUser);
 
             consolePage.openAddressList(addressSpace);
 
@@ -429,7 +427,7 @@ public abstract class ConsoleTest extends TestBase {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
@@ -459,24 +457,24 @@ public abstract class ConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.addToAddressSpaces(addressSpace);
+        resourceManager.addToAddressSpaces(addressSpace);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_MEDIUM,
-                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
-        String currentConfig = resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan();
+                resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+        String currentConfig = resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan();
         consolePage.changeAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
-                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
+                resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
 
         consolePage.changeAuthService(addressSpace, "none-authservice", AuthenticationServiceType.NONE);
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
         assertEquals("none-authservice",
-                resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getAuthenticationService().getName());
+                resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getAuthenticationService().getName());
     }
 
     protected void doTestViewCustomPlans() throws Exception {
@@ -581,7 +579,7 @@ public abstract class ConsoleTest extends TestBase {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(brokered, standard);
+        resourceManager.createAddressSpace(brokered, standard);
 
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
@@ -634,14 +632,14 @@ public abstract class ConsoleTest extends TestBase {
 
     protected void doTestAddressSnippet(AddressSpaceType addressSpaceType, String destinationPlan) throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(addressSpaceType);
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address address = generateAddressObject(addressSpace, destinationPlan);
         getAndExecAddressDeploymentSnippet(addressSpace, address);
         AddressUtils.waitForDestinationsReady(address);
         AddressUtils.isAddressReady(addressSpace, address);
-        resourcesManager.deleteAddresses(address);
-        resourcesManager.deleteAddressSpace(addressSpace);
+        resourceManager.deleteAddresses(address);
+        resourceManager.deleteAddressSpace(addressSpace);
     }
 
     protected void doTestCreateDeleteAddress(AddressSpace addressSpace, Address... destinations) throws Exception {
@@ -808,7 +806,7 @@ public abstract class ConsoleTest extends TestBase {
                 .endSpec()
                 .build();
 
-        resourcesManager.setAddresses(queue1, queue2, queue3);
+        resourceManager.setAddresses(queue1, queue2, queue3);
 
         ExternalMessagingClient client = new ExternalMessagingClient()
                 .withClientEngine(new RheaClientSender())
@@ -840,14 +838,14 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestEditAddress(AddressSpace addressSpace, Address address, String plan) throws Exception {
-        resourcesManager.setAddresses(address);
+        resourceManager.setAddresses(address);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.changeAddressPlan(address, plan);
         Thread.sleep(10_000);
         AddressUtils.waitForDestinationsReady(address);
-        assertThat(resourcesManager.getAddress(kubernetes.getInfraNamespace(), address).getSpec().getPlan(), is(plan));
+        assertThat(resourceManager.getAddress(kubernetes.getInfraNamespace(), address).getSpec().getPlan(), is(plan));
     }
 
     protected void doTestDeleteFilteredAddress(AddressSpace addressSpace) throws Exception {
@@ -861,7 +859,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("test-queue")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
 
@@ -873,7 +871,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("test-topic")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
 
@@ -1035,7 +1033,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue-via-web")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
 
@@ -1152,7 +1150,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue-in-and-out")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
 
@@ -1201,7 +1199,7 @@ public abstract class ConsoleTest extends TestBase {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue-stored-msg")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
 
@@ -1284,7 +1282,7 @@ public abstract class ConsoleTest extends TestBase {
                         .withNewSpec()
                         .withType("topic")
                         .withAddress("topic-sub" + testString)
-                        .withPlan(getDefaultPlan(AddressType.TOPIC))
+                        .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                         .endSpec()
                         .build();
                 log.info("Creating topic for subscription");
@@ -1311,7 +1309,7 @@ public abstract class ConsoleTest extends TestBase {
                         .withNewSpec()
                         .withType(type.toString())
                         .withAddress(type.toString() + "-" + testString)
-                        .withPlan(getDefaultPlan(type))
+                        .withPlan(resourceManager.getDefaultAddressPlan(type))
                         .endSpec()
                         .build();
                 assert_value = 1;
@@ -1466,7 +1464,7 @@ public abstract class ConsoleTest extends TestBase {
                         .withNewSpec()
                         .withType("topic")
                         .withAddress(String.format("topic-%s-%d", infix, i))
-                        .withPlan(getDefaultPlan(AddressType.TOPIC))
+                        .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                         .endSpec()
                         .build());
             } else {
@@ -1478,7 +1476,7 @@ public abstract class ConsoleTest extends TestBase {
                         .withNewSpec()
                         .withType("queue")
                         .withAddress(String.format("queue-%s-%d", infix, i))
-                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                         .endSpec()
                         .build());
             }
@@ -1538,7 +1536,7 @@ public abstract class ConsoleTest extends TestBase {
 
     private void waitUntilAddressSpaceActive(AddressSpace addressSpace) throws Exception {
         String name = addressSpace.getMetadata().getName();
-        resourcesManager.waitForAddressSpaceReady(addressSpace);
+        resourceManager.waitForAddressSpaceReady(addressSpace);
         Boolean active = Optional.ofNullable(selenium.waitUntilItemPresent(60, () -> consolePage.getAddressSpaceItem(addressSpace)))
                 .map(webItem -> webItem.getStatus().contains("Active"))
                 .orElseGet(() -> {

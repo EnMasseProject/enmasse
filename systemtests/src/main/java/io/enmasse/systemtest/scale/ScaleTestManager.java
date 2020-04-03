@@ -4,9 +4,27 @@
  */
 package io.enmasse.systemtest.scale;
 
-import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.lessThan;
+import io.enmasse.address.model.Address;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.downtime.DowntimeData;
+import io.enmasse.systemtest.scale.downtime.DowntimeMonitoringResult;
+import io.enmasse.systemtest.scale.metrics.MessagesCountRecord;
+import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
+import io.enmasse.systemtest.scale.performance.AddressTypePerformanceResults;
+import io.enmasse.systemtest.scale.performance.PerformanceResults;
+import io.enmasse.systemtest.scale.performance.ThroughputData;
+import io.enmasse.systemtest.utils.TestUtils;
+import org.HdrHistogram.AtomicHistogram;
+import org.HdrHistogram.DoubleHistogram;
+import org.HdrHistogram.Histogram;
+import org.apache.commons.math3.stat.descriptive.rank.Median;
+import org.hawkular.agent.prometheus.types.Counter;
+import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -22,28 +40,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.HdrHistogram.AtomicHistogram;
-import org.HdrHistogram.DoubleHistogram;
-import org.HdrHistogram.Histogram;
-import org.apache.commons.math3.stat.descriptive.rank.Median;
-import org.hawkular.agent.prometheus.types.Counter;
-import org.slf4j.Logger;
-
-import io.enmasse.address.model.Address;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.scale.downtime.DowntimeData;
-import io.enmasse.systemtest.scale.downtime.DowntimeMonitoringResult;
-import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.MessagesCountRecord;
-import io.enmasse.systemtest.scale.performance.AddressTypePerformanceResults;
-import io.enmasse.systemtest.scale.performance.PerformanceResults;
-import io.enmasse.systemtest.scale.performance.ThroughputData;
-import io.enmasse.systemtest.utils.TestUtils;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.lessThan;
 
 /**
  * This class should be instantiated once per test

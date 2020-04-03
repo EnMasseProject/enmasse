@@ -4,10 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import java.util.Collections;
-
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -24,6 +20,9 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
+import org.slf4j.Logger;
+
+import java.util.Collections;
 
 /**
  * Handles interaction with openshift cluster

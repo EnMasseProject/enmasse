@@ -4,14 +4,10 @@
  */
 package io.enmasse.systemtest.scale.metrics;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.scale.ScaleTestEnvironment;
 import org.hawkular.agent.prometheus.PrometheusDataFormat;
 import org.hawkular.agent.prometheus.PrometheusScraper;
 import org.hawkular.agent.prometheus.types.Counter;
@@ -19,10 +15,13 @@ import org.hawkular.agent.prometheus.types.Histogram;
 import org.hawkular.agent.prometheus.types.MetricFamily;
 import org.slf4j.Logger;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.scale.ScaleTestEnvironment;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class ScaleTestClientMetricsClient {
 

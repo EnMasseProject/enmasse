@@ -6,7 +6,6 @@ package io.enmasse.systemtest.selenium.resources;
 
 import io.enmasse.systemtest.model.address.AddressStatus;
 import io.enmasse.systemtest.model.address.AddressType;
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 

@@ -9,7 +9,6 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
@@ -30,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
-public abstract class ClusterClientTestBase extends TestBase implements ITestBaseShared {
+public abstract class ClusterClientTestBase extends TestBase {
 
     private Endpoint getMessagingRoute(AddressSpace addressSpace, boolean websocket, boolean ssl, boolean mqtt) throws Exception {
         int port = ssl ? 5671 : 5672;
@@ -53,37 +52,37 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : "")))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : "")))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("message-basic-" + ClientType.getAddressName(sender) + (websocket ? "-ws" : ""))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket, true, false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), websocket, true, false))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, resourceManager.getDefaultAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket, true, false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), websocket, true, false))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, resourceManager.getDefaultAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "");
 
         assertTrue(senderClient.run());
         assertTrue(receiverClient.run());
@@ -101,21 +100,21 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "basic-mqtt" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "basic-mqtt" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("basic-mqtt" + ClientType.getAddressName(sender))
-                .withPlan(getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_LARGE_TOPIC : resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
 
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false, false, false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), false, false, false))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -124,7 +123,7 @@ public abstract class ClusterClientTestBase extends TestBase implements ITestBas
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false, false, false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), false, false, false))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)

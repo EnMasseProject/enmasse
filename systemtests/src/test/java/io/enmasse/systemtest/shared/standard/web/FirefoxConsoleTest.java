@@ -6,29 +6,39 @@ package io.enmasse.systemtest.shared.standard.web;
 
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.SHARED;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Tag(SHARED)
 @SeleniumFirefox
-public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStandard {
+public class FirefoxConsoleTest extends ConsoleTest {
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     @Test
     void testCreateDeleteQueue() throws Exception {
-        doTestCreateDeleteAddress(getSharedAddressSpace(),
+        doTestCreateDeleteAddress(resourceManager.getDefaultAddressSpace(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue2"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-queue2"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -38,8 +48,8 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
                         .build(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-queue"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -52,11 +62,11 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testCreateDeleteTopic() throws Exception {
-        doTestCreateDeleteAddress(getSharedAddressSpace(),
+        doTestCreateDeleteAddress(resourceManager.getDefaultAddressSpace(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("topic")
@@ -66,8 +76,8 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
                         .build(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic2"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic2"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("topic")
@@ -79,11 +89,11 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testCreateDeleteDurableSubscription() throws Exception {
-     doTestCreateDeleteAddress(getSharedAddressSpace(),
+     doTestCreateDeleteAddress(resourceManager.getDefaultAddressSpace(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("topic")
@@ -93,8 +103,8 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
                         .build(),
                 new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-sub"))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-sub"))
                         .endMetadata()
                         .withNewSpec()
                         .withType("subscription")
@@ -107,10 +117,10 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testCreateDeleteAnycast() throws Exception {
-        doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
+        doTestCreateDeleteAddress(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-anycast"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-anycast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("anycast")
@@ -122,10 +132,10 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testCreateDeleteMulticast() throws Exception {
-        doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
+        doTestCreateDeleteAddress(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-multicast"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-multicast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("multicast")
@@ -137,32 +147,32 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testAddressStatus() throws Exception {
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
+        doTestAddressStatus(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-queue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("test-queue")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
+        doTestAddressStatus(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("test-topic")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
+        doTestAddressStatus(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-anycast"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-anycast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("anycast")
@@ -170,10 +180,10 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
                 .withPlan(DestinationPlan.STANDARD_SMALL_ANYCAST)
                 .endSpec()
                 .build());
-        doTestAddressStatus(getSharedAddressSpace(), new AddressBuilder()
+        doTestAddressStatus(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-multicast"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-multicast"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("multicast")
@@ -185,36 +195,36 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testFilterAddressesByType() throws Exception {
-        doTestFilterAddressesByType(getSharedAddressSpace());
+        doTestFilterAddressesByType(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testFilterAddressesByName() throws Exception {
-        doTestFilterAddressesByName(getSharedAddressSpace());
+        doTestFilterAddressesByName(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testFilterAddressesByStatus() throws Exception {
-        doTestFilterAddressesByStatus(getSharedAddressSpace());
+        doTestFilterAddressesByStatus(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testPurgeAddress() throws Exception {
-        doTestPurgeMessages(getSharedAddressSpace());
+        doTestPurgeMessages(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testEditAddress() throws Exception {
-        doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
+        doTestEditAddress(resourceManager.getDefaultAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-queue-edit"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("test-queue-edit")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build(),
                 DestinationPlan.STANDARD_XLARGE_QUEUE);
@@ -222,113 +232,113 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     void testDeleteFilteredAddress() throws Exception {
-        doTestDeleteFilteredAddress(getSharedAddressSpace());
+        doTestDeleteFilteredAddress(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testSortAddressesByName() throws Exception {
-        doTestSortAddressesByName(getSharedAddressSpace());
+        doTestSortAddressesByName(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testSortAddressesBySenders() throws Exception {
-        doTestSortAddressesBySenders(getSharedAddressSpace());
+        doTestSortAddressesBySenders(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testSortAddressesByReceivers() throws Exception {
-        doTestSortAddressesByReceivers(getSharedAddressSpace());
+        doTestSortAddressesByReceivers(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testSortConnectionsBySenders() throws Exception {
-        doTestSortConnectionsBySenders(getSharedAddressSpace());
+        doTestSortConnectionsBySenders(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testSortConnectionsByReceivers() throws Exception {
-        doTestSortConnectionsByReceivers(getSharedAddressSpace());
+        doTestSortConnectionsByReceivers(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testAddressLinks() throws Exception {
-        doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
+        doTestAddressLinks(resourceManager.getDefaultAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
     }
 
     @Test
     @ExternalClients
     void testFilterConnectionsByContainerId() throws Exception {
-        doTestFilterConnectionsByContainerId(getSharedAddressSpace());
+        doTestFilterConnectionsByContainerId(resourceManager.getDefaultAddressSpace());
     }
 
     @Disabled("Filtering based on ID is not supported now.") // Todo: Enable after filtering by Id will be supported
     @Test
     @ExternalClients
     void testFilterLinksByContainerId() throws Exception {
-        doTestFilterClientsByContainerId(getSharedAddressSpace());
+        doTestFilterClientsByContainerId(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testFilterLinksByName() throws Exception {
-        doTestFilterClientsByName(getSharedAddressSpace());
+        doTestFilterClientsByName(resourceManager.getDefaultAddressSpace());
     }
 
 
     @Test
     @ExternalClients
     void testSortConnectionsByContainerId() throws Exception {
-        doTestSortConnectionsByContainerId(getSharedAddressSpace());
+        doTestSortConnectionsByContainerId(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testMessagesStoredMetrics() throws Exception {
-        doTestMessagesStoredMetrics(getSharedAddressSpace());
+        doTestMessagesStoredMetrics(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testClientsMetrics() throws Exception {
-        doTestClientsMetrics(getSharedAddressSpace());
+        doTestClientsMetrics(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     @ExternalClients
     void testEmptyLinkPage() throws Exception {
-        doTestEmptyLinkPage(getSharedAddressSpace(), TestInfo.getInstance().getActualTest());
+        doTestEmptyLinkPage(resourceManager.getDefaultAddressSpace(), TestInfo.getInstance().getActualTest());
     }
 
     @Test()
     void testCannotOpenConsolePage() {
         assertThrows(IllegalAccessException.class,
-                () -> doTestCanOpenConsolePage(getSharedAddressSpace(), new UserCredentials("noexistuser", "pepaPa555"), false));
+                () -> doTestCanOpenConsolePage(resourceManager.getDefaultAddressSpace(), new UserCredentials("noexistuser", "pepaPa555"), false));
     }
 
     @Test
     void testCanOpenConsolePage() throws Exception {
-        doTestCanOpenConsolePage(getSharedAddressSpace(), clusterUser, true);
+        doTestCanOpenConsolePage(resourceManager.getDefaultAddressSpace(), clusterUser, true);
     }
 
     @Test
     void testVerylongAddressName() throws Exception {
-        doTestWithStrangeAddressNames(getSharedAddressSpace(), false, true,
+        doTestWithStrangeAddressNames(resourceManager.getDefaultAddressSpace(), false, true,
                 AddressType.QUEUE, AddressType.ANYCAST, AddressType.MULTICAST, AddressType.TOPIC, AddressType.SUBSCRIPTION
         );
     }
 
     @Test
     void testValidAddressNames() throws Exception {
-        doTestValidAddressNames(getSharedAddressSpace());
+        doTestValidAddressNames(resourceManager.getDefaultAddressSpace());
     }
 
     @Test
     void testErrorDialog() throws Exception {
-        doTestErrorDialog(getSharedAddressSpace());
+        doTestErrorDialog(resourceManager.getDefaultAddressSpace());
     }
 
 }

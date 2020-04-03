@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.isolated.web;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -15,11 +14,13 @@ import io.enmasse.systemtest.selenium.SeleniumChrome;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 
 @Tag(NON_PR)
+@Tag(ISOLATED)
 @SeleniumChrome
-class ChromeConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
+class ChromeConsoleTest extends ConsoleTest {
 
     @Test
     void testLoginLogout() throws Exception {

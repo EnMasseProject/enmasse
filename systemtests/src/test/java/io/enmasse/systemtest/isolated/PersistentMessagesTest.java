@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -33,11 +32,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
-class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
+@Tag(ISOLATED)
+class PersistentMessagesTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private UserCredentials credentials = new UserCredentials("test", "test");
 
@@ -57,8 +58,8 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(brokered);
-        resourcesManager.createOrUpdateUser(brokered, credentials);
+        resourceManager.createAddressSpace(brokered);
+        resourceManager.createOrUpdateUser(brokered, credentials);
 
 
         Address brokeredQueue = new AddressBuilder()
@@ -91,8 +92,8 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(standard);
-        resourcesManager.createOrUpdateUser(standard, credentials);
+        resourceManager.createAddressSpace(standard);
+        resourceManager.createOrUpdateUser(standard, credentials);
 
         Address standardQueue = new AddressBuilder()
                 .withNewMetadata()
@@ -160,35 +161,35 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
     }
 
     private void doTestQueuePersistentMessages(AddressSpace addSpace, Address address, int messagesBatch) throws Exception {
-        resourcesManager.setAddresses(address);
+        resourceManager.setAddresses(address);
 
         // Wait for the first console pod to be terminated
         TestUtils.waitForConsoleRollingUpdate(kubernetes.getInfraNamespace());
         TestUtils.waitUntilDeployed(kubernetes.getInfraNamespace());
 
         int podCount = kubernetes.listPods().size();
-        clientUtils.sendDurableMessages(resourcesManager, addSpace, address, credentials, messagesBatch);
+        clientUtils.sendDurableMessages(resourceManager, addSpace, address, credentials, messagesBatch);
         restartBrokers(podCount);
 
         // Seems that the service/route can sometimes not be immediately available despite the pod being Ready.
         assertConnectable(addSpace, credentials);
-        clientUtils.receiveDurableMessages(resourcesManager, addSpace, address, credentials, messagesBatch);
+        clientUtils.receiveDurableMessages(resourceManager, addSpace, address, credentials, messagesBatch);
 
     }
 
     private void doTestTopicPersistentMessages(AddressSpace addSpace, Address topic, Address subscription) throws Exception {
-        resourcesManager.setAddresses(topic, subscription);
+        resourceManager.setAddresses(topic, subscription);
 
         int podCount = kubernetes.listPods().size();
 
-        AmqpClient client = resourcesManager.getAmqpClientFactory().createTopicClient(addSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient(addSpace);
         client.getConnectOptions().setCredentials(credentials);
 
         log.info("Subscribe first receiver");
         Future<List<Message>> recvResults = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 30);
-        clientUtils.sendDurableMessages(resourcesManager, addSpace, topic, credentials, 30);
+        clientUtils.sendDurableMessages(resourceManager, addSpace, topic, credentials, 30);
         assertThat("Wrong messages received: ", recvResults.get(1, TimeUnit.MINUTES).size(), is(30));
-        clientUtils.sendDurableMessages(resourcesManager, addSpace, topic, credentials, 30);
+        clientUtils.sendDurableMessages(resourceManager, addSpace, topic, credentials, 30);
 
         restartBrokers(podCount);
 
@@ -216,7 +217,7 @@ class PersistentMessagesTest extends TestBase implements ITestBaseIsolated {
         String name = space.getMetadata().getName();
         do {
             try {
-                clientUtils.connectAddressSpace(resourcesManager, space, user);
+                clientUtils.connectAddressSpace(resourceManager, space, user);
                 log.info("Successfully connected to address space : {}", name);
                 return;
             } catch (IOException e) {

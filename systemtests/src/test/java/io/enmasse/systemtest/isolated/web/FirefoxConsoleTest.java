@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.isolated.web;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -16,9 +15,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 
+@Tag(ISOLATED)
 @SeleniumFirefox
-class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
+class FirefoxConsoleTest extends ConsoleTest {
 
     @Test
     void testLoginLogout() throws Exception {

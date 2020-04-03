@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.shared.standard.clients.proton.java;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import org.junit.jupiter.api.Disabled;
@@ -14,9 +13,11 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(ACCEPTANCE)
-class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
+@Tag(SHARED)
+class MsgPatternsTest extends ClientTestBase {
 
     @Test
     void testBasicMessage() throws Exception {

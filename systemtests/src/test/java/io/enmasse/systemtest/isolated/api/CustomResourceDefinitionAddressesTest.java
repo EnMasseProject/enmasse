@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -25,6 +24,7 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -32,11 +32,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(ISOLATED)
 @SeleniumFirefox
-public class CustomResourceDefinitionAddressesTest extends TestBase implements ITestIsolatedStandard {
+public class CustomResourceDefinitionAddressesTest extends TestBase {
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private AddressSpace brokered;
     private UserCredentials userCredentials;
@@ -56,9 +58,9 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(brokered);
+        resourceManager.createAddressSpace(brokered);
         userCredentials = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(brokered, userCredentials);
+        resourceManager.createOrUpdateUser(brokered, userCredentials);
     }
 
     @Test
@@ -91,7 +93,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         consoleWeb.openAddressList(brokered);
         consoleWeb.createAddress(dest1);
 
-        resourcesManager.appendAddresses(false, dest2);
+        resourceManager.appendAddresses(false, dest2);
         AddressUtils.waitForDestinationsReady(dest1, dest2);
 
         Address addressFromConsole = kubernetes.getAddressClient(brokered.getMetadata().getNamespace()).list().getItems()
@@ -176,7 +178,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         consoleWeb.openConsolePage();
         consoleWeb.openAddressList(brokered);
         consoleWeb.deleteAddress(dest1);
-        resourcesManager.deleteAddresses(dest2);
+        resourceManager.deleteAddresses(dest2);
 
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");

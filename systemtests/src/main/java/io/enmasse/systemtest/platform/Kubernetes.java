@@ -4,30 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import org.apache.commons.io.output.CloseShieldOutputStream;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressList;
 import io.enmasse.address.model.AddressSpace;
@@ -57,6 +33,9 @@ import io.enmasse.admin.model.v1.DoneableConsoleService;
 import io.enmasse.admin.model.v1.DoneableStandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfigList;
+import io.enmasse.api.model.DoneableMessagingInfra;
+import io.enmasse.api.model.MessagingInfra;
+import io.enmasse.api.model.MessagingInfraList;
 import io.enmasse.iot.model.v1.DoneableIoTConfig;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -110,6 +89,29 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
+import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.slf4j.Logger;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class Kubernetes {
     private static final Logger log = CustomLogger.getLogger();
@@ -217,6 +219,10 @@ public abstract class Kubernetes {
     ///////////////////////////////////////////////////////////////////////////////
     // client and crd clients
     ///////////////////////////////////////////////////////////////////////////////
+
+    public MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> getMessagingInfraClient() {
+        return (MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>>) client.customResources(CoreCrd.messagingInfras(), MessagingInfra.class, MessagingInfraList.class, DoneableMessagingInfra.class);
+    }
 
     public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient() {
         return getAddressSpaceClient(infraNamespace);

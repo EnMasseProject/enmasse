@@ -7,7 +7,6 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.systemtest.TestTag;
 import io.vertx.core.json.JsonObject;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

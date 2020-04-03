@@ -13,7 +13,6 @@ import io.enmasse.address.model.DoneableAddressSpace;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -32,6 +31,7 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
 import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
 import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
@@ -48,7 +49,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+class CustomResourceDefinitionAddressSpacesTest extends TestBase {
 
     private final Logger log = CustomLogger.getLogger();
 
@@ -68,11 +70,11 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endSpec()
                 .build();
         JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
-        isolatedResourcesManager.addToAddressSpaces(brokered);
+        resourceManager.addToAddressSpaces(brokered);
         createCR(addressSpacePayloadJson.toString());
-        resourcesManager.waitForAddressSpaceReady(brokered);
+        resourceManager.waitForAddressSpaceReady(brokered);
 
-        resourcesManager.deleteAddressSpace(brokered);
+        resourceManager.deleteAddressSpace(brokered);
         TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
@@ -96,11 +98,11 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.addToAddressSpaces(standard);
+        resourceManager.addToAddressSpaces(standard);
         createCR(AddressSpaceUtils.addressSpaceToJson(standard).toString());
-        isolatedResourcesManager.addToAddressSpaces(standard);
-        resourcesManager.waitForAddressSpaceReady(standard);
-        String currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+        resourceManager.addToAddressSpaces(standard);
+        resourceManager.waitForAddressSpaceReady(standard);
+        String currentConfig = resourceManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
         log.info("Initial config: {}", currentConfig);
 
         // change plan to "unlimited"
@@ -110,15 +112,15 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .done();
         assertTrue(updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString()).getRetCode());
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
-        assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
-        currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
+        assertThat(resourceManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
+        currentConfig = resourceManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
 
         // Patch back to "small" plan
         assertTrue(patchCR(standard.getKind().toLowerCase(), standard.getMetadata().getName(), "{\"spec\":{\"plan\":\"" + AddressSpacePlans.STANDARD_SMALL + "\"}}").getRetCode());
-        standard = resourcesManager.getAddressSpace(standard.getMetadata().getName());
-        resourcesManager.waitForAddressSpaceReady(standard);
+        standard = resourceManager.getAddressSpace(standard.getMetadata().getName());
+        resourceManager.waitForAddressSpaceReady(standard);
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
-        assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_SMALL));
+        assertThat(resourceManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_SMALL));
     }
 
     @Test
@@ -136,7 +138,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(brokered);
+        resourceManager.createAddressSpace(brokered);
 
         ExecutionResultData addressSpaces = KubeCMDClient.getAddressSpace(environment.namespace(), brokered.getMetadata().getName());
         String output = addressSpaces.getStdOut();
@@ -170,15 +172,15 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            isolatedResourcesManager.addToAddressSpaces(brokered);
+            resourceManager.addToAddressSpaces(brokered);
             JsonObject addressSpacePayloadJson = AddressSpaceUtils.addressSpaceToJson(brokered);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
             createCR(namespace, addressSpacePayloadJson.toString());
-            resourcesManager.waitForAddressSpaceReady(brokered);
+            resourceManager.waitForAddressSpaceReady(brokered);
 
-            resourcesManager.deleteAddressSpace(brokered);
+            resourceManager.deleteAddressSpace(brokered);
             TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
@@ -225,8 +227,8 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            isolatedResourcesManager.addToAddressSpaces(brokered);
-            isolatedResourcesManager.addToAddressSpaces(standard);
+            resourceManager.addToAddressSpaces(brokered);
+            resourceManager.addToAddressSpaces(standard);
 
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
@@ -237,7 +239,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             assertTrue(result.getStdOut().contains(brokered.getMetadata().getName()));
             assertTrue(result.getStdOut().contains(standard.getMetadata().getName()));
 
-            resourcesManager.waitForAddressSpaceReady(brokered);
+            resourceManager.waitForAddressSpaceReady(brokered);
 
             CliOutputData data = new CliOutputData(KubeCMDClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);
@@ -249,7 +251,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                         containsString("Following deployments and statefulsets are not ready"));
             }
 
-            resourcesManager.waitForAddressSpaceReady(standard);
+            resourceManager.waitForAddressSpaceReady(standard);
 
             data = new CliOutputData(KubeCMDClient.getAddressSpace(namespace, Optional.of("wide")).getStdOut(),
                     CliOutputData.CliOutputDataType.ADDRESS_SPACE);

@@ -4,18 +4,17 @@
  */
 package io.enmasse.systemtest.framework;
 
-import static io.enmasse.systemtest.utils.AssertionPredicate.from;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
-
-import java.util.Optional;
-
+import io.enmasse.systemtest.TestTag;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 
-import io.enmasse.systemtest.TestTag;
+import java.util.Optional;
+
+import static io.enmasse.systemtest.utils.AssertionPredicate.from;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 
 @Tag(TestTag.FRAMEWORK)
 public class CustomPredicatesTest {

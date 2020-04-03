@@ -4,13 +4,57 @@
  */
 package io.enmasse.systemtest.scale;
 
-import static io.enmasse.systemtest.TestTag.SCALE;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.Phase;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.scale.downtime.DowntimeData;
+import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
+import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.time.TimeMeasuringSystem;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.AuthServiceUtils;
+import io.enmasse.systemtest.utils.PlanUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.EnvVarBuilder;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -34,64 +78,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.address.model.Phase;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.ResourceAllowance;
-import io.enmasse.admin.model.v1.ResourceRequest;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecAdminBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
-import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.scale.downtime.DowntimeData;
-import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
-import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
-import io.enmasse.systemtest.time.TimeMeasuringSystem;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.AuthServiceUtils;
-import io.enmasse.systemtest.utils.PlanUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.EnvVarBuilder;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
-import io.fabric8.kubernetes.api.model.apps.Deployment;
+import static io.enmasse.systemtest.TestTag.SCALE;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SCALE)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ScaleTest extends TestBase implements ITestBaseIsolated {
+class ScaleTest extends TestBase {
     private final static Logger LOGGER = CustomLogger.getLogger();
 
     private final ScaleTestEnvironment env = ScaleTestEnvironment.getInstance();
@@ -522,10 +519,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         LOGGER.info("Create custom auth service");
         //Custom auth service
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true, "5Gi", "3Gi", true, authServiceName);
-        resourcesManager.createAuthService(standardAuth, false);
+        resourceManager.createAuthService(standardAuth, false);
         setVerboseGCAuthservice(authServiceName);
         Thread.sleep(120_000);
-        resourcesManager.waitForAuthPods(standardAuth);
+        resourceManager.waitForAuthPods(standardAuth);
 
         LOGGER.info("Create addressspace");
         //Create address space

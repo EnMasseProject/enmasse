@@ -4,39 +4,6 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SMOKE;
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static io.enmasse.user.model.v1.Operation.recv;
-import static io.enmasse.user.model.v1.Operation.send;
-import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
-import static java.util.EnumSet.of;
-import static java.util.Optional.ofNullable;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
-import static org.hamcrest.core.AllOf.allOf;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.hamcrest.Matcher;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceStatus;
@@ -48,8 +15,8 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -70,9 +37,43 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.OwnerReference;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import org.hamcrest.Matcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
-class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
-    private final static Logger log = CustomLogger.getLogger();
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static io.enmasse.user.model.v1.Operation.recv;
+import static io.enmasse.user.model.v1.Operation.send;
+import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
+import static java.util.EnumSet.of;
+import static java.util.Optional.ofNullable;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.HasPropertyWithValue.hasProperty;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
+import static org.hamcrest.core.AllOf.allOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@Tag(ISOLATED_IOT)
+class IoTProjectManagedTest extends TestBase {
+    private final static Logger LOGGER = CustomLogger.getLogger();
 
     @FunctionalInterface
     interface ProjectModificator {
@@ -81,9 +82,9 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
          *
          * @param timeout The timeout budget the operation has available.
          * @param project The project to work with. It is an provisioned project, which already passed a
-         *        call to {@link IoTProjectManagedTest#assertManaged(IoTProject)}.
+         *                call to {@link IoTProjectManagedTest#assertManaged(IoTProject)}.
          * @return {@code true} if the state has been change and a final call to
-         *         {@link IoTProjectManagedTest#assertManaged(IoTProject)} to be performed.
+         * {@link IoTProjectManagedTest#assertManaged(IoTProject)} to be performed.
          */
         boolean modify(TimeoutBudget timeout, IoTProject project) throws Exception;
     }
@@ -94,7 +95,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     @BeforeEach
     void createIoTClient() {
-        this.projectClient = this.kubernetes.getIoTProjectClient(IOT_PROJECT_NAMESPACE);
+        this.projectClient = this.kubernetes.getIoTProjectClient(IoTConstants.IOT_PROJECT_NAMESPACE);
     }
 
     /**
@@ -111,23 +112,21 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     /**
      * Delete a resource and wait for it to be re-created properly.
      *
-     * @param <T> The resource type.
-     * @param <LT> The list type of the resource.
-     * @param <D> The {@link Doneable} type.
-     * @param project The IoT project to process.
-     * @param clazz The class instance of the resource type.
-     * @param name The kubernetes name of the resource.
-     * @param basicClient The basic resource client. Does not need to be namespaced.
+     * @param <T>            The resource type.
+     * @param <LT>           The list type of the resource.
+     * @param <D>            The {@link Doneable} type.
+     * @param clazz          The class instance of the resource type.
+     * @param basicClient    The basic resource client. Does not need to be namespaced.
      * @param phaseExtractor The function which extracts the phase information.
      */
     <T extends HasMetadata, LT, D> ProjectModificator deleteAndWaitResource(final Class<T> clazz, final Function<IoTProject, String> nameExtractor,
-            final MixedOperation<T, LT, D, Resource<T, D>> basicClient, final Function<T, Optional<Phase>> phaseExtractor) {
+                                                                            final MixedOperation<T, LT, D, Resource<T, D>> basicClient, final Function<T, Optional<Phase>> phaseExtractor) {
 
         return (timeout, project) -> {
 
             final var name = nameExtractor.apply(project);
             final var className = clazz.getSimpleName();
-            final var client = basicClient.inNamespace(IOT_PROJECT_NAMESPACE);
+            final var client = basicClient.inNamespace(IoTConstants.IOT_PROJECT_NAMESPACE);
 
             // get the current address space
 
@@ -150,24 +149,24 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
                 var current = namedClient.get();
                 if (current == null) {
-                    log.info("{} is still missing", className);
+                    LOGGER.info("{} is still missing", className);
                     return false;
                 }
                 if (originalId.equals(current.getMetadata().getUid())) {
-                    log.info("{} has still the same ID", className);
+                    LOGGER.info("{} has still the same ID", className);
                     // still the same object
                     return false;
                 }
 
                 // get current phase
                 final var phase = phaseExtractor.apply(current);
-                if (!phase.isPresent()) {
-                    log.info("{} no phase information", className);
+                if (phase.isEmpty()) {
+                    LOGGER.info("{} no phase information", className);
                     return false;
                 }
 
                 if (phase.get() != Phase.Active) {
-                    log.info("{} is not ready yet: {}", className, phase.get());
+                    LOGGER.info("{} is not ready yet: {}", className, phase.get());
                     return false;
                 }
 
@@ -181,12 +180,12 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
                 var current = projectAccess.get();
 
                 if (current == null) {
-                    log.info("IoTProject missing");
+                    LOGGER.info("IoTProject missing");
                     return false;
                 }
 
                 if (current.getStatus() == null || current.getStatus().getPhase() == null) {
-                    log.info("IoTProject is missing status information");
+                    LOGGER.info("IoTProject is missing status information");
                     return false;
                 }
 
@@ -268,7 +267,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     void doTestAddressSpaceWithModifications(final TimeoutBudget timeout, final ProjectModificator modificator) throws Exception {
 
-        isolatedIoTManager.createIoTConfig(new IoTConfigBuilder()
+        resourceManager.createResource(new IoTConfigBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(kubernetes.getInfraNamespace())
@@ -283,13 +282,13 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
         final String iotProjectName = "iot-project-managed";
 
         IoTProject project = IoTUtils.getBasicIoTProjectObject(iotProjectName, addressSpaceName,
-                IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
+                IoTConstants.IOT_PROJECT_NAMESPACE, IoTConstants.IOT_DEFAULT_ADDRESS_SPACE_PLAN);
         LOGGER.warn("NAMESPACE EXISTS? {}, {}", project.getMetadata().getNamespace(), kubernetes.namespaceExists(project.getMetadata().getNamespace()));
-        isolatedIoTManager.createIoTProject(project); // waiting until ready
+        resourceManager.createResource(project); // waiting until ready
         IoTProject created = this.projectClient.withName(iotProjectName).get();
 
         assertNotNull(created);
-        assertEquals(IOT_PROJECT_NAMESPACE, created.getMetadata().getNamespace());
+        assertEquals(IoTConstants.IOT_PROJECT_NAMESPACE, created.getMetadata().getNamespace());
         assertEquals(project.getMetadata().getName(), created.getMetadata().getName());
         assertEquals(
                 project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(),
@@ -312,7 +311,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     private void assertManaged(IoTProject project) throws Exception {
         // address spaces
         AddressSpace addressSpace =
-                isolatedIoTManager.getAddressSpace(IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
+                resourceManager.getAddressSpace(IoTConstants.IOT_PROJECT_NAMESPACE, project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         assertEquals(project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName(), addressSpace.getMetadata().getName());
         assertEquals(AddressSpaceType.STANDARD.toString(), addressSpace.getSpec().getType());
         assertEquals(AddressSpacePlans.STANDARD_SMALL, addressSpace.getSpec().getPlan());
@@ -337,15 +336,15 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
             final String addressName = address.getSpec().getAddress();
 
-            if (addressName.equals(IOT_ADDRESS_EVENT + addressSuffix)) {
+            if (addressName.equals(IoTConstants.IOT_ADDRESS_EVENT + addressSuffix)) {
 
                 assertAddressType(address, AddressType.QUEUE, DestinationPlan.STANDARD_SMALL_QUEUE);
                 correctAddressesCounter++;
 
-            } else if (addressName.equals(IOT_ADDRESS_CONTROL + addressSuffix)
-                    || addressName.equals(IOT_ADDRESS_TELEMETRY + addressSuffix)
-                    || addressName.equals(IOT_ADDRESS_COMMAND + addressSuffix)
-                    || addressName.equals(IOT_ADDRESS_COMMAND_RESPONSE + addressSuffix)) {
+            } else if (addressName.equals(IoTConstants.IOT_ADDRESS_CONTROL + addressSuffix)
+                    || addressName.equals(IoTConstants.IOT_ADDRESS_TELEMETRY + addressSuffix)
+                    || addressName.equals(IoTConstants.IOT_ADDRESS_COMMAND + addressSuffix)
+                    || addressName.equals(IoTConstants.IOT_ADDRESS_COMMAND_RESPONSE + addressSuffix)) {
 
                 assertAddressType(address, AddressType.ANYCAST, DestinationPlan.STANDARD_SMALL_ANYCAST);
                 correctAddressesCounter++;
@@ -359,7 +358,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         // username "adapter"
         // name "project-address-space"+".adapter"
-        User user = isolatedIoTManager.getUser(addressSpace, "adapter-" + project.getMetadata().getUid());
+        User user = resourceManager.getUser(addressSpace, "adapter-" + project.getMetadata().getUid());
         assertNotNull(user);
         assertEquals(1, user.getMetadata().getOwnerReferences().size());
         assertTrue(isOwner(project, user.getMetadata().getOwnerReferences().get(0)));
@@ -370,16 +369,16 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
         assertThat(authorizations, containsInAnyOrder(
                 asList(
-                        assertAdapterAuthorization(of(send), expandAddresses(addressSuffix, IOT_ADDRESS_TELEMETRY, IOT_ADDRESS_EVENT, IOT_ADDRESS_COMMAND_RESPONSE)),
-                        assertAdapterAuthorization(of(recv), expandAddresses(addressSuffix, IOT_ADDRESS_COMMAND)),
-                        assertAdapterAuthorization(of(recv, send), expandAddresses(addressSuffix, IOT_ADDRESS_CONTROL)))));
+                        assertAdapterAuthorization(of(send), expandAddresses(addressSuffix, IoTConstants.IOT_ADDRESS_TELEMETRY, IoTConstants.IOT_ADDRESS_EVENT, IoTConstants.IOT_ADDRESS_COMMAND_RESPONSE)),
+                        assertAdapterAuthorization(of(recv), expandAddresses(addressSuffix, IoTConstants.IOT_ADDRESS_COMMAND)),
+                        assertAdapterAuthorization(of(recv, send), expandAddresses(addressSuffix, IoTConstants.IOT_ADDRESS_CONTROL)))));
     }
 
     /**
      * Assert an authorization entry.
      *
      * @param operations The expected operations.
-     * @param addresses The expected addresses.
+     * @param addresses  The expected addresses.
      * @return A matcher, asserting the entry.
      */
     private static Matcher<UserAuthorization> assertAdapterAuthorization(final Set<Operation> operations, final Set<String> addresses) {
@@ -416,7 +415,7 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
     /**
      * Test if the project is the owner the reference points to.
      *
-     * @param project The project to check for.
+     * @param project        The project to check for.
      * @param ownerReference The reference to check.
      * @return {@code true} if the reference points to the project.
      */

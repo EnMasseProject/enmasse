@@ -1,42 +1,59 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-
 package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserBuilder;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Random;
+import java.util.Stack;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -44,82 +61,304 @@ import java.util.stream.Collectors;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
 
-public abstract class ResourceManager {
-    protected static final Environment environment = Environment.getInstance();
-    protected static final Kubernetes kubernetes = Kubernetes.getInstance();
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
-    private static Logger LOGGER = CustomLogger.getLogger();
+/**
+ * Managing resources used in test
+ */
+public class ResourceManager {
 
-    protected String defaultAddSpaceIdentifier;
-    protected String addressSpaceType;
-    protected String addressSpacePlan;
-    protected List<AddressSpace> currentAddressSpaces;
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
-    public void setDefaultAddSpaceIdentifier(String defaultAddSpaceIdentifier) {
-        this.defaultAddSpaceIdentifier = defaultAddSpaceIdentifier;
+    private static Stack<ThrowableRunner> classResources = new Stack<>();
+    private static Stack<ThrowableRunner> methodResources = new Stack<>();
+    private static Stack<ThrowableRunner> pointerResources = classResources;
+    private Kubernetes kubeClient = Kubernetes.getInstance();
+    private final Environment environment = Environment.getInstance();
+    private AmqpClientFactory amqpClientFactory = null;
+    private MqttClientFactory mqttClientFactory = null;
+    private final GlobalLogCollector logCollector = new GlobalLogCollector(kubeClient, environment.testLogDir());
+
+    private IoTConfig defaultIoTConfig;
+    private IoTProject defaultIoTProject;
+    private AddressSpace defaultAddressSpace;
+
+    private static ResourceManager instance;
+
+    public static synchronized ResourceManager getInstance() {
+        if (instance == null) {
+            instance = new ResourceManager();
+        }
+        return instance;
     }
 
-    public void setAddressSpaceType(String addressSpaceType) {
-        this.addressSpaceType = addressSpaceType;
+    public Stack<ThrowableRunner> getPointerResources() {
+        return pointerResources;
     }
 
-    public void setAddressSpacePlan(String addressSpacePlan) {
-        this.addressSpacePlan = addressSpacePlan;
+    public void setMethodResources() {
+        LOGGER.info("Setting pointer to method resources");
+        pointerResources = methodResources;
+        initFactories();
     }
 
-    public abstract void setup() throws Exception;
-
-    public abstract void tearDown(ExtensionContext context) throws Exception;
-
-    public abstract AmqpClientFactory getAmqpClientFactory();
-
-    public abstract void setAmqpClientFactory(AmqpClientFactory amqpClientFactory);
-
-    public abstract MqttClientFactory getMqttClientFactory();
-
-    public abstract void setMqttClientFactory(MqttClientFactory mqttClientFactory);
-
-    public AddressSpace getSharedAddressSpace() {
-        return null;
-    }
-
-    public void addToAddressSpaces(AddressSpace addressSpace) throws Exception {
-        throw new Exception("Not implemented in resource manager");
-    }
-
-    public void deleteAddressSpaceCreatedBySC(AddressSpace addressSpace) throws Exception {
-        throw new Exception("Not implemented in resource manager");
+    public void setClassResources() {
+        LOGGER.info("Setting pointer to class resources");
+        pointerResources = classResources;
+        initFactories();
     }
 
     //------------------------------------------------------------------------------------------------
     // Client factories
     //------------------------------------------------------------------------------------------------
 
-    public void closeClientFactories(AmqpClientFactory amqpClientFactory, MqttClientFactory mqttClientFactory) throws Exception {
+    public void initFactories(AddressSpace addressSpace) {
+        amqpClientFactory = new AmqpClientFactory(addressSpace, environment.getSharedDefaultCredentials());
+        mqttClientFactory = new MqttClientFactory(addressSpace, environment.getSharedDefaultCredentials());
+    }
+
+    public void initFactories(AddressSpace addressSpace, UserCredentials cred) {
+        amqpClientFactory = new AmqpClientFactory(addressSpace, cred);
+        mqttClientFactory = new MqttClientFactory(addressSpace, cred);
+    }
+
+    public void initFactories() {
+        amqpClientFactory = new AmqpClientFactory(null, environment.getSharedDefaultCredentials());
+        mqttClientFactory = new MqttClientFactory(null, environment.getSharedDefaultCredentials());
+    }
+
+    public void initFactories(IoTProject project, UserCredentials credentials) {
+        String addSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
+        initFactories(kubeClient.getAddressSpaceClient(project.getMetadata()
+                .getNamespace()).withName(addSpaceName).get(), credentials);
+    }
+
+    public void closeAmqpFactory() throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
-        }
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
+            amqpClientFactory = null;
         }
     }
+
+    public void closeMqttFactory() {
+        if (mqttClientFactory != null) {
+            mqttClientFactory.close();
+            mqttClientFactory = null;
+        }
+    }
+
+    public void closeFactories() throws Exception {
+        closeAmqpFactory();
+        closeMqttFactory();
+    }
+
+    public AmqpClientFactory getAmqpClientFactory() {
+        return amqpClientFactory;
+    }
+
+    public MqttClientFactory getMqttClientFactory() {
+        return mqttClientFactory;
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Common resource methods
+    //------------------------------------------------------------------------------------------------
+
+    public <T extends HasMetadata> void createResource(T... resources) throws Exception {
+        for (T resource : resources) {
+            switch (resource.getKind()) {
+                case StandardInfraConfig.KIND:
+                    createInfraConfig((StandardInfraConfig) resource);
+                    break;
+                case BrokeredInfraConfig.KIND:
+                    createInfraConfig((BrokeredInfraConfig) resource);
+                    break;
+                case AuthenticationService.KIND:
+                    createAuthService((AuthenticationService) resource);
+                    break;
+                case AddressPlan.KIND:
+                    createAddressPlan((AddressPlan) resource);
+                    break;
+                case AddressSpacePlan.KIND:
+                    createAddressSpacePlan((AddressSpacePlan) resource);
+                    break;
+                case AddressSpace.KIND:
+                    createAddressSpace((AddressSpace) resource);
+                    break;
+                case Address.KIND:
+                    appendAddresses((Address) resource);
+                    break;
+                case IoTConfig.KIND:
+                    IoTUtils.createIoTConfig((IoTConfig) resource);
+                    scheduleDeletion(kubeClient.getIoTConfigClient(), (IoTConfig) resource);
+                    break;
+                case IoTProject.KIND:
+                    IoTUtils.createIoTProject((IoTProject) resource);
+                    scheduleDeletion(kubeClient.getIoTProjectClient(resource.getMetadata().getNamespace()), (IoTProject) resource);
+                    break;
+            }
+        }
+    }
+
+    public <T extends HasMetadata> void removeResource(T... resources) throws Exception {
+        for (T resource : resources) {
+            switch (resource.getKind()) {
+                case StandardInfraConfig.KIND:
+                    removeInfraConfig((StandardInfraConfig) resource);
+                    break;
+                case BrokeredInfraConfig.KIND:
+                    removeInfraConfig((BrokeredInfraConfig) resource);
+                    break;
+                case AuthenticationService.KIND:
+                    removeAuthService((AuthenticationService) resource);
+                    break;
+                case AddressPlan.KIND:
+                    removeAddressPlan((AddressPlan) resource);
+                    break;
+                case AddressSpacePlan.KIND:
+                    removeAddressSpacePlan((AddressSpacePlan) resource);
+                    break;
+                case AddressSpace.KIND:
+                    deleteAddressSpace((AddressSpace) resource);
+                    break;
+                case Address.KIND:
+                    deleteAddresses((Address) resource);
+                    break;
+                case IoTConfig.KIND:
+                    IoTUtils.deleteIoTConfigAndWait(kubeClient, (IoTConfig) resource);
+                    break;
+                case IoTProject.KIND:
+                    IoTUtils.deleteIoTProjectAndWait(kubeClient, (IoTProject) resource);
+                    break;
+                case User.KIND:
+                    removeUser((User) resource);
+                    break;
+            }
+        }
+    }
+
+    public <T extends HasMetadata> T scheduleDeletion(MixedOperation<T, ?, ?, ?> operation, T resource) {
+        LOGGER.info("Scheduled deletion of {} {} in namespace {}",
+                resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+        switch (resource.getKind()) {
+            case StandardInfraConfig.KIND:
+                pointerResources.push(() -> {
+                    removeInfraConfig((StandardInfraConfig) resource);
+                    waitForDeletion((StandardInfraConfig) resource);
+                });
+                break;
+            case BrokeredInfraConfig.KIND:
+                pointerResources.push(() -> {
+                    removeInfraConfig((BrokeredInfraConfig) resource);
+                    waitForDeletion((BrokeredInfraConfig) resource);
+                });
+                break;
+            case AddressPlan.KIND:
+                pointerResources.push(() -> {
+                    removeAddressPlan((AddressPlan) resource);
+                    waitForDeletion((AddressPlan) resource);
+                });
+                break;
+            case AddressSpacePlan.KIND:
+                pointerResources.push(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    removeAddressSpacePlan((AddressSpacePlan) resource);
+                    waitForDeletion((AddressSpacePlan) resource);
+                });
+                break;
+            case AuthenticationService.KIND:
+                pointerResources.push(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    removeAuthService((AuthenticationService) resource);
+                });
+                break;
+            case Address.KIND:
+                pointerResources.push(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    deleteAddresses((Address) resource);
+                });
+                break;
+            case AddressSpace.KIND:
+                pointerResources.add(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    deleteAddressSpace((AddressSpace) resource);
+                });
+                break;
+            case IoTProject.KIND:
+                pointerResources.add(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    IoTUtils.deleteIoTProjectAndWait(kubeClient, (IoTProject) resource);
+                });
+                break;
+            case IoTConfig.KIND:
+                pointerResources.add(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    IoTUtils.deleteIoTConfigAndWait(kubeClient, (IoTConfig) resource);
+                });
+                break;
+            default:
+                pointerResources.push(() -> {
+                    LOGGER.info("Deleting {} {} in namespace {}",
+                            resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+                    operation.inNamespace(resource.getMetadata().getNamespace())
+                            .withName(resource.getMetadata().getName())
+                            .cascading(true)
+                            .delete();
+                });
+        }
+        return resource;
+    }
+
+    private void waitForDeletion(InfraConfig infraConfig) {
+        var client = infraConfig.getKind().equals("standardinfraconfig") ? kubeClient.getStandardInfraConfigClient() : kubeClient.getBrokeredInfraConfigClient();
+        TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", infraConfig.getKind(), infraConfig.getMetadata().getName()), waitPhase ->
+                        client.withName(infraConfig.getMetadata().getName()) == null,
+                new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    private void waitForDeletion(AddressPlan plan) {
+        TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", plan.getKind(), plan.getMetadata().getName()), waitPhase ->
+                        kubeClient.getAddressPlanClient().withName(plan.getMetadata().getName()) == null,
+                new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    private void waitForDeletion(AddressSpacePlan plan) {
+        TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", plan.getKind(), plan.getMetadata().getName()), waitPhase ->
+                        kubeClient.getAddressSpacePlanClient().withName(plan.getMetadata().getName()) == null,
+                new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    public void deleteClassResources() throws Exception {
+        LOGGER.info("Going to clear all class resources");
+        while (!classResources.empty()) {
+            classResources.pop().run();
+        }
+        classResources.clear();
+    }
+
+    public void deleteMethodResources() throws Exception {
+        LOGGER.info("Going to clear all method resources");
+        while (!methodResources.empty()) {
+            methodResources.pop().run();
+        }
+        methodResources.clear();
+        pointerResources = classResources;
+    }
+
 
     //------------------------------------------------------------------------------------------------
     // Address plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressPlan(AddressPlan addressPlan) throws Exception {
+    public void createAddressPlan(AddressPlan addressPlan) {
         LOGGER.info("Address plan {} will be created {}", addressPlan.getMetadata().getName(), addressPlan);
         var client = Kubernetes.getInstance().getAddressPlanClient();
-        client.create(addressPlan);
-        Thread.sleep(1000);
-    }
-
-    public void replaceAddressPlan(AddressPlan addressPlan) throws InterruptedException {
-        LOGGER.info("Address plan {} will be replaced {}", addressPlan.getMetadata().getName(), addressPlan);
-        var client = Kubernetes.getInstance().getAddressPlanClient();
         client.createOrReplace(addressPlan);
-        Thread.sleep(1000);
+        scheduleDeletion(kubeClient.getAddressPlanClient(), addressPlan);
     }
 
     public void removeAddressPlan(AddressPlan addressPlan) throws Exception {
@@ -134,11 +373,11 @@ public abstract class ResourceManager {
     // Address space plans
     //------------------------------------------------------------------------------------------------
 
-    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan) {
         createAddressSpacePlan(addressSpacePlan, true);
     }
 
-    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean wait) throws Exception {
+    public void createAddressSpacePlan(AddressSpacePlan addressSpacePlan, boolean wait) {
         LOGGER.info("AddressSpace plan {} will be created {}", addressSpacePlan.getMetadata().getName(), addressSpacePlan);
         if (addressSpacePlan.getMetadata().getNamespace() == null || addressSpacePlan.getMetadata().getNamespace().equals("")) {
             addressSpacePlan.getMetadata().setNamespace(Kubernetes.getInstance().getInfraNamespace());
@@ -148,10 +387,10 @@ public abstract class ResourceManager {
         if (wait) {
             TestUtils.waitForSchemaInSync(addressSpacePlan.getMetadata().getName());
         }
-        Thread.sleep(1000);
+        scheduleDeletion(kubeClient.getAddressSpacePlanClient(), addressSpacePlan);
     }
 
-    public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) throws Exception {
+    public void removeAddressSpacePlan(AddressSpacePlan addressSpacePlan) {
         Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
     }
 
@@ -171,26 +410,24 @@ public abstract class ResourceManager {
         return Kubernetes.getInstance().getStandardInfraConfigClient().withName(name).get();
     }
 
-    public void createInfraConfig(StandardInfraConfig standardInfraConfig) {
-        LOGGER.info("StandardInfraConfig {} will be created {}", standardInfraConfig.getMetadata().getName(), standardInfraConfig);
-        var client = Kubernetes.getInstance().getStandardInfraConfigClient();
-        client.createOrReplace(standardInfraConfig);
+    public void createInfraConfig(InfraConfig infraConfig) {
+        LOGGER.info("InfraConfig {} will be created {}", infraConfig.getMetadata().getName(), infraConfig);
+        if (infraConfig.getKind().equals(StandardInfraConfig.KIND)) {
+            kubeClient.getStandardInfraConfigClient().createOrReplace((StandardInfraConfig) infraConfig);
+            scheduleDeletion(kubeClient.getStandardInfraConfigClient(), (StandardInfraConfig) infraConfig);
+        } else {
+            kubeClient.getBrokeredInfraConfigClient().createOrReplace((BrokeredInfraConfig) infraConfig);
+            scheduleDeletion(kubeClient.getBrokeredInfraConfigClient(), (BrokeredInfraConfig) infraConfig);
+        }
     }
 
-    public void createInfraConfig(BrokeredInfraConfig brokeredInfraConfig) {
-        LOGGER.info("BrokeredInfraConfig {} will be created {}", brokeredInfraConfig.getMetadata().getName(), brokeredInfraConfig);
-        var client = Kubernetes.getInstance().getBrokeredInfraConfigClient();
-        client.createOrReplace(brokeredInfraConfig);
-    }
-
-    public void removeInfraConfig(StandardInfraConfig infraConfig) {
-        var client = Kubernetes.getInstance().getStandardInfraConfigClient();
-        client.withName(infraConfig.getMetadata().getName()).cascading(true).delete();
-    }
-
-    public void removeInfraConfig(BrokeredInfraConfig infraConfig) {
-        var client = Kubernetes.getInstance().getBrokeredInfraConfigClient();
-        client.withName(infraConfig.getMetadata().getName()).cascading(true).delete();
+    public void removeInfraConfig(InfraConfig infraConfig) {
+        LOGGER.info("InfraConfig {} will be deleted {}", infraConfig.getMetadata().getName(), infraConfig);
+        if (infraConfig.getKind().equals(StandardInfraConfig.KIND)) {
+            kubeClient.getStandardInfraConfigClient().createOrReplace((StandardInfraConfig) infraConfig);
+        } else {
+            kubeClient.getBrokeredInfraConfigClient().createOrReplace((BrokeredInfraConfig) infraConfig);
+        }
     }
 
     //------------------------------------------------------------------------------------------------
@@ -208,21 +445,14 @@ public abstract class ResourceManager {
     public void createAuthService(AuthenticationService authenticationService, boolean wait) throws Exception {
         var client = Kubernetes.getInstance().getAuthenticationServiceClient();
         LOGGER.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
-        client.create(authenticationService);
+        client.createOrReplace(authenticationService);
         if (wait) {
             waitForAuthPods(authenticationService);
         }
+        scheduleDeletion(kubeClient.getAuthenticationServiceClient(), authenticationService);
     }
 
-
-    public void replaceAuthService(AuthenticationService authenticationService) throws Exception {
-        LOGGER.info("AuthService {} will be created {}", authenticationService.getMetadata().getName(), authenticationService);
-        var client = Kubernetes.getInstance().getAuthenticationServiceClient();
-        client.createOrReplace(authenticationService);
-        waitForAuthPods(authenticationService);
-    }
-
-    public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
+    public void waitForAuthPods(AuthenticationService authenticationService) {
         String desiredPodName = authenticationService.getMetadata().getName();
         TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
                     List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance(), authenticationService.getMetadata().getNamespace());
@@ -239,13 +469,17 @@ public abstract class ResourceManager {
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
-    public void removeAuthService(AuthenticationService authService) throws Exception {
+    public void removeAuthService(AuthenticationService authService) {
         Kubernetes.getInstance().getAuthenticationServiceClient().withName(authService.getMetadata().getName()).cascading(true).delete();
         TestUtils.waitUntilCondition("Auth service is deleted: " + authService.getMetadata().getName(), (phase) ->
                         TestUtils.listReadyPods(Kubernetes.getInstance(), authService.getMetadata().getNamespace()).stream().noneMatch(pod ->
                                 pod.getMetadata().getName().contains(authService.getMetadata().getName())),
                 new TimeoutBudget(1, TimeUnit.MINUTES));
     }
+
+    //------------------------------------------------------------------------------------------------
+    // Address Space
+    //------------------------------------------------------------------------------------------------
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
         createAddressSpace(addressSpace, true);
@@ -255,7 +489,7 @@ public abstract class ResourceManager {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_ADDRESS_SPACE);
         if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
-            kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
+            kubeClient.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
             if (waitUntilReady) {
                 AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             }
@@ -267,6 +501,7 @@ public abstract class ResourceManager {
         }
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
+        scheduleDeletion(kubeClient.getAddressSpaceClient(), addressSpace);
     }
 
     public void createAddressSpace(AddressSpace... addressSpaces) throws Exception {
@@ -274,7 +509,7 @@ public abstract class ResourceManager {
         for (AddressSpace addressSpace : addressSpaces) {
             if (!AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
                 LOGGER.info("Address space '{}' doesn't exist and will be created.", addressSpace);
-                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
+                kubeClient.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace);
             } else {
                 LOGGER.info("Address space '" + addressSpace + "' already exists.");
             }
@@ -282,6 +517,7 @@ public abstract class ResourceManager {
         for (AddressSpace addressSpace : addressSpaces) {
             AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+            scheduleDeletion(kubeClient.getAddressSpaceClient(), addressSpace);
         }
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -293,10 +529,6 @@ public abstract class ResourceManager {
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         TimeMeasuringSystem.stopOperation(operationID);
     }
-
-    //------------------------------------------------------------------------------------------------
-    // Address space methods
-    //------------------------------------------------------------------------------------------------
 
     public void deleteAddressSpace(AddressSpace addressSpace) throws Exception {
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
@@ -314,19 +546,13 @@ public abstract class ResourceManager {
         }
     }
 
-    protected void createAddressSpaces(List<AddressSpace> addressSpaces, String operationID) throws Exception {
-        addressSpaces.forEach(addressSpace ->
-                kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace()).createOrReplace(addressSpace));
-        for (AddressSpace addressSpace : addressSpaces) {
-            AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
-            AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-        }
-        TimeMeasuringSystem.stopOperation(operationID);
+    public void replaceAddressSpace(AddressSpace addressSpace) throws Exception {
+        replaceAddressSpace(addressSpace, true, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
     public void replaceAddressSpace(AddressSpace addressSpace, boolean waitForConfigApplied, TimeoutBudget waitBudget) throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.UPDATE_ADDRESS_SPACE);
-        var client = kubernetes.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
+        var client = kubeClient.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         if (AddressSpaceUtils.existAddressSpace(addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName())) {
             LOGGER.info("Address space '{}' exists and will be updated.", addressSpace);
             final AddressSpace current = client.withName(addressSpace.getMetadata().getName()).get();
@@ -345,7 +571,6 @@ public abstract class ResourceManager {
             }
 
             AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
-            currentAddressSpaces.add(addressSpace);
         } else {
             LOGGER.info("Address space '{}' does not exists.", addressSpace.getMetadata().getName());
         }
@@ -353,12 +578,16 @@ public abstract class ResourceManager {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
+    public void addToAddressSpaces(AddressSpace addressSpace) {
+        scheduleDeletion(kubeClient.getAddressSpaceClient(), addressSpace);
+    }
+
     public AddressSpace getAddressSpace(String namespace, String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
+        return kubeClient.getAddressSpaceClient(namespace).withName(addressSpaceName).get();
     }
 
     public AddressSpace getAddressSpace(String addressSpaceName) {
-        return kubernetes.getAddressSpaceClient().withName(addressSpaceName).get();
+        return kubeClient.getAddressSpaceClient().withName(addressSpaceName).get();
     }
 
 
@@ -396,6 +625,9 @@ public abstract class ResourceManager {
 
     private void appendAddresses(boolean wait, TimeoutBudget timeout, Address... destinations) throws Exception {
         AddressUtils.appendAddresses(timeout, wait, destinations);
+        for (Address addr : destinations) {
+            scheduleDeletion(kubeClient.getAddressClient(), addr);
+        }
         logCollector.collectConfigMaps();
     }
 
@@ -406,6 +638,9 @@ public abstract class ResourceManager {
 
     public void setAddresses(Address... addresses) throws Exception {
         setAddresses(new TimeoutBudget(15, TimeUnit.MINUTES), addresses);
+        for (Address addr : addresses) {
+            scheduleDeletion(kubeClient.getAddressClient(), addr);
+        }
     }
 
     public void replaceAddress(Address destination) throws Exception {
@@ -413,7 +648,7 @@ public abstract class ResourceManager {
     }
 
     public Address getAddress(String namespace, Address destination) {
-        return kubernetes.getAddressClient().inNamespace(namespace).withName(destination.getMetadata().getName()).get();
+        return kubeClient.getAddressClient().inNamespace(namespace).withName(destination.getMetadata().getName()).get();
     }
 
     //================================================================================================
@@ -462,21 +697,23 @@ public abstract class ResourceManager {
             user.getMetadata().setNamespace(addressSpace.getMetadata().getNamespace());
         }
         LOGGER.info("User {} in address space {} will be created/replaced", user, addressSpace.getMetadata().getName());
-        User existing = kubernetes.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
+        User existing = kubeClient.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
         if (existing != null) {
             existing.setSpec(user.getSpec());
             user = existing;
         }
-        kubernetes.getUserClient(user.getMetadata().getNamespace()).createOrReplace(user);
+        kubeClient.getUserClient(user.getMetadata().getNamespace()).createOrReplace(user);
         if (wait) {
             return UserUtils.waitForUserActive(user, new TimeoutBudget(1, TimeUnit.MINUTES));
         }
-        return kubernetes.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
+        User createdUser = kubeClient.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).get();
+        scheduleDeletion(kubeClient.getUserClient(), createdUser);
+        return createdUser;
     }
 
     public User createUserServiceAccount(AddressSpace addressSpace, UserCredentials cred) throws Exception {
         LOGGER.info("ServiceAccount user {} in address space {} will be created", cred.getUsername(), addressSpace.getMetadata().getName());
-        String serviceaccountName = kubernetes.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
+        String serviceaccountName = kubeClient.createServiceAccount(cred.getUsername(), addressSpace.getMetadata().getNamespace());
         User user = new UserBuilder()
                 .withNewMetadata()
                 .withName(String.format("%s.%s", addressSpace.getMetadata().getName(),
@@ -501,7 +738,7 @@ public abstract class ResourceManager {
         Objects.requireNonNull(addressSpace);
         Objects.requireNonNull(user);
         LOGGER.info("User {} in address space {} will be removed", user.getMetadata().getName(), addressSpace.getMetadata().getName());
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
+        kubeClient.getUserClient(addressSpace.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
         UserUtils.waitForUserDeleted(user.getMetadata().getNamespace(), user.getMetadata().getName(), new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
@@ -509,13 +746,19 @@ public abstract class ResourceManager {
         Objects.requireNonNull(addressSpace);
         LOGGER.info("User {} in address space {} will be removed", userName, addressSpace.getMetadata().getName());
         String name = String.format("%s.%s", addressSpace.getMetadata().getName(), userName);
-        kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).withName(name).cascading(true).delete();
+        kubeClient.getUserClient(addressSpace.getMetadata().getNamespace()).withName(name).cascading(true).delete();
         UserUtils.waitForUserDeleted(addressSpace.getMetadata().getNamespace(), name, new TimeoutBudget(1, TimeUnit.MINUTES));
+    }
+
+    public void removeUser(User user) throws InterruptedException {
+        LOGGER.info("User {} will be removed", user.getMetadata().getName());
+        kubeClient.getUserClient(user.getMetadata().getNamespace()).withName(user.getMetadata().getName()).cascading(true).delete();
+        UserUtils.waitForUserDeleted(user.getMetadata().getNamespace(), user.getMetadata().getName(), new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public User getUser(AddressSpace addressSpace, String username) {
         String id = String.format("%s.%s", addressSpace.getMetadata().getName(), username);
-        List<User> response = kubernetes.getUserClient(addressSpace.getMetadata().getNamespace()).list().getItems();
+        List<User> response = kubeClient.getUserClient(addressSpace.getMetadata().getNamespace()).list().getItems();
         LOGGER.info("User list for {}: {}", addressSpace.getMetadata().getName(), response);
         for (User user : response) {
             if (user.getMetadata().getName().equals(id)) {
@@ -526,4 +769,124 @@ public abstract class ResourceManager {
         return null;
     }
 
+    public void tearDown(ExtensionContext context) throws Exception {
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
+            try {
+                if (context.getExecutionException().isPresent()) {
+                    Path path = TestUtils.getFailedTestLogsPath(context);
+                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+                }
+                SystemtestsKubernetesApps.deleteInfinispanServer();
+                SystemtestsKubernetesApps.deletePostgresqlServer();
+                SystemtestsKubernetesApps.deleteH2Server();
+            } catch (Exception e) {
+                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
+                throw e;
+            }
+        }
+    }
+
+    //================================================================================================
+    //======================================= Default messaging ======================================
+    //================================================================================================
+
+    public void createDefaultIoT() throws Exception {
+        kubeClient.createNamespace(IoTConstants.IOT_PROJECT_NAMESPACE);
+        UserCredentials credentials = new UserCredentials(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+        defaultIoTConfig = IoTUtils.getDefaultIoTConfig();
+        createResource(defaultIoTConfig);
+        defaultIoTProject = IoTUtils.getBasicIoTProjectObject("iot-project", "iot-" + new Random().nextInt(900) + 100,
+                IoTConstants.IOT_PROJECT_NAMESPACE, IoTConstants.IOT_DEFAULT_ADDRESS_SPACE_PLAN);
+        createResource(defaultIoTProject);
+        createOrUpdateUser(getIotAddressSpace(defaultIoTProject), credentials);
+        initFactories(defaultIoTProject, credentials);
+    }
+
+    public void createDefaultMessaging(AddressSpaceType type, String plan) throws Exception {
+        defaultAddressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("default-address-space")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(type.toString())
+                .withPlan(plan)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        createAddressSpace(defaultAddressSpace);
+        createOrUpdateUser(defaultAddressSpace, environment.getSharedDefaultCredentials());
+        initFactories(defaultAddressSpace);
+    }
+
+    public AddressSpace getIotAddressSpace(IoTProject project) {
+        String addSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
+        return getAddressSpace(project.getMetadata().getNamespace(), addSpaceName);
+    }
+
+    public AddressSpace getDefaultIotAddressSpace() {
+        String addSpaceName = defaultIoTProject.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
+        return getAddressSpace(defaultIoTProject.getMetadata().getNamespace(), addSpaceName);
+    }
+
+    public IoTConfig getDefaultIoTConfig() {
+        return defaultIoTConfig;
+    }
+
+    public IoTProject getDefaultIoTProject() {
+        return defaultIoTProject;
+    }
+
+    public AddressSpace getDefaultAddressSpace() {
+        return defaultAddressSpace;
+    }
+
+    public String getDefaultTenantId() {
+        return IoTUtils.getTenantId(defaultIoTProject);
+    }
+
+    public AmqpClient getAmqpClient() {
+        try {
+            return amqpClientFactory.createQueueClient();
+        } catch (Exception ex) {
+            LOGGER.error("Cannot create amqp client", ex);
+            return null;
+        }
+    }
+
+    public String getTenantId(IoTProject ioTProject) {
+        return IoTUtils.getTenantId(ioTProject);
+    }
+
+    public String getDefaultAddressPlan(AddressType addressType) {
+        if (getAddressSpaceType().equals(AddressSpaceType.BROKERED)) {
+            switch (addressType) {
+                case QUEUE:
+                    return DestinationPlan.BROKERED_QUEUE;
+                case TOPIC:
+                    return DestinationPlan.BROKERED_TOPIC;
+            }
+        } else {
+            switch (addressType) {
+                case QUEUE:
+                    return DestinationPlan.STANDARD_SMALL_QUEUE;
+                case TOPIC:
+                    return DestinationPlan.STANDARD_SMALL_TOPIC;
+                case ANYCAST:
+                    return DestinationPlan.STANDARD_SMALL_ANYCAST;
+                case MULTICAST:
+                    return DestinationPlan.STANDARD_SMALL_MULTICAST;
+            }
+        }
+        return null;
+    }
+
+    public AddressSpaceType getAddressSpaceType() {
+        return defaultAddressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString()) ? AddressSpaceType.BROKERED : AddressSpaceType.STANDARD;
+    }
 }
+

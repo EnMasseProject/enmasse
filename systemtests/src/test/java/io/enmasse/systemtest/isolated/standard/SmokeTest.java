@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -29,6 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static org.hamcrest.CoreMatchers.is;
@@ -42,8 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @Tag(NON_PR)
 @Tag(SMOKE)
+@Tag(ISOLATED)
 @Tag(ACCEPTANCE)
-class SmokeTest extends TestBase implements ITestIsolatedStandard {
+class SmokeTest extends TestBase {
 
     private Address queue;
     private Address topic;
@@ -111,12 +112,12 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_MULTICAST)
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
-        resourcesManager.setAddresses(queue, topic, anycast, multicast);
+        resourceManager.createResource(addressSpace);
+        resourceManager.setAddresses(queue, topic, anycast, multicast);
         Thread.sleep(60_000);
 
         cred = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
         testAnycast();
         testQueue();
@@ -125,16 +126,16 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void testQueue() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(cred);
 
         QueueTest.runQueueTest(client, queue);
     }
 
     private void testTopic() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createTopicClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient(addressSpace);
         client.getConnectOptions().setCredentials(cred);
-        List<String> msgs = TestUtils.generateMessages(500);
+        List<String> msgs = TestUtils.generateMessages(50);
 
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
@@ -165,7 +166,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void testAnycast() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(cred);
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz");
@@ -178,7 +179,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void testMulticast() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createBroadcastClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createBroadcastClient(addressSpace);
         client.getConnectOptions().setCredentials(cred);
         List<String> msgs = Collections.singletonList("foo");
 

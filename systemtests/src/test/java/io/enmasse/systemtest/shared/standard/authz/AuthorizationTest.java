@@ -5,13 +5,14 @@
 package io.enmasse.systemtest.shared.standard.authz;
 
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.SHARED;
 
-class AuthorizationTest extends AuthorizationTestBase implements ITestSharedStandard {
+@Tag(SHARED)
+class AuthorizationTest extends AuthorizationTestBase {
 
     @Test
     void testSendAuthz() throws Exception {

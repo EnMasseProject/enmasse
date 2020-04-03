@@ -28,7 +28,6 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -46,7 +45,6 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.artsok.RepeatedIfExceptionsTest;
-
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -83,8 +81,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
-class CommonTest extends TestBase implements ITestBaseIsolated {
-    private static Logger log = CustomLogger.getLogger();
+class CommonTest extends TestBase {
+    private static Logger LOGGER = CustomLogger.getLogger();
 
     @Test
     void testAccessLogs() throws Exception {
@@ -101,7 +99,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(standard);
+        resourceManager.createAddressSpace(standard);
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
@@ -114,7 +112,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         kubernetes.awaitPodsReady(new TimeoutBudget(5, TimeUnit.MINUTES));
 
@@ -123,7 +121,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         kubernetes.listPods().stream().filter(pod -> !pod.getMetadata().getName().contains("none-authservice")).forEach(pod -> kubernetes.getContainersFromPod(pod.getMetadata().getName()).forEach(container -> {
             String podName = pod.getMetadata().getName();
             String containerName = container.getName();
-            log.info("Getting log from pod: {}, for container: {}", podName, containerName);
+            LOGGER.info("Getting log from pod: {}, for container: {}", podName, containerName);
             String podlog = kubernetes.getLog(podName, containerName);
 
             // Retry - diagnostic code to help understand a sporadic Ci failure.
@@ -133,7 +131,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                log.info("(Retry) Getting log from pod: {}, for container: {}", podName, containerName);
+                LOGGER.info("(Retry) Getting log from pod: {}, for container: {}", podName, containerName);
                 podlog = kubernetes.getLog(podName, containerName);
             }
 
@@ -183,35 +181,35 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
-        resourcesManager.createOrUpdateUser(brokered, user);
-        resourcesManager.createOrUpdateUser(standard, user);
+        resourceManager.createAddressSpace(standard, brokered);
+        resourceManager.createOrUpdateUser(brokered, user);
+        resourceManager.createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
         List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
-        resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
-        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restarting -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restarting -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
         for (Label label : labels) {
-            log.info("Restarting {}", label.labelValue);
+            LOGGER.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
-        log.info("Restarting whole enmasse");
+        LOGGER.info("Restarting whole enmasse");
         KubeCMDClient.deletePodByLabel("app", kubernetes.getEnmasseAppLabel());
         Thread.sleep(180_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
@@ -259,9 +257,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
-        resourcesManager.createOrUpdateUser(brokered, user);
-        resourcesManager.createOrUpdateUser(standard, user);
+        resourceManager.createAddressSpace(standard, brokered);
+        resourceManager.createOrUpdateUser(brokered, user);
+        resourceManager.createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = Collections.singletonList(
                 new AddressBuilder()
@@ -302,46 +300,46 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                         .build());
 
 
-        resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
-        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
 
-        log.info("Sending messages before admin pod restart");
+        LOGGER.info("Sending messages before admin pod restart");
 
         for (Address addr : brokeredAddresses) {
-            getClientUtils().sendDurableMessages(resourcesManager, brokered, addr, user, 15);
+            getClientUtils().sendDurableMessages(resourceManager, brokered, addr, user, 15);
         }
 
         for (Address addr : standardAddresses) {
-            getClientUtils().sendDurableMessages(resourcesManager, standard, addr, user, 15);
+            getClientUtils().sendDurableMessages(resourceManager, standard, addr, user, 15);
         }
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restarting -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restarting -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
         for (Label label : labels) {
-            log.info("Restarting {}", label.labelValue);
+            LOGGER.info("Restarting {}", label.labelValue);
             KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
             Thread.sleep(30_000);
             TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
             assertSystemWorks(brokered, standard, user, brokeredAddresses, standardAddresses);
         }
 
-        log.info("Receiving messages after admin pod restart");
+        LOGGER.info("Receiving messages after admin pod restart");
 
         for (Address addr : brokeredAddresses) {
-            getClientUtils().receiveDurableMessages(resourcesManager, brokered, addr, user, 15);
+            getClientUtils().receiveDurableMessages(resourceManager, brokered, addr, user, 15);
         }
 
         for (Address addr : standardAddresses) {
-            getClientUtils().receiveDurableMessages(resourcesManager, standard, addr, user, 15);
+            getClientUtils().receiveDurableMessages(resourceManager, standard, addr, user, 15);
         }
 
     }
@@ -367,7 +365,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     .endAuthenticationService()
                     .endSpec()
                     .build();
-            isolatedResourcesManager.createAddressSpaceList(standard);
+            resourceManager.createAddressSpace(standard);
 
             // configure admin/agent pod to use api proxy
             Map<String, String> adminLabels = new HashMap<>();
@@ -403,7 +401,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             }).limit(2).collect(Collectors.toList()).iterator();
 
             // Create address before proxy goes away
-            resourcesManager.setAddresses(itr.next());
+            resourceManager.setAddresses(itr.next());
 
             Kubernetes.getInstance().setDeploymentReplicas(Kubernetes.getInstance().getInfraNamespace(), SystemtestsKubernetesApps.API_PROXY, 0);
             LOGGER.info("api-proxy scaled down");
@@ -416,7 +414,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
             LOGGER.info("api-proxy scaled up");
 
             // Create address after proxy has returned
-            resourcesManager.setAddresses(itr.next());
+            resourceManager.setAddresses(itr.next());
         } finally {
             SystemtestsKubernetesApps.deleteProxyApiApp();
         }
@@ -437,9 +435,9 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(standard);
-        resourcesManager.createOrUpdateUser(standard, new UserCredentials("jenda", "cenda"));
-        resourcesManager.setAddresses(AddressUtils.getAllStandardAddresses(standard).toArray(new Address[0]));
+        resourceManager.createAddressSpace(standard);
+        resourceManager.createOrUpdateUser(standard, new UserCredentials("jenda", "cenda"));
+        resourceManager.setAddresses(AddressUtils.getAllStandardAddresses(standard).toArray(new Address[0]));
 
         String qdRouterName = TestUtils.listRunningPods(kubernetes, standard).stream()
                 .filter(pod -> pod.getMetadata().getName().contains("qdrouter"))
@@ -483,42 +481,42 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(standard, brokered);
-        resourcesManager.createOrUpdateUser(brokered, user);
-        resourcesManager.createOrUpdateUser(standard, user);
+        resourceManager.createAddressSpace(standard, brokered);
+        resourceManager.createOrUpdateUser(brokered, user);
+        resourceManager.createOrUpdateUser(standard, user);
 
         List<Address> brokeredAddresses = AddressUtils.getAllBrokeredAddresses(brokered);
         List<Address> standardAddresses = AddressUtils.getAllStandardAddresses(standard);
 
-        resourcesManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
-        resourcesManager.setAddresses(standardAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(brokeredAddresses.toArray(new Address[0]));
+        resourceManager.setAddresses(standardAddresses.toArray(new Address[0]));
 
-        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
-        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+        getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
+        getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
 
-        log.info("------------------------------------------------------------");
-        log.info("------------------- Start with restarting -------------------");
-        log.info("------------------------------------------------------------");
+        LOGGER.info("------------------------------------------------------------");
+        LOGGER.info("------------------- Start with restarting -------------------");
+        LOGGER.info("------------------------------------------------------------");
 
         List<Pod> pods = kubernetes.listPods();
         int runningPodsBefore = pods.size();
-        log.info("Number of running pods before restarting any: {}", runningPodsBefore);
+        LOGGER.info("Number of running pods before restarting any: {}", runningPodsBefore);
 
         for (Address addr : brokeredAddresses) {
-            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
+            LOGGER.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), brokered.getMetadata().getName());
             for (Label label : labels) {
-                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
+                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
                 doMessagingDuringRestart(label, runningPodsBefore, user, brokered, addr);
-                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourcesManager);
+                getClientUtils().assertCanConnect(brokered, user, brokeredAddresses, resourceManager);
             }
         }
 
         for (Address addr : standardAddresses) {
-            log.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
+            LOGGER.info("Starting messaging in address {} and address space {}", addr.getSpec().getAddress(), standard.getMetadata().getName());
             for (Label label : labels) {
-                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
                 doMessagingDuringRestart(label, runningPodsBefore, user, standard, addr);
-                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourcesManager);
+                getClientUtils().assertCanConnect(standard, user, standardAddresses, resourceManager);
             }
         }
     }
@@ -535,7 +533,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         AddressPlan exampleAddressPlan = PlanUtils.createAddressPlanObject("test-queue-keeps-operable", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.5), new ResourceRequest("router", 0.5)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
         return exampleAddressPlan;
     }
 
@@ -567,7 +565,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -585,7 +583,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .withAddressPlans(Arrays.asList(exampleAddressPlan.getMetadata().getName()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         AddressSpace exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -601,7 +599,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createAddressSpace(exampleAddressSpace);
         return exampleAddressSpace;
     }
 
@@ -629,12 +627,12 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
         AddressPlan exampleAddressPlan = PlanUtils.createAddressPlanObject("test-queue-keeps-operable", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.5)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -650,7 +648,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .withAddressPlans(Arrays.asList(exampleAddressPlan.getMetadata().getName()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         AddressSpace exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -666,7 +664,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createAddressSpace(exampleAddressSpace);
 
         doTestBrokerRemainsOperableOnFullAddress(exampleAddressPlan, exampleAddressSpace, false);
 
@@ -674,7 +672,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     private void doTestBrokerRemainsOperableOnFullAddress(AddressPlan addressPlan, AddressSpace addressSpace, boolean retry) throws Exception {
         UserCredentials user = new UserCredentials("dummy", "supersecure");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
+        resourceManager.createOrUpdateUser(addressSpace, user);
 
         var address1 = new AddressBuilder()
                 .withNewMetadata()
@@ -700,20 +698,20 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
 
-        resourcesManager.setAddresses(address1, address2);
+        resourceManager.setAddresses(address1, address2);
         assertEquals(
-                resourcesManager.getAddress(address1.getMetadata().getNamespace(), address1).getStatus().getBrokerStatuses(),
-                resourcesManager.getAddress(address2.getMetadata().getNamespace(), address2).getStatus().getBrokerStatuses(),
+                resourceManager.getAddress(address1.getMetadata().getNamespace(), address1).getStatus().getBrokerStatuses(),
+                resourceManager.getAddress(address2.getMetadata().getNamespace(), address2).getStatus().getBrokerStatuses(),
                 "Addresses are not colocated on the same broker");
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(user);
         boolean full = false;
         byte[] bytes = new byte[1024 * 100];
         Random random = new Random();
         int messagesSent = 0;
         TimeoutBudget timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
-        log.info("Start time: get queue full");
+        LOGGER.info("Start time: get queue full");
         do {
             Message message = Message.Factory.create();
             random.nextBytes(bytes);
@@ -727,23 +725,23 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 var state = deliveries.get(0).getRemoteState();
                 if (state.getType() == DeliveryStateType.Modified || state.getType() == DeliveryStateType.Rejected) {
                     full = true;
-                    log.info("broker is full with state {} after sending {} messages", state, messagesSent);
+                    LOGGER.info("broker is full with state {} after sending {} messages", state, messagesSent);
                 }
                 messagesSent++;
 
                 if (timeout.timeoutExpired()) {
-                    log.info("Delivery state is {}", state.getType());
+                    LOGGER.info("Delivery state is {}", state.getType());
                     Assertions.fail("Timeout waiting for broker to become full, probably error in test env configuration");
                 }
             } catch (Exception e) {
                 full = true;
-                log.info("broker is full after sending {} messages, exception", messagesSent, e);
+                LOGGER.info("broker is full after sending {} messages, exception", messagesSent, e);
             }
         } while(!full);
 
         assertTrue(messagesSent > 0, "Incorrect test set up, 0 messages sent");
 
-        resourcesManager.deleteAddresses(address1);
+        resourceManager.deleteAddresses(address1);
         AddressUtils.waitForAddressDeleted(address1, new TimeoutBudget(1, TimeUnit.MINUTES));
 
         if (retry) {
@@ -770,8 +768,8 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace, false);
-        resourcesManager.deleteAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace, false);
+        resourceManager.deleteAddressSpace(addressSpace);
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -780,26 +778,26 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     private void assertSystemWorks(AddressSpace brokered, AddressSpace standard, UserCredentials existingUser,
                                    List<Address> brAddresses, List<Address> stAddresses) throws Exception {
-        log.info("Check if system works");
-        getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourcesManager);
-        getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourcesManager);
-        resourcesManager.getAddressSpace(brokered.getMetadata().getName());
-        resourcesManager.getAddressSpace(standard.getMetadata().getName());
-        resourcesManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda"));
-        resourcesManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
+        LOGGER.info("Check if system works");
+        getClientUtils().assertCanConnect(standard, existingUser, stAddresses, resourceManager);
+        getClientUtils().assertCanConnect(brokered, existingUser, brAddresses, resourceManager);
+        resourceManager.getAddressSpace(brokered.getMetadata().getName());
+        resourceManager.getAddressSpace(standard.getMetadata().getName());
+        resourceManager.createOrUpdateUser(brokered, new UserCredentials("jenda", "cenda"));
+        resourceManager.createOrUpdateUser(standard, new UserCredentials("jura", "fura"));
     }
 
     private void doMessagingDuringRestart(Label label, int runningPodsBefore, UserCredentials user, AddressSpace space, Address addr) throws Exception {
         long sleepMillis = 500;
-        log.info("Starting messaging");
+        LOGGER.info("Starting messaging");
         AddressType addressType = AddressType.getEnum(addr.getSpec().getType());
-        AmqpClient client = getAmqpClientFactory().createAddressClient(space, addressType);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createAddressClient(space, addressType);
         client.getConnectOptions().setCredentials(user);
 
         var stopSend = new CompletableFuture<>();
 
         var recvFut = client.recvMessagesWithStatus(addr.getSpec().getAddress(), msg -> {
-            log.info("Message received");
+            LOGGER.info("Message received");
             return false;
         });
 
@@ -813,14 +811,14 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
                     try {
                         Thread.sleep(sleepMillis);
                     } catch (InterruptedException e) {
-                        log.error("Error waiting between sends", e);
+                        LOGGER.error("Error waiting between sends", e);
                         stopSend.completeExceptionally(e);
                         return true;
                     }
                     return false;
                 });
 
-        log.info("Restarting {}", label.labelValue);
+        LOGGER.info("Restarting {}", label.labelValue);
         KubeCMDClient.deletePodByLabel(label.getLabelName(), label.getLabelValue());
         Thread.sleep(30_000);
         TestUtils.waitForExpectedReadyPods(kubernetes, kubernetes.getInfraNamespace(), runningPodsBefore, new TimeoutBudget(10, TimeUnit.MINUTES));
@@ -831,7 +829,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         try {
             Thread.sleep(10_000);
         } catch (InterruptedException e) {
-            log.error("Error waiting between stop sender and receiver", e);
+            LOGGER.error("Error waiting between stop sender and receiver", e);
         }
         recvFut.closeGracefully();
 

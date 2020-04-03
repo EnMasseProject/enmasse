@@ -4,15 +4,14 @@
  */
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresTreeBased;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
-
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.Mode;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.Mode;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresTreeBased;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 class PostgresTreeDeviceRegistryTest extends DeviceRegistryTest {
 

@@ -4,27 +4,6 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
-import java.net.HttpURLConnection;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
@@ -34,12 +13,12 @@ import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.iot.IoTProjectTestContext;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
@@ -55,10 +34,33 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
 
 @Tag(TestTag.SMOKE)
-class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
-    private static Logger log = CustomLogger.getLogger();
+@Tag(ISOLATED_IOT)
+class MultipleProjectsTest extends TestBase {
+    private static Logger LOGGER = CustomLogger.getLogger();
     private DeviceRegistryClient registryClient;
     private CredentialsRegistryClient credentialsClient;
 
@@ -87,7 +89,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 .endAdapters()
                 .endSpec()
                 .build();
-        isolatedIoTManager.createIoTConfig(iotConfig);
+        resourceManager.createResource(iotConfig);
 
         Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
         registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
@@ -99,8 +101,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
             kubernetes.createNamespace(projectName);
 
             IoTProject project = IoTUtils.getBasicIoTProjectObject(projectName, projectName,
-                    projectName, getDefaultAddressSpacePlan());
-            isolatedIoTManager.createIoTProject(project);
+                    projectName, IoTConstants.IOT_DEFAULT_ADDRESS_SPACE_PLAN);
+            resourceManager.createResource(project);
             IoTProjectTestContext ctx = new IoTProjectTestContext(projectName, project);
 
             configureDeviceSide(ctx);
@@ -145,7 +147,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private void configureAmqpSide(IoTProjectTestContext ctx) throws Exception {
-        AddressSpace addressSpace = isolatedIoTManager.getAddressSpace(ctx.getNamespace(),
+        AddressSpace addressSpace = resourceManager.getAddressSpace(ctx.getNamespace(),
                 ctx.getProject().getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName());
         User amqpUser = configureAmqpUser(ctx.getProject(), addressSpace);
         ctx.setAmqpUser(amqpUser);
@@ -169,10 +171,10 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 .withType(UserAuthenticationType.password)
                 .endAuthentication()
                 .withAuthorization(Collections.singletonList(new UserAuthorizationBuilder()
-                        .withAddresses(IOT_ADDRESS_TELEMETRY + "/" + tenant,
-                                IOT_ADDRESS_TELEMETRY + "/" + tenant + "/*",
-                                IOT_ADDRESS_EVENT + "/" + tenant,
-                                IOT_ADDRESS_EVENT + "/" + tenant + "/*")
+                        .withAddresses(IoTConstants.IOT_ADDRESS_TELEMETRY + "/" + tenant,
+                                IoTConstants.IOT_ADDRESS_TELEMETRY + "/" + tenant + "/*",
+                                IoTConstants.IOT_ADDRESS_EVENT + "/" + tenant,
+                                IoTConstants.IOT_ADDRESS_EVENT + "/" + tenant + "/*")
                         .withOperations(Operation.recv)
                         .build()))
                 .endSpec()
@@ -183,8 +185,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     private AmqpClient configureAmqpClient(AddressSpace addressSpace, User user) throws Exception {
-        LOGGER.warn("Amqp factory: " + getAmqpClientFactory());
-        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
+        LOGGER.warn("Amqp factory: " + resourceManager.getAmqpClientFactory());
+        AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         amqpClient.getConnectOptions()
                 .setUsername(user.getSpec().getUsername())
                 .setPassword(new String(Base64.getDecoder().decode(user.getSpec().getAuthentication().getPassword())));
@@ -222,12 +224,12 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 return true;
             } catch (MqttException mqttException) {
                 if (phase == WaitPhase.LAST_TRY) {
-                    log.error("Error waiting to connect mqtt adapter", mqttException);
+                    LOGGER.error("Error waiting to connect mqtt adapter", mqttException);
                 }
                 return false;
             }
         }, new TimeoutBudget(1, TimeUnit.MINUTES));
-        log.info("Connection to mqtt adapter succeeded");
+        LOGGER.info("Connection to mqtt adapter succeeded");
         ctx.setMqttAdapterClient(mqttAdapterClient);
     }
 

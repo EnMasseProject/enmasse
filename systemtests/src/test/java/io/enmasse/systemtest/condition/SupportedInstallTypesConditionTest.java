@@ -7,11 +7,10 @@ package io.enmasse.systemtest.condition;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.TestTag;
-
-import java.lang.annotation.Annotation;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+
+import java.lang.annotation.Annotation;
 
 import static io.enmasse.systemtest.EnmasseInstallType.BUNDLE;
 import static io.enmasse.systemtest.EnmasseInstallType.OLM;

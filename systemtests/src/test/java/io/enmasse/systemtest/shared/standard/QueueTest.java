@@ -10,11 +10,12 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -25,6 +26,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -49,6 +51,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.SHARED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -57,10 +60,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+@Tag(SHARED)
 @ExtendWith(JmsProviderParameterResolver.class)
-public class QueueTest extends TestBase implements ITestSharedStandard {
+public class QueueTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private Connection connection;
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
         runQueueTest(client, dest, 512);
@@ -157,8 +166,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testColocatedQueues() throws Exception {
         Address q1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "queue1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -168,8 +177,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address q2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "queue2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -179,8 +188,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address q3 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queue3"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "queue3"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -188,9 +197,9 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(q1, q2, q3);
+        resourceManager.setAddresses(q1, q2, q3);
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
         runQueueTest(client, q3);
@@ -200,8 +209,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testShardedQueues() throws Exception {
         Address q1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "sharded-queue-1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "sharded-queue-1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -211,8 +220,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address q2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "sharded-queue-2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "sharded-queue-2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -222,10 +231,10 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         kubernetes.getAddressClient().create(q2);
 
-        resourcesManager.appendAddresses(q1);
+        resourceManager.appendAddresses(q1);
         AddressUtils.waitForDestinationsReady(q2);
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient();
         runQueueTest(client, q1);
         runQueueTest(client, q2);
     }
@@ -235,46 +244,46 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testRestApi() throws Exception {
         Address q1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "rest-api-queue1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "rest-api-queue1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("rest-api-queue1")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
         Address q2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "rest-api-queue2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "rest-api-queue2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("rest-api-queue2")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
 
-        assertAddressApi(getSharedAddressSpace(), q1, q2);
+        assertAddressApi(resourceManager.getDefaultAddressSpace(), q1, q2);
     }
 
     @Test
     void testMessagePriorities() throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "queuepriorities"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "queuepriorities"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue_priorities")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient();
         Thread.sleep(30_000);
 
         int msgsCount = 1024;
@@ -308,8 +317,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testScaledown() throws Exception {
         Address xlarge = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -319,8 +328,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address large = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -330,8 +339,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address small = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -348,8 +357,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testScaleup() throws Exception {
         Address xlarge = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -359,8 +368,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address large = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -370,8 +379,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address small = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "scalequeue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
@@ -390,10 +399,10 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         assertEquals(before.getSpec().getType(), after.getSpec().getType());
 
         if (createInitial) {
-            resourcesManager.setAddresses(before);
+            resourceManager.setAddresses(before);
         }
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient();
         final List<String> prefixes = Arrays.asList("foo", "bar", "baz", "quux");
         final int numMessages = 500;
         final int totalNumMessages = numMessages * prefixes.size();
@@ -419,7 +428,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
 
 
         CustomLogger.getLogger().info(String.format("Now scaling from '%s' to '%s'", before.getSpec().getPlan(), after.getSpec().getPlan()));
-        resourcesManager.replaceAddress(after);
+        resourceManager.replaceAddress(after);
         logCollector.collectLogsOfPodsByLabels(kubernetes.getInfraNamespace(), before.getSpec().getPlan(), Collections.singletonMap("role", "broker"));
 
         // Receive messages sent before address was replaced
@@ -475,8 +484,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
             for (int destI = 0; destI < destinationCount; destI++) {
                 destinations[destI] = new AddressBuilder()
                         .withNewMetadata()
-                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), String.format("%s.%s.%s", destNamePrefix, i, destI)))
+                        .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), String.format("%s.%s.%s", destNamePrefix, i, destI)))
                         .endMetadata()
                         .withNewSpec()
                         .withType("queue")
@@ -492,8 +501,8 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
             {
                 try {
                     int messageCount = 43;
-                    resourcesManager.appendAddresses(false, destinations);
-                    assertConcurentMessaging(Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
+                    resourceManager.appendAddresses(false, destinations);
+                    assertConcurentMessaging(resourceManager.getDefaultAddressSpace(), Arrays.asList(destinations), users, destNamePrefix, customerIndex, messageCount);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail(e.getMessage());
@@ -505,7 +514,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
         for (Map.Entry<CompletableFuture<Void>, List<UserCredentials>> customer : company.entrySet()) {
             customer.getKey().get();
             for (UserCredentials user : customer.getValue()) {
-                resourcesManager.removeUser(getSharedAddressSpace(), user.getUsername());
+                resourceManager.removeUser(resourceManager.getDefaultAddressSpace(), user.getUsername());
             }
         }
     }
@@ -515,18 +524,18 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressQueue = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-queue-large"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-queue-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("jmsQueueLarge")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressQueue);
+        resourceManager.setAddresses(addressQueue);
 
-        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressQueue);
         connection.start();
 

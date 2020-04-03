@@ -10,7 +10,6 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -26,6 +25,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -38,7 +38,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-class MonitoringTest extends TestBase implements ITestIsolatedStandard {
+import static io.enmasse.systemtest.TestTag.ISOLATED;
+
+@Tag(ISOLATED)
+class MonitoringTest extends TestBase {
 
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
@@ -195,7 +198,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, "1");
 

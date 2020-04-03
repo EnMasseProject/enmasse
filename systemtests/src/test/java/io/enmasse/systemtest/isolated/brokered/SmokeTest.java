@@ -11,8 +11,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
-import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
@@ -28,6 +27,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
 import static org.hamcrest.CoreMatchers.is;
@@ -36,8 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 @Tag(NON_PR)
 @Tag(SMOKE)
+@Tag(ISOLATED)
 @Tag(ACCEPTANCE)
-class SmokeTest extends TestBase implements ITestIsolatedBrokered {
+class SmokeTest extends TestBase {
 
     @Test
     void testAddressTypes() throws Exception {
@@ -63,15 +64,15 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("brokeredqueueq")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
-        resourcesManager.setAddresses(queueA);
+        resourceManager.createAddressSpace(addressSpace);
+        resourceManager.setAddresses(queueA);
         UserCredentials cred = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
-        AmqpClient amqpQueueCli = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient amqpQueueCli = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         amqpQueueCli.getConnectOptions().setCredentials(cred);
         QueueTest.runQueueTest(amqpQueueCli, queueA);
         amqpQueueCli.close();
@@ -84,12 +85,12 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("brokeredtopicb")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(DestinationPlan.BROKERED_TOPIC)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topicB);
+        resourceManager.setAddresses(topicB);
 
-        AmqpClient amqpTopicCli = getAmqpClientFactory().createTopicClient(addressSpace);
+        AmqpClient amqpTopicCli = resourceManager.getAmqpClientFactory().createTopicClient(addressSpace);
         amqpTopicCli.getConnectOptions().setCredentials(cred);
         List<Future<List<Message>>> recvResults = Arrays.asList(
                 amqpTopicCli.recvMessages(topicB.getSpec().getAddress(), 1000),
@@ -141,7 +142,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpaceList(addressSpaceA, addressSpaceB);
+        resourceManager.createAddressSpace(addressSpaceA, addressSpaceB);
 
         Address queueA = new AddressBuilder()
                 .withNewMetadata()
@@ -151,7 +152,7 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue-a")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
 
@@ -163,26 +164,26 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("queue-b")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queueA, queueB);
+        resourceManager.setAddresses(queueA, queueB);
         UserCredentials user = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpaceA, user);
+        resourceManager.createOrUpdateUser(addressSpaceA, user);
 
-        AmqpClient amqpQueueCliA = getAmqpClientFactory().createQueueClient(addressSpaceA);
+        AmqpClient amqpQueueCliA = resourceManager.getAmqpClientFactory().createQueueClient(addressSpaceA);
         amqpQueueCliA.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(amqpQueueCliA, queueA);
         amqpQueueCliA.close();
 
-        resourcesManager.createOrUpdateUser(addressSpaceB, user);
+        resourceManager.createOrUpdateUser(addressSpaceB, user);
 
-        AmqpClient amqpQueueCliC = getAmqpClientFactory().createQueueClient(addressSpaceB);
+        AmqpClient amqpQueueCliC = resourceManager.getAmqpClientFactory().createQueueClient(addressSpaceB);
         amqpQueueCliC.getConnectOptions().setCredentials(user);
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
         amqpQueueCliC.close();
 
-        resourcesManager.deleteAddressSpace(addressSpaceA);
+        resourceManager.deleteAddressSpace(addressSpaceA);
 
         QueueTest.runQueueTest(amqpQueueCliC, queueB);
     }

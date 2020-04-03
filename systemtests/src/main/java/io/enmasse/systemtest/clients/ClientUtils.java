@@ -33,7 +33,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import javax.security.sasl.AuthenticationException;
-
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;

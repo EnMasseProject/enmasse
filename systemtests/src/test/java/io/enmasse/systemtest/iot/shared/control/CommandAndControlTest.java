@@ -4,18 +4,33 @@
  */
 package io.enmasse.systemtest.iot.shared.control;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
-import static io.enmasse.systemtest.utils.Predicates.is;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static org.hamcrest.CoreMatchers.anyOf;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.hamcrest.core.IsInstanceOf.instanceOf;
-import static org.hamcrest.core.IsNull.notNullValue;
-import static org.junit.Assert.assertThat;
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.amqp.QueueTerminusFactory;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.iot.CredentialsRegistryClient;
+import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageType;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.client.HttpResponse;
+import io.vertx.proton.ProtonDelivery;
+import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.messaging.Released;
+import org.apache.qpid.proton.message.Message;
+import org.hamcrest.core.Is;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -30,35 +45,21 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import org.apache.qpid.proton.amqp.Binary;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.amqp.messaging.Released;
-import org.apache.qpid.proton.message.Message;
-import org.hamcrest.core.Is;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static io.enmasse.systemtest.utils.Predicates.is;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
+import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.hamcrest.core.IsNull.notNullValue;
+import static org.junit.Assert.assertThat;
 
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.amqp.QueueTerminusFactory;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTShared;
-import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DeviceRegistryClient;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.MessageType;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.utils.IoTUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.client.HttpResponse;
-import io.vertx.proton.ProtonDelivery;
-
-class CommandAndControlTest extends TestBase implements ITestIoTShared {
+@Tag(TestTag.SHARED_IOT)
+class CommandAndControlTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -77,6 +78,11 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     private String commandPayload;
     private int ttd;
 
+    @BeforeAll
+    void initProject() throws Exception {
+        resourceManager.createDefaultIoT();
+    }
+
     @BeforeEach
     void init() throws Exception {
 
@@ -89,11 +95,11 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
         this.deviceId = UUID.randomUUID().toString();
         this.authId = UUID.randomUUID().toString();
         this.password = UUID.randomUUID().toString();
-        this.httpClient = new HttpAdapterClient(this.httpAdapterEndpoint, this.authId, sharedIoTResourceManager.getTenantId(), this.password);
+        this.httpClient = new HttpAdapterClient(this.httpAdapterEndpoint, this.authId, resourceManager.getDefaultTenantId(), this.password);
 
         // set up new random device
-        this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);
-        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password);
+        this.registryClient.registerDevice(resourceManager.getDefaultTenantId(), this.deviceId);
+        this.credentialsClient.addCredentials(resourceManager.getDefaultTenantId(), this.deviceId, this.authId, this.password);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();
@@ -132,12 +138,12 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     void testRequestResponseCommand() throws Exception {
 
         final var reqId = UUID.randomUUID().toString();
-        final var replyToAddress = "control/" + sharedIoTResourceManager.getTenantId() + "/" + UUID.randomUUID().toString();
+        final var replyToAddress = "control/" + IoTUtils.getTenantId(resourceManager.getDefaultIoTProject()) + "/" + UUID.randomUUID().toString();
 
         final AtomicReference<Future<List<ProtonDelivery>>> sentFuture = new AtomicReference<>();
 
         // set up command response consumer (before responding to telemetry)
-        var f3 = sharedIoTResourceManager.getAmqpClient().recvMessages(replyToAddress, 1);
+        var f3 = resourceManager.getAmqpClient().recvMessages(replyToAddress, 1);
 
         var f1 = setupMessagingReceiver(sentFuture, commandMessage -> {
             commandMessage.setCorrelationId(reqId);
@@ -202,7 +208,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // setup telemetry consumer
 
-        var f1 = sharedIoTResourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + sharedIoTResourceManager.getTenantId()), msg -> {
+        var f1 = resourceManager.getAmqpClient().recvMessages(new QueueTerminusFactory().getSource("telemetry/" + IoTUtils.getTenantId(resourceManager.getDefaultIoTProject())), msg -> {
 
             log.info("Received message: {}", msg);
 
@@ -231,7 +237,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
             // send request command
 
             log.info("Sending out command message");
-            var f2 = sharedIoTResourceManager.getAmqpClient().sendMessage("control/" + sharedIoTResourceManager.getTenantId() + "/" + deviceId, commandMessage)
+            var f2 = resourceManager.getAmqpClient().sendMessage("control/" + IoTUtils.getTenantId(resourceManager.getDefaultIoTProject()) + "/" + deviceId, commandMessage)
                     .whenComplete((res, err) -> {
                         String strres = null;
                         if (res != null) {

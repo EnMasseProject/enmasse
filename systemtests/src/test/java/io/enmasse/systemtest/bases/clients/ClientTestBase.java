@@ -10,7 +10,6 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
@@ -43,7 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExternalClients
-public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
+public abstract class ClientTestBase extends TestBase {
     protected Path logPath = null;
     private List<AbstractClient> clients;
 
@@ -80,38 +79,38 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "message-basic" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("message-basic" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), websocket))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, resourceManager.getDefaultAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), websocket))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), websocket))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
                 .withTimeout(30)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
-                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
+                .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, resourceManager.getDefaultAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
 
 
@@ -131,20 +130,20 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "round-robin" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "round-robin" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("round-robin" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -153,7 +152,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
@@ -161,7 +160,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(receiver2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount / 2)
@@ -192,20 +191,20 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic-sub" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "topic-sub" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("topic-sub" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -215,7 +214,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
                 .withClientEngine(subscriber)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -224,7 +223,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(subscriber2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -256,20 +255,20 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "browse" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "browse" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("browse" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -277,7 +276,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClientBrowse = new ExternalMessagingClient()
                 .withClientEngine(receiver_browse)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -285,7 +284,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClientReceive = new ExternalMessagingClient()
                 .withClientEngine(receiver_receive)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -307,23 +306,23 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     protected void doDrainQueueTest(AbstractClient sender, AbstractClient receiver) throws Exception {
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "drain" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "drain" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("drain" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         clients.addAll(Arrays.asList(sender, receiver));
         int expectedMsgCount = 50;
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(expectedMsgCount)
@@ -331,7 +330,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withAddress(dest)
                 .withCredentials(defaultCredentials)
                 .withCount(0)
@@ -352,20 +351,20 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         clients.addAll(Arrays.asList(sender, receiver));
         Address queue = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-queue" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "selector-queue" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("selector-queue" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(queue)
                 .withCredentials(defaultCredentials)
@@ -382,7 +381,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(0)
                 .withCredentials(defaultCredentials)
                 .withAddress(queue)
@@ -427,21 +426,21 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-topic" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "selector-topic" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("selector-topic" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic);
+        resourceManager.setAddresses(topic);
 
         //set up senders
         ExternalMessagingClient senderClient1 = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(topic)
                 .withCredentials(defaultCredentials)
@@ -454,7 +453,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient senderClient2 = new ExternalMessagingClient()
                 .withClientEngine(sender2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withAddress(topic)
                 .withCredentials(defaultCredentials)
@@ -466,7 +465,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         //set up subscriber1
         ExternalMessagingClient receiverClient1 = new ExternalMessagingClient()
                 .withClientEngine(subscriber)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withCredentials(defaultCredentials)
                 .withAddress(topic)
@@ -476,7 +475,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         //set up subscriber2
         ExternalMessagingClient receiverClient2 = new ExternalMessagingClient()
                 .withClientEngine(subscriber2)
-                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()))
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()))
                 .withCount(expectedMsgCount)
                 .withCredentials(defaultCredentials)
                 .withAddress(topic)
@@ -511,20 +510,20 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "message-basic" + ClientType.getAddressName(sender)))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "message-basic" + ClientType.getAddressName(sender)))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("message-basic" + ClientType.getAddressName(sender))
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         ExternalMessagingClient senderClient = new ExternalMessagingClient()
                 .withClientEngine(sender)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), false))
                 .withAddress(dest)
                 .withCredentials(publishCred)
                 .withCount(expectedMsgCount)
@@ -535,7 +534,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
 
         ExternalMessagingClient receiverClient = new ExternalMessagingClient()
                 .withClientEngine(receiver)
-                .withMessagingRoute(getMessagingRoute(getSharedAddressSpace(), false))
+                .withMessagingRoute(getMessagingRoute(resourceManager.getDefaultAddressSpace(), false))
                 .withAddress(dest)
                 .withCredentials(consumCred)
                 .withCount(expectedMsgCount)
@@ -580,8 +579,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .endSpec()
                 .done());
 
-        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), publisher);
-        resourcesManager.createOrUpdateUser(getSharedAddressSpace(), consumer);
+        resourceManager.createOrUpdateUser(resourceManager.getDefaultAddressSpace(), publisher);
+        resourceManager.createOrUpdateUser(resourceManager.getDefaultAddressSpace(), consumer);
     }
 
 }

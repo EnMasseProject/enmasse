@@ -18,22 +18,24 @@ import io.enmasse.admin.model.v1.BrokeredInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
+@Tag(ISOLATED)
+class InfraTestBrokered extends InfraTestBase {
 
     @Test
     void testCreateInfra() throws Exception {
@@ -62,12 +64,12 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-brokered", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 1.0)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -84,7 +86,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -100,9 +102,9 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createAddressSpace(exampleAddressSpace);
 
-        resourcesManager.setAddresses(new AddressBuilder()
+        resourceManager.setAddresses(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -153,7 +155,7 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(infra);
+        resourceManager.createInfraConfig(infra);
 
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
@@ -170,10 +172,10 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        resourceManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
             () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null, null),
@@ -202,9 +204,9 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
-        BrokeredInfraConfig actualInfra = resourcesManager.getBrokeredInfraConfig(testInfra.getMetadata().getName());
+        BrokeredInfraConfig actualInfra = resourceManager.getBrokeredInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 

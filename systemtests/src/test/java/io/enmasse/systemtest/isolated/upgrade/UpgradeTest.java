@@ -14,7 +14,6 @@ import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
@@ -56,7 +55,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(UPGRADE)
 @ExternalClients
-class UpgradeTest extends TestBase implements ITestIsolatedStandard {
+class UpgradeTest extends TestBase {
 
     private static final int MESSAGE_COUNT = 50;
     private static Logger log = CustomLogger.getLogger();
@@ -65,7 +64,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
-        isolatedResourcesManager.setReuseAddressSpace();
+        //resourceManager.setReuseAddressSpace();
         productName = Environment.getInstance().getProductName();
     }
 
@@ -113,11 +112,11 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
         createAddressSpaceCMD(kubernetes.getInfraNamespace(), "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
-        resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("brokered"));
+        resourceManager.waitForAddressSpaceReady(resourceManager.getAddressSpace("brokered"));
 
         createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
-        resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("standard"));
+        resourceManager.waitForAddressSpaceReady(resourceManager.getAddressSpace("standard"));
 
         createUserCMD(kubernetes.getInfraNamespace(), "test-brokered", "test", "brokered", getApiVersion(version));
         createUserCMD(kubernetes.getInfraNamespace(), "test-standard", "test", "standard", getApiVersion(version));
@@ -126,7 +125,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-queue", "brokered-queue", "brokered", "queue", "brokered-queue", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "brokered-topic", "brokered-topic", "brokered", "topic", "brokered-topic", getApiVersion(version));
         Thread.sleep(30_000);
-        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("brokered")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourceManager.getAddressSpace("brokered")).toArray(new Address[0]));
 
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-xlarge", "standard-queue-xlarge", "standard", "queue", "standard-xlarge-queue", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-queue-small", "standard-queue-small", "standard", "queue", "standard-small-queue", getApiVersion(version));
@@ -134,7 +133,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-anycast", "standard-anycast", "standard", "anycast", "standard-small-anycast", getApiVersion(version));
         createAddressCMD(kubernetes.getInfraNamespace(), "standard-multicast", "standard-multicast", "standard", "multicast", "standard-small-multicast", getApiVersion(version));
         Thread.sleep(30_000);
-        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourcesManager.getAddressSpace("standard")).toArray(new Address[0]));
+        AddressUtils.waitForDestinationsReady(AddressUtils.getAddresses(resourceManager.getAddressSpace("standard")).toArray(new Address[0]));
 
         // Workaround - addresses may report ready before the broker pod backing the address report ready=true.  This happens because broker liveness/readiness is judged on a
         // Jolokia based probe. As jolokia becomes available after AMQP management, address can be ready when the broker is not. See https://github.com/EnMasseProject/enmasse/issues/2979
@@ -150,13 +149,13 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             upgradeEnmasseBundle(Paths.get(Environment.getInstance().getUpgradeTemplates()));
         }
 
-        AddressSpace brokered = resourcesManager.getAddressSpace("brokered");
+        AddressSpace brokered = resourceManager.getAddressSpace("brokered");
         assertNotNull(brokered);
-        AddressSpace standard = resourcesManager.getAddressSpace("standard");
+        AddressSpace standard = resourceManager.getAddressSpace("standard");
         assertNotNull(standard);
         Arrays.asList(brokered, standard).forEach(a -> {
             try {
-                resourcesManager.waitForAddressSpaceReady(a);
+                resourceManager.waitForAddressSpaceReady(a);
             } catch (Exception e) {
                 fail(String.format("Address space didn't return to ready after upgrade : %s", a), e);
             }
@@ -341,7 +340,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             AuthenticationServiceSpecStandardStorage storage = authService.getSpec().getStandard().getStorage();
             if (storage == null || !AuthenticationServiceSpecStandardType.persistent_claim.equals(storage.getType())) {
                 log.info("Installed auth service {} does not use persistent claim, recreating it ", authServiceName);
-                resourcesManager.removeAuthService(authService);
+                resourceManager.removeAuthService(authService);
 
                 AuthenticationService replacement = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true);
                 kubernetes.getAuthenticationServiceClient().create(replacement);

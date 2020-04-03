@@ -5,16 +5,15 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.net.HttpURLConnection;
-
-import org.eclipse.hono.service.management.device.Device;
-
 import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.client.HttpResponse;
+import org.eclipse.hono.service.management.device.Device;
+
+import java.net.HttpURLConnection;
 
 public class DeviceRegistryClient extends HonoApiClient {
 

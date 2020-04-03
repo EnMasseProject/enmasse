@@ -19,7 +19,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
 import io.enmasse.systemtest.condition.OpenShift;
@@ -35,6 +34,7 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -42,9 +42,11 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.junit.jupiter.api.Assertions.fail;
 
-class CertProviderTest extends TestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+class CertProviderTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -64,7 +66,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         createTestEnv(
                 createEndpoint("messaging", spec, null, "amqps"));
 
-        String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
+        String caCert = new String(Base64.getDecoder().decode(resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
 
         testCertProvider(caCert);
     }
@@ -171,10 +173,10 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         user = new UserCredentials("user1", "password1");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
+        resourceManager.createOrUpdateUser(addressSpace, user);
 
         if (createAddresses) {
             queue = new AddressBuilder()
@@ -199,12 +201,12 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                     .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
                     .endSpec()
                     .build();
-            resourcesManager.setAddresses(queue, topic);
+            resourceManager.setAddresses(queue, topic);
         }
     }
 
     private void testCertProvider(String messagingCert) throws Exception {
-        AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         amqpClient.getConnectOptions().setCredentials(user).setCert(messagingCert);
 
         QueueTest.runQueueTest(amqpClient, queue, 5);

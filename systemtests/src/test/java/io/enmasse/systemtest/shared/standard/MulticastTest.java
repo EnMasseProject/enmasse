@@ -7,19 +7,30 @@ package io.enmasse.systemtest.shared.standard;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-class MulticastTest extends TestBase implements ITestSharedStandard {
+import static io.enmasse.systemtest.TestTag.SHARED;
+
+@Tag(SHARED)
+class MulticastTest extends TestBase {
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     @Test
     void testRestApi() throws Exception {
         Address m1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "multicast1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "multicast1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("multicast")
@@ -29,8 +40,8 @@ class MulticastTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address m2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "multicast2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "multicast2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("multicast")
@@ -39,6 +50,6 @@ class MulticastTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        assertAddressApi(getSharedAddressSpace(), m1, m2);
+        assertAddressApi(resourceManager.getDefaultAddressSpace(), m1, m2);
     }
 }

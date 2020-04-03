@@ -5,14 +5,17 @@
 package io.enmasse.systemtest.shared.standard.clients.proton.python;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.messagingclients.proton.python.PythonClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.python.PythonClientSender;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-class MsgPatternsTest extends ClientTestBase implements ITestSharedStandard {
+import static io.enmasse.systemtest.TestTag.SHARED;
+
+@Tag(SHARED)
+class MsgPatternsTest extends ClientTestBase {
 
     @Test
     void testBasicMessage() throws Exception {

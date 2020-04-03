@@ -6,7 +6,6 @@ package io.enmasse.systemtest.bases.infra;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -32,7 +31,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class InfraTestBase extends TestBase implements ITestBase {
+public abstract class InfraTestBase extends TestBase {
 
     private static final List<String> resizingStorageProvisioners = Arrays.asList("kubernetes.io/aws-ebs", "kubernetes.io/gce-pd",
             "kubernetes.io/azure-file", "kubernetes.io/azure-disk", "kubernetes.io/glusterfs", "kubernetes.io/cinder",

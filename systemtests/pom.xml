@@ -221,14 +221,14 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated | soak | shared-iot | isolated-iot) &amp; !upgrade</groups>
+                <groups>(shared | isolated | soak | shared-iot | isolated-iot) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
             <id>shared</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered) &amp; !isolated &amp; !smoke &amp; !soak
+                <groups>shared &amp; !isolated &amp; !smoke &amp; !soak
                     &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
                 </groups>
             </properties>
@@ -243,7 +243,7 @@
         <profile>
             <id>isolated</id>
             <properties>
-                <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
+                <groups>isolated &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
                 <skip.tests>false</skip.tests>
             </properties>
         </profile>
@@ -251,7 +251,7 @@
             <id>pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated) &amp; !nonPR &amp; !smoke &amp; !soak
+                <groups>(shared | isolated) &amp; !nonPR &amp; !smoke &amp; !soak
                     &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
                 </groups>
             </properties>

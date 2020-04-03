@@ -7,7 +7,6 @@ package io.enmasse.systemtest.bases.mqtt;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
@@ -30,7 +29,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class MqttPublishTestBase extends TestBase implements ITestBaseShared {
+public abstract class MqttPublishTestBase extends TestBase {
 
     private static final String MYTOPIC = "mytopic";
     private static final Logger log = CustomLogger.getLogger();
@@ -68,8 +67,8 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
     public void testRetainedMessages() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -77,7 +76,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
                 .withPlan(topicPlan())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic);
+        resourceManager.setAddresses(topic);
 
         MqttMessage retainedMessage = new MqttMessage();
         retainedMessage.setQos(1);
@@ -86,7 +85,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         retainedMessage.setRetained(true);
 
         // send retained message to the topic
-        Builder publisherBuilder = getMqttClientFactory().build();
+        Builder publisherBuilder = resourceManager.getMqttClientFactory().build();
         customizeClient(publisherBuilder);
         IMqttClient publisher = publisherBuilder.create();
         publisher.connect();
@@ -94,7 +93,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         publisher.disconnect();
 
         // each client which will subscribe to the topic should receive retained message!
-        Builder subscriberBuilder = getMqttClientFactory().build();
+        Builder subscriberBuilder = resourceManager.getMqttClientFactory().build();
         customizeClient(subscriberBuilder);
         IMqttClient subscriber = subscriberBuilder.create();
         subscriber.connect();
@@ -110,8 +109,8 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
 
         Address dest = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), MYTOPIC))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), MYTOPIC))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -119,12 +118,12 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
                 .withPlan(topicPlan())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(dest);
+        resourceManager.setAddresses(dest);
 
         MqttConnectOptions options = new MqttConnectOptions();
         options.setConnectionTimeout(options.getConnectionTimeout() * 2);  //Default is 30 seconds, increase it to 1 min.
         options.setAutomaticReconnect(true);
-        Builder clientBuilder = getMqttClientFactory().build().mqttConnectionOptions(options);
+        Builder clientBuilder = resourceManager.getMqttClientFactory().build().mqttConnectionOptions(options);
         customizeClient(clientBuilder);
         IMqttClient client = clientBuilder.create();
 
@@ -157,7 +156,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
     }
 
     protected String topicPlan() {
-        return getDefaultPlan(AddressType.TOPIC);
+        return resourceManager.getDefaultAddressPlan(AddressType.TOPIC);
     }
 
 }

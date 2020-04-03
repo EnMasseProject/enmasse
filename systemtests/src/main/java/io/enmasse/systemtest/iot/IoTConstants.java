@@ -2,9 +2,11 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.bases.iot;
+package io.enmasse.systemtest.iot;
 
-public interface ITestIoTBase {
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+
+public interface IoTConstants {
      String IOT_ADDRESS_EVENT = "event";
      String IOT_ADDRESS_TELEMETRY = "telemetry";
      String IOT_ADDRESS_CONTROL = "control";
@@ -20,4 +22,5 @@ public interface ITestIoTBase {
      };
 
      String IOT_PROJECT_NAMESPACE = "iot-project-ns";
+     String IOT_DEFAULT_ADDRESS_SPACE_PLAN = AddressSpacePlans.STANDARD_SMALL;
 }

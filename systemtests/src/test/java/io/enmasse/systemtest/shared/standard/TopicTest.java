@@ -9,11 +9,12 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -25,6 +26,7 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -44,15 +46,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.SHARED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(SHARED)
 @ExtendWith(JmsProviderParameterResolver.class)
-public class TopicTest extends TestBase implements ITestSharedStandard {
+public class TopicTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     private static void runTopicTest(AmqpClient client, Address dest)
             throws InterruptedException, ExecutionException, TimeoutException, IOException {
@@ -77,8 +86,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testColocatedTopics() throws Exception {
         Address t1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1-pooled"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic1-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -88,8 +97,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address t2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic2-pooled"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic2-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -99,8 +108,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address t3 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic3-pooled"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic3-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -108,9 +117,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(t1, t2, t3);
+        resourceManager.setAddresses(t1, t2, t3);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         runTopicTest(client, t1);
         runTopicTest(client, t2);
         runTopicTest(client, t3);
@@ -120,8 +129,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testShardedTopic() throws Exception {
         Address t1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1-sharded"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic1-sharded"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -131,8 +140,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address t2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic2-sharded"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic2-sharded"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -140,12 +149,12 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_LARGE_TOPIC)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(t2);
+        resourceManager.setAddresses(t2);
 
-        resourcesManager.appendAddresses(t1);
+        resourceManager.appendAddresses(t1);
         AddressUtils.waitForDestinationsReady(t2);
 
-        AmqpClient topicClient = getAmqpClientFactory().createTopicClient();
+        AmqpClient topicClient = resourceManager.getAmqpClientFactory().createTopicClient();
         runTopicTest(topicClient, t1, 2048);
         runTopicTest(topicClient, t2, 2048);
     }
@@ -155,8 +164,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testRestApi() throws Exception {
         Address t1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic1-small"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic1-small"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -166,8 +175,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address t2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic2-small"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic2-small"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -176,7 +185,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
 
-        assertAddressApi(getSharedAddressSpace(), t1, t2);
+        assertAddressApi(resourceManager.getDefaultAddressSpace(), t1, t2);
     }
 
     @Test
@@ -184,8 +193,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testMessageSelectorsAppProperty() throws Exception {
         Address selTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "selector-topic-large"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "selector-topic-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -194,9 +203,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
         String linkName = "linkSelectorTopicAppProp";
-        resourcesManager.setAddresses(selTopic);
+        resourceManager.setAddresses(selTopic);
 
-        AmqpClient topicClient = getAmqpClientFactory().createTopicClient();
+        AmqpClient topicClient = resourceManager.getAmqpClientFactory().createTopicClient();
 
         Map<String, Object> appProperties = new HashMap<>();
         appProperties.put("appPar1", 1);
@@ -269,7 +278,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         source.setFilter(map);
 
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
-        AmqpClient client2 = getAmqpClientFactory().createTopicClient();
+        AmqpClient client2 = resourceManager.getAmqpClientFactory().createTopicClient();
         Future<List<Message>> receivedWithoutSel = client2.recvMessages(dest.getSpec().getAddress(), msgsCount - 1);
 
         Future<Integer> sent = client.sendMessages(dest.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
@@ -297,8 +306,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testMessageSelectorsProperty() throws Exception {
         Address selTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "prop-topic1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "prop-topic1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -307,7 +316,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .endSpec()
                 .build();
         String linkName = "linkSelectorTopicProp";
-        resourcesManager.setAddresses(selTopic);
+        resourceManager.setAddresses(selTopic);
 
         int msgsCount = 10;
         List<Message> listOfMessages = new ArrayList<>();
@@ -330,7 +339,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         map.put(Symbol.valueOf("jms-selector"), new AmqpJmsSelectorFilter("JMSXGroupID IS NOT NULL"));
         source.setFilter(map);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         Future<List<Message>> received = client.recvMessages(source, linkName, 1);
 
         Future<Integer> sent = client.sendMessages(selTopic.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
@@ -347,8 +356,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testDurableSubscriptionOnPooledTopic() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-pooled"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -358,8 +367,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub-pooled"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "mysub-pooled"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -368,9 +377,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic, subscription);
+        resourceManager.setAddresses(topic, subscription);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         log.info("Receiving first batch");
@@ -395,8 +404,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testDurableSubscriptionMaxConsumers() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-max-sub"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic-max-sub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -406,8 +415,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub-max"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "mysub-max"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -419,10 +428,10 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic, subscription);
+        resourceManager.setAddresses(topic, subscription);
 
         // Start two consumers and check that the second consumer is disconnected
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         Future<List<Message>> c1 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 0);
         Future<List<Message>> c2 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 0);
 
@@ -435,8 +444,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testDurableSubscriptionMultipleConsumers() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-shared-sub"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic-shared-sub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -446,8 +455,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub-shared"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "mysub-shared"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -459,9 +468,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic, subscription);
+        resourceManager.setAddresses(topic, subscription);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
 
         log.info("Start consumers");
         Future<List<Message>> c1 = client.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription), 10);
@@ -480,8 +489,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testDurableSubscriptionOnShardedTopic() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-sharded"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic-sharded"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -491,8 +500,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "mysub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -503,8 +512,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "anothersub"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "anothersub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -513,9 +522,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic, subscription1, subscription2);
+        resourceManager.setAddresses(topic, subscription1, subscription2);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         log.info("Receiving first batch");
@@ -538,7 +547,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         log.info("Receiving messages from second subscription");
         List<String> allmessages = new ArrayList<>(batch1);
         allmessages.addAll(batch2);
-        AmqpClient client2 = getAmqpClientFactory().createTopicClient();
+        AmqpClient client2 = resourceManager.getAmqpClientFactory().createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), allmessages.size());
         assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(allmessages));
     }
@@ -547,8 +556,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testDurableSubscriptionOnShardedTopic2() throws Exception {
         Address topic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-topic-durable-sharded"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "test-topic-durable-sharded"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -558,8 +567,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .build();
         Address subscription1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "mysub2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "mysub2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -568,9 +577,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(topic, subscription1);
+        resourceManager.setAddresses(topic, subscription1);
 
-        AmqpClient client = getAmqpClientFactory().createTopicClient();
+        AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient();
         List<String> batch1 = Arrays.asList("one", "two", "three");
 
         log.info("Sending first batch");
@@ -584,8 +593,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         log.info("Creating second subscription");
         Address subscription2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "anothersub"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "anothersub"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("subscription")
@@ -594,7 +603,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
                 .endSpec()
                 .build();
-        resourcesManager.appendAddresses(subscription2);
+        resourceManager.appendAddresses(subscription2);
 
         log.info("Sending second batch");
         List<String> batch2 = Arrays.asList("four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve");
@@ -606,7 +615,7 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
         assertThat("Wrong messages received: batch2", extractBodyAsString(recvResults), is(batch2));
 
         log.info("Receiving messages from second subscription");
-        AmqpClient client2 = getAmqpClientFactory().createTopicClient();
+        AmqpClient client2 = resourceManager.getAmqpClientFactory().createTopicClient();
         recvResults = client2.recvMessages(AddressUtils.getQualifiedSubscriptionAddress(subscription2), batch2.size());
         assertThat("Wrong messages received for second subscription", extractBodyAsString(recvResults), is(batch2));
     }
@@ -624,8 +633,8 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     private void doTopicWildcardTest(String plan) throws Exception {
         Address t0 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic-wild"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "topic-wild"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -633,9 +642,9 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
                 .withPlan(plan)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(t0);
+        resourceManager.setAddresses(t0);
 
-        AmqpClient amqpClient = getAmqpClientFactory().createTopicClient();
+        AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
 
@@ -663,18 +672,18 @@ public class TopicTest extends TestBase implements ITestSharedStandard {
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-large"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicLarge")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        Connection connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        Connection connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 

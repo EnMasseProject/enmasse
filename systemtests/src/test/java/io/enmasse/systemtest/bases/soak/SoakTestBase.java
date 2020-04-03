@@ -99,7 +99,7 @@ public abstract class SoakTestBase extends TestBase {
     // Tests methods
     //========================================================================================================
     protected void doTestQueueSendReceiveLong(AddressSpace addressSpace) throws Exception {
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         int msgCount = 1000;
         int queueCount = 10;
@@ -118,20 +118,20 @@ public abstract class SoakTestBase extends TestBase {
                     .withNewSpec()
                     .withType("queue")
                     .withAddress("queue-sendreceive-" + i)
-                    .withPlan(getDefaultPlan(AddressType.QUEUE))
+                    .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                     .endSpec()
                     .build());
         }
-        resourcesManager.setAddresses(queueList.toArray(new Address[0]));
+        resourceManager.setAddresses(queueList.toArray(new Address[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, credentials);
+        resourceManager.createOrUpdateUser(addressSpace, credentials);
 
         runTestInLoop(30, () -> {
             //create client
-            AmqpClient client = resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
+            AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
             clients.add(client);
 
@@ -156,7 +156,7 @@ public abstract class SoakTestBase extends TestBase {
 
     protected void doTestAuthSendReceiveLong(AddressSpace addressSpace) throws Exception {
         log.info("testAuthSendReceiveLong start");
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
         log.info("Address space '{}'created", addressSpace);
 
         Address queue = new AddressBuilder()
@@ -167,7 +167,7 @@ public abstract class SoakTestBase extends TestBase {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("test-auth-queue")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
         Address topic = new AddressBuilder()
@@ -178,25 +178,25 @@ public abstract class SoakTestBase extends TestBase {
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("test-auth-topic")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue, topic);
+        resourceManager.setAddresses(queue, topic);
         log.info("Addresses '{}', '{}' created", queue.getSpec().getAddress(), topic.getSpec().getAddress());
 
         UserCredentials user = new UserCredentials("test-user", "test-user");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
+        resourceManager.createOrUpdateUser(addressSpace, user);
 
         runTestInLoop(30, () -> {
             log.info("Start test loop basic auth tests");
-            getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourcesManager);
-            getClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourcesManager);
+            getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(queue, topic), resourceManager);
+            getClientUtils().assertCannotConnect(addressSpace, new UserCredentials("nobody", "nobody"), Arrays.asList(queue, topic), resourceManager);
         });
         log.info("testAuthSendReceiveLong finished");
     }
 
     protected void doTestTopicPubSubLong(AddressSpace addressSpace) throws Exception {
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         int msgCount = 1000;
         int topicCount = 10;
@@ -213,18 +213,18 @@ public abstract class SoakTestBase extends TestBase {
                     .withNewSpec()
                     .withType("topic")
                     .withAddress("test-topic-pubsub-" + i)
-                    .withPlan(getDefaultPlan(AddressType.TOPIC))
+                    .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                     .endSpec()
                     .build());
         }
-        resourcesManager.setAddresses(topicList.toArray(new Address[0]));
+        resourceManager.setAddresses(topicList.toArray(new Address[0]));
 
         List<String> msgBatch = TestUtils.generateMessages(msgCount);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, credentials);
+        resourceManager.createOrUpdateUser(addressSpace, credentials);
         runTestInLoop(30, () -> {
-            AmqpClient client = resourcesManager.getAmqpClientFactory().createTopicClient(addressSpace);
+            AmqpClient client = resourceManager.getAmqpClientFactory().createTopicClient(addressSpace);
             client.getConnectOptions().setCredentials(credentials);
             clients.add(client);
 
@@ -266,7 +266,7 @@ public abstract class SoakTestBase extends TestBase {
                     .withNewSpec()
                     .withType("queue")
                     .withAddress("queue-via-web")
-                    .withPlan(getDefaultPlan(AddressType.QUEUE))
+                    .withPlan(resourceManager.getDefaultAddressPlan(AddressType.QUEUE))
                     .endSpec()
                     .build());
             topicList.add(new AddressBuilder()
@@ -277,7 +277,7 @@ public abstract class SoakTestBase extends TestBase {
                     .withNewSpec()
                     .withType("topic")
                     .withAddress(topicPattern + i)
-                    .withPlan(getDefaultPlan(AddressType.TOPIC))
+                    .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                     .endSpec()
                     .build());
         }
@@ -285,14 +285,14 @@ public abstract class SoakTestBase extends TestBase {
         AmqpClient queueClient;
         AmqpClient topicClient;
 
-        resourcesManager.setAddresses(queueList.toArray(new Address[0]));
-        resourcesManager.appendAddresses(topicList.toArray(new Address[0]));
+        resourceManager.setAddresses(queueList.toArray(new Address[0]));
+        resourceManager.appendAddresses(topicList.toArray(new Address[0]));
 
-        queueClient = resourcesManager.getAmqpClientFactory().createQueueClient(addressSpace);
+        queueClient = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         queueClient.getConnectOptions().setCredentials(credentials);
         clients.add(queueClient);
 
-        topicClient = resourcesManager.getAmqpClientFactory().createTopicClient(addressSpace);
+        topicClient = resourceManager.getAmqpClientFactory().createTopicClient(addressSpace);
         topicClient.getConnectOptions().setCredentials(credentials);
         clients.add(topicClient);
 
@@ -304,8 +304,8 @@ public abstract class SoakTestBase extends TestBase {
             TopicTest.runTopicTest(topicClient, topic, 1024);
         }
 
-        resourcesManager.deleteAddresses(queueList.toArray(new Address[0]));
-        resourcesManager.deleteAddresses(topicList.toArray(new Address[0]));
+        resourceManager.deleteAddresses(queueList.toArray(new Address[0]));
+        resourceManager.deleteAddresses(topicList.toArray(new Address[0]));
         Thread.sleep(15000);
     }
 
@@ -314,7 +314,7 @@ public abstract class SoakTestBase extends TestBase {
         runTestInLoop(120, () -> {
             int count = 5;
             AmqpClient queueClient;
-            Map<Address, AmqpClient> pairs = new HashMap<Address, AmqpClient>();
+            Map<Address, AmqpClient> pairs = new HashMap<>();
 
 
             List<AddressSpace> addressSpaceList = IntStream.range(0, count).mapToObj(i ->
@@ -332,12 +332,12 @@ public abstract class SoakTestBase extends TestBase {
                             .endSpec()
                             .build()).collect(Collectors.toList());
 
-            resourcesManager.createAddressSpace(addressSpaceList.toArray(new AddressSpace[0]));
+            resourceManager.createAddressSpace(addressSpaceList.toArray(new AddressSpace[0]));
             List<Address> addresses = new LinkedList<>();
             for (AddressSpace space : addressSpaceList) {
                 UserCredentials credentials = new UserCredentials("test", "test");
-                resourcesManager.createOrUpdateUser(space, credentials);
-                queueClient = resourcesManager.getAmqpClientFactory().createQueueClient(space);
+                resourceManager.createOrUpdateUser(space, credentials);
+                queueClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
                 queueClient.getConnectOptions().setCredentials(credentials);
                 clients.add(queueClient);
 
@@ -356,13 +356,13 @@ public abstract class SoakTestBase extends TestBase {
                     pairs.put(addresses.get(i), queueClient);
                 }
             }
-            resourcesManager.setAddresses(addresses.toArray(new Address[0]));
+            resourceManager.setAddresses(addresses.toArray(new Address[0]));
             for (Map.Entry<Address, AmqpClient> pair : pairs.entrySet()) {
                 QueueTest.runQueueTest(pair.getValue(), pair.getKey(), 1024);
             }
 
             for (AddressSpace space : addressSpaceList) {
-                resourcesManager.deleteAddressSpace(space);
+                resourceManager.deleteAddressSpace(space);
             }
         });
     }

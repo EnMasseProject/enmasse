@@ -4,43 +4,19 @@
  */
 package io.enmasse.systemtest.utils;
 
-import static io.enmasse.systemtest.utils.Predicates.any;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageType;
@@ -55,6 +31,33 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.utils.Serialization;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.HttpResponse;
+import org.slf4j.Logger;
+
+import java.nio.ByteBuffer;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.enmasse.systemtest.utils.Predicates.any;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class IoTUtils {
 
@@ -71,6 +74,34 @@ public class IoTUtils {
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
     private static final Logger log = CustomLogger.getLogger();
+
+    public static IoTConfig getDefaultIoTConfig() throws Exception {
+        CertBundle certBundle = CertificateUtils.createCertBundle();
+        return new IoTConfigBuilder()
+                .withNewMetadata()
+                .withName("default")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+
+                .withNewSpec()
+
+                .withServices(DefaultDeviceRegistry.newDefaultInstance())
+
+                .withNewAdapters()
+                .withNewMqtt()
+                .withNewEndpoint()
+                .withNewKeyCertificateStrategy()
+                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
+                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
+                .endKeyCertificateStrategy()
+                .endEndpoint()
+                .endMqtt()
+                .endAdapters()
+
+                .endSpec()
+
+                .build();
+    }
 
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
@@ -424,7 +455,7 @@ public class IoTUtils {
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
 
-    public static void assertCorrectRegistryMode (final Mode mode) {
+    public static void assertCorrectRegistryMode(final Mode mode) {
         final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(mode.name(), deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.jdbc.mode"));

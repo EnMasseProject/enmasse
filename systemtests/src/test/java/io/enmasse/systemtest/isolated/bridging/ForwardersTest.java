@@ -34,9 +34,11 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+@Tag(ISOLATED)
 class ForwardersTest extends BridgingBase {
 
     private static Logger log = CustomLogger.getLogger();
@@ -74,11 +76,11 @@ class ForwardersTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(forwarder);
+        resourceManager.setAddresses(forwarder);
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, 5);
 
@@ -100,7 +102,7 @@ class ForwardersTest extends BridgingBase {
 
         //send to forwarder
         int messagesBatch = 20;
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
         localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
@@ -165,11 +167,11 @@ class ForwardersTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(forwarder);
+        resourceManager.setAddresses(forwarder);
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         //send until remote broker is full
         AmqpClient clientToRemote = createClientToRemoteBroker();
@@ -197,7 +199,7 @@ class ForwardersTest extends BridgingBase {
 
         int messagesBatch = 20;
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
         //send to address with forwarder wich will retry forwarding indefinetly until remote broker is available
         localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
@@ -226,11 +228,11 @@ class ForwardersTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(forwarder);
+        resourceManager.setAddresses(forwarder);
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
 
@@ -255,11 +257,11 @@ class ForwardersTest extends BridgingBase {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(forwarder);
+        resourceManager.setAddresses(forwarder);
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
 
         UserCredentials localUser = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(space, localUser);
+        resourceManager.createOrUpdateUser(space, localUser);
 
         int messagesBatch = 20;
 
@@ -269,7 +271,7 @@ class ForwardersTest extends BridgingBase {
     private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to address with forwarder
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
         localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
@@ -292,7 +294,7 @@ class ForwardersTest extends BridgingBase {
 
         //receive in address with forwarder
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
+        AmqpClient localClient = resourceManager.getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
 
         var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);

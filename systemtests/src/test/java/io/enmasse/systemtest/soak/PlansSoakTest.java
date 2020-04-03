@@ -14,7 +14,6 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -31,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
+class PlansSoakTest extends SoakTestBase {
 
     @AfterEach
     void tearDown() throws Exception {
@@ -45,12 +44,12 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                 new ResourceRequest("broker", 0.001),
                 new ResourceRequest("router", 0.00001));
         AddressPlan extraSmallQueuePlan = PlanUtils.createAddressPlanObject("extra-extra-small-queue", AddressType.QUEUE, addressResourceQueue);
-        isolatedResourcesManager.createAddressPlan(extraSmallQueuePlan);
+        resourceManager.createAddressPlan(extraSmallQueuePlan);
 
         List<ResourceRequest> addressResourceAnycast = Collections.singletonList(
                 new ResourceRequest("router", 0.0005));
         AddressPlan extraSmallAnycastPlan = PlanUtils.createAddressPlanObject("extra-extra-small-anycast", AddressType.ANYCAST, addressResourceAnycast);
-        isolatedResourcesManager.createAddressPlan(extraSmallAnycastPlan);
+        resourceManager.createAddressPlan(extraSmallAnycastPlan);
 
         List<ResourceAllowance> resources = Arrays.asList(
                 new ResourceAllowance("broker", 10.0),
@@ -59,7 +58,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         List<AddressPlan> addressPlans = Arrays.asList(extraSmallQueuePlan, extraSmallAnycastPlan);
         AddressSpacePlan thousandAddressPlan = PlanUtils.createAddressSpacePlanObject("thousand-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        resourcesManager.createAddressSpacePlan(thousandAddressPlan);
+        resourceManager.createAddressSpacePlan(thousandAddressPlan);
 
         AddressSpace thousandAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -74,10 +73,10 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createAddressSpace(thousandAddressSpace);
+        resourceManager.createAddressSpace(thousandAddressSpace);
 
         UserCredentials credentials = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(thousandAddressSpace, credentials);
+        resourceManager.createOrUpdateUser(thousandAddressSpace, credentials);
 
         ArrayList<Address> addressesQueue = new ArrayList<>();
         int countQueue = 2500;
@@ -94,7 +93,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build());
         }
-        resourcesManager.setAddresses(new TimeoutBudget(30, TimeUnit.MINUTES), addressesQueue.toArray(new Address[0]));
+        resourceManager.setAddresses(new TimeoutBudget(30, TimeUnit.MINUTES), addressesQueue.toArray(new Address[0]));
 
         ArrayList<Address> addressesAnycast = new ArrayList<>();
         int countAnycast = 7500;
@@ -111,9 +110,9 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build());
         }
-        resourcesManager.appendAddresses(new TimeoutBudget(30, TimeUnit.MINUTES), addressesAnycast.toArray(new Address[0]));
+        resourceManager.appendAddresses(new TimeoutBudget(30, TimeUnit.MINUTES), addressesAnycast.toArray(new Address[0]));
 
-        AmqpClient queueClient = getAmqpClientFactory().createQueueClient(thousandAddressSpace);
+        AmqpClient queueClient = resourceManager.getAmqpClientFactory().createQueueClient(thousandAddressSpace);
         queueClient.getConnectOptions().setCredentials(credentials);
         for (int i = 0; i < countQueue; i += 100) {
             QueueTest.runQueueTest(queueClient, addressesQueue.get(i), 42);
@@ -121,7 +120,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         queueClient.close();
 
         for (int i = 0; i <countAnycast; i+= 50) {
-            getClientUtils().assertCanConnect(thousandAddressSpace, credentials, Collections.singletonList(addressesAnycast.get(i)), resourcesManager);
+            getClientUtils().assertCanConnect(thousandAddressSpace, credentials, Collections.singletonList(addressesAnycast.get(i)), resourceManager);
         }
 
 
@@ -132,7 +131,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         //define and create address plans
         List<ResourceRequest> addressResourcesQueue = Arrays.asList(new ResourceRequest("broker", 0.001), new ResourceRequest("router", 0.0));
         AddressPlan xxsQueuePlan = PlanUtils.createAddressPlanObject("pooled-xxs-queue", AddressType.QUEUE, addressResourcesQueue);
-        isolatedResourcesManager.createAddressPlan(xxsQueuePlan);
+        resourceManager.createAddressPlan(xxsQueuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -142,7 +141,7 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
         List<AddressPlan> addressPlans = Collections.singletonList(xxsQueuePlan);
         AddressSpacePlan manyAddressesPlan = PlanUtils.createAddressSpacePlanObject("many-brokers-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        resourcesManager.createAddressSpacePlan(manyAddressesPlan);
+        resourceManager.createAddressSpacePlan(manyAddressesPlan);
 
         //create address space plan with new plan
         AddressSpace manyAddressesSpace = new AddressSpaceBuilder()
@@ -159,10 +158,10 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpace(manyAddressesSpace);
+        resourceManager.createAddressSpace(manyAddressesSpace);
 
         UserCredentials cred = new UserCredentials("testus", "papyrus");
-        resourcesManager.createOrUpdateUser(manyAddressesSpace, cred);
+        resourceManager.createOrUpdateUser(manyAddressesSpace, cred);
 
         ArrayList<Address> dest = new ArrayList<>();
         int destCount = 3900;
@@ -180,19 +179,19 @@ class PlansSoakTest extends SoakTestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build());
         }
-        resourcesManager.setAddresses(dest.toArray(new Address[0]));
+        resourceManager.setAddresses(dest.toArray(new Address[0]));
 
         for (int i = 0; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }
 
-        AmqpClient queueClient = getAmqpClientFactory().createQueueClient(manyAddressesSpace);
+        AmqpClient queueClient = resourceManager.getAmqpClientFactory().createQueueClient(manyAddressesSpace);
         queueClient.getConnectOptions().setCredentials(cred);
         for (int i = 0; i < destCount; i += 100) {
             QueueTest.runQueueTest(queueClient, dest.get(i), 42);
         }
 
-        isolatedResourcesManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
+        resourceManager.deleteAddresses(dest.subList(0, toDeleteCount).toArray(new Address[0]));
         for (int i = toDeleteCount; i < destCount; i += 1000) {
             waitForBrokerReplicas(manyAddressesSpace, dest.get(i), 1);
         }

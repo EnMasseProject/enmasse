@@ -11,7 +11,6 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.isolated.Credentials;
@@ -30,6 +29,7 @@ import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -41,14 +41,16 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(ISOLATED)
 @SeleniumFirefox
 @OpenShift(version = OpenShiftVersion.OCP3)
-class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
+class ServiceCatalogWebTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<AddressSpace> provisionedServices = new ArrayList<>();
@@ -61,13 +63,6 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
     @AfterEach
     void tearDownWebConsoleTests() {
         if (!environment.skipCleanup()) {
-            provisionedServices.forEach((addressSpace) -> {
-                try {
-                    isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
             provisionedServices.clear();
         } else {
             log.warn("Remove address spaces in tear down - SKIPPED!");
@@ -199,8 +194,8 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.createAddress(queue);
         consolePage.createAddress(topic);
 
-        getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
-        getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
+        getClientUtils().assertCanConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourceManager);
+        getClientUtils().assertCannotConnect(brokered, restricted.getCredentials(), Arrays.asList(queue, topic), resourceManager);
 
         log.info("Remove binding and check if client cannot connect");
         ocPage.removeBinding(brokered, bindingID);
@@ -212,7 +207,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
             log.info("Still awaiting user {} to be removed.", username);
         }
 
-        getClientUtils().assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourcesManager);
+        getClientUtils().assertCannotConnect(brokered, credentials.getCredentials(), Arrays.asList(queue, topic), resourceManager);
     }
 
     @Test
@@ -255,7 +250,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         consolePage.openConsolePage();
         consolePage.createAddress(queue);
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
+        AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions()
                 .setCredentials(credentials.getCredentials())
                 .setCert(credentials.getMessagingCert());
@@ -356,7 +351,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build());
 
-        isolatedResourcesManager.deleteAddressSpaceCreatedBySC(addressSpace);
+        resourceManager.deleteAddressSpace(addressSpace);
 
         WebElement errorLog = selenium.getWebElement(() ->
                 selenium.getDriver().findElement(By.id("empty-no-longer-exists")));

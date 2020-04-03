@@ -5,12 +5,15 @@
 package io.enmasse.systemtest.shared.standard.clients.rhea;
 
 import io.enmasse.systemtest.bases.clients.ClusterClientTestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-class MsgPatternsInternalTest extends ClusterClientTestBase implements ITestSharedStandard {
+import static io.enmasse.systemtest.TestTag.SHARED;
+
+@Tag(SHARED)
+class MsgPatternsInternalTest extends ClusterClientTestBase {
 
     @Test
     void testBasicMessage() throws Exception {

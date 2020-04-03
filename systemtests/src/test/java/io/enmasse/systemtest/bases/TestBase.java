@@ -12,12 +12,14 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -69,32 +71,29 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ExtendWith(JunitCallbackListener.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class TestBase implements ITestBase, ITestSeparator {
+public abstract class TestBase implements ITestSeparator {
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Environment environment = Environment.getInstance();
-    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(kubernetes, environment.testLogDir());
-    protected ResourceManager resourcesManager;
+    protected ClientUtils clientUtils = new ClientUtils();
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    protected Kubernetes kubernetes = Kubernetes.getInstance();
+    protected static final GlobalLogCollector logCollector = new GlobalLogCollector(Kubernetes.getInstance(), environment.testLogDir());
+    protected ResourceManager resourceManager = ResourceManager.getInstance();
     protected UserCredentials defaultCredentials = null;
-    protected UserCredentials managementCredentials = null;
+
+    protected ClientUtils getClientUtils() {
+        return clientUtils;
+    }
+
+    protected ResourceManager getResourceManager() {
+        return resourceManager;
+    }
 
     @BeforeEach
     public void initTest() throws Exception {
         LOGGER.info("Test init");
-        resourcesManager = getResourceManager();
-        if (TestInfo.getInstance().isTestShared()) {
-            defaultCredentials = environment.getSharedDefaultCredentials();
-            managementCredentials = environment.getSharedManagementCredentials();
-            resourcesManager.setAddressSpacePlan(getDefaultAddressSpacePlan());
-            resourcesManager.setAddressSpaceType(getAddressSpaceType().toString());
-            resourcesManager.setDefaultAddSpaceIdentifier(getDefaultAddrSpaceIdentifier());
-            if (resourcesManager.getSharedAddressSpace() == null) {
-                resourcesManager.setup();
-            }
-        } else {
-            defaultCredentials = environment.getDefaultCredentials();
-            managementCredentials = environment.getManagementCredentials();
-            resourcesManager.setup();
-        }
+        resourceManager = getResourceManager();
+        defaultCredentials = environment.getSharedDefaultCredentials();
     }
 
     //================================================================================================
@@ -202,12 +201,12 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         }
     }
 
-    protected void assertConcurentMessaging(List<Address> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
+    protected void assertConcurentMessaging(AddressSpace addressSpace, List<Address> dest, List<UserCredentials> users, String destNamePrefix, int customerIndex, int messageCount) throws Exception {
         ArrayList<AmqpClient> clients = new ArrayList<>(users.size());
-        String sufix = AddressSpaceUtils.isBrokered(resourcesManager.getSharedAddressSpace()) ? "#" : "*";
+        String sufix = AddressSpaceUtils.isBrokered(addressSpace) ? "#" : "*";
         users.forEach((user) -> {
             try {
-                resourcesManager.createOrUpdateUser(resourcesManager.getSharedAddressSpace(),
+                resourceManager.createOrUpdateUser(addressSpace,
                         UserUtils.createUserResource(user)
                                 .editSpec()
                                 .withAuthorization(Collections.singletonList(
@@ -216,7 +215,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                                                 .withOperations(Operation.send, Operation.recv).build()))
                                 .endSpec()
                                 .done());
-                AmqpClient queueClient = resourcesManager.getAmqpClientFactory().createQueueClient();
+                AmqpClient queueClient = resourceManager.getAmqpClientFactory().createQueueClient();
                 queueClient.getConnectOptions().setCredentials(user);
                 clients.add(queueClient);
             } catch (Exception e) {
@@ -303,8 +302,8 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
 
     protected void assertAddressApi(AddressSpace addressSpace, Address d1, Address d2) throws Exception {
         List<String> destinationsNames = Arrays.asList(d1.getSpec().getAddress(), d2.getSpec().getAddress());
-        resourcesManager.setAddresses(d1);
-        resourcesManager.appendAddresses(d2);
+        resourceManager.setAddresses(d1);
+        resourceManager.appendAddresses(d2);
 
         //d1, d2
         List<String> response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
@@ -315,22 +314,22 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
         Address res = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(d2.getMetadata().getName()).get();
         assertThat("Rest api does not return specific address", res.getSpec().getAddress(), is(d2.getSpec().getAddress()));
 
-        resourcesManager.deleteAddresses(d1);
+        resourceManager.deleteAddresses(d1);
 
         //d2
         response = AddressUtils.getAddresses(addressSpace).stream().map(address -> address.getSpec().getAddress()).collect(Collectors.toList());
         assertThat("Rest api does not return right addresses", response, is(destinationsNames.subList(1, 2)));
         LOGGER.info("address {} successfully deleted", d1.getSpec().getAddress());
 
-        resourcesManager.deleteAddresses(d2);
+        resourceManager.deleteAddresses(d2);
 
         //empty
         List<Address> listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));
         LOGGER.info("addresses {} successfully deleted", d2.getSpec().getAddress());
 
-        resourcesManager.setAddresses(d1, d2);
-        resourcesManager.deleteAddresses(d1, d2);
+        resourceManager.setAddresses(d1, d2);
+        resourceManager.deleteAddresses(d1, d2);
 
         listRes = AddressUtils.getAddresses(addressSpace);
         assertThat("Rest api returns addresses", listRes, is(Collections.emptyList()));

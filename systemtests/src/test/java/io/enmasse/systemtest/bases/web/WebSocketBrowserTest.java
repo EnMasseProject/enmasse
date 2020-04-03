@@ -7,7 +7,6 @@ package io.enmasse.systemtest.bases.web;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.RheaWebPage;
@@ -16,14 +15,14 @@ import org.junit.jupiter.api.BeforeEach;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public abstract class WebSocketBrowserTest extends TestBase implements ITestBaseShared {
+public abstract class WebSocketBrowserTest extends TestBase {
 
     private RheaWebPage rheaWebPage;
 
     @BeforeEach
     public void setUpWebConsoleTests() throws Exception {
         rheaWebPage = new RheaWebPage(SeleniumProvider.getInstance());
-        resourcesManager.deleteAddresses(getSharedAddressSpace());
+        resourceManager.deleteAddresses(resourceManager.getDefaultAddressSpace());
     }
 
     //============================================================================================
@@ -31,11 +30,11 @@ public abstract class WebSocketBrowserTest extends TestBase implements ITestBase
     //============================================================================================
 
     protected void doWebSocketSendReceive(Address destination) throws Exception {
-        resourcesManager.setAddresses(destination);
+        resourceManager.setAddresses(destination);
         int count = 10;
 
-        rheaWebPage.sendReceiveMessages(AddressSpaceUtils.getMessagingWssRoute(getSharedAddressSpace()).toString(), destination.getSpec().getAddress(),
-                count, defaultCredentials, AddressSpaceType.valueOf(getSharedAddressSpace().getSpec().getType().toUpperCase()));
+        rheaWebPage.sendReceiveMessages(AddressSpaceUtils.getMessagingWssRoute(resourceManager.getDefaultAddressSpace()).toString(), destination.getSpec().getAddress(),
+                count, defaultCredentials, AddressSpaceType.valueOf(resourceManager.getDefaultAddressSpace().getSpec().getType().toUpperCase()));
         assertTrue(rheaWebPage.checkCountMessage(count * 2), "Browser client didn't sent and received all messages");
     }
 }

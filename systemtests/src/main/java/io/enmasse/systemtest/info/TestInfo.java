@@ -12,7 +12,6 @@ import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
 import io.enmasse.systemtest.logs.CustomLogger;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -106,9 +105,7 @@ public class TestInfo {
             .collect(Collectors.toList());
 
         testRunTags = testClasses.stream()
-            .map(t -> {
-                return t.getTags();
-            })
+            .map(TestIdentifier::getTags)
             .flatMap(Set::stream)
             .distinct()
             .map(t -> t.getName())
@@ -230,8 +227,7 @@ public class TestInfo {
         List<String> nextTestTags = getTags(test1);
         Set<String> currentTestTags = test2.getTags();
 
-        return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
-                || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD))
+        return (nextTestTags.contains(TestTag.SHARED) && currentTestTags.contains(TestTag.SHARED))
                 || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
 

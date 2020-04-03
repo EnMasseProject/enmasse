@@ -10,15 +10,11 @@ import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.IsolatedIoTManager;
-import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.manager.SharedIoTManager;
-import io.enmasse.systemtest.manager.SharedResourceManager;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
-
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -38,16 +34,14 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private static Environment env = Environment.getInstance();
     private Kubernetes kubernetes = Kubernetes.getInstance();
     private TestInfo testInfo = TestInfo.getInstance();
-    private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
-    private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
-    private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
-    private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
+    private ResourceManager resourceManager = ResourceManager.getInstance();
     private OperatorManager operatorManager = OperatorManager.getInstance();
     private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
+        resourceManager.setClassResources();
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError("Callback before all", context, () -> {
                 if (testInfo.isUpgradeTest()) {
@@ -99,17 +93,20 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
-            } else if (testInfo.isOLMTest()) {
-                LOGGER.info("Test is OLM");
-                if (operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.deleteEnmasseOlm();
-                }
-            } else if (env.installType() == EnmasseInstallType.BUNDLE) {
-                if (testInfo.isEndOfIotTests()) {
-                    operatorManager.removeIoT();
-                }
-                if (operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.deleteEnmasseOlm();
+            } else {
+                resourceManager.deleteClassResources();
+                if (testInfo.isOLMTest()) {
+                    LOGGER.info("Test is OLM");
+                    if (operatorManager.isEnmasseOlmDeployed()) {
+                        operatorManager.deleteEnmasseOlm();
+                    }
+                } else if (env.installType() == EnmasseInstallType.BUNDLE) {
+                    if (testInfo.isEndOfIotTests()) {
+                        operatorManager.removeIoT();
+                    }
+                    if (operatorManager.isEnmasseOlmDeployed()) {
+                        operatorManager.deleteEnmasseOlm();
+                    }
                 }
             }
         });
@@ -118,6 +115,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
+        resourceManager.setMethodResources();
         logPodsInInfraNamespace();
         if (beforeAllException != null) {
             throw beforeAllException;
@@ -128,35 +126,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
-            if (testInfo.isTestShared()) {
-                tearDownSharedResources();
-            } else if (testInfo.isTestIoT()) {
-                isolatedIoTManager.tearDown(testInfo.getActualTest());
-            } else {
-                tearDownCommonResources();
-            }
+            resourceManager.deleteMethodResources();
         });
-    }
-
-    private void tearDownCommonResources() throws Exception {
-        LOGGER.info("Admin resource manager teardown");
-        isolatedResourcesManager.tearDown(testInfo.getActualTest());
-        isolatedResourcesManager.unsetReuseAddressSpace();
-        isolatedResourcesManager.deleteAddressspacesFromList();
-    }
-
-    private void tearDownSharedResources() throws Exception {
-        if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
-            if (testInfo.isTestIoT()) {
-                LOGGER.info("Teardown shared IoT!");
-                sharedIoTManager.tearDown(testInfo.getActualTest());
-            } else {
-                LOGGER.info("Teardown shared!");
-                sharedResourcesManager.tearDown(testInfo.getActualTest());
-            }
-        } else if (sharedResourcesManager.getSharedAddressSpace() != null) {
-            sharedResourcesManager.tearDownShared();
-        }
     }
 
     @Override

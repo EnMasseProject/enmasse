@@ -20,7 +20,6 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
@@ -60,6 +59,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -69,7 +69,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ApiServerTest extends TestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+class ApiServerTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
 
     private static <T> Set<String> toStrings(final Collection<T> items, final Function<T, String> converter) {
@@ -86,7 +87,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     void testRestApiGetSchema() throws Exception {
         AddressPlan queuePlan = PlanUtils.createAddressPlanObject("test-schema-rest-api-addr-plan", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 0.6), new ResourceRequest("router", 0.0)));
-        resourcesManager.createAddressPlan(queuePlan);
+        resourceManager.createAddressPlan(queuePlan);
 
         //define and create address space plan
         List<ResourceAllowance> resources = Arrays.asList(
@@ -96,7 +97,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
         List<AddressPlan> addressPlans = Collections.singletonList(queuePlan);
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("schema-rest-api-plan",
                 "default", AddressSpaceType.STANDARD, resources, addressPlans);
-        resourcesManager.createAddressSpacePlan(addressSpacePlan);
+        resourceManager.createAddressSpacePlan(addressSpacePlan);
 
         AddressSpaceSchemaList schemaData = kubernetes.getSchemaClient().list();;
         log.info("Check if schema object is not null");
@@ -152,7 +153,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address destWithoutAddress = new AddressBuilder()
                 .withNewMetadata()
@@ -164,7 +165,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        Throwable exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutAddress));
+        Throwable exception = assertThrows(KubernetesClientException.class, () -> resourceManager.setAddresses(destWithoutAddress));
         assertTrue(exception.getMessage().contains("spec.address in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
 
         Address destWithoutType = new AddressBuilder()
@@ -177,7 +178,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutType));
+        exception = assertThrows(KubernetesClientException.class, () -> resourceManager.setAddresses(destWithoutType));
         assertTrue(exception.getMessage().contains("spec.type in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
 
         Address destWithoutPlan = new AddressBuilder()
@@ -190,7 +191,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .withAddress("test-queue")
                 .endSpec()
                 .build();
-        exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutPlan));
+        exception = assertThrows(KubernetesClientException.class, () -> resourceManager.setAddresses(destWithoutPlan));
         assertTrue(exception.getMessage().contains("spec.plan in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
     }
 
@@ -209,7 +210,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addrSpace);
+        resourceManager.createAddressSpace(addrSpace);
 
         final Set<String> names = new LinkedHashSet<>();
 
@@ -225,7 +226,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         names.add(anycast.getMetadata().getName());
-        resourcesManager.setAddresses(anycast);
+        resourceManager.setAddresses(anycast);
         List<Address> addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(1));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
@@ -242,7 +243,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         names.add(multicast.getMetadata().getName());
-        resourcesManager.appendAddresses(multicast);
+        resourceManager.appendAddresses(multicast);
         addresses = kubernetes.getAddressClient(addrSpace.getMetadata().getNamespace()).list().getItems();
         assertThat(addresses.size(), is(2));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
@@ -261,7 +262,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         names.add(longname.getMetadata().getName());
-        resourcesManager.appendAddresses(longname);
+        resourceManager.appendAddresses(longname);
         addresses = kubernetes.getAddressClient().list().getItems();
         assertThat(addresses.size(), is(3));
         assertThat(toStrings(addresses, address -> address.getMetadata().getName()), is(names));
@@ -316,7 +317,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build();
 
-            isolatedResourcesManager.createAddressSpaceList(brokered, standard);
+            resourceManager.createAddressSpace(brokered, standard);
 
             assertThat("Get all address spaces does not contain 2 address spaces",
                     kubernetes.getAddressSpaceClient().inAnyNamespace().list().getItems().size(), is(2));
@@ -369,8 +370,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build();
 
-            resourcesManager.setAddresses(brokeredQueue, brokeredTopic);
-            resourcesManager.setAddresses(standardQueue, standardTopic);
+            resourceManager.setAddresses(brokeredQueue, brokeredTopic);
+            resourceManager.setAddresses(standardQueue, standardTopic);
 
             assertThat("Get all addresses does not contain 4 addresses",
                     kubernetes.getAddressClient().inAnyNamespace().list().getItems().size(), is(4));
@@ -380,8 +381,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
 
             UserCredentials cred = new UserCredentials("pepa", "novak");
 
-            resourcesManager.createOrUpdateUser(brokered, cred);
-            resourcesManager.createOrUpdateUser(standard, cred);
+            resourceManager.createOrUpdateUser(brokered, cred);
+            resourceManager.createOrUpdateUser(standard, cred);
 
             List<User> users = kubernetes.getUserClient().inAnyNamespace().list().getItems();
             List<String> namespacedUser = users.stream()
@@ -422,10 +423,10 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                     .endSpec()
                     .build();
 
-            resourcesManager.createAddressSpace(addrSpace);
-            resourcesManager.waitForAddressSpaceReady(addrSpace);
+            resourceManager.createAddressSpace(addrSpace);
+            resourceManager.waitForAddressSpaceReady(addrSpace);
 
-            resourcesManager.deleteAddressSpace(addrSpace);
+            resourceManager.deleteAddressSpace(addrSpace);
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
@@ -462,11 +463,11 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         UserCredentials cred = new UserCredentials("david", "password");
 
-        resourcesManager.createAddressSpace(addressspace);
-        resourcesManager.setAddresses(dest);
-        resourcesManager.createOrUpdateUser(addressspace, cred);
+        resourceManager.createAddressSpace(addressspace);
+        resourceManager.setAddresses(dest);
+        resourceManager.createOrUpdateUser(addressspace, cred);
 
-        getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourcesManager);
+        getClientUtils().assertCanConnect(addressspace, cred, Collections.singletonList(dest), resourceManager);
 
         AddressSpace replace = new DoneableAddressSpace(addressspace)
                 .editSpec()
@@ -474,16 +475,16 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .done();
 
-        resourcesManager.replaceAddressSpace(replace, false, null);
+        resourceManager.replaceAddressSpace(replace, false, null);
         TimeoutBudget budget = new TimeoutBudget(2, TimeUnit.MINUTES);
         AddressSpace space;
         while (!budget.timeoutExpired()) {
-            space = isolatedResourcesManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
+            space = resourceManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
             if (space.getStatus().getMessages().contains("Unknown address space plan 'no-exists'")) {
                 break;
             }
         }
-        space = isolatedResourcesManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
+        space = resourceManager.getAddressSpace(replace.getMetadata().getNamespace(), replace.getMetadata().getName());
         assertTrue(space.getStatus().getMessages().contains("Unknown address space plan 'no-exists'"));
     }
 
@@ -537,8 +538,8 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
             AddressSpace space1 = supplier.get();
             JsonObject space1Json = AddressSpaceUtils.addressSpaceToJson(space1);
             assertTrue(KubeCMDClient.createCR(namespace, space1Json.toString()).getRetCode());
-            resourcesManager.waitForAddressSpaceReady(space1);
-            resourcesManager.deleteAddressSpace(space1);
+            resourceManager.waitForAddressSpaceReady(space1);
+            resourceManager.deleteAddressSpace(space1);
 
             kubernetes.getClient().rbac().clusterRoleBindings().withName(rolebindingname).cascading(true).delete();
 
@@ -573,14 +574,14 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
         String targetType = !addressSpaceType.equals(AddressSpaceType.STANDARD.toString()) ? AddressSpaceType.STANDARD.toString() :
                 AddressSpaceType.BROKERED.toString();
 
         addressSpace.getSpec().setType(targetType);
 
         assertThrows(IllegalStateException.class, () -> {
-            resourcesManager.replaceAddressSpace(addressSpace, false, new TimeoutBudget(1, TimeUnit.MINUTES));
+            resourceManager.replaceAddressSpace(addressSpace, false, new TimeoutBudget(1, TimeUnit.MINUTES));
         });
 
         AddressSpaceUtils.syncAddressSpaceObject(addressSpace);

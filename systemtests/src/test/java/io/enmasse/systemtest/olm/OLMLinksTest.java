@@ -4,25 +4,9 @@
  */
 package io.enmasse.systemtest.olm;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.NON_PR;
-import static io.enmasse.systemtest.TestTag.OLM;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
-import java.time.Duration;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.operator.OperatorManager;
@@ -30,13 +14,27 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.OLM;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 @Tag(OLM)
 @Tag(ACCEPTANCE)
 @Tag(NON_PR)
 @SupportedInstallType(value = EnmasseInstallType.OLM, olmInstallType = OLMInstallationType.DEFAULT)
 @SeleniumChrome
-public class OLMLinksTest extends TestBase implements ITestBaseIsolated {
+public class OLMLinksTest extends TestBase {
 
     SeleniumProvider selenium = SeleniumProvider.getInstance();
 
@@ -57,16 +55,16 @@ public class OLMLinksTest extends TestBase implements ITestBaseIsolated {
             String url = link.getString("url");
             if (name.equals("GitHub")) {
 
-                assertTrue(url.equals("https://github.com/EnMasseProject/enmasse"));
+                assertEquals("https://github.com/EnMasseProject/enmasse", url);
                 continue;
 
             } else if (name.equals("Documentation")) {
 
-                assertTrue(url.equals(environment.enmasseOlmDocsUrl()));
+                assertEquals(url, environment.enmasseOlmDocsUrl());
 
             } else if (name.equals(environment.enmasseOlmAboutName())) {
 
-                assertTrue(url.equals(environment.enmasseOlmAboutUrl()));
+                assertEquals(url, environment.enmasseOlmAboutUrl());
 
             } else {
                 Assertions.fail("Unexpected link " + name + " url " + url);

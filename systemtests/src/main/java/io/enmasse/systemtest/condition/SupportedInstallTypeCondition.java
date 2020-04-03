@@ -4,16 +4,15 @@
  */
 package io.enmasse.systemtest.condition;
 
-import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
-
-import java.util.Optional;
-
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.Environment;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-import io.enmasse.systemtest.EnmasseInstallType;
-import io.enmasse.systemtest.Environment;
+import java.util.Optional;
+
+import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
 public class SupportedInstallTypeCondition implements ExecutionCondition {
 

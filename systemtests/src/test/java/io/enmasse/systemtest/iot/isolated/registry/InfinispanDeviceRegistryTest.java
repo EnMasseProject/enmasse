@@ -5,15 +5,14 @@
 
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
-
-import java.net.HttpURLConnection;
-
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import java.net.HttpURLConnection;
+
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
 

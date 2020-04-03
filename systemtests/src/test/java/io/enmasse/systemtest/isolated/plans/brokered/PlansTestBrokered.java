@@ -15,17 +15,20 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
+import static io.enmasse.systemtest.TestTag.ISOLATED;
+
+@Tag(ISOLATED)
+public class PlansTestBrokered extends TestBase {
 
     @Test
     void testReplaceAddressSpacePlanBrokered() throws Exception {
@@ -36,8 +39,8 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
         AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("bigger-queue", AddressType.QUEUE,
                 Collections.singletonList(new ResourceRequest("broker", 0.7)));
 
-        isolatedResourcesManager.createAddressPlan(beforeQueuePlan);
-        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
+        resourceManager.createAddressPlan(beforeQueuePlan);
+        resourceManager.createAddressPlan(afterQueuePlan);
 
         //define and create address space plans
 
@@ -51,8 +54,8 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 Collections.singletonList(new ResourceAllowance("broker", 5.0)),
                 Collections.singletonList(afterQueuePlan));
 
-        isolatedResourcesManager.createAddressSpacePlan(beforeAddressSpacePlan);
-        isolatedResourcesManager.createAddressSpacePlan(afterAddressSpacePlan);
+        resourceManager.createAddressSpacePlan(beforeAddressSpacePlan);
+        resourceManager.createAddressSpacePlan(afterAddressSpacePlan);
 
         //create address space with new plan
         AddressSpace addressSpace = new AddressSpaceBuilder()
@@ -68,10 +71,10 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         UserCredentials user = new UserCredentials("quota-user", "quotaPa55");
-        resourcesManager.createOrUpdateUser(addressSpace, user);
+        resourceManager.createOrUpdateUser(addressSpace, user);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -84,14 +87,14 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .withPlan(beforeQueuePlan.getMetadata().getName())
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
-        clientUtils.sendDurableMessages(resourcesManager, addressSpace, queue, user, 16);
+        clientUtils.sendDurableMessages(resourceManager, addressSpace, queue, user, 16);
 
         addressSpace = new DoneableAddressSpace(addressSpace).editSpec().withPlan(afterAddressSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(addressSpace);
+        resourceManager.replaceAddressSpace(addressSpace);
 
-        clientUtils.receiveDurableMessages(resourcesManager, addressSpace, queue, user, 16);
+        clientUtils.receiveDurableMessages(resourceManager, addressSpace, queue, user, 16);
 
         Address afterQueue = new AddressBuilder()
                 .withNewMetadata()
@@ -104,8 +107,8 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
                 .withPlan(afterQueuePlan.getMetadata().getName())
                 .endSpec()
                 .build();
-        resourcesManager.appendAddresses(afterQueue);
+        resourceManager.appendAddresses(afterQueue);
 
-        getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue), resourceManager);
     }
 }

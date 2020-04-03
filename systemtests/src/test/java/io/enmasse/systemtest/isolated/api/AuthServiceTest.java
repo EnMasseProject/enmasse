@@ -14,7 +14,6 @@ import io.enmasse.admin.model.v1.AuthenticationService;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -39,8 +38,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 
-class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+class AuthServiceTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
 
@@ -52,8 +53,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     @Test
     void testCreateDeleteCustomAuthService() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        resourcesManager.createAuthService(standardAuth);
-        resourcesManager.removeAuthService(standardAuth);
+        resourceManager.createAuthService(standardAuth);
+        resourceManager.removeAuthService(standardAuth);
         TestUtils.waitForNReplicas(0, false, standardAuth.getMetadata().getNamespace(), Map.of("name", "test-standard-authservice"), Collections.emptyMap(), new TimeoutBudget(1, TimeUnit.MINUTES), 5000);
     }
 
@@ -61,8 +62,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
     @Tag(ACCEPTANCE)
     void testCustomAuthServiceStandard() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -78,7 +79,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -91,19 +92,19 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
-        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourceManager);
     }
 
     @Test
     void testAuthServiceExternal() throws Exception {
         // create standard authservice to point external authservice at
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice", true);
-        resourcesManager.createAuthService(standardAuth);
+        resourceManager.createAuthService(standardAuth);
 
         AddressSpace addressSpaceStandardAuth = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -118,10 +119,10 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endAuthenticationService()
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpaceStandardAuth);
+        resourceManager.createAddressSpace(addressSpaceStandardAuth);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpaceStandardAuth, cred);
+        resourceManager.createOrUpdateUser(addressSpaceStandardAuth, cred);
 
         SecretReference invalidCert = new SecretReference();
         invalidCert.setName("mycert");
@@ -134,7 +135,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 invalidCert,
                 invalidCert);
         // Can't wait for it because it doesn't actually spin up any pod
-        resourcesManager.createAuthService(externalAuth, false);
+        resourceManager.createAuthService(externalAuth, false);
         log.info(externalAuth.toString());
 
         SecretReference validCert = new SecretReference();
@@ -164,7 +165,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpaceExternalAuth);
+        resourceManager.createAddressSpace(addressSpaceExternalAuth);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -177,16 +178,16 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
-        getClientUtils().assertCanConnect(addressSpaceExternalAuth, cred, Collections.singletonList(queue), resourcesManager);
+        resourceManager.setAddresses(queue);
+        getClientUtils().assertCanConnect(addressSpaceExternalAuth, cred, Collections.singletonList(queue), resourceManager);
     }
 
     @Test
     @Tag(ACCEPTANCE)
     void testAuthenticateAgainstMultipleAuthServices() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-eph", false);
-        resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -216,7 +217,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        isolatedResourcesManager.createAddressSpaceList(addressSpace, addressSpace2);
+        resourceManager.createAddressSpace(addressSpace, addressSpace2);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -241,25 +242,25 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue, queue2);
+        resourceManager.setAddresses(queue, queue2);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
         UserCredentials cred2 = new UserCredentials("david2", "pepinator2");
-        resourcesManager.createOrUpdateUser(addressSpace2, cred2);
+        resourceManager.createOrUpdateUser(addressSpace2, cred2);
 
-        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
-        getClientUtils().assertCanConnect(addressSpace2, cred2, Collections.singletonList(queue2), resourcesManager);
-        getClientUtils().assertCannotConnect(addressSpace, cred2, Collections.singletonList(queue), resourcesManager);
-        getClientUtils().assertCannotConnect(addressSpace2, cred, Collections.singletonList(queue2), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourceManager);
+        getClientUtils().assertCanConnect(addressSpace2, cred2, Collections.singletonList(queue2), resourceManager);
+        getClientUtils().assertCannotConnect(addressSpace, cred2, Collections.singletonList(queue), resourceManager);
+        getClientUtils().assertCannotConnect(addressSpace2, cred, Collections.singletonList(queue2), resourceManager);
     }
 
     @Test
     void testCustomAuthServiceNone() throws Exception {
         AuthenticationService noneAuth = AuthServiceUtils.createNoneAuthServiceObject("test-none-authservice");
-        resourcesManager.createAuthService(noneAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(noneAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(noneAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(noneAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -275,7 +276,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -288,18 +289,18 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
-        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"), Collections.singletonList(queue), resourcesManager);
-        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"), Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"), Collections.singletonList(queue), resourceManager);
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"), Collections.singletonList(queue), resourceManager);
     }
 
     @Test
     @Disabled("Does not work in current state of auth services")
     void testAuthServiceWithoutDeletingClaim() throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-claim", true, "1Gi", false, "test-claim");
-        resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -315,7 +316,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -328,17 +329,17 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
-        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourceManager);
 
-        resourcesManager.removeAuthService(standardAuth);
-        resourcesManager.createAuthService(standardAuth);
+        resourceManager.removeAuthService(standardAuth);
+        resourceManager.createAuthService(standardAuth);
 
-        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourceManager);
     }
 
     @Test
@@ -346,8 +347,8 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
         Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(kubernetes.getInfraNamespace());
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-postgres",
                 endpoint.getHost(), endpoint.getPort(), "postgresql", "postgresdb", SystemtestsKubernetesApps.POSTGRES_APP);
-        resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -363,7 +364,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -376,24 +377,24 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
-        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourceManager);
     }
 
     @ParameterizedTest(name = "testSwitchAuthService-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testSwitchAuthService(String type) throws Exception {
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-1", true);
-        resourcesManager.createAuthService(standardAuth);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth.getMetadata().getName())).toString());
 
         AuthenticationService standardAuth2 = AuthServiceUtils.createStandardAuthServiceObject("test-standard-authservice-2", true);
-        resourcesManager.createAuthService(standardAuth2);
-        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth2.getMetadata().getName())).toString());
+        resourceManager.createAuthService(standardAuth2);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourceManager.getAuthService(standardAuth2.getMetadata().getName())).toString());
 
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -409,7 +410,7 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(addressSpace);
+        resourceManager.createAddressSpace(addressSpace);
 
         Address queue = new AddressBuilder()
                 .withNewMetadata()
@@ -422,16 +423,16 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
                 .withPlan(type.equals(AddressSpaceType.STANDARD.toString()) ? DestinationPlan.STANDARD_SMALL_QUEUE : DestinationPlan.BROKERED_QUEUE)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(queue);
+        resourceManager.setAddresses(queue);
 
         UserCredentials cred = new UserCredentials("david", "pepinator");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
+        resourceManager.createOrUpdateUser(addressSpace, cred);
 
-        getClientUtils().sendDurableMessages(resourcesManager, addressSpace, queue, cred, 100);
+        getClientUtils().sendDurableMessages(resourceManager, addressSpace, queue, cred, 100);
 
         addressSpace.getSpec().getAuthenticationService().setName(standardAuth2.getMetadata().getName());
 
-        resourcesManager.replaceAddressSpace(addressSpace, true, null);
+        resourceManager.replaceAddressSpace(addressSpace, true, null);
         AddressSpaceUtils.waithForAuthServiceApplied(addressSpace, standardAuth2.getMetadata().getName());
 
         // For standard address space, wait until router pods have gotten the new applied config
@@ -440,11 +441,11 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
             TestUtils.waitForRoutersInSync(addressSpace);
         }
 
-        resourcesManager.removeAuthService(standardAuth);
+        resourceManager.removeAuthService(standardAuth);
 
         UserCredentials cred2 = new UserCredentials("foo", "bar");
-        resourcesManager.createOrUpdateUser(addressSpace, cred2);
+        resourceManager.createOrUpdateUser(addressSpace, cred2);
 
-        getClientUtils().receiveDurableMessages(resourcesManager, addressSpace, queue, cred2, 100);
+        getClientUtils().receiveDurableMessages(resourceManager, addressSpace, queue, cred2, 100);
     }
 }

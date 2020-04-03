@@ -6,13 +6,24 @@ package io.enmasse.systemtest.shared.brokered.mqtt;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.bases.mqtt.MqttPublishTestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-public class PublishTest extends MqttPublishTestBase implements ITestSharedBrokered {
+import static io.enmasse.systemtest.TestTag.SHARED;
+
+@Tag(SHARED)
+public class PublishTest extends MqttPublishTestBase {
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     @Test
     @Override
@@ -40,10 +51,10 @@ public class PublishTest extends MqttPublishTestBase implements ITestSharedBroke
 
     @Override
     protected void customizeClient(Builder mqttClientBuilder) {
-        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(getSharedAddressSpace(), "messaging");
+        Endpoint messagingEndpoint = AddressSpaceUtils.getEndpointByServiceName(resourceManager.getDefaultAddressSpace(), "messaging");
         if (messagingEndpoint == null) {
-            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(getSharedAddressSpace(), "messaging");
-            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(getSharedAddressSpace()));
+            String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(resourceManager.getDefaultAddressSpace(), "messaging");
+            messagingEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(resourceManager.getDefaultAddressSpace()));
         }
         mqttClientBuilder.endpoint(messagingEndpoint);
     }

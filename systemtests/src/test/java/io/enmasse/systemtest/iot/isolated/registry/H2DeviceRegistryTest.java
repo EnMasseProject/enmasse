@@ -4,10 +4,14 @@
  */
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newH2Based;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -16,15 +20,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.Mode;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newH2Based;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class H2DeviceRegistryTest extends DeviceRegistryTest {
 

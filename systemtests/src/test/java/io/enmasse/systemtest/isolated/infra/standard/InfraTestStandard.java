@@ -20,7 +20,6 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -45,10 +44,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
+@Tag(ISOLATED)
+class InfraTestStandard extends InfraTestBase {
     private static Logger log = CustomLogger.getLogger();
 
     @Test
@@ -86,12 +87,12 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -111,7 +112,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -127,9 +128,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createAddressSpace(exampleAddressSpace);
 
-        resourcesManager.setAddresses(new AddressBuilder()
+        resourceManager.setAddresses(new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -181,7 +182,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(infra);
+        resourceManager.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -200,10 +201,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        resourceManager.replaceAddressSpace(exampleAddressSpace);
 
         waitUntilInfraReady(
                 () -> assertInfra(brokerMemory,
@@ -242,9 +243,9 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        isolatedResourcesManager.createInfraConfig(testInfra);
+        resourceManager.createInfraConfig(testInfra);
 
-        StandardInfraConfig actualInfra = isolatedResourcesManager.getStandardInfraConfig(testInfra.getMetadata().getName());
+        StandardInfraConfig actualInfra = resourceManager.getStandardInfraConfig(testInfra.getMetadata().getName());
 
         assertEquals(testInfra.getMetadata().getName(), actualInfra.getMetadata().getName());
 
@@ -272,7 +273,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         testCreatePdb();
 
-        resourcesManager.deleteAddressSpace(exampleAddressSpace);
+        resourceManager.deleteAddressSpace(exampleAddressSpace);
 
         String pdbRouterName = getRouterPdbName();
         String pdbBrokerName = getBrokerPdbName();
@@ -313,7 +314,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(infraWithOutPdb);
+        resourceManager.createInfraConfig(infraWithOutPdb);
 
         AddressSpacePlan spacePlanWithOutPdb = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -333,10 +334,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(spacePlanWithOutPdb);
+        resourceManager.createAddressSpacePlan(spacePlanWithOutPdb);
 
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(spacePlanWithOutPdb.getMetadata().getName()).endSpec().done();
-        isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
+        resourceManager.replaceAddressSpace(exampleAddressSpace);
 
         String pdbRouterName = getRouterPdbName();
         String pdbBrokerName = getBrokerPdbName();
@@ -376,12 +377,12 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
-        resourcesManager.createInfraConfig(infraWithPdb);
+        resourceManager.createInfraConfig(infraWithPdb);
 
         exampleAddressPlan = PlanUtils.createAddressPlanObject("example-queue-plan-standard", AddressType.QUEUE,
                 Arrays.asList(new ResourceRequest("broker", 1.0), new ResourceRequest("router", 1.0)));
 
-        resourcesManager.createAddressPlan(exampleAddressPlan);
+        resourceManager.createAddressPlan(exampleAddressPlan);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
@@ -401,7 +402,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .stream().map(addressPlan -> addressPlan.getMetadata().getName()).collect(Collectors.toList()))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpacePlan(exampleSpacePlan);
+        resourceManager.createAddressSpacePlan(exampleSpacePlan);
 
         exampleAddressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
@@ -417,7 +418,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(exampleAddressSpace);
+        resourceManager.createAddressSpace(exampleAddressSpace);
 
         String pdbRouterName = getRouterPdbName();
 

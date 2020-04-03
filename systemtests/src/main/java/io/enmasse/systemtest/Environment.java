@@ -5,17 +5,16 @@
 
 package io.enmasse.systemtest;
 
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.client.Config;
+import org.eclipse.hono.util.Strings;
+import org.slf4j.Logger;
+
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Optional;
-
-import org.eclipse.hono.util.Strings;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.client.Config;
 
 public class Environment {
     public static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";

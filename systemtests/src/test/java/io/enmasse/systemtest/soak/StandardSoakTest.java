@@ -5,14 +5,13 @@
 package io.enmasse.systemtest.soak;
 
 import io.enmasse.address.model.AddressSpaceBuilder;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.bases.soak.SoakTestBase;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Test;
 
-class StandardSoakTest extends SoakTestBase implements ITestIsolatedStandard {
+class StandardSoakTest extends SoakTestBase {
 
     @Test
     void testQueueSendReceiveLong() throws Exception {

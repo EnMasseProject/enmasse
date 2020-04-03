@@ -11,7 +11,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -49,8 +48,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public abstract class OLMTestBase extends TestBase implements ITestIsolatedStandard {
-    private static Logger log = CustomLogger.getLogger();
+public abstract class OLMTestBase extends TestBase {
+    private static Logger LOGGER = CustomLogger.getLogger();
     private Exception ex = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     private static final int CR_TIMEOUT_MILLIS = 30000;
@@ -76,12 +75,12 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
                 LOGGER.info("Example: {}", example);
                 String kind = example.getString("kind");
                 if (kind.equals("AuthenticationService") && kubernetes.getCluster() instanceof CRCCluster) {
-                    log.info("Creating standard-authservice with no persistence because of CRC cluster");
+                    LOGGER.info("Creating standard-authservice with no persistence because of CRC cluster");
                     AuthenticationService authService = AuthServiceUtils.createStandardAuthServiceObject("standard-authservice", false);
                     authService.getMetadata().setNamespace(getInstallationNamespace());
                     kubernetes.getAuthenticationServiceClient(getInstallationNamespace()).create(authService);
                 } else if (infraKinds.contains(kind)) {
-                    log.info("Creating {}", example.toString());
+                    LOGGER.info("Creating {}", example.toString());
                     createCR(getInstallationNamespace(), example);
                 }
             }
@@ -115,7 +114,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         for (String namespace : Arrays.asList(getInstallationNamespace(), getDifferentAddressSpaceNamespace())) {
             AddressSpace addressSpace = kubernetes.getAddressSpaceClient(namespace).withName("myspace").get();
             if (addressSpace != null) {
-                resourcesManager.deleteAddressSpace(addressSpace);
+                resourceManager.deleteAddressSpace(addressSpace);
             }
         }
     }
@@ -125,7 +124,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         ex = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         if (!environment.skipCleanup()) {
             for (JsonObject example : exampleResources) {
-                log.info("Deleting {}", example.toString());
+                LOGGER.info("Deleting {}", example.toString());
                 KubeCMDClient.deleteCR(getInstallationNamespace(), example.toString(), CR_TIMEOUT_MILLIS);
             }
             kubernetes.deleteNamespace(getDifferentAddressSpaceNamespace());
@@ -146,18 +145,18 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
             .filter(example -> example.getString("kind").equals("AddressSpace"))
             .findFirst()
             .orElseThrow(()-> new IllegalStateException("Example resources don't contain an address space"));
-        log.info("Creating {}", exampleAddressSpace.getString("kind"));
+        LOGGER.info("Creating {}", exampleAddressSpace.getString("kind"));
         createCR(addressSpaceNamespace, exampleAddressSpace);
         var client = kubernetes.getAddressSpaceClient(addressSpaceNamespace);
         TestUtils.waitUntilCondition("Address space visible",
                 phase -> client.withName("myspace").get() != null,new TimeoutBudget(30, TimeUnit.SECONDS));
-        resourcesManager.waitForAddressSpaceReady(client.withName("myspace").get());
+        resourceManager.waitForAddressSpaceReady(client.withName("myspace").get());
 
 
         for(JsonObject example : exampleResources) {
             String kind = example.getString("kind");
             if(kind.equals("Address") || kind.equals("MessagingUser")) {
-                log.info("Creating {}", kind);
+                LOGGER.info("Creating {}", kind);
                 createCR(addressSpaceNamespace, example);
             }
         }
@@ -173,7 +172,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
         AddressSpace exampleSpace = kubernetes.getAddressSpaceClient(addressSpaceNamespace).withName("myspace").get();
         Address exampleAddress = kubernetes.getAddressClient(addressSpaceNamespace).withName("myspace.myqueue").get();
 
-        AmqpClient amqpClient = resourcesManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+        AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setTerminusFactory(new QueueTerminusFactory())
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setCert(new String(Base64.getDecoder().decode(exampleSpace.getStatus().getCaCert()), StandardCharsets.UTF_8))

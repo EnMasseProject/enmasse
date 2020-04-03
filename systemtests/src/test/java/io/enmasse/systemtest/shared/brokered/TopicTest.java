@@ -8,15 +8,17 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -41,14 +43,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.enmasse.systemtest.TestTag.NON_PR;
+import static io.enmasse.systemtest.TestTag.SHARED;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
+@Tag(SHARED)
 @ExtendWith(JmsProviderParameterResolver.class)
-class TopicTest extends TestBase implements ITestSharedBrokered {
+class TopicTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
     private Connection connection;
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+    }
 
     @AfterEach
     void tearDown() throws Exception {
@@ -66,8 +75,8 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     private void doTopicWildcardTest(String plan) throws Exception {
         Address t0 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "topic"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
@@ -75,9 +84,9 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
                 .withPlan(plan)
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(t0);
+        resourceManager.setAddresses(t0);
 
-        AmqpClient amqpClient = getAmqpClientFactory().createTopicClient();
+        AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createTopicClient();
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
 
@@ -106,28 +115,28 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testRestApi() throws Exception {
         Address t1 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic1"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "topic1"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("topic1")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
         Address t2 = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "topic2"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "topic2"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("topic2")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
 
-        assertAddressApi(getSharedAddressSpace(), t1, t2);
+        assertAddressApi(resourceManager.getDefaultAddressSpace(), t1, t2);
     }
 
     @Test
@@ -135,18 +144,18 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testMessageSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-mess"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-mess"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicMess")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -185,18 +194,18 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-dur-subs"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-dur-subs"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicDurSubs")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -258,18 +267,18 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-trans"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-trans"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicTrans")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
         Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
@@ -312,20 +321,20 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-durable"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-durable"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicDurable")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -372,20 +381,20 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-nondurable"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-nondurable"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicNonDurable")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context1 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
-        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials, addressTopic);
+        Context context2 = jmsProvider.createContextForShared(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials, addressTopic);
         Connection connection2 = jmsProvider.createConnection(context2);
         connection1.start();
         connection2.start();
@@ -430,18 +439,18 @@ class TopicTest extends TestBase implements ITestSharedBrokered {
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         Address addressTopic = new AddressBuilder()
                 .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "jms-topic-large"))
+                .withNamespace(resourceManager.getDefaultAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(resourceManager.getDefaultAddressSpace(), "jms-topic-large"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("topic")
                 .withAddress("jmsTopicLarge")
-                .withPlan(getDefaultPlan(AddressType.TOPIC))
+                .withPlan(resourceManager.getDefaultAddressPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
-        resourcesManager.setAddresses(addressTopic);
+        resourceManager.setAddresses(addressTopic);
 
-        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(getSharedAddressSpace()).toString(), defaultCredentials,
+        connection = jmsProvider.createConnection(AddressSpaceUtils.getMessagingRoute(resourceManager.getDefaultAddressSpace()).toString(), defaultCredentials,
                 "jmsCliId", addressTopic);
         connection.start();
 

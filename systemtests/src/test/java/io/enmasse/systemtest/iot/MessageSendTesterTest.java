@@ -5,16 +5,15 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.enmasse.systemtest.TestTag;
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.systemtest.TestTag;
-import io.vertx.core.json.JsonObject;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(TestTag.FRAMEWORK)
 public class MessageSendTesterTest {
@@ -41,7 +40,7 @@ public class MessageSendTesterTest {
 
         for (int initialLength = fixedLength; initialLength < 1024; initialLength++) {
 
-            final char init[] = new char[initialLength - fixedLength];
+            final char[] init = new char[initialLength - fixedLength];
             Arrays.fill(init, 'b');
             final String initValue = String.valueOf(init);
 
