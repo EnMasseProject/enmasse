@@ -7,7 +7,7 @@ MAVEN_ARGS+="-DskipTests"
 endif
 
 ifneq ($(FULL_BUILD),true)
-build:
+build: build_deps
 	cd $(TOPDIR); $(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)
 
 test:

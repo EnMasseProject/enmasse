@@ -37,6 +37,7 @@ require (
 	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/coreos/prometheus-operator v0.34.0
+	github.com/fabric8io/kubernetes-client v4.9.0+incompatible
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-logr/logr v0.1.0
 	github.com/google/go-cmp v0.3.2-0.20191216211814-5a6f75716e12 // indirect
@@ -65,4 +66,5 @@ require (
 	k8s.io/kube-aggregator v0.0.0
 	pack.ag/amqp v0.12.6
 	sigs.k8s.io/controller-runtime v0.4.0
+	software.sslmate.com/src/go-pkcs12 v0.0.0-20190322163127-6e380ad96778
 )

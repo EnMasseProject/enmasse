@@ -1,0 +1,147 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: messaginginfras.enmasse.io
+spec:
+  group: enmasse.io
+  names:
+    kind: MessagingInfra
+    listKind: MessagingInfraList
+    plural: messaginginfras
+    singular: messaginginfra
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            broker:
+              properties:
+                image:
+                  description: Broker image to use instead of default image.
+                  properties:
+                    name:
+                      type: string
+                    pullPolicy:
+                      description: PullPolicy describes a policy for if/when to pull
+                        a container image
+                      type: string
+                  required:
+                  - name
+                  type: object
+                initImage:
+                  description: Broker init image to use instead of default image.
+                  properties:
+                    name:
+                      type: string
+                    pullPolicy:
+                      description: PullPolicy describes a policy for if/when to pull
+                        a container image
+                      type: string
+                  required:
+                  - name
+                  type: object
+                scalingStrategy:
+                  description: Strategy for scaling the brokers. Default is 'static'.
+                  properties:
+                    static:
+                      description: Scaler which configures a static number of broker
+                        pods.
+                      properties:
+                        poolSize:
+                          description: The number of brokers to create.
+                          format: int32
+                          type: integer
+                      required:
+                      - poolSize
+                      type: object
+                  type: object
+              type: object
+            router:
+              properties:
+                image:
+                  description: Router image to use instead of default image.
+                  properties:
+                    name:
+                      type: string
+                    pullPolicy:
+                      description: PullPolicy describes a policy for if/when to pull
+                        a container image
+                      type: string
+                  required:
+                  - name
+                  type: object
+                scalingStrategy:
+                  description: Strategy for scaling the routers. Default is 'static'.
+                  properties:
+                    static:
+                      description: Strategy which configures a static number of router
+                        pods.
+                      properties:
+                        replicas:
+                          description: The number of router replicas to create.
+                          format: int32
+                          type: integer
+                      required:
+                      - replicas
+                      type: object
+                  type: object
+              type: object
+          type: object
+        status:
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            message:
+              type: string
+            phase:
+              type: string
+          type: object
+      type: object
+  version: v1beta2
+  versions:
+  - name: v1beta2
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

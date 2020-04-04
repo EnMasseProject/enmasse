@@ -19,6 +19,7 @@ IOT_MODULES=\
 
 MODULES=\
 	$(IOT_MODULES) \
+	shared-infra \
 	enmasse-operator \
 	crds \
 	address-space-controller \
