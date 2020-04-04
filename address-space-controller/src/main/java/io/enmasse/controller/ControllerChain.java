@@ -147,15 +147,15 @@ public class ControllerChain implements Watcher<AddressSpace> {
         boolean changed = false;
 
         if (!original.getMetadata().equals(addressSpace.getMetadata())) {
-            log.debug("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
+            log.info("Meta changed from {} to {}", original.getMetadata(), addressSpace.getMetadata());
             changed = true;
         }
         if (!original.getSpec().equals(addressSpace.getSpec())) {
-            log.debug("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
+            log.info("Spec changed from {} to {}", original.getSpec(), addressSpace.getSpec());
             changed = true;
         }
         if (!original.getStatus().equals(addressSpace.getStatus())) {
-            log.debug("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
+            log.info("Status changed from {} to {}", original.getStatus(), addressSpace.getStatus());
             changed = true;
         }
 
