@@ -234,7 +234,7 @@ spec:
                       - "edge"
                   idleTimeout:
                     type: integer
-                    description: "Idle timeout of AMQP connection."
+                    description: "Idle timeout of AMQP connection (seconds). 0 disables the idle timeout."
                   maxFrameSize:
                     type: integer
                     description: "Max frame size of AMQP connection."
@@ -451,5 +451,4 @@ spec:
                     type: array
                     items:
                       type: string
-
 

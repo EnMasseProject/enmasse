@@ -648,7 +648,7 @@ public class RouterConfigController implements Controller {
             }
 
             if (connector.getMaxFrameSize() != null) {
-                remoteConnector.setMaxFrameSize(connector.getMaxFrameSize());
+                remoteConnector.setMaxFrameSize(Math.max(512 /* AMQP MIN-MAX-FRAME-SIZE */ , connector.getMaxFrameSize()));
             }
 
             connectors.add(remoteConnector);
