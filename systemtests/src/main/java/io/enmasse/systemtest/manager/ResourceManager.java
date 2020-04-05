@@ -97,13 +97,12 @@ public class ResourceManager {
     public void setMethodResources() {
         LOGGER.info("Setting pointer to method resources");
         pointerResources = methodResources;
-        initFactories();
+        initFactories(null);
     }
 
     public void setClassResources() {
         LOGGER.info("Setting pointer to class resources");
         pointerResources = classResources;
-        initFactories();
     }
 
     //------------------------------------------------------------------------------------------------
@@ -118,11 +117,6 @@ public class ResourceManager {
     public void initFactories(AddressSpace addressSpace, UserCredentials cred) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, cred);
         mqttClientFactory = new MqttClientFactory(addressSpace, cred);
-    }
-
-    public void initFactories() {
-        amqpClientFactory = new AmqpClientFactory(null, environment.getSharedDefaultCredentials());
-        mqttClientFactory = new MqttClientFactory(null, environment.getSharedDefaultCredentials());
     }
 
     public void initFactories(IoTProject project, UserCredentials credentials) {
@@ -314,21 +308,21 @@ public class ResourceManager {
     }
 
     private void waitForDeletion(InfraConfig infraConfig) {
-        var client = infraConfig.getKind().equals("standardinfraconfig") ? kubeClient.getStandardInfraConfigClient() : kubeClient.getBrokeredInfraConfigClient();
+        var client = infraConfig.getKind().equals(StandardInfraConfig.KIND) ? kubeClient.getStandardInfraConfigClient() : kubeClient.getBrokeredInfraConfigClient();
         TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", infraConfig.getKind(), infraConfig.getMetadata().getName()), waitPhase ->
-                        client.withName(infraConfig.getMetadata().getName()) == null,
+                        client.withName(infraConfig.getMetadata().getName()).get() == null,
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     private void waitForDeletion(AddressPlan plan) {
         TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", plan.getKind(), plan.getMetadata().getName()), waitPhase ->
-                        kubeClient.getAddressPlanClient().withName(plan.getMetadata().getName()) == null,
+                        kubeClient.getAddressPlanClient().withName(plan.getMetadata().getName()).get() == null,
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
     private void waitForDeletion(AddressSpacePlan plan) {
         TestUtils.waitUntilCondition(String.format("Deleting %s with name %s", plan.getKind(), plan.getMetadata().getName()), waitPhase ->
-                        kubeClient.getAddressSpacePlanClient().withName(plan.getMetadata().getName()) == null,
+                        kubeClient.getAddressSpacePlanClient().withName(plan.getMetadata().getName()).get() == null,
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
@@ -444,9 +438,9 @@ public class ResourceManager {
     public void removeInfraConfig(InfraConfig infraConfig) {
         LOGGER.info("InfraConfig {} will be deleted {}", infraConfig.getMetadata().getName(), infraConfig);
         if (infraConfig.getKind().equals(StandardInfraConfig.KIND)) {
-            kubeClient.getStandardInfraConfigClient().createOrReplace((StandardInfraConfig) infraConfig);
+            kubeClient.getStandardInfraConfigClient().withName(infraConfig.getMetadata().getName()).delete();
         } else {
-            kubeClient.getBrokeredInfraConfigClient().createOrReplace((BrokeredInfraConfig) infraConfig);
+            kubeClient.getBrokeredInfraConfigClient().withName(infraConfig.getMetadata().getName()).delete();
         }
     }
 
