@@ -170,6 +170,18 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 		return err
 	}
 
+	// Delete api-server service
+	err = u.deleteServiceIfExists("api-server")
+	if err != nil {
+		return err
+	}
+
+	// Delete api-server deployment
+	err = u.deleteDeploymentIfExists("api-server")
+	if err != nil {
+		return err
+	}
+
 	// Scale address-space-controller back up. Retry in case the deployment got modified while we were scaling down
 	err = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		// Update address-space-controller deployment object to new version
@@ -181,12 +193,6 @@ func (u *Upgrader) performUpgrade(addressSpaceControllerDeployment *appsv1.Deplo
 		// Apply new configuration and wait for it to scale up
 		return u.scaleDeployment(addressSpaceControllerDeployment, 1)
 	})
-	if err != nil {
-		return err
-	}
-
-	// Delete api-server deployment
-	err = u.delete("api-server")
 	if err != nil {
 		return err
 	}
@@ -286,14 +292,19 @@ func (u *Upgrader) convertMessagingUsers() error {
 	return nil
 }
 
-func (u *Upgrader) delete(name string) error {
-	u.deleteDeployment(name)
-
+func (u *Upgrader) deleteServiceIfExists(name string) error {
 	propagationPolicy := metav1.DeletePropagationBackground
 	serviceClient := u.client.CoreV1().Services(u.namespace)
-	return serviceClient.Delete(name, &metav1.DeleteOptions{
-		PropagationPolicy: &propagationPolicy,
-	})
+	_, err := serviceClient.Get(name, metav1.GetOptions{})
+	if err != nil && k8errors.IsNotFound(err) {
+		return nil
+	} else if err != nil {
+		return err
+	} else {
+		return serviceClient.Delete(name, &metav1.DeleteOptions{
+			PropagationPolicy: &propagationPolicy,
+		})
+	}
 }
 
 func (u *Upgrader) deleteDeployment(name string) error {
