@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.shared.brokered.api;
 
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -18,7 +19,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,14 +32,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.BROKERED, plan = AddressSpacePlans.BROKERED)
 public class UserApiTest extends TestBase {
 
     private static final Logger LOGGER = CustomLogger.getLogger();
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
-    }
 
     @Test
     void testCreateDeleteUserUsingCRD() throws Exception {

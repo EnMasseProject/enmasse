@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot.shared.control;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
+import io.enmasse.systemtest.annotations.DefaultIoT;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -59,6 +60,7 @@ import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
 @Tag(TestTag.SHARED_IOT)
+@DefaultIoT
 class CommandAndControlTest extends TestBase {
 
     private static Logger log = CustomLogger.getLogger();
@@ -77,11 +79,6 @@ class CommandAndControlTest extends TestBase {
     private HttpAdapterClient httpClient;
     private String commandPayload;
     private int ttd;
-
-    @BeforeAll
-    void initProject() throws Exception {
-        resourceManager.createDefaultIoT();
-    }
 
     @BeforeEach
     void init() throws Exception {

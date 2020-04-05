@@ -8,6 +8,7 @@ package io.enmasse.systemtest.shared.standard;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -26,7 +27,6 @@ import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.ApplicationProperties;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -54,14 +54,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 @ExtendWith(JmsProviderParameterResolver.class)
 public class TopicTest extends TestBase {
     private static Logger log = CustomLogger.getLogger();
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
-    }
 
     private static void runTopicTest(AmqpClient client, Address dest)
             throws InterruptedException, ExecutionException, TimeoutException, IOException {

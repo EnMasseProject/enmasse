@@ -6,24 +6,20 @@ package io.enmasse.systemtest.shared.standard;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 class MulticastTest extends TestBase {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
-    }
 
     @Test
     void testRestApi() throws Exception {

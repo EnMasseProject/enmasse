@@ -4,22 +4,18 @@
  */
 package io.enmasse.systemtest.shared.brokered.clients.mqtt;
 
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.clients.ClusterClientTestBase;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.BROKERED, plan = AddressSpacePlans.BROKERED)
 class MsgPatternsInternalTest extends ClusterClientTestBase {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
-    }
 
     @Test
     void testMqttMessage() throws Exception {

@@ -10,6 +10,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.DefaultIoT;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -44,6 +45,7 @@ import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
  * test with an acceptable message loss rate of e.g. 10%.
  */
 @Tag(TestTag.SHARED_IOT)
+@DefaultIoT
 class MqttAdapterTest extends TestBase {
 
     private final String deviceId = TestUtils.randomCharacters(23 /* max client ID length */);
@@ -57,11 +59,6 @@ class MqttAdapterTest extends TestBase {
     private CredentialsRegistryClient credentialsClient;
     private AmqpClient businessApplicationClient;
     private MqttAdapterClient mqttAdapterClient;
-
-    @BeforeAll
-    void initProject() throws Exception {
-        resourceManager.createDefaultIoT();
-    }
 
     @BeforeEach
     void initEnv() throws Exception {

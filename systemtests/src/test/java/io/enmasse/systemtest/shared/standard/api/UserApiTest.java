@@ -6,10 +6,10 @@ package io.enmasse.systemtest.shared.standard.api;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.UnauthorizedAccessException;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -22,16 +22,12 @@ import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -42,26 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 public class UserApiTest extends TestBase {
-
-    private Map<AddressSpace, User> users = new HashMap<>();
     private Logger LOGGER = CustomLogger.getLogger();
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
-    }
-
-    @AfterEach
-    void cleanUsers() {
-        users.forEach((addressSpace, user) -> {
-            try {
-                resourceManager.removeUser(addressSpace, user);
-            } catch (Exception e) {
-                LOGGER.info("Clean: User not exists {}", user.getSpec().getUsername());
-            }
-        });
-    }
 
     @Test
     void testUpdateUserPermissionsUserAPI() throws Exception {
@@ -88,7 +67,6 @@ public class UserApiTest extends TestBase {
                 .endSpec()
                 .done();
 
-        users.put(resourceManager.getDefaultAddressSpace(), testUser);
         testUser = resourceManager.createOrUpdateUser(resourceManager.getDefaultAddressSpace(), testUser);
 
         AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(resourceManager.getDefaultAddressSpace());

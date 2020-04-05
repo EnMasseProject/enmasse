@@ -48,7 +48,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.annotations.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;

@@ -9,6 +9,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.DefaultIoT;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
@@ -37,6 +38,7 @@ import java.util.UUID;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @Tag(TestTag.SHARED_IOT)
+@DefaultIoT
 class HttpAdapterTest extends TestBase {
 
     @SuppressWarnings("unused")
@@ -51,11 +53,6 @@ class HttpAdapterTest extends TestBase {
     private CredentialsRegistryClient credentialsClient;
     private AmqpClient businessApplicationClient;
     private HttpAdapterClient adapterClient;
-
-    @BeforeAll
-    void initProject() throws Exception {
-        resourceManager.createDefaultIoT();
-    }
 
     @BeforeEach
     void initEnv() throws Exception {

@@ -5,11 +5,11 @@
 package io.enmasse.systemtest.shared.brokered.web;
 
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.annotations.SeleniumChrome;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;

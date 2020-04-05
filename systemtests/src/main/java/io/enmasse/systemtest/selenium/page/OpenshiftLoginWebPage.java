@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.selenium.page;
 
-import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.condition.OpenShiftVersion.Openshift4MinorVersion;
+import io.enmasse.systemtest.annotations.OpenShiftVersion;
+import io.enmasse.systemtest.annotations.OpenShiftVersion.Openshift4MinorVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;

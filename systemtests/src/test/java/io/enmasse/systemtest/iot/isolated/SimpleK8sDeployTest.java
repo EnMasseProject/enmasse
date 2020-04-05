@@ -13,7 +13,7 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.condition.Kubernetes;
+import io.enmasse.systemtest.annotations.Kubernetes;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;

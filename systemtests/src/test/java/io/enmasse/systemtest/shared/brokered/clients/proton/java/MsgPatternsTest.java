@@ -4,12 +4,12 @@
  */
 package io.enmasse.systemtest.shared.brokered.clients.proton.java;
 
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -19,12 +19,8 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(ACCEPTANCE)
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.BROKERED, plan = AddressSpacePlans.BROKERED)
 class MsgPatternsTest extends ClientTestBase {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
-    }
 
     @Test
     void testBasicMessage() throws Exception {

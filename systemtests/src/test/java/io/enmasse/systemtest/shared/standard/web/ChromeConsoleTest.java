@@ -6,16 +6,16 @@ package io.enmasse.systemtest.shared.standard.web;
 
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
+import io.enmasse.systemtest.annotations.ExternalClients;
+import io.enmasse.systemtest.annotations.SeleniumChrome;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
 import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -32,12 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Tag(NON_PR)
 @Tag(SHARED)
 @SeleniumChrome
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 public class ChromeConsoleTest extends ConsoleTest {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
-    }
 
     @Test
     void testCreateDeleteQueue() throws Exception {

@@ -5,25 +5,21 @@
 package io.enmasse.systemtest.shared.brokered.mqtt;
 
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.mqtt.MqttPublishTestBase;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.BROKERED, plan = AddressSpacePlans.BROKERED)
 public class PublishTest extends MqttPublishTestBase {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
-    }
 
     @Test
     @Override

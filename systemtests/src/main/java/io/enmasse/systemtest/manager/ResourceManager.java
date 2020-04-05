@@ -349,6 +349,26 @@ public class ResourceManager {
         pointerResources = classResources;
     }
 
+    public void tearDown(ExtensionContext context) throws Exception {
+        closeFactories();
+        if (environment.skipCleanup()) {
+            LOGGER.info("Skip cleanup is set, no cleanup process");
+        } else {
+            try {
+                if (context.getExecutionException().isPresent()) {
+                    Path path = TestUtils.getFailedTestLogsPath(context);
+                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
+                }
+                SystemtestsKubernetesApps.deleteInfinispanServer();
+                SystemtestsKubernetesApps.deletePostgresqlServer();
+                SystemtestsKubernetesApps.deleteH2Server();
+            } catch (Exception e) {
+                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
+                throw e;
+            }
+        }
+    }
+
 
     //------------------------------------------------------------------------------------------------
     // Address plans
@@ -767,26 +787,6 @@ public class ResourceManager {
             }
         }
         return null;
-    }
-
-    public void tearDown(ExtensionContext context) throws Exception {
-        closeFactories();
-        if (environment.skipCleanup()) {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
-        } else {
-            try {
-                if (context.getExecutionException().isPresent()) {
-                    Path path = TestUtils.getFailedTestLogsPath(context);
-                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
-                }
-                SystemtestsKubernetesApps.deleteInfinispanServer();
-                SystemtestsKubernetesApps.deletePostgresqlServer();
-                SystemtestsKubernetesApps.deleteH2Server();
-            } catch (Exception e) {
-                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
-                throw e;
-            }
-        }
     }
 
     //================================================================================================

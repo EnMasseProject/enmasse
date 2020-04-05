@@ -12,7 +12,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
-import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;

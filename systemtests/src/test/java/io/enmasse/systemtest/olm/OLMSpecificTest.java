@@ -7,7 +7,7 @@ package io.enmasse.systemtest.olm;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.bases.olm.OLMTestBase;
-import io.enmasse.systemtest.condition.SupportedInstallType;
+import io.enmasse.systemtest.annotations.SupportedInstallType;
 import io.enmasse.systemtest.operator.OperatorManager;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

@@ -10,7 +10,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.PrometheusApiClient;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.annotations.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;

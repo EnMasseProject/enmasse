@@ -20,7 +20,7 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.annotations.OpenShift;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;

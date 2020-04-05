@@ -5,13 +5,13 @@
 package io.enmasse.systemtest.shared.standard.web;
 
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
+import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.selenium.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -19,12 +19,8 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(SHARED)
 @SeleniumFirefox
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
-    }
 
     @Test
     void testWebSocketSendReceiveQueue() throws Exception {

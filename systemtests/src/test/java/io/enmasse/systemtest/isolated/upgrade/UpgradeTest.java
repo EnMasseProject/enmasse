@@ -14,14 +14,14 @@ import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.annotations.OpenShift;
+import io.enmasse.systemtest.annotations.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.operator.OperatorManager;
@@ -64,7 +64,6 @@ class UpgradeTest extends TestBase {
 
     @BeforeAll
     void prepareUpgradeEnv() throws Exception {
-        //resourceManager.setReuseAddressSpace();
         productName = Environment.getInstance().getProductName();
     }
 

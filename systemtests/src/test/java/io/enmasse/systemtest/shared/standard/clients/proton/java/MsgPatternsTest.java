@@ -4,9 +4,12 @@
  */
 package io.enmasse.systemtest.shared.standard.clients.proton.java;
 
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -17,12 +20,8 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(ACCEPTANCE)
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.STANDARD, plan = AddressSpacePlans.STANDARD_UNLIMITED)
 class MsgPatternsTest extends ClientTestBase {
-
-    @Test
-    void testBasicMessage() throws Exception {
-        doBasicMessageTest(new ProtonJMSClientSender(logPath), new ProtonJMSClientReceiver(logPath));
-    }
 
     @Test
     @DisplayName("testTopicSubscribe")

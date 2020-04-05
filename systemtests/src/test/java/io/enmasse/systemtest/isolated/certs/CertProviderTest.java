@@ -21,7 +21,7 @@ import io.enmasse.systemtest.apiclients.OpenshiftCertValidatorApiClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
-import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.annotations.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
