@@ -29,25 +29,15 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.shared.standard.QueueTest;
+import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.CertificateUtils;
 import io.vertx.core.json.JsonObject;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.security.KeyStore;
-import java.security.SecureRandom;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
@@ -72,12 +62,11 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 .build();
 
         createTestEnv(
-                createEndpoint("messaging", spec, null, "amqps"),
-                createEndpoint("mqtt", spec, null, "secure-mqtt"));
+                createEndpoint("messaging", spec, null, "amqps"));
 
         String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
 
-        testCertProvider(caCert, caCert);
+        testCertProvider(caCert);
     }
 
     @Test
@@ -85,9 +74,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
-        String mqttHost = String.format("mqtt.%s", domain);
         CertBundle messagingCert = CertificateUtils.createCertBundle(messagingHost);
-        CertBundle mqttCert = CertificateUtils.createCertBundle(mqttHost);
 
         createTestEnv(
                 createEndpoint("messaging", new CertSpecBuilder()
@@ -96,17 +83,9 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                                 .withTlsCert(messagingCert.getCertB64())
                                 .build(),
                         messagingHost,
-                        "amqps"),
-                createEndpoint("mqtt", new CertSpecBuilder()
-                                .withProvider(CertProvider.certBundle.name())
-                                .withTlsKey(mqttCert.getKeyB64())
-                                .withTlsCert(mqttCert.getCertB64())
-                                .build(),
-                        mqttHost,
-                        "secure-mqtt"));
+                        "amqps"));
 
-
-        testCertProvider(messagingCert.getCaCert(), mqttCert.getCaCert());
+        testCertProvider(messagingCert.getCaCert());
     }
 
     @Test
@@ -116,13 +95,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 new EndpointSpecBuilder()
                         .withName("messaging")
                         .withService("messaging")
-                        .editOrNewCert()
-                        .withProvider(CertProvider.openshift.name())
-                        .endCert()
-                        .build(),
-                new EndpointSpecBuilder()
-                        .withName("mqtt")
-                        .withService("mqtt")
                         .editOrNewCert()
                         .withProvider(CertProvider.openshift.name())
                         .endCert()
@@ -140,10 +112,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 Endpoint messagingEndpoint = kubernetes.getEndpoint("messaging-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "amqps");
                 request.put("messagingHost", messagingEndpoint.getHost());
                 request.put("messagingPort", messagingEndpoint.getPort());
-
-                Endpoint mqttEndpoint = kubernetes.getEndpoint("mqtt-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace), environment.namespace(), "secure-mqtt");
-                request.put("mqttHost", mqttEndpoint.getHost());
-                request.put("mqttPort", Integer.toString(mqttEndpoint.getPort()));
 
                 TimeoutBudget timeout = new TimeoutBudget(5, TimeUnit.MINUTES);
                 Exception lastException = null;
@@ -195,7 +163,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 .endMetadata()
                 .withNewSpec()
                 .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED_WITH_MQTT)
+                .withPlan(AddressSpacePlans.STANDARD_UNLIMITED)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
@@ -235,39 +203,12 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         }
     }
 
-    private void testCertProvider(String messagingCert, String mqttCert) throws Exception {
+    private void testCertProvider(String messagingCert) throws Exception {
         AmqpClient amqpClient = getAmqpClientFactory().createQueueClient(addressSpace);
         amqpClient.getConnectOptions().setCredentials(user).setCert(messagingCert);
 
-        MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setSocketFactory(getSocketFactory(new ByteArrayInputStream(mqttCert.getBytes())));
-        mqttOptions.setUserName(user.getUsername());
-        mqttOptions.setPassword(user.getPassword().toCharArray());
-        IMqttClient mqttClient = getMqttClientFactory().build()
-                .addressSpace(addressSpace)
-                .mqttConnectionOptions(mqttOptions).create();
-
         QueueTest.runQueueTest(amqpClient, queue, 5);
-        mqttClient.connect();
-        assertSimpleMQTTSendReceive(topic, mqttClient, 3);
-        mqttClient.disconnect();
-    }
-
-    private SSLSocketFactory getSocketFactory(InputStream caCrtFile) throws Exception {
-        CertificateFactory cf = CertificateFactory.getInstance("X.509");
-
-        X509Certificate caCert = (X509Certificate) cf.generateCertificate(caCrtFile);
-
-        KeyStore caKs = KeyStore.getInstance(KeyStore.getDefaultType());
-        caKs.load(null, null);
-        caKs.setCertificateEntry("ca-certificate", caCert);
-        TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
-        tmf.init(caKs);
-
-        SSLContext context = getMqttClientFactory().tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
-        context.init(null, tmf.getTrustManagers(), new SecureRandom());
-
-        return context.getSocketFactory();
+        TopicTest.runTopicTest(amqpClient, topic, 5);
     }
 
     private static EndpointSpec createEndpoint(String name, CertSpec certSpec, String host, String servicePort) {

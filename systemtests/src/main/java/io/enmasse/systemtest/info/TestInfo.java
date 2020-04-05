@@ -232,7 +232,6 @@ public class TestInfo {
 
         return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
                 || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD))
-                || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT))
                 || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
 
