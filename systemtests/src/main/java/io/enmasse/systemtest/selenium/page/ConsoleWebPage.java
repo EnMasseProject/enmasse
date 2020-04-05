@@ -9,6 +9,7 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -20,7 +21,6 @@ import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NotFoundException;
@@ -585,7 +585,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getFinishButton());
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.takeScreenShot();
-        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        ResourceManager.getInstance().waitForAddressSpaceReady(addressSpace);
         selenium.refreshPage();
     }
 

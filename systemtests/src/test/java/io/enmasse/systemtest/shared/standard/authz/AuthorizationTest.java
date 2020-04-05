@@ -5,6 +5,9 @@
 package io.enmasse.systemtest.shared.standard.authz;
 
 import io.enmasse.systemtest.bases.authz.AuthorizationTestBase;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -13,6 +16,11 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 
 @Tag(SHARED)
 class AuthorizationTest extends AuthorizationTestBase {
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
+    }
 
     @Test
     void testSendAuthz() throws Exception {

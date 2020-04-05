@@ -770,6 +770,7 @@ public class ResourceManager {
     }
 
     public void tearDown(ExtensionContext context) throws Exception {
+        closeFactories();
         if (environment.skipCleanup()) {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {

@@ -60,7 +60,7 @@ public class TopicTest extends TestBase {
 
     @BeforeAll
     void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
     }
 
     private static void runTopicTest(AmqpClient client, Address dest)

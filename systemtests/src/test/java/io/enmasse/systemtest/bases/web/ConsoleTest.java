@@ -25,6 +25,7 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -467,12 +468,12 @@ public abstract class ConsoleTest extends TestBase {
         String currentConfig = resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan();
         consolePage.changeAddressSpacePlan(addressSpace, AddressSpacePlans.STANDARD_UNLIMITED);
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(addressSpace, currentConfig);
-        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        ResourceManager.getInstance().waitForAddressSpaceReady(addressSpace);
         assertEquals(AddressSpacePlans.STANDARD_UNLIMITED,
                 resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getPlan());
 
         consolePage.changeAuthService(addressSpace, "none-authservice", AuthenticationServiceType.NONE);
-        AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        ResourceManager.getInstance().waitForAddressSpaceReady(addressSpace);
         assertEquals("none-authservice",
                 resourceManager.getAddressSpace(addressSpace.getMetadata().getName()).getSpec().getAuthenticationService().getName());
     }

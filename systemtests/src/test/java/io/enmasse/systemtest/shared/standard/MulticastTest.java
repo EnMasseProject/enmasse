@@ -22,7 +22,7 @@ class MulticastTest extends TestBase {
 
     @BeforeAll
     void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
     }
 
     @Test

@@ -127,6 +127,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
             resourceManager.deleteMethodResources();
+            resourceManager.tearDown(extensionContext);
         });
     }
 

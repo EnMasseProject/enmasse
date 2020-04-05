@@ -68,7 +68,7 @@ public class QueueTest extends TestBase {
 
     @BeforeAll
     void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
+        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
     }
 
     public static void runQueueTest(AmqpClient client, Address dest) throws InterruptedException, ExecutionException, TimeoutException, IOException {
@@ -120,7 +120,7 @@ public class QueueTest extends TestBase {
             try {
                 actual = numSent.get(timeoutMs, TimeUnit.MILLISECONDS);
             } catch (Exception t) {
-                if (t.getMessage()!=null && t.getMessage().contains("Message not accepted")) {
+                if (t.getMessage() != null && t.getMessage().contains("Message not accepted")) {
                     log.info("Send failed, retrying {}", t.getMessage());
                     return false;
                 } else {
@@ -130,7 +130,7 @@ public class QueueTest extends TestBase {
             }
             if (actual != msgs.size()) {
                 log.info("only {} out of {} messages sent, retrying with remaining {} messages", actual, msgs.size(), msgs.size() - actual);
-                for (int i = 0; i<actual; i++) {
+                for (int i = 0; i < actual; i++) {
                     msgs.remove(0);
                 }
                 return false;

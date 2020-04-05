@@ -7,6 +7,9 @@ package io.enmasse.systemtest.shared.standard.clients.rhea;
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -18,6 +21,11 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 @Tag(ACCEPTANCE)
 @Tag(SHARED)
 class MsgPatternsTest extends ClientTestBase {
+
+    @BeforeAll
+    void initMessaging() throws Exception {
+        resourceManager.createDefaultMessaging(AddressSpaceType.STANDARD, AddressSpacePlans.STANDARD_UNLIMITED);
+    }
 
     @Test
     void testBasicMessage() throws Exception {
