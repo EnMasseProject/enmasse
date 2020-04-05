@@ -5,6 +5,9 @@
 * #4076: Avoid memory leak if connected router is disconnected
 
 
+## 0.31.1
+* #4241: Fix a race in upgrader logic that prevented upgrade from continuing
+
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
 *  #3686: Add metrics endpoint to controller-managerxs
