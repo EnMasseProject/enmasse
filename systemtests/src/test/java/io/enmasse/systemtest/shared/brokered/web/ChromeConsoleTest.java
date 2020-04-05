@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.shared.brokered.web;
 
 import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.annotations.DefaultMessaging;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.annotations.SeleniumChrome;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
@@ -13,7 +14,6 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -28,13 +28,9 @@ import static io.enmasse.systemtest.TestTag.SHARED;
 */
 @Tag(NON_PR)
 @Tag(SHARED)
+@DefaultMessaging(type = AddressSpaceType.BROKERED, plan = AddressSpacePlans.BROKERED)
 @SeleniumChrome
 class ChromeConsoleTest extends ConsoleTest {
-
-    @BeforeAll
-    void initMessaging() throws Exception {
-        resourceManager.createDefaultMessaging(AddressSpaceType.BROKERED, AddressSpacePlans.BROKERED);
-    }
 
     @Test
     void testCreateDeleteQueue() throws Exception {
