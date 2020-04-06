@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -26,9 +26,7 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newInfinispanBased())
-                .endServices()
+                .withServices(newInfinispanBased())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()

@@ -58,6 +58,17 @@ public class OperatorManager {
         LOGGER.info("***********************************************************");
     }
 
+    public void installEnmasseSharedInfraBundle() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse operator shared infra install");
+        LOGGER.info("***********************************************************");
+        generateTemplates();
+        kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "shared-infra"));
+        TestUtils.waitUntilDeployed(kube.getInfraNamespace());
+        LOGGER.info("***********************************************************");
+    }
+
     private void installExamplesBundle(String namespace) throws Exception {
         installExamplePlans(namespace);
         installExampleRoles(namespace);

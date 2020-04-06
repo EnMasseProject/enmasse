@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -29,6 +29,7 @@ func SetHonoProbes(container *corev1.Container) {
 
 	container.ReadinessProbe = install.ApplyHttpProbe(container.ReadinessProbe, 10, "/readiness", 8088)
 	container.LivenessProbe = install.ApplyHttpProbe(container.LivenessProbe, 10, "/liveness", 8088)
+	container.LivenessProbe.FailureThreshold = 10
 
 }
 
@@ -213,6 +214,8 @@ func (r *ReconcileIoTConfig) reconcileMetricsService(serviceName string) func(co
 func processReconcileMetricsService(_ *iotv1alpha1.IoTConfig, serviceName string, service *corev1.Service) error {
 
 	install.ApplyMetricsServiceDefaults(service, "iot", serviceName)
+
+	service.Spec.Type = corev1.ServiceTypeClusterIP
 
 	service.Spec.Ports = []corev1.ServicePort{
 		{

@@ -115,7 +115,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("brokered"));
 
-        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited-with-mqtt", authServiceName, getApiVersion(version));
+        createAddressSpaceCMD(kubernetes.getInfraNamespace(), "standard", "standard", "standard-unlimited", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
         resourcesManager.waitForAddressSpaceReady(resourcesManager.getAddressSpace("standard"));
 

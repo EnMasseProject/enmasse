@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -36,8 +36,8 @@ public class VertxConfiguration {
      *
      * @return The properties.
      */
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".vertx")
     @Bean
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".vertx")
     public VertxProperties vertxProperties() {
         return new VertxProperties();
     }

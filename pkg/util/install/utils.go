@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -8,6 +8,7 @@ package install
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
@@ -51,18 +52,14 @@ func ApplyDefaultLabels(meta *v1.ObjectMeta, component string, name string) {
 func ApplyServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
-	if service.CreationTimestamp.IsZero() {
-		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
-	}
+	service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 
 }
 
 func ApplyMetricsServiceDefaults(service *corev1.Service, component string, name string) {
 
 	ApplyDefaultLabels(&service.ObjectMeta, component, name+"-metrics")
-	if service.CreationTimestamp.IsZero() {
-		service.Spec.Selector = CreateDefaultLabels(nil, component, name)
-	}
+	service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 
 }
 
@@ -101,6 +98,28 @@ func ApplyDeploymentDefaults(deployment *appsv1.Deployment, component string, na
 
 }
 
+// Apply some default deployment values
+func ApplyStatefulSetDefaults(statefulset *appsv1.StatefulSet, component string, name string) {
+
+	ApplyDefaultLabels(&statefulset.ObjectMeta, component, name)
+
+	if statefulset.CreationTimestamp.IsZero() {
+		statefulset.Spec.Selector = &v1.LabelSelector{
+			MatchLabels: CreateDefaultLabels(nil, component, name),
+		}
+	}
+
+	if statefulset.Annotations == nil {
+		statefulset.Annotations = map[string]string{}
+	}
+
+	replicas := int32(1)
+	statefulset.Spec.Replicas = &replicas
+
+	statefulset.Spec.Template.Annotations = CreateDefaultAnnotations(statefulset.Spec.Template.Annotations)
+	statefulset.Spec.Template.Labels = CreateDefaultLabels(statefulset.Spec.Template.Labels, component, name)
+}
+
 func DropContainer(deployment *appsv1.Deployment, name string) {
 	if deployment.Spec.Template.Spec.Containers == nil {
 		return
@@ -120,13 +139,17 @@ func DropContainer(deployment *appsv1.Deployment, name string) {
 }
 
 // Delete all containers which are not expected
-func DeleteOtherContainers(containers []corev1.Container, expectedNames []string) []corev1.Container {
+func DeleteOtherContainers(containers []corev1.Container, prefix string, expectedNames []string) []corev1.Container {
 
 	sort.Strings(expectedNames)
 
-	result := make([]corev1.Container, 0)
+	result := make([]corev1.Container, 0, len(containers))
 
 	for _, c := range containers {
+		if len(prefix) > 0 && !strings.HasPrefix(c.Name, prefix) {
+			result = append(result, c)
+			continue
+		}
 		if !util.ContainsString(expectedNames, c.Name) {
 			continue
 		}

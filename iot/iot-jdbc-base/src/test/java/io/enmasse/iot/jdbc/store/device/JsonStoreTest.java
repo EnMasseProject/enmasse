@@ -36,11 +36,11 @@ public class JsonStoreTest {
     public void testHierarchical1() {
 
         final PskCredential psk = newPskCredential("auth-1");
-        String encoded = JsonStore.encodeCredentialsHierarchical(Arrays.asList(psk));
+        String encoded = JsonAdapterStore.encodeCredentialsHierarchical(Arrays.asList(psk));
 
         assertThat(encoded, is("{\"psk\":{\"auth-1\":{\"secrets\":[{\"key\":\"Zm9v\"}]}}}"));
 
-        final List<CommonCredential> decoded = JsonStore.decodeCredentialsHierarchical(encoded);
+        final List<CommonCredential> decoded = JsonAdapterStore.decodeCredentialsHierarchical(encoded);
 
         assertThat(decoded, hasSize(1));
     }

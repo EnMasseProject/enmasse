@@ -7,7 +7,11 @@
 * #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 * #4242: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
+* #4245 standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
 
+
+## 0.31.1
+* #4241: Fix a race in upgrader logic that prevented upgrade from continuing
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans

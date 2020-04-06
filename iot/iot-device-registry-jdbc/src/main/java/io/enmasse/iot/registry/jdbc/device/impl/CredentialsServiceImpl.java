@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.jdbc.device.impl;
 
+import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_ADAPTER;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.eclipse.hono.util.CacheDirective.noCacheDirective;
 
@@ -21,9 +22,10 @@ import org.eclipse.hono.util.Constants;
 import org.eclipse.hono.util.CredentialsConstants;
 import org.eclipse.hono.util.CredentialsResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
 import io.enmasse.iot.registry.device.AbstractCredentialsService;
 import io.enmasse.iot.registry.device.CredentialKey;
 import io.enmasse.iot.registry.tenant.TenantInformation;
@@ -33,12 +35,13 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @Component
+@Profile(PROFILE_REGISTRY_ADAPTER)
 public class CredentialsServiceImpl extends AbstractCredentialsService {
 
-    private final AbstractDeviceStore store;
+    private final AbstractDeviceAdapterStore store;
 
     @Autowired
-    public CredentialsServiceImpl(final AbstractDeviceStore store) {
+    public CredentialsServiceImpl(final AbstractDeviceAdapterStore store) {
         this.store = store;
     }
 

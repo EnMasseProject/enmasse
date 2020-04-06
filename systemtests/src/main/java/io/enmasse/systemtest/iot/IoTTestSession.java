@@ -517,9 +517,7 @@ public final class IoTTestSession implements AutoCloseable {
                 if (!Environment.getInstance().isSkipDeployPostgresql()) {
                     config
                             .editOrNewSpec()
-                            .withNewServices()
-                            .withDeviceRegistry(DefaultDeviceRegistry.newDefaultInstance())
-                            .endServices()
+                            .withServices(DefaultDeviceRegistry.newDefaultInstance())
                             .endSpec();
                 }
 

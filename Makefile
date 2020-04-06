@@ -21,7 +21,6 @@ DOCKER_DIRS = \
 	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
-	iot/iot-device-registry-file \
 	iot/iot-device-registry-infinispan \
 	iot/iot-device-registry-jdbc \
 	iot/iot-http-adapter \
@@ -38,6 +37,10 @@ INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 MAVEN_BATCH     ?= true
 
+ifndef GOPATH
+	GOPATH=/tmp/go
+endif
+
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_ARGS+=-DskipTests -Dmaven.test.skip=true
 endif
@@ -47,7 +50,7 @@ endif
 
 all: build_java build_go templates
 
-templates: imageenv
+templates: imageenv manifests
 	$(MAKE) -C templates
 
 deploy: build_go
@@ -133,5 +136,26 @@ docu_check:
 docu_clean:
 	make -C documentation clean
 
+# Targets related to kubebuilder
+controller-gen:
+ifeq (, $(shell which controller-gen))
+	@{ \
+	set -e ;\
+	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
+	cd $$CONTROLLER_GEN_TMP_DIR ;\
+	go mod init tmp ;\
+	GOPATH=$(GOPATH) go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5 ;\
+	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
+	}
+CONTROLLER_GEN=$(GOPATH)/bin/controller-gen
+else
+CONTROLLER_GEN=$(shell which controller-gen)
+endif
+
+manifests: controller-gen
+	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1beta2 output:dir=./templates/shared-infra
+
+
 .PHONY: test_go_vet test_go_plain build_go imageenv
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean templates
+.PHONY: controller-gen manifests

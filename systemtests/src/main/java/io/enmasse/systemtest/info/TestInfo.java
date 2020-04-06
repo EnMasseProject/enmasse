@@ -178,6 +178,10 @@ public class TestInfo {
         return false;
     }
 
+    public boolean isTestSharedInfra() {
+        return currentTestClass.getTags().stream().anyMatch(TestTag.SHARED_INFRA_TAGS::contains);
+    }
+
     public boolean isTestIoT() {
         for (String tag : currentTest.getTags()) {
             if (TestTag.IOT_TAGS.contains(tag)) {
@@ -228,7 +232,6 @@ public class TestInfo {
 
         return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
                 || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD))
-                || (nextTestTags.contains(TestTag.SHARED_MQTT) && currentTestTags.contains(TestTag.SHARED_MQTT))
                 || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
     }
 

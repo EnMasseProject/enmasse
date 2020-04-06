@@ -463,9 +463,9 @@ spec:
       image: ${IOT_PROXY_CONFIGURATOR_IMAGE}
     - name: iot-auth-service
       image: ${IOT_AUTH_SERVICE_IMAGE}
-    - name: iot-device-registry-file
-      image: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
     - name: iot-device-registry-infinispan
+      image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+    - name: iot-device-registry-jdbc
       image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
     - name: iot-http-adapter
       image: ${IOT_HTTP_ADAPTER_IMAGE}
@@ -629,6 +629,17 @@ spec:
         - apiGroups: [ "" ]
           resources: [ "namespaces" ]
           verbs: [ "get", "list", "watch" ]
+      - serviceAccountName: iot-device-connection
+        rules:
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
+        - apiGroups: [ "authorization.k8s.io" ]
+          resources: [ "subjectaccessreviews" ]
+          verbs: [ "create" ]
+        - apiGroups: [ "iot.enmasse.io" ]
+          resources: [ "iotprojects" ]
+          verbs: [ "get", "list", "watch" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -688,6 +699,8 @@ spec:
                   valueFrom:
                     fieldRef:
                       fieldPath: metadata.namespace
+                - name: SHARED_INFRA
+                  value: "false"
                 - name: IOT_CONFIG_NAME
                   value: "default"
                 - name: OPERATOR_NAME
@@ -714,10 +727,10 @@ spec:
                   value: ${CONTROLLER_MANAGER_IMAGE}
                 - name: IOT_AUTH_SERVICE_IMAGE
                   value: ${IOT_AUTH_SERVICE_IMAGE}
-                - name: IOT_DEVICE_REGISTRY_FILE_IMAGE
-                  value: ${IOT_DEVICE_REGISTRY_FILE_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
                   value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+                - name: IOT_DEVICE_REGISTRY_JDBC_IMAGE
+                  value: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
                 - name: IOT_HTTP_ADAPTER_IMAGE
                   value: ${IOT_HTTP_ADAPTER_IMAGE}
                 - name: IOT_MQTT_ADAPTER_IMAGE

@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.platform;
 
+import static org.junit.jupiter.api.Assertions.fail;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -108,8 +110,6 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
-
-import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class Kubernetes {
     private static final Logger log = CustomLogger.getLogger();
@@ -440,13 +440,35 @@ public abstract class Kubernetes {
         client.apps().deployments().inNamespace(namespace).withName(name).scale(numReplicas, true);
     }
 
+    /**
+     * List <strong>all</strong> pods.
+     * <p>
+     * Compared to {@link #listPods(String)}, this method indeed returns all pods.
+     * @param namespace The namespace to list pods in.
+     * @return The list of all pods.
+     */
+    public List<Pod> listAllPods(String namespace) {
+        return client.pods().inNamespace(namespace).list().getItems();
+    }
+
     public List<Pod> listPods(String namespace) {
-        return new ArrayList<>(client.pods().inNamespace(namespace).list().getItems())
-                .stream().filter(pod -> !pod.getMetadata().getName().contains("tenant-cleanup")).collect(Collectors.toList()); //TODO remove until cleaning of this pod will be fixed;
+        return client.pods().inNamespace(namespace).list().getItems()
+                .stream().filter(pod -> !pod.getMetadata().getName().contains("tenant-cleanup"))
+                .collect(Collectors.toList()); //TODO remove until cleaning of this pod will be fixed;
     }
 
     public List<Pod> listPods() {
         return listPods(infraNamespace);
+    }
+
+    /**
+     * List <strong>all</strong> pods.
+     * <p>
+     * @param namespace The namespace to list pods in.
+     * @return The list of all pods.
+     */
+    public List<Pod> listAllPods() {
+        return listAllPods(infraNamespace);
     }
 
     public List<Pod> listPods(Map<String, String> labelSelector) {

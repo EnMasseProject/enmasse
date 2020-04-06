@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -26,13 +26,15 @@ import io.sundr.builder.annotations.Inline;
 public class JdbcConnectionInformation {
 
     private String url;
-    private String deviceClass;
+    private String driverClass;
 
     private String username;
     private String password;
 
     @JsonInclude(NON_DEFAULT)
     private int maximumPoolSize;
+
+    private String tableName;
 
     public String getUrl() {
         return url;
@@ -42,12 +44,12 @@ public class JdbcConnectionInformation {
         this.url = url;
     }
 
-    public String getDeviceClass() {
-        return deviceClass;
+    public String getDriverClass() {
+        return driverClass;
     }
 
-    public void setDeviceClass(String deviceClass) {
-        this.deviceClass = deviceClass;
+    public void setDriverClass(String deviceClass) {
+        this.driverClass = deviceClass;
     }
 
     public String getUsername() {
@@ -72,6 +74,14 @@ public class JdbcConnectionInformation {
 
     public void setMaximumPoolSize(int maximumPoolSize) {
         this.maximumPoolSize = maximumPoolSize;
+    }
+
+    public String getTableName() {
+        return tableName;
+    }
+
+    public void setTableName(String tableName) {
+        this.tableName = tableName;
     }
 
 }

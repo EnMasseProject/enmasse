@@ -3,8 +3,8 @@ include ../Makefile.go.mk
 
 build_deps: build/operatorImageMap.yaml
 
-run: ./build/operatorImageMap.yaml ./build/controller-manager
-	ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
+run: build/operatorImageMap.yaml 
+	CONTROLLER_DISABLE_ALL=true CONTROLLER_ENABLE_MESSAGING_INFRA=true OPERATOR_NAME=enmasse-operator NAMESPACE=enmasse-infra ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
 
 build/operatorImageMap.yaml:
 	mkdir -p build
@@ -13,7 +13,6 @@ build/operatorImageMap.yaml:
 	echo "address-space-controller: $(ADDRESS_SPACE_CONTROLLER_IMAGE)" >> "$@"
 	echo "controller-manager: $(CONTROLLER_MANAGER_IMAGE)" >> "$@"
 	echo "iot-auth-service: $(IOT_AUTH_SERVICE_IMAGE)" >> "$@"
-	echo "iot-device-registry-file: $(IOT_DEVICE_REGISTRY_FILE_IMAGE)" >> "$@"
 	echo "iot-device-registry-infinispan: $(IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE)" >> "$@"
 	echo "iot-device-registry-jdbc: $(IOT_DEVICE_REGISTRY_JDBC_IMAGE)" >> "$@"
 	echo "iot-http-adapter: $(IOT_HTTP_ADAPTER_IMAGE)" >> "$@"
@@ -39,4 +38,4 @@ build/operatorImageMap.yaml:
 	echo "mqtt-gateway: $(MQTT_GATEWAY_IMAGE)" >> "$@"
 	echo "mqtt-lwt: $(MQTT_LWT_IMAGE)" >> "$@"
 
-.PHONY: build/operatorImageMap.yaml
+.PHONY: build/operatorImageMap.yaml run

@@ -112,8 +112,9 @@ func detectApi(gvk schema.GroupVersionKind) bool {
 	retries := 10
 	for retries > 0 {
 
+		log.Info("Start probing API", "groupVersionKind", gvk)
 		err = probeApi()
-		log.Info(fmt.Sprintf("Request error: %v", err))
+		log.Info("Request error", "error", err)
 
 		if err == nil {
 			return true

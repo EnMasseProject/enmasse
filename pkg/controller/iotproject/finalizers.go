@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -179,15 +179,6 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 		return reconcile.Result{}, err
 	}
 
-	// check for device registry type
-
-	switch config.EvalDeviceRegistryImplementation() {
-	case iotv1alpha1.DeviceRegistryFileBased:
-		// nothing to do
-		ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "No need for special tenant cleanup")
-		return reconcile.Result{}, nil
-	}
-
 	// process
 
 	job, err := createIoTTenantCleanerJob(&ctx, project, config)
@@ -196,6 +187,13 @@ func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result
 
 	if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	// eval job
+
+	if job == nil {
+		ctx.Recorder.Event(project, corev1.EventTypeNormal, EventReasonProjectTermination, "No need for special tenant cleanup")
+		return reconcile.Result{}, nil
 	}
 
 	// eval job status

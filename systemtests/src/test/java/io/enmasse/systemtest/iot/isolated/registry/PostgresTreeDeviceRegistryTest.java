@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.iot.isolated.registry;
@@ -20,9 +20,7 @@ class PostgresTreeDeviceRegistryTest extends DeviceRegistryTest {
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withNewServices()
-                .withDeviceRegistry(newPostgresTreeBased())
-                .endServices()
+                .withServices(newPostgresTreeBased())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -171,22 +171,54 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 	}
 }
 
+//region DeviceConnection
+
+type DeviceConnectionImplementation int
+
+const (
+	DeviceConnectionDefault = iota
+	DeviceConnectionIllegal
+	DeviceConnectionInfinispan
+	DeviceConnectionJdbc
+)
+
+func (config IoTConfig) EvalDeviceConnectionImplementation() DeviceConnectionImplementation {
+
+	var infinispan = config.Spec.ServicesConfig.DeviceConnection.Infinispan
+	if infinispan != nil && infinispan.Disabled {
+		infinispan = nil
+	}
+	var jdbc = config.Spec.ServicesConfig.DeviceConnection.JDBC
+	if jdbc != nil && jdbc.Disabled {
+		jdbc = nil
+	}
+
+	if false { // this is just here to align the other lines
+	} else if infinispan == nil && jdbc == nil {
+		return DeviceConnectionIllegal
+	} else if infinispan != nil && jdbc == nil {
+		return DeviceConnectionInfinispan
+	} else if infinispan == nil && jdbc != nil {
+		return DeviceConnectionJdbc
+	}
+	return DeviceConnectionIllegal
+}
+
+//endregion
+
+//region Common DeviceRegistry
+
 type DeviceRegistryImplementation int
 
 const (
 	DeviceRegistryDefault = iota
 	DeviceRegistryIllegal
-	DeviceRegistryFileBased
 	DeviceRegistryInfinispan
 	DeviceRegistryJdbc
 )
 
 func (config IoTConfig) EvalDeviceRegistryImplementation() DeviceRegistryImplementation {
 
-	var file = config.Spec.ServicesConfig.DeviceRegistry.File
-	if file != nil && file.Disabled {
-		file = nil
-	}
 	var infinispan = config.Spec.ServicesConfig.DeviceRegistry.Infinispan
 	if infinispan != nil && infinispan.Disabled {
 		infinispan = nil
@@ -197,15 +229,27 @@ func (config IoTConfig) EvalDeviceRegistryImplementation() DeviceRegistryImpleme
 	}
 
 	if false { // this is just here to align the other lines
-	} else if infinispan == nil && jdbc == nil && file == nil {
+	} else if infinispan == nil && jdbc == nil {
 		return DeviceRegistryIllegal
-	} else if infinispan != nil && jdbc == nil && file == nil {
+	} else if infinispan != nil && jdbc == nil {
 		return DeviceRegistryInfinispan
-	} else if infinispan == nil && jdbc != nil && file == nil {
+	} else if infinispan == nil && jdbc != nil {
 		return DeviceRegistryJdbc
-	} else if infinispan == nil && jdbc == nil && file != nil {
-		return DeviceRegistryFileBased
 	}
 
 	return DeviceRegistryIllegal
 }
+
+//endregion
+
+//region JDBC device registry
+
+func (r JdbcDeviceRegistry) IsSplitRegistry() (bool, error) {
+	if r.Server.External != nil {
+		return r.Server.External.Management != nil && r.Server.External.Adapter != nil, nil
+	} else {
+		return false, util.NewConfigurationError("unsupported device registry configuration")
+	}
+}
+
+//endregion

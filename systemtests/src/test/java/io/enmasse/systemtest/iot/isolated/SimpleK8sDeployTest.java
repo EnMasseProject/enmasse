@@ -1,23 +1,20 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.systemtest.iot.isolated;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
-import io.enmasse.iot.model.v1.ContainerConfigBuilder;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.condition.Kubernetes;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.utils.IoTUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.Quantity;
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonMap;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -25,15 +22,23 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static io.enmasse.systemtest.TestTag.SMOKE;
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonMap;
+import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
+import io.enmasse.iot.model.v1.ContainerConfigBuilder;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
+import io.enmasse.systemtest.condition.Kubernetes;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.enmasse.systemtest.utils.IoTUtils;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Quantity;
 
 @Tag(SMOKE)
 @Kubernetes
@@ -63,6 +68,8 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .withNewProxyLike(r1).endProxy()
                 .withNewProxyConfiguratorLike(r1).endProxyConfigurator()
                 .build();
+
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
 
         config = new IoTConfigBuilder()
 
@@ -113,14 +120,29 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .withNewContainerLike(r2).endContainer()
                 .endTenant()
 
-                .withNewCollector()
-                .withNewContainerLike(r1).endContainer()
-                .endCollector()
+                .withDeviceConnection(DefaultDeviceRegistry.newPostgresBasedConnection(jdbcEndpoint))
+                .withDeviceRegistry(DefaultDeviceRegistry.newPostgresTreeBasedRegistry(jdbcEndpoint))
 
-                .withNewDeviceRegistry()
-                .withNewFile()
+                .editDeviceConnection()
+                .editJdbc()
+                .editOrNewCommonServiceConfig()
                 .withNewContainerLike(r2).endContainer()
-                .endFile()
+                .endCommonServiceConfig()
+                .endJdbc()
+                .endDeviceConnection()
+
+                .editDeviceRegistry()
+                .editJdbc()
+                .editServer()
+                .editExternal()
+                .editManagement()
+                .editOrNewCommonConfig()
+                .withNewContainerLike(r2).endContainer()
+                .endCommonConfig()
+                .endManagement()
+                .endExternal()
+                .endServer()
+                .endJdbc()
                 .endDeviceRegistry()
 
                 .endServices()

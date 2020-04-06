@@ -1,17 +1,25 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.systemtest.iot;
 
+import io.enmasse.iot.model.v1.DeviceConnectionServiceConfig;
+import io.enmasse.iot.model.v1.DeviceConnectionServiceConfigBuilder;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
-import io.enmasse.iot.model.v1.ExternalInfinispanServer;
-import io.enmasse.iot.model.v1.ExternalInfinispanServerBuilder;
-import io.enmasse.iot.model.v1.ExternalJdbcServer;
-import io.enmasse.iot.model.v1.ExternalJdbcServerBuilder;
+import io.enmasse.iot.model.v1.ExternalInfinispanDeviceConnectionServer;
+import io.enmasse.iot.model.v1.ExternalInfinispanDeviceConnectionServerBuilder;
+import io.enmasse.iot.model.v1.ExternalInfinispanDeviceRegistryServer;
+import io.enmasse.iot.model.v1.ExternalInfinispanDeviceRegistryServerBuilder;
+import io.enmasse.iot.model.v1.ExternalJdbcDeviceConnectionServer;
+import io.enmasse.iot.model.v1.ExternalJdbcDeviceConnectionServerBuilder;
+import io.enmasse.iot.model.v1.ExternalJdbcRegistryServer;
+import io.enmasse.iot.model.v1.ExternalJdbcRegistryServerBuilder;
 import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.iot.model.v1.ServicesConfig;
+import io.enmasse.iot.model.v1.ServicesConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
@@ -19,51 +27,86 @@ public final class DefaultDeviceRegistry {
 
     private DefaultDeviceRegistry() {}
 
-    public static ExternalInfinispanServer externalServer(final Endpoint infinispanEndpoint) {
-        var builder = new ExternalInfinispanServerBuilder()
+    public static ExternalInfinispanDeviceConnectionServer externalInfinispanConnectionServer(final Endpoint infinispanEndpoint) {
+        var builder = new ExternalInfinispanDeviceConnectionServerBuilder()
+                .withNewServer()
                 .withHost(infinispanEndpoint.getHost())
-                .withPort(infinispanEndpoint.getPort());
+                .withPort(infinispanEndpoint.getPort())
+                .endServer();
 
         // credentials aligned with 'templates/iot/examples/infinispan/manual'
         builder = builder
+                .editOrNewServer()
                 .withUsername("app")
                 .withPassword("test12")
                 .withSaslRealm("ApplicationRealm")
-                .withSaslServerName("hotrod");
+                .withSaslServerName("hotrod")
+                .endServer();
 
         return builder.build();
     }
 
-    public static ExternalJdbcServer externalPostgres(final Endpoint jdbcEndpoint, final Mode mode) {
-        var builder = new ExternalJdbcServerBuilder()
-                .withUrl(String.format("jdbc:postgresql://%s:%s/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()));
+    public static ExternalInfinispanDeviceRegistryServer externalInfinispanRegistryServer(final Endpoint infinispanEndpoint) {
+        var builder = new ExternalInfinispanDeviceRegistryServerBuilder()
+                .withNewServer()
+                .withHost(infinispanEndpoint.getHost())
+                .withPort(infinispanEndpoint.getPort())
+                .endServer();
+
+        // credentials aligned with 'templates/iot/examples/infinispan/manual'
+        builder = builder
+                .editOrNewServer()
+                .withUsername("app")
+                .withPassword("test12")
+                .withSaslRealm("ApplicationRealm")
+                .withSaslServerName("hotrod")
+                .endServer();
+
+        return builder.build();
+    }
+
+    public static ExternalJdbcRegistryServer externalPostgresRegistryServer(final Endpoint jdbcEndpoint, final Mode mode) {
+        var builder = new ExternalJdbcRegistryServerBuilder()
+                .withNewManagement()
+                .withNewConnection()
+                .withUrl(String.format("jdbc:postgresql://%s:%s/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()))
+                .endConnection()
+                .endManagement();
 
         // credentials aligned with 'templates/iot/examples/postgresql/deploy'
         builder = builder
+                .editOrNewManagement()
+                .editOrNewConnection()
                 .withUsername("registry")
-                .withPassword("user12");
+                .withPassword("user12")
+                .endConnection()
+                .endManagement();
 
         builder = builder
-                .withNewDevices()
-                .withMode(mode)
-                .endDevices();
+                .withMode(mode);
 
         return builder.build();
     }
 
-    public static ExternalJdbcServer externalH2(final Endpoint jdbcEndpoint) {
-        var builder = new ExternalJdbcServerBuilder()
-                .withUrl(String.format("jdbc:h2:tcp://%s:%s//data/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()));
+    public static ExternalJdbcRegistryServer externalH2RegistryServer(final Endpoint jdbcEndpoint) {
+        var builder = new ExternalJdbcRegistryServerBuilder()
+                .withNewManagement()
+                .withNewConnection()
+                .withUrl(String.format("jdbc:h2:tcp://%s:%s//data/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()))
+                .endConnection()
+                .endManagement();
 
         // credentials aligned with 'templates/iot/examples/h2/deploy'
         builder = builder
+                .editOrNewManagement()
+                .editOrNewConnection()
                 .withUsername("registry")
-                .withPassword("user12");
+                .withPassword("user12")
+                .endConnection()
+                .endManagement();
 
         builder = builder
-                .withNewDevices()
                 .withMode(Mode.TABLE)
-                .endDevices()
 
                 .addNewExtension()
                 .withNewContainer()
@@ -87,9 +130,8 @@ public final class DefaultDeviceRegistry {
      * @return A new configuration, for a storage which is already deployed.
      * @throws Exception In case the deployment of the backend failed.
      */
-    public static DeviceRegistryServiceConfig newDefaultInstance() throws Exception {
-        // align with deleteDefaultServer
-        return newPostgresTreeBased();
+    public static ServicesConfig newDefaultInstance() throws Exception {
+       return newPostgresTreeBased();
     }
 
     /**
@@ -100,13 +142,142 @@ public final class DefaultDeviceRegistry {
         SystemtestsKubernetesApps.deletePostgresqlServer();
     }
 
+    public static ServicesConfig newPostgresTreeBased() throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
+
+        return new ServicesConfigBuilder()
+                .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
+                .withDeviceRegistry(newPostgresTreeBasedRegistry(jdbcEndpoint))
+                .build();
+    }
+
+    public static ServicesConfig newPostgresFlatBased() throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_FLAT);
+
+        return new ServicesConfigBuilder()
+                .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
+                .withDeviceRegistry(newPostgresFlatBasedRegistry(jdbcEndpoint))
+                .build();
+    }
+
+    public static ServicesConfig newH2Based() throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployH2Server();
+
+        return new ServicesConfigBuilder()
+                .withDeviceConnection(newH2BasedConnection(jdbcEndpoint))
+                .withDeviceRegistry(newH2BasedRegistry(jdbcEndpoint))
+                .build();
+    }
+
+    public static ServicesConfig newInfinispanBased() throws Exception {
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
+
+        return new ServicesConfigBuilder()
+
+                .withNewDeviceConnection()
+                .withNewInfinispan()
+                .withNewServer()
+                .withExternal(externalInfinispanConnectionServer(infinispanEndpoint))
+                .endServer()
+                .endInfinispan()
+                .endDeviceConnection()
+
+                .withNewDeviceRegistry()
+                .withNewInfinispan()
+                .withNewServer()
+                .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
+                .endServer()
+                .endInfinispan()
+                .endDeviceRegistry()
+
+                .build();
+
+    }
+
+    public static DeviceRegistryServiceConfig newPostgresFlatBasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
+        return new DeviceRegistryServiceConfigBuilder()
+                .withNewJdbc()
+                .withNewServer()
+
+                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, Mode.JSON_FLAT))
+
+                .endServer()
+                .endJdbc()
+                .build();
+    }
+
+    public static DeviceRegistryServiceConfig newPostgresTreeBasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
+        return new DeviceRegistryServiceConfigBuilder()
+                .withNewJdbc()
+                .withNewServer()
+
+                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, Mode.JSON_TREE))
+
+                .endServer()
+                .endJdbc()
+                .build();
+    }
+
+    public static DeviceRegistryServiceConfig newH2BasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
+        return new DeviceRegistryServiceConfigBuilder()
+                .withNewJdbc()
+                .withNewServer()
+
+                .withExternal(externalH2RegistryServer(jdbcEndpoint))
+
+                .endServer()
+                .endJdbc()
+                .build();
+    }
+
+
+    private static ExternalJdbcDeviceConnectionServer externalPostgresConnectionServer(final Endpoint jdbcEndpoint) {
+        var builder = new ExternalJdbcDeviceConnectionServerBuilder()
+                .withUrl(String.format("jdbc:postgresql://%s:%s/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()));
+
+        // credentials aligned with 'templates/iot/examples/postgresql/deploy'
+        builder = builder
+                .withUsername("registry")
+                .withPassword("user12");
+
+        return builder.build();
+    }
+
+    private static ExternalJdbcDeviceConnectionServer externalH2ConnectionServer(final Endpoint jdbcEndpoint) {
+        var builder = new ExternalJdbcDeviceConnectionServerBuilder()
+                .withUrl(String.format("jdbc:h2:tcp://%s:%s//data/device-registry", jdbcEndpoint.getHost(), jdbcEndpoint.getPort()));
+
+        // credentials aligned with 'templates/iot/examples/h2/deploy'
+        builder = builder
+                .withUsername("registry")
+                .withPassword("user12");
+
+        builder = builder
+
+                .addNewExtension()
+                .withNewContainer()
+                .withName("ext-add-h2-driver")
+                .withImage("quay.io/enmasse/h2-extension:1.4.200-1")
+                .withImagePullPolicy("IfNotPresent")
+                .addNewVolumeMount()
+                .withName("extensions")
+                .withMountPath("/ext")
+                .endVolumeMount()
+                .endContainer()
+
+                .endExtension();
+
+        return builder.build();
+    }
+
+    /*
     public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
 
-                .withExternal(externalServer(infinispanEndpoint))
+                .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
 
                 .endServer()
                 .endInfinispan()
@@ -120,44 +291,31 @@ public final class DefaultDeviceRegistry {
                 .endFile()
                 .build();
     }
+    */
 
-    public static DeviceRegistryServiceConfig newPostgresFlatBased() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_FLAT);
-        return new DeviceRegistryServiceConfigBuilder()
+    public static DeviceConnectionServiceConfig newPostgresBasedConnection(final Endpoint jdbcEndpoint) throws Exception {
+        return new DeviceConnectionServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
-                .withExternal(externalPostgres(jdbcEndpoint, Mode.JSON_FLAT))
+                .withExternal(externalPostgresConnectionServer(jdbcEndpoint))
 
                 .endServer()
                 .endJdbc()
                 .build();
     }
 
-    public static DeviceRegistryServiceConfig newPostgresTreeBased() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
-        return new DeviceRegistryServiceConfigBuilder()
+    public static DeviceConnectionServiceConfig newH2BasedConnection(final Endpoint jdbcEndpoint) throws Exception {
+        return new DeviceConnectionServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
-                .withExternal(externalPostgres(jdbcEndpoint, Mode.JSON_TREE))
+                .withExternal(externalH2ConnectionServer(jdbcEndpoint))
 
                 .endServer()
                 .endJdbc()
                 .build();
     }
 
-    public static DeviceRegistryServiceConfig newH2Based() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployH2Server();
-        return new DeviceRegistryServiceConfigBuilder()
-                .withNewJdbc()
-                .withNewServer()
-
-                .withExternal(externalH2(jdbcEndpoint))
-
-                .endServer()
-                .endJdbc()
-                .build();
-    }
 
 }
