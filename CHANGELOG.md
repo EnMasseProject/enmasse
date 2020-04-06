@@ -7,6 +7,7 @@
 
 ## 0.31.1
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
+* #4245:  standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
 * #4317: Addresses with different casing is not becoming ready
 
 ## 0.31.0
