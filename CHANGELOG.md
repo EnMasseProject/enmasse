@@ -11,6 +11,7 @@
 
 ## 0.31.1
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
+* #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
