@@ -4,14 +4,21 @@
  */
 package io.enmasse.systemtest.messagingclients.artemis;
 
+import java.nio.file.Path;
+
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 
 
 public class ArtemisJMSClientSender extends ProtonJMSClientSender {
+
+    public ArtemisJMSClientSender(Path logPath) throws Exception {
+        super(ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER, logPath);
+    }
+
     public ArtemisJMSClientSender() throws Exception {
-        this.setClientType(ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER);
+        super(ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER, null);
     }
 
     @Override

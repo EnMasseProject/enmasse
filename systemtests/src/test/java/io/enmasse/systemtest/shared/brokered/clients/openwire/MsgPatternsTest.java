@@ -27,7 +27,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new OpenwireJMSClientSender(), new OpenwireJMSClientReceiver(), new OpenwireJMSClientReceiver());
+        doTopicSubscribeTest(new OpenwireJMSClientSender(logPath), new OpenwireJMSClientReceiver(logPath), new OpenwireJMSClientReceiver(logPath));
     }
 
     @Test

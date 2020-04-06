@@ -12,6 +12,8 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class RheaClientReceiver extends AbstractClient {
     public RheaClientReceiver() throws Exception {
@@ -81,4 +83,21 @@ public class RheaClientReceiver extends AbstractClient {
     protected List<String> transformExecutableCommand(String executableCommand) {
         return Arrays.asList(executableCommand);
     }
+
+    @Override
+    public Supplier<Predicate<String>> clientAttachedProbeFactory() {
+        return () -> {
+            return new Predicate<String>() {
+                int attachMsgCount = 0;
+                @Override
+                public boolean test(String line) {
+                    if (line.contains("attach#12")) {
+                        attachMsgCount++;
+                    }
+                    return attachMsgCount == 2;
+                }
+            };
+        };
+    }
+
 }

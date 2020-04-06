@@ -27,7 +27,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     @Test
     @DisplayName("testTopicSubscribe")
     void testTopicSubscribe() throws Exception {
-        doTopicSubscribeTest(new ArtemisJMSClientSender(), new ArtemisJMSClientReceiver(), new ArtemisJMSClientReceiver());
+        doTopicSubscribeTest(new ArtemisJMSClientSender(logPath), new ArtemisJMSClientReceiver(logPath), new ArtemisJMSClientReceiver(logPath));
     }
 
     @Test

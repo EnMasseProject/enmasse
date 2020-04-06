@@ -15,11 +15,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Flow.Publisher;
+import java.util.concurrent.Flow.Subscriber;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -37,6 +41,7 @@ public class Exec {
     private StreamGobbler stdErrReader;
     private Path logPath;
     private boolean appendLineSeparator;
+    private Subscriber<String> stdErrProcessor;
     private static final Pattern PATH_SPLITTER = Pattern.compile(System.getProperty("path.separator"));
     protected static final Object lock = new Object();
     protected static final Environment env = Environment.getInstance();
@@ -52,6 +57,10 @@ public class Exec {
 
     public Exec(boolean appendLineSeparator) {
         this.appendLineSeparator = appendLineSeparator;
+    }
+
+    public void setStdErrProcessor(Subscriber<String> stdErrProcessor) {
+        this.stdErrProcessor = stdErrProcessor;
     }
 
     /**
@@ -174,6 +183,9 @@ public class Exec {
      */
     private Future<String> readStdError() {
         stdErrReader = new StreamGobbler(process.getErrorStream());
+        if (stdErrProcessor != null) {
+            stdErrReader.subscribe(stdErrProcessor);
+        }
         return stdErrReader.read();
     }
 
@@ -242,9 +254,10 @@ public class Exec {
     /**
      * Class represent async reader
      */
-    class StreamGobbler {
+    private class StreamGobbler implements Publisher<String>{
         private InputStream is;
         private StringBuilder data = new StringBuilder();
+        private Collection<Subscriber<? super String>> subscribers = new ConcurrentLinkedQueue<>();
 
         /**
          * Constructor of StreamGobbler
@@ -275,19 +288,30 @@ public class Exec {
                 try {
                     log.debug("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
-                        data.append(scanner.nextLine());
+                        String line = scanner.nextLine();
+                        data.append(line);
                         if (appendLineSeparator) {
                             data.append(System.getProperty("line.separator"));
                         }
+                        subscribers.forEach(sub -> sub.onNext(line));
                     }
                     scanner.close();
                     return data.toString();
                 } catch (Exception e) {
+                    subscribers.forEach(sub -> sub.onError(e));
                     throw new CompletionException(e);
                 } finally {
                     scanner.close();
+                    subscribers.forEach(sub -> sub.onComplete());
                 }
             }, runnable -> new Thread(runnable).start());
         }
+
+        @Override
+        public void subscribe(Subscriber<? super String> subscriber) {
+            subscriber.onSubscribe(null);
+            subscribers.add(subscriber);
+        }
+
     }
 }

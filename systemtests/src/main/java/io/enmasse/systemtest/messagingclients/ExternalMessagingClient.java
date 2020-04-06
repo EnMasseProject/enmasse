@@ -109,6 +109,11 @@ public class ExternalMessagingClient {
         return client.getId();
     }
 
+    public Future<Void> getClientAttachedProbe() {
+        Objects.requireNonNull(this.client);
+        return client.getClientAttached();
+    }
+
     //===================================================================
     //                          Run methods
     //===================================================================

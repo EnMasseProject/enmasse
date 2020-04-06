@@ -12,14 +12,20 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class ProtonJMSClientReceiver extends AbstractClient {
     public ProtonJMSClientReceiver() throws Exception {
-        super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER);
+        this(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, null);
     }
 
     public ProtonJMSClientReceiver(Path logPath) throws Exception {
-        super(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, logPath);
+        this(ClientType.CLI_JAVA_PROTON_JMS_RECEIVER, logPath);
+    }
+
+    protected ProtonJMSClientReceiver(ClientType type, Path logPath) throws Exception {
+        super(type, logPath);
     }
 
     @Override
@@ -95,4 +101,17 @@ public class ProtonJMSClientReceiver extends AbstractClient {
     protected List<String> transformExecutableCommand(String executableCommand) {
         return Arrays.asList("java", "-jar", executableCommand, "receiver");
     }
+
+    @Override
+    public Supplier<Predicate<String>> clientAttachedProbeFactory() {
+        return () -> {
+            return new Predicate<String>() {
+                @Override
+                public boolean test(String line) {
+                    return line.contains("New Proton Event: LINK_REMOTE_OPEN");
+                }
+            };
+        };
+    }
+
 }

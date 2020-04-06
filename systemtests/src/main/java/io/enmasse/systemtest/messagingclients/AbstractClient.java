@@ -23,7 +23,11 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.Flow.Subscriber;
+import java.util.concurrent.Flow.Subscription;
 import java.util.concurrent.Future;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 /**
  * Class represent abstract client which keeps common features of client
@@ -42,20 +46,21 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
+    private CompletableFuture<Void> clientAttached;
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
     private String id;
 
-    public AbstractClient(ClientType clientType) throws Exception {
+    protected AbstractClient(ClientType clientType) throws Exception {
         this(clientType, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
-    public AbstractClient(ClientType clientType, String podNamespace) throws Exception {
+    protected AbstractClient(ClientType clientType, String podNamespace) throws Exception {
         this(clientType, null, podNamespace);
     }
 
-    public AbstractClient(ClientType clientType, Path logPath) throws Exception {
+    protected AbstractClient(ClientType clientType, Path logPath) throws Exception {
         this(clientType, logPath, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
@@ -70,6 +75,9 @@ public abstract class AbstractClient {
         this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(this.podNamespace);
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
+        if (clientAttachedProbeFactory() != null) {
+            this.clientAttached = new CompletableFuture<Void>();
+        }
     }
 
     public String getId() {
@@ -155,6 +163,10 @@ public abstract class AbstractClient {
         return executor.getStdErr();
     }
 
+    public Future<Void> getClientAttached() {
+        return clientAttached;
+    }
+
     /**
      * Validates that client support this arg
      *
@@ -197,6 +209,9 @@ public abstract class AbstractClient {
         messages.clear();
         try {
             executor = new Exec(logPath);
+            if (clientAttachedProbeFactory() != null) {
+                setClientAttachedProbe();
+            }
             int ret = executor.exec(prepareCommand(), timeout);
             synchronized (lock) {
                 log.info("{} {} Return code - {}", this.getClass().getName(), clientType, ret);
@@ -216,6 +231,37 @@ public abstract class AbstractClient {
             ex.printStackTrace();
             return false;
         }
+    }
+
+    private void setClientAttachedProbe() {
+        var clientAttachedProbe = clientAttachedProbeFactory().get();
+        executor.setStdErrProcessor(new Subscriber<String>() {
+
+            @Override
+            public void onSubscribe(Subscription subscription) {
+                //empty
+            }
+
+            @Override
+            public void onNext(String item) {
+                if (!clientAttached.isDone()) {
+                    if (clientAttachedProbe.test(item)) {
+                        log.info("Client is attached!!");
+                        clientAttached.complete(null);
+                    }
+                }
+            }
+
+            @Override
+            public void onError(Throwable throwable) {
+                clientAttached.completeExceptionally(throwable);
+            }
+
+            @Override
+            public void onComplete() {
+                clientAttached.complete(null);
+            }
+        });
     }
 
     /**
@@ -417,4 +463,9 @@ public abstract class AbstractClient {
 
         return args;
     }
+
+    protected Supplier<Predicate<String>> clientAttachedProbeFactory() {
+        return null;
+    }
+
 }

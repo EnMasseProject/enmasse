@@ -12,6 +12,8 @@ import io.enmasse.systemtest.messagingclients.ClientType;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class PythonClientReceiver extends AbstractClient {
     public PythonClientReceiver() throws Exception {
@@ -76,4 +78,21 @@ public class PythonClientReceiver extends AbstractClient {
     protected List<String> transformExecutableCommand(String executableCommand) {
         return Arrays.asList(executableCommand);
     }
+
+    @Override
+    public Supplier<Predicate<String>> clientAttachedProbeFactory() {
+        return () -> {
+            return new Predicate<String>() {
+                int attachMsgCount = 0;
+                @Override
+                public boolean test(String line) {
+                    if (line.contains("@attach(18)")) {
+                        attachMsgCount++;
+                    }
+                    return attachMsgCount == 2;
+                }
+            };
+        };
+    }
+
 }
