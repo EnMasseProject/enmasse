@@ -437,10 +437,11 @@ public final class IoTTestSession implements AutoCloseable {
     /**
      * Create a new test session builder.
      *
+     * @param namespace The namespace for the IoTConfig.
      * @return The new instance.
      * @throws Exception
      */
-    public static IoTTestSession.Builder create() {
+    public static IoTTestSession.Builder create(final String namespace) {
 
         // create new default IoT infrastructure
 
@@ -448,7 +449,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 .withNewMetadata()
                 .withName("default")
-                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .withNamespace(namespace)
                 .endMetadata();
 
         // we use the same name for the IoTProject and the AddressSpace
@@ -469,7 +470,7 @@ public final class IoTTestSession implements AutoCloseable {
     }
 
     public static IoTTestSession.Builder createDefault() {
-        return create()
+        return create(Kubernetes.getInstance().getInfraNamespace())
                 .preDeploy(withDefaultAdapters())
                 .preDeploy(withDefaultServices());
     }
