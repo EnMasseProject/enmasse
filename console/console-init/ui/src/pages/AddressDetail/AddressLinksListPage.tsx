@@ -76,28 +76,41 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     addresses &&
     addresses.addresses.length > 0 &&
     addresses.addresses[0].links.total > 0 &&
+    addresses.addresses[0].links.links &&
+    addresses.addresses[0].links.links.length > 0 &&
     addresses.addresses[0].links;
 
-  let clientRows: IClient[] = addresses.addresses[0].links.links.map(link => ({
-    role: link.spec.role.toString(),
-    containerId: link.spec.connection.spec.containerId,
-    name: link.metadata.name,
-    deliveryRate: getFilteredValue(
-      link.metrics,
-      link.spec.role === "sender"
-        ? "enmasse_messages_in"
-        : "enmasse_messages_out"
-    ),
-    backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
-    connectionName: link.spec.connection.metadata.name,
-    addressSpaceName: name,
-    addressSpaceNamespace: namespace,
-    addressSpaceType: type
-  }));
+  let clientRows: IClient[] =
+    links && links.links
+      ? links.links.map(link => ({
+          role:
+            link && link.spec && link.spec.role && link.spec.role.toString(),
+          containerId:
+            link &&
+            link.spec.connection &&
+            link.spec.connection.spec &&
+            link.spec.connection.spec.containerId,
+          name: link && link.metadata && link.metadata.name,
+          deliveryRate: getFilteredValue(
+            link.metrics,
+            link.spec.role === "sender"
+              ? "enmasse_messages_in"
+              : "enmasse_messages_out"
+          ),
+          backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
+          connectionName:
+            link && link.spec.connection && link.spec.connection.metadata.name,
+          addressSpaceName: name,
+          addressSpaceNamespace: namespace,
+          addressSpaceType: type
+        }))
+      : [];
+
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
+
   return (
     <>
       <ClientList rows={clientRows} onSort={onSort} sortBy={sortBy} />
