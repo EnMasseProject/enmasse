@@ -110,7 +110,6 @@
           <includeJsr303Annotations>false</includeJsr303Annotations>
           <includeToString>false</includeToString>
           <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
-          <outputDirectory>${project.build.directory}/generated-sources</outputDirectory>
           <customAnnotator>io.enmasse.api.annotator.KubernetesTypeAnnotator</customAnnotator>
           <annotationStyle>none</annotationStyle>
         </configuration>
