@@ -68,7 +68,6 @@ export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> =
           <TableHeader id="aslist-table-header" />
           <TableBody />
         </Table>
-        <ProjectToolbar />
       </div>
     </>
   );
