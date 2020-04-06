@@ -10,21 +10,30 @@ import {
   Button,
   Wizard
 } from "@patternfly/react-core";
-import { ProjectTypeConfiguration } from "modules/msg-and-iot/dailogs/components";
+import {
+  ProjectTypeConfiguration,
+  IIoTProjectInput,
+  IoTProjectConfiguration,
+  IoTProjectReview
+} from "modules/msg-and-iot/dailogs/components";
 import {
   IMessagingProjectInput,
   MessagingProjectConfiguration
 } from "modules/msg-and-iot/dailogs/components/MessagingProjectConfiguration";
 import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE } from "graphql-module";
-import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import {
+  isMessagingProjectValid,
+  isIoTProjectValid
+} from "modules/msg-and-iot/dailogs/utils";
 import { MessagingProjectReview } from "modules/msg-and-iot/dailogs/components";
-import { FinishedStep } from "components";
+import { FinishedStep, IDropdownOption } from "components";
 const CreateProjectContainer: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProjectInput
   >();
+  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>();
   const [firstSelectedStep, setFirstSelectedStep] = useState<string>();
   const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
     false
@@ -37,8 +46,6 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     setMessagingProjectDetail(undefined);
     setFirstSelectedStep(undefined);
   };
-  const isMessagingFinishEnabled = () =>
-    isMessagingProjectValid(messagingProjectDetail);
   const refetchQueries: string[] = ["all_address_spaces"];
   const resetFormState = () => {
     console.log("success");
@@ -80,6 +87,13 @@ const CreateProjectContainer: React.FunctionComponent = () => {
       resetForm();
     }
   };
+  const namespaceOptions: IDropdownOption[] = [
+    { label: "app1_ns", value: "app1_ns" }
+  ];
+  const handleIoTProjectSave = async () => {
+    console.log("iot created");
+    resetForm();
+  };
 
   const step1 = {
     name: "Project Type",
@@ -91,16 +105,14 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     )
   };
 
-  const configurationStepForIot = {
-    name: "Configuration",
-    component: <>iot</>
-  };
+  const configurationStepForIot = IoTProjectConfiguration(
+    setiotProjectDetail,
+    namespaceOptions,
+    iotProjectDetail
+  );
 
-  const finalStepForIot = {
-    name: "Review",
-    component: <>Iot review</>,
-    nextButtonText: "Finish"
-  };
+  const finalStepForIot = IoTProjectReview(iotProjectDetail);
+
   const finishedStep = {
     name: "Finish",
     component: <FinishedStep onClose={onToggle} sucess={true} />,
@@ -122,12 +134,33 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     }
   }
   steps.push(finishedStep);
+  const handleNextIsEnabled = () => {
+    if (firstSelectedStep) {
+      if (firstSelectedStep === "messaging") {
+        if (isMessagingProjectValid(messagingProjectDetail)) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (firstSelectedStep === "iot") {
+        if (isIoTProjectValid(iotProjectDetail)) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return false;
+  };
 
   const CustomFooter = (
     <WizardFooter>
       <WizardContextConsumer>
         {({ activeStep, onNext, onBack, onClose }) => {
-          if (activeStep.name === "Project Type" || "Finish") {
+          if (
+            activeStep.name === "Project Type" ||
+            activeStep.name === "Finish"
+          ) {
             return (
               <>
                 <Button
@@ -160,22 +193,11 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                   variant="primary"
                   type="submit"
                   onClick={onNext}
-                  className={
-                    firstSelectedStep === "messaging" &&
-                    !isMessagingFinishEnabled()
-                      ? "pf-m-disabled"
-                      : ""
-                  }
+                  className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
                 >
                   Next
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={onBack}
-                  className={
-                    activeStep.name === "Project Type" ? "pf-m-disabled" : ""
-                  }
-                >
+                <Button variant="secondary" onClick={onBack}>
                   Back
                 </Button>
                 <Button variant="link" onClick={onClose}>
@@ -184,34 +206,20 @@ const CreateProjectContainer: React.FunctionComponent = () => {
               </>
             );
           }
-          // Final step buttons
-          let confirmButton;
-          if (firstSelectedStep && firstSelectedStep === "iot") {
-            confirmButton = (
-              <Button
-                variant="primary"
-                type="submit"
-                onClick={() => {
-                  console.log("iot created");
-                }}
-              >
-                Finish
-              </Button>
-            );
-          } else {
-            confirmButton = (
-              <Button
-                variant="primary"
-                type="submit"
-                onClick={handleMessagingProjectSave}
-              >
-                Finish
-              </Button>
-            );
-          }
+
           return (
             <>
-              {confirmButton}
+              <Button
+                variant="primary"
+                type="submit"
+                onClick={
+                  firstSelectedStep && firstSelectedStep === "messaging"
+                    ? handleMessagingProjectSave
+                    : handleIoTProjectSave
+                }
+              >
+                Finish
+              </Button>
               <Button onClick={onBack} variant="secondary">
                 Back
               </Button>
