@@ -6,7 +6,6 @@
 import React from "react";
 import ReactDom from "react-dom";
 import { render, cleanup } from "@testing-library/react";
-import "@testing-library/jest-dom/extend-expect";
 import { MockedProvider } from "@apollo/react-testing";
 import wait from "waait";
 import { ConnectionContainer } from "./ConnectionContainer";
