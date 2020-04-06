@@ -22,7 +22,6 @@ import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 
 @Tag(ISOLATED_SHARED_INFRA)
 public interface ITestIsolatedSharedInfra extends ITestBase {
-    MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> messagingInfraClient = kubernetes.getClient().customResources(CoreCrd.messagingInfras(), MessagingInfra.class, MessagingInfraList.class, DoneableMessagingInfra.class);
 
     IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
 

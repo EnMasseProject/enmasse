@@ -14,6 +14,7 @@ import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
+import io.enmasse.systemtest.messaginginfra.MessagingInfraResourceManager;
 import io.enmasse.systemtest.operator.OperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -48,6 +49,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
+        MessagingInfraResourceManager.getInstance().setClassResources();
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError("Callback before all", context, () -> {
                 if (testInfo.isUpgradeTest()) {
@@ -118,6 +120,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
+        MessagingInfraResourceManager.getInstance().setMethodResources();
         logPodsInInfraNamespace();
         if (beforeAllException != null) {
             throw beforeAllException;
