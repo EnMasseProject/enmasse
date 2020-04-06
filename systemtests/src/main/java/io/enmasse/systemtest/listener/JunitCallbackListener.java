@@ -8,6 +8,7 @@ import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.ResourceManager;
@@ -78,6 +79,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                         operatorManager.installEnmasseBundle();
                     }
                     if (testInfo.isClassIoT()) {
+                        kubernetes.createNamespace(IoTConstants.IOT_PROJECT_NAMESPACE);
                         operatorManager.installIoTOperator();
                     }
                 }

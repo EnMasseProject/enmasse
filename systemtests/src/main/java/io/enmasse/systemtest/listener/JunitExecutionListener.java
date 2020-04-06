@@ -7,6 +7,7 @@ package io.enmasse.systemtest.listener;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.ResourceManager;
@@ -102,7 +103,7 @@ public class JunitExecutionListener implements TestExecutionListener {
                 if (!SystemtestsKubernetesApps.H2_PROJECT.equals(kube.getInfraNamespace())) {
                     kube.deleteNamespace(SystemtestsKubernetesApps.H2_PROJECT);
                 }
-
+                kube.deleteNamespace(IoTConstants.IOT_PROJECT_NAMESPACE);
             } catch (Exception e) {
                 LOGGER.warn("Cleanup failed or no clean is needed");
             }

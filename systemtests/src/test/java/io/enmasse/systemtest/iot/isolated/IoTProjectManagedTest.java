@@ -189,11 +189,7 @@ class IoTProjectManagedTest extends TestBase {
                     return false;
                 }
 
-                if (!current.getStatus().getPhase().equals("Active")) {
-                    return false;
-                }
-
-                return true;
+                return current.getStatus().getPhase().equals("Active");
             }, timeout.remaining(), Duration.ofSeconds(10), () -> "IoTProject failed to switch back to 'Active'");
 
             return true;

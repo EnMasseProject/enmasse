@@ -20,7 +20,9 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
+import io.enmasse.systemtest.annotations.DefaultIoT;
 import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.IoTConstants;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
@@ -51,6 +53,7 @@ import org.slf4j.Logger;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Stack;
 import java.util.UUID;
@@ -60,6 +63,7 @@ import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
+import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
 /**
  * Managing resources used in test
@@ -101,6 +105,7 @@ public class ResourceManager {
     }
 
     public void setClassResources() {
+        LOGGER.info("####################################################################################################");
         LOGGER.info("Setting pointer to class resources");
         pointerResources = classResources;
     }
@@ -345,10 +350,9 @@ public class ResourceManager {
 
     public void tearDown(ExtensionContext context) throws Exception {
         closeFactories();
-        if (environment.skipCleanup()) {
-            LOGGER.info("Skip cleanup is set, no cleanup process");
-        } else {
-            try {
+        if (!(environment.skipCleanup() || environment.skipUninstall())) {
+            Optional<DefaultIoT> annotation = findAnnotation(context.getElement(), DefaultIoT.class);
+            if (annotation.isEmpty() && TestInfo.getInstance().isTestIoT()) {
                 if (context.getExecutionException().isPresent()) {
                     Path path = TestUtils.getFailedTestLogsPath(context);
                     SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
@@ -356,9 +360,6 @@ public class ResourceManager {
                 SystemtestsKubernetesApps.deleteInfinispanServer();
                 SystemtestsKubernetesApps.deletePostgresqlServer();
                 SystemtestsKubernetesApps.deleteH2Server();
-            } catch (Exception e) {
-                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
-                throw e;
             }
         }
     }
