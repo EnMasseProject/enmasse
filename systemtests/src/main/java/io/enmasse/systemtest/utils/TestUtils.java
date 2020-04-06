@@ -368,7 +368,6 @@ public class TestUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
         logCollector.collectEvents();
         logCollector.collectLogsTerminatedPods();
-        logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");
         kubernetes.deleteNamespace(addressSpace.getMetadata().getNamespace());
         waitForNamespaceDeleted(kubernetes, addressSpace.getMetadata().getNamespace());

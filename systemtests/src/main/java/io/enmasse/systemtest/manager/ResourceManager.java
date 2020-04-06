@@ -367,14 +367,12 @@ public abstract class ResourceManager {
     //================================================================================================
 
     public void deleteAddresses(Address... destinations) {
-        logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
         AddressUtils.delete(destinations);
     }
 
     public void deleteAddresses(AddressSpace addressSpace) throws Exception {
         LOGGER.info("Addresses in " + addressSpace.getMetadata().getName() + " will be deleted!");
-        logCollector.collectConfigMaps();
         logCollector.collectRouterState("deleteAddresses");
         AddressUtils.delete(addressSpace);
     }
@@ -396,7 +394,6 @@ public abstract class ResourceManager {
 
     private void appendAddresses(boolean wait, TimeoutBudget timeout, Address... destinations) throws Exception {
         AddressUtils.appendAddresses(timeout, wait, destinations);
-        logCollector.collectConfigMaps();
     }
 
     public void setAddresses(TimeoutBudget budget, Address... addresses) throws Exception {
