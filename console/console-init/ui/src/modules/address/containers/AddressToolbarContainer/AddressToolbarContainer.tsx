@@ -5,19 +5,14 @@
 
 import React, { useState } from "react";
 import {
-  SelectOption,
   SelectOptionObject,
   DataToolbarChipGroup,
   DataToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
-import {
-  FetchPolicy,
-  TYPEAHEAD_REQUIRED_LENGTH,
-  TypeAheadMessage
-} from "constant";
-import { getSelectOptionList, initalSelectOption } from "utils";
+import { FetchPolicy } from "constant";
+import { getSelectOptionList } from "utils";
 import {
   RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH,
   RETURN_ADDRESS_SPACE_DETAIL
@@ -27,7 +22,6 @@ import {
   IAddressSpacesResponse
 } from "schema/ResponseTypes";
 import { AddressToolbar } from "modules/address/components";
-import { useParams } from "react-router";
 
 export interface IAddressToolbarContainerProps {
   selectedNames: any[];
@@ -69,7 +63,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   const client = useApolloClient();
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameInput, setNameInput] = useState<string>();
-  const [nameOptions, setNameOptions] = useState<any[]>();
   const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
   const [statusIsExpanded, setStatusIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
@@ -82,10 +75,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
     setTypeSelected(null);
     setStatusSelected(null);
   };
-
-  if (!nameOptions) {
-    setNameOptions([initalSelectOption]);
-  }
 
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
@@ -129,50 +118,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       );
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
-  };
-  const onNameFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setNameInput(input);
-    setNameOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setNameOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeNameInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setNameOptions(options);
-        } else {
-          setNameOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
   };
 
   const onTypeToggle = () => {
@@ -269,7 +214,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       filterSelected={filterSelected}
       nameSelected={nameSelected}
       nameInput={nameInput}
-      nameOptions={nameOptions}
       typeIsExpanded={typeIsExpanded}
       typeSelected={typeSelected}
       statusIsExpanded={statusIsExpanded}
@@ -278,7 +222,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       onFilterSelect={onFilterSelect}
       onNameSelect={onNameSelect}
       onNameClear={onNameClear}
-      onNameFilter={onNameFilter}
       onTypeToggle={onTypeToggle}
       onTypeSelect={onTypeSelect}
       onStatusToggle={onStatusToggle}
@@ -299,6 +242,8 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       addressspaceName={addressspaceName}
       addressspaceType={addressspaceType}
       addressspacePlan={addressSpacePlan}
+      onChangeNameInput={onChangeNameInput}
+      setNameInput={setNameInput}
     />
   );
 };

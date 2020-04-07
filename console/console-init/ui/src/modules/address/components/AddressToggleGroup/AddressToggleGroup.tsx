@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   Select,
@@ -18,14 +23,13 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { TypeAhead, DropdownWithToggle } from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 
 export interface IAddressToggleGroupProps {
   totalRecords: number;
   filterSelected?: string;
   nameSelected?: string;
   nameInput?: string;
-  nameOptions?: any[];
   typeIsExpanded: boolean;
   typeSelected?: string | null;
   statusIsExpanded: boolean;
@@ -34,7 +38,6 @@ export interface IAddressToggleGroupProps {
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
   onTypeToggle: () => void;
   onTypeSelect: (e: any, selection: SelectOptionObject) => void;
   onStatusToggle: () => void;
@@ -44,13 +47,14 @@ export interface IAddressToggleGroupProps {
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
+  onChangeNameInput?: (value: string) => Promise<any>;
+  setNameInput?: (value: string) => void;
 }
 const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
   nameInput,
-  nameOptions,
   typeIsExpanded,
   typeSelected,
   statusIsExpanded,
@@ -59,13 +63,14 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onTypeToggle,
   onTypeSelect,
   onStatusToggle,
   onStatusSelect,
   onSearch,
-  onDelete
+  onDelete,
+  onChangeNameInput,
+  setNameInput
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -105,18 +110,18 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           deleteChip={onDelete}
           categoryName="Name"
         >
-          {filterSelected && filterSelected === "Name" && (
+          {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
-                onFilter={onNameFilter}
                 selected={nameSelected}
                 inputData={nameInput || ""}
-                options={nameOptions}
                 placeholderText={"Select name"}
+                onChangeInput={onChangeNameInput}
+                setInput={setNameInput}
               />
               <Button
                 id="ad-links-filter-search-name"
@@ -138,7 +143,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           deleteChip={onDelete}
           categoryName="Type"
         >
-          {filterSelected === "Type" && (
+          {filterSelected && filterSelected.toLowerCase() === "type" && (
             <Select
               variant={SelectVariant.single}
               aria-label="Select Type"
@@ -166,7 +171,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           deleteChip={onDelete}
           categoryName="Status"
         >
-          {filterSelected === "Status" && (
+          {filterSelected && filterSelected.toLowerCase() === "status" && (
             <Select
               variant={SelectVariant.single}
               aria-label="Select Status"

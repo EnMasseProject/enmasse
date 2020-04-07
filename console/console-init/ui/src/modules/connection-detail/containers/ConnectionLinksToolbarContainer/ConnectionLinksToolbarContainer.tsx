@@ -5,19 +5,14 @@
 
 import React, { useState } from "react";
 import {
-  SelectOption,
   SelectOptionObject,
   DataToolbarChipGroup,
   DataToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
-import {
-  FetchPolicy,
-  TYPEAHEAD_REQUIRED_LENGTH,
-  TypeAheadMessage
-} from "constant";
-import { getSelectOptionList, initalSelectOption } from "utils";
+import { FetchPolicy } from "constant";
+import { getSelectOptionList } from "utils";
 import {
   RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
   RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH
@@ -60,8 +55,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
   const [nameInput, setNameInput] = useState<string>();
   const [addressSelected, setAddressSelected] = useState<string>();
   const [addressInput, setAddressInput] = useState<string>();
-  const [nameOptions, setNameOptions] = useState<any[]>();
-  const [addressOptions, setAddressOptions] = useState<any[]>();
   const [roleIsExpanded, setRoleIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
 
@@ -72,24 +65,20 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
     setRoleSelected(null);
   };
 
-  if (!nameOptions) {
-    setNameOptions([initalSelectOption]);
-  }
-  if (!addressOptions) {
-    setAddressOptions([initalSelectOption]);
-  }
-
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
   };
+
   const onNameSelect = (e: any, selection: SelectOptionObject) => {
     setNameSelected(selection.toString());
     setNameInput(undefined);
   };
+
   const onNameClear = () => {
     setNameSelected(undefined);
     setNameInput(undefined);
   };
+
   const onChangeNameInput = async (value: string) => {
     const response = await client.query<IConnectionLinksNameSearchResponse>({
       query: RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH(
@@ -122,53 +111,11 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
   };
-  const onNameFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setNameInput(input);
-    setNameOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setNameOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeNameInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setNameOptions(options);
-        } else {
-          setNameOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
-  };
+
   const onAddressSelect = (e: any, selection: SelectOptionObject) => {
     setAddressSelected(selection.toString());
   };
+
   const onAddressClear = () => {
     setAddressSelected(undefined);
     setAddressInput(undefined);
@@ -205,51 +152,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       );
       if (filteredAddressOptions.length > 0) return filteredAddressOptions;
     }
-  };
-
-  const onAddressFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setAddressInput(input);
-    setAddressOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setAddressOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeAddressInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setAddressOptions(options);
-        } else {
-          setAddressOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
   };
 
   const onRoleToggle = () => {
@@ -355,8 +257,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       nameInput={nameInput}
       addressSelected={addressSelected}
       addressInput={addressInput}
-      nameOptions={nameOptions}
-      addressOptions={addressOptions}
       roleIsExpanded={roleIsExpanded}
       roleSelected={roleSelected}
       selectedNames={selectedNames}
@@ -364,10 +264,8 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       onFilterSelect={onFilterSelect}
       onNameSelect={onNameSelect}
       onNameClear={onNameClear}
-      onNameFilter={onNameFilter}
       onAddressSelect={onAddressSelect}
       onAddressClear={onAddressClear}
-      onAddressFilter={onAddressFilter}
       onRoleToggle={onRoleToggle}
       onRoleSelect={onRoleSelect}
       onSearch={onSearch}
@@ -375,6 +273,10 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       sortValue={sortValue}
       setSortValue={setSortValue}
       onClearAllFilters={onClearAllFilters}
+      onChangeNameInput={onChangeNameInput}
+      onChangeAddressInput={onChangeAddressInput}
+      setNameInput={setNameInput}
+      setAddressInput={setAddressInput}
     />
   );
 };

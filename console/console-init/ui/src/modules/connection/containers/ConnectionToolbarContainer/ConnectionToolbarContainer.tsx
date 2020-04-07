@@ -5,31 +5,17 @@
 
 import React, { useState } from "react";
 import {
-  SelectOption,
   SelectOptionObject,
   DataToolbarChipGroup,
   DataToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
-import {
-  FetchPolicy,
-  TYPEAHEAD_REQUIRED_LENGTH,
-  TypeAheadMessage
-} from "constant";
-import { getSelectOptionList, initalSelectOption } from "utils";
-import {
-  RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH,
-  RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH,
-  RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH
-} from "graphql-module/queries";
-import {
-  ISearchAddressLinkNameResponse,
-  ISearchAddressLinkContainerResponse,
-  IConnectionListNameSearchResponse
-} from "schema/ResponseTypes";
-import { AddressLinksToolbar } from "modules/address-detail/components";
-import { ConnectionsToolbar } from "modules/connection/components/ConnectionsToolbar";
+import { FetchPolicy } from "constant";
+import { getSelectOptionList } from "utils";
+import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
+import { IConnectionListNameSearchResponse } from "schema/ResponseTypes";
+import { ConnectionsToolbar } from "modules/connection/components";
 
 export interface IConnectionToolbarContainerProps {
   selectedHostnames: any[];
@@ -59,8 +45,6 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
   const [hostnameInput, setHostnameInput] = useState<string>();
   const [containerSelected, setContainerSelected] = useState<string>();
   const [containerInput, setContainerInput] = useState<string>();
-  const [hostnameOptions, setHostnameOptions] = useState<any[]>();
-  const [containerOptions, setContainerOptions] = useState<any[]>();
   const [filterSelected, setFilterSelected] = useState<string>("Hostname");
 
   const onClearAllFilters = () => {
@@ -69,25 +53,21 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
     setSelectedHostnames([]);
   };
 
-  if (!hostnameOptions) {
-    setHostnameOptions([initalSelectOption]);
-  }
-  if (!containerOptions) {
-    setContainerOptions([initalSelectOption]);
-  }
-
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
   };
+
   const onHostnameSelect = (e: any, selection: SelectOptionObject) => {
     setHostnameSelected(selection.toString());
     setHostnameInput(undefined);
   };
+
   const onHostnameClear = () => {
     setHostnameSelected(undefined);
     setHostnameInput(undefined);
   };
-  const onChangeHostnameInput = async (value: string) => {
+
+  const onChangeHostNameInput = async (value: string) => {
     const response = await client.query<IConnectionListNameSearchResponse>({
       query: RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
         true,
@@ -117,50 +97,7 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       if (filteredHostnameOptions.length > 0) return filteredHostnameOptions;
     }
   };
-  const onHostnameFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setHostnameInput(input);
-    setHostnameOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setHostnameOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeHostnameInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setHostnameOptions(options);
-        } else {
-          setHostnameOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
-  };
+
   const onContainerSelect = (e: any, selection: SelectOptionObject) => {
     setContainerSelected(selection.toString());
   };
@@ -198,51 +135,6 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       );
       if (filteredContainerOptions.length > 0) return filteredContainerOptions;
     }
-  };
-
-  const onContainerFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setContainerInput(input);
-    setContainerOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setContainerOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeContainerInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setContainerOptions(options);
-        } else {
-          setContainerOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
   };
 
   const onSearch = () => {
@@ -347,22 +239,22 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       hostnameInput={hostnameInput}
       containerSelected={containerSelected}
       containerInput={containerInput}
-      hostnameOptions={hostnameOptions}
-      containerOptions={containerOptions}
       selectedHostnames={selectedHostnames}
       selectedContainers={selectedContainers}
       onFilterSelect={onFilterSelect}
       onHostnameSelect={onHostnameSelect}
       onHostnameClear={onHostnameClear}
-      onHostnameFilter={onHostnameFilter}
       onContainerSelect={onContainerSelect}
       onContainerClear={onContainerClear}
-      onContainerFilter={onContainerFilter}
       onSearch={onSearch}
       onDelete={onDelete}
       sortValue={sortValue}
       setSortValue={setSortValue}
       onClearAllFilters={onClearAllFilters}
+      onChangeHostNameInput={onChangeHostNameInput}
+      setHostContainerInput={setContainerInput}
+      onChangeContainerInput={onChangeContainerInput}
+      setHostNameInput={setHostnameInput}
     />
   );
 };

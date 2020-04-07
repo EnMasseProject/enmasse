@@ -5,19 +5,14 @@
 
 import React, { useState } from "react";
 import {
-  SelectOption,
   SelectOptionObject,
   DataToolbarChipGroup,
   DataToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
-import {
-  FetchPolicy,
-  TYPEAHEAD_REQUIRED_LENGTH,
-  TypeAheadMessage
-} from "constant";
-import { getSelectOptionList, initalSelectOption } from "utils";
+import { FetchPolicy } from "constant";
+import { getSelectOptionList } from "utils";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
@@ -56,8 +51,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const [nameInput, setNameInput] = useState<string>();
   const [namespaceSelected, setNamespaceSelected] = useState<string>();
   const [namespaceInput, setNamespaceInput] = useState<string>();
-  const [nameOptions, setNameOptions] = useState<any[]>();
-  const [namespaceOptions, setNamespaceOptions] = useState<any[]>();
   const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
 
   const [filterSelected, setFilterSelected] = useState<string>("Name");
@@ -82,24 +75,20 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     }
   };
 
-  if (!nameOptions) {
-    setNameOptions([initalSelectOption]);
-  }
-  if (!namespaceOptions) {
-    setNamespaceOptions([initalSelectOption]);
-  }
-
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
   };
+
   const onNameSelect = (e: any, selection: SelectOptionObject) => {
     setNameSelected(selection.toString());
     setNameInput(undefined);
   };
+
   const onNameClear = () => {
     setNameSelected(undefined);
     setNameInput(undefined);
   };
+
   const onChangeNameInput = async (value: string) => {
     const response = await client.query<
       ISearchNameOrNameSpaceAddressSpaceListResponse
@@ -130,50 +119,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
   };
-  const onNameFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setNameInput(input);
-    setNameOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setNameOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeNameInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setNameOptions(options);
-        } else {
-          setNameOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
-  };
+
   const onNamespaceSelect = (e: any, selection: SelectOptionObject) => {
     setNamespaceSelected(selection.toString());
   };
@@ -211,51 +157,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       );
       if (filteredNamespaceOptions.length > 0) return filteredNamespaceOptions;
     }
-  };
-
-  const onNamespaceFilter = (e: any) => {
-    const input = e.target.value && e.target.value.trim();
-    setNamespaceInput(input);
-    setNamespaceOptions(undefined);
-    if (input.trim().length < TYPEAHEAD_REQUIRED_LENGTH) {
-      setNamespaceOptions([
-        <SelectOption
-          value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-          isDisabled={true}
-        />
-      ]);
-    } else {
-      onChangeNamespaceInput(input).then(data => {
-        const list = data;
-        const options = list
-          ? list.map((object, index) => (
-              <SelectOption
-                disabled={object.isDisabled}
-                key={index}
-                value={object.value}
-              />
-            ))
-          : [];
-        if (options && options.length > 0) {
-          setNamespaceOptions(options);
-        } else {
-          setNamespaceOptions([
-            <SelectOption
-              value={TypeAheadMessage.NO_RESULT_FOUND}
-              isDisabled={true}
-            />
-          ]);
-        }
-      });
-    }
-    const options = [
-      <SelectOption
-        value={TypeAheadMessage.MORE_CHAR_REQUIRED}
-        key="1"
-        isDisabled={true}
-      />
-    ];
-    return options;
   };
 
   const onTypeToggle = () => {
@@ -365,8 +266,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       nameInput={nameInput}
       namespaceSelected={namespaceSelected}
       namespaceInput={namespaceInput}
-      nameOptions={nameOptions}
-      namespaceOptions={namespaceOptions}
       typeIsExpanded={typeIsExpanded}
       typeSelected={typeSelected}
       selectedNames={selectedNames}
@@ -374,10 +273,8 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       onFilterSelect={onFilterSelect}
       onNameSelect={onNameSelect}
       onNameClear={onNameClear}
-      onNameFilter={onNameFilter}
       onNamespaceSelect={onNamespaceSelect}
       onNamespaceClear={onNamespaceClear}
-      onNamespaceFilter={onNamespaceFilter}
       onTypeToggle={onTypeToggle}
       onTypeSelect={onTypeSelect}
       onDeleteAll={onDeleteAll}
@@ -389,6 +286,10 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       sortValue={sortValue}
       setSortValue={setSortValue}
       onClearAllFilters={onClearAllFilters}
+      onChangeNameInput={onChangeNameInput}
+      onChangeNameSpaceInput={onChangeNamespaceInput}
+      setNameInput={setNameInput}
+      setNameSpaceInput={setNamespaceInput}
     />
   );
 };

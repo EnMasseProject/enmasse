@@ -1,67 +1,51 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip,
   DataToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
-import { ConnectionsToggleGroup } from "../ConnectionsToggleGroup";
+import {
+  ConnectionsToggleGroup,
+  IConnectionsToggleGroupProps
+} from "modules/connection/components";
 
-export interface IConnectionsToolbarProps extends DataToolbarContentProps {
-  totalRecords: number;
-  filterSelected?: string;
-  hostnameSelected?: string;
-  hostnameInput?: string;
-  containerSelected?: string;
-  containerInput?: string;
-  hostnameOptions?: any[];
-  containerOptions?: any[];
-  selectedHostnames: Array<{ value: string; isExact: boolean }>;
-  selectedContainers: Array<{ value: string; isExact: boolean }>;
-  onFilterSelect: (value: string) => void;
-  onHostnameSelect: (e: any, selection: SelectOptionObject) => void;
-  onHostnameClear: () => void;
-  onHostnameFilter: (e: any) => any[];
-  onContainerSelect: (e: any, selection: SelectOptionObject) => void;
-  onContainerClear: () => void;
-  onContainerFilter: (e: any) => any[];
-  onSearch: () => void;
-  onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
-  ) => void;
+export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
 }
-const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps> = ({
+const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
+  DataToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   hostnameSelected,
   hostnameInput,
   containerSelected,
   containerInput,
-  hostnameOptions,
-  containerOptions,
   selectedHostnames,
   selectedContainers,
   onFilterSelect,
   onHostnameSelect,
   onHostnameClear,
-  onHostnameFilter,
   onContainerSelect,
   onContainerClear,
-  onContainerFilter,
   onSearch,
   onDelete,
   sortValue,
   setSortValue,
-  onClearAllFilters
+  onClearAllFilters,
+  onChangeHostNameInput,
+  onChangeContainerInput,
+  setHostNameInput,
+  setHostContainerInput
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
@@ -82,19 +66,19 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps> = ({
         hostnameInput={hostnameInput}
         containerSelected={containerSelected}
         containerInput={containerInput}
-        hostnameOptions={hostnameOptions}
-        containerOptions={containerOptions}
         selectedHostnames={selectedHostnames}
         selectedContainers={selectedContainers}
         onFilterSelect={onFilterSelect}
         onHostnameSelect={onHostnameSelect}
         onHostnameClear={onHostnameClear}
-        onHostnameFilter={onHostnameFilter}
         onContainerSelect={onContainerSelect}
         onContainerClear={onContainerClear}
-        onContainerFilter={onContainerFilter}
         onSearch={onSearch}
         onDelete={onDelete}
+        onChangeHostNameInput={onChangeHostNameInput}
+        setHostContainerInput={setHostContainerInput}
+        onChangeContainerInput={onChangeContainerInput}
+        setHostNameInput={setHostNameInput}
       />
       <DataToolbarItem>
         {width < 769 && (
