@@ -4,50 +4,7 @@
  */
 package io.enmasse.systemtest.scale;
 
-import static io.enmasse.systemtest.TestTag.SCALE;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
-import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -76,6 +33,7 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.scale.downtime.DowntimeData;
 import io.enmasse.systemtest.scale.metrics.MessagingClientMetricsClient;
 import io.enmasse.systemtest.scale.metrics.ProbeClientMetricsClient;
+import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -88,6 +46,47 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static io.enmasse.systemtest.TestTag.SCALE;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
+import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(SCALE)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -301,7 +300,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             try {
                 List<Address> addr = getTenantAddressBatch(addressSpace);
                 addressBatch.addAll(addr);
-                getResourceManager().appendAddresses(false, addr.toArray(new Address[0]));
+                appendAddress(addr.toArray(new Address[0]));
                 if (iterator % 200 == 0) {
                     List<Address> currentAddresses = kubernetes.getAddressClient().inNamespace(namespace).list().getItems();
                     LOGGER.info("Created {} addresses", currentAddresses.size());
@@ -552,10 +551,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         }
         int addresses = 0;
         int iterator = 0;
-        LOGGER.info("Creating {} addresses, equivalent to {} tenants", totalAddresses, totalAddresses/addressesPerTenant);
+        LOGGER.info("Creating {} addresses, equivalent to {} tenants", totalAddresses, totalAddresses / addressesPerTenant);
         while (addresses < totalAddresses) {
             try {
-                getResourceManager().appendAddresses(false, getTenantAddressBatch(addressSpace).toArray(new Address[0]));
+                appendAddress(getTenantAddressBatch(addressSpace).toArray(new Address[0]));
                 addresses += addressesPerTenant;
                 if (iterator % 200 == 0) {
                     LOGGER.info("Created {} addresses of {}", addresses, totalAddresses);
@@ -623,11 +622,19 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 .done();
     }
 
+    private void appendAddress(Address... addresses) throws InterruptedException {
+        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
+        for (Address address : addresses) {
+            TestUtils.runUntilPass(10, () -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address));
+        }
+        TimeMeasuringSystem.stopOperation(operationID);
+    }
+
     private Duration addAddressAndMeasure() throws Exception {
         try {
             long start = System.currentTimeMillis();
             var addresses = getTenantAddressBatch(addressSpace).toArray(new Address[0]);
-            getResourceManager().appendAddresses(false, addresses);
+            appendAddress(addresses);
             AddressUtils.waitForDestinationsReady(addresses);
             long end = System.currentTimeMillis();
             long duration = end - start;
