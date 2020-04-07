@@ -103,7 +103,7 @@ public class ProtonJMSClientReceiver extends AbstractClient {
     }
 
     @Override
-    public Supplier<Predicate<String>> clientAttachedProbeFactory() {
+    public Supplier<Predicate<String>> linkAttachedProbeFactory() {
         return () -> {
             return new Predicate<String>() {
                 @Override

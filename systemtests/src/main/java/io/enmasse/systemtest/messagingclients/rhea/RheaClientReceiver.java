@@ -85,7 +85,7 @@ public class RheaClientReceiver extends AbstractClient {
     }
 
     @Override
-    public Supplier<Predicate<String>> clientAttachedProbeFactory() {
+    public Supplier<Predicate<String>> linkAttachedProbeFactory() {
         return () -> {
             return new Predicate<String>() {
                 int attachMsgCount = 0;

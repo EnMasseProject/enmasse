@@ -46,7 +46,7 @@ public abstract class AbstractClient {
     private List<String> executable;
     private String podName;
     private String podNamespace;
-    private CompletableFuture<Void> clientAttached;
+    private CompletableFuture<Void> linkAttached;
     /**
      * Important: this is not any container_id nor nothing related with amqp, this is just an identifier for logging in our tests
      */
@@ -75,8 +75,8 @@ public abstract class AbstractClient {
         this.podName = SystemtestsKubernetesApps.getMessagingAppPodName(this.podNamespace);
         this.fillAllowedArgs();
         this.executable = transformExecutableCommand(ClientType.getCommand(clientType));
-        if (clientAttachedProbeFactory() != null) {
-            this.clientAttached = new CompletableFuture<Void>();
+        if (linkAttachedProbeFactory() != null) {
+            this.linkAttached = new CompletableFuture<Void>();
         }
     }
 
@@ -163,8 +163,8 @@ public abstract class AbstractClient {
         return executor.getStdErr();
     }
 
-    public Future<Void> getClientAttached() {
-        return clientAttached;
+    public Future<Void> getLinkAttached() {
+        return linkAttached;
     }
 
     /**
@@ -209,8 +209,8 @@ public abstract class AbstractClient {
         messages.clear();
         try {
             executor = new Exec(logPath);
-            if (clientAttachedProbeFactory() != null) {
-                setClientAttachedProbe();
+            if (linkAttachedProbeFactory() != null) {
+                setLinkAttachedProbe();
             }
             int ret = executor.exec(prepareCommand(), timeout);
             synchronized (lock) {
@@ -233,8 +233,8 @@ public abstract class AbstractClient {
         }
     }
 
-    private void setClientAttachedProbe() {
-        var clientAttachedProbe = clientAttachedProbeFactory().get();
+    private void setLinkAttachedProbe() {
+        var linkAttachedProbe = linkAttachedProbeFactory().get();
         executor.setStdErrProcessor(new Subscriber<String>() {
 
             @Override
@@ -244,22 +244,22 @@ public abstract class AbstractClient {
 
             @Override
             public void onNext(String item) {
-                if (!clientAttached.isDone()) {
-                    if (clientAttachedProbe.test(item)) {
+                if (!linkAttached.isDone()) {
+                    if (linkAttachedProbe.test(item)) {
                         log.info("Client is attached!!");
-                        clientAttached.complete(null);
+                        linkAttached.complete(null);
                     }
                 }
             }
 
             @Override
             public void onError(Throwable throwable) {
-                clientAttached.completeExceptionally(throwable);
+                linkAttached.completeExceptionally(throwable);
             }
 
             @Override
             public void onComplete() {
-                clientAttached.complete(null);
+                linkAttached.complete(null);
             }
         });
     }
@@ -464,7 +464,7 @@ public abstract class AbstractClient {
         return args;
     }
 
-    protected Supplier<Predicate<String>> clientAttachedProbeFactory() {
+    protected Supplier<Predicate<String>> linkAttachedProbeFactory() {
         return null;
     }
 

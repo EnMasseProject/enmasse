@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.messagingclients.artemis;
 
 import java.nio.file.Path;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
@@ -26,4 +28,10 @@ public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
         args = modifySelectorArg(args);
         return args;
     }
+
+    @Override
+    public Supplier<Predicate<String>> linkAttachedProbeFactory() {
+        return null;
+    }
+
 }
