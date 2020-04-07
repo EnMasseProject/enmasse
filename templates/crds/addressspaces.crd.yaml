@@ -225,6 +225,19 @@ spec:
                           type: string
                         port:
                           type: integer
+                  role:
+                    type: string
+                    description: "Role of connector. Defaults to 'route-container'."
+                    enum:
+                      - "normal"
+                      - "route-container"
+                      - "edge"
+                  idleTimeout:
+                    type: integer
+                    description: "Idle timeout of AMQP connection (seconds). 0 disables the idle timeout."
+                  maxFrameSize:
+                    type: integer
+                    description: "Max frame size of AMQP connection."
                   tls:
                     type: object
                     description: "TLS configuration for the connector. If not specified, TLS will not be used."
@@ -438,5 +451,4 @@ spec:
                     type: array
                     items:
                       type: string
-
 
