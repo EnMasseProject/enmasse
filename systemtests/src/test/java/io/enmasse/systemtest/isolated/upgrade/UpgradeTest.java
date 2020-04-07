@@ -87,6 +87,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
         }
+        TestUtils.waitForNamespaceDeleted(kubernetes, infraNamespace);
     }
 
     @ParameterizedTest(name = "testUpgradeBundle-{0}")
