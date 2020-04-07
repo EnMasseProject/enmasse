@@ -38,13 +38,11 @@ export interface IAddressSpace {
 }
 
 export interface IAddressSpaceListProps extends TableProps {
-  totalItemsCount: number;
   actionResolver?: IActionsResolver;
   onSort?: (_event: any, index: number, direction: SortByDirection) => void;
 }
 
 export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> = ({
-  totalItemsCount,
   onSelect,
   onSort,
   rows,
