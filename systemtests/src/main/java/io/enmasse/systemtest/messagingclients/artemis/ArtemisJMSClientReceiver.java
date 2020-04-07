@@ -4,13 +4,22 @@
  */
 package io.enmasse.systemtest.messagingclients.artemis;
 
+import java.nio.file.Path;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 
 public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
+
+    public ArtemisJMSClientReceiver(Path logsPath) throws Exception {
+        super(ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER, logsPath);
+    }
+
     public ArtemisJMSClientReceiver() throws Exception {
-        this.setClientType(ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER);
+        super(ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER, null);
     }
 
     @Override
@@ -19,4 +28,10 @@ public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
         args = modifySelectorArg(args);
         return args;
     }
+
+    @Override
+    public Supplier<Predicate<String>> linkAttachedProbeFactory() {
+        return null;
+    }
+
 }

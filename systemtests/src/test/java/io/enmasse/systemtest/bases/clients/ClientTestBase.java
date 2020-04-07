@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -170,7 +171,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> rec2Result = receiverClient2.runAsync();
 
-        Thread.sleep(15000);
+        receiverClient1.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
+        receiverClient2.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
 
         assertTrue(senderClient.run(), "Sender failed, expected return code 0");
         assertTrue(recResult.get(), "Receiver failed, expected return code 0");
@@ -234,7 +236,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> recResult = receiverClient1.runAsync();
         Future<Boolean> recResult2 = receiverClient2.runAsync();
 
-        Thread.sleep(15000);
+        receiverClient1.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
+        receiverClient2.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
 
         assertAll(
                 () -> assertTrue(senderClient.run(), "Producer failed, expected return code 0"),
@@ -486,7 +489,8 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
         Future<Boolean> result1 = receiverClient1.runAsync();
         Future<Boolean> result2 = receiverClient2.runAsync();
 
-        Thread.sleep(15000);
+        receiverClient1.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
+        receiverClient2.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
 
         assertTrue(senderClient1.run(), "Sender failed, expected return code 0");
         assertTrue(senderClient2.run(), "Sender2 failed, expected return code 0");

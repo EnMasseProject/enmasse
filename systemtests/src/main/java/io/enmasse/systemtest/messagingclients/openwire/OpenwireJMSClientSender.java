@@ -4,14 +4,21 @@
  */
 package io.enmasse.systemtest.messagingclients.openwire;
 
+import java.nio.file.Path;
+
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 
 
 public class OpenwireJMSClientSender extends ProtonJMSClientSender {
+
+    public OpenwireJMSClientSender(Path logPath) throws Exception {
+        super(ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER, logPath);
+    }
+
     public OpenwireJMSClientSender() throws Exception {
-        this.setClientType(ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER);
+        super(ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER, null);
     }
 
     @Override

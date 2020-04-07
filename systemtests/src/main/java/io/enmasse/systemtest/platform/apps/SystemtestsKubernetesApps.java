@@ -74,7 +74,6 @@ import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
-import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -919,6 +918,7 @@ public class SystemtestsKubernetesApps {
                 .withImage("quay.io/enmasse/systemtests-clients:latest")
                 .withCommand("sleep")
                 .withArgs("infinity")
+                .withEnv(new EnvVarBuilder().withName("PN_TRACE_FRM").withValue("true").build())
                 .endContainer()
                 .endSpec()
                 .endTemplate()

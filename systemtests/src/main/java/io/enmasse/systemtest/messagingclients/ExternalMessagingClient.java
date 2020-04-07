@@ -8,13 +8,20 @@ package io.enmasse.systemtest.messagingclients;
 import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonArray;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
+import org.slf4j.Logger;
+
 public class ExternalMessagingClient {
+
+    private static Logger LOGGER = CustomLogger.getLogger();
+
     private AbstractClient client;
     private ClientArgumentMap arguments;
 
@@ -107,6 +114,24 @@ public class ExternalMessagingClient {
     public String getId() {
         Objects.requireNonNull(this.client);
         return client.getId();
+    }
+
+    public Future<Void> getLinkAttachedProbe() {
+        Objects.requireNonNull(this.client);
+        if (client.getLinkAttached() != null) {
+            return client.getLinkAttached();
+        } else {
+            CompletableFuture<Void> defaultWait = new CompletableFuture<Void>();
+            defaultWait.completeAsync(() -> {
+                try {
+                    Thread.sleep(14000);
+                } catch(Exception e) {
+                    LOGGER.error("Error in default wait for link attached", e);
+                }
+                return null;
+            }, r -> new Thread(r).start());
+            return defaultWait;
+        }
     }
 
     //===================================================================
