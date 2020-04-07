@@ -103,7 +103,7 @@ public class AddressUtils {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS);
         var client = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace());
         for (Address address : client.list().getItems()) {
-            client.withName(address.getMetadata().getName()).cascading(true).delete();
+            TestUtils.runUntilPass(10, () -> client.withName(address.getMetadata().getName()).cascading(true).delete());
             waitForAddressDeleted(address, new TimeoutBudget(5, TimeUnit.MINUTES));
         }
         TimeMeasuringSystem.stopOperation(operationID);
@@ -118,10 +118,11 @@ public class AddressUtils {
             log.info("Remove addresses in every addresses's address space");
         }
         for (Address address : addresses) {
-            Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete();
+            TestUtils.runUntilPass(10, () -> Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).withName(address.getMetadata().getName()).cascading(true).delete());
         }
         for (Address address : addresses) {
-            address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
+            Address finalAddress = address;
+            address = TestUtils.runUntilPass(10, () -> Kubernetes.getInstance().getAddressClient(finalAddress.getMetadata().getNamespace()).create(finalAddress));
             if (verboseLogs) {
                 log.info("Address {} created", address.getMetadata().getName());
             }
@@ -139,7 +140,8 @@ public class AddressUtils {
         }
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.APPEND_ADDRESS);
         for (Address address : addresses) {
-            address = Kubernetes.getInstance().getAddressClient(address.getMetadata().getNamespace()).create(address);
+            Address finalAddress = address;
+            address = TestUtils.runUntilPass(10, () -> Kubernetes.getInstance().getAddressClient(finalAddress.getMetadata().getNamespace()).create(finalAddress));
             if (verboseLogs) {
                 log.info("Address {} created", address.getMetadata().getName());
             }
