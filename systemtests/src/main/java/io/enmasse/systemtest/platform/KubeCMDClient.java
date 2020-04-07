@@ -304,7 +304,6 @@ public class KubeCMDClient {
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--namespace", namespace,
-                "--output", "custom-columns=\"LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}\"",
                 "--sort-by={.metadata.creationTimestamp}");
 
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
@@ -313,7 +312,6 @@ public class KubeCMDClient {
     public static ExecutionResultData getAllEvents() {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--all-namespaces=true",
-                "--output", "custom-columns=\"LAST SEEN:{lastTimestamp},FIRST SEEN:{firstTimestamp},COUNT:{count},NAME:{metadata.name},KIND:{involvedObject.kind},SUBOBJECT:{involvedObject.fieldPath},TYPE:{type},REASON:{reason},SOURCE:{source.component},MESSAGE:{message}\"",
                 "--sort-by={.metadata.creationTimestamp}");
 
         ExecutionResultData data = Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
