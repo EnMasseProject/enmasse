@@ -111,6 +111,7 @@ function pre_configuration() {
     export ARTEMIS_INSTANCE_ETC_URI=file:${instanceDir}/etc/
     
     envsubst < $CONFIG_TEMPLATES/artemis.profile > $BROKER_CONF_DIR/artemis.profile
+    envsubst < $CONFIG_TEMPLATES/management.xml > $BROKER_CONF_DIR/management.xml
 
     cp $CONFIG_TEMPLATES/logging.properties $BROKER_CONF_DIR/logging.properties
 }

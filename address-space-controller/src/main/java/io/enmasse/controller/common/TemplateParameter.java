@@ -44,4 +44,7 @@ public interface TemplateParameter {
     String MQTT_LWT_IMAGE = "MQTT_LWT_IMAGE";
 
     String FS_GROUP_FALLBACK_MAP = "FS_GROUP_FALLBACK_MAP";
+    String BROKER_SUPPORT_USER = "BROKER_SUPPORT_USER";
+    String BROKER_SUPPORT_PWD = "BROKER_SUPPORT_PWD";
+
 }

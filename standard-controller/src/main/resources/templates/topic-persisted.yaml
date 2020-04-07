@@ -155,6 +155,9 @@ objects:
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
+          - mountPath: /opt/apache-artemis/support
+            name: broker-support
+            readOnly: true
         - env:
           - name: INFRA_UUID
             value: ${INFRA_UUID}
@@ -250,6 +253,9 @@ objects:
         - name: broker-internal-cert
           secret:
             secretName: broker-internal-cert.${INFRA_UUID}
+        - name: broker-support
+          secret:
+            secretName: broker-support-${INFRA_UUID}
     volumeClaimTemplates:
     - apiVersion: v1
       kind: PersistentVolumeClaim

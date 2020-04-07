@@ -35,7 +35,10 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.login.LoginException;
 import javax.security.cert.CertificateException;
 import javax.security.cert.X509Certificate;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.Principal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -57,6 +60,8 @@ public class SaslDelegatingLoginTest {
     private String verticleId;
     private String mechName;
     private SaslGroupBasedSecuritySettingsPlugin securityPlugin = new SaslGroupBasedSecuritySettingsPlugin();
+    private Path userFile;
+    private Path passwordFile;
 
     @BeforeEach
     public void setup() throws ExecutionException, InterruptedException {
@@ -93,7 +98,25 @@ public class SaslDelegatingLoginTest {
 
     @AfterEach
     public void tearDown() {
-        vertx.close();
+
+        try {
+            vertx.close();
+        } finally {
+            if (userFile != null) {
+                try {
+                    Files.deleteIfExists(userFile);
+                } catch (IOException e) {
+                    // pass
+                }
+            }
+            if (passwordFile != null) {
+                try {
+                    Files.deleteIfExists(passwordFile);
+                } catch (IOException e) {
+                    // pass
+                }
+            }
+        }
     }
 
     // successful credentials login with roles
@@ -183,6 +206,55 @@ public class SaslDelegatingLoginTest {
         assertEquals(Collections.emptySet(), subject.getPrincipals(UserPrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected user principal names");
         assertEquals(Collections.emptySet(), subject.getPrincipals(RolePrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected role principal names");
 
+    }
+
+    @Test
+    public void testSuccessfulSupportAccess() throws Exception {
+
+        String username = "support";
+        String password = "pwd" + UUID.randomUUID().toString();
+        userFile = Files.createTempFile("user", "dat");
+        Files.deleteIfExists(userFile);
+        passwordFile = Files.createTempFile("passwd", "dat");
+        Files.deleteIfExists(passwordFile);
+        Files.write(userFile, Collections.singletonList(username));
+        Files.write(passwordFile, Collections.singletonList(password));
+
+        options.put("support_user_path", userFile.toString());
+        options.put("support_password_path", passwordFile.toString());
+
+        Subject subject = new Subject();
+
+        loginModule.initialize(subject, createCallbackHandler(username, password.toCharArray()), Collections.emptyMap(), options);
+        assertTrue(loginModule.login(), "Login unexpectedly failed");
+        assertEquals(0, subject.getPrincipals().size(), "No principals should be added until after the commit");
+        assertTrue(loginModule.commit(), "Commit unexpectedly failed");
+        assertEquals(Collections.singleton(username), subject.getPrincipals(UserPrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected user principal names");
+        assertEquals(new HashSet<>(Arrays.asList("all", "amq", "admin")), subject.getPrincipals(RolePrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected role principal names");
+    }
+
+    @Test
+    public void testUnsuccessfulSupportAccess() throws Exception {
+        String username = "support";
+        String password = "pwd" + UUID.randomUUID().toString();
+        userFile = Files.createTempFile("user", "dat");
+        Files.deleteIfExists(userFile);
+        passwordFile = Files.createTempFile("passwd", "dat");
+        Files.deleteIfExists(passwordFile);
+        Files.write(userFile, Collections.singletonList(username));
+        Files.write(passwordFile, Collections.singletonList(password));
+
+        options.put("support_user_path", userFile.toString());
+        options.put("support_password_path", passwordFile.toString());
+
+        Subject subject = new Subject();
+
+        loginModule.initialize(subject, createCallbackHandler(username, "bad".toCharArray()), Collections.emptyMap(), options);
+        assertFalse(loginModule.login(), "Login unexpectedly failed");
+        assertEquals(0, subject.getPrincipals().size(), "No principals should be added until after the commit");
+        assertFalse(loginModule.commit(), "Commit unexpectedly failed");
+        assertEquals(Collections.emptySet(), subject.getPrincipals(UserPrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected user principal names");
+        assertEquals(Collections.emptySet(), subject.getPrincipals(RolePrincipal.class).stream().map(Principal::getName).collect(Collectors.toSet()), "Unexpected role principal names");
     }
 
 
