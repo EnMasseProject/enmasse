@@ -9,4 +9,3 @@ keycloak_admin_password=admin
 authentication_services=["standard"]
 monitoring_namespace=enmasse-monitoring
 monitoring_operator=False
-monitoring=False

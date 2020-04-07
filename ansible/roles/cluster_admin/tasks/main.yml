@@ -63,6 +63,3 @@
 - import_role:
     name: monitoring-operator
   when: monitoring_operator
-- import_role:
-    name: monitoring
-  when: monitoring
