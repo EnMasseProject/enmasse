@@ -46,7 +46,11 @@ import {
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
-import { getSelectOptionList, ISelectOption } from "utils";
+import {
+  getSelectOptionList,
+  ISelectOption,
+  removeForbiddenChars
+} from "utils";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -218,8 +222,9 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNameInput(e.target.value);
-    onChangeNameData(e.target.value);
+    let name = removeForbiddenChars(e.target.value);
+    setNameInput(name);
+    onChangeNameData(name);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -270,8 +275,9 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setContainerInput(e.target.value);
-    onChangeContainerData(e.target.value);
+    let container = removeForbiddenChars(e.target.value);
+    setContainerInput(container);
+    onChangeContainerData(container);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
           <SelectOption key={index} value={option} />

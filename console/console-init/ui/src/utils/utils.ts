@@ -3,6 +3,11 @@ import {
   TypeAheadMessage,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
 } from "constants/constants";
+import {
+  forbiddenBackslashRegexp,
+  forbiddenSingleQuoteRegexp,
+  forbiddenDoubleQuoteRegexp
+} from "types/Configs";
 
 export interface ISelectOption {
   value: string;
@@ -48,4 +53,12 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   return records;
 };
 
-export { getSelectOptionList };
+const removeForbiddenChars = (input: string) => {
+  let modifiedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
+  modifiedInput = modifiedInput.replace(forbiddenSingleQuoteRegexp, "''");
+  modifiedInput = modifiedInput.replace(forbiddenDoubleQuoteRegexp, '\\"');
+  console.log("modified input", modifiedInput);
+  return modifiedInput;
+};
+
+export { getSelectOptionList, removeForbiddenChars };

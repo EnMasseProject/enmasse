@@ -41,7 +41,11 @@ import {
   TYPEAHEAD_REQUIRED_LENGTH,
   FetchPolicy
 } from "constants/constants";
-import { ISelectOption, getSelectOptionList } from "utils";
+import {
+  ISelectOption,
+  getSelectOptionList,
+  removeForbiddenChars
+} from "utils";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
@@ -246,8 +250,9 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNameInput(e.target.value);
-    onChangeNameData(e.target.value);
+    let name = removeForbiddenChars(e.target.value);
+    setNameInput(name);
+    onChangeNameData(name);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -295,8 +300,9 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onNamespaceSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setNameSpaceInput(e.target.value);
-    onChangeNamespaceData(e.target.value);
+    let namespace = removeForbiddenChars(e.target.value);
+    setNameSpaceInput(namespace);
+    onChangeNamespaceData(namespace);
     const options: React.ReactElement[] = namespaceOptions
       ? namespaceOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
