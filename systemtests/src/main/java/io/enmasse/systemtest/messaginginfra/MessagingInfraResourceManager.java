@@ -63,24 +63,27 @@ public class MessagingInfraResourceManager {
     }
 
     public void setClassResources() {
-        LOGGER.info("###################################");
         LOGGER.info("Setting pointer to class resources");
         pointerResources = classResources;
     }
 
     public void deleteClassResources() throws Exception {
         LOGGER.info("Going to clear all class resources");
+        LOGGER.info("------------------------------------");
         while (!classResources.empty()) {
             classResources.pop().run();
         }
+        LOGGER.info("------------------------------------");
         classResources.clear();
     }
 
     public void deleteMethodResources() throws Exception {
         LOGGER.info("Going to clear all method resources");
+        LOGGER.info("------------------------------------");
         while (!methodResources.empty()) {
             methodResources.pop().run();
         }
+        LOGGER.info("------------------------------------");
         methodResources.clear();
         pointerResources = classResources;
     }
