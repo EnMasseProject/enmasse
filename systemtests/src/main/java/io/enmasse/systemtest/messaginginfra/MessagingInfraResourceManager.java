@@ -7,8 +7,6 @@ package io.enmasse.systemtest.messaginginfra;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.model.MessagingInfra;
 import io.enmasse.api.model.MessagingInfraBuilder;
-import io.enmasse.api.model.MessagingInfraStatus;
-import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
@@ -65,7 +63,7 @@ public class MessagingInfraResourceManager {
     }
 
     public void setClassResources() {
-        LOGGER.info("####################################################################################################");
+        LOGGER.info("###################################");
         LOGGER.info("Setting pointer to class resources");
         pointerResources = classResources;
     }
@@ -138,15 +136,15 @@ public class MessagingInfraResourceManager {
     // Common resource methods
     //------------------------------------------------------------------------------------------------
 
-    public <T extends HasMetadata> void createResource(T... resources) throws Exception {
+    public <T extends HasMetadata> void createResource(T... resources) {
         for (T resource : resources) {
             LOGGER.info("Create/Update of {} {} in namespace {}",
                     resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             switch (resource.getKind()) {
-                case "MessagingInfra":
+                case MessagingInfraCrd.KIND:
                     createMessagingInfra((MessagingInfra) resource);
-                    waithForInfraUp((MessagingInfra) resource);
                     scheduleDeletion(MessagingInfraCrd.getClient(), (MessagingInfra) resource);
+                    waitForInfraUp((MessagingInfra) resource);
                     break;
                 default:
                     LOGGER.warn("Can't find resource in list, please create it manually");
@@ -175,7 +173,8 @@ public class MessagingInfraResourceManager {
                 resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
         switch (resource.getKind()) {
             case "MessagingInfra":
-                deleteMessagingInfra((MessagingInfra) resource);
+                pointerResources.push(() ->
+                        deleteMessagingInfra((MessagingInfra) resource));
                 break;
             default:
                 pointerResources.push(() -> {
@@ -204,10 +203,14 @@ public class MessagingInfraResourceManager {
     }
 
     private void deleteMessagingInfra(MessagingInfra resource) {
-        MessagingInfraCrd.getClient().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).delete();
+        if (MessagingInfraCrd.getClient().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).get() != null) {
+            LOGGER.info("Delete of {} {} in namespace {}",
+                    resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+            MessagingInfraCrd.getClient().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).delete();
+        }
     }
 
-    public void waithForInfraUp(MessagingInfra infra) {
+    public void waitForInfraUp(MessagingInfra infra) {
         MessagingInfra found = null;
         TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
         while (!budget.timeoutExpired()) {

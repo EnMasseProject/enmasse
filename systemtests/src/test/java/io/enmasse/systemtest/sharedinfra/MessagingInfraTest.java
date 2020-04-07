@@ -28,11 +28,14 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
 
     @Test
     public void testInfraStaticScalingStrategy() throws Exception {
-        MessagingInfra infra = MessagingInfraCrd.getDefaultInfra()
-                .editMetadata()
+        MessagingInfra infra = new MessagingInfraBuilder()
+                .withNewMetadata()
+                .withName("default-infra")
                 .withNamespace(environment.namespace())
                 .endMetadata()
-                .done();
+                .withNewSpec()
+                .endSpec()
+                .build();
 
         infraResourceManager.createResource(infra);
 

@@ -101,6 +101,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
+            } else if(testInfo.isTestSharedInfra()) {
+                MessagingInfraResourceManager.getInstance().deleteClassResources();
             } else if (testInfo.isOLMTest()) {
                 LOGGER.info("Test is OLM");
                 if (operatorManager.isEnmasseOlmDeployed()) {
@@ -131,6 +133,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
+            MessagingInfraResourceManager.getInstance().deleteMethodResources();
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
             } else if (testInfo.isTestIoT()) {
