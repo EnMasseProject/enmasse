@@ -37,7 +37,6 @@ import {
 export interface IAddressSpaceListContainerProps {
   page: number;
   perPage: number;
-  totalItemsCount: number;
   setTotalAddressSpaces: (value: number) => void;
   filterNames: string[];
   filterNamespaces: string[];
@@ -55,7 +54,6 @@ export interface IAddressSpaceListContainerProps {
 export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps> = ({
   page,
   perPage,
-  totalItemsCount,
   setTotalAddressSpaces,
   filterNames,
   filterNamespaces,
@@ -165,8 +163,9 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
     if (link.parentNode) link.parentNode.removeChild(link);
   };
 
-  const addressSpacesList: IAddressSpace[] = addressSpaces.addressSpaces.map(
-    addSpace => ({
+  const addressSpacesList: IAddressSpace[] =
+    addressSpaces &&
+    addressSpaces.addressSpaces.map(addSpace => ({
       name: addSpace.metadata.name,
       nameSpace: addSpace.metadata.namespace,
       creationTimestamp: addSpace.metadata.creationTimestamp,
@@ -191,8 +190,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
             { name: addSpace.metadata.name, nameSpace }
           )
         ).length === 1
-    })
-  );
+    }));
 
   const onSort = (_event: any, index: number, direction: SortByDirection) => {
     setSortBy({ index: index, direction: direction });
@@ -238,7 +236,6 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   return (
     <>
       <AddressSpaceList
-        totalItemsCount={totalItemsCount}
         onSelect={onSelect}
         onSort={onSort}
         rows={tableRows}

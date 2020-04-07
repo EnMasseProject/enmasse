@@ -80,7 +80,6 @@ export default function AddressPage() {
 
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
-  const [onCreationRefetch, setOnCreationRefetch] = useState<boolean>(false);
 
   const [selectedAddresses, setSelectedAddresses] = useState<IAddress[]>([]);
   const { data } = useQuery<IAddressSpacePlanResponse>(
@@ -299,7 +298,6 @@ export default function AddressPage() {
             onPurgeAllAddress={onPurgeAll}
             isDeleteAllDisabled={isDeleteAllOptionDisabled()}
             isPurgeAllDisabled={isPurgeAllOptionDisbled()}
-            setOnCreationRefetch={setOnCreationRefetch}
           />
         </GridItem>
         <GridItem span={5}>{renderPagination()}</GridItem>
@@ -319,8 +317,6 @@ export default function AddressPage() {
         setSortValue={setSortDropdownValue}
         isWizardOpen={isCreateWizardOpen}
         setIsWizardOpen={setIsCreateWizardOpen}
-        onCreationRefetch={onCreationRefetch}
-        setOnCreationRefetch={setOnCreationRefetch}
         selectedAddresses={selectedAddresses}
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
