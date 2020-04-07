@@ -46,7 +46,11 @@ import {
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
-import { getSelectOptionList, ISelectOption } from "utils";
+import {
+  getSelectOptionList,
+  ISelectOption,
+  removeForbiddenChars
+} from "utils";
 
 interface IConnectionLinksFilterProps {
   filterValue: string;
@@ -226,8 +230,9 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNameInput(e.target.value);
-    onChangeNameData(e.target.value);
+    let name = removeForbiddenChars(e.target.value);
+    setNameInput(name);
+    onChangeNameData(name);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -276,8 +281,9 @@ export const ConnectionLinksFilter: React.FunctionComponent<IConnectionLinksFilt
   const onAddressSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setAddressInput(e.target.value);
-    onChangeAddressData(e.target.value);
+    let address = removeForbiddenChars(e.target.value);
+    setAddressInput(address);
+    onChangeAddressData(address);
     const options: React.ReactElement[] = addressOptions
       ? addressOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
