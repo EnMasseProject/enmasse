@@ -6,6 +6,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@apollo/react-hooks";
 import { ISortBy } from "@patternfly/react-table";
+import { Loading } from "use-patternfly";
 import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
 import {
   IConnection,
@@ -45,7 +46,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  let { data } = useQuery<IConnectionListResponse>(
+  let { data, loading } = useQuery<IConnectionListResponse>(
     RETURN_ALL_CONECTION_LIST(
       page,
       perPage,
@@ -57,6 +58,8 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
+  if (loading) return <Loading />;
 
   const { connections } = data || {
     connections: { total: 0, connections: [] }

@@ -34,8 +34,6 @@ export interface IAddressListPageProps {
   setSortValue: (value: ISortBy) => void;
   isWizardOpen: boolean;
   setIsWizardOpen: (value: boolean) => void;
-  onCreationRefetch?: boolean;
-  setOnCreationRefetch: (value: boolean) => void;
   selectedAddresses: Array<IAddress>;
   onSelectAddress: (address: IAddress, isSelected: boolean) => void;
   onSelectAllAddress: (addresses: IAddress[], isSelected: boolean) => void;
@@ -55,8 +53,6 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   setSortValue,
   isWizardOpen,
   setIsWizardOpen,
-  onCreationRefetch,
-  setOnCreationRefetch,
   selectedAddresses,
   onSelectAddress,
   onSelectAllAddress
@@ -80,7 +76,7 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { data, refetch, loading } = useQuery<IAddressResponse>(
+  const { data, loading } = useQuery<IAddressResponse>(
     RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE(
       page,
       perPage,
@@ -93,11 +89,6 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
-
-  if (onCreationRefetch) {
-    refetch();
-    setOnCreationRefetch(false);
-  }
 
   if (loading) return <Loading />;
 

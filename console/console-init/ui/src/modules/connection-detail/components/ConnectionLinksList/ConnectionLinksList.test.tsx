@@ -8,8 +8,8 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { ILink, ConnectionLinksList } from "./ConnectionLinksList";
 
-describe("Link List", () => {
-  test("it renders a list of links", () => {
+describe("<ConnectionLinksList/>", () => {
+  test("should render a list of links", () => {
     const links: ILink[] = [
       {
         role: "sender",
@@ -51,10 +51,10 @@ describe("Link List", () => {
     const addressNodeOne = getByText(links[0].address);
     const deliveriesNodeOne = getByText(links[0].deliveries.toString());
 
-    expect(roleNodeOne).toBeDefined();
-    expect(nameNodeOne).toBeDefined();
-    expect(addressNodeOne).toBeDefined();
-    expect(deliveriesNodeOne).toBeDefined();
+    expect(roleNodeOne).toBeInTheDocument();
+    expect(nameNodeOne).toBeInTheDocument();
+    expect(addressNodeOne).toBeInTheDocument();
+    expect(deliveriesNodeOne).toBeInTheDocument();
 
     //Testing elements of second row
     const roleNodeTwo = getByText(links[1].role);
@@ -62,9 +62,9 @@ describe("Link List", () => {
     const addressNodeTwo = getByText(links[1].address);
     const deliveriesNodeTwo = getByText(links[1].deliveries.toString());
 
-    expect(roleNodeTwo).toBeDefined();
-    expect(nameNodeTwo).toBeDefined();
-    expect(addressNodeTwo).toBeDefined();
-    expect(deliveriesNodeTwo).toBeDefined();
+    expect(roleNodeTwo).toBeInTheDocument();
+    expect(nameNodeTwo).toBeInTheDocument();
+    expect(addressNodeTwo).toBeInTheDocument();
+    expect(deliveriesNodeTwo).toBeInTheDocument();
   });
 });
