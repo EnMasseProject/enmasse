@@ -559,6 +559,10 @@ public abstract class Kubernetes {
     }
 
     public void deleteNamespace(String namespace) throws Exception {
+        deleteNamespace(namespace, Duration.ofMinutes(5));
+    }
+
+    public void deleteNamespace(String namespace, Duration timeout) throws Exception {
         if (verboseLog) {
             log.info("Following namespace will be removed - {}", namespace);
         }
@@ -566,7 +570,7 @@ public abstract class Kubernetes {
             client.namespaces().withName(namespace).cascading(true).delete();
 
             TestUtils.waitUntilCondition("Namespace will be deleted", phase ->
-                    !namespaceExists(namespace), new TimeoutBudget(5, TimeUnit.MINUTES));
+                    !namespaceExists(namespace), TimeoutBudget.ofDuration(timeout));
         } else {
             log.info("Namespace {} already removed", namespace);
         }

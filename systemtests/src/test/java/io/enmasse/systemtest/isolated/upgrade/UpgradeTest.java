@@ -83,7 +83,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         if (this.type.equals(EnmasseInstallType.BUNDLE)) {
             assertTrue(OperatorManager.getInstance().clean());
         } else if (this.type.equals(EnmasseInstallType.OLM)) {
-            assertTrue(OperatorManager.getInstance().removeOlm());
+            if (OperatorManager.getInstance().isEnmasseOlmDeployed()) {
+                assertTrue(OperatorManager.getInstance().removeOlm());
+            }
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
         }
