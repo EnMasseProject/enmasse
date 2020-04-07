@@ -463,39 +463,44 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 
 func (r *ReconcileConsoleService) reconcilePrometheusRule(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
 
-	if !util.HasApi(monitoringGVK) {
-		return reconcile.Result{}, nil
-	}
+	monitoringEnabled := util.GetBooleanEnv("ENABLE_MONITORING")
 
-	prometheusRule := &monitoringv1.PrometheusRule{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "enmasse-console-rules",
-			Namespace: consoleservice.Namespace,
-		},
-	}
+	if monitoringEnabled {
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, prometheusRule, func() error {
+		if !util.HasApi(monitoringGVK) {
+			return reconcile.Result{}, nil
+		}
 
-		install.ApplyDefaultLabels(&prometheusRule.ObjectMeta, "consoleservice", consoleservice.Name)
-		install.ApplyCustomLabel(&prometheusRule.ObjectMeta, "monitoring-key", "middleware")
-		prometheusRule.Spec = monitoringv1.PrometheusRuleSpec{
-			Groups: []monitoringv1.RuleGroup{
-				{
-					Name: "ComponentHealth",
-					Rules: []monitoringv1.Rule{
-						{
-							Record: "enmasse_component_health",
-							Expr:   intstr.FromString("up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'} or on(namespace) (1- absent(up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'}))"),
+		prometheusRule := &monitoringv1.PrometheusRule{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      "enmasse-console-rules",
+				Namespace: consoleservice.Namespace,
+			},
+		}
+
+		_, err := controllerutil.CreateOrUpdate(ctx, r.client, prometheusRule, func() error {
+
+			install.ApplyDefaultLabels(&prometheusRule.ObjectMeta, "consoleservice", consoleservice.Name)
+			install.ApplyCustomLabel(&prometheusRule.ObjectMeta, "monitoring-key", "middleware")
+			prometheusRule.Spec = monitoringv1.PrometheusRuleSpec{
+				Groups: []monitoringv1.RuleGroup{
+					{
+						Name: "ComponentHealth",
+						Rules: []monitoringv1.Rule{
+							{
+								Record: "enmasse_component_health",
+								Expr:   intstr.FromString("up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'} or on(namespace) (1- absent(up{job='console',namespace='" + util.GetEnvOrDefault("NAMESPACE", "enmasse-infra") + "'}))"),
+							},
 						},
 					},
 				},
-			},
+			}
+			return nil
+		})
+		if err != nil {
+			log.Error(err, "Failed reconciling PrometheusRule")
+			return reconcile.Result{}, err
 		}
-		return nil
-	})
-	if err != nil {
-		log.Error(err, "Failed reconciling PrometheusRule")
-		return reconcile.Result{}, err
 	}
 	return reconcile.Result{}, nil
 }
