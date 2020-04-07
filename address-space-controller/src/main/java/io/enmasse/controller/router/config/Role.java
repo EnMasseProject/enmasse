@@ -8,8 +8,10 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Role {
+    normal("normal"),
     inter_router("inter-router"),
-    route_container("route-container");
+    route_container("route-container"),
+    edge("edge");
 
     private final String desc;
     Role(String desc) {
@@ -24,10 +26,14 @@ public enum Role {
     @JsonCreator
     public static Role forValue(String value) {
         switch (value) {
+            case "normal":
+                return Role.normal;
             case "route-container":
                 return Role.route_container;
             case "inter-router":
                 return Role.inter_router;
+            case "edge":
+                return Role.edge;
             default:
                 throw new IllegalArgumentException("Unknown role '" + value + "'");
         }

@@ -20,6 +20,8 @@ public class Connector {
     private String saslMechanisms;
     private String failoverUrls;
     private Role role;
+    private Integer maxFrameSize;
+    private Integer idleTimeoutSeconds;
 
     public String getHost() {
         return host;
@@ -101,6 +103,22 @@ public class Connector {
         this.name = name;
     }
 
+    public Integer getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(Integer maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
+    }
+
+    public Integer getIdleTimeoutSeconds() {
+        return idleTimeoutSeconds;
+    }
+
+    public void setIdleTimeoutSeconds(Integer idleTimeoutSeconds) {
+        this.idleTimeoutSeconds = idleTimeoutSeconds;
+    }
+
     @Override
     public String toString() {
         return "Connector{" +
@@ -111,6 +129,8 @@ public class Connector {
                 ", verifyHostname=" + verifyHostname +
                 ", saslMechanisms='" + saslMechanisms + '\'' +
                 ", failoverUrls='" + failoverUrls + '\'' +
+                ", idleTimeoutSeconds=" + idleTimeoutSeconds +
+                ", maxFrameSize=" + maxFrameSize +
                 ", role=" + role +
                 '}';
     }
@@ -129,11 +149,13 @@ public class Connector {
                 Objects.equals(saslPassword, connector.saslPassword) &&
                 Objects.equals(saslMechanisms, connector.saslMechanisms) &&
                 Objects.equals(failoverUrls, connector.failoverUrls) &&
-                role == connector.role;
+                role == connector.role &&
+                Objects.equals(idleTimeoutSeconds, connector.idleTimeoutSeconds) &&
+                Objects.equals(maxFrameSize, connector.maxFrameSize);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, host, port, sslProfile, verifyHostname, saslUsername, saslPassword, saslMechanisms, failoverUrls, role);
+        return Objects.hash(name, host, port, sslProfile, verifyHostname, saslUsername, saslPassword, saslMechanisms, failoverUrls, role, idleTimeoutSeconds, maxFrameSize);
     }
 }

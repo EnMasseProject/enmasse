@@ -211,6 +211,9 @@ public class RouterConfigControllerTest {
                 .addNewEndpointHost()
                 .withHost("messaging2.example.com")
                 .endEndpointHost()
+                .withIdleTimeout(12000)
+                .withMaxFrameSize(12345)
+                .withRole("normal")
 
                 .withNewTls()
                 .withNewCaCert()
@@ -331,6 +334,9 @@ public class RouterConfigControllerTest {
         assertEquals("amqps://messaging2.example.com:5671", remote.getFailoverUrls());
         assertEquals("connector_remote1_settings", remote.getSslProfile());
         assertEquals("EXTERNAL PLAIN", remote.getSaslMechanisms());
+        assertEquals(12000, remote.getIdleTimeoutSeconds());
+        assertEquals(12345, remote.getMaxFrameSize());
+        assertEquals("normal", remote.getRole().toValue());
         assertEquals(5671, remote.getPort());
         assertEquals("test", remote.getSaslUsername());
         assertEquals("test", remote.getSaslPassword());

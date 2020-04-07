@@ -572,6 +572,21 @@ func (in *ConnectorSpec) DeepCopyInto(out *ConnectorSpec) {
 		copy(*out, *in)
 	}
 	out.Tls = in.Tls
+	if in.Role != nil {
+		in, out := &in.Role, &out.Role
+		*out = new(string)
+		**out = **in
+	}
+	if in.MaxFrameSize != nil {
+		in, out := &in.MaxFrameSize, &out.MaxFrameSize
+		*out = new(int)
+		**out = **in
+	}
+	if in.IdleTimeout != nil {
+		in, out := &in.IdleTimeout, &out.IdleTimeout
+		*out = new(int)
+		**out = **in
+	}
 	out.Credentials = in.Credentials
 	if in.Addresses != nil {
 		in, out := &in.Addresses, &out.Addresses

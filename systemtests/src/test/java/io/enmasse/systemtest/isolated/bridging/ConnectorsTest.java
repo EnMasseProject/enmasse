@@ -71,6 +71,7 @@ class ConnectorsTest extends BridgingBase {
                 .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withConnectors(new AddressSpaceSpecConnectorBuilder()
                         .withName(REMOTE_NAME)
+                        .withIdleTimeout(10000)
                         .addToEndpointHosts(new AddressSpaceSpecConnectorEndpointBuilder()
                                 .withHost("nonexistinghost.jeje.hola")
                                 .withPort(8080)

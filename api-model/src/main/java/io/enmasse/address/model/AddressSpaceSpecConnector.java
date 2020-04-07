@@ -41,6 +41,10 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
     @NotNull
     private String name;
 
+    private String role;
+    private Integer maxFrameSize;
+    private Integer idleTimeout;
+
     @NotNull
     @NotEmpty
     @JsonSetter(nulls = Nulls.AS_EMPTY)
@@ -103,6 +107,34 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
         }
     }
 
+    public String getRole() {
+        if (role != null) {
+            return role;
+        } else {
+            return "route-container";
+        }
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public Integer getMaxFrameSize() {
+        return maxFrameSize;
+    }
+
+    public void setMaxFrameSize(Integer maxFrameSize) {
+        this.maxFrameSize = maxFrameSize;
+    }
+
+    public Integer getIdleTimeout() {
+        return idleTimeout;
+    }
+
+    public void setIdleTimeout(Integer idleTimeout) {
+        this.idleTimeout = idleTimeout;
+    }
+
     @Override
     public String toString() {
         return "AddressSpaceSpecConnector{" +
@@ -111,6 +143,9 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
                 ", credentials=" + credentials +
                 ", tls=" + tls +
                 ", addresses=" + addresses +
+                ", role=" + role +
+                ", idleTimeout=" + idleTimeout +
+                ", maxFrameSize=" + maxFrameSize +
                 '}';
     }
 
@@ -123,11 +158,14 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
                 Objects.equals(endpointHosts, connector.endpointHosts) &&
                 Objects.equals(credentials, connector.credentials) &&
                 Objects.equals(tls, connector.tls) &&
-                Objects.equals(addresses, connector.addresses);
+                Objects.equals(addresses, connector.addresses) &&
+                Objects.equals(role, connector.role) &&
+                Objects.equals(idleTimeout, connector.idleTimeout) &&
+                Objects.equals(maxFrameSize, connector.maxFrameSize);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, endpointHosts, credentials, tls, addresses);
+        return Objects.hash(name, endpointHosts, credentials, tls, addresses, role, idleTimeout, maxFrameSize);
     }
 }
