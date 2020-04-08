@@ -5,33 +5,32 @@
 
 import React, { useState } from "react";
 import { Wizard } from "@patternfly/react-core";
+import { useQuery } from "@apollo/react-hooks";
 import { useMutationQuery } from "hooks";
-import { AddressDefinition } from "modules/address/dialogs/CreateAddress/Configuration";
+import { AddressDefinition } from "modules/address/containers";
 import { PreviewAddress } from "./Preview";
-import { CREATE_ADDRESS } from "graphql-module/queries";
+import {
+  CREATE_ADDRESS,
+  RETURN_ADDRESS_SPACE_DETAIL
+} from "graphql-module/queries";
 import { IDropdownOption } from "components";
 import { messagingAddressNameRegexp } from "utils";
+import { useStoreContext, types } from "context-state-reducer";
+import { IAddressSpacesResponse } from "schema/ResponseTypes";
+import { FetchPolicy } from "constant";
 
-interface ICreateAddressProps {
-  name: string;
-  namespace: string;
-  addressSpace: string;
-  addressSpacePlan: string;
-  addressSpaceType: string;
-  isCreateWizardOpen: boolean;
-  setIsCreateWizardOpen: (value: boolean) => void;
-  setOnCreationRefetch?: (value: boolean) => void;
-}
-export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
-  name,
-  namespace,
-  addressSpace,
-  addressSpacePlan,
-  addressSpaceType,
-  isCreateWizardOpen,
-  setIsCreateWizardOpen,
-  setOnCreationRefetch
-}) => {
+export const CreateAddress: React.FunctionComponent<{}> = () => {
+  const { dispatch, state } = useStoreContext();
+  const { modalProps } = (state && state.modal) || {};
+  const {
+    onConfirm,
+    onClose,
+    name,
+    namespace,
+    addressSpace,
+    addressSpaceType
+  } = modalProps || {};
+
   const [addressName, setAddressName] = useState("");
   const [addressType, setAddressType] = useState(" ");
   const [plan, setPlan] = useState(" ");
@@ -44,18 +43,42 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
   const [isNameValid, setIsNameValid] = useState(true);
 
   const resetFormState = () => {
-    setIsCreateWizardOpen(false);
     setAddressType("");
     setPlan("");
-    setOnCreationRefetch && setOnCreationRefetch(true);
   };
 
+  const refetchQueries: string[] = ["all_addresses_for_addressspace_view"];
   const [setAddressQueryVariables] = useMutationQuery(
     CREATE_ADDRESS,
-    undefined,
+    refetchQueries,
     resetFormState,
     resetFormState
   );
+
+  const { data } = useQuery<IAddressSpacesResponse>(
+    RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
+    { fetchPolicy: FetchPolicy.NETWORK_ONLY }
+  );
+
+  const getAddressSpacePlan = () => {
+    let addressSpacePlan: string = "";
+    if (
+      data &&
+      data.addressSpaces &&
+      data.addressSpaces.addressSpaces.length > 0
+    ) {
+      const plan = data.addressSpaces.addressSpaces[0].spec.plan.metadata.name;
+      if (plan) {
+        addressSpacePlan = plan;
+      }
+    }
+    return addressSpacePlan;
+  };
+
+  const onCloseDialog = () => {
+    dispatch({ type: types.HIDE_MODAL });
+    onClose && onClose();
+  };
 
   const handleAddressChange = (name: string) => {
     setAddressName(name);
@@ -64,36 +87,35 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
       : setIsNameValid(true);
   };
 
-  const isReviewEnabled = () => {
+  const isReviewButtonEnabled = () => {
     if (
       addressName.trim() !== "" &&
       isNameValid &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-      (addressType === "subscription") === (topic.trim() !== "")
+      (addressType.toLowerCase() === "subscription") === (topic.trim() !== "")
     ) {
       return true;
     }
-
     return false;
   };
 
-  const isFinishEnabled = () => {
+  const isFinishButtonEnabled = () => {
     if (
       addressName.trim() !== "" &&
       plan.trim() !== "" &&
       addressType.trim() !== "" &&
-      (addressType === "subscription") === (topic.trim() !== "") &&
+      (addressType.toLowerCase() === "subscription") ===
+        (topic.trim() !== "") &&
       isNameValid
     ) {
       return true;
     }
-
     return false;
   };
 
   const handleSave = async () => {
-    if (addressSpace && isFinishEnabled()) {
+    if (addressSpace) {
       const getVariables = () => {
         let variable: any = {
           metadata: {
@@ -113,8 +135,11 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
         a: getVariables(),
         as: addressSpace
       };
-      setAddressQueryVariables(variables);
+      await setAddressQueryVariables(variables);
     }
+
+    onCloseDialog();
+    onConfirm && onConfirm();
   };
   const steps = [
     {
@@ -123,7 +148,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
         <AddressDefinition
           addressspaceName={name}
           namespace={namespace}
-          addressSpacePlan={addressSpacePlan}
+          addressSpacePlan={getAddressSpacePlan()}
           addressName={addressName}
           handleAddressChange={handleAddressChange}
           isNameValid={isNameValid}
@@ -142,7 +167,7 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
           setTopicForSubscripitons={setTopicForSubscription}
         />
       ),
-      enableNext: isReviewEnabled(),
+      enableNext: isReviewButtonEnabled(),
       backButton: "hide"
     },
     {
@@ -157,21 +182,18 @@ export const CreateAddress: React.FunctionComponent<ICreateAddressProps> = ({
           addressspace={addressSpace}
         />
       ),
-      enableNext: isFinishEnabled(),
-      canJumpTo: isReviewEnabled(),
+      enableNext: isFinishButtonEnabled(),
+      canJumpTo: isReviewButtonEnabled(),
       nextButtonText: "Finish"
     }
   ];
   return (
     <Wizard
       id="create-addr-wizard"
-      isOpen={isCreateWizardOpen}
+      isOpen={true}
       isFullHeight={true}
       isFullWidth={true}
-      onClose={() => {
-        setIsCreateWizardOpen(!isCreateWizardOpen);
-        setAddressName("");
-      }}
+      onClose={onCloseDialog}
       title="Create new Address"
       steps={steps}
       onNext={() => {}}

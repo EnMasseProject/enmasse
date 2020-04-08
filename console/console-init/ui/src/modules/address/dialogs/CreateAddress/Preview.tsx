@@ -50,7 +50,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   addressspace
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const { data, loading, error } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
+  const { data, loading } = useQuery(ADDRESS_COMMAND_PREVIEW_DETAIL, {
     variables: {
       a: {
         metadata: {
@@ -66,8 +66,8 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
       as: addressspace
     }
   });
+
   if (loading) return <Loading />;
-  if (error) console.log("Address Preview Query Error", error);
 
   return (
     <PageSection variant={PageSectionVariants.light}>
@@ -155,7 +155,9 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
-                      navigator.clipboard.writeText(data.addressCommand);
+                      navigator.clipboard.writeText(
+                        data && data.addressCommand
+                      );
                       setIsCopied(true);
                     }}
                     onMouseLeave={() => {
@@ -173,7 +175,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             theme="github"
             fontSize={14}
             readOnly={true}
-            value={data.addressCommand}
+            value={data && data.addressCommand}
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
             style={{
