@@ -43,7 +43,7 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
         setIsValid(false);
       }
     } else {
-      setShowJson(true);
+      setShowJson(!showJson);
     }
   };
   const onChange = (value: string) => {
