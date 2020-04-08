@@ -141,63 +141,63 @@ class SaslAuthenticator implements ProtonSaslAuthenticator
         String[] remoteMechanisms = sasl.getRemoteMechanisms();
         boolean done = false;
 
-        if(saslMechanism == null) {
-            if (remoteMechanisms.length > 0) {
-                String chosen = remoteMechanisms[0];
-                Optional<SaslServerMechanism> mechanismImpl = ALL_MECHANISMS.stream().filter(m -> m.getName().equals(chosen)).findFirst();
-                if (mechanismImpl.isPresent()) {
-                    String saslHostname = sasl.getHostname();
-                    if(saslHostname == null) {
-                        saslHostname = config.get("defaultDomain","");
+        try {
+            if(saslMechanism == null) {
+                if (remoteMechanisms.length > 0) {
+                    String chosen = remoteMechanisms[0];
+                    Optional<SaslServerMechanism> mechanismImpl = ALL_MECHANISMS.stream().filter(m -> m.getName().equals(chosen)).findFirst();
+                    if (mechanismImpl.isPresent()) {
+                        String saslHostname = sasl.getHostname();
+                        if(saslHostname == null) {
+                            saslHostname = config.get("defaultDomain","");
+                        }
+                        try {
+                            saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config, amqpServer);
+                        } catch (Exception e) {
+                            sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
+                            done = true;
+                        }
+                    } else {
+                        sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
+                        done = true;
                     }
-                    saslMechanism = mechanismImpl.get().newInstance(keycloakSessionFactory, saslHostname, config, amqpServer);
-
+                }
+            }
+            if(!done && saslMechanism != null) {
+                byte[] response;
+                if(sasl.pending()>0) {
+                    response = new byte[sasl.pending()];
+                    sasl.recv(response, 0, response.length);
                 } else {
-
+                    response = new byte[0];
+                }
+                try {
+                    byte[] challenge = saslMechanism.processResponse(response);
+                    if (!saslMechanism.isComplete() || (challenge != null && challenge.length > 0)) {
+                        sasl.send(challenge, 0, challenge.length);
+                    } else {
+                        succeeded = saslMechanism.isAuthenticated();
+                        done = true;
+                        if (succeeded) {
+                            connection.attachments().set(USER_ATTACHMENT, UserData.class, saslMechanism.getAuthenticatedUser());
+                            sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
+                        } else {
+                            sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    done = true;
                     sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
+                } catch (Exception e) {
+                    LOG.warn("Unrecoverable exception during SASL negotiation", e);
                     done = true;
+                    sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
                 }
             }
+        } finally {
+            completionHandler.handle(done);
         }
-        if(!done && saslMechanism != null) {
-            byte[] response;
-            if(sasl.pending()>0) {
-                response = new byte[sasl.pending()];
-                sasl.recv(response, 0, response.length);
-            } else {
-                response = new byte[0];
-            }
-            try {
-                byte[] challenge = saslMechanism.processResponse(response);
-                if (!saslMechanism.isComplete() || (challenge != null && challenge.length > 0))
-                {
-                    sasl.send(challenge, 0, challenge.length);
-                }
-                else
-                {
-                    succeeded = saslMechanism.isAuthenticated();
-                    done = true;
-                    if (succeeded)
-                    {
-                        connection.attachments().set(USER_ATTACHMENT, UserData.class, saslMechanism.getAuthenticatedUser());
-                        sasl.done(Sasl.SaslOutcome.PN_SASL_OK);
-                    }
-                    else
-                    {
-                        sasl.done(Sasl.SaslOutcome.PN_SASL_AUTH);
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                done = true;
-                sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
-            } catch (IllegalArgumentException e) {
-                e.printStackTrace();
-                done = true;
-                sasl.done(Sasl.SaslOutcome.PN_SASL_SYS);
-            }
-        }
-        completionHandler.handle(done);
     }
 
     @Override

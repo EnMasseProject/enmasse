@@ -564,6 +564,8 @@
                   <property name="tlsHost" value="0.0.0.0"/>
                   <property name="tlsPort" value="5671"/>
                   <property name="defaultDomain" value="enmasse"/>
+                  <property name="numAmqpServerInstances" value="${env.ENMASSE_NUM_AMQP_SERVER_INSTANCES:4}"/>
+                  <property name="numAmqpsServerInstances" value="${env.ENMASSE_NUM_AMQPS_SERVER_INSTANCES:4}"/>
                 </properties>
               </provider>
             </spi>
