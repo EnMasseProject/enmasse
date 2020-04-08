@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+sudo apt update
 sudo apt install docker.io
 sudo systemctl unmask docker
 
