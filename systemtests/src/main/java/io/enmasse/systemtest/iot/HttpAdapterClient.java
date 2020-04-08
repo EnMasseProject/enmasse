@@ -14,6 +14,8 @@ import static java.time.Duration.ofSeconds;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -37,11 +39,18 @@ import io.vertx.ext.web.client.WebClientOptions;
 
 public class HttpAdapterClient extends ApiClient {
 
-    protected static Logger log = CustomLogger.getLogger();
+    protected static final Logger log = CustomLogger.getLogger();
+
+    private final Set<String> tlsVersions;
 
     public HttpAdapterClient(Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
+        this(endpoint, deviceAuthId, tenantId, password, Collections.emptySet());
+    }
+
+    public HttpAdapterClient(Endpoint endpoint, String deviceAuthId, String tenantId, String password, Set<String> tlsVersions) {
         super(() -> endpoint, "");
         this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
+        this.tlsVersions = tlsVersions;
     }
 
     private static String contentType(final Buffer payload) {
@@ -55,10 +64,19 @@ public class HttpAdapterClient extends ApiClient {
 
     @Override
     protected void connect() {
-        this.client = WebClient.create(vertx, new WebClientOptions()
+        var options = new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
-                .setVerifyHost(false));
+                .setVerifyHost(false);
+
+        if (this.tlsVersions != null && !this.tlsVersions.isEmpty()) {
+            // remove all current versions
+            options.getEnabledSecureTransportProtocols().forEach(options::removeEnabledSecureTransportProtocol);
+            // set new versions
+            this.tlsVersions.forEach(options::addEnabledSecureTransportProtocol);
+        }
+
+        this.client = WebClient.create(vertx, options);
     }
 
     @Override

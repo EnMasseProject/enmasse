@@ -28,6 +28,7 @@ public class AdapterConfig extends ServiceConfig {
     private EndpointConfig endpoint;
     private CommonAdapterContainers containers;
     private JavaContainerOptions java;
+    private TlsOptions tls;
     private AdapterOptions options;
 
     public Boolean getEnabled() {
@@ -55,6 +56,13 @@ public class AdapterConfig extends ServiceConfig {
     }
     public JavaContainerOptions getJava() {
         return java;
+    }
+
+    public void setTls(TlsOptions tls) {
+        this.tls = tls;
+    }
+    public TlsOptions getTls() {
+        return tls;
     }
 
     public void setOptions(AdapterOptions options) {

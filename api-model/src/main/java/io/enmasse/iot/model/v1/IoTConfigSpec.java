@@ -31,6 +31,7 @@ public class IoTConfigSpec {
     private AdaptersConfig adapters;
     private ServicesConfig services;
     private JavaContainerDefaults java;
+    private TlsOptions tls;
 
     public Boolean getEnableDefaultRoutes() {
         return enableDefaultRoutes;
@@ -72,6 +73,13 @@ public class IoTConfigSpec {
     }
     public JavaContainerDefaults getJava() {
         return java;
+    }
+
+    public void setTls(TlsOptions tls) {
+        this.tls = tls;
+    }
+    public TlsOptions getTls() {
+        return tls;
     }
 
 }

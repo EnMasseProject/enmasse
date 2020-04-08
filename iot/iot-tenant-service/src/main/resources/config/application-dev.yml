@@ -5,14 +5,10 @@ enmasse:
       validation:
         sharedSecret: 1234567890123456789012345678901234567890123456789012345678901234
 
-    tenant:
+    amqp:
+      insecurePortEnabled: true
+      insecurePort: 15672
 
-      endpoint:
-
-        amqp:
-          insecurePortEnabled: true
-          insecurePort: 15672
-
-        http:
-          insecurePortEnabled: true
-          insecurePort: 18080
+    http:
+      insecurePortEnabled: true
+      insecurePort: 18080

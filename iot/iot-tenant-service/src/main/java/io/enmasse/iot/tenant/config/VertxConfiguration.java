@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -10,6 +10,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.enmasse.iot.utils.ConfigBase;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.dns.AddressResolverOptions;
@@ -32,7 +33,7 @@ public class VertxConfiguration {
     }
 
     @Bean
-    @ConfigurationProperties("enmasse.iot.vertx")
+    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".vertx")
     public VertxProperties vertxProperties() {
         return new VertxProperties();
     }

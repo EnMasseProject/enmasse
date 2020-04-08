@@ -11,18 +11,14 @@ enmasse:
       validation:
         certPath: /etc/tls-auth-service/tls.crt
 
-    tenant:
+    amqp:
+      bindAddress: 0.0.0.0
+      keyPath: /etc/tls/tls.key
+      certPath: /etc/tls/tls.crt
+      keyFormat: PEM
+      nativeTlsRequired: true
 
-      endpoint:
-
-        amqp:
-          bindAddress: 0.0.0.0
-          keyPath: /etc/tls/tls.key
-          certPath: /etc/tls/tls.crt
-          keyFormat: PEM
-          nativeTlsRequired: true
-
-        http:
-          insecurePortBindAddress: 0.0.0.0
-          insecurePortEnabled: true
-          insecurePort: 8080
+    http:
+      insecurePortBindAddress: 0.0.0.0
+      insecurePortEnabled: true
+      insecurePort: 8080

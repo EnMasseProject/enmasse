@@ -10,7 +10,5 @@ enmasse:
       insecurePortEnabled: true
       insecurePort: 8088
 
-    tenant:
-
-      app:
-        maxInstances: 1
+    app:
+      maxInstances: 1

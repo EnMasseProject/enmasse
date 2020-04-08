@@ -273,6 +273,14 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 	adapterConfig := adapter.AdapterConfigProvider(config)
 	options := mergeAdapterOptions(config.Spec.AdaptersConfig.DefaultOptions, adapterConfig.Options)
 
+	// add native tls flag
+
+	appendAdapterEnvVar(container, adapter, "NATIVE_TLS_REQUIRED", strconv.FormatBool(adapterConfig.IsNativeTlsRequired(config)))
+
+	// configure tls versions
+
+	appendAdapterEnvVar(container, adapter, "SECURE_PROTOCOLS", strings.Join(adapterConfig.TlsVersions(config), ","))
+
 	// set max payload size
 	if options.MaxPayloadSize > 0 {
 		appendAdapterEnvVar(container, adapter, "MAX_PAYLOAD_SIZE", strconv.FormatInt(int64(options.MaxPayloadSize), 10))
