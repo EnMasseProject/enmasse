@@ -15,7 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import java.net.HttpURLConnection;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.eclipse.hono.service.management.credentials.CommonCredential;
@@ -314,6 +316,40 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
         var response2 = client.registerDeviceWithResponse(tenantId, deviceId);
         assertEquals(HTTP_CONFLICT, response2.statusCode());
+    }
+
+    protected void doRegisterMultipleDevices() throws Exception {
+
+        final String tenantId = isolatedIoTManager.getTenantId();
+        final String prefix = UUID.randomUUID().toString();
+        final Set<String> devices = new HashSet<>();
+
+        for (int i = 0; i < 1_000; i++) {
+            var deviceId = prefix + "-" + UUID.randomUUID().toString();
+            client.registerDevice(tenantId, deviceId);
+            devices.add(deviceId);
+        }
+
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
+            for (final String deviceId : devices) {
+                credentialsClient.addPlainPasswordCredentials(tenantId, deviceId, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            }
+        }
+
+        for (final String deviceId : devices) {
+            final Device result = client.getDeviceRegistration(tenantId, deviceId);
+            assertNotNull(result);
+            assertDefaultEnabled(result.getEnabled());
+        }
+
+        for (final String deviceId : devices) {
+            client.deleteDeviceRegistration(tenantId, deviceId);
+        }
+
+        for (final String deviceId : devices) {
+            client.getDeviceRegistration(tenantId, deviceId, HTTP_NOT_FOUND);
+        }
+
     }
 
 }

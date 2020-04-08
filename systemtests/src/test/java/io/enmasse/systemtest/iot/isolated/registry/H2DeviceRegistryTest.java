@@ -96,6 +96,11 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
+    void testRegisterMultipleDevices() throws Exception {
+        super.doRegisterMultipleDevices();
+    }
+
+    @Test
     void testTenantDeletionTriggersDevicesDeletion() throws Exception {
         super.doTestTenantDeletionTriggersDevicesDeletion();
 
