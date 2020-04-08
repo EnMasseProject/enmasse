@@ -37,7 +37,7 @@ systemtests:
 		KUBERNETES_API_URL=$(KUBERNETES_API_URL) \
 		./scripts/run_tests.sh '$(PROFILE)' '$(TESTCASE)'
 
-tekton-test:
+systemtests-tekton:
 		$(CMDTOOL) create namespace $(PIPELINE_NAMESPACE) || true
 		$(CMDTOOL) apply -f ../.tekton/test/ -n $(PIPELINE_NAMESPACE)
 		tkn pipeline start systemtest-pipeline \
