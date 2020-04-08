@@ -68,6 +68,8 @@
                 <REACT_APP_NAME>EnMasse Console</REACT_APP_NAME>
                 <REACT_APP_DOCS>${application.docs}</REACT_APP_DOCS>
                 <REACT_APP_GRAPHQL_ENDPOINT>/graphql/query</REACT_APP_GRAPHQL_ENDPOINT>
+                <!-- Prevents react warnings being promoted to errors -->
+                <CI>false</CI>
               </environmentVariables>
               <arguments>build</arguments>
             </configuration>
