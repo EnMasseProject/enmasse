@@ -484,7 +484,7 @@ const RETURN_ADDRESS_LINKS = (
 };
 
 const RETURN_ADDRESS_PLANS = (
-  addressSpacePlan: string,
+  addressSpacePlan: string | null,
   addressType: string
 ) => {
   const ADDRESS_PLANS = gql`
