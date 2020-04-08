@@ -115,6 +115,10 @@ spec:
                   - BLOCK
                   - FAIL
                   - DROP
+                globalMaxSize:
+                  pattern: "^(?i)\\d+\\s*[kmg]?b?$"
+                  type: string
+                  description: Sets a global limit to the amount of memory the broker can use before it applies the rules determined by addressFullPolicy. Value in bytes or use a byte suffix ("B", "K", "MB", "GB")
                 storageClassName:
                   type: string
                 updatePersistentVolumeClaim:
