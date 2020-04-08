@@ -7,7 +7,7 @@ import React from "react";
 import {
   MessagingToolbarToggleGroup,
   IMessagingToolbarToggleGroupProps
-} from "../MessagingDatatoolbarToggleGroup";
+} from "modules/address-space/components";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
   DataToolbarItem,
