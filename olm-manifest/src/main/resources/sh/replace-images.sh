@@ -5,7 +5,7 @@
 #
 # The script itself is invoked during the build of the container image where it will allow overriding the image urls via ${MY_IMAGE_PULL_URL}
 
-CSV_FILE=/manifests/${olm.version}/${application.bundle.prefix}.${olm.version}.clusterserviceversion.yaml
+CSV_FILE=/manifests/${application.bundle.prefix}.clusterserviceversion.yaml
 export ${env.IMAGE_ENV}
 COMPONENTS=$(echo ${env.IMAGE_ENV} | sed -e 's/ /\n/g' | cut -f 1 -d '=')
 

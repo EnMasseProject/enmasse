@@ -28,14 +28,10 @@
     <fileSets>
         <fileSet>
           <directory>${project.basedir}/../templates/crds</directory>
-          <outputDirectory>/manifests/${olm.version}</outputDirectory>
+          <outputDirectory>/manifests</outputDirectory>
           <includes>
             <include>*</include>
           </includes>
-        </fileSet>
-        <fileSet>
-          <directory>${project.basedir}/target/classes/manifests</directory>
-          <outputDirectory>/manifests</outputDirectory>
         </fileSet>
     </fileSets>
     <files>
@@ -46,15 +42,15 @@
           <fileMode>0755</fileMode>
         </file>
         <file>
-          <source>${project.basedir}/target/classes/latest/enmasse.package.yaml</source>
-          <outputDirectory>/manifests</outputDirectory>
-          <destName>${application.bundle.prefix}.package.yaml</destName>
+          <source>${project.basedir}/target/classes/latest/annotations.yaml</source>
+          <outputDirectory>/metadata</outputDirectory>
+          <destName>annotations.yaml</destName>
           <fileMode>0644</fileMode>
         </file>
         <file>
           <source>${project.basedir}/target/classes/latest/enmasse.clusterserviceversion.yaml</source>
-          <outputDirectory>/manifests/${olm.version}</outputDirectory>
-          <destName>${application.bundle.prefix}.${olm.version}.clusterserviceversion.yaml</destName>
+          <outputDirectory>/manifests</outputDirectory>
+          <destName>${application.bundle.prefix}.clusterserviceversion.yaml</destName>
           <fileMode>0644</fileMode>
         </file>
     </files>
