@@ -53,8 +53,15 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
     setSelectedHostnames([]);
   };
 
+  //this function used to clear value of type ahead select input field on filter change
+  const resettInitialState = () => {
+    setHostnameInput("");
+    setContainerInput("");
+  };
+
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
+    resettInitialState();
   };
 
   const onHostnameSelect = (e: any, selection: SelectOptionObject) => {
