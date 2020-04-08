@@ -1,11 +1,13 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip,
   DataToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
@@ -13,33 +15,11 @@ import { SortForMobileView, useWindowDimensions } from "components";
 import { CreateAddress } from "modules/address/dialogs";
 import {
   AddressListKebab,
-  AddressToggleGroup
+  AddressToggleGroup,
+  IAddressToggleGroupProps
 } from "modules/address/components";
 
-export interface IAddressToolbarProps extends DataToolbarContentProps {
-  totalRecords: number;
-  filterSelected?: string;
-  nameSelected?: string;
-  nameInput?: string;
-  nameOptions?: any[];
-  typeIsExpanded: boolean;
-  typeSelected?: string | null;
-  statusIsExpanded: boolean;
-  statusSelected?: string | null;
-  selectedNames: Array<{ value: string; isExact: boolean }>;
-  onFilterSelect: (value: string) => void;
-  onNameSelect: (e: any, selection: SelectOptionObject) => void;
-  onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
-  onTypeToggle: () => void;
-  onTypeSelect: (e: any, selection: SelectOptionObject) => void;
-  onStatusToggle: () => void;
-  onStatusSelect: (e: any, selection: SelectOptionObject) => void;
-  onSearch: () => void;
-  onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
-  ) => void;
+export interface IAddressToolbarProps extends IAddressToggleGroupProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
@@ -55,12 +35,12 @@ export interface IAddressToolbarProps extends DataToolbarContentProps {
   addressspaceType: string;
   addressspacePlan: string;
 }
-const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
+const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
+  DataToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
   nameInput,
-  nameOptions,
   typeIsExpanded,
   typeSelected,
   statusIsExpanded,
@@ -69,7 +49,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onTypeToggle,
   onTypeSelect,
   onStatusToggle,
@@ -89,7 +68,9 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
   namespace,
   addressspaceName,
   addressspaceType,
-  addressspacePlan
+  addressspacePlan,
+  onChangeNameInput,
+  setNameInput
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
@@ -108,7 +89,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
         filterSelected={filterSelected}
         nameSelected={nameSelected}
         nameInput={nameInput}
-        nameOptions={nameOptions}
         typeIsExpanded={typeIsExpanded}
         typeSelected={typeSelected}
         statusIsExpanded={statusIsExpanded}
@@ -117,13 +97,14 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps> = ({
         onFilterSelect={onFilterSelect}
         onNameSelect={onNameSelect}
         onNameClear={onNameClear}
-        onNameFilter={onNameFilter}
         onTypeToggle={onTypeToggle}
         onTypeSelect={onTypeSelect}
         onStatusToggle={onStatusToggle}
         onStatusSelect={onStatusSelect}
         onSearch={onSearch}
         onDelete={onDelete}
+        onChangeNameInput={onChangeNameInput}
+        setNameInput={setNameInput}
       />
       <DataToolbarItem>
         {width < 769 && (
