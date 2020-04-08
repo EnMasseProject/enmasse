@@ -787,9 +787,9 @@ public abstract class Kubernetes {
      * @param podName name of pod
      * @return list of containers
      */
-    public List<Container> getContainersFromPod(String podName) {
+    public List<Container> getContainersFromPod(String namespace, String podName) {
         Objects.requireNonNull(podName);
-        return client.pods().inNamespace(infraNamespace).withName(podName).get().getSpec().getContainers();
+        return client.pods().inNamespace(namespace).withName(podName).get().getSpec().getContainers();
     }
 
     /***
@@ -798,10 +798,10 @@ public abstract class Kubernetes {
      * @param containerName name of container in pod
      * @return log
      */
-    public String getLog(String podName, String containerName) {
+    public String getLog(String namespace, String podName, String containerName) {
         Objects.requireNonNull(podName);
         Objects.requireNonNull(containerName);
-        return client.pods().inNamespace(infraNamespace).withName(podName).inContainer(containerName).getLog();
+        return client.pods().inNamespace(namespace).withName(podName).inContainer(containerName).getLog();
     }
 
     /***

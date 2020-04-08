@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.utils;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -193,6 +194,8 @@ public class AddressSpaceUtils {
         waitForItems(addressSpace, budget, () -> kube.listStatefulSets(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
         waitForItems(addressSpace, budget, () -> kube.listServiceAccounts(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
         waitForItems(addressSpace, budget, () -> kube.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
+        var addressSpaceClient = kube.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
+        waitForItems(addressSpace, budget, () -> Optional.ofNullable(addressSpaceClient.withName(addressSpace.getMetadata().getName()).get()).map(Arrays::asList).orElse(Collections.emptyList()));
     }
 
     private static <T> void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<List<T>> callable) throws Exception {

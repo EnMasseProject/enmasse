@@ -710,6 +710,10 @@ public class TestUtils {
         return getLogsPath(extensionContext, "scale_test");
     }
 
+    public static Path getUpgradeTestLogsPath(ExtensionContext extensionContext) {
+        return getLogsPath(extensionContext, "upgrade_test");
+    }
+
     public static Path getLogsPath(ExtensionContext extensionContext, String rootFolder) {
         String testMethod = extensionContext.getDisplayName();
         Class<?> testClass = extensionContext.getRequiredTestClass();

@@ -301,6 +301,9 @@ public class KubeCMDClient {
                 .replaceAll(System.getProperty("line.separator"), "");
     }
 
+    /**
+     * Note: there are lots of kubernetes components creating events with "<nil>" timestamps, so I'm forced to remove the sorting by this values
+     */
     public static ExecutionResultData getEvents(String namespace) {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--namespace", namespace,
@@ -309,6 +312,9 @@ public class KubeCMDClient {
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
+    /**
+     * Note: there are lots of kubernetes components creating events with "<nil>" timestamps, so I'm forced to remove the sorting by this values
+     */
     public static ExecutionResultData getAllEvents() {
         List<String> command = Arrays.asList(CMD, "get", "events",
                 "--all-namespaces=true",

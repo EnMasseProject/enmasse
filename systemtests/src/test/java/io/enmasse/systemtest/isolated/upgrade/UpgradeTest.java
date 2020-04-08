@@ -21,6 +21,7 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
@@ -37,6 +38,7 @@ import io.enmasse.user.model.v1.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -61,6 +63,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+/**
+ * Note: OLM default upgrade (in openshift-operators namespace) is known to fail due to fsGroup issue since openshift 4.3.8
+ * This won't be fixed untile 0.31.1 is released
+ */
 @Tag(UPGRADE)
 @ExternalClients
 class UpgradeTest extends TestBase implements ITestIsolatedStandard {
@@ -79,13 +85,25 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @AfterEach
-    void removeEnmasse() throws Exception {
+    void removeEnmasse(ExtensionContext context) throws Exception {
+        if (context.getExecutionException().isPresent()) {
+            Path logsPath = TestUtils.getUpgradeTestLogsPath(context);
+            GlobalLogCollector.saveInfraState(logsPath, infraNamespace);
+        }
         boolean waitForNamespace = true;
         if (this.type.equals(EnmasseInstallType.BUNDLE)) {
             assertTrue(OperatorManager.getInstance().clean());
         } else if (this.type.equals(EnmasseInstallType.OLM)) {
             if (OperatorManager.getInstance().isEnmasseOlmDeployed()) {
-                cleanAllEnmasseResources();
+                for (var addrSpace : kubernetes.getAddressSpaceClient(infraNamespace).list().getItems()) {
+                    LOGGER.info("address space '{}' will be removed", addrSpace);
+                    try {
+                        resourcesManager.deleteAddressSpace(addrSpace);
+                    } catch (Exception e) {
+                        LOGGER.warn("Delete address space failed", e);
+                        throw e;
+                    }
+                }
                 assertTrue(OperatorManager.getInstance().removeOlm());
             }
             if (olmType != null && olmType == OLMInstallationType.DEFAULT) {
@@ -543,18 +561,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             String enmasseCSV = Files.readString(Paths.get(templateDir.toString(), "install", "components", "example-olm", "subscription.yaml"));
             var yaml = new YAMLMapper().readTree(enmasseCSV);
             return yaml.get("spec").get("startingCSV").asText();
-        }
-    }
-
-    private void cleanAllEnmasseResources() throws Exception {
-        for (var addrSpace : kubernetes.getAddressSpaceClient(infraNamespace).list().getItems()) {
-            LOGGER.info("address space '{}' will be removed", addrSpace);
-            try {
-                resourcesManager.deleteAddressSpace(addrSpace);
-            } catch (Exception e) {
-                LOGGER.warn("Delete address space failed", e);
-                throw e;
-            }
         }
     }
 
