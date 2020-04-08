@@ -104,8 +104,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                         throw e;
                     }
                 }
-                assertTrue(OperatorManager.getInstance().removeOlm());
             }
+            assertTrue(OperatorManager.getInstance().removeOlm());
             if (olmType != null && olmType == OLMInstallationType.DEFAULT) {
                 waitForNamespace = false;
             }
