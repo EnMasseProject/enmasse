@@ -1,9 +1,11 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
-  Select,
-  SelectVariant,
   SelectOptionObject,
-  SelectOption,
   DataToolbarToggleGroup,
   DataToolbarGroup,
   DataToolbarFilter,
@@ -16,9 +18,8 @@ import {
   DropdownPosition,
   Badge
 } from "@patternfly/react-core";
-import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { TypeAhead, DropdownWithToggle } from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 
 export interface IConnectionsToggleGroupProps {
   totalRecords: number;
@@ -27,22 +28,22 @@ export interface IConnectionsToggleGroupProps {
   hostnameInput?: string;
   containerSelected?: string;
   containerInput?: string;
-  hostnameOptions?: any[];
-  containerOptions?: any[];
   selectedHostnames: Array<{ value: string; isExact: boolean }>;
   selectedContainers: Array<{ value: string; isExact: boolean }>;
   onFilterSelect: (value: string) => void;
   onHostnameSelect: (e: any, selection: SelectOptionObject) => void;
   onHostnameClear: () => void;
-  onHostnameFilter: (e: any) => any[];
   onContainerSelect: (e: any, selection: SelectOptionObject) => void;
   onContainerClear: () => void;
-  onContainerFilter: (e: any) => any[];
   onSearch: () => void;
   onDelete: (
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
+  onChangeHostNameInput?: (value: string) => Promise<any>;
+  onChangeContainerInput?: (value: string) => Promise<any>;
+  setHostNameInput?: (value: string) => void;
+  setHostContainerInput?: (value: string) => void;
 }
 const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupProps> = ({
   totalRecords,
@@ -51,27 +52,23 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
   hostnameInput,
   containerSelected,
   containerInput,
-  hostnameOptions,
-  containerOptions,
   selectedHostnames,
   selectedContainers,
   onFilterSelect,
   onHostnameSelect,
   onHostnameClear,
-  onHostnameFilter,
   onContainerSelect,
   onContainerClear,
-  onContainerFilter,
   onSearch,
-  onDelete
+  onDelete,
+  onChangeHostNameInput,
+  onChangeContainerInput,
+  setHostNameInput,
+  setHostContainerInput
 }) => {
   const filterMenuItems = [
     { key: "filterHostname", value: "Hostname" },
     { key: "filterContainer", value: "Container" }
-  ];
-  const roleOptions: ISelectOption[] = [
-    { value: "Sender", isDisabled: false },
-    { value: "Receiver", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -95,16 +92,16 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
         >
           {filterSelected && filterSelected === "Hostname" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select hostname"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onHostnameSelect}
                 onClear={onHostnameClear}
-                onFilter={onHostnameFilter}
                 selected={hostnameSelected}
                 inputData={hostnameInput || ""}
-                options={hostnameOptions}
                 placeholderText={"Select hostname"}
+                onChangeInput={onChangeHostNameInput}
+                setInput={setHostNameInput}
               />
               <Button
                 id="ad-links-filter-search-hostname"
@@ -128,16 +125,16 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
         >
           {filterSelected && filterSelected === "Container" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select container"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onContainerSelect}
                 onClear={onContainerClear}
-                onFilter={onContainerFilter}
                 selected={containerSelected}
                 inputData={containerInput || ""}
-                options={containerOptions}
                 placeholderText={"Select container"}
+                onChangeInput={onChangeContainerInput}
+                setInput={setHostContainerInput}
               />
               <Button
                 id="ad-links-filter-search-container"

@@ -3,55 +3,29 @@ import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip,
   DataToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { ConnectionLinksToggleGroup } from "modules/connection-detail/components";
+import {
+  ConnectionLinksToggleGroup,
+  IConnectionLinksToggleGroupProps
+} from "modules/connection-detail/components";
 import { SortForMobileView, useWindowDimensions } from "components";
 
-export interface IConnectionLinksToolbarProps extends DataToolbarContentProps {
-  totalRecords: number;
-  filterSelected?: string;
-  nameSelected?: string;
-  nameInput?: string;
-  addressSelected?: string;
-  addressInput?: string;
-  nameOptions?: any[];
-  addressOptions?: any[];
-  roleIsExpanded: boolean;
-  roleSelected?: string | null;
-  selectedNames: Array<{ value: string; isExact: boolean }>;
-  selectedAddresses: Array<{ value: string; isExact: boolean }>;
-  onFilterSelect: (value: string) => void;
-  onNameSelect: (e: any, selection: SelectOptionObject) => void;
-  onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
-  onAddressSelect: (e: any, selection: SelectOptionObject) => void;
-  onAddressClear: () => void;
-  onAddressFilter: (e: any) => any[];
-  onRoleToggle: () => void;
-  onRoleSelect: (e: any, selection: SelectOptionObject) => void;
-  onSearch: () => void;
-  onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
-  ) => void;
+export interface IConnectionLinksToolbarProps
+  extends IConnectionLinksToggleGroupProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
 }
-const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarProps> = ({
+const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarProps &
+  DataToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
   nameInput,
   addressSelected,
   addressInput,
-  nameOptions,
-  addressOptions,
   roleIsExpanded,
   roleSelected,
   selectedNames,
@@ -59,17 +33,19 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onAddressSelect,
   onAddressClear,
-  onAddressFilter,
   onRoleToggle,
   onRoleSelect,
   onSearch,
   onDelete,
   sortValue,
   setSortValue,
-  onClearAllFilters
+  onClearAllFilters,
+  onChangeNameInput,
+  onChangeAddressInput,
+  setNameInput,
+  setAddressInput
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
@@ -92,8 +68,6 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
         nameInput={nameInput}
         addressSelected={addressSelected}
         addressInput={addressInput}
-        nameOptions={nameOptions}
-        addressOptions={addressOptions}
         roleIsExpanded={roleIsExpanded}
         roleSelected={roleSelected}
         selectedNames={selectedNames}
@@ -101,14 +75,16 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
         onFilterSelect={onFilterSelect}
         onNameSelect={onNameSelect}
         onNameClear={onNameClear}
-        onNameFilter={onNameFilter}
         onAddressSelect={onAddressSelect}
         onAddressClear={onAddressClear}
-        onAddressFilter={onAddressFilter}
         onRoleToggle={onRoleToggle}
         onRoleSelect={onRoleSelect}
         onSearch={onSearch}
         onDelete={onDelete}
+        onChangeNameInput={onChangeNameInput}
+        onChangeAddressInput={onChangeAddressInput}
+        setNameInput={setNameInput}
+        setAddressInput={setAddressInput}
       />
       <DataToolbarItem>
         {width < 769 && (

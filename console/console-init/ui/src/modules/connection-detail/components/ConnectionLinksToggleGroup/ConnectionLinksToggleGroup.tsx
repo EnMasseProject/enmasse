@@ -18,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAhead } from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IConnectionLinksToggleGroupProps {
   totalRecords: number;
@@ -27,8 +27,6 @@ export interface IConnectionLinksToggleGroupProps {
   nameInput?: string;
   addressSelected?: string;
   addressInput?: string;
-  nameOptions?: any[];
-  addressOptions?: any[];
   roleIsExpanded: boolean;
   roleSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
@@ -36,10 +34,8 @@ export interface IConnectionLinksToggleGroupProps {
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
   onAddressSelect: (e: any, selection: SelectOptionObject) => void;
   onAddressClear: () => void;
-  onAddressFilter: (e: any) => any[];
   onRoleToggle: () => void;
   onRoleSelect: (e: any, selection: SelectOptionObject) => void;
   onSearch: () => void;
@@ -47,6 +43,10 @@ export interface IConnectionLinksToggleGroupProps {
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
+  onChangeNameInput?: (value: string) => Promise<any>;
+  onChangeAddressInput?: (value: string) => Promise<any>;
+  setNameInput?: (value: string) => void;
+  setAddressInput?: (value: string) => void;
 }
 const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggleGroupProps> = ({
   totalRecords,
@@ -55,8 +55,6 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   nameInput,
   addressSelected,
   addressInput,
-  nameOptions,
-  addressOptions,
   roleIsExpanded,
   roleSelected,
   selectedNames,
@@ -64,14 +62,16 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onAddressSelect,
   onAddressClear,
-  onAddressFilter,
   onRoleToggle,
   onRoleSelect,
   onSearch,
-  onDelete
+  onDelete,
+  onChangeNameInput,
+  onChangeAddressInput,
+  setNameInput,
+  setAddressInput
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -105,16 +105,16 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
         >
           {filterSelected && filterSelected === "Name" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
-                onFilter={onNameFilter}
                 selected={nameSelected}
                 inputData={nameInput || ""}
-                options={nameOptions}
                 placeholderText={"Select name"}
+                onChangeInput={onChangeNameInput}
+                setInput={setNameInput}
               />
               <Button
                 id="ad-links-filter-search-name"
@@ -138,16 +138,16 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
         >
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select address"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onAddressSelect}
                 onClear={onAddressClear}
-                onFilter={onAddressFilter}
                 selected={addressSelected}
                 inputData={addressInput || ""}
-                options={addressOptions}
                 placeholderText={"Select address"}
+                onChangeInput={onChangeAddressInput}
+                setInput={setAddressInput}
               />
               <Button
                 id="ad-links-filter-search-address"

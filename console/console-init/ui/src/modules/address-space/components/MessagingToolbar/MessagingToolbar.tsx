@@ -1,45 +1,25 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
-import { MessagingToolbarToggleGroup } from "../MessagingDatatoolbarToggleGroup";
+import {
+  MessagingToolbarToggleGroup,
+  IMessagingToolbarToggleGroupProps
+} from "modules/address-space/components";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip,
   DataToolbarContentProps
 } from "@patternfly/react-core";
 import { AddressSpaceListKebab } from "modules/address-space/components";
 import { ISortBy } from "@patternfly/react-table";
-export interface IMessageToolbarProps extends DataToolbarContentProps {
-  totalRecords: number;
-  filterSelected?: string;
-  nameSelected?: string;
-  nameInput?: string;
-  namespaceSelected?: string;
-  namespaceInput?: string;
-  nameOptions?: any[];
-  namespaceOptions?: any[];
-  typeIsExpanded: boolean;
-  typeSelected?: string | null;
-  selectedNames: Array<{ value: string; isExact: boolean }>;
-  selectedNamespaces: Array<{ value: string; isExact: boolean }>;
-  onFilterSelect: (value: string) => void;
-  onNameSelect: (e: any, selection: SelectOptionObject) => void;
-  onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
-  onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
+export interface IMessageToolbarProps
+  extends IMessagingToolbarToggleGroupProps {
   onNamespaceClear: () => void;
-  onNamespaceFilter: (e: any) => any[];
-  onTypeToggle: () => void;
-  onTypeSelect: (e: any, selection: SelectOptionObject) => void;
-  onDeleteAll: () => void;
-  onSearch: () => void;
-  onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
-  ) => void;
   onCreateAddressSpace: () => void;
   isDeleteAllDisabled: boolean;
   onSelectDeleteAll: (event: any) => void;
@@ -47,7 +27,8 @@ export interface IMessageToolbarProps extends DataToolbarContentProps {
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
 }
-const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps> = ({
+const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
+  DataToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
@@ -63,10 +44,8 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps> = ({
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onNamespaceSelect,
   onNamespaceClear,
-  onNamespaceFilter,
   onTypeToggle,
   onTypeSelect,
   onDeleteAll,
@@ -77,7 +56,11 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps> = ({
   onSelectDeleteAll,
   sortValue,
   setSortValue,
-  onClearAllFilters
+  onClearAllFilters,
+  onChangeNameInput,
+  onChangeNameSpaceInput,
+  setNameInput,
+  setNameSpaceInput
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
@@ -102,15 +85,17 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps> = ({
         onFilterSelect={onFilterSelect}
         onNameSelect={onNameSelect}
         onNameClear={onNameClear}
-        onNameFilter={onNameFilter}
         onNamespaceSelect={onNamespaceSelect}
         onNamespaceClear={onNamespaceClear}
-        onNamespaceFilter={onNamespaceFilter}
         onTypeToggle={onTypeToggle}
         onTypeSelect={onTypeSelect}
         onDeleteAll={onDeleteAll}
         onSearch={onSearch}
         onDelete={onDelete}
+        onChangeNameInput={onChangeNameInput}
+        onChangeNameSpaceInput={onChangeNameSpaceInput}
+        setNameInput={setNameInput}
+        setNameSpaceInput={setNameSpaceInput}
       />
       <DataToolbarItem>
         {width < 769 && (
