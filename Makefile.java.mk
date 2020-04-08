@@ -10,6 +10,9 @@ ifneq ($(FULL_BUILD),true)
 build: build_deps
 	cd $(TOPDIR); $(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn -pl $(MVNPROJ) -am clean install $(MAVEN_ARGS)
 
+build_deps::
+	:
+
 test:
 ifeq ($(SKIP_TESTS),true)
 	$(warning "java tests will be skipped")

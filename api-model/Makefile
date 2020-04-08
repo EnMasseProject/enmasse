@@ -1,10 +1,8 @@
 include ../Makefile.java.mk
 
-build_deps: generatejava
-
-generatejava:
+build_deps::
 	mkdir -p build
 	go build -o build/generate generator/generate.go
 	./build/generate > src/main/resources/schema/kube-schema.json
 
-.PHONY: generatejava
+.PHONY: build_deps
