@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   Select,
@@ -18,7 +23,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAhead } from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IAddressLinksToggleGroupProps {
   totalRecords: number;
@@ -27,7 +32,6 @@ export interface IAddressLinksToggleGroupProps {
   nameInput?: string;
   containerSelected?: string;
   containerInput?: string;
-  nameOptions?: any[];
   containerOptions?: any[];
   roleIsExpanded: boolean;
   roleSelected?: string | null;
@@ -36,10 +40,8 @@ export interface IAddressLinksToggleGroupProps {
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
   onContainerSelect: (e: any, selection: SelectOptionObject) => void;
   onContainerClear: () => void;
-  onContainerFilter: (e: any) => any[];
   onRoleToggle: () => void;
   onRoleSelect: (e: any, selection: SelectOptionObject) => void;
   onSearch: () => void;
@@ -47,6 +49,10 @@ export interface IAddressLinksToggleGroupProps {
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
+  onChangeNameInput?: (value: string) => Promise<any>;
+  onChangeContainerInput?: (value: string) => Promise<any>;
+  setNameInput?: (value: string) => void;
+  setContainerInput?: (value: string) => void;
 }
 const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupProps> = ({
   totalRecords,
@@ -55,8 +61,6 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
   nameInput,
   containerSelected,
   containerInput,
-  nameOptions,
-  containerOptions,
   roleIsExpanded,
   roleSelected,
   selectedNames,
@@ -64,14 +68,16 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onContainerSelect,
   onContainerClear,
-  onContainerFilter,
   onRoleToggle,
   onRoleSelect,
   onSearch,
-  onDelete
+  onDelete,
+  onChangeNameInput,
+  onChangeContainerInput,
+  setNameInput,
+  setContainerInput
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -105,16 +111,16 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
         >
           {filterSelected && filterSelected === "Name" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
-                onFilter={onNameFilter}
                 selected={nameSelected}
                 inputData={nameInput || ""}
-                options={nameOptions}
                 placeholderText={"Select name"}
+                onChangeInput={onChangeNameInput}
+                setInput={setNameInput}
               />
               <Button
                 id="ad-links-filter-search-name"
@@ -138,16 +144,16 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
         >
           {filterSelected && filterSelected === "Container" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select container"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onContainerSelect}
                 onClear={onContainerClear}
-                onFilter={onContainerFilter}
                 selected={containerSelected}
                 inputData={containerInput || ""}
-                options={containerOptions}
                 placeholderText={"Select container"}
+                onChangeInput={onChangeContainerInput}
+                setInput={setContainerInput}
               />
               <Button
                 id="ad-links-filter-search-container"

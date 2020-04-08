@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   Select,
@@ -18,7 +23,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAhead } from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -36,10 +41,8 @@ export interface IMessagingToolbarToggleGroupProps {
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
-  onNameFilter: (e: any) => any[];
   onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
   onNamespaceClear: () => void;
-  onNamespaceFilter: (e: any) => any[];
   onTypeToggle: () => void;
   onTypeSelect: (e: any, selection: SelectOptionObject) => void;
   onDeleteAll: () => void;
@@ -48,6 +51,10 @@ export interface IMessagingToolbarToggleGroupProps {
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => void;
+  onChangeNameInput?: (value: string) => Promise<any>;
+  onChangeNameSpaceInput?: (value: string) => Promise<any>;
+  setNameInput?: (value: string) => void;
+  setNameSpaceInput?: (value: string) => void;
 }
 const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarToggleGroupProps> = ({
   totalRecords,
@@ -56,8 +63,6 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   nameInput,
   namespaceSelected,
   namespaceInput,
-  nameOptions,
-  namespaceOptions,
   typeIsExpanded,
   typeSelected,
   selectedNames,
@@ -65,15 +70,16 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onNameFilter,
   onNamespaceSelect,
   onNamespaceClear,
-  onNamespaceFilter,
   onTypeToggle,
   onTypeSelect,
-  onDeleteAll,
   onSearch,
-  onDelete
+  onDelete,
+  onChangeNameInput,
+  onChangeNameSpaceInput,
+  setNameInput,
+  setNameSpaceInput
 }) => {
   const filterMenuItems = [
     { key: "filterName", value: "Name" },
@@ -105,18 +111,18 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           deleteChip={onDelete}
           categoryName="Name"
         >
-          {filterSelected && filterSelected === "Name" && (
+          {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
-                onFilter={onNameFilter}
                 selected={nameSelected}
                 inputData={nameInput || ""}
-                options={nameOptions}
                 placeholderText={"Select name"}
+                onChangeInput={onChangeNameInput}
+                setInput={setNameInput}
               />
               <Button
                 id="ad-links-filter-search-name"
@@ -138,18 +144,18 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           deleteChip={onDelete}
           categoryName="Namespace"
         >
-          {filterSelected && filterSelected === "Namespace" && (
+          {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
-              <TypeAhead
+              <TypeAheadSelect
                 ariaLabelTypeAhead={"Select namespace"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
                 onClear={onNamespaceClear}
-                onFilter={onNamespaceFilter}
                 selected={namespaceSelected}
                 inputData={namespaceInput || ""}
-                options={namespaceOptions}
                 placeholderText={"Select namespace"}
+                onChangeInput={onChangeNameSpaceInput}
+                setInput={setNameSpaceInput}
               />
               <Button
                 id="ad-links-filter-search-namespace"
@@ -171,7 +177,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           deleteChip={onDelete}
           categoryName="Type"
         >
-          {filterSelected === "Type" && (
+          {filterSelected && filterSelected.toLowerCase() === "type" && (
             <Select
               variant={SelectVariant.single}
               aria-label="Select Type"

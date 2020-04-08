@@ -24,7 +24,6 @@ export default function ConnectionPage() {
   useDocumentTitle("Connection List");
 
   useA11yRouteChange();
-  const [filterValue, setFilterValue] = useState<string>("Hostname");
   const [hostnames, setHostnames] = useState<Array<string>>([]);
   const [containerIds, setContainerIds] = useState<Array<string>>([]);
   const [totalConnections, setTotalConnections] = useState<number>(0);
