@@ -538,13 +538,14 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
 
         olmManifestsImage = olmManifestsImage.replace(environment.getClusterInternalImageRegistry(), environment.getClusterExternalImageRegistry());
 
-        int retries = 2;
+        int retries = 5;
         ExecutionResultData results = null;
         while (retries > 0) {
             results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush), true);
             if(results.getRetCode()) {
                 return customRegistryImageToUse;
             }
+            Thread.sleep(1000);
             retries--;
         }
         assertTrue(results != null && results.getRetCode(), "custom operator registry image build failed ");
