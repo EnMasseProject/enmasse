@@ -7,7 +7,6 @@ import * as React from "react";
 import { Wizard } from "@patternfly/react-core";
 import { AddressDefinition } from "pages/CreateAddress/CreateAddressDefinition";
 import { PreviewAddress } from "./PreviewAddress";
-import { useApolloClient } from "@apollo/react-hooks";
 import { CREATE_ADDRESS } from "queries";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import { messagingAddressNameRegexp } from "types/Configs";
@@ -17,8 +16,8 @@ interface ICreateAddressProps {
   name: string;
   namespace: string;
   addressSpace: string;
-  addressSpacePlan: string;
-  addressSpaceType: string;
+  addressSpacePlan: string | null;
+  addressSpaceType?: string;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
   setOnCreationRefetch?: (value: boolean) => void;
@@ -37,7 +36,6 @@ export const CreateAddressPage: React.FunctionComponent<ICreateAddressProps> = (
   const [addressType, setAddressType] = React.useState(" ");
   const [plan, setPlan] = React.useState(" ");
   const [topic, setTopic] = React.useState(" ");
-  const client = useApolloClient();
   const [addressTypes, setAddressTypes] = React.useState<IDropdownOption[]>([]);
   const [addressPlans, setAddressPlans] = React.useState<IDropdownOption[]>([]);
   const [topicsForSubscription, setTopicForSubscription] = React.useState<
