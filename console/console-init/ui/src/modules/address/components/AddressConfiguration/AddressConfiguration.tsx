@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   Grid,
@@ -22,26 +27,22 @@ const styles = StyleSheet.create({
     flex: "1"
   }
 });
-interface IAddressConfigurationProps {
+
+export interface IAddressConfigurationProps {
   addressName: string;
   isNameValid: boolean;
   handleAddressChange: (name: string) => void;
   type: string;
   plan: string;
   topic: string;
-  isTypeOpen: boolean;
-  setIsTypeOpen: (value: boolean) => void;
-  isPlanOpen: boolean;
-  setIsPlanOpen: (value: boolean) => void;
-  isTopicOpen: boolean;
-  setIsTopicOpen: (value: boolean) => void;
-  onTypeSelect: (value: string) => void;
-  onPlanSelect: (value: string) => void;
-  onTopicSelect: (value: string) => void;
+  onTypeSelect?: (value: string) => void;
+  onPlanSelect?: (value: string) => void;
+  onTopicSelect?: (value: string) => void;
   typeOptions: IDropdownOption[];
   planOptions: IDropdownOption[];
   topicsForSubscription: IDropdownOption[];
 }
+
 const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> = ({
   addressName,
   isNameValid,
@@ -56,6 +57,17 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
   planOptions,
   topicsForSubscription
 }) => {
+  const getHelperText = () => {
+    if (addressName && addressName.trim() !== "" && !isNameValid) {
+      return (
+        <small>
+          Only digits (0-9), lower case letters (a-z), -, and . allowed, and
+          should start with alpha-numeric characters.
+        </small>
+      );
+    }
+  };
+
   return (
     <>
       <Grid>
@@ -65,16 +77,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               label="Address"
               isRequired={true}
               fieldId="address-name"
-              helperText={
-                addressName.trim() !== "" && !isNameValid ? (
-                  <small>
-                    Only digits (0-9), lower case letters (a-z), -, and .
-                    allowed, and should start with alpha-numeric characters.
-                  </small>
-                ) : (
-                  ""
-                )
-              }
+              helperText={getHelperText()}
             >
               <TextInput
                 isRequired={true}
@@ -83,7 +86,9 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
-                isValid={addressName.trim() === "" || isNameValid}
+                isValid={
+                  (addressName && addressName.trim() === "") || isNameValid
+                }
               />
             </FormGroup>
 
@@ -117,7 +122,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 isDisabled={type.trim() === ""}
               />
             </FormGroup>
-            {type && type === "subscription" && (
+            {type && type.toLowerCase() === "subscription" && (
               <FormGroup
                 label="Topic"
                 isRequired={true}

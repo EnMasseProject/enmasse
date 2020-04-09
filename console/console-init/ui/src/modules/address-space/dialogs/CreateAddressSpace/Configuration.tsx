@@ -82,10 +82,6 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
   isNameValid,
   setIsNameValid
 }) => {
-  let namespaceOptions: any[];
-  let planOptions: any[] = [];
-  let authenticationServiceOptions: IAuthenticationServiceOptions[] = [];
-
   const [isStandardChecked, setIsStandardChecked] = useState(false);
   const [isBrokeredChecked, setIsBrokeredChecked] = useState(false);
 
@@ -124,40 +120,53 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
     namespaces: []
   };
 
-  namespaceOptions = namespaces.map(namespace => {
-    return {
-      value: namespace.metadata.name,
-      label: namespace.metadata.name
-    };
-  });
-  if (type) {
-    planOptions =
-      addressSpacePlans
-        .map(plan => {
-          if (plan.spec.addressSpaceType === type) {
-            return {
-              value: plan.metadata.name,
-              label: plan.metadata.name
-            };
-          }
-        })
-        .filter(plan => plan !== undefined) || [];
-  }
-
-  if (authenticationServices) {
-    authenticationServices.addressSpaceSchema_v2.forEach(authService => {
-      if (authService.metadata.name === type) {
-        authenticationServiceOptions = authService.spec.authenticationServices.map(
-          service => {
-            return {
-              value: service,
-              label: service
-            };
-          }
-        );
-      }
+  const getNameSpaceOptions = () => {
+    let nameSpaceOptions: any[];
+    nameSpaceOptions = namespaces.map(namespace => {
+      return {
+        value: namespace.metadata.name,
+        label: namespace.metadata.name
+      };
     });
-  }
+    return nameSpaceOptions;
+  };
+
+  const getPlanOptions = () => {
+    let planOptions: any[] = [];
+    if (type) {
+      planOptions =
+        addressSpacePlans
+          .map(plan => {
+            if (plan.spec.addressSpaceType === type) {
+              return {
+                value: plan.metadata.name,
+                label: plan.metadata.name
+              };
+            }
+          })
+          .filter(plan => plan !== undefined) || [];
+    }
+    return planOptions;
+  };
+
+  const getAuthenticationServiceOptions = () => {
+    let authenticationServiceOptions: IAuthenticationServiceOptions[] = [];
+    if (authenticationServices) {
+      authenticationServices.addressSpaceSchema_v2.forEach(authService => {
+        if (authService.metadata.name === type) {
+          authenticationServiceOptions = authService.spec.authenticationServices.map(
+            service => {
+              return {
+                value: service,
+                label: service
+              };
+            }
+          );
+        }
+      });
+    }
+    return authenticationServiceOptions;
+  };
 
   const handleBrokeredChange = () => {
     setIsBrokeredChecked(true);
@@ -192,16 +201,16 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
         handleStandardChange={handleStandardChange}
         onAuthenticationServiceSelect={onAuthenticationServiceSelect}
         namespace={namespace}
-        namespaceOptions={namespaceOptions}
+        namespaceOptions={getNameSpaceOptions()}
         name={name}
         isNameValid={isNameValid}
         isStandardChecked={isStandardChecked}
         isBrokeredChecked={isBrokeredChecked}
         type={type}
         plan={plan}
-        planOptions={planOptions}
+        planOptions={getPlanOptions()}
         authenticationService={authenticationService}
-        authenticationServiceOptions={authenticationServiceOptions}
+        authenticationServiceOptions={getAuthenticationServiceOptions()}
       />
     </>
   );
