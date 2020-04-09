@@ -29,7 +29,9 @@ const ALL_ADDRESS_SPACES_FILTER = (
   let filterNameSpacesLength = filterNameSpaces && filterNameSpaces.length;
   let filterNameSpace = filterNameSpaces && filterNameSpaces[0];
   let filterNameSpaceValue =
-    filterNameSpace && filterNameSpace.value && filterNameSpace.value.trim();
+    filterNameSpace &&
+    filterNameSpace.value &&
+    removeForbiddenChars(filterNameSpace.value.trim());
 
   if (filterNamesLength && filterNamesLength > 0) {
     if (filterNamesLength > 1) {
@@ -75,7 +77,7 @@ const ALL_ADDRESS_SPACES_FILTER = (
         let filterNameSpaceValue =
           filterNameSpace &&
           filterNameSpace.value &&
-          filterNameSpace.value.trim();
+          removeForbiddenChars(filterNameSpace.value.trim());
         if (filterNameSpace.isExact)
           filter +=
             "OR `$.metadata.namespace` = '" + filterNameSpaceValue + "'";
