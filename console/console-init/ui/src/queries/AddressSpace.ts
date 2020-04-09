@@ -5,6 +5,7 @@
 
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
+import { removeForbiddenChars } from "utils";
 
 const DELETE_ADDRESS_SPACE = gql`
   mutation delete_as($a: ObjectMeta_v1_Input!) {
@@ -21,7 +22,9 @@ const ALL_ADDRESS_SPACES_FILTER = (
   let filterNamesLength = filterNames && filterNames.length;
   let filterName = filterNames && filterNames[0];
   let filterNameValue =
-    filterName && filterName.value && filterName.value.trim();
+    filterName &&
+    filterName.value &&
+    removeForbiddenChars(filterName.value.trim());
 
   let filterNameSpacesLength = filterNameSpaces && filterNameSpaces.length;
   let filterNameSpace = filterNameSpaces && filterNameSpaces[0];
@@ -36,7 +39,10 @@ const ALL_ADDRESS_SPACES_FILTER = (
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName = filterNames && filterNames[i];
         let filterNameValue =
-          filterName && filterName.value && filterName.value.trim();
+          filterName &&
+          filterName.value &&
+          removeForbiddenChars(filterName.value.trim());
+
         if (filterName.isExact)
           filter += "OR `$.metadata.name` = '" + filterNameValue + "'";
         else filter += "OR `$.metadata.name` LIKE '" + filterNameValue + "%'";
@@ -242,6 +248,7 @@ const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
   value: string
 ) => {
   let filter = "";
+  value = removeForbiddenChars(value);
   if (value) {
     if (isName) {
       filter += "`$.metadata.name` LIKE '" + value + "%'";

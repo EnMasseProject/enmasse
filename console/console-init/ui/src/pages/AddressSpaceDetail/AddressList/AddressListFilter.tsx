@@ -37,15 +37,9 @@ import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from 
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
-import {
-  getSelectOptionList,
-  ISelectOption,
-  removeForbiddenChars
-} from "utils";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IAddressListFilterProps {
   filterValue: string | null;
@@ -187,9 +181,8 @@ export const AddressListFilter: React.FunctionComponent<IAddressListFilterProps>
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let name = removeForbiddenChars(e.target.value);
-    setNameInput(name);
-    onChangeNameData(name);
+    setNameInput(e.target.value);
+    onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />

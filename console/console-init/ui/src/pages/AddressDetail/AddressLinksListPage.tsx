@@ -61,7 +61,6 @@ export const AddressLinksListPage: React.FunctionComponent<IAddressLinksListProp
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading && !data) return <Loading />;
-  if (error) console.log(error);
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };

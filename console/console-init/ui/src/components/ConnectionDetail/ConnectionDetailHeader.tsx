@@ -59,7 +59,6 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
 }) => {
   const [isHidden, setIsHidden] = React.useState(true);
   const { width } = useWindowDimensions();
-  console.log("addressSpaceType", addressSpaceType);
   return (
     <Card>
       <CardHeader>

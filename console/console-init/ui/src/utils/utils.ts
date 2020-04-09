@@ -54,11 +54,10 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
 };
 
 const removeForbiddenChars = (input: string) => {
-  let modifiedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
-  modifiedInput = modifiedInput.replace(forbiddenSingleQuoteRegexp, "''");
-  modifiedInput = modifiedInput.replace(forbiddenDoubleQuoteRegexp, '\\"');
-  console.log("modified input", modifiedInput);
-  return modifiedInput;
+  let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
+  escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
+  escapedInput = escapedInput.replace(forbiddenDoubleQuoteRegexp, '\\"');
+  return escapedInput;
 };
 
 export { getSelectOptionList, removeForbiddenChars };

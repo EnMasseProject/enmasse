@@ -36,16 +36,10 @@ import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTy
 import { useApolloClient } from "@apollo/react-hooks";
 import {
   TypeAheadMessage,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   TYPEAHEAD_REQUIRED_LENGTH,
   FetchPolicy
 } from "constants/constants";
-import {
-  ISelectOption,
-  getSelectOptionList,
-  removeForbiddenChars
-} from "utils";
+import { ISelectOption, getSelectOptionList } from "utils";
 
 interface IAddressSpaceListFilterProps {
   filterValue?: string;
@@ -207,11 +201,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
     setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
   };
 
-  const createSelectOptionObject = (value: string) => {
-    const data: ISelectOption = { value: value, isDisabled: false };
-    return data;
-  };
-
   const onChangeNameData = async (value: string) => {
     setNameOptions(undefined);
 
@@ -250,9 +239,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   };
 
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let name = removeForbiddenChars(e.target.value);
-    setNameInput(name);
-    onChangeNameData(name);
+    setNameInput(e.target.value);
+    onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -300,9 +288,8 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
   const onNamespaceSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    let namespace = removeForbiddenChars(e.target.value);
-    setNameSpaceInput(namespace);
-    onChangeNamespaceData(namespace);
+    setNameSpaceInput(e.target.value);
+    onChangeNamespaceData(e.target.value);
     const options: React.ReactElement[] = namespaceOptions
       ? namespaceOptions.map((option, index) => (
           <SelectOption key={index} value={option} />

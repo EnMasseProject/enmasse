@@ -42,15 +42,9 @@ import {
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
-import {
-  getSelectOptionList,
-  ISelectOption,
-  removeForbiddenChars
-} from "utils";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IAddressLinksFilterProps {
   filterValue: string;
@@ -222,9 +216,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
     }
   };
   const onNameSelectFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let name = removeForbiddenChars(e.target.value);
-    setNameInput(name);
-    onChangeNameData(name);
+    setNameInput(e.target.value);
+    onChangeNameData(e.target.value);
     const options: React.ReactElement[] = nameOptions
       ? nameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -275,9 +268,8 @@ export const AddressLinksFilter: React.FunctionComponent<IAddressLinksFilterProp
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    let container = removeForbiddenChars(e.target.value);
-    setContainerInput(container);
-    onChangeContainerData(container);
+    setContainerInput(e.target.value);
+    onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
           <SelectOption key={index} value={option} />

@@ -36,15 +36,9 @@ import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
-import {
-  getSelectOptionList,
-  ISelectOption,
-  removeForbiddenChars
-} from "utils";
+import { getSelectOptionList, ISelectOption } from "utils";
 
 interface IConnectionListFilterProps {
   filterValue?: string | null;
@@ -220,9 +214,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const onHostnameSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    let hostName = removeForbiddenChars(e.target.value);
-    setHostNameInput(hostName);
-    onChangeHostnameData(hostName);
+    setHostNameInput(e.target.value);
+    onChangeHostnameData(e.target.value);
     const options: React.ReactElement[] = hostnameOptions
       ? hostnameOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
@@ -269,9 +262,8 @@ export const ConnectionListFilter: React.FunctionComponent<IConnectionListFilter
   const onContainerSelectFilterChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    let container = removeForbiddenChars(e.target.value);
-    setContainerInput(container);
-    onChangeContainerData(container);
+    setContainerInput(e.target.value);
+    onChangeContainerData(e.target.value);
     const options: React.ReactElement[] = containerOptions
       ? containerOptions.map((option, index) => (
           <SelectOption key={index} value={option} />
