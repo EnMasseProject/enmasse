@@ -7,7 +7,7 @@ import React, { useState } from "react";
 import { Wizard } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { useMutationQuery } from "hooks";
-import { AddressDefinition } from "modules/address/containers";
+import { AddressDefinitionContainer } from "modules/address/containers";
 import { PreviewAddress } from "./Preview";
 import {
   CREATE_ADDRESS,
@@ -145,7 +145,7 @@ export const CreateAddress: React.FunctionComponent<{}> = () => {
     {
       name: "Definition",
       component: (
-        <AddressDefinition
+        <AddressDefinitionContainer
           addressspaceName={name}
           namespace={namespace}
           addressSpacePlan={getAddressSpacePlan()}

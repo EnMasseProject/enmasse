@@ -55,7 +55,7 @@ interface IAddressTypes {
   }>;
 }
 
-export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
+export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinition> = ({
   addressspaceName,
   namespace,
   addressName,
