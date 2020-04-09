@@ -15,17 +15,17 @@ import {
   DropdownItem,
   DropdownPosition
 } from "@patternfly/react-core";
-import { useQuery, useApolloClient } from "@apollo/react-hooks";
+import { useApolloClient } from "@apollo/react-hooks";
 import { IDropdownOption } from "components/common/FilterDropdown";
 import {
   RETURN_ADDRESS_PLANS,
   RETURN_ADDRESS_TYPES,
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
 } from "queries";
-import { Loading } from "use-patternfly";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { IAddressResponse } from "types/ResponseTypes";
 import { dropdown_item_styles } from "pages/CreateAddressSpace/CreateAddressSpaceConfiguration";
+import { FetchPolicy } from "constants/constants";
 
 const styles = StyleSheet.create({
   capitalize_labels: {
@@ -37,14 +37,14 @@ export interface IAddressDefinition {
   addressspaceName: string;
   namespace: string;
   addressName: string;
-  addressSpacePlan: string;
+  addressSpacePlan: string | null;
   handleAddressChange: (name: string) => void;
   type: string;
   setType: (value: any) => void;
   plan: string;
   setPlan: (value: any) => void;
   topic: string;
-  addressSpaceType: string;
+  addressSpaceType?: string;
   setTopic: (value: string) => void;
   planDisabled?: boolean;
   typeOptions: IDropdownOption[];
@@ -110,30 +110,44 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
     ) {
       const type = event.currentTarget.childNodes[0].value;
       setType(type);
-      const addressPlans = await client.query<IAddressPlans>({
-        query: RETURN_ADDRESS_PLANS(addressSpacePlan, type)
-      });
-      if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
-        const planOptions = addressPlans.data.addressPlans.map(plan => {
-          return {
-            value: plan.metadata.name,
-            label: plan.spec.displayName || plan.metadata.name,
-            description: plan.spec.shortDescription || plan.spec.longDescription
-          };
+      if (addressSpacePlan && type && type.trim !== "") {
+        const addressPlans = await client.query<IAddressPlans>({
+          query: RETURN_ADDRESS_PLANS(addressSpacePlan, type),
+          fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
-        setPlan(" ");
-        setTopic(" ");
-        setPlanOptions(planOptions);
+        if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
+          const planOptions = addressPlans.data.addressPlans.map(plan => {
+            return {
+              value: plan.metadata.name,
+              label: plan.spec.displayName || plan.metadata.name,
+              description:
+                plan.spec.shortDescription || plan.spec.longDescription
+            };
+          });
+          setPlan(" ");
+          setTopic(" ");
+          setPlanOptions(planOptions);
+        }
       }
-      if (type === "subscription") {
+      if (
+        type === "subscription" &&
+        addressspaceName &&
+        namespace &&
+        type &&
+        addressspaceName !== "" &&
+        namespace !== "" &&
+        type.trim() !== ""
+      ) {
         const topics_addresses = await client.query<IAddressResponse>({
           query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
             addressspaceName,
             namespace,
             type
-          )
+          ),
+          fetchPolicy: FetchPolicy.NETWORK_ONLY
         });
         if (
+          topics_addresses &&
           topics_addresses.data &&
           topics_addresses.data.addresses &&
           topics_addresses.data.addresses.addresses.length > 0
@@ -164,28 +178,26 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
       setTopic(event.currentTarget.childNodes[0].value);
     setIsTopicOpen(!isTopicOpen);
   };
-  const { loading, error, data } = useQuery<IAddressTypes>(
-    RETURN_ADDRESS_TYPES,
-    {
-      variables: {
-        a: addressSpaceType
-      }
-    }
-  );
-  if (loading) return <Loading />;
-  if (error) return <Loading />;
-  const { addressTypes_v2 } = data || {
-    addressTypes_v2: []
-  };
-  const types: IDropdownOption[] = addressTypes_v2.map(type => {
-    return {
-      value: type.spec.displayName,
-      label: type.spec.displayName,
-      description: type.spec.shortDescription
-    };
-  });
-  if (typeOptions.length === 0) setTypeOptions(types);
-
+  if (addressSpaceType) {
+    const addressTypes = client.query<IAddressTypes>({
+      query: RETURN_ADDRESS_TYPES,
+      variables: { a: addressSpaceType },
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
+    });
+    addressTypes.then(({ data }) => {
+      const { addressTypes_v2 } = data || {
+        addressTypes_v2: []
+      };
+      const types: IDropdownOption[] = addressTypes_v2.map(type => {
+        return {
+          value: type.spec.displayName,
+          label: type.spec.displayName,
+          description: type.spec.shortDescription
+        };
+      });
+      if (typeOptions.length === 0) setTypeOptions(types);
+    });
+  }
   return (
     <>
       <Grid>

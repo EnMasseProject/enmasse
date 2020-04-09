@@ -23,6 +23,7 @@ import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
 import { FetchPolicy } from "constants/constants";
+import { Loading } from "use-patternfly";
 
 interface AddressListFilterProps {
   filterValue: string | null;
@@ -65,7 +66,9 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   isPurgeAllDisabled
 }) => {
   const { name, namespace, type } = useParams();
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState();
+  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
+    null
+  );
   const client = useApolloClient();
   const { width } = useWindowDimensions();
 
@@ -86,25 +89,27 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   ];
 
   const createAddressOnClick = async () => {
-    setIsCreateWizardOpen(!isCreateWizardOpen);
     if (name && namespace) {
-      const addressSpace = await client.query<IAddressSpacesResponse>({
+      const { data, loading } = await client.query<IAddressSpacesResponse>({
         query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
         fetchPolicy: FetchPolicy.NETWORK_ONLY
       });
+      if (loading) {
+        return <Loading />;
+      }
       if (
-        addressSpace.data &&
-        addressSpace.data.addressSpaces &&
-        addressSpace.data.addressSpaces.addressSpaces.length > 0
+        data &&
+        data.addressSpaces &&
+        data.addressSpaces.addressSpaces.length > 0
       ) {
         const plan =
-          addressSpace.data.addressSpaces.addressSpaces[0].spec.plan.metadata
-            .name;
+          data.addressSpaces.addressSpaces[0].spec.plan.metadata.name;
         if (plan) {
           setAddressSpacePlan(plan);
         }
       }
     }
+    setIsCreateWizardOpen(!isCreateWizardOpen);
   };
 
   const toolbarItems = (
@@ -135,8 +140,8 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
             name={name || ""}
             namespace={namespace || ""}
             addressSpace={name || ""}
-            addressSpacePlan={addressSpacePlan || ""}
-            addressSpaceType={type || ""}
+            addressSpacePlan={addressSpacePlan}
+            addressSpaceType={type}
             isCreateWizardOpen={isCreateWizardOpen}
             setIsCreateWizardOpen={setIsCreateWizardOpen}
             setOnCreationRefetch={setOnCreationRefetch}
