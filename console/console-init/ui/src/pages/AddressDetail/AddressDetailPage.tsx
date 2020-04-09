@@ -122,7 +122,7 @@ export default function AddressDetailPage() {
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
-  if (addresses.addresses.length <= 0) {
+  if (addresses.addresses.length <= 0 || addresses.total <= 0) {
     return (
       <NoDataFound
         type={"Address"}
