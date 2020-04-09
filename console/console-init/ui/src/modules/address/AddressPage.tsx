@@ -79,7 +79,6 @@ export default function AddressPage() {
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState(false);
 
   const [selectedAddresses, setSelectedAddresses] = useState<IAddress[]>([]);
   const { data } = useQuery<IAddressSpacePlanResponse>(
@@ -315,8 +314,6 @@ export default function AddressPage() {
         perPage={perPage}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
-        isWizardOpen={isCreateWizardOpen}
-        setIsWizardOpen={setIsCreateWizardOpen}
         selectedAddresses={selectedAddresses}
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}

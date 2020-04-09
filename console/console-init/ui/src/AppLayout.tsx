@@ -53,7 +53,7 @@ const AppLayout: React.FC = () => {
     () => ({
       onClick: () => history.push("/")
     }),
-    [history]
+    []
   );
 
   return (

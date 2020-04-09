@@ -41,7 +41,7 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
         setSortDirection(sortValue.direction);
       }
     }
-  }, [sortValue]);
+  }, [sortValue, sortData, sortMenu]);
 
   const onSortSelect = (value: string) => {
     setSortData(value);

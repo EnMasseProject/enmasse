@@ -32,8 +32,6 @@ export interface IAddressListPageProps {
   addressSpacePlan: string | null;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
-  isWizardOpen: boolean;
-  setIsWizardOpen: (value: boolean) => void;
   selectedAddresses: Array<IAddress>;
   onSelectAddress: (address: IAddress, isSelected: boolean) => void;
   onSelectAllAddress: (addresses: IAddress[], isSelected: boolean) => void;
@@ -51,8 +49,6 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   addressSpacePlan,
   sortValue,
   setSortValue,
-  isWizardOpen,
-  setIsWizardOpen,
   selectedAddresses,
   onSelectAddress,
   onSelectAllAddress
@@ -95,41 +91,55 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
+
   setTotalAddress(addresses.total);
 
-  const addressesList: IAddress[] = addresses.addresses.map(address => ({
-    name: address.metadata.name,
-    displayName: address.spec.address,
-    namespace: address.metadata.namespace,
-    type: address.spec.type,
-    planLabel:
-      address.spec.plan.spec.displayName || address.spec.plan.metadata.name,
-    planValue: address.spec.plan.metadata.name,
-    messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
-    messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),
-    storedMessages: getFilteredValue(
-      address.metrics,
-      "enmasse_messages_stored"
-    ),
-    senders: getFilteredValue(address.metrics, "enmasse_senders"),
-    receivers: getFilteredValue(address.metrics, "enmasse_receivers"),
-    partitions:
-      address.status && address.status.planStatus
-        ? address.status.planStatus.partitions
-        : null,
-    isReady: address.status && address.status.isReady,
-    creationTimestamp: address.metadata.creationTimestamp,
-    status: address.status && address.status.phase ? address.status.phase : "",
-    errorMessages:
-      address.status && address.status.messages ? address.status.messages : [],
-    selected:
-      selectedAddresses.filter(({ name, namespace }) =>
-        compareObject(
-          { name, namespace },
-          { name: address.metadata.name, namespace: address.metadata.namespace }
-        )
-      ).length === 1
-  }));
+  const getAddressList = () => {
+    return (
+      addresses &&
+      addresses.addresses.map(address => ({
+        name: address.metadata.name,
+        displayName: address.spec.address,
+        namespace: address.metadata.namespace,
+        type: address.spec.type,
+        planLabel:
+          address.spec.plan.spec.displayName || address.spec.plan.metadata.name,
+        planValue: address.spec.plan.metadata.name,
+        messageIn: getFilteredValue(address.metrics, "enmasse_messages_in"),
+        messageOut: getFilteredValue(address.metrics, "enmasse_messages_out"),
+        storedMessages: getFilteredValue(
+          address.metrics,
+          "enmasse_messages_stored"
+        ),
+        senders: getFilteredValue(address.metrics, "enmasse_senders"),
+        receivers: getFilteredValue(address.metrics, "enmasse_receivers"),
+        partitions:
+          address.status && address.status.planStatus
+            ? address.status.planStatus.partitions
+            : null,
+        isReady: address.status && address.status.isReady,
+        creationTimestamp: address.metadata.creationTimestamp,
+        status:
+          address.status && address.status.phase ? address.status.phase : "",
+        errorMessages:
+          address.status && address.status.messages
+            ? address.status.messages
+            : [],
+        selected:
+          selectedAddresses.filter(({ name, namespace }) =>
+            compareObject(
+              { name, namespace },
+              {
+                name: address.metadata.name,
+                namespace: address.metadata.namespace
+              }
+            )
+          ).length === 1
+      }))
+    );
+  };
+
+  const addressesList: IAddress[] = getAddressList();
 
   const onPurge = async (address: IAddress) => {
     if (address) {
@@ -212,14 +222,7 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
         onSelectAddress={onSelectAddress}
         onSelectAllAddress={onSelectAllAddress}
       />
-      {addresses.total > 0 ? (
-        " "
-      ) : (
-        <EmptyAddress
-          isWizardOpen={isWizardOpen}
-          setIsWizardOpen={setIsWizardOpen}
-        />
-      )}
+      {addresses.total > 0 ? " " : <EmptyAddress />}
     </>
   );
 };

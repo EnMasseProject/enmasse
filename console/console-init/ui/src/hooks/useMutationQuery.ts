@@ -40,6 +40,6 @@ export const useMutationQuery = <TData = any, TVariables = OperationVariables>(
       }
     }
     executeQuery();
-  }, [variables, query]);
+  }, [variables, query, addVariables]);
   return [setVariables];
 };

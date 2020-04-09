@@ -197,7 +197,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       modalProps: {
         name: addressspaceName,
         namespace: namespace,
-        addressSpace: addressspaceName,
         addressSpaceType: addressspaceType
       }
     });

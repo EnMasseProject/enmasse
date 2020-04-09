@@ -49,7 +49,7 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { loading, error, data } = useQuery<IAddressLinksResponse>(
+  const { loading, data } = useQuery<IAddressLinksResponse>(
     RETURN_ADDRESS_LINKS(
       page,
       perPage,
@@ -63,11 +63,13 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
   if (loading && !data) return <Loading />;
-  if (error) console.log(error);
+
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
+
   if (
     addresses &&
     addresses.addresses.length > 0 &&
@@ -75,14 +77,19 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
   ) {
     setAddressLinksTotal(addresses.addresses[0].links.total);
   }
-  const links =
-    addresses &&
-    addresses.addresses.length > 0 &&
-    addresses.addresses[0].links.total > 0 &&
-    addresses.addresses[0].links;
 
-  let clientRows: IAddressLink[] = addresses.addresses[0].links.links.map(
-    link => ({
+  const getAddressLinks = () => {
+    return (
+      addresses &&
+      addresses.addresses.length > 0 &&
+      addresses.addresses[0].links.total > 0 &&
+      addresses.addresses[0].links
+    );
+  };
+
+  const getRows = () => {
+    let rows: IAddressLink[] = [];
+    rows = addresses.addresses[0].links.links.map(link => ({
       role: link.spec.role.toString(),
       containerId: link.spec.connection.spec.containerId,
       name: link.metadata.name,
@@ -97,15 +104,21 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
       addressSpaceName: name,
       addressSpaceNamespace: namespace,
       addressSpaceType: type
-    })
-  );
+    }));
+
+    return rows;
+  };
+
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
+
+  const links = getAddressLinks();
+
   return (
     <>
-      <AddressLinks rows={clientRows} onSort={onSort} sortBy={sortBy} />
+      <AddressLinks rows={getRows()} onSort={onSort} sortBy={sortBy} />
       {links && links.total > 0 ? <></> : <EmptyAddressLinks />}
     </>
   );

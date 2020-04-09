@@ -21,9 +21,6 @@ import { EDIT_ADDRESS_SPACE } from "graphql-module/queries";
 
 export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
   const { state, dispatch } = useStoreContext();
-  let planOptions: any[] = [];
-  let authServiceOptions: any[] = [];
-
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose } = modalProps || {};
 
@@ -53,29 +50,37 @@ export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
     addressSpacePlans: []
   };
 
-  if (addressSpace.type) {
-    planOptions =
-      addressSpacePlans
-        .map(plan => {
-          if (plan.spec.addressSpaceType === addressSpace.type) {
-            return {
-              value: plan.metadata.name,
-              label: plan.metadata.name
-            };
-          }
-        })
-        .filter(plan => plan !== undefined) || [];
-  }
+  const getPlanOptions = () => {
+    let planOptions: any[] = [];
+    if (addressSpace.type) {
+      planOptions =
+        addressSpacePlans
+          .map(plan => {
+            if (plan.spec.addressSpaceType === addressSpace.type) {
+              return {
+                value: plan.metadata.name,
+                label: plan.metadata.name
+              };
+            }
+          })
+          .filter(plan => plan !== undefined) || [];
+    }
+    return planOptions;
+  };
 
-  if (authServices.addressSpaceSchema_v2[0])
-    authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
-      authService => {
-        return {
-          value: authService,
-          label: authService
-        };
-      }
-    );
+  const getAuthServiceOptions = () => {
+    let authServiceOptions: any[] = [];
+    if (authServices.addressSpaceSchema_v2[0])
+      authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
+        authService => {
+          return {
+            value: authService,
+            label: authService
+          };
+        }
+      );
+    return authServiceOptions;
+  };
 
   const onCloseDialog = () => {
     dispatch({ type: types.HIDE_MODAL });
@@ -130,8 +135,8 @@ export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
       onCloseDialog={onCloseDialog}
       onPlanChange={onPlanChange}
       onAuthServiceChange={onAuthServiceChange}
-      authServiceOptions={authServiceOptions}
-      planOptions={planOptions}
+      authServiceOptions={getAuthServiceOptions()}
+      planOptions={getPlanOptions()}
       addressSpace={addressSpace}
     />
   );

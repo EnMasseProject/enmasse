@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { useParams } from "react-router-dom";
 import {
   Title,
   EmptyState,
@@ -14,17 +15,24 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
-interface IEmptyAddressProps {
-  isWizardOpen: boolean;
-  setIsWizardOpen: (value: boolean) => void;
-}
-export const EmptyAddress: React.FunctionComponent<IEmptyAddressProps> = ({
-  isWizardOpen,
-  setIsWizardOpen
-}) => {
-  const createAddressOnClick = async () => {
-    setIsWizardOpen(true);
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+
+export const EmptyAddress: React.FunctionComponent<{}> = () => {
+  const { name, namespace, type } = useParams();
+  const { dispatch } = useStoreContext();
+
+  const onCreateAddress = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CREATE_ADDRESS,
+      modalProps: {
+        name,
+        namespace,
+        addressSpaceType: type
+      }
+    });
   };
+
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={PlusCircleIcon} />
@@ -39,7 +47,7 @@ export const EmptyAddress: React.FunctionComponent<IEmptyAddressProps> = ({
       <Button
         id="empty-address-create-button"
         variant={ButtonVariant.primary}
-        onClick={createAddressOnClick}
+        onClick={onCreateAddress}
       >
         Create Address
       </Button>
