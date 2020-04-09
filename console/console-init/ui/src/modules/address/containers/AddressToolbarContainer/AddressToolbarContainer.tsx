@@ -13,15 +13,10 @@ import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
 import { FetchPolicy } from "constant";
 import { getSelectOptionList } from "utils";
-import {
-  RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH,
-  RETURN_ADDRESS_SPACE_DETAIL
-} from "graphql-module/queries";
-import {
-  IAddressListNameSearchResponse,
-  IAddressSpacesResponse
-} from "schema/ResponseTypes";
+import { RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
+import { IAddressListNameSearchResponse } from "schema/ResponseTypes";
 import { AddressToolbar } from "modules/address/components";
+import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 
 export interface IAddressToolbarContainerProps {
   selectedNames: any[];
@@ -61,13 +56,12 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   isPurgeAllDisabled
 }) => {
   const client = useApolloClient();
+  const { dispatch } = useStoreContext();
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameInput, setNameInput] = useState<string>();
   const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
   const [statusIsExpanded, setStatusIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
-  const [addressSpacePlan, setAddressSpacePlan] = useState();
-  const [isCreateWizardOpen, setIsCreateWizardOpen] = useState<boolean>(false);
 
   const onClearAllFilters = () => {
     setFilterSelected("Name");
@@ -129,6 +123,7 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   const onTypeToggle = () => {
     setTypeIsExpanded(!typeIsExpanded);
   };
+
   const onTypeSelect = (e: any, selection: SelectOptionObject) => {
     setTypeSelected(selection.toString());
     setTypeIsExpanded(false);
@@ -137,6 +132,7 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   const onStatusToggle = () => {
     setStatusIsExpanded(!statusIsExpanded);
   };
+
   const onStatusSelect = (e: any, selection: SelectOptionObject) => {
     setStatusSelected(selection.toString());
     setStatusIsExpanded(false);
@@ -193,27 +189,20 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
         break;
     }
   };
-  const createAddressOnClick = async () => {
-    setIsCreateWizardOpen(!isCreateWizardOpen);
-    if (addressspaceName && namespace) {
-      const addressSpace = await client.query<IAddressSpacesResponse>({
-        query: RETURN_ADDRESS_SPACE_DETAIL(addressspaceName, namespace),
-        fetchPolicy: FetchPolicy.NETWORK_ONLY
-      });
-      if (
-        addressSpace.data &&
-        addressSpace.data.addressSpaces &&
-        addressSpace.data.addressSpaces.addressSpaces.length > 0
-      ) {
-        const plan =
-          addressSpace.data.addressSpaces.addressSpaces[0].spec.plan.metadata
-            .name;
-        if (plan) {
-          setAddressSpacePlan(plan);
-        }
+
+  const onCreateAddress = () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CREATE_ADDRESS,
+      modalProps: {
+        name: addressspaceName,
+        namespace: namespace,
+        addressSpace: addressspaceName,
+        addressSpaceType: addressspaceType
       }
-    }
+    });
   };
+
   return (
     <AddressToolbar
       totalRecords={totalRecords}
@@ -241,13 +230,8 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       onPurgeAllAddress={onPurgeAllAddress}
       isDeleteAllDisabled={isDeleteAllDisabled}
       isPurgeAllDisabled={isPurgeAllDisabled}
-      onClickCreateAddress={createAddressOnClick}
-      isCreateWizardOpen={isCreateWizardOpen}
-      setIsCreateWizardOpen={setIsCreateWizardOpen}
+      onClickCreateAddress={onCreateAddress}
       namespace={namespace}
-      addressspaceName={addressspaceName}
-      addressspaceType={addressspaceType}
-      addressspacePlan={addressSpacePlan}
       onChangeNameInput={onChangeNameInput}
       setNameInput={setNameInput}
     />

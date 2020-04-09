@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React from "react";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
 import { IDropdownOption } from "components";
@@ -13,29 +13,24 @@ import {
   RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION
 } from "graphql-module/queries";
 import { IAddressResponse } from "schema/ResponseTypes";
-import { AddressConfiguration } from "modules/address/components";
+import {
+  AddressConfiguration,
+  IAddressConfigurationProps
+} from "modules/address/components";
 
-export interface IAddressDefinition {
+export interface IAddressDefinition extends IAddressConfigurationProps {
   addressspaceName: string;
   namespace: string;
-  addressName: string;
   addressSpacePlan: string;
-  handleAddressChange: (name: string) => void;
-  type: string;
   setType: (value: any) => void;
-  plan: string;
   setPlan: (value: any) => void;
-  topic: string;
   addressSpaceType: string;
   setTopic: (value: string) => void;
-  typeOptions: IDropdownOption[];
   setTypeOptions: (values: IDropdownOption[]) => void;
-  planOptions: IDropdownOption[];
   setPlanOptions: (values: IDropdownOption[]) => void;
-  topicsForSubscription: IDropdownOption[];
   setTopicForSubscripitons: (values: IDropdownOption[]) => void;
-  isNameValid: boolean;
 }
+
 interface IAddressPlans {
   addressPlans: Array<{
     metadata: {
@@ -49,6 +44,7 @@ interface IAddressPlans {
     };
   }>;
 }
+
 interface IAddressTypes {
   addressTypes_v2: Array<{
     spec: {
@@ -58,7 +54,8 @@ interface IAddressTypes {
     };
   }>;
 }
-export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
+
+export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinition> = ({
   addressspaceName,
   namespace,
   addressName,
@@ -79,9 +76,18 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
   planOptions,
   setPlanOptions
 }) => {
-  const [isTypeOpen, setIsTypeOpen] = useState<boolean>(false);
-  const [isTopicOpen, setIsTopicOpen] = useState<boolean>(false);
   const client = useApolloClient();
+  const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
+    variables: {
+      a: addressSpaceType
+    }
+  });
+
+  if (loading) return <Loading />;
+
+  const { addressTypes_v2 } = data || {
+    addressTypes_v2: []
+  };
 
   const onTypeSelect = async (value: string) => {
     if (value) {
@@ -90,6 +96,7 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
       const addressPlans = await client.query<IAddressPlans>({
         query: RETURN_ADDRESS_PLANS(addressSpacePlan, type)
       });
+
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
@@ -102,7 +109,8 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
         setTopic(" ");
         setPlanOptions(planOptions);
       }
-      if (type === "subscription") {
+
+      if (type.toLowerCase() === "subscription") {
         const topics_addresses = await client.query<IAddressResponse>({
           query: RETURN_TOPIC_ADDRESSES_FOR_SUBSCRIPTION(
             addressspaceName,
@@ -126,28 +134,17 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
           setTopicForSubscripitons(topics);
         }
       }
-      setIsTypeOpen(!isTypeOpen);
     }
   };
 
-  const [isPlanOpen, setIsPlanOpen] = useState(false);
   const onPlanSelect = (value: string) => {
     setPlan(value);
-    setIsPlanOpen(!isPlanOpen);
   };
+
   const onTopicSelect = (value: string) => {
     setTopic(value);
   };
-  const { loading, data } = useQuery<IAddressTypes>(RETURN_ADDRESS_TYPES, {
-    variables: {
-      a: addressSpaceType
-    }
-  });
-  if (loading) return <Loading />;
 
-  const { addressTypes_v2 } = data || {
-    addressTypes_v2: []
-  };
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
       value: type.spec.displayName,
@@ -155,7 +152,10 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
       description: type.spec.shortDescription
     };
   });
-  if (typeOptions.length === 0) setTypeOptions(types);
+
+  if (typeOptions && typeOptions.length === 0) {
+    setTypeOptions(types);
+  }
 
   return (
     <AddressConfiguration
@@ -165,12 +165,6 @@ export const AddressDefinition: React.FunctionComponent<IAddressDefinition> = ({
       type={type}
       plan={plan}
       topic={topic}
-      isTypeOpen={isTypeOpen}
-      setIsTypeOpen={setIsTypeOpen}
-      isPlanOpen={isPlanOpen}
-      setIsPlanOpen={setIsPlanOpen}
-      isTopicOpen={isTopicOpen}
-      setIsTopicOpen={setIsTopicOpen}
       onTypeSelect={onTypeSelect}
       onPlanSelect={onPlanSelect}
       onTopicSelect={onTopicSelect}
