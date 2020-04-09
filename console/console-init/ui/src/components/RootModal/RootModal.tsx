@@ -10,11 +10,12 @@ import {
   EditAddressSpaceContainer,
   CreateAddressSpace
 } from "modules/address-space/dialogs";
-import { EditAddress } from "modules/address/dialogs";
+import { EditAddress, CreateAddress } from "modules/address/dialogs";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,
   [MODAL_TYPES.EDIT_ADDRESS_SPACE]: EditAddressSpaceContainer,
+  [MODAL_TYPES.CREATE_ADDRESS]: CreateAddress,
   [MODAL_TYPES.EDIT_ADDRESS]: EditAddress,
   [MODAL_TYPES.DELETE_ADDRESS_SPACE]: DialogPrompt,
   [MODAL_TYPES.DELETE_ADDRESS]: DialogPrompt,

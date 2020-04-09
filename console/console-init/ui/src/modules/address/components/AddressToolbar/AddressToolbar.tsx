@@ -12,7 +12,6 @@ import {
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
-import { CreateAddress } from "modules/address/dialogs";
 import {
   AddressListKebab,
   AddressToggleGroup,
@@ -28,13 +27,9 @@ export interface IAddressToolbarProps extends IAddressToggleGroupProps {
   isDeleteAllDisabled: boolean;
   isPurgeAllDisabled: boolean;
   onClickCreateAddress: () => void;
-  isCreateWizardOpen: boolean;
-  setIsCreateWizardOpen: (value: boolean) => void;
   namespace: string;
-  addressspaceName: string;
-  addressspaceType: string;
-  addressspacePlan: string;
 }
+
 const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
   DataToolbarContentProps> = ({
   totalRecords,
@@ -63,12 +58,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
   isDeleteAllDisabled,
   isPurgeAllDisabled,
   onClickCreateAddress,
-  isCreateWizardOpen,
-  setIsCreateWizardOpen,
-  namespace,
-  addressspaceName,
-  addressspaceType,
-  addressspacePlan,
   onChangeNameInput,
   setNameInput
 }) => {
@@ -112,19 +101,6 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
             sortMenu={sortMenuItems}
             sortValue={sortValue}
             setSortValue={setSortValue}
-          />
-        )}
-      </DataToolbarItem>
-      <DataToolbarItem>
-        {isCreateWizardOpen && (
-          <CreateAddress
-            name={addressspaceName || ""}
-            namespace={namespace || ""}
-            addressSpace={addressspaceName || ""}
-            addressSpacePlan={addressspacePlan || ""}
-            addressSpaceType={addressspaceType || ""}
-            isCreateWizardOpen={isCreateWizardOpen}
-            setIsCreateWizardOpen={setIsCreateWizardOpen}
           />
         )}
       </DataToolbarItem>
