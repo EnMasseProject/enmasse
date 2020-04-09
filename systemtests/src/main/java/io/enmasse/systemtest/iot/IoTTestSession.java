@@ -15,7 +15,8 @@ import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -48,13 +49,13 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTBase;
-import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
@@ -640,32 +641,17 @@ public final class IoTTestSession implements AutoCloseable {
         };
     }
 
-    public static PreDeployProcessor withDefaultAdapters() {
-
-        return (context, config, project) -> {
-
-            // cert bundle for MQTT
-
-            final CertBundle certBundle;
-            try {
-                certBundle = CertificateUtils.createCertBundle();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create certificate bundle", e);
-            }
-
-            config
-                    .editOrNewSpec()
-                    .editOrNewAdapters()
-                    .editOrNewMqtt()
-                    .editOrNewEndpoint()
-                    .withNewKeyCertificateStrategy()
-                    .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                    .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                    .endKeyCertificateStrategy()
-                    .endEndpoint()
-                    .endMqtt()
-                    .endAdapters()
-                    .endSpec();
-        };
+    public static void deployDefaultCerts() throws Exception {
+        if (!Files.isRegularFile(Paths.get("../templates/iot/examples/k8s-tls/build/root-cert.pem"))) {
+            Exec.execute("../templates/iot/examples/k8s-tls/create");
+        }
+        // deploy will try to undeploy first, so it can always be called
+        Exec.execute(
+                asList("../templates/iot/examples/k8s-tls/deploy"),
+                60_000, true, true,
+                Map.of(
+                        "CLI", KubeCMDClient.getCMD(),
+                        "PREFIX", "systemtests-"
+                        ));
     }
 }

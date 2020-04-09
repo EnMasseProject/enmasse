@@ -11,7 +11,7 @@ OUTDIR="$SCRIPTDIR/build"
 : ${PREFIX:=}
 
 function deleteSecret () {
-  kubectl -n "$NAMESPACE" delete secret "$1" --ignore-not-found=true
+  "${CLI}" -n "$NAMESPACE" delete secret "$1" --ignore-not-found=true
 }
 
 for i in ${IOT_SERVICES}; do

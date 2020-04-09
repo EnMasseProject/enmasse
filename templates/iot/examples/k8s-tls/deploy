@@ -13,7 +13,7 @@ OUTDIR="$SCRIPTDIR/build"
 $SCRIPTDIR/undeploy
 
 for i in ${IOT_SERVICES}; do
-  kubectl -n "$NAMESPACE" create secret tls "${PREFIX}${i}-tls" --key="$OUTDIR/${i}-key.pem" --cert="$OUTDIR/${i}-fullchain.pem"
+  "${CLI}" -n "$NAMESPACE" create secret tls "${PREFIX}${i}-tls" --key="$OUTDIR/${i}-key.pem" --cert="$OUTDIR/${i}-fullchain.pem"
 done
 
-kubectl -n "$NAMESPACE" create secret generic "${PREFIX}iot-service-ca" --from-file=service-ca.crt="$OUTDIR/trusted-certs.pem"
+"${CLI}" -n "$NAMESPACE" create secret generic "${PREFIX}iot-service-ca" --from-file=service-ca.crt="$OUTDIR/trusted-certs.pem"
