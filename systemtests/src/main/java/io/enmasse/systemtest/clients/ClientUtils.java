@@ -63,7 +63,6 @@ public class ClientUtils {
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
                                     UserCredentials credentials, int count) throws Exception {
         AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
-        LOGGER.debug("Address fucking space!: " + addressSpace.toString());
         client.getConnectOptions().setCredentials(credentials);
         List<Message> listOfMessages = new ArrayList<>();
         IntStream.range(0, count).forEach(num -> {
