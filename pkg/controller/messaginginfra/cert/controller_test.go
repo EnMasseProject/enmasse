@@ -25,14 +25,31 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func setup(t *testing.T, caExpiration time.Duration, certExpiration time.Duration) *CertController {
+type testClock struct {
+	now time.Time
+}
+
+func (t *testClock) Now() time.Time {
+	return t.now
+}
+
+func setup(t *testing.T) (*CertController, *testClock) {
 	s := scheme.Scheme
 	cl := fake.NewFakeClientWithScheme(s)
-	return NewCertController(cl, s, caExpiration, certExpiration)
+	clock := &testClock{
+		now: time.Now(),
+	}
+	return &CertController{
+		client:             cl,
+		scheme:             s,
+		caExpirationTime:   48 * time.Hour,
+		certExpirationTime: 24 * time.Hour,
+		clock:              clock,
+	}, clock
 }
 
 func TestCaNew(t *testing.T) {
-	cc := setup(t, 24*time.Hour, 24*time.Hour)
+	cc, _ := setup(t)
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "ca"},
@@ -57,7 +74,7 @@ func TestCaNew(t *testing.T) {
 }
 
 func TestCaRenewed(t *testing.T) {
-	cc := setup(t, 1*time.Second, 1*time.Second)
+	cc, clock := setup(t)
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "ca"},
@@ -71,9 +88,9 @@ func TestCaRenewed(t *testing.T) {
 	key := secret.Data["tls.key"]
 	crt := secret.Data["tls.crt"]
 
-	time.Sleep(10 * time.Second)
+	// Fast forward and verify cert has been renewed
+	clock.now = clock.now.Add(48 * time.Hour)
 
-	// Apply again and verify cert has been renewed
 	err = cc.applyCaSecret(secret, logrtesting.TestLogger{})
 	assert.Nil(t, err)
 	assert.Contains(t, secret.Data, "tls.key")
@@ -84,7 +101,7 @@ func TestCaRenewed(t *testing.T) {
 }
 
 func TestCertNew(t *testing.T) {
-	cc := setup(t, 24*time.Hour, 24*time.Hour)
+	cc, _ := setup(t)
 
 	caSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "ca"},
@@ -128,7 +145,7 @@ func TestCertNew(t *testing.T) {
 }
 
 func TestCertRenewed(t *testing.T) {
-	cc := setup(t, 24*time.Hour, 10*time.Second)
+	cc, clock := setup(t)
 
 	caSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "ca"},
@@ -143,32 +160,39 @@ func TestCertRenewed(t *testing.T) {
 	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
+	// Add passing of time to ensure cert is valid
+	clock.now = clock.now.Add(12 * time.Hour)
+
 	assert.Contains(t, secret.Data, "tls.key")
 	assert.Contains(t, secret.Data, "tls.crt")
 	assert.Contains(t, secret.Data, "ca.crt")
 	assert.Contains(t, secret.Data, "keystore.p12")
 	assert.Equal(t, caSecret.Data["tls.crt"], secret.Data["ca.crt"])
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "b.example.com", false)
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "c.example.com", true)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "b.example.com", false)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "c.example.com", true)
 
 	key := secret.Data["tls.key"]
 	crt := secret.Data["tls.crt"]
 	p12 := secret.Data["keystore.p12"]
 
-	time.Sleep(10 * time.Second)
+	clock.now = clock.now.Add(12 * time.Hour)
 
 	// Certificate should be renewed
 	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a.example.com", "b.example.com")
 	assert.Nil(t, err)
+
+	// Add passing of time to ensure cert is valid
+	clock.now = clock.now.Add(12 * time.Hour)
+
 	assert.Contains(t, secret.Data, "tls.key")
 	assert.Contains(t, secret.Data, "tls.crt")
 	assert.Contains(t, secret.Data, "ca.crt")
 	assert.Contains(t, secret.Data, "keystore.p12")
 	assert.Equal(t, caSecret.Data["tls.crt"], secret.Data["ca.crt"])
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "b.example.com", false)
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "c.example.com", true)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "b.example.com", false)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "c.example.com", true)
 
 	assert.NotEqual(t, crt, secret.Data["tls.crt"])
 	assert.Equal(t, key, secret.Data["tls.key"])
@@ -176,7 +200,7 @@ func TestCertRenewed(t *testing.T) {
 }
 
 func TestCertCaRenewed(t *testing.T) {
-	cc := setup(t, 10*time.Second, 10*time.Hour)
+	cc, clock := setup(t)
 
 	caSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "ca"},
@@ -191,26 +215,32 @@ func TestCertCaRenewed(t *testing.T) {
 	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
-	time.Sleep(10 * time.Second)
+	clock.now = clock.now.Add(24 * time.Hour)
 
 	// Verify that certificate is not valid anymore
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", true)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", true)
 
 	// Renew CA
 	err = cc.applyCaSecret(caSecret, logrtesting.TestLogger{})
 	assert.Nil(t, err)
 
-	// Our cert is still valid
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
+	// Add passing of time to ensure cert is no longer valid
+	clock.now = clock.now.Add(1 * time.Hour)
+
+	// Our cert is not valid
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", true)
 
 	// Renew our cert
 	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a.example.com", "b.example.com")
 
+	// Add passing of time to ensure cert is valid
+	clock.now = clock.now.Add(1 * time.Hour)
+
 	// Valid again
-	assertCert(t, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
+	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", false)
 }
 
-func assertCert(t *testing.T, caBytes []byte, certBytes []byte, dnsName string, shouldErr bool) {
+func assertCert(t *testing.T, clock Clock, caBytes []byte, certBytes []byte, dnsName string, shouldErr bool) {
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM(caBytes)
 	assert.True(t, ok)
@@ -222,8 +252,9 @@ func assertCert(t *testing.T, caBytes []byte, certBytes []byte, dnsName string, 
 	assert.Nil(t, err)
 
 	opts := x509.VerifyOptions{
-		DNSName: dnsName,
-		Roots:   roots,
+		DNSName:     dnsName,
+		Roots:       roots,
+		CurrentTime: clock.Now(),
 	}
 
 	_, err = cert.Verify(opts)
