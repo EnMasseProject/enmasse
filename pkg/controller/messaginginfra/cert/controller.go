@@ -29,11 +29,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+type Clock interface {
+	Now() time.Time
+}
+
+type systemClock struct{}
+
+func (s *systemClock) Now() time.Time {
+	return time.Now()
+}
+
 type CertController struct {
 	client             client.Client
 	scheme             *runtime.Scheme
 	caExpirationTime   time.Duration
 	certExpirationTime time.Duration
+	clock              Clock
 }
 
 func NewCertController(client client.Client, scheme *runtime.Scheme, caExpirationTime time.Duration, certExpirationTime time.Duration) *CertController {
@@ -42,6 +53,7 @@ func NewCertController(client client.Client, scheme *runtime.Scheme, caExpiratio
 		scheme:             scheme,
 		caExpirationTime:   caExpirationTime,
 		certExpirationTime: certExpirationTime,
+		clock:              &systemClock{},
 	}
 }
 
@@ -74,7 +86,7 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
 		secret.ObjectMeta.Annotations = make(map[string]string)
 	}
 
-	now := time.Now()
+	now := c.clock.Now()
 	_, hasCert := secret.Data["tls.key"]
 
 	var err error
@@ -174,7 +186,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 
 	logger.Info("Checking cert", "secret", secret.Name, "expiryDate", expiryDate.Format(time.UnixDate), "expectedCaDigest", expectedCaDigest, "actualCaDigest", actualCaDigest)
 
-	now := time.Now()
+	now := c.clock.Now()
 
 	// Create the initial certificate if this is a new secret to be created
 	if !hasCert {
