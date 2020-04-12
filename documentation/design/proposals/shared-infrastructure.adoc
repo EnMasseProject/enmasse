@@ -473,11 +473,10 @@ The following controllers and components must be implemented:
 
 Both for MessagingTenantPlan and AddressPlans - Only MessagingTenantPlan used in examples here.
 
-1. No plan - No plans defined by service admin - no plan specified by messaging tenant => no plan applied => no limits
-2. Restricted - Plans defined by service admin - plan set by messaging tenant
-3. Restricted by default - Plans defined and default defined by service admin - plan not set by messaging tenant
+1. No default plan defined by service admin - implicit default applied
+1. Default plan defined by service admin - explicit default applied
 
-== Unlimited - No plans defined by service admin - no plan specified by messaging tenant => no limits
+==== No default plan defined by service admin - implicit default applied
 
 ```
 apiVersion: enmasse.io/v1
@@ -496,41 +495,11 @@ metadata:
 spec: {}
 ```
 
-== Restricted - Plans defined by service admin - plan set by messaging tenant
+NOTE:
 
-```
-apiVersion: enmasse.io/v1
-kind: MessagingInfra
-metadata:
-  name: infra1
-spec: {}
-```
+* If default changes from implicit default to plan 1 to `plan1`, change all tenants without anything set
 
-```
-apiVersion: enmasse.io/v1
-kind: MessagingTenantPlan
-metadata:
-  name: plan1
-  namespace: enmasse-plans
-spec:
-  // ...
-```
-
-```
-apiVersion: enmasse.io/v1
-kind: MessagingTenant
-metadata:
-  name: default
-  namespace: myspace
-spec:
-  plan:
-    name: plan1
-    namespace: enmasse-plans
-```
-
-If plan1 is modified, changes are applied to all messaging tenants.
-
-== Restricted by default - Plans defined by service admin and default is set - plan not set by messaging tenant
+==== Default plan defined by service admin - explicit default applied
 
 ```
 apiVersion: enmasse.io/v1
@@ -568,26 +537,9 @@ metadata:
 spec: {}
 ```
 
-Alternative 1: After initial reconcile, MessagingTenant is updated (plan is materialized):
-
-```
-apiVersion: enmasse.io/v1
-kind: MessagingTenant
-metadata:
-  name: default
-  namespace: myspace
-spec:
-  plan:
-    name: plan2
-    namespace: enmasse-plans
-```
-
-Alternative 2: After initial reconcile, MessagingTenant is not updated.
-
 NOTE:
-* Alternative 1: If default changes from `plan2` to `plan1`, nothing changes
-* Alternative 2: If default changes from `plan2` to `plan1`, change all plans without anything set
-* Both alternatives: If `plan2` is modified, changes are applied to all messaging tenants
+* If default changes from `plan2` to `plan1`, change all tenants without anything set
+* If `plan2` is modified, changes are applied to all messaging tenants using defaults as long as `plan2` is default
 
 ==== Tasks
 
