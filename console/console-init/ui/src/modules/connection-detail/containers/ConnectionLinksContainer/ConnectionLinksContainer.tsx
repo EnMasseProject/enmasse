@@ -68,7 +68,7 @@ export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetail
     connections: { total: 0, connections: [] }
   };
 
-  const connection = connections.connections[0];
+  const connection = connections && connections.connections[0];
 
   const getRows = () => {
     let linkRows: ILink[] = [];
