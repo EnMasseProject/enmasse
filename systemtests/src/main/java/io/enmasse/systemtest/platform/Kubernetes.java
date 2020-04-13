@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.fabric8.openshift.api.model.Route;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -972,7 +973,7 @@ public abstract class Kubernetes {
         } while (!unready.isEmpty() && budget.timeLeft() > 0);
 
         if (!unready.isEmpty()) {
-            fail(String.format(" %d pod(s) still unready", unready.size()));
+            fail(String.format(" %d pod(s) still unready in namespace : %s", unready.size(), namespace));
         }
     }
 
@@ -1072,4 +1073,9 @@ public abstract class Kubernetes {
         log.info("Output: {}", stdoutString);
         return stdoutString;
     }
+
+    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
+        throw new UnsupportedOperationException();
+    }
+
 }

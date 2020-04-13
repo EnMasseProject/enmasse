@@ -8,6 +8,8 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.ConsoleTest;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -165,4 +167,12 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     void testAddressLinks() throws Exception {
         doTestAddressLinks(getSharedAddressSpace(), DestinationPlan.BROKERED_QUEUE);
     }
+
+    @Test
+    @OpenShift(version = OpenShiftVersion.OCP4)
+    void testOpenShiftWithCustomCert() throws Exception {
+        doTestOpenShiftWithCustomCert();
+    }
+
+
 }

@@ -6,6 +6,8 @@
 package install
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"sort"
 	"strings"
@@ -652,4 +654,39 @@ func AddOwnerReference(owner v1.Object, object v1.Object, scheme *runtime.Scheme
 	object.SetOwnerReferences(refs)
 
 	return nil
+}
+
+func ComputeConfigMapHash(cm corev1.ConfigMap) (hash string, err error) {
+	d := sha256.New()
+	_, err = d.Write([]byte(cm.Namespace))
+	if err != nil {
+		return
+	}
+	_, err = d.Write([]byte(cm.Name))
+	if err != nil {
+		return
+	}
+	_, err = d.Write([]byte(cm.ResourceVersion))
+	if err != nil {
+		return
+	}
+	keys := make([]string, 0)
+	for key, _ := range cm.Data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys  {
+		_, err = d.Write([]byte(key))
+		if err != nil {
+			return
+		}
+		_, err = d.Write([]byte(cm.Data[key]))
+		if err != nil {
+			return
+		}
+	}
+
+	hash = base64.StdEncoding.EncodeToString(d.Sum(nil)[:])
+	return
 }

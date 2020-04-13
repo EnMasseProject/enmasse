@@ -5,6 +5,8 @@
 package io.enmasse.systemtest.platform;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -154,5 +156,10 @@ public class OpenShift extends Kubernetes {
     @Override
     public String getOlmNamespace() {
         return OLM_NAMESPACE;
+    }
+
+    @Override
+    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
+        return client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 }
