@@ -65,11 +65,12 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
     connections: { total: 0, connections: [] }
   };
 
-  setTotalConnections(connections.total);
+  setTotalConnections(connections && connections.total);
 
   const getRows = () => {
-    const connectionList: IConnection[] = connections.connections.map(
-      connection => ({
+    const connectionList: IConnection[] =
+      connections &&
+      connections.connections.map(connection => ({
         hostname: connection.spec.hostname,
         containerId: connection.spec.containerId,
         protocol: connection.spec.protocol,
@@ -84,8 +85,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
         status: "running",
         name: connection.metadata.name,
         creationTimestamp: connection.metadata.creationTimestamp
-      })
-    );
+      }));
     return connectionList;
   };
 
@@ -101,7 +101,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
         sortBy={sortBy}
         onSort={onSort}
       />
-      {connections.total > 0 ? "" : <EmptyConnection />}
+      {(connections && connections.total) > 0 ? "" : <EmptyConnection />}
     </>
   );
 };

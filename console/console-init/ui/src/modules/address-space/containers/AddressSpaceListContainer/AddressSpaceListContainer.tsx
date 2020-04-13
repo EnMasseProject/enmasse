@@ -94,7 +94,8 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   const { addressSpaces } = data || {
     addressSpaces: { total: 0, addressSpaces: [] }
   };
-  setTotalAddressSpaces(addressSpaces.total);
+
+  setTotalAddressSpaces(addressSpaces && addressSpaces.total);
 
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
@@ -197,7 +198,8 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
     setSortValue({ index: index, direction: direction });
   };
 
-  const tableRows = addressSpacesList.map(row => getTableCells(row));
+  const tableRows =
+    addressSpacesList && addressSpacesList.map(row => getTableCells(row));
 
   const onSelect = async (
     event: React.MouseEvent,
@@ -243,7 +245,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
         sortBy={sortBy}
         actionResolver={actionResolver}
       />
-      {addressSpaces.total > 0 ? "" : <EmptyAddressSpace />}
+      {(addressSpaces && addressSpaces.total) > 0 ? "" : <EmptyAddressSpace />}
     </>
   );
 };

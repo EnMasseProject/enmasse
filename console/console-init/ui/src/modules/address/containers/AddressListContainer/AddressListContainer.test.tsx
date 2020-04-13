@@ -5,6 +5,7 @@
 
 import React from "react";
 import ReactDom from "react-dom";
+import { MemoryRouter } from "react-router";
 import { render, cleanup } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
 import wait from "waait";
@@ -65,9 +66,11 @@ afterEach(cleanup);
 
 const setup = (mocks: any, props: any) => {
   return render(
-    <MockedProvider mocks={mocks} addTypename={false}>
-      <AddressListContainer {...props} />
-    </MockedProvider>
+    <MemoryRouter>
+      <MockedProvider mocks={mocks} addTypename={false}>
+        <AddressListContainer {...props} />
+      </MockedProvider>
+    </MemoryRouter>
   );
 };
 
