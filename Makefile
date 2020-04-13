@@ -127,6 +127,9 @@ $(DOCKER_DIRS):
 systemtests:
 	make -C systemtests
 
+systemtests-tekton:
+	make -C systemtests systemtests-tekton
+
 docu_html:
 	make -C documentation build
 
