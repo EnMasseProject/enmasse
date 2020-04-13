@@ -88,9 +88,6 @@ export const EditAddressSpace: React.FunctionComponent<IEditAddressSpaceProps> =
 
   return (
     <Form>
-      <TextContent>
-        <Text component={TextVariants.h2}>Choose a new plan.</Text>
-      </TextContent>
       <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
         <FormSelect
           id="edit-namespace"

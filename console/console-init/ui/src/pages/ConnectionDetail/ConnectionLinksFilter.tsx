@@ -41,9 +41,7 @@ import {
 } from "queries";
 import {
   TypeAheadMessage,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TYPEAHEAD_REQUIRED_LENGTH,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";

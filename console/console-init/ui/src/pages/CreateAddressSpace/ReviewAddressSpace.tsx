@@ -69,7 +69,6 @@ export const ReviewAddressSpace: React.FunctionComponent<IAddressSpaceReview> = 
     }
   );
   if (loading) return <Loading />;
-  if (error) console.log("Address Space Review Query Error", error);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>

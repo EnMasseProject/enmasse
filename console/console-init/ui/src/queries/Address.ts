@@ -5,6 +5,7 @@
 
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
+import { removeForbiddenChars } from "utils";
 
 const DELETE_ADDRESS = gql`
   mutation delete_addr($a: ObjectMeta_v1_Input!) {
@@ -29,7 +30,9 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   let filterNamesLength = filterNames && filterNames.length;
   let filterName = filterNames && filterNames[0];
   let filterNameValue =
-    filterName && filterName.value && filterName.value.trim();
+    filterName &&
+    filterName.value &&
+    removeForbiddenChars(filterName.value.trim());
 
   if (name && name.trim() !== "") {
     filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
@@ -51,7 +54,8 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
       else filter += "(`$.spec.address` LIKE '" + filterNameValue + "%' ";
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName = filterNames && filterNames[i];
-        let filterNameValue = filterName && filterName.value.trim();
+        let filterNameValue =
+          filterName && removeForbiddenChars(filterName.value.trim());
         if (filterName.isExact) {
           filter += "OR `$.spec.address` = '" + filterNameValue + "'";
         } else {
@@ -288,12 +292,16 @@ const ADDRESS_LINKS_FILTER = (
   let filterNamesLength = filterNames && filterNames.length;
   let filterName = filterNames && filterNames[0];
   let filterNameValue =
-    filterName && filterName.value && filterName.value.trim();
+    filterName &&
+    filterName.value &&
+    removeForbiddenChars(filterName.value.trim());
 
   let filterContainersLength = filterContainers && filterContainers.length;
   let filterContainer = filterContainers && filterContainers[0];
   let filterContainerValue =
-    filterContainer && filterContainer.value && filterContainer.value.trim();
+    filterContainer &&
+    filterContainer.value &&
+    removeForbiddenChars(filterContainer.value.trim());
 
   if (addressSpace) {
     filter += "`$.metadata.name` LIKE '" + addressSpace + ".%' AND ";
@@ -315,7 +323,9 @@ const ADDRESS_LINKS_FILTER = (
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName = filterNames && filterNames[i];
         let filterNameValue =
-          filterName && filterName.value && filterName.value.trim();
+          filterName &&
+          filterName.value &&
+          removeForbiddenChars(filterName.value.trim());
         if (filterName.isExact)
           filterForLink += "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
@@ -353,7 +363,7 @@ const ADDRESS_LINKS_FILTER = (
         let filterContainerValue =
           filterContainer &&
           filterContainer.value &&
-          filterContainer.value.trim();
+          removeForbiddenChars(filterContainer.value.trim());
         if (filterContainer.isExact)
           filterForLink +=
             "OR `$.spec.connection.spec.containerId` = '" +
@@ -611,6 +621,7 @@ const RETURN_ALL_NAMES_OF_ADDRESS_LINK_FOR_TYPEAHEAD_SEARCH = (
   namespace: string,
   name: string
 ) => {
+  name = removeForbiddenChars(name);
   const all_names = gql`
     query all_link_names_for_connection {
       addresses(
@@ -638,6 +649,7 @@ const RETURN_ALL_CONTAINER_IDS_OF_ADDRESS_LINKS_FOR_TYPEAHEAD_SEARCH = (
   namespace: string,
   container: string
 ) => {
+  container = removeForbiddenChars(container);
   const all_names = gql`
     query all_link_names_for_connection {
       addresses(
@@ -670,6 +682,7 @@ const RETURN_ALL_ADDRESS_NAMES_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
   name?: string
 ) => {
   let filter = "";
+  name = name && removeForbiddenChars(name);
   if (addressspaceName && addressspaceName.trim() !== "") {
     filter += "`$.metadata.name` LIKE '" + addressspaceName + ".%' AND";
   }

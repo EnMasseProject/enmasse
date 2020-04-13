@@ -67,7 +67,6 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
     }
   });
   if (loading) return <Loading />;
-  if (error) console.log("Address Preview Query Error", error);
 
   return (
     <PageSection variant={PageSectionVariants.light}>

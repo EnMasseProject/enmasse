@@ -84,9 +84,7 @@ export default function ConnectionDetailPage() {
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading) return <Loading />;
-  if (error) {
-    console.log(error);
-  }
+
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
