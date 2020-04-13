@@ -14,8 +14,10 @@ import {
 } from "@patternfly/react-core";
 import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
 import { FormatDistance } from "use-patternfly";
-import { ConnectionDetailHeaderAttributes } from "./ConnectionDetailHeaderAttributes";
-import { MessagesDetailHeaderAttributes } from "./MessagesDetailHeaderAttributes";
+import {
+  ConnectionDetailHeaderAttributes,
+  MessagesDetailHeaderAttributes
+} from "modules/connection-detail/components";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";

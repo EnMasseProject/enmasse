@@ -9,3 +9,5 @@ export * from "./ConnectionLinksList";
 export * from "./EmptyConnectionLinks";
 export * from "./ConnectionLinksToggleGroup";
 export * from "./ConnectionLinksToolbar";
+export * from "./ConnectionDetailHeaderAttributes";
+export * from "./MessagesDetailHeaderAttributes";

@@ -49,7 +49,7 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
   }
-  const { loading, error, data } = useQuery<IAddressLinksResponse>(
+  const { loading, data } = useQuery<IAddressLinksResponse>(
     RETURN_ADDRESS_LINKS(
       page,
       perPage,
@@ -63,10 +63,13 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
   if (loading && !data) return <Loading />;
+
   const { addresses } = data || {
     addresses: { total: 0, addresses: [] }
   };
+
   if (
     addresses &&
     addresses.addresses.length > 0 &&
@@ -74,47 +77,60 @@ const AddressLinksContainer: React.FunctionComponent<IAddressLinksListProps> = (
   ) {
     setAddressLinksTotal(addresses.addresses[0].links.total);
   }
-  const links =
-    addresses &&
-    addresses.addresses.length > 0 &&
-    addresses.addresses[0].links.total > 0 &&
-    addresses.addresses[0].links.links &&
-    addresses.addresses[0].links.links.length > 0 &&
-    addresses.addresses[0].links;
 
-  let clientRows: IAddressLink[] =
-    links && links.links
-      ? links.links.map(link => ({
-          role:
-            link && link.spec && link.spec.role && link.spec.role.toString(),
-          containerId:
-            link &&
-            link.spec.connection &&
-            link.spec.connection.spec &&
-            link.spec.connection.spec.containerId,
-          name: link && link.metadata && link.metadata.name,
-          deliveryRate: getFilteredValue(
-            link.metrics,
-            link.spec.role === "sender"
-              ? "enmasse_messages_in"
-              : "enmasse_messages_out"
-          ),
-          backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
-          connectionName:
-            link && link.spec.connection && link.spec.connection.metadata.name,
-          addressSpaceName: name,
-          addressSpaceNamespace: namespace,
-          addressSpaceType: type
-        }))
-      : [];
+  const getAddressLinks = () => {
+    return (
+      addresses &&
+      addresses.addresses.length > 0 &&
+      addresses.addresses[0].links.total > 0 &&
+      addresses.addresses[0].links &&
+      addresses.addresses[0].links.links.length > 0 &&
+      addresses.addresses[0].links
+    );
+  };
+
+  const getRows = () => {
+    let rows: IAddressLink[] =
+      links && links.links
+        ? links.links.map(link => ({
+            role:
+              link && link.spec && link.spec.role && link.spec.role.toString(),
+            containerId:
+              link &&
+              link.spec.connection &&
+              link.spec.connection.spec &&
+              link.spec.connection.spec.containerId,
+            name: link && link.metadata && link.metadata.name,
+            deliveryRate: getFilteredValue(
+              link.metrics,
+              link.spec.role === "sender"
+                ? "enmasse_messages_in"
+                : "enmasse_messages_out"
+            ),
+            backlog: getFilteredValue(link.metrics, "enmasse_messages_backlog"),
+            connectionName:
+              link &&
+              link.spec.connection &&
+              link.spec.connection.metadata.name,
+            addressSpaceName: name,
+            addressSpaceNamespace: namespace,
+            addressSpaceType: type
+          }))
+        : [];
+
+    return rows;
+  };
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
+
+  const links = getAddressLinks();
+
   return (
     <>
-      <AddressLinks rows={clientRows} onSort={onSort} sortBy={sortBy} />
+      <AddressLinks rows={getRows()} onSort={onSort} sortBy={sortBy} />
       {links && links.total > 0 ? <></> : <EmptyAddressLinks />}
     </>
   );

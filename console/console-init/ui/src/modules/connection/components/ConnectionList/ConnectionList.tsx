@@ -26,7 +26,6 @@ interface IConnectionListProps {
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
 }
-
 export interface IConnection {
   hostname: string;
   containerId: string;
@@ -48,6 +47,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   onSort
 }) => {
   const { width } = useWindowDimensions();
+
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
       cells: [
@@ -81,7 +81,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     };
     return tableRow;
   };
+
   const tableRows = rows.map(toTableCells);
+
   const tableColumns = [
     { title: "Hostname", dataLabel: "host", transforms: [sortable] },
     { title: "Container ID", transforms: [sortable] },

@@ -123,6 +123,7 @@ export const AddressLinksToolbarContainer: React.FunctionComponent<IAddressLinks
   const onContainerSelect = (e: any, selection: SelectOptionObject) => {
     setContainerSelected(selection.toString());
   };
+
   const onContainerClear = () => {
     setContainerSelected(undefined);
     setContainerInput(undefined);
@@ -166,6 +167,7 @@ export const AddressLinksToolbarContainer: React.FunctionComponent<IAddressLinks
   const onRoleToggle = () => {
     setRoleIsExpanded(!roleIsExpanded);
   };
+
   const onRoleSelect = (e: any, selection: SelectOptionObject) => {
     setRoleSelected(selection.toString());
     setRoleIsExpanded(false);
@@ -226,11 +228,13 @@ export const AddressLinksToolbarContainer: React.FunctionComponent<IAddressLinks
         setContainerSelected(undefined);
       }
     }
+
     setNameInput(undefined);
     setNameSelected(undefined);
     setContainerInput(undefined);
     setContainerSelected(undefined);
   };
+
   const onDelete = (
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip

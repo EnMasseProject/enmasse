@@ -30,7 +30,7 @@ export interface IAddressToolbarContainerProps {
   setSortValue: (value: ISortBy) => void;
   namespace: string;
   addressspaceName: string;
-  addressspaceType: string;
+  addressspaceType?: string;
   onDeleteAllAddress: () => void;
   onPurgeAllAddress: () => void;
   isDeleteAllDisabled: boolean;
@@ -197,7 +197,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       modalProps: {
         name: addressspaceName,
         namespace: namespace,
-        addressSpace: addressspaceName,
         addressSpaceType: addressspaceType
       }
     });

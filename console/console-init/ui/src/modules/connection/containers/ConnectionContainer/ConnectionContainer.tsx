@@ -64,22 +64,30 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
+
   setTotalConnections(connections.total);
-  const connectionList: IConnection[] = connections.connections.map(
-    connection => ({
-      hostname: connection.spec.hostname,
-      containerId: connection.spec.containerId,
-      protocol: connection.spec.protocol,
-      encrypted: connection.spec.encrypted,
-      messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
-      messageOut: getFilteredValue(connection.metrics, "enmasse_messages_out"),
-      senders: getFilteredValue(connection.metrics, "enmasse_senders"),
-      receivers: getFilteredValue(connection.metrics, "enmasse_receivers"),
-      status: "running",
-      name: connection.metadata.name,
-      creationTimestamp: connection.metadata.creationTimestamp
-    })
-  );
+
+  const getRows = () => {
+    const connectionList: IConnection[] = connections.connections.map(
+      connection => ({
+        hostname: connection.spec.hostname,
+        containerId: connection.spec.containerId,
+        protocol: connection.spec.protocol,
+        encrypted: connection.spec.encrypted,
+        messageIn: getFilteredValue(connection.metrics, "enmasse_messages_in"),
+        messageOut: getFilteredValue(
+          connection.metrics,
+          "enmasse_messages_out"
+        ),
+        senders: getFilteredValue(connection.metrics, "enmasse_senders"),
+        receivers: getFilteredValue(connection.metrics, "enmasse_receivers"),
+        status: "running",
+        name: connection.metadata.name,
+        creationTimestamp: connection.metadata.creationTimestamp
+      })
+    );
+    return connectionList;
+  };
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
@@ -88,7 +96,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   return (
     <>
       <ConnectionList
-        rows={connectionList}
+        rows={getRows()}
         addressSpaceType={addressSpaceType}
         sortBy={sortBy}
         onSort={onSort}

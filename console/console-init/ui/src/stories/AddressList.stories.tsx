@@ -82,10 +82,9 @@ export const addressList = () => (
 );
 
 export const emptyAddress = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
   return (
     <MemoryRouter>
-      <EmptyAddress isWizardOpen={isOpen} setIsWizardOpen={setIsOpen} />
+      <EmptyAddress />
     </MemoryRouter>
   );
 };

@@ -131,6 +131,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const onNamespaceSelect = (e: any, selection: SelectOptionObject) => {
     setNamespaceSelected(selection.toString());
   };
+
   const onNamespaceClear = () => {
     setNamespaceSelected(undefined);
     setNamespaceInput(undefined);
@@ -170,6 +171,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const onTypeToggle = () => {
     setTypeIsExpanded(!typeIsExpanded);
   };
+
   const onTypeSelect = (e: any, selection: SelectOptionObject) => {
     setTypeSelected(selection.toString());
     setTypeIsExpanded(false);
@@ -230,17 +232,19 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
         setNamespaceSelected(undefined);
       }
     }
+
     setNameInput(undefined);
     setNameSelected(undefined);
     setNamespaceInput(undefined);
     setNamespaceSelected(undefined);
   };
+
   const onDelete = (
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => {
     let index;
-    switch (category && category.toString().toLocaleLowerCase()) {
+    switch (category && category.toString().toLowerCase()) {
       case "name":
         if (selectedNames && chip) {
           index = selectedNames
