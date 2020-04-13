@@ -1,0 +1,172 @@
+
+:toc:
+:toclevels: 4
+
+== Console Backend.
+
+=== Introduction
+
+The Console Backend is responsible for:
+
+* serving the static content of console ui
+* let the end user authenticate to the console
+* providing a graphql api that allows the console ui to:
+** list, create, update, delete address and address space objects.
+** list connections and links
+** get metrics for address spaces, address, connections and links.
+
+
+== High Level
+
+The EnMasse Console is controlled by the consoleservice CR.
+
+There is a console deployment.  The deployment comprises a *console-server* component and *oauth-proxy*.
+
+The *console-server* component will present GraphQL API allowing the view/maintenance of address spaces, addresses,
+and connections by the UI.  The model presented object model presented by the EnMasse GraphQL schema is a composite
+one that provides access to the resource and metrics through a single query interface.  Mutations permit the
+create/patch/delete of address spaces and addresses, the closure of connections and purge of addresses.
+
+The console-server internally maintains a *cache* of address-spaces, addresses and connections, links and metrics.
+
+* address-spaces and addresses are read from the Kubernetes API (utilising watches of the resources).
+* connection and link information are gathered from the agents of address spaces themselves.
+* metrics will also be scraped *directly* from the agents. 
+
+For read operations, console-graphql uses a service account with *list* permission for address spaces and addresses
+in order to build a global view.  It is a responsibility of this component to filter the user's view so that he can see
+only those objects to which he has permission.  It will use a `SelfSubjectAccessReview` in order to do this.  The
+SelfSubjectAccessReview responses will be cached for a short time, to avoid load on the server.
+
+For write operations, console-server propagates the user's bearer token made available by oauth-proxy.
+
+oauth-proxy provides authentication.
+
+=== High Level Diagram
+
+image:images/global-console-phase-2.png[]
+
+=== Entity Relationship Diagram
+
+Major entities exposed at GraphQL abstraction
+
+image:images/GraphQLModel.png[]
+
+== Components
+
+=== EnMasse Operator
+
+The EnMasse Operator is responsibility for the deployment of the console and the creation of the resources it needs.
+Its behaviour differs depending on whether Openshift or a Kubernetes platform is in use.
+
+
+==== CRD Definition
+
+The CRD encapsulates the following:
+
+- discoveryMetadataURL - a URL referencing an OAuth discovery metadata https://tools.ietf.org/id/draft-ietf-oauth-discovery-08.html.  Discovery metadata is becoming increasing common, but it allows the url to be a data-url so a user could construct their own discover document if need be.
+- certificateSecret a reference to TLS certificate secret
+- oauthClientSecret - a secret containing the OAuth client-id and client secret
+- ssoCookieSecret - a secret used to crypt the cookie laid by OAuth-Proxy on the browser.  This cookie contains the OAuth/OIDC token.
+- ssoCookieDomain - if set, the domain of the cookie laid by OAuth-Proxy
+- scope - OAuth scope
+- host - hostname used by the Global Console.
+
+==== Resources controlled by the Operator
+
+The Operator uses the information in the Console Service CR to create and keep synchronised the following resources.
+
+- service (with serving-cert-secret-name on OpenShift).
+- deployment (with containers for oauth-proxy and console-server)
+- secrets
+- oauthClientSecret
+- ssoCookieDomain
+- certificateSecret
+- oauthclient (OpenShift only - kept in synch with the oauthClientSecret client-id/secret)
+- route (OpenShift only)
+- console-link (OpenShift only)
+
+=== oauth-proxy
+
+The console uses OpenShift oauth-proxy for deployments on OpenShift or oauth2-proxy for deployments on Kubernetes.
+
+oauth-proxy is also responsible for serving the static content of the console-ui.
+
+=== console-server
+
+It has the following responsibilities:
+
+* present a GraphQL interface
+** for queries - exposing address-spaces, addresses, connection together will link and metric information.
+** for mutations - allow creation/patch/delete of address-space/address, connection close, address purge.
+* populate cached model with
+** address-space and address (from Kubernetes API)
+** connections and links (from the addressspaces' agents)
+** metrics (from the addressspaces' agents)
+
+==== GraphQL queries
+
+GraphQL Queries will allow the caller to access the cached model.
+
+The GraphQL interface will provide paginated result sets where necessary.  It will follow the _offset
+pagination_ pattern https://graphql.org/learn/pagination/ rather than the cursor one.  The cursor one doesn't meet
+the requirements of the UI (random access to any page).
+
+Paginated queries accept optional `first` and `offset` arguments.  `first` allows the user to request the first `n` items,
+and defaults to infinity.  `offset` allows the user to specify a starting index and defaults to zero.  The paginated
+results return a `*QueryResult` object.  This gives access to a `Total` (number of results available) and a list of result objects themselves.
+
+Paginated queries also accept optional `filter` and sort `orderBy`:
+
+* `filter` is expressed as a boolean expression with its operands supporting a JSON Path.  The specification is based
+on a SQL-92 WHERE clause syntax. For example:
+
+`.spec.plan == "standard-small-queue"`
+
+* `orderby` is expressed is a comma separated list. Each clause is a JSON path expression followed by an optional
+keyword ASC or DESC.
+
+`$.spec.type` ,`$.metadata.name` desc
+
+The queries observe the cache.  They filter the results from the cache to exclude items that the user has no permission to see.  To do this, `SelfSubjectAccessReview` is used, passing the bearer token of the logged on user.  The access review will be cached for a configurable period.
+
+==== GraphQL mutations
+
+There are mutations permitting the create/delete/patch of addressspaces and addresses.  There are mutations
+allowing an address to be purged and a connection closed.
+
+Mutations will interact directly the API backends (Kubernetes for addressspaces and addresses and the Agent API for purge
+and connection closed).  It will perform this interaction using the user's bearer token.
+
+==== Cache
+
+The console-graphql maintains a cache of namespace/addressspapce/address/connection, link and metric information.
+
+* It uses Kubernetes watches to build cache of namespaces/addressspapce/address.
+* It uses the Agent AMQP interface to subscribe for connection/link and address/link information.
+
+In all of these API interactions, the bearer of the service account will be passed to the peer.
+
+==== Metrics
+
+The *gauge* metrics (e.g. queue depth) need no further processing.
+
+Where the console UI requires a *rate* metric it is be console-graphql responsibility to calculate this rate from counter
+metrics exposed by the agents.   It does this using the Prometheus query engine itself.
+
+Some guage metrics required are synthesized from the cache.  Examples of this are `enmasse_addresses` (the number of addresses currently defined in an addressspace)
+
+=== Agent
+
+Agent exposes an AMQP interface that allows a subscriber to register for connection/address/link metrics.
+
+Authentication to the AMQP interface is done using XOAUTH2.  The console-server will pass either the bearer token of
+the console-server account or the bearer token of the end user.
+
+
+
+
+
+
+
+
