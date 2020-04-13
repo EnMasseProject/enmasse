@@ -59,9 +59,7 @@ export const ConnectionLinksListPage: React.FunctionComponent<IConnectionLinksLi
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
   if (loading && !data) return <Loading />;
-  if (error) {
-    console.log(error);
-  }
+
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };

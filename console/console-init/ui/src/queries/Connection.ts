@@ -5,6 +5,7 @@
 
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
+import { removeForbiddenChars } from "utils";
 
 const ALL_CONECTION_LIST_FILTER = (
   hostnames: any[],
@@ -15,11 +16,15 @@ const ALL_CONECTION_LIST_FILTER = (
   let filter = "";
   let hostnamesLength = hostnames && hostnames.length;
   let hostname = hostnames && hostnames[0];
-  let hostnameValue = hostname && hostname.value && hostname.value.trim();
+  let hostnameValue =
+    hostname && hostname.value && removeForbiddenChars(hostname.value.trim());
 
   let containersLength = containers && containers.length;
   let container = containers && containers[0];
-  let containerValue = container && container.value && container.value.trim();
+  let containerValue =
+    container &&
+    container.value &&
+    removeForbiddenChars(container.value.trim());
 
   if (name) {
     filter += "`$.spec.addressSpace` = '" + name + "'";
@@ -37,7 +42,10 @@ const ALL_CONECTION_LIST_FILTER = (
       else filter += "(`$.spec.hostname` LIKE '" + hostnameValue + "%' ";
       for (let i = 1; i < hostnamesLength; i++) {
         let hostname = hostnames && hostnames[i];
-        let hostnameValue = hostname && hostname.value && hostname.value.trim();
+        let hostnameValue =
+          hostname &&
+          hostname.value &&
+          removeForbiddenChars(hostname.value.trim());
         if (hostname.isExact)
           filter += "OR `$.spec.hostname` = '" + hostnameValue + "'";
         else filter += "OR `$.spec.hostname` LIKE '" + hostnameValue + "%' ";
@@ -61,7 +69,9 @@ const ALL_CONECTION_LIST_FILTER = (
       for (let i = 1; i < containersLength; i++) {
         let container = containers && containers[i];
         let containerValue =
-          container && container.value && container.value.trim();
+          container &&
+          container.value &&
+          removeForbiddenChars(container.value.trim());
         if (container.isExact)
           filter += "OR `$.spec.containerId` = '" + containerValue + "'";
         else
@@ -163,15 +173,15 @@ const RETURN_ALL_CONECTION_LIST = (
 
 const RETURN_CONNECTION_DETAIL = (
   addressSpaceName?: string,
-  addressSpaceNameSpcae?: string,
+  addressSpaceNameSpace?: string,
   connectionName?: string
 ) => {
   let filter = "";
   if (addressSpaceName) {
     filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
   }
-  if (addressSpaceNameSpcae) {
-    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpcae + "' AND ";
+  if (addressSpaceNameSpace) {
+    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.metadata.name` = '" + connectionName + "'";
@@ -259,7 +269,7 @@ const CONNECTION_LINKS_FILTER = (
   filterNames: any[],
   filterAddresses: any[],
   addressSpaceName?: string,
-  addressSpaceNameSpcae?: string,
+  addressSpaceNameSpace?: string,
   connectionName?: string,
   filterRole?: string
 ) => {
@@ -268,18 +278,22 @@ const CONNECTION_LINKS_FILTER = (
   let filterNamesLength = filterNames && filterNames.length;
   let filterName = filterNames && filterNames[0];
   let filterNameValue =
-    filterName && filterName.value && filterName.value.trim();
+    filterName &&
+    filterName.value &&
+    removeForbiddenChars(filterName.value.trim());
 
   let filterAddressesLength = filterAddresses && filterAddresses.length;
   let filterAddresse = filterAddresses && filterAddresses[0];
   let filterAddresseValue =
-    filterAddresse && filterAddresse.value && filterAddresse.value.trim();
+    filterAddresse &&
+    filterAddresse.value &&
+    removeForbiddenChars(filterAddresse.value.trim());
 
   if (addressSpaceName) {
     filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
   }
-  if (addressSpaceNameSpcae) {
-    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpcae + "' AND ";
+  if (addressSpaceNameSpace) {
+    filter += "`$.metadata.namespace` = '" + addressSpaceNameSpace + "' AND ";
   }
   if (connectionName) {
     filter += "`$.metadata.name` = '" + connectionName + "'";
@@ -294,7 +308,9 @@ const CONNECTION_LINKS_FILTER = (
       for (let i = 1; i < filterNamesLength; i++) {
         let filterName = filterNames && filterNames[i];
         let filterNameValue =
-          filterName && filterName.value && filterName.value.trim();
+          filterName &&
+          filterName.value &&
+          removeForbiddenChars(filterName.value.trim());
         if (filterName.isExact)
           filterForLink += "OR `$.metadata.name` = '" + filterNameValue + "'";
         else
@@ -353,7 +369,7 @@ const RETURN_CONNECTION_LINKS = (
   filterNames: any[],
   filterAddresses: any[],
   addressSpaceName?: string,
-  addressSpaceNameSpcae?: string,
+  addressSpaceNameSpace?: string,
   connectionName?: string,
   sortBy?: ISortBy,
   filterRole?: string
@@ -362,7 +378,7 @@ const RETURN_CONNECTION_LINKS = (
     filterNames,
     filterAddresses,
     addressSpaceName,
-    addressSpaceNameSpcae,
+    addressSpaceNameSpace,
     connectionName,
     filterRole
   );
@@ -412,6 +428,7 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH = (
   name: string
 ) => {
   let filter = "";
+  name = removeForbiddenChars(name);
   if (namespace) {
     filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
@@ -446,6 +463,7 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
   address: string
 ) => {
   let filter = "";
+  address = removeForbiddenChars(address);
   if (namespace) {
     filter += "`$.metadata.namespace` = '" + namespace + "' AND ";
   }
@@ -482,6 +500,7 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
   namespace?: string
 ) => {
   let filter = "";
+  searchValue = removeForbiddenChars(searchValue);
   if (name) {
     filter += "`$.spec.addressSpace` = '" + name + "'";
   }

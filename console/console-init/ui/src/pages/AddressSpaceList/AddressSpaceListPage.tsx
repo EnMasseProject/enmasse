@@ -180,9 +180,6 @@ export const AddressSpaceListPage: React.FunctionComponent<AddressSpaceListPageP
   if (loading) {
     return <Loading />;
   }
-  if (error) {
-    console.log(error);
-  }
 
   if (onCreationRefetch) {
     refetch();

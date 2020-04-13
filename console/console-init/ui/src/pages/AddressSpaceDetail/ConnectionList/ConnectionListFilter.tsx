@@ -36,8 +36,6 @@ import { IConnectionListNameSearchResponse } from "types/ResponseTypes";
 import {
   TypeAheadMessage,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   FetchPolicy
 } from "constants/constants";
 import { getSelectOptionList, ISelectOption } from "utils";

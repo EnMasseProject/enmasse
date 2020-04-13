@@ -36,8 +36,6 @@ import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "types/ResponseTy
 import { useApolloClient } from "@apollo/react-hooks";
 import {
   TypeAheadMessage,
-  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   TYPEAHEAD_REQUIRED_LENGTH,
   FetchPolicy
 } from "constants/constants";
@@ -201,11 +199,6 @@ export const AddressSpaceListFilter: React.FunctionComponent<IAddressSpaceListFi
 
   const onNamespaceSelectToggle = () => {
     setIsSelectNamespaceExpanded(!isSelectNamespaceExpanded);
-  };
-
-  const createSelectOptionObject = (value: string) => {
-    const data: ISelectOption = { value: value, isDisabled: false };
-    return data;
   };
 
   const onChangeNameData = async (value: string) => {
