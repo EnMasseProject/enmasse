@@ -456,9 +456,6 @@ const RETURN_ADDRESS_LINKS = (
           metadata {
             name
           }
-          spec {
-            addressSpace
-          }
           links (first:${perPage} offset:${perPage *
     (page - 1)}  orderBy:"${orderBy}" filter:"${filterForLink}"){
             total

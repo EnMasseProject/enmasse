@@ -28,33 +28,13 @@ import { RETURN_CONNECTION_DETAIL } from "graphql-module/queries";
 import { ConnectionLinksWithToolbar } from "modules/connection-detail/components";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { NoDataFound } from "components";
-
-const getProductFilteredValue = (object: any[], value: string) => {
-  if (object && object != null) {
-    const filtered = object.filter(obj => obj.Key === value);
-    if (filtered.length > 0) {
-      return filtered[0].Value;
-    }
-  }
-  return "-";
-};
-
-const getSplitValue = (value: string) => {
-  let string1 = value.split(", OS: ");
-  let string2 = string1[0].split("JVM:");
-  let os, jvm;
-  if (string1.length > 1) {
-    os = string1[1];
-  }
-  if (string2.length > 0) {
-    jvm = string2[1];
-  }
-  return { jvm: jvm, os: os };
-};
+import { getProductFilteredValue, getSplitValue } from "./utils";
 
 export default function ConnectionDetailPage() {
   const { name, namespace, type, connectionname } = useParams();
   useDocumentTitle("Connection Details");
+  useA11yRouteChange();
+
   const breadcrumb = React.useMemo(
     () => (
       <Breadcrumb>
@@ -78,17 +58,19 @@ export default function ConnectionDetailPage() {
   );
 
   useBreadcrumb(breadcrumb);
-  useA11yRouteChange();
+
   const { loading, data } = useQuery<IConnectionDetailResponse>(
     RETURN_CONNECTION_DETAIL(name || "", namespace || "", connectionname || ""),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
   if (loading) return <Loading />;
 
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
-  if (connections.connections.length <= 0) {
+
+  const renderNoRecordFound = () => {
     return (
       <NoDataFound
         type={"Connection"}
@@ -96,8 +78,14 @@ export default function ConnectionDetailPage() {
         routeLink={`/address-spaces/${namespace}/${name}/${type}/connections`}
       />
     );
+  };
+
+  if (connections.connections.length <= 0) {
+    renderNoRecordFound();
   }
+
   const connection = connections.connections[0];
+
   //Change this logic
   const jvmObject =
     connection &&
@@ -109,34 +97,41 @@ export default function ConnectionDetailPage() {
         )
       : { jvm: "-", os: "-" };
 
-  const connectionDetail: IConnectionHeaderDetailProps = {
-    hostname: connection && connection.spec.hostname,
-    containerId: connection && connection.spec.containerId,
-    version:
-      connection &&
-      getProductFilteredValue(connection.spec.properties, "version"),
-    protocol: connection && connection.spec.protocol.toUpperCase(),
-    encrypted: (connection && connection.spec.encrypted) || false,
-    creationTimestamp: connection && connection.metadata.creationTimestamp,
-    messageIn:
-      connection && getFilteredValue(connection.metrics, "enmasse_messages_in"),
-    messageOut:
-      connection &&
-      getFilteredValue(connection.metrics, "enmasse_messages_out"),
-    //Change this logic
-    platform: jvmObject && jvmObject.jvm,
-    os: jvmObject && jvmObject.os,
-    product:
-      connection &&
-      connection.spec.properties &&
-      connection.spec.properties.length > 0
-        ? getProductFilteredValue(connection.spec.properties, "product")
-        : "-"
+  const getConnectionDetail = () => {
+    const connectionDetail: IConnectionHeaderDetailProps = {
+      hostname: connection && connection.spec.hostname,
+      containerId: connection && connection.spec.containerId,
+      version:
+        connection &&
+        getProductFilteredValue(connection.spec.properties, "version"),
+      protocol: connection && connection.spec.protocol.toUpperCase(),
+      encrypted: (connection && connection.spec.encrypted) || false,
+      creationTimestamp: connection && connection.metadata.creationTimestamp,
+      messageIn:
+        connection &&
+        getFilteredValue(connection.metrics, "enmasse_messages_in"),
+      messageOut:
+        connection &&
+        getFilteredValue(connection.metrics, "enmasse_messages_out"),
+      //Change this logic
+      platform: jvmObject && jvmObject.jvm,
+      os: jvmObject && jvmObject.os,
+      product:
+        connection &&
+        connection.spec.properties &&
+        connection.spec.properties.length > 0
+          ? getProductFilteredValue(connection.spec.properties, "product")
+          : "-"
+    };
+    return connectionDetail;
   };
 
   return (
     <>
-      <ConnectionDetailHeader {...connectionDetail} addressSpaceType={type} />
+      <ConnectionDetailHeader
+        {...getConnectionDetail()}
+        addressSpaceType={type}
+      />
       <PageSection>
         <ConnectionLinksWithToolbar
           name={name}

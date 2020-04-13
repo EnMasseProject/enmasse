@@ -61,33 +61,41 @@ export const ConnectionLinksContainer: React.FunctionComponent<IConnectionDetail
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
   if (loading && !data) return <Loading />;
 
   const { connections } = data || {
     connections: { total: 0, connections: [] }
   };
+
   const connection = connections.connections[0];
-  let linkRows: ILink[] = [];
-  if (connection && connection.links.total >= 0) {
-    setTotalLinks(connection.links.total);
-    linkRows = connection.links.links.map(link => ({
-      name: link.metadata.name,
-      role: link.spec.role,
-      address: link.spec.address,
-      deliveries: getFilteredValue(link.metrics, "enmasse_deliveries"),
-      accepted: getFilteredValue(link.metrics, "enmasse_accepted"),
-      rejected: getFilteredValue(link.metrics, "enmasse_rejected"),
-      released: getFilteredValue(link.metrics, "enmasse_released"),
-      modified: getFilteredValue(link.metrics, "enmasse_modified"),
-      presettled: getFilteredValue(link.metrics, "enmasse_presettled"),
-      undelivered: getFilteredValue(link.metrics, "enmasse_undelivered")
-    }));
-  }
+
+  const getRows = () => {
+    let linkRows: ILink[] = [];
+    if (connection && connection.links.total >= 0) {
+      setTotalLinks(connection.links.total);
+      linkRows = connection.links.links.map(link => ({
+        name: link.metadata.name,
+        role: link.spec.role,
+        address: link.spec.address,
+        deliveries: getFilteredValue(link.metrics, "enmasse_deliveries"),
+        accepted: getFilteredValue(link.metrics, "enmasse_accepted"),
+        rejected: getFilteredValue(link.metrics, "enmasse_rejected"),
+        released: getFilteredValue(link.metrics, "enmasse_released"),
+        modified: getFilteredValue(link.metrics, "enmasse_modified"),
+        presettled: getFilteredValue(link.metrics, "enmasse_presettled"),
+        undelivered: getFilteredValue(link.metrics, "enmasse_undelivered")
+      }));
+    }
+    return linkRows;
+  };
 
   const onSort = (_event: any, index: any, direction: any) => {
     setSortBy({ index: index, direction: direction });
     setSortValue({ index: index, direction: direction });
   };
+
+  const linkRows = getRows();
 
   return (
     <>

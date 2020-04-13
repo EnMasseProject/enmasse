@@ -73,6 +73,17 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   authenticationServiceOptions,
   isStandardChecked
 }) => {
+  const getHelperText = () => {
+    return name.trim() !== "" && !isNameValid ? (
+      <small>
+        Only lowercase alphanumeric characters, -, and . allowed, and should
+        start and end with an alpha-numeric character.
+      </small>
+    ) : (
+      ""
+    );
+  };
+
   return (
     <>
       <Grid>
@@ -95,16 +106,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               label="Name"
               isRequired={true}
               fieldId="address-space"
-              helperText={
-                name.trim() !== "" && !isNameValid ? (
-                  <small>
-                    Only lowercase alphanumeric characters, -, and . allowed,
-                    and should start and end with an alpha-numeric character.
-                  </small>
-                ) : (
-                  ""
-                )
-              }
+              helperText={getHelperText()}
             >
               <TextInput
                 isRequired={true}

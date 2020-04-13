@@ -22,14 +22,8 @@ import { FetchPolicy } from "constant";
 export const CreateAddress: React.FunctionComponent = () => {
   const { dispatch, state } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
-  const {
-    onConfirm,
-    onClose,
-    name,
-    namespace,
-    addressSpace,
-    addressSpaceType
-  } = modalProps || {};
+  const { onConfirm, onClose, name, namespace, addressSpaceType } =
+    modalProps || {};
 
   const [addressName, setAddressName] = useState("");
   const [addressType, setAddressType] = useState(" ");
@@ -61,7 +55,7 @@ export const CreateAddress: React.FunctionComponent = () => {
   );
 
   const getAddressSpacePlan = () => {
-    let addressSpacePlan: string = "";
+    let addressSpacePlan: string | null = null;
     if (
       data &&
       data.addressSpaces &&
@@ -115,7 +109,7 @@ export const CreateAddress: React.FunctionComponent = () => {
   };
 
   const handleSave = async () => {
-    if (addressSpace) {
+    if (name) {
       const getVariables = () => {
         let variable: any = {
           metadata: {
@@ -133,7 +127,7 @@ export const CreateAddress: React.FunctionComponent = () => {
       };
       const variables = {
         a: getVariables(),
-        as: addressSpace
+        as: name
       };
       await setAddressQueryVariables(variables);
     }
@@ -179,7 +173,7 @@ export const CreateAddress: React.FunctionComponent = () => {
           type={addressType}
           topic={topic}
           namespace={namespace || ""}
-          addressspace={addressSpace}
+          addressspace={name}
         />
       ),
       enableNext: isFinishButtonEnabled(),

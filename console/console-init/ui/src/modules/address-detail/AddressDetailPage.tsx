@@ -103,33 +103,42 @@ export default function AddressDetailPage() {
       />
     );
   }
+
   const addressDetail = addresses && addresses.addresses[0];
 
-  const address: IAddress = {
-    name: addressDetail.metadata.name,
-    displayName: addressDetail.spec.address,
-    namespace: addressDetail.metadata.namespace,
-    type: addressDetail.spec.plan.spec.addressType,
-    planLabel:
-      addressDetail.spec.plan.spec.displayName ||
-      addressDetail.spec.plan.metadata.name,
-    planValue: addressDetail.spec.plan.metadata.name,
-    topic: addressDetail.spec.topic,
-    messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
-    messageOut: getFilteredValue(addressDetail.metrics, "enmasse_messages_out"),
-    storedMessages: getFilteredValue(
-      addressDetail.metrics,
-      "enmasse_messages_stored"
-    ),
-    senders: getFilteredValue(addressDetail.metrics, "enmasse_senders"),
-    receivers: getFilteredValue(addressDetail.metrics, "enmasse_receivers"),
-    partitions:
-      addressDetail.status && addressDetail.status.planStatus
-        ? addressDetail.status.planStatus.partitions
-        : 0,
-    isReady: addressDetail.status.isReady,
-    creationTimestamp: addressDetail.metadata.creationTimestamp
+  const getAddress = () => {
+    const address: IAddress = {
+      name: addressDetail.metadata.name,
+      displayName: addressDetail.spec.address,
+      namespace: addressDetail.metadata.namespace,
+      type: addressDetail.spec.plan.spec.addressType,
+      planLabel:
+        addressDetail.spec.plan.spec.displayName ||
+        addressDetail.spec.plan.metadata.name,
+      planValue: addressDetail.spec.plan.metadata.name,
+      topic: addressDetail.spec.topic,
+      messageIn: getFilteredValue(addressDetail.metrics, "enmasse_messages_in"),
+      messageOut: getFilteredValue(
+        addressDetail.metrics,
+        "enmasse_messages_out"
+      ),
+      storedMessages: getFilteredValue(
+        addressDetail.metrics,
+        "enmasse_messages_stored"
+      ),
+      senders: getFilteredValue(addressDetail.metrics, "enmasse_senders"),
+      receivers: getFilteredValue(addressDetail.metrics, "enmasse_receivers"),
+      partitions:
+        addressDetail.status && addressDetail.status.planStatus
+          ? addressDetail.status.planStatus.partitions
+          : 0,
+      isReady: addressDetail.status && addressDetail.status.isReady,
+      creationTimestamp: addressDetail.metadata.creationTimestamp
+    };
+    return address;
   };
+
+  const address = getAddress();
 
   const onDelete = () => {
     const data = addressDetail.metadata;
