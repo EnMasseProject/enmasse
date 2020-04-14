@@ -213,6 +213,14 @@ public class Exec {
         return false;
     }
 
+    public static ExecutionResultData executeAndCheck(String... commands) {
+        ExecutionResultData results = execute(Arrays.asList(commands));
+        if (!results.getRetCode()) {
+            throw new IllegalStateException(results.getStdErr());
+        }
+        return results;
+    }
+
     public static ExecutionResultData execute(List<String> command) {
         return execute(command, 60_000, true, true);
     }

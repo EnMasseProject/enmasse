@@ -15,7 +15,7 @@ import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
 import io.enmasse.systemtest.messaginginfra.MessagingInfraResourceManager;
-import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -43,7 +43,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
     private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
     private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
-    private OperatorManager operatorManager = OperatorManager.getInstance();
+    private EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
     private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     @Override

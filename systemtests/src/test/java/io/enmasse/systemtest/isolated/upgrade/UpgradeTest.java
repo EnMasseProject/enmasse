@@ -28,7 +28,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -92,9 +92,9 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         }
         boolean waitForNamespace = true;
         if (this.type.equals(EnmasseInstallType.BUNDLE)) {
-            assertTrue(OperatorManager.getInstance().clean());
+            assertTrue(EnmasseOperatorManager.getInstance().clean());
         } else if (this.type.equals(EnmasseInstallType.OLM)) {
-            if (OperatorManager.getInstance().isEnmasseOlmDeployed()) {
+            if (EnmasseOperatorManager.getInstance().isEnmasseOlmDeployed()) {
                 for (var addrSpace : kubernetes.getAddressSpaceClient(infraNamespace).list().getItems()) {
                     LOGGER.info("address space '{}' will be removed", addrSpace);
                     try {
@@ -105,12 +105,12 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                     }
                 }
             }
-            assertTrue(OperatorManager.getInstance().removeOlm());
+            assertTrue(EnmasseOperatorManager.getInstance().removeOlm());
             if (olmType != null && olmType == OLMInstallationType.DEFAULT) {
                 waitForNamespace = false;
             }
         } else {
-            OperatorManager.getInstance().deleteEnmasseAnsible();
+            EnmasseOperatorManager.getInstance().deleteEnmasseAnsible();
         }
         if (waitForNamespace) {
             TestUtils.waitForNamespaceDeleted(kubernetes, infraNamespace);
@@ -140,7 +140,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     void testUpgradeOLMSpecific(String version, String templates) throws Exception {
         this.type = EnmasseInstallType.OLM;
         this.olmType = OLMInstallationType.SPECIFIC;
-        this.infraNamespace = OperatorManager.getInstance().getNamespaceByOlmInstallationType(olmType);
+        this.infraNamespace = EnmasseOperatorManager.getInstance().getNamespaceByOlmInstallationType(olmType);
         doTestUpgrade(templates, version);
     }
 
@@ -150,7 +150,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     void testUpgradeOLMDefault(String version, String templates) throws Exception {
         this.type = EnmasseInstallType.OLM;
         this.olmType = OLMInstallationType.DEFAULT;
-        this.infraNamespace = OperatorManager.getInstance().getNamespaceByOlmInstallationType(olmType);
+        this.infraNamespace = EnmasseOperatorManager.getInstance().getNamespaceByOlmInstallationType(olmType);
         doTestUpgrade(templates, version);
     }
 
@@ -466,7 +466,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         KubeCMDClient.applyFromFile(infraNamespace, Paths.get(templateDir.toString(), "install", "components", "example-authservices", "standard-authservice.yaml"));
 
         Thread.sleep(60_000);
-        OperatorManager.getInstance().waitUntilOperatorReadyOlm(olmType);
+        EnmasseOperatorManager.getInstance().waitUntilOperatorReadyOlm(olmType);
         Thread.sleep(30_000);
     }
 

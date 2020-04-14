@@ -31,20 +31,20 @@ import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class OperatorManager {
+public class EnmasseOperatorManager {
 
     private static Logger LOGGER = CustomLogger.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private String productName;
-    private static OperatorManager instance;
+    private static EnmasseOperatorManager instance;
 
-    private OperatorManager() {
+    private EnmasseOperatorManager() {
         productName = Environment.getInstance().getProductName();
     }
 
-    public static synchronized OperatorManager getInstance() {
+    public static synchronized EnmasseOperatorManager getInstance() {
         if (instance == null) {
-            instance = new OperatorManager();
+            instance = new EnmasseOperatorManager();
         }
         return instance;
     }
