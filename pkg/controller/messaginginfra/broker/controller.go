@@ -112,16 +112,14 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 				delete(hosts, toHost(&brokers.Items[i]))
 				toDelete--
 			}
-		} else {
-			logger.Info("No changes to broker pool")
 		}
 
 		// Update discoverable brokers
-		newHosts := make([]string, 0)
+		allHosts := make([]string, 0)
 		for host, _ := range hosts {
-			newHosts = append(newHosts, host)
+			allHosts = append(allHosts, host)
 		}
-		b.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateBrokers(newHosts)
+		b.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateBrokers(allHosts)
 		return nil
 	})
 }
