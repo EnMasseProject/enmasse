@@ -30,6 +30,10 @@ $(error "Environment variable $$KUBERNETES_API_URL not set")
 endif
 endif
 
+ifneq (, $(wildcard .env))
+include .env
+endif
+
 all: systemtests
 
 systemtests:

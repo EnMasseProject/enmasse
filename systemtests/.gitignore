@@ -15,3 +15,4 @@
 
 # Test requirement specific
 client_executable
+.env

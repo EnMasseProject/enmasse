@@ -93,8 +93,10 @@ pipeline {
                     } else {
                         env.TEST_ONLY = false
                         if (env.OC_VERSION == "4") {
-                            env.DOCKER_REGISTRY = 'default-route-openshift-image-registry.apps-crc.testing'
-                            env.INTERNAL_REGISTRY = 'image-registry.openshift-image-registry.svc:5000'
+                            env.OCP4_EXTERNAL_IMAGE_REGISTRY = 'default-route-openshift-image-registry.apps-crc.testing'
+                            env.OCP4_INTERNAL_IMAGE_REGISTRY = 'image-registry.openshift-image-registry.svc:5000'
+                            env.DOCKER_REGISTRY = "${OCP4_EXTERNAL_IMAGE_REGISTRY}"
+                            env.INTERNAL_REGISTRY = "${OCP4_INTERNAL_IMAGE_REGISTRY}"
                         } else {
                             env.DOCKER_REGISTRY = '172.30.1.1:5000'
                             env.INTERNAL_REGISTRY = '172.30.1.1:5000'

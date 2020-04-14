@@ -24,6 +24,7 @@ public class Environment {
     public static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
     public static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
     public static final String ENMASSE_DOCS_SYSTEM_PROPERTY = "enmasse.docs";
+    public static final String ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY = "enmasse.olm.replaces";
     public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
     public static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
     public static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
@@ -48,6 +49,8 @@ public class Environment {
     private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
     private static final String H2_PROJECT = "H2_PROJECT";
     private static final String SCALE_CONFIG = "SCALE_CONFIG";
+    private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
+    private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static Logger log = CustomLogger.getLogger();
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
@@ -59,6 +62,7 @@ public class Environment {
     private final String enmasseOlmAboutUrl = System.getProperty("enmasse.olm.about.url");
     private final String enmasseOlmDocConfigUrl = System.getProperty("enmasse.olm.doc.configure.url");
     private final String enmasseOlmDocIotUrl = System.getProperty("enmasse.olm.doc.iot.url");
+    private final String enmasseOlmReplaces = System.getProperty(ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY);
     private String kubernetesDomain = System.getenv(K8S_DOMAIN_ENV);
     private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
@@ -83,6 +87,8 @@ public class Environment {
             .map(OLMInstallationType::valueOf).orElse(OLMInstallationType.SPECIFIC);
     protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH,
             Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String clusterExternalImageRegistry = System.getenv().getOrDefault(OCP4_EXTERNAL_IMAGE_REGISTRY, "");
+    private final String clusterInternalImageRegistry = System.getenv().getOrDefault(OCP4_INTERNAL_IMAGE_REGISTRY, "");
     protected UserCredentials managementCredentials = new UserCredentials(null, null);
     protected UserCredentials defaultCredentials = new UserCredentials(null, null);
     protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
@@ -208,6 +214,10 @@ public class Environment {
     public String enmasseOlmDocIotUrl() {
         return enmasseOlmDocIotUrl;
     }
+    
+    public String enmasseOlmReplaces() {
+        return enmasseOlmReplaces;
+    }
 
     public String kubernetesDomain() {
         return kubernetesDomain;
@@ -299,5 +309,13 @@ public class Environment {
 
     public String getScaleConfig() {
         return scaleConfig;
+    }
+
+    public String getClusterExternalImageRegistry() {
+        return clusterExternalImageRegistry;
+    }
+
+    public String getClusterInternalImageRegistry() {
+        return clusterInternalImageRegistry;
     }
 }

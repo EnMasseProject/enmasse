@@ -167,6 +167,7 @@
                         <enmasse.olm.about.url>${olm.csv.about.url}</enmasse.olm.about.url>
                         <enmasse.olm.doc.configure.url>${olm.csv.doc.configure.url}</enmasse.olm.doc.configure.url>
                         <enmasse.olm.doc.iot.url>${olm.csv.doc.iot.url}</enmasse.olm.doc.iot.url>
+                        <enmasse.olm.replaces>${olm.csv.replaces}</enmasse.olm.replaces>
                     </systemProperties>
                     <includes>
                         <include>io.enmasse.systemtest.**</include>
