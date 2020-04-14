@@ -8,9 +8,9 @@
 
 The Console Backend is responsible for:
 
-* serving the static content of console ui
+* serving the static content of console UI
 * let the end user authenticate to the console
-* providing a graphql api that allows the console ui to:
+* providing a graphql api that allows the console UI to:
 ** list, create, update, delete address and address space objects.
 ** list connections and links
 ** get metrics for address spaces, address, connections and links.
@@ -23,7 +23,7 @@ The EnMasse Console is controlled by the consoleservice CR.
 There is a console deployment.  The deployment comprises a *console-server* component and *oauth-proxy*.
 
 The *console-server* component will present GraphQL API allowing the view/maintenance of address spaces, addresses,
-and connections by the UI.  The model presented object model presented by the EnMasse GraphQL schema is a composite
+and connections by the UI.  The object model presented by the EnMasse GraphQL schema is a composite
 one that provides access to the resource and metrics through a single query interface.  Mutations permit the
 create/patch/delete of address spaces and addresses, the closure of connections and purge of addresses.
 
@@ -71,6 +71,7 @@ The CRD encapsulates the following:
 - ssoCookieDomain - if set, the domain of the cookie laid by OAuth-Proxy
 - scope - OAuth scope
 - host - hostname used by the Global Console.
+- impersonation - for kubernetes use impersonation headers (disabled by default)
 
 ==== Resources controlled by the Operator
 
