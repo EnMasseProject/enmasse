@@ -8,6 +8,7 @@
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 * #4242: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
 * #4245 standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
+* #4299: Bump vertx from 3.8.3 to 3.9.0
 
 
 ## 0.31.1
