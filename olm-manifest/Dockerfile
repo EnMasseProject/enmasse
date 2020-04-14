@@ -10,10 +10,7 @@ ARG maven_version
 
 ADD target/olm-manifest-${maven_version}-dist.tar.gz /
 
-RUN find /manifests
-RUN find /metadata
-
-RUN /bin/initializer -o ./bundles.db
+RUN /bin/initializer -m /manifests -o ./bundles.db
 
 FROM scratch
 
