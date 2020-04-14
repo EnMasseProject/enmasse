@@ -497,7 +497,7 @@ spec: {}
 
 NOTE:
 
-* If default changes from implicit default to plan 1 to `plan1`, change all tenants without anything set
+* If default changes from implicit default to `plan1`, change all tenants without anything set
 
 ==== Default plan defined by service admin - explicit default applied
 
