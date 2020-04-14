@@ -25,18 +25,20 @@ import (
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
+	fakeinfra "github.com/enmasseproject/enmasse/pkg/state/test"
 )
 
-func setup(t *testing.T) *RouterController {
+func setup(t *testing.T) (*RouterController, *fakeinfra.FakeManager) {
 	s := scheme.Scheme
 	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfra{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
-	return NewRouterController(cl, s, certController)
+	fm := fakeinfra.NewFakeManager()
+	return NewRouterController(cl, s, certController, fm), fm
 }
 
 func TestReconcileRouterReplicas(t *testing.T) {
-	rc := setup(t)
+	rc, fm := setup(t)
 
 	infra := v1beta2.MessagingInfra{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
@@ -64,6 +66,8 @@ func TestReconcileRouterReplicas(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int32(2), *set.Spec.Replicas)
 
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
+
 	// Scale up
 	infra.Spec.Router.ScalingStrategy.Static.Replicas = 3
 	err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
@@ -73,6 +77,7 @@ func TestReconcileRouterReplicas(t *testing.T) {
 	err = rc.client.Get(context.TODO(), types.NamespacedName{Namespace: set.Namespace, Name: set.Name}, set)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(3), *set.Spec.Replicas)
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc", "router-infra1-2.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
 
 	// Scale down
 	infra.Spec.Router.ScalingStrategy.Static.Replicas = 1
@@ -83,4 +88,5 @@ func TestReconcileRouterReplicas(t *testing.T) {
 	err = rc.client.Get(context.TODO(), types.NamespacedName{Namespace: set.Namespace, Name: set.Name}, set)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(1), *set.Spec.Replicas)
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
 }

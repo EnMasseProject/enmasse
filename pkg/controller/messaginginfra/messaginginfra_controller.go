@@ -7,6 +7,7 @@ package messaginginfra
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -14,17 +15,18 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/broker"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/router"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
-	//logr "github.com/go-logr/logr"
+	logr "github.com/go-logr/logr"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	//metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
-	//resource "k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
-	//intstr "k8s.io/apimachinery/pkg/util/intstr"
+
+	"k8s.io/client-go/tools/record"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -39,13 +41,19 @@ import (
 var log = logf.Log.WithName("controller_messaginginfra")
 var _ reconcile.Reconciler = &ReconcileMessagingInfra{}
 
+const (
+	FINALIZER_NAME = "enmasse.io/messaging-infra"
+)
+
 type ReconcileMessagingInfra struct {
 	client           client.Client
 	reader           client.Reader
+	recorder         record.EventRecorder
 	scheme           *runtime.Scheme
 	certController   *cert.CertController
 	routerController *router.RouterController
 	brokerController *broker.BrokerController
+	stateManager     state.StateManager
 	namespace        string
 }
 
@@ -67,15 +75,18 @@ func newReconciler(mgr manager.Manager) *ReconcileMessagingInfra {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
 	// TODO: Make expiry configurable
+	stateManager := state.GetStateManager()
 	certController := cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour)
-	brokerController := broker.NewBrokerController(mgr.GetClient(), mgr.GetScheme(), certController)
-	routerController := router.NewRouterController(mgr.GetClient(), mgr.GetScheme(), certController)
+	brokerController := broker.NewBrokerController(mgr.GetClient(), mgr.GetScheme(), certController, stateManager)
+	routerController := router.NewRouterController(mgr.GetClient(), mgr.GetScheme(), certController, stateManager)
 	return &ReconcileMessagingInfra{
 		client:           mgr.GetClient(),
 		certController:   certController,
 		routerController: routerController,
 		brokerController: brokerController,
+		stateManager:     stateManager,
 		reader:           mgr.GetAPIReader(),
+		recorder:         mgr.GetEventRecorderFor("messaginginfra"),
 		scheme:           mgr.GetScheme(),
 		namespace:        namespace,
 	}
@@ -102,22 +113,29 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 
 func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
-	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling MessagingInfra")
+	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
-	ctx := context.TODO()
+	ctx := context.Background()
+
+	logger.Info("Reconciling MessagingInfra")
 
 	found := &v1beta2.MessagingInfra{}
-	err := r.client.Get(ctx, request.NamespacedName, found)
+	err := r.reader.Get(ctx, request.NamespacedName, found)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			reqLogger.Info("MessagingInfra resource not found. Ignoring since object must be deleted")
+			logger.Info("MessagingInfra resource not found. Ignoring since object must be deleted")
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Error(err, "Failed to get MessagingInfra")
+		logger.Error(err, "Failed to get MessagingInfra")
 		return reconcile.Result{}, err
 	}
 
+	fresult, err := r.reconcileFinalizers(ctx, logger, found)
+	if err != nil || fresult.Requeue || fresult.Return {
+		return reconcile.Result{Requeue: fresult.Requeue}, err
+	}
+
+	// Start regular processing loop
 	ic := &infraContext{
 		ctx:    ctx,
 		client: r.client,
@@ -138,7 +156,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Reconcile CA
 	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
-		return r.certController.ReconcileCa(ctx, reqLogger, infra)
+		return r.certController.ReconcileCa(ctx, logger, infra)
 	})
 	if err != nil {
 		return reconcile.Result{}, err
@@ -146,7 +164,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Reconcile Routers
 	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
-		return r.routerController.ReconcileRouters(ctx, reqLogger, infra)
+		return r.routerController.ReconcileRouters(ctx, logger, infra)
 	})
 	if err != nil {
 		return reconcile.Result{}, err
@@ -154,11 +172,43 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Reconcile Brokers
 	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
-		return r.brokerController.ReconcileBrokers(ctx, reqLogger, infra)
+		return r.brokerController.ReconcileBrokers(ctx, logger, infra)
 	})
 	if err != nil {
 		return reconcile.Result{}, err
 	}
+
+	// Sync state
+	result, err := ic.Process(func(infra *v1beta2.MessagingInfra) (reconcile.Result, error) {
+		err := r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).Sync()
+		// Treat as transient error
+		if err, ok := err.(*state.NotConnectedError); ok {
+			logger.Info("Error syncing addresses", "error", err)
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		}
+		return reconcile.Result{}, err
+	})
+	if err != nil || result.Requeue || result.RequeueAfter > 0 {
+		return result, err
+	}
+
+	// Check status
+	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
+		infraStatus, err := r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).GetStatus()
+		if err != nil {
+			return err
+		}
+
+		brokersConnected := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersConnected)
+		for _, connectorStatus := range infraStatus.Connectors {
+			if !connectorStatus.Connected {
+				brokersConnected.SetStatus(corev1.ConditionFalse, "", fmt.Sprintf("Connection between %s and %s not ready: %s", connectorStatus.Router, connectorStatus.Broker, connectorStatus.Message))
+				return nil
+			}
+		}
+		brokersConnected.SetStatus(corev1.ConditionTrue, "", "")
+		return nil
+	})
 
 	// Update main condition
 	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
@@ -187,7 +237,49 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// Update status (if it has changed)
 	err = ic.UpdateStatus()
 
-	return reconcile.Result{}, err
+	return reconcile.Result{RequeueAfter: 30 * time.Second}, err
+}
+
+type finalizerResult struct {
+	Requeue bool
+	Return  bool
+}
+
+func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) (finalizerResult, error) {
+	// Handle finalizing an deletion state first
+	if infra.DeletionTimestamp != nil && infra.Status.Phase != v1beta2.MessagingInfraTerminating {
+		infra.Status.Phase = v1beta2.MessagingInfraTerminating
+		err := r.client.Status().Update(ctx, infra)
+		return finalizerResult{Requeue: true}, err
+	}
+
+	original := infra.DeepCopy()
+	result, err := finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, infra, []finalizer.Finalizer{
+		finalizer.Finalizer{
+			Name: FINALIZER_NAME,
+			Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
+				infra, ok := c.Object.(*v1beta2.MessagingInfra)
+				if !ok {
+					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingInfra")
+				}
+
+				err := r.stateManager.DeleteInfra(infra.Name, infra.Namespace)
+				return reconcile.Result{}, err
+			},
+		},
+	})
+	if err != nil {
+		return finalizerResult{}, err
+	}
+
+	if result.Requeue {
+		// Update and requeue if changed
+		if !reflect.DeepEqual(original, infra) {
+			err := r.client.Update(ctx, infra)
+			return finalizerResult{Return: true}, err
+		}
+	}
+	return finalizerResult{Requeue: result.Requeue}, nil
 }
 
 /*

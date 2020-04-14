@@ -82,9 +82,6 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 
 func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger) error {
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "", secret.Name)
-	if secret.ObjectMeta.Annotations == nil {
-		secret.ObjectMeta.Annotations = make(map[string]string)
-	}
 
 	now := c.clock.Now()
 	_, hasCert := secret.Data["tls.key"]
@@ -192,7 +189,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 	if !hasCert {
 		logger.Info("Creating component certificate", "secret", secret.Name)
 		expiryDate := now.Add(c.certExpirationTime)
-		key, cert, keystore, err := generateCert(nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
 		if err != nil {
 			return err
 		}
@@ -201,18 +198,22 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		secret.Data["tls.crt"] = cert
 		secret.Data["ca.crt"] = caSecret.Data["tls.crt"]
 		secret.Data["keystore.p12"] = keystore
+		secret.Data["truststore.p12"] = truststore
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
 
 	} else if shouldRenewCert(now, expiryDate) || expectedCaDigest != actualCaDigest {
 		// If we should renew or if CA has changed, renew this certificate
-
-		logger.Info("Renewing component certificate", "secret", secret.Name)
+		if expectedCaDigest != actualCaDigest {
+			logger.Info("Renewing component certificate with new CA", "secret", secret.Name)
+		} else {
+			logger.Info("Renewing expired component certificate", "secret", secret.Name)
+		}
 		expiryDate := now.Add(c.certExpirationTime)
 		//  Making sure that we don't expire after CA and cap it at the CA expiry date
 		if expiryDate.After(caExpiryDate) {
 			expiryDate = caExpiryDate
 		}
-		key, cert, keystore, err := generateCert(secret.Data["tls.key"], secret.Data["tls.crt"], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(secret.Data["tls.key"], secret.Data["tls.crt"], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
 		if err != nil {
 			return err
 		}
@@ -221,6 +222,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		secret.Data["tls.crt"] = cert
 		secret.Data["ca.crt"] = caSecret.Data["tls.crt"]
 		secret.Data["keystore.p12"] = keystore
+		secret.Data["truststore.p12"] = truststore
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
 	}
 

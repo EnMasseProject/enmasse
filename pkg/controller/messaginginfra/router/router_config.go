@@ -68,7 +68,7 @@ func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
 				// Localhost listener for admin access
 				"listener",
 				map[string]interface{}{
-					"host":             "127.0.0.1",
+					"host":             "0.0.0.0",
 					"port":             7777,
 					"authenticatePeer": false,
 				},
