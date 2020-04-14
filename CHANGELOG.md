@@ -8,6 +8,7 @@
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 * #4299: Bump vertx from 3.8.3 to 3.9.0
 * #4315: [IoT] Add the ability to configure TLS options
+* #4314: [IoT] Add alerts for infrastructure and projects
 
 ## 0.31.2
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
