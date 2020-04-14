@@ -469,6 +469,78 @@ The following controllers and components must be implemented:
 * Messaging-endpoint controller - Managing messaging endpoints of namespaces
 * (Phase 2) Messaging-connector controller - Managing external connectors of namespaces
 
+=== Plan behavior
+
+Both for MessagingTenantPlan and AddressPlans - Only MessagingTenantPlan used in examples here.
+
+1. No default plan defined by service admin - implicit default applied
+1. Default plan defined by service admin - explicit default applied
+
+==== No default plan defined by service admin - implicit default applied
+
+```
+apiVersion: enmasse.io/v1
+kind: MessagingInfra
+metadata:
+  name: infra1
+spec: {}
+```
+
+```
+apiVersion: enmasse.io/v1
+kind: MessagingTenant
+metadata:
+  name: default
+  namespace: myspace
+spec: {}
+```
+
+NOTE:
+
+* If default changes from implicit default to `plan1`, change all tenants without anything set
+
+==== Default plan defined by service admin - explicit default applied
+
+```
+apiVersion: enmasse.io/v1
+kind: MessagingInfra
+metadata:
+  name: infra1
+spec: {}
+```
+
+```
+apiVersion: enmasse.io/v1
+kind: MessagingTenantPlan
+metadata:
+  name: plan1
+  namespace: enmasse-plans
+spec:
+   // ...
+apiVersion: enmasse.io/v1
+kind: MessagingTenantPlan
+metadata:
+  name: plan2
+  namespace: enmasse-plans
+  annotations:
+    enmasse.io/default: "true"
+spec:
+   // ...
+```
+
+```
+apiVersion: enmasse.io/v1
+kind: MessagingTenant
+metadata:
+  name: default
+  namespace: myspace
+spec: {}
+```
+
+NOTE:
+* If default changes from `plan2` to `plan1`, change all tenants without anything set
+* If `plan2` is modified, changes are applied to all messaging tenants using defaults as long as `plan2` is default
+
 ==== Tasks
 
 ===== Task 1: Create new CRDs (small)
