@@ -8,6 +8,8 @@ import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.lessThan;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,9 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.HdrHistogram.AtomicHistogram;
 import org.HdrHistogram.DoubleHistogram;
-import org.HdrHistogram.Histogram;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
@@ -65,8 +65,6 @@ public class ScaleTestManager {
     private final double reconnectFailureRatioThreshold = env.getReconnectFailureRatioThreshold();
     private final double notAcceptedDeliveriesRatioThreshold = env.getNotAcceptedDeliveriesRatioThreshold();
 
-    private final Kubernetes kubernetes;
-
     private Supplier<ScaleTestClientConfiguration> clientProvider;
 
     private int totalExpectedConnections = 0;
@@ -86,7 +84,6 @@ public class ScaleTestManager {
             client.setPassword(credentials.getPassword());
             return client;
         };
-        this.kubernetes = Kubernetes.getInstance();
     }
 
     public int getConnections() {
@@ -109,7 +106,7 @@ public class ScaleTestManager {
         return performanceResults;
     }
 
-    public void deployMessagingClient(List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
+    public void deployMessagingClient(Kubernetes kubernetes, List<Address> addresses, AddressType type, int linksPerConnection) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -137,14 +134,14 @@ public class ScaleTestManager {
         clientsMonitoringQueue.offer(clientId);
     }
 
-    public void deployTenantClient(List<Address> addresses, int addressesPerTenant, int sendMsgPeriodMillis) throws Exception {
+    public void deployTenantClient(Kubernetes kubernetes, List<Address> addresses, int addressesPerTenant, int sendMsgPeriodMillis) throws Exception {
         var config = new ScaleTestClientConfiguration();
         config.setAddressesPerTenant(addressesPerTenant);
         config.setSendMessagePeriod(sendMsgPeriodMillis);
-        deployTenantClient(addresses, config);
+        deployTenantClient(kubernetes, addresses, config);
     }
 
-    public void deployTenantClient(List<Address> addresses, ScaleTestClientConfiguration params) throws Exception {
+    public void deployTenantClient(Kubernetes kubernetes, List<Address> addresses, ScaleTestClientConfiguration params) throws Exception {
         if (addresses == null || addresses.isEmpty()) {
             throw new IllegalArgumentException("Addresses cannot be null or empty");
         }
@@ -365,8 +362,9 @@ public class ScaleTestManager {
             var addressTypeResults = new AddressTypePerformanceResults();
             performanceResults.getAddresses().put(type.toString(), addressTypeResults);
 
-            Histogram acceptedMsgsPerSecHistogram = new AtomicHistogram(20000, 4);
-            Histogram receivedMsgsPerSecHistogram = new AtomicHistogram(20000, 4);
+            DoubleHistogram acceptedMsgsPerSecHistogram = new DoubleHistogram(20000, 4);
+            DoubleHistogram receivedMsgsPerSecHistogram = new DoubleHistogram(20000, 4);
+
 
             for (var client : clientsMap.values()) {
                 var metrics = client.getMetricsClient();
@@ -395,23 +393,27 @@ public class ScaleTestManager {
 
     }
 
-    private ThroughputData gatherGlobalPerformanceData(Histogram histogram, int numberOfClients) {
+    ThroughputData gatherGlobalPerformanceData(DoubleHistogram histogram, int numberOfClients) {
         ThroughputData global = new ThroughputData();
 
-        long perClientThroughput99p = histogram.getValueAtPercentile(0.99);
+        BigDecimal perClientThroughput99pBD = BigDecimal.valueOf(histogram.getValueAtPercentile(0.99));
+        perClientThroughput99pBD = perClientThroughput99pBD.setScale(2, RoundingMode.HALF_UP);
+        double perClientThroughput99p = perClientThroughput99pBD.doubleValue();
         global.setPerClientThroughput99p(perClientThroughput99p+MSG_PER_SEC_SUFFIX);
-        long estimateTotalThroughput99p = perClientThroughput99p * numberOfClients;
+        double estimateTotalThroughput99p = perClientThroughput99p * numberOfClients;
         global.setEstimateTotalThroughput99p(estimateTotalThroughput99p + MSG_PER_SEC_SUFFIX);
 
-        long perClientThroughputMedian = histogram.getValueAtPercentile(0.5);
+        BigDecimal perClientThroughputMedianBD = BigDecimal.valueOf(histogram.getValueAtPercentile(0.5));
+        perClientThroughputMedianBD = perClientThroughputMedianBD.setScale(2, RoundingMode.HALF_UP);
+        double perClientThroughputMedian = perClientThroughputMedianBD.doubleValue();
         global.setPerClientThroughputMedian(perClientThroughputMedian+MSG_PER_SEC_SUFFIX);
-        long estimateTotalThroughputMedian = perClientThroughputMedian * numberOfClients;
+        double estimateTotalThroughputMedian = perClientThroughputMedian * numberOfClients;
         global.setEstimateTotalThroughputMedian(estimateTotalThroughputMedian + MSG_PER_SEC_SUFFIX);
 
         return global;
     }
 
-    private ThroughputData gatherPerformanceData(String clientId, List<MessagesCountRecord> messagesRecords, long clientStartTimeMillis, Histogram histogram) {
+    ThroughputData gatherPerformanceData(String clientId, List<MessagesCountRecord> messagesRecords, long clientStartTimeMillis, DoubleHistogram histogram) {
         if (messagesRecords != null && !messagesRecords.isEmpty()) {
             ThroughputData client = new ThroughputData();
             client.setName(clientId);
@@ -431,9 +433,12 @@ public class ScaleTestManager {
                 }
                 long messages = record.getMessages() - lastMessages;
 
-                long msgPerSec = messages / timeSpentSeconds;
+                BigDecimal bd = BigDecimal.valueOf((double)messages / (double)timeSpentSeconds);
+                bd = bd.setScale(2, RoundingMode.HALF_UP);
+                double msgPerSec = bd.doubleValue();
 
                 client.getMsgPerSecond().add(msgPerSec+MSG_PER_SEC_SUFFIX);
+
                 histogram.recordValue(msgPerSec);
 
                 lastTimeMillis = record.getTimestamp();

@@ -230,7 +230,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     config.setSendMessagePeriod(env.getPerfSendMessagesPeriod());
                     config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
                     config.setSendersPerTenant(env.getPerfSendersPerTenant());
-                    manager.deployTenantClient(groupOfAddresses, config);
+                    manager.deployTenantClient(kubernetes, groupOfAddresses, config);
                     checkMetrics(manager.getMonitoringResult());
                 }
 
@@ -306,7 +306,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                     LOGGER.info("Created {} addresses", currentAddresses.size());
                     AddressUtils.waitForDestinationsReady(new TimeoutBudget(15, TimeUnit.MINUTES), currentAddresses.toArray(new Address[0]));
 
-                    manager.deployTenantClient(addressBatch, addressesPerTenant, env.getScaleSendMessagesPeriod());
+                    manager.deployTenantClient(kubernetes, addressBatch, addressesPerTenant, env.getScaleSendMessagesPeriod());
                     addressBatch.clear();
                     manager.sleep();
                     TestUtils.listRouterPods(kubernetes, addressSpace).forEach(
@@ -363,7 +363,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
         //deploy clients and start messaging
         for (var groupOfAddresses : addressesGroups) {
-            manager.deployTenantClient(groupOfAddresses, addressesPerTenant, env.getFaultToleranceSendMessagesPeriod());
+            manager.deployTenantClient(kubernetes, groupOfAddresses, addressesPerTenant, env.getFaultToleranceSendMessagesPeriod());
         }
         manager.getDowntimeResult().setClientsDeployed(addressesGroups.size());
 
