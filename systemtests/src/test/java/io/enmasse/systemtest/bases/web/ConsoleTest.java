@@ -1447,10 +1447,12 @@ public abstract class ConsoleTest extends TestBase {
 
         String customCaCnName = "custom-ca";
         String customIngressSecretName = "custom-ingress";
+        String wildcardSan = String.format("*.%s", environment.kubernetesDomain());
+        log.info("Wildcard SAN for custom cert: {}", wildcardSan);
         try (CertPair ca = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse/CN=MyCA");
              CertPair unsignedCluster = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse//CN=MyCluster");
              CertSigningRequest csr = OpenSSLUtil.createCsr(unsignedCluster);
-             CertPair cluster = OpenSSLUtil.signCrs(csr, Collections.singletonList("*.apps-crc.testing"), ca)
+             CertPair cluster = OpenSSLUtil.signCrs(csr, Collections.singletonList(wildcardSan), ca)
         ) {
             // Steps from https://docs.openshift.com/container-platform/4.3/authentication/certificates/replacing-default-ingress-certificate.html#replacing-default-ingress_replacing-default-ingress
 
