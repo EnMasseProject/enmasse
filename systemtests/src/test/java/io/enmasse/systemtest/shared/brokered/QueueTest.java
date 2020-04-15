@@ -61,10 +61,10 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
     }
 
 
-    // Test reproducing #4317
+    // Test reproducing GitHub issue #4317
     @Test
     @Tag(NON_PR)
-    void testAddressOrderingIssue4317() throws Exception {
+    void testAddressOrdering() throws Exception {
         Address ab = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
