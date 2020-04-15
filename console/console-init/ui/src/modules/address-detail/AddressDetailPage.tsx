@@ -71,7 +71,7 @@ export default function AddressDetailPage() {
   }
 
   const resetDeleteFormState = (data: any) => {
-    const deleteAddress = data && data.data && data.data.deleteAddress;
+    const deleteAddress = data && data.deleteAddress;
     if (deleteAddress) {
       history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
     }
@@ -140,7 +140,7 @@ export default function AddressDetailPage() {
 
   const address = getAddress();
 
-  const onDelete = () => {
+  const onDelete = async () => {
     const data = addressDetail.metadata;
     const variables = {
       a: {
@@ -148,7 +148,7 @@ export default function AddressDetailPage() {
         namespace: data.namespace
       }
     };
-    setDeleteAddressQueryVariables(variables);
+    await setDeleteAddressQueryVariables(variables);
   };
 
   const purgeAddress = (data: any) => {

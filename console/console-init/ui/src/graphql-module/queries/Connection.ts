@@ -349,7 +349,7 @@ const CONNECTION_LINKS_FILTER = (
         filterForLink += "`$.spec.address` = '" + filterAddresseValue + "'";
       else
         filterForLink +=
-          "`$.spec.Address` LIKE '" + filterAddresseValue + "%' ";
+          "`$.spec.address` LIKE '" + filterAddresseValue + "%' ";
     }
     if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";
