@@ -79,9 +79,8 @@ export default function ConnectionDetailPage() {
       />
     );
   };
-
-  if (connections.connections.length <= 0) {
-    renderNoRecordFound();
+  if (connections.total <= 0 || connections.connections.length <= 0) {
+    return renderNoRecordFound();
   }
 
   const connection = connections.connections[0];
