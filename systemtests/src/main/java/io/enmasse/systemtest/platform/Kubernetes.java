@@ -141,7 +141,7 @@ public abstract class Kubernetes {
      */
     public static boolean isOpenShiftCompatible(OpenShiftVersion version) {
 
-        if (!isOpenShift() || !isCRC()) {
+        if (!isOpenShift() && !isCRC()) {
             return false;
         }
 

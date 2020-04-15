@@ -223,7 +223,7 @@ func applyInterServiceForDeploymentSecretCertificates(client client.Client, depl
 
 	// mount the global service ca configmap
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, tlsServiceCAVolumeName, cfg.CASecretName)
-	if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-ca-hash", deployment.Namespace, cfg.CASecretName); err != nil {
+	if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-ca-hash", deployment.Namespace, cfg.CASecretName, "service-ca.crt"); err != nil {
 		return err
 	}
 
@@ -237,7 +237,7 @@ func applyInterServiceForDeploymentSecretCertificates(client client.Client, depl
 
 		// mount the secret for key/cert
 		install.ApplySecretVolume(&deployment.Spec.Template.Spec, tlsServiceKeyVolumeName, mappedSecretName)
-		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-key-hash", deployment.Namespace, mappedSecretName); err != nil {
+		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-key-hash", deployment.Namespace, mappedSecretName, "tls.crt", "tls.key"); err != nil {
 			return err
 		}
 

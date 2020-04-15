@@ -54,10 +54,6 @@ const RegistryJdbcModeAnnotation = iotPrefix + "/registry.jdbc.mode"
 const RegistryAdapterFeatureLabel = iotPrefix + "/registry-adapter"
 const RegistryManagementFeatureLabel = iotPrefix + "/registry-management"
 
-func AllRegistryFeatures() []string {
-	return []string{RegistryAdapterFeatureLabel, RegistryManagementFeatureLabel}
-}
-
 var log = logf.Log.WithName("controller_iotconfig")
 
 // Gets called by parent "init", adding as to the manager

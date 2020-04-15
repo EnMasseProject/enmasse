@@ -16,7 +16,7 @@ import (
 
 // Get the hash of the content of a config map, and apply this to the pod so
 // that a change in the content of the config map will trigger a re-rollout.
-func ApplyConfigMapHash(c client.Client, pod *corev1.PodTemplateSpec, annotationName string, namespace string, configMapName string) error {
+func ApplyConfigMapHash(c client.Client, pod *corev1.PodTemplateSpec, annotationName string, namespace string, configMapName string, keys ...string) error {
 
 	cm := &corev1.ConfigMap{}
 
@@ -33,7 +33,17 @@ func ApplyConfigMapHash(c client.Client, pod *corev1.PodTemplateSpec, annotation
 	// create hash
 
 	rec := cchange.NewRecorder()
-	rec.AddStringsFromMap(cm.Data)
+	if len(keys) == 0 {
+		rec.AddStringsFromMap(cm.Data)
+	} else {
+		for _, k := range keys {
+			if v, ok := cm.Data[k]; ok {
+				rec.AddString(v)
+			} else {
+				return util.NewConfigurationError("Missing key '%s' in data section of ConfigMap %s/%s", k, namespace, configMapName)
+			}
+		}
+	}
 
 	// store hash
 
@@ -46,7 +56,7 @@ func ApplyConfigMapHash(c client.Client, pod *corev1.PodTemplateSpec, annotation
 
 // Get the hash of the content of a secret, and apply this to the pod so
 // that a change in the content of the secret will trigger a re-rollout.
-func ApplySecretHash(c client.Client, pod *corev1.PodTemplateSpec, annotationName string, namespace string, secretName string) error {
+func ApplySecretHash(c client.Client, pod *corev1.PodTemplateSpec, annotationName string, namespace string, secretName string, keys ...string) error {
 
 	secret := &corev1.Secret{}
 
@@ -63,7 +73,17 @@ func ApplySecretHash(c client.Client, pod *corev1.PodTemplateSpec, annotationNam
 	// create hash
 
 	rec := cchange.NewRecorder()
-	rec.AddBytesFromMap(secret.Data)
+	if len(keys) == 0 {
+		rec.AddBytesFromMap(secret.Data)
+	} else {
+		for _, k := range keys {
+			if v, ok := secret.Data[k]; ok {
+				rec.AddBytes(v)
+			} else {
+				return util.NewConfigurationError("Missing key '%s' in data section of Secret %s/%s", k, namespace, secretName)
+			}
+		}
+	}
 
 	// store hash
 

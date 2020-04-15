@@ -13,7 +13,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
 
@@ -28,7 +27,6 @@ import (
 )
 
 const nameSigfoxAdapter = "iot-sigfox-adapter"
-const routeSigfoxAdapter = "iot-sigfox-adapter"
 
 func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
@@ -37,7 +35,6 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 
 	adapter := findAdapter("sigfox")
 	enabled := adapter.IsEnabled(config)
-	adapterConfig := config.Spec.AdaptersConfig.SigfoxAdapterConfig
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameSigfoxAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -48,28 +45,13 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 		return r.processService(ctx, nameSigfoxAdapter, config, !enabled, r.reconcileSigfoxAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameSigfoxAdapter+"-metrics", config, false, r.reconcileMetricsService(nameSigfoxAdapter))
+		return r.processService(ctx, nameSigfoxAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameSigfoxAdapter))
 	})
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameSigfoxAdapter+"-config", config, !enabled, r.reconcileSigfoxAdapterConfigMap)
 	})
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameSigfoxAdapter+"-external", config, !enabled, r.reconcileSigfoxAdapterServiceExternal)
-		})
-	}
-	if util.IsOpenshift() {
-		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
-
-		rc.ProcessSimple(func() error {
-			endpoint := config.Status.Adapters["sigfox"]
-			err := r.processRoute(ctx, routeSigfoxAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileSigfoxAdapterRoute)
-			config.Status.Adapters["sigfox"] = endpoint
-			return err
-		})
-	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameSigfoxAdapter, !enabled)
+		return r.processAdapterRoute(ctx, config, adapter, r.reconcileSigfoxAdapterRoute, r.reconcileSigfoxAdapterServiceExternal)
 	})
 
 	return rc.Result()
@@ -175,7 +157,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameSigfoxAdapter); err != nil {
+	if err := applyEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameSigfoxAdapter, "tls"); err != nil {
 		return err
 	}
 
@@ -209,7 +191,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterService(config *iotv1alpha1.I
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig, service, nameSigfoxAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig, service, nameSigfoxAdapter); err != nil {
 		return err
 	}
 
@@ -280,8 +262,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterRoute(config *iotv1alpha1.IoT
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	if config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig != nil &&
-		config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig.HasCustomCertificate() {
+	if config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig.HasCustomCertificate() {
 
 		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
 		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
@@ -328,7 +309,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterServiceExternal(config *iotv1
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig, service, nameSigfoxAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.SigfoxAdapterConfig.EndpointConfig, service, nameSigfoxAdapter); err != nil {
 		return err
 	}
 

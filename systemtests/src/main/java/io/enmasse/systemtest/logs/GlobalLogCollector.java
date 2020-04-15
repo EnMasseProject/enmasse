@@ -321,6 +321,9 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "addressspace", "-o", "yaml").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "address", "-o", "yaml").getStdOut());
             Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "messaginguser", "-o", "yaml").getStdOut());
+            if (Kubernetes.isOpenShiftCompatible()) {
+                Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
+            }
 
             if (extraCollectors != null) {
                 for (var c : extraCollectors) {

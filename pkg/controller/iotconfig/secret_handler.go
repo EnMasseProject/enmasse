@@ -88,16 +88,24 @@ func (s secretHandler) allSecrets(meta v1.Object) []string {
 			result = append(result,
 				nameAuthService+"-tls",
 				nameDeviceConnection+"-tls",
+				nameDeviceRegistry+"-tls",
+				nameDeviceRegistryAdapter+"-tls",
+				nameDeviceRegistryManagement+"-tls",
+				nameTenantService+"-tls",
 			)
 		}
 
 	}
 
+	// device registry endpoint
+
+	result = s.addSecretsFromEndpoint(result, config.Spec.ServicesConfig.DeviceRegistry.Management.Endpoint, "")
+
 	// add all endpoint certificates
 
 	for _, a := range adapters {
 		if a.IsEnabled(config) {
-			result = s.addSecretsFromEndpoint(result, a.AdapterConfigProvider(config), a.FullName())
+			result = s.addSecretsFromEndpoint(result, a.AdapterConfigProvider(config).EndpointConfig, a.FullName())
 		}
 	}
 
@@ -111,14 +119,17 @@ func (s secretHandler) allSecrets(meta v1.Object) []string {
 
 }
 
-func (s secretHandler) addSecretsFromEndpoint(result []string, config *iotv1alpha1.CommonAdapterConfig, fullName string) []string {
+func (s secretHandler) addSecretsFromEndpoint(result []string, config iotv1alpha1.EndpointConfig, fullName string) []string {
 
-	if config != nil && config.EndpointConfig != nil && config.EndpointConfig.SecretNameStrategy != nil {
-		result = append(result, config.EndpointConfig.SecretNameStrategy.TlsSecretName)
-	} else if config != nil && config.EndpointConfig != nil && config.EndpointConfig.KeyCertificateStrategy != nil {
-		// do nothing
+	if config.SecretNameStrategy != nil {
+
+		result = append(result, config.SecretNameStrategy.TlsSecretName)
+
 	} else if s.openshift {
-		result = append(result, fullName+"-tls")
+
+		if fullName != "" {
+			result = append(result, fullName+"-tls")
+		}
 	}
 
 	return result

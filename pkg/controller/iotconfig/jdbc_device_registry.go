@@ -66,7 +66,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					nameDeviceRegistry,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter,registry-management",
-					[]string{RegistryAdapterFeatureLabel, RegistryManagementFeatureLabel},
+					true, true,
 				)
 			})
 		})
@@ -89,7 +89,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					nameDeviceRegistryAdapter,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
-					[]string{RegistryAdapterFeatureLabel},
+					true, false,
 				)
 			})
 		})
@@ -104,7 +104,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					nameDeviceRegistryManagement,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-management",
-					[]string{RegistryManagementFeatureLabel},
+					false, true,
 				)
 			})
 		})
@@ -126,7 +126,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					nameDeviceRegistryAdapter,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
-					[]string{RegistryAdapterFeatureLabel},
+					true, false,
 				)
 			})
 		})
@@ -151,7 +151,8 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	serviceNameForTls string,
 	mode string,
 	profiles string,
-	features []string,
+	adapter bool,
+	management bool,
 ) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
@@ -162,11 +163,15 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	// reset and set features
 
-	for _, f := range AllRegistryFeatures() {
-		delete(deployment.Spec.Template.Labels, f)
+	if adapter {
+		deployment.Spec.Template.Labels[RegistryAdapterFeatureLabel] = "true"
+	} else {
+		delete(deployment.Spec.Template.Labels, RegistryAdapterFeatureLabel)
 	}
-	for _, f := range features {
-		deployment.Spec.Template.Labels[f] = "true"
+	if management {
+		deployment.Spec.Template.Labels[RegistryManagementFeatureLabel] = "true"
+	} else {
+		delete(deployment.Spec.Template.Labels, RegistryManagementFeatureLabel)
 	}
 
 	service := config.Spec.ServicesConfig.DeviceRegistry
@@ -236,7 +241,16 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 		// volume mounts
 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
-		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+		if adapter {
+			install.ApplyVolumeMountSimple(container, "tls", "/etc/tls-internal", true)
+		} else {
+			install.DropVolumeMount(container, "tls")
+		}
+		if management {
+			install.ApplyVolumeMountSimple(container, "tls-endpoint", "/etc/tls-external", true)
+		} else {
+			install.DropVolumeMount(container, "tls-endpoint")
+		}
 		install.DropVolumeMount(container, "registry")
 
 		// extensions
@@ -280,8 +294,24 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(r.client, config, deployment, serviceNameForTls); err != nil {
+	var interServiceName string
+	if adapter {
+		// only set when we have an internal service (adapter facing service)
+		interServiceName = serviceNameForTls
+	} else {
+		interServiceName = ""
+	}
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, interServiceName); err != nil {
 		return err
+	}
+
+	// endpoint
+
+	if management {
+		// if the management part is enabled, set the management endpoint
+		if err := applyEndpointDeployment(r.client, service.Management.Endpoint, deployment, serviceNameForTls, "tls-endpoint"); err != nil {
+			return err
+		}
 	}
 
 	// return
@@ -381,14 +411,14 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceRegistryConfigMap(config *iotv1a
 				},
 				"amqp": map[string]interface{}{
 					"bindAddress": "0.0.0.0",
-					"keyPath":     "/etc/tls/tls.key",
-					"certPath":    "/etc/tls/tls.crt",
+					"keyPath":     "/etc/tls-internal/tls.key",
+					"certPath":    "/etc/tls-internal/tls.crt",
 					"keyFormat":   "PEM",
 				},
 				"rest": map[string]interface{}{
 					"bindAddress": "0.0.0.0",
-					"keyPath":     "/etc/tls/tls.key",
-					"certPath":    "/etc/tls/tls.crt",
+					"keyPath":     "/etc/tls-external/tls.key",
+					"certPath":    "/etc/tls-external/tls.crt",
 					"keyFormat":   "PEM",
 				},
 			},

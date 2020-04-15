@@ -116,7 +116,8 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		// volume mounts
 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
-		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls-internal", true)
+		install.ApplyVolumeMountSimple(container, "tls-endpoint", "/etc/tls-external", true)
 		install.DropVolumeMount(container, "registry")
 
 		// apply container options
@@ -160,6 +161,12 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	// inter service secrets
 
 	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameDeviceRegistry); err != nil {
+		return err
+	}
+
+	// endpoint
+
+	if err := applyEndpointDeployment(r.client, service.Management.Endpoint, deployment, nameDeviceRegistry, "tls-endpoint"); err != nil {
 		return err
 	}
 
@@ -241,14 +248,14 @@ enmasse:
 
     amqp:
       bindAddress: 0.0.0.0
-      keyPath: /etc/tls/tls.key
-      certPath: /etc/tls/tls.crt
+      keyPath: /etc/tls-internal/tls.key
+      certPath: /etc/tls-internal/tls.crt
       keyFormat: PEM
 
     rest:
       bindAddress: 0.0.0.0
-      keyPath: /etc/tls/tls.key
-      certPath: /etc/tls/tls.crt
+      keyPath: /etc/tls-external/tls.key
+      certPath: /etc/tls-external/tls.crt
       keyFormat: PEM
 `
 	return nil

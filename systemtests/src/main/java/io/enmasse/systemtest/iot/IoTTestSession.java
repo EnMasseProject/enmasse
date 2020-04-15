@@ -28,6 +28,9 @@ import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.collect.Lists;
 
 import io.enmasse.address.model.AddressSpace;
@@ -65,6 +68,8 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 
 public final class IoTTestSession implements AutoCloseable {
+
+    private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
 
     public static enum Adapter {
         HTTP {
@@ -342,7 +347,14 @@ public final class IoTTestSession implements AutoCloseable {
                  */
                 try {
                     code.run(session);
-                } catch (Exception e) {
+                } catch (Throwable e) {
+                    // we need to catch Throwables as unit test assertions
+                    // are based on Error instead of Exception.
+                    if (log.isDebugEnabled()) {
+                        log.debug("Caught exception during test", e);
+                    } else {
+                        log.info("Caught exception during test, running exception handler");
+                    }
                     this.exceptionHandler.accept(e);
                     throw e;
                 }
@@ -455,12 +467,20 @@ public final class IoTTestSession implements AutoCloseable {
 
             } catch (Exception e) {
 
+                if (log.isDebugEnabled()) {
+                    log.debug("Caught exception during deployment", e);
+                } else {
+                    log.info("Caught exception during deployment, running exception handler");
+                }
+
                 // first run exception handler
                 try {
                     this.exceptionHandler.accept(e);
                 } catch (Exception e2) {
+                    log.info("Failed to run exception handler", e2);
                     e.addSuppressed(new RuntimeException("Failed to run exception handler", e2));
                 }
+
                 // cleanup in case any creation step failed
                 throw cleanup(cleanup, e);
 
@@ -511,6 +531,14 @@ public final class IoTTestSession implements AutoCloseable {
     }
 
     public static IoTConfigBuilder createDefaultConfig(final String namespace) {
+
+        log.info("IsOpenShift: {}, IsOpenShiftCompatible: {}, IsOpenShift4: {}, IsCRC: {}, KubernetesVersion: {}",
+                Kubernetes.isOpenShift(),
+                Kubernetes.isOpenShiftCompatible(),
+                Kubernetes.isOpenShiftCompatible(OCP4),
+                Kubernetes.isCRC(),
+                Kubernetes.getInstance().getKubernetesVersion());
+
         var config = new IoTConfigBuilder()
 
                 .withNewMetadata()
@@ -532,12 +560,7 @@ public final class IoTTestSession implements AutoCloseable {
 
             // switch to provided key/cert for adapters that needs it
 
-            for (Adapter adapter : asList(MQTT)) {
-                config = adapter.edit(config, c -> c
-                        .editOrNewEndpoint()
-                        .withNewSecretNameStrategy("systemtests-iot-" + adapter.name().toLowerCase() + "-adapter-tls")
-                        .endEndpoint());
-            }
+            config = useSystemtestKeys(config, MQTT);
 
         } else {
 
@@ -561,15 +584,20 @@ public final class IoTTestSession implements AutoCloseable {
 
             // all adapters need explicit endpoint key/certs
 
-            for (Adapter adapter : Adapter.values()) {
-                config = adapter.edit(config, c -> c
-                        .editOrNewEndpoint()
-                        .withNewSecretNameStrategy("systemtests-iot-" + adapter.name().toLowerCase() + "-adapter-tls")
-                        .endEndpoint());
-            }
+            config = useSystemtestKeys(config, Adapter.values());
 
         }
 
+        return config;
+    }
+
+    private static IoTConfigBuilder useSystemtestKeys(IoTConfigBuilder config, final Adapter... adapters) {
+        for (Adapter adapter : adapters) {
+            config = adapter.edit(config, c -> c
+                    .editOrNewEndpoint()
+                    .withNewSecretNameStrategy("systemtests-iot-" + adapter.name().toLowerCase() + "-adapter-tls")
+                    .endEndpoint());
+        }
         return config;
     }
 
@@ -578,12 +606,14 @@ public final class IoTTestSession implements AutoCloseable {
                 .preDeploy(withDefaultServices());
     }
 
-    private static Exception cleanup(final List<ThrowingCallable> cleanup, Exception initialException) {
+    private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
+
+        log.info("Cleaning up resources...");
 
         for (ThrowingCallable f : Lists.reverse(cleanup)) {
             try {
                 f.call();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 if (initialException == null) {
                     initialException = e;
                 } else {
@@ -592,7 +622,15 @@ public final class IoTTestSession implements AutoCloseable {
             }
         }
 
-        return initialException;
+        log.info("Cleaning up resources... done!");
+
+        if (initialException == null || initialException instanceof Exception) {
+            // return the Exception
+            return (Exception) initialException;
+        } else {
+            // return Throwable wrapped in exception
+            return new Exception(initialException);
+        }
     }
 
     /**
@@ -651,7 +689,6 @@ public final class IoTTestSession implements AutoCloseable {
                 60_000, true, true,
                 Map.of(
                         "CLI", KubeCMDClient.getCMD(),
-                        "PREFIX", "systemtests-"
-                        ));
+                        "PREFIX", "systemtests-"));
     }
 }

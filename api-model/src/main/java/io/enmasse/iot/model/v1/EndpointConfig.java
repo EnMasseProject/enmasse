@@ -26,7 +26,6 @@ public class EndpointConfig {
     private Boolean enableDefaultRoute;
 
     private SecretNameStrategy secretNameStrategy;
-    private KeyCertificateStrategy keyCertificateStrategy;
 
     public Boolean getEnableDefaultRoute() {
         return enableDefaultRoute;
@@ -40,13 +39,6 @@ public class EndpointConfig {
     }
     public void setSecretNameStrategy(SecretNameStrategy secretNameStrategy) {
         this.secretNameStrategy = secretNameStrategy;
-    }
-
-    public KeyCertificateStrategy getKeyCertificateStrategy() {
-        return keyCertificateStrategy;
-    }
-    public void setKeyCertificateStrategy(KeyCertificateStrategy keyCertificateStrategy) {
-        this.keyCertificateStrategy = keyCertificateStrategy;
     }
 
 }

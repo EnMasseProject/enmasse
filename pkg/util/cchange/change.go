@@ -81,6 +81,10 @@ func (c *ConfigChangeRecorder) AddString(data string) {
 	c.hasher.Write([]byte(data))
 }
 
+func (c *ConfigChangeRecorder) AddBytes(data []byte) {
+	c.hasher.Write(data)
+}
+
 func (c ConfigChangeRecorder) Hash() []byte {
 	return c.hasher.Sum(nil)
 }

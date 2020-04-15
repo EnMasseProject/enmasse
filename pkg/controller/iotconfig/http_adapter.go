@@ -13,7 +13,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
 
@@ -28,7 +27,6 @@ import (
 )
 
 const nameHttpAdapter = "iot-http-adapter"
-const routeHttpAdapter = "iot-http-adapter"
 
 func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
@@ -37,7 +35,6 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 
 	adapter := findAdapter("http")
 	enabled := adapter.IsEnabled(config)
-	adapterConfig := config.Spec.AdaptersConfig.HttpAdapterConfig
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -48,28 +45,13 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameHttpAdapter, config, !enabled, r.reconcileHttpAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameHttpAdapter+"-metrics", config, false, r.reconcileMetricsService(nameHttpAdapter))
+		return r.processService(ctx, nameHttpAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameHttpAdapter))
 	})
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, !enabled, r.reconcileHttpAdapterConfigMap)
 	})
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameHttpAdapter+"-external", config, !enabled, r.reconcileHttpAdapterServiceExternal)
-		})
-	}
-	if util.IsOpenshift() {
-		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
-
-		rc.ProcessSimple(func() error {
-			endpoint := config.Status.Adapters["http"]
-			err := r.processRoute(ctx, routeHttpAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileHttpAdapterRoute)
-			config.Status.Adapters["http"] = endpoint
-			return err
-		})
-	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameHttpAdapter, !enabled)
+		return r.processAdapterRoute(ctx, config, adapter, r.reconcileHttpAdapterRoute, r.reconcileHttpAdapterServiceExternal)
 	})
 
 	return rc.Result()
@@ -174,7 +156,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameHttpAdapter); err != nil {
+	if err := applyEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameHttpAdapter, "tls"); err != nil {
 		return err
 	}
 
@@ -208,7 +190,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
 		return err
 	}
 
@@ -279,8 +261,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterRoute(config *iotv1alpha1.IoTCo
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	if config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig != nil &&
-		config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig.HasCustomCertificate() {
+	if config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig.HasCustomCertificate() {
 
 		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
 		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
@@ -327,7 +308,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterServiceExternal(config *iotv1al
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.HttpAdapterConfig.EndpointConfig, service, nameHttpAdapter); err != nil {
 		return err
 	}
 
