@@ -1,0 +1,88 @@
+== Overview
+
+The iot console backend should provide a graphQL api that allows the console UI to :
+* list, create, update, delete iot projects.
+* list, create, update, delete devices and their credentials in iot projects the user have access to.
+* list addresses and connection details of the downstream messaging endpoints.
+* list hono protocols adapter the user have access to, and their connection details.
+* get metrics for iot projects and devices.
+
+
+== Design
+
+The above requirements involves two kind of resources :
+* kubernetes resources.
+* Hono resources that are accessed through the device registry service.
+
+=== Kubernetes Object
+
+The existing console back end will be updated to access the relevant kubernetes objects
+(iot projects, routes for protocol adapters, messaging endpoint).
+The existing approach of permissions will be used : it is the backend's responsibility to
+filter the user's view so it fits the user's permissions.
+For write operations, console-server propagates the user's bearer token made available by oauth-proxy.
+
+=== Hono devices & Credentials
+
+The iot devices and their credentials needs to be accessed through the device registry REST api.
+Therefore, a rest client must be used in the console backend. For this part, the internal cache
+of the console-backend will not be used. Also, the token verification can be ignored, as the device registry
+already verify the bearer token in HTTP requests.
+In this scope the backend acts as a simple REST to graphQL translator. Some details are pulled from the Json
+data and flatened into the graphQL object for convenience when querying.
+The original Json structure will be returned as well in the graphQL object.
+
+
+=== Metrics
+
+Metrics will also be scraped directly from the agents.
+Specifics metrics needs are TBD.
+
+==== GraphQL queries
+
+Get all user-visible namespaces and iotprojects visible to this user, optionaly filtered by project type :
+`allProjects(first: Int, offset: Int, filter: String, orderBy: String, projectType: projectQueryType)`
+
+Get the iot project tied to the specified addressspace
+`iotProject(namespace: String!, name: String!)`
+
+Get all adapters accessible with the given iotproject
+`adapters(iotproject: String!)`
+
+Get all user-visible devices in the given iot project, paginated
+`devices(iotproject: String!, first: Int, offset: Int, filter: String, orderBy: String)`
+
+Get a specific device in an iot project
+`device(iotproject: String!, deviceId: String!)`
+
+Get credentials for device in iot project
+`credentials(iotproject: String!, deviceId: String!)`
+
+
+==== GraphQL mutations
+
+Create, update, delete an iot project
+Create, update, delete a device
+update, delete credentials for device
+
+enable or disable a list of devices
+enable or disable a list of iot projects
+delete a list of iot projects
+
+create a gateways group
+retrieve all the existing gateway groups
+delete a list of devices
+
+
+Mutations will interact directly the API backends (Kubernetes for iot projects, device registry for devices and credentials).
+It will perform this interaction using the user's bearer token.
+
+
+== Hono upstream work
+
+The first step is to improve the upstream hono management API with the needed features :
+- retrieve all devices for a tenant
+- deleteing multiples devices
+- enabling / disabling multiples devices
+- add status section in devices registration data
+- groups of gateway management operations

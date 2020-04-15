@@ -56,7 +56,6 @@ arguments are `first` which specifies the number of rows to be returned and `off
 the starting index within the result set. The object return provides a count
 of the number of rows in the result set in total.
 
-
 # Environment
 
 The following environment variables are understood:
@@ -101,7 +100,6 @@ query addressTypes {
 }
 ```
 
-
 ## all_address_spaces
 
 ```
@@ -129,7 +127,8 @@ query all_address_spaces {
       }
     }
   }
-}```
+}
+```
 
 ## all_addresses_for_addressspace_view
 
@@ -345,9 +344,8 @@ query all_link_names_for_connection {
 }
 ```
 
-
-
 # single_address_with_links_and_metrics
+
 ```
 query single_address_with_links_and_metrics {
   addresses(
@@ -384,6 +382,182 @@ query single_address_with_links_and_metrics {
         }
       }
     }
+  }
+}
+```
+
+## Retrieve all Iot projects
+
+```
+query allProjects {
+  allProjects(projectType:iotProject) {
+    total
+    iotProjects{
+      metadata{
+        name
+        namespace
+        creationTimestamp
+      }
+      enabled
+      spec{
+        downstreamStrategyType
+        configuration
+         downstreamStrategy{
+          __typename
+          	... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+              addressSpace {
+                name
+              }
+              addresses {
+            		Telemetry {
+              		name
+            		}
+            		Event{
+              		name
+            		}
+            		Command{
+              		name
+            		}
+          		}
+            }
+          ... on ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+          	connectionInformation {
+              host
+              port
+            }
+          }
+        }
+      }
+      status{
+        phase
+        phaseReason
+        tenantName
+        downstreamEndpoint{
+          host
+          port
+          credentials{
+            username
+            password
+          }
+          tls
+          certificate
+        }
+      }
+      	endpoints{
+       	  name
+        	url
+       	  host
+      }
+    }
+  }
+}
+```
+
+## Retrieve a filtered iot project
+
+```
+query allProjects {
+  allProjects(
+    filter: "`$.metadata.name`='iotProjectIndia'"
+    projectType: iotProject
+  ) {
+    total
+    iotProjects {
+      metadata {
+        name
+        namespace
+        creationTimestamp
+      }
+      enabled
+      spec {
+        downstreamStrategyType
+        configuration
+        downstreamStrategy {
+          __typename
+          ... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+            addressSpace {
+              name
+            }
+            addresses {
+              Telemetry {
+                name
+              }
+              Event {
+                name
+              }
+              Command {
+                name
+              }
+            }
+          }
+        }
+      }
+      status {
+        phase
+        phaseReason
+        tenantName
+        downstreamEndpoint {
+          host
+          port
+          credentials {
+            username
+            password
+          }
+          tls
+          certificate
+        }
+      }
+      endpoints {
+        name
+        url
+        host
+      }
+    }
+  }
+}
+```
+
+## Retrieve Iot devices for an iot project
+
+```
+query {
+  devices(iotproject: "iotProjectFrance") {
+    total
+    devices {
+      deviceId
+      jsonData
+    }
+  }
+}
+```
+
+## Retrieve Iot device filtered by device ID
+
+```
+query {
+  devices(
+    iotproject: "iotProjectFrance",
+    filter: "`$.deviceId`='10'"
+  ) {
+    total
+    devices {
+      deviceId
+      jsonData
+    }
+  }
+}
+```
+
+## Retrieve credentials for device
+
+```
+query {
+  credentials(
+    iotproject: "iotProjectIndia",
+    deviceId: "20"
+  ) {
+    total
+    credentials
   }
 }
 ```
@@ -435,6 +609,7 @@ mutation patch_as(
 args:
 
 (patching a plan)
+
 ```
 {
   "a": {"name": "jupiter_as1", "namespace": "app1_ns" },
@@ -444,6 +619,7 @@ args:
 ```
 
 (patching a authentication service name)
+
 ```
 {
   "a": {"name": "jupiter_as1", "namespace" : "app1_ns" },
@@ -492,7 +668,7 @@ args:
 }
 ```
 
-It is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name is defaulted
+It is also possible to create an address without an ObjectMeta.name. In this case the ObjectMeta.Name is defaulted
 from the Spec.Address:
 
 ```
@@ -632,9 +808,8 @@ args:
 }
 ```
 
-For addresses, it is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name
+For addresses, it is also possible to create an address without an ObjectMeta.name. In this case the ObjectMeta.Name
 is defaulted from the Spec.Address:
-
 
 ```
 query cmd($a: Address_enmasse_io_v1beta1_Input!, $as:String) {
@@ -649,5 +824,91 @@ args:
   "as": "jupiter_as",
   "a": { "metadata": {"namespace": "app1_ns" },
     "spec": {"type": "standard", "plan": "standard-small", "address":"foo"}}
+}
+```
+
+## Create Iot project
+
+```
+mutation {
+  createIotProject(input: {
+    metadata: {
+      name: "iotProjectGermany",
+      namespace: "app1_ns"
+    },
+    enabled: true
+  }) {
+    creationTimestamp
+  }
+}
+```
+
+## Create Iot device
+
+```
+mutation {
+  createIotDevice(
+    iotproject: "iotProjectFrance"
+    device: {
+      deviceId: "Jens-phone"
+      enabled: true
+      viaGateway: false
+      jsonData: "{ext: {brand: samsung}}"
+    }
+	) {
+    deviceId
+  }
+}
+```
+
+## Delete Iot device
+
+```
+mutation {
+  deleteIotDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "11"
+  )
+}
+```
+
+## Update iot device
+
+```
+mutation {
+  updateIotDevice(
+    iotproject: "iotProjectFrance"
+    device: {
+      deviceId: "Jens-phone"
+      enabled: true
+      viaGateway: false
+      jsonData: "{ext: {brand: apple, headphone-jack: false}}"
+    }
+	) {
+    deviceId
+  }
+}
+```
+
+## Set credentials for iot device
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: ["{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}"]
+	)
+}
+```
+
+## Delete credentials for iot device
+
+```
+mutation {
+  deleteCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+	)
 }
 ```

@@ -4,14 +4,14 @@
  *
  */
 
-const uuidv1 = require('uuid/v1');
-const { ApolloServer, gql } = require('apollo-server');
-const typeDefs = require('./schema');
-const { applyPatch, compare } = require('fast-json-patch');
-const parser = require('./filter_parser.js');
-const clone = require('clone');
-const orderer = require('./orderer.js');
-const _ = require('lodash');
+const uuidv1 = require("uuid/v1");
+const { ApolloServer, gql } = require("apollo-server");
+const typeDefs = require("./schema");
+const { applyPatch, compare } = require("fast-json-patch");
+const parser = require("./filter_parser.js");
+const clone = require("clone");
+const orderer = require("./orderer.js");
+const _ = require("lodash");
 
 function calcLowerUpper(offset, first, len) {
   var lower = 0;
@@ -22,7 +22,7 @@ function calcLowerUpper(offset, first, len) {
   if (first !== undefined && first > 0) {
     upper = Math.min(lower + first, len);
   }
-  return {lower, upper};
+  return { lower, upper };
 }
 
 var stateChangeTimeout = process.env.STATE_CHANGE_TIMEOUT;
@@ -41,8 +41,9 @@ const availableAddressSpaceTypes = [
       addressSpaceType: "brokered",
       displayName: "brokered",
       shortDescription: "The brokered address space.",
-      longDescription: "The brokered address space type is the \"classic\" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.",
-      displayOrder: 0,
+      longDescription:
+        'The brokered address space type is the "classic" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.',
+      displayOrder: 0
     }
   },
   {
@@ -55,10 +56,11 @@ const availableAddressSpaceTypes = [
       addressSpaceType: "standard",
       displayName: "standard",
       shortDescription: "The standard address space.",
-      longDescription: "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
-      displayOrder: 1,
+      longDescription:
+        "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
+      displayOrder: 1
     }
-  },
+  }
 ];
 
 const availableAddressTypes = [
@@ -72,8 +74,9 @@ const availableAddressTypes = [
       addressSpaceType: "brokered",
       displayName: "queue",
       shortDescription: "A store-and-forward queue",
-      longDescription: "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
-      displayOrder: 0,
+      longDescription:
+        "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
+      displayOrder: 0
     }
   },
   {
@@ -85,9 +88,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "brokered",
       displayName: "topic",
-      shortDescription: "A publish-and-subscribe address with store-and-forward semantics",
-      longDescription: "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
-      displayOrder: 1,
+      shortDescription:
+        "A publish-and-subscribe address with store-and-forward semantics",
+      longDescription:
+        "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      displayOrder: 1
     }
   },
   {
@@ -99,9 +104,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "standard",
       displayName: "anycast",
-      shortDescription: "A scalable 'direct' address for sending messages to one consumer",
-      longDescription: "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
-      displayOrder: 0,
+      shortDescription:
+        "A scalable 'direct' address for sending messages to one consumer",
+      longDescription:
+        "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
+      displayOrder: 0
     }
   },
   {
@@ -113,9 +120,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "standard",
       displayName: "multicast",
-      shortDescription: "A scalable 'direct' address for sending messages to multiple consumers",
-      longDescription: "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
-      displayOrder: 1,
+      shortDescription:
+        "A scalable 'direct' address for sending messages to multiple consumers",
+      longDescription:
+        "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
+      displayOrder: 1
     }
   },
   {
@@ -128,8 +137,9 @@ const availableAddressTypes = [
       addressSpaceType: "standard",
       displayName: "queue",
       shortDescription: "A store-and-forward queue",
-      longDescription: "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.",
-      displayOrder: 2,
+      longDescription:
+        "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. A queue can be sharded across multiple storage units. Message ordering might be lost for queues in the standard address space.",
+      displayOrder: 2
     }
   },
   {
@@ -142,8 +152,9 @@ const availableAddressTypes = [
       addressSpaceType: "standard",
       displayName: "subscription",
       shortDescription: "A subscription on a specified topic",
-      longDescription: "The subscription address type allows a subscription to be created for a topic that holds messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer consumes from the address `mytopic::mysub`.",
-      displayOrder: 3,
+      longDescription:
+        "The subscription address type allows a subscription to be created for a topic that holds messages published to the topic even if the subscriber is not attached. The subscription is accessed by the consumer using <topic-address>::<subscription-address>. For example, for a subscription `mysub` on a topic `mytopic` the consumer consumes from the address `mytopic::mysub`.",
+      displayOrder: 3
     }
   },
   {
@@ -156,10 +167,11 @@ const availableAddressTypes = [
       addressSpaceType: "standard",
       displayName: "topic",
       shortDescription: "A publish-subscribe topic",
-      longDescription: "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
-      displayOrder: 4,
+      longDescription:
+        "The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      displayOrder: 4
     }
-  },
+  }
 ];
 
 const availableAuthenticationServices = [
@@ -206,7 +218,7 @@ const availableAddressSpaceSchemas = [
 const availableNamespaces = [
   {
     metadata: {
-      name: "app1_ns",
+      name: "app1_ns"
     },
     status: {
       phase: "Active"
@@ -214,7 +226,7 @@ const availableNamespaces = [
   },
   {
     metadata: {
-      name: "app2_ns",
+      name: "app2_ns"
     },
     status: {
       phase: "Active"
@@ -222,8 +234,15 @@ const availableNamespaces = [
   }
 ];
 
-function createAddressPlan(name, addressType, displayName, shortDescription, longDescription, resources, displayOrder)
-{
+function createAddressPlan(
+  name,
+  addressType,
+  displayName,
+  shortDescription,
+  longDescription,
+  resources,
+  displayOrder
+) {
   return {
     metadata: {
       name: name,
@@ -242,127 +261,152 @@ function createAddressPlan(name, addressType, displayName, shortDescription, lon
 }
 
 const availableAddressPlans = [
-  createAddressPlan("standard-small-queue",
-      "queue",
-      "Small Queue",
-      "Creates a small queue sharing underlying broker with other queues.",
-      "Creates a small queue sharing underlying broker with other queues.",
-      {
-        "broker": 0.01,
-        "router": 0.001
-      },
-      0),
-  createAddressPlan("standard-medium-queue",
-      "queue",
-      "Medium Queue",
-      "Creates a medium sized queue sharing underlying broker with other queues.",
-      "Creates a medium sized queue sharing underlying broker with other queues.",
-      {
-        "broker": 0.01,
-        "router": 0.001
-      },
-      1),
-  createAddressPlan("standard-small-anycast",
-      "anycast",
-      "Small Anycast",
-      "Creates a small anycast address.",
-      "Creates a small anycast address where messages go via a router that does not take ownership of the messages.",
-      {
-        "router": 0.001
-      },
-      2),
-  createAddressPlan("standard-medium-anycast",
-      "anycast",
-      "Medium Anycast",
-      "Creates a medium anycast address.",
-      "Creates a medium anycast address where messages go via a router that does not take ownership of the messages.",
-      {
-        "router": 0.001
-      },
-      3),
-  createAddressPlan("standard-large-anycast",
-      "anycast",
-      "Large Anycast",
-      "Creates a large anycast address.",
-      "Creates a large anycast address where messages go via a router that does not take ownership of the messages.",
-      {
-        "router": 0.001
-      },
-      4),
-  createAddressPlan("standard-small-multicast",
-      "multicast",
-      "Small Multicast",
-      "Creates a small multicast address.",
-      "Creates a small multicast address where messages go via a router that does not take ownership of the messages.",
-      {
-        "router": 0.001
-      },
-      5),
-  createAddressPlan("standard-medium-multicast",
-      "multicast",
-      "Medium Multicast",
-      "Creates a medium multicast address.",
-      "Creates a medium multicast address where messages go via a router that does not take ownership of the messages.",
-      {
-        "router": 0.001
-      },
-      6),
-  createAddressPlan("standard-small-topic",
-      "topic",
-      "Small Topic",
-      "Creates a small topic sharing underlying broker with other topics.",
-      "Creates a small topic sharing underlying broker with other topics.",
-      {
-        "broker": 0
-      },
-      7),
-  createAddressPlan("standard-small-topic",
-      "topic",
-      "Small Topic",
-      "Creates a small topic sharing underlying broker with other topics.",
-      "Creates a small topic sharing underlying broker with other topics.",
-      {
-        "broker": 0
-      },
-      8),
-  createAddressPlan("standard-medium-topic",
-      "topic",
-      "Medium Topic",
-      "Creates a medium topic sharing underlying broker with other topics.",
-      "Creates a medium topic sharing underlying broker with other topics.",
-      {
-        "broker": 0
-      },
-      9),
-  createAddressPlan("standard-small-subscription",
-      "subscription",
-      "Small Subscription",
-      "Creates a small durable subscription on a topic.",
-      "Creates a small durable subscription on a topic, which is then accessed as a distinct address.",
-      {
-        "broker": 0
-      },
-      10),
-  createAddressPlan("brokered-queue",
-      "queue",
-      "Brokered Queue",
-      "Creates a queue on a broker.",
-      "Creates a queue on a broker.",
-      {
-        "broker": 0
-      },
-      0),
-  createAddressPlan("brokered-topic",
-      "topic",
-      "Brokered Topic",
-      "Creates a topic on a broker.",
-      "Creates a topic on a broker.",
-      {
-        "broker": 0
-      },
-      1)
+  createAddressPlan(
+    "standard-small-queue",
+    "queue",
+    "Small Queue",
+    "Creates a small queue sharing underlying broker with other queues.",
+    "Creates a small queue sharing underlying broker with other queues.",
+    {
+      broker: 0.01,
+      router: 0.001
+    },
+    0
+  ),
+  createAddressPlan(
+    "standard-medium-queue",
+    "queue",
+    "Medium Queue",
+    "Creates a medium sized queue sharing underlying broker with other queues.",
+    "Creates a medium sized queue sharing underlying broker with other queues.",
+    {
+      broker: 0.01,
+      router: 0.001
+    },
+    1
+  ),
+  createAddressPlan(
+    "standard-small-anycast",
+    "anycast",
+    "Small Anycast",
+    "Creates a small anycast address.",
+    "Creates a small anycast address where messages go via a router that does not take ownership of the messages.",
+    {
+      router: 0.001
+    },
+    2
+  ),
+  createAddressPlan(
+    "standard-medium-anycast",
+    "anycast",
+    "Medium Anycast",
+    "Creates a medium anycast address.",
+    "Creates a medium anycast address where messages go via a router that does not take ownership of the messages.",
+    {
+      router: 0.001
+    },
+    3
+  ),
+  createAddressPlan(
+    "standard-large-anycast",
+    "anycast",
+    "Large Anycast",
+    "Creates a large anycast address.",
+    "Creates a large anycast address where messages go via a router that does not take ownership of the messages.",
+    {
+      router: 0.001
+    },
+    4
+  ),
+  createAddressPlan(
+    "standard-small-multicast",
+    "multicast",
+    "Small Multicast",
+    "Creates a small multicast address.",
+    "Creates a small multicast address where messages go via a router that does not take ownership of the messages.",
+    {
+      router: 0.001
+    },
+    5
+  ),
+  createAddressPlan(
+    "standard-medium-multicast",
+    "multicast",
+    "Medium Multicast",
+    "Creates a medium multicast address.",
+    "Creates a medium multicast address where messages go via a router that does not take ownership of the messages.",
+    {
+      router: 0.001
+    },
+    6
+  ),
+  createAddressPlan(
+    "standard-small-topic",
+    "topic",
+    "Small Topic",
+    "Creates a small topic sharing underlying broker with other topics.",
+    "Creates a small topic sharing underlying broker with other topics.",
+    {
+      broker: 0
+    },
+    7
+  ),
+  createAddressPlan(
+    "standard-small-topic",
+    "topic",
+    "Small Topic",
+    "Creates a small topic sharing underlying broker with other topics.",
+    "Creates a small topic sharing underlying broker with other topics.",
+    {
+      broker: 0
+    },
+    8
+  ),
+  createAddressPlan(
+    "standard-medium-topic",
+    "topic",
+    "Medium Topic",
+    "Creates a medium topic sharing underlying broker with other topics.",
+    "Creates a medium topic sharing underlying broker with other topics.",
+    {
+      broker: 0
+    },
+    9
+  ),
+  createAddressPlan(
+    "standard-small-subscription",
+    "subscription",
+    "Small Subscription",
+    "Creates a small durable subscription on a topic.",
+    "Creates a small durable subscription on a topic, which is then accessed as a distinct address.",
+    {
+      broker: 0
+    },
+    10
+  ),
+  createAddressPlan(
+    "brokered-queue",
+    "queue",
+    "Brokered Queue",
+    "Creates a queue on a broker.",
+    "Creates a queue on a broker.",
+    {
+      broker: 0
+    },
+    0
+  ),
+  createAddressPlan(
+    "brokered-topic",
+    "topic",
+    "Brokered Topic",
+    "Creates a topic on a broker.",
+    "Creates a topic on a broker.",
+    {
+      broker: 0
+    },
+    1
+  )
 ];
-
 
 const availableAddressSpacePlans = [
   {
@@ -373,10 +417,14 @@ const availableAddressSpacePlans = [
     },
     spec: {
       addressSpaceType: "standard",
-      addressPlans: availableAddressPlans.filter(p => !p.metadata.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(
+        p => !p.metadata.name.startsWith("brokered-")
+      ),
       displayName: "Small",
-      shortDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
-      longDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 1 router and 1 broker in total, and is suitable for small applications using small address plans and few addresses.",
+      shortDescription:
+        "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
+      longDescription:
+        "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 1 router and 1 broker in total, and is suitable for small applications using small address plans and few addresses.",
       displayOrder: 0,
       resourceLimits: {
         aggregate: 2,
@@ -393,10 +441,14 @@ const availableAddressSpacePlans = [
     },
     spec: {
       addressSpaceType: "standard",
-      addressPlans: availableAddressPlans.filter(p => !p.metadata.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(
+        p => !p.metadata.name.startsWith("brokered-")
+      ),
       displayName: "Medium",
-      shortDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
-      longDescription: "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 3 routers and 3 broker in total, and is suitable for applications using small address plans and few addresses.",
+      shortDescription:
+        "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis",
+      longDescription:
+        "Messaging infrastructure based on Apache Qpid Dispatch Router and Apache ActiveMQ Artemis. This plan allows up to 3 routers and 3 broker in total, and is suitable for applications using small address plans and few addresses.",
       displayOrder: 1,
       resourceLimits: {
         aggregate: 2.0,
@@ -413,21 +465,23 @@ const availableAddressSpacePlans = [
     },
     spec: {
       addressSpaceType: "brokered",
-      addressPlans: availableAddressPlans.filter(p => p.metadata.name.startsWith("brokered-")),
+      addressPlans: availableAddressPlans.filter(p =>
+        p.metadata.name.startsWith("brokered-")
+      ),
       displayName: "Single Broker",
       shortDescription: "Single Broker instance",
-      longDescription: "Single Broker plan where you can create an infinite number of queues until the system falls over.",
+      longDescription:
+        "Single Broker plan where you can create an infinite number of queues until the system falls over.",
       displayOrder: 0,
       resourceLimits: {
-        broker: 1.9,
+        broker: 1.9
       }
     }
   }
 ];
 
 function getRandomCreationDate(floor) {
-
-  var created = new Date().getTime() - (Math.random() * 1000 * 60 * 60 * 24);
+  var created = new Date().getTime() - Math.random() * 1000 * 60 * 60 * 24;
   if (floor && created < floor.getTime()) {
     created = floor.getTime();
   }
@@ -450,33 +504,47 @@ function scheduleSetAddressSpaceStatus(addressSpace, phase, messages) {
 }
 
 function createAddressSpace(as) {
-  var namespace = availableNamespaces.find(n => n.metadata.name === as.metadata.namespace);
+  var namespace = availableNamespaces.find(
+    n => n.metadata.name === as.metadata.namespace
+  );
   if (namespace === undefined) {
     var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
     throw `Unrecognised namespace '${as.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  if (as.spec.type !== 'brokered' && as.spec.type !== 'standard') {
-    throw `Unrecognised address space type '${(as.spec.type)}', known ones are : brokered, standard`;
+  if (as.spec.type !== "brokered" && as.spec.type !== "standard") {
+    throw `Unrecognised address space type '${as.spec.type}', known ones are : brokered, standard`;
   }
 
-  var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === as.spec.plan && as.spec.type === o.spec.addressSpaceType);
+  var spacePlan = availableAddressSpacePlans.find(
+    o =>
+      o.metadata.name === as.spec.plan &&
+      as.spec.type === o.spec.addressSpaceType
+  );
   if (spacePlan === undefined) {
-    var knownPlansNames = availableAddressSpacePlans.filter(p => as.spec.type === p.spec.addressSpaceType).map(p => p.metadata.name);
+    var knownPlansNames = availableAddressSpacePlans
+      .filter(p => as.spec.type === p.spec.addressSpaceType)
+      .map(p => p.metadata.name);
     throw `Unrecognised address space plan '${as.spec.plan}', known plans for type '${as.spec.type}' are : ${knownPlansNames}`;
   }
 
-  if (addressSpaces.find(existing => as.metadata.name === existing.metadata.name && as.metadata.namespace === existing.metadata.namespace) !== undefined) {
+  if (
+    addressSpaces.find(
+      existing =>
+        as.metadata.name === existing.metadata.name &&
+        as.metadata.namespace === existing.metadata.namespace
+    ) !== undefined
+  ) {
     throw `Address space with name  '${as.metadata.name} already exists in namespace ${as.metadata.namespace}`;
   }
 
   var phase = "Active";
   var messages = [];
   if (as.status && as.status.phase) {
-    phase = as.status.phase
+    phase = as.status.phase;
   }
   if (phase !== "Active") {
-    messages.push("The following deployments are not ready: [admin.daf7b31]")
+    messages.push("The following deployments are not ready: [admin.daf7b31]");
   }
 
   var addressSpace = {
@@ -484,13 +552,17 @@ function createAddressSpace(as) {
       name: as.metadata.name,
       namespace: namespace.metadata.name,
       uid: uuidv1(),
-      creationTimestamp: as.metadata.creationTimestamp ? as.metadata.creationTimestamp : getRandomCreationDate()
+      creationTimestamp: as.metadata.creationTimestamp
+        ? as.metadata.creationTimestamp
+        : getRandomCreationDate()
     },
     spec: {
       plan: spacePlan,
       type: as.spec.type,
       authenticationService: {
-        name: as.spec.authenticationService ? as.spec.authenticationService.name : null
+        name: as.spec.authenticationService
+          ? as.spec.authenticationService.name
+          : null
       }
     },
     status: null
@@ -502,29 +574,53 @@ function createAddressSpace(as) {
   return addressSpace.metadata;
 }
 
-function patchAddressSpace(metadata, jsonPatch, patchType) {
-  var index = addressSpaces.findIndex(existing => metadata.name === existing.metadata.name && metadata.namespace === existing.metadata.namespace);
+function verifyPatchType(patchType) {
+  var knownPatchTypes = [
+    "application/json-patch+json",
+    "application/merge-patch+json",
+    "application/strategic-merge-patch+json"
+  ];
+  if (knownPatchTypes.find(p => p === patchType) === undefined) {
+    throw `Unsupported patch type '$patchType'`;
+  } else if (patchType !== "application/json-patch+json") {
+    throw `Unsupported patch type '$patchType', this mock currently supports only 'application/json-patch+json'`;
+  }
+}
+
+function getAddressSpaceIndex(metadata) {
+  let index = addressSpaces.findIndex(
+    existing =>
+      metadata.name === existing.metadata.name &&
+      metadata.namespace === existing.metadata.namespace
+  );
   if (index < 0) {
     throw `Address space with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
   }
 
-  var knownPatchTypes = ["application/json-patch+json", "application/merge-patch+json", "application/strategic-merge-patch+json"];
-  if (knownPatchTypes.find(p => p === patchType) === undefined) {
-    throw `Unsupported patch type '$patchType'`
-  } else if ( patchType !== 'application/json-patch+json') {
-    throw `Unsupported patch type '$patchType', this mock currently supports only 'application/json-patch+json'`;
-  }
+  return index;
+}
+
+function patchAddressSpace(metadata, jsonPatch, patchType) {
+  let index = getAddressSpaceIndex(metadata);
+  verifyPatchType(patchType);
 
   var patch = JSON.parse(jsonPatch);
   var current = JSON.parse(JSON.stringify(addressSpaces[index]));
-  var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
     if (!_.isEqual(replacement.spec.plan, current.spec.plan)) {
-      var replacementPlan = typeof(replacement.spec.plan) === "string" ? replacement.spec.plan : replacement.metadata.name;
-      var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === replacementPlan);
+      var replacementPlan =
+        typeof replacement.spec.plan === "string"
+          ? replacement.spec.plan
+          : replacement.metadata.name;
+      var spacePlan = availableAddressSpacePlans.find(
+        o => o.metadata.name === replacementPlan
+      );
       if (spacePlan === undefined) {
-        var knownPlansNames = availableAddressSpacePlans.map(p => p.metadata.name);
+        var knownPlansNames = availableAddressSpacePlans.map(
+          p => p.metadata.name
+        );
         throw `Unrecognised address space plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
       replacement.spec.plan = spacePlan;
@@ -533,72 +629,64 @@ function patchAddressSpace(metadata, jsonPatch, patchType) {
     addressSpaces[index].spec = replacement.spec;
     return addressSpaces[index];
   } else {
-    throw `Failed to patch address space with name  '${metadata.name}' in namespace ${metadata.namespace}`
+    throw `Failed to patch address space with name  '${metadata.name}' in namespace ${metadata.namespace}`;
   }
 }
 
 function deleteAddressSpace(objectmeta) {
-  var index = addressSpaces.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
-  if (index < 0) {
-    throw `Address space with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
-  }
+  var index = getAddressSpaceIndex(objectmeta);
   var as = addressSpaces[index];
   delete addressspace_connection[as.metadata.uid];
 
   addressSpaces.splice(index, 1);
 }
 
-
 var addressSpaces = [];
 
-createAddressSpace(
-    {
-      metadata: {
-        name: "jupiter_as1",
-        namespace: availableNamespaces[0].metadata.name,
-      },
-      spec: {
-        plan: "standard-small",
-        type: "standard",
-        authenticationService: {
-          name: "none-authservice"
-        }
-      }
-    });
+createAddressSpace({
+  metadata: {
+    name: "jupiter_as1",
+    namespace: availableNamespaces[0].metadata.name
+  },
+  spec: {
+    plan: "standard-small",
+    type: "standard",
+    authenticationService: {
+      name: "none-authservice"
+    }
+  }
+});
 
-createAddressSpace(
-    {
-      metadata: {
-        name: "saturn_as2",
-        namespace: availableNamespaces[0].metadata.name,
-      },
-      spec: {
-        plan: "standard-medium",
-        type: "standard",
-        authenticationService: {
-          name: "none-authservice"
-        }
-      },
-      status: {
-        phase: "Configuring"
-      }
-    });
+createAddressSpace({
+  metadata: {
+    name: "saturn_as2",
+    namespace: availableNamespaces[0].metadata.name
+  },
+  spec: {
+    plan: "standard-medium",
+    type: "standard",
+    authenticationService: {
+      name: "none-authservice"
+    }
+  },
+  status: {
+    phase: "Configuring"
+  }
+});
 
-createAddressSpace(
-    {
-      metadata: {
-        name: "mars_as2",
-        namespace: availableNamespaces[1].metadata.name,
-      },
-      spec: {
-        plan: "brokered-single-broker",
-        type: "brokered",
-        authenticationService: {
-          name: "none-authservice"
-        }
-      }
-    });
-
+createAddressSpace({
+  metadata: {
+    name: "mars_as2",
+    namespace: availableNamespaces[1].metadata.name
+  },
+  spec: {
+    plan: "brokered-single-broker",
+    type: "brokered",
+    authenticationService: {
+      name: "none-authservice"
+    }
+  }
+});
 
 var connections = [];
 
@@ -606,31 +694,33 @@ var users = ["guest", "bob", "alice"];
 function createConnection(addressSpace, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
-  var encrypted = (port % 2 === 0);
+  var encrypted = port % 2 === 0;
   var properties = [];
   if (addressSpace.spec.Type === "standard") {
     properties = [
       {
-        "key": "platform",
-        "value": "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
+        key: "platform",
+        value:
+          "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
       },
       {
-        "key": "product",
-        "value": "QpidJMS"
+        key: "product",
+        value: "QpidJMS"
       },
       {
-        "key": "version",
-        "value": "0.38.0-SNAPSHOT"
+        key: "version",
+        value: "0.38.0-SNAPSHOT"
       }
     ];
-
   }
   return {
     metadata: {
       name: hostport,
       uid: uuidv1() + "",
       namespace: addressSpace.metadata.namespace,
-      creationTimestamp: getRandomCreationDate(addressSpace.metadata.creationTimestamp)
+      creationTimestamp: getRandomCreationDate(
+        addressSpace.metadata.creationTimestamp
+      )
     },
     spec: {
       addressSpace: addressSpace.metadata.name,
@@ -645,57 +735,55 @@ function createConnection(addressSpace, hostname) {
   };
 }
 
-connections = connections.concat(["juno",
-                                  "galileo",
-                                  "ulysses",
-                                  "cassini",
-                                  "pioneer10",
-                                  "pioneer11",
-                                  "voyager1",
-                                  "voyager2",
-                                  "horizons",
-                                  "clipper",
-                                  "icy",
-                                  "dragonfly",
-                                  "kosmos",
-                                  "mariner4",
-                                  "mariner5",
-                                  "zond2",
-                                  "mariner6",
-                                  "nozomi",
-                                  "rosetta",
-                                  "yinghuo1",
-                                  "pathfinder"
-].map(
-    (n) => (
-        createConnection(addressSpaces[0], n)
-    )
-));
+connections = connections.concat(
+  [
+    "juno",
+    "galileo",
+    "ulysses",
+    "cassini",
+    "pioneer10",
+    "pioneer11",
+    "voyager1",
+    "voyager2",
+    "horizons",
+    "clipper",
+    "icy",
+    "dragonfly",
+    "kosmos",
+    "mariner4",
+    "mariner5",
+    "zond2",
+    "mariner6",
+    "nozomi",
+    "rosetta",
+    "yinghuo1",
+    "pathfinder"
+  ].map(n => createConnection(addressSpaces[0], n))
+);
 
-connections = connections.concat(["dragonfly"].map(
-    (n) => (
-        createConnection(addressSpaces[1], n)
-    )
-));
+connections = connections.concat(
+  ["dragonfly"].map(n => createConnection(addressSpaces[1], n))
+);
 
-connections = connections.concat(["kosmos",
-                                  "mariner4",
-                                  "mariner5",
-                                  "zond2",
-                                  "mariner6",
-                                  "nozomi",
-                                  "rosetta",
-                                  "yinghuo1",
-                                  "pathfinder"
-].map(
-    (n) => (
-        createConnection(addressSpaces[2], n)
-    )
-));
+connections = connections.concat(
+  [
+    "kosmos",
+    "mariner4",
+    "mariner5",
+    "zond2",
+    "mariner6",
+    "nozomi",
+    "rosetta",
+    "yinghuo1",
+    "pathfinder"
+  ].map(n => createConnection(addressSpaces[2], n))
+);
 
 var addressspace_connection = {};
 addressSpaces.forEach(as => {
-  addressspace_connection[as.metadata.uid] = connections.filter((c) => c.spec.addressSpace === as.metadata.name);
+  addressspace_connection[as.metadata.uid] = connections.filter(
+    c => c.spec.addressSpace === as.metadata.name
+  );
 });
 
 var addresses = [];
@@ -717,27 +805,44 @@ function scheduleSetAddressStatus(address, phase, messages, planStatus) {
 function defaultResourceNameFromAddress(address, addressSpaceName) {
   var clean = address.toLowerCase();
   var maxLength = 253 - addressSpaceName.length - 1;
-  if (/^[a-z0-9][-a-z0-9_.]*[a-z0-9]$/.test(clean) && addressSpaceName.length < maxLength) {
+  if (
+    /^[a-z0-9][-a-z0-9_.]*[a-z0-9]$/.test(clean) &&
+    addressSpaceName.length < maxLength
+  ) {
     return addressSpaceName + "." + clean;
   } else {
     clean = clean.replace(/[^-a-z0-9_.]/g, "");
-    if (clean.charAt(0) === '-' || clean.charAt(0) === '.' || clean.charAt(0) === '_') clean = clean.substring(1);
-    if (clean.charAt(clean.length - 1) === '-' || clean.charAt(clean.length - 1) === '.' || clean.charAt(clean.length - 1) === '_') clean = clean.substring(0, clean.length - 1);
+    if (
+      clean.charAt(0) === "-" ||
+      clean.charAt(0) === "." ||
+      clean.charAt(0) === "_"
+    )
+      clean = clean.substring(1);
+    if (
+      clean.charAt(clean.length - 1) === "-" ||
+      clean.charAt(clean.length - 1) === "." ||
+      clean.charAt(clean.length - 1) === "_"
+    )
+      clean = clean.substring(0, clean.length - 1);
     var uid = "" + uuidv1();
     maxLength = 253 - addressSpaceName.length - uid.length - 2;
     if (clean.length > maxLength) clean = clean.substring(0, maxLength);
-    return  addressSpaceName + "." + clean + "." + uid;
+    return addressSpaceName + "." + clean + "." + uid;
   }
 }
 
 function createAddress(addr, addressSpaceName) {
-  var namespace = availableNamespaces.find(n => n.metadata.name === addr.metadata.namespace);
+  var namespace = availableNamespaces.find(
+    n => n.metadata.name === addr.metadata.namespace
+  );
   if (namespace === undefined) {
     var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
     throw `Unrecognised namespace '${addr.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  var addressSpacesInNamespace = addressSpaces.filter(as => as.metadata.namespace === addr.metadata.namespace);
+  var addressSpacesInNamespace = addressSpaces.filter(
+    as => as.metadata.namespace === addr.metadata.namespace
+  );
   if (addr.metadata.name) {
     var parts = addr.metadata.name.split(".", 2);
     if (parts.length < 2) {
@@ -748,53 +853,75 @@ function createAddress(addr, addressSpaceName) {
     if (!addressSpaceName) {
       throw `addressSpace is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
-    addr.metadata.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
+    addr.metadata.name = defaultResourceNameFromAddress(
+      addr.spec.address,
+      addressSpaceName
+    );
   } else {
-    throw `address is undefined, cannot default resource name`
+    throw `address is undefined, cannot default resource name`;
   }
 
-  var addressSpace = addressSpacesInNamespace.find(as => as.metadata.name === addressSpaceName);
+  var addressSpace = addressSpacesInNamespace.find(
+    as => as.metadata.name === addressSpaceName
+  );
   if (addressSpace === undefined) {
     var addressspacenames = addressSpacesInNamespace.map(p => p.metadata.Name);
     throw `Unrecognised address space '${addressSpaceName}', known ones are : ${addressspacenames}`;
   }
 
-  var knownTypes = ['queue', 'topic', 'subscription', 'multicast', 'anycast'];
+  var knownTypes = ["queue", "topic", "subscription", "multicast", "anycast"];
   if (knownTypes.find(t => t === addr.spec.type) === undefined) {
     throw `Unrecognised address type '${addr.spec.type}', known ones are : '${knownTypes}'`;
   }
 
-  var plan = availableAddressPlans.find(p => p.metadata.name === addr.spec.plan && addr.spec.type === p.spec.addressType);
+  var plan = availableAddressPlans.find(
+    p =>
+      p.metadata.name === addr.spec.plan &&
+      addr.spec.type === p.spec.addressType
+  );
   if (plan === undefined) {
-    var knownPlansNames = availableAddressPlans.filter(p => addr.spec.Type === p.spec.addressType).map(p => p.metadata.name);
+    var knownPlansNames = availableAddressPlans
+      .filter(p => addr.spec.Type === p.spec.addressType)
+      .map(p => p.metadata.name);
     throw `Unrecognised address plan '${addr.spec.plan}', known plans for type '${addr.spec.type}' are : ${knownPlansNames}`;
   }
 
-  if (addr.spec.type === 'subscription') {
-      var topics  = addresses.filter(a => a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "topic");
-      if (!addr.spec.topic) {
-        throw `spec.topic is mandatory for the subscription type`;
-      } else if (topics.find(t => t.spec.address === addr.spec.topic) === undefined) {
-        var topicNames  = topics.map(t => t.spec.address);
-        throw `Unrecognised topic address '${addr.spec.topic}', known ones are : '${topicNames}'`;
-      }
+  if (addr.spec.type === "subscription") {
+    var topics = addresses.filter(
+      a =>
+        a.metadata.name.startsWith(addressSpaceName) && a.spec.type === "topic"
+    );
+    if (!addr.spec.topic) {
+      throw `spec.topic is mandatory for the subscription type`;
+    } else if (
+      topics.find(t => t.spec.address === addr.spec.topic) === undefined
+    ) {
+      var topicNames = topics.map(t => t.spec.address);
+      throw `Unrecognised topic address '${addr.spec.topic}', known ones are : '${topicNames}'`;
+    }
   } else {
-      if (addr.spec.topic) {
-        throw `spec.topic is not allowed for the address type '${addr.spec.type}'.`;
-      }
+    if (addr.spec.topic) {
+      throw `spec.topic is not allowed for the address type '${addr.spec.type}'.`;
+    }
   }
 
-  if (addresses.find(existing => addr.metadata.name === existing.metadata.name && addr.metadata.namespace === existing.metadata.namespace) !== undefined) {
+  if (
+    addresses.find(
+      existing =>
+        addr.metadata.name === existing.metadata.name &&
+        addr.metadata.namespace === existing.metadata.namespace
+    ) !== undefined
+  ) {
     throw `Address with name  '${addr.metadata.name} already exists in address space ${addressSpaceName}`;
   }
 
   var phase = "Active";
   var messages = [];
   if (addr.status && addr.status.phase) {
-    phase = addr.status.phase
+    phase = addr.status.phase;
   }
   if (phase !== "Active") {
-    messages.push("Address " + addr.metadata.name + " not found on qdrouterd")
+    messages.push("Address " + addr.metadata.name + " not found on qdrouterd");
   }
 
   var planStatus = null;
@@ -802,7 +929,7 @@ function createAddress(addr, addressSpaceName) {
     planStatus = {
       name: plan.metadata.name,
       partitions: 1
-    }
+    };
   }
 
   var address = {
@@ -810,7 +937,9 @@ function createAddress(addr, addressSpaceName) {
       name: addr.metadata.name,
       namespace: addr.metadata.namespace,
       uid: uuidv1(),
-      creationTimestamp: addr.metadata.creationTimestamp ? addr.metadata.creationTimestamp : getRandomCreationDate()
+      creationTimestamp: addr.metadata.creationTimestamp
+        ? addr.metadata.creationTimestamp
+        : getRandomCreationDate()
     },
     spec: {
       address: addr.spec.address,
@@ -819,34 +948,42 @@ function createAddress(addr, addressSpaceName) {
       type: addr.spec.type,
       topic: addr.spec.topic
     },
-    status: null,
+    status: null
   };
   scheduleSetAddressStatus(address, phase, messages, planStatus);
   addresses.push(address);
   return address.metadata;
 }
 
-function patchAddress(objectmeta, jsonPatch, patchType) {
-  var index = addresses.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
+function getAddressIndex(objectMeta) {
+  let index = addresses.findIndex(
+    existing =>
+      objectmeta.name === existing.metadata.name &&
+      objectmeta.namespace === existing.metadata.namespace
+  );
   if (index < 0) {
     throw `Address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
+  return index;
+}
 
-  var knownPatchTypes = ["application/json-patch+json", "application/merge-patch+json", "application/strategic-merge-patch+json"];
-  if (knownPatchTypes.find(p => p === patchType) === undefined) {
-    throw `Unsupported patch type '$patchType'`
-  } else if ( patchType !== 'application/json-patch+json') {
-    throw `Unsupported patch type '$patchType', this mock currently supports only 'application/json-patch+json'`;
-  }
+function patchAddress(objectmeta, jsonPatch, patchType) {
+  let index = getAddressIndex(objectmeta);
+  verifyPatchType(patchType);
 
   var patch = JSON.parse(jsonPatch);
   var current = JSON.parse(JSON.stringify(addresses[index]));
-  var patched = applyPatch(JSON.parse(JSON.stringify(current)) , patch);
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
-    if (!_.isEqual(replacement.spec.plan,current.spec.plan)) {
-      var replacementPlan = typeof(replacement.spec.plan) === "string" ? replacement.spec.plan : replacement.plan.metadata.name;
-      var spacePlan = availableAddressPlans.find(o => o.metadata.name === replacementPlan);
+    if (!_.isEqual(replacement.spec.plan, current.spec.plan)) {
+      var replacementPlan =
+        typeof replacement.spec.plan === "string"
+          ? replacement.spec.plan
+          : replacement.plan.metadata.name;
+      var spacePlan = availableAddressPlans.find(
+        o => o.metadata.name === replacementPlan
+      );
       if (spacePlan === undefined) {
         var knownPlansNames = availableAddressPlans.map(p => p.metadata.name);
         throw `Unrecognised address plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
@@ -857,7 +994,7 @@ function patchAddress(objectmeta, jsonPatch, patchType) {
     addresses[index].spec = replacement.spec;
     return addresses[index];
   } else {
-    throw `Failed to patch address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace}`
+    throw `Failed to patch address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace}`;
   }
 }
 
@@ -865,31 +1002,30 @@ function titleCasePath(str) {
   var splitStr = str.toLowerCase().split("/");
   for (var i = 0; i < splitStr.length; i++) {
     splitStr[i] =
-        splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+      splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
   }
   return splitStr.join("/");
 }
 
 function deleteAddress(metadata) {
-  var index = addresses.findIndex(existing => metadata.name === existing.metadata.name && metadata.namespace === existing.metadata.namespace);
-  if (index < 0) {
-    throw `Address with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
-  }
+  var index = getAddressIndex;
   addresses.splice(index, 1);
 }
 
 function purgeAddress(objectmeta) {
-  var index = addresses.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
-  if (index < 0) {
-    throw `Address with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
-  }
+  var index = getAddressIndex;
 }
 
 function closeConnection(objectmeta) {
-
-  var index = connections.findIndex(existing => objectmeta.name === existing.metadata.name && objectmeta.namespace === existing.metadata.namespace);
+  var index = connections.findIndex(
+    existing =>
+      objectmeta.name === existing.metadata.name &&
+      objectmeta.namespace === existing.metadata.namespace
+  );
   if (index < 0) {
-    var knownCons = connections.filter(c => c.metadata.namespace === objectmeta.namespace).map(c => c.metadata.name);
+    var knownCons = connections
+      .filter(c => c.metadata.namespace === objectmeta.namespace)
+      .map(c => c.metadata.name);
     throw `Connection with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist. Known connection names are: ${knownCons}`;
   }
   var targetCon = connections[index];
@@ -898,137 +1034,170 @@ function closeConnection(objectmeta) {
   var as = addressSpaces.find(as => as.metadata.name === addressSpaceName);
 
   var as_cons = addressspace_connection[as.metadata.uid];
-  var as_cons_index = as_cons.findIndex((c) => c === targetCon);
+  var as_cons_index = as_cons.findIndex(c => c === targetCon);
   as_cons.splice(as_cons_index, 1);
 
   connections.splice(index, 1);
-
 }
 
-["ganymede", "callisto", "io", "europa", "amalthea", "himalia", "thebe", "elara", "pasiphae", "metis", "carme", "sinope"].map(n =>
-    (createAddress({
-      metadata: {
-        name: addressSpaces[0].metadata.name + "." + n,
-        namespace: addressSpaces[0].metadata.namespace
-      },
-      spec: {
-        address: n,
-        addressSpace: addressSpaces[0].metadata.name,
-        plan: "standard-small-queue",
-        type: "queue"
-      },
-      status: {
-        phase: n.startsWith("c") ? "Configuring" : (n.startsWith("p") ? "Pending" : "Active")
-      }
-    })));
+[
+  "ganymede",
+  "callisto",
+  "io",
+  "europa",
+  "amalthea",
+  "himalia",
+  "thebe",
+  "elara",
+  "pasiphae",
+  "metis",
+  "carme",
+  "sinope"
+].map(n =>
+  createAddress({
+    metadata: {
+      name: addressSpaces[0].metadata.name + "." + n,
+      namespace: addressSpaces[0].metadata.namespace
+    },
+    spec: {
+      address: n,
+      addressSpace: addressSpaces[0].metadata.name,
+      plan: "standard-small-queue",
+      type: "queue"
+    },
+    status: {
+      phase: n.startsWith("c")
+        ? "Configuring"
+        : n.startsWith("p")
+        ? "Pending"
+        : "Active"
+    }
+  })
+);
 
 function createTopicWithSub(addressSpace, topicName) {
-    createAddress({
-      metadata: {
-        name: addressSpace.metadata.name + "." + topicName,
-        namespace: addressSpace.metadata.namespace
-      },
-      spec: {
-        address: topicName,
-        addressSpace: addressSpace.metadata.name,
-        plan: "standard-small-topic",
-        type: "topic"
-      },
-      status: {
-        phase: topicName.startsWith("c") ? "Configuring" : (topicName.startsWith("p") ? "Pending" : "Active")
-      }
-    });
-    var subname = topicName + '-sub';
-    createAddress({
-      metadata: {
-        name: addressSpaces[0].metadata.name + "." + subname,
-        namespace: addressSpace.metadata.namespace
-      },
-      spec: {
-        address: subname,
-        addressSpace: addressSpace.metadata.name,
-        plan: "standard-small-subscription",
-        type: "subscription",
-        topic: topicName
-      },
-      status: {
-        phase: topicName.startsWith("c") ? "Configuring" : (topicName.startsWith("p") ? "Pending" : "Active")
-      }
-    });
+  createAddress({
+    metadata: {
+      name: addressSpace.metadata.name + "." + topicName,
+      namespace: addressSpace.metadata.namespace
+    },
+    spec: {
+      address: topicName,
+      addressSpace: addressSpace.metadata.name,
+      plan: "standard-small-topic",
+      type: "topic"
+    },
+    status: {
+      phase: topicName.startsWith("c")
+        ? "Configuring"
+        : topicName.startsWith("p")
+        ? "Pending"
+        : "Active"
+    }
+  });
+  var subname = topicName + "-sub";
+  createAddress({
+    metadata: {
+      name: addressSpaces[0].metadata.name + "." + subname,
+      namespace: addressSpace.metadata.namespace
+    },
+    spec: {
+      address: subname,
+      addressSpace: addressSpace.metadata.name,
+      plan: "standard-small-subscription",
+      type: "subscription",
+      topic: topicName
+    },
+    status: {
+      phase: topicName.startsWith("c")
+        ? "Configuring"
+        : topicName.startsWith("p")
+        ? "Pending"
+        : "Active"
+    }
+  });
 }
 
 // Topic with a subscription
-["themisto"].map(n => (createTopicWithSub(addressSpaces[0], n)));
-
+["themisto"].map(n => createTopicWithSub(addressSpaces[0], n));
 
 ["titan", "rhea", "iapetus", "dione", "tethys", "enceladus", "mimas"].map(n =>
-    (createAddress({
-      metadata: {
-        name: addressSpaces[1].metadata.name + "." + n,
-        namespace: addressSpaces[1].metadata.namespace
-      },
-      spec: {
-        address: n,
-        addressSpace: addressSpaces[1].metadata.name,
-        plan: "standard-small-queue",
-        type: "queue"
-      }
-    })));
+  createAddress({
+    metadata: {
+      name: addressSpaces[1].metadata.name + "." + n,
+      namespace: addressSpaces[1].metadata.namespace
+    },
+    spec: {
+      address: n,
+      addressSpace: addressSpaces[1].metadata.name,
+      plan: "standard-small-queue",
+      type: "queue"
+    }
+  })
+);
 
 ["phobos", "deimous"].map(n =>
-    (createAddress({
-      metadata: {
-        name: addressSpaces[2].metadata.name + "." + n,
-        namespace: addressSpaces[2].metadata.namespace
-      },
-      spec: {
-        address: n,
-        addressSpace: addressSpaces[2].metadata.name,
-        plan: "brokered-queue",
-        type: "queue"
-      }
-    })));
+  createAddress({
+    metadata: {
+      name: addressSpaces[2].metadata.name + "." + n,
+      namespace: addressSpaces[2].metadata.namespace
+    },
+    spec: {
+      address: n,
+      addressSpace: addressSpaces[2].metadata.name,
+      plan: "brokered-queue",
+      type: "queue"
+    }
+  })
+);
 
 function* makeAddrIter(namespace, addressspace) {
-  var filter = addresses.filter(a => a.metadata.namespace === namespace && a.metadata.name.startsWith(addressspace + "."));
+  var filter = addresses.filter(
+    a =>
+      a.metadata.namespace === namespace &&
+      a.metadata.name.startsWith(addressspace + ".")
+  );
   var i = 0;
-  while(filter.length) {
+  while (filter.length) {
     var addr = filter[i++ % filter.length];
     yield addr;
   }
 }
 
 var addressItrs = {};
-addressSpaces.forEach((as) => {
-  addressItrs[as.metadata.uid] = makeAddrIter(as.metadata.namespace, as.metadata.name);
+addressSpaces.forEach(as => {
+  addressItrs[as.metadata.uid] = makeAddrIter(
+    as.metadata.namespace,
+    as.metadata.name
+  );
 });
 
 var links = [];
 connections.forEach(c => {
   var addressSpaceName = c.spec.addressSpace;
-  var addressSpace = addressSpaces.find(as => as.metadata.name === addressSpaceName);
+  var addressSpace = addressSpaces.find(
+    as => as.metadata.name === addressSpaceName
+  );
   var uid = addressSpace.metadata.uid;
   var addr = addressItrs[uid].next().value;
 
-  for (var i = 0; i< addr.metadata.name.length; i++) {
-    links.push(
-        {
-          metadata: {
-            name: uuidv1(),
-          },
-          spec: {
-            connection: c,
-            address: addr.metadata.name,
-            role: i % 2 === 0 ? "sender" : "receiver",
-          }
-        });
+  for (var i = 0; i < addr.metadata.name.length; i++) {
+    links.push({
+      metadata: {
+        name: uuidv1()
+      },
+      spec: {
+        connection: c,
+        address: addr.metadata.name,
+        role: i % 2 === 0 ? "sender" : "receiver"
+      }
+    });
   }
 });
 
 function buildFilterer(filter) {
-  return filter ? parser.parse(filter) : {evaluate: () => true};
+  return filter ? parser.parse(filter) : { evaluate: () => true };
 }
-
 
 function init(input) {
   if (input.metadata) {
@@ -1068,8 +1237,7 @@ function makeMockAddressMetrics() {
       type: "gauge",
       value: Math.floor(Math.random() * 10),
       units: "msg/s"
-    },
-
+    }
   ];
 }
 
@@ -1098,16 +1266,18 @@ function makeMockConnectionMetrics() {
       type: "gauge",
       value: Math.floor(Math.random() * 10),
       units: "total"
-    },
+    }
   ];
 }
 
 function makeMockLinkMetrics(is_addr_query, link) {
   if (is_addr_query) {
-
     return [
       {
-        name: link.spec.role === "sender" ? "enmasse_messages_in" : "enmasse_messages_out",
+        name:
+          link.spec.role === "sender"
+            ? "enmasse_messages_in"
+            : "enmasse_messages_out",
         type: "gauge",
         value: Math.floor(Math.random() * 10),
         units: "msg/s"
@@ -1117,10 +1287,9 @@ function makeMockLinkMetrics(is_addr_query, link) {
         type: "gauge",
         value: Math.floor(Math.random() * 15),
         units: "msg"
-      },
+      }
     ];
   } else {
-
     var addressSpaceName = link.spec.connection.spec.addressSpace;
     var as = addressSpaces.find(as => as.metadata.name === addressSpaceName);
     if (as.spec.type === "brokered") {
@@ -1175,17 +1344,22 @@ function makeMockLinkMetrics(is_addr_query, link) {
           type: "counter",
           value: Math.floor(Math.random() * 10),
           units: "deliveries"
-        },
+        }
       ];
-
     }
   }
 }
 
 function makeAddressSpaceMetrics(as) {
-  var cons = as.metadata.uid in addressspace_connection ? addressspace_connection[as.metadata.uid] : [];
-  var addrs = addresses.filter((a) => as.metadata.namespace === a.metadata.namespace &&
-      a.metadata.name.startsWith(as.metadata.name + "."));
+  var cons =
+    as.metadata.uid in addressspace_connection
+      ? addressspace_connection[as.metadata.uid]
+      : [];
+  var addrs = addresses.filter(
+    a =>
+      as.metadata.namespace === a.metadata.namespace &&
+      a.metadata.name.startsWith(as.metadata.name + ".")
+  );
 
   return [
     {
@@ -1199,7 +1373,7 @@ function makeAddressSpaceMetrics(as) {
       type: "gauge",
       value: addrs.length,
       units: "addresses"
-    },
+    }
   ];
 }
 
@@ -1210,9 +1384,12 @@ function addressCommand(addr, addressSpaceName) {
     if (!addressSpaceName) {
       throw `addressSpace is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
-    addr.metadata.name = defaultResourceNameFromAddress(addr.spec.address, addressSpaceName);
+    addr.metadata.name = defaultResourceNameFromAddress(
+      addr.spec.address,
+      addressSpaceName
+    );
   } else {
-    throw `address is undefined, cannot default resource name`
+    throw `address is undefined, cannot default resource name`;
   }
 
   return `apiVersion: enmasse.io/v1beta1
@@ -1241,8 +1418,431 @@ EOF
 `;
 }
 
+var iotProjects = [];
+var iotdevices = [];
+
+createIotProject({
+  metadata: {
+    name: "iotProjectFrance",
+    namespace: availableNamespaces[0].metadata.name
+  },
+  enabled: true,
+  spec: {
+    downstreamStrategyType: "managed"
+  }
+});
+
+createIotProject({
+  metadata: {
+    name: "iotProjectIndia",
+    namespace: availableNamespaces[1].metadata.name
+  },
+  enabled: true,
+  spec: {
+    downstreamStrategyType: "external"
+  }
+});
+
+function getMockIotEndpoints() {
+  return [
+    {
+      name: "HttpAdapter",
+      url: "https://http.amq-online-iot.rhmi.com:8443",
+      host: "http.amq-online-iot.rhmi.com",
+      port: 8443
+    },
+    {
+      name: "MqttAdapter",
+      url: "mqtts://mqtt.amq-online-iot.rhmi.com:8883",
+      host: "mqtt.amq-online-iot.rhmi.com",
+      port: 8883,
+      tls: true
+    },
+    {
+      name: "AmqpAdapter",
+      url: "amqps://amqp.amq-online-iot.rhmi.com:8443",
+      host: "amqp.amq-online-iot.rhmi.com",
+      port: 5671
+    },
+    {
+      name: "DeviceRegistrationManagement",
+      url: "https://management.amq-online-iot.rhmi.com/devices",
+      host: "management.amq-online-iot.rhmi.com",
+      port: 443
+    },
+    {
+      name: "DeviceCredentialManagement",
+      url: "https://management.amq-online-iot.rhmi.com/credentials",
+      host: "management.amq-online-iot.rhmi.com",
+      port: 443
+    }
+  ];
+}
+
+function createIotProject(pj) {
+  var namespace = availableNamespaces.find(
+    n => n.metadata.name === pj.metadata.namespace
+  );
+  if (namespace === undefined) {
+    var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
+    throw `Unrecognised namespace '${pj.metadata.namespace}', known ones are : ${knownNamespaces}`;
+  }
+
+  var strategyType = pj.spec.downstreamStrategyType;
+  if (strategyType !== "managed" && strategyType !== "external") {
+    throw `Unrecognised downstream strategy type '${pj.spec.downstreamStrategyType}', known ones are : managed, external`;
+  }
+
+  if (
+    iotProjects.find(
+      existing =>
+        pj.metadata.name === existing.metadata.name &&
+        pj.metadata.namespace === existing.metadata.namespace
+    ) !== undefined
+  ) {
+    throw `Iot Project with name  '${pj.metadata.name} already exists in namespace ${pj.metadata.namespace}`;
+  }
+
+  var phase = "Active";
+  var messages = [];
+  if (pj.status && pj.status.phase) {
+    phase = pj.status.phase;
+  }
+  if (phase !== "Active") {
+    messages.push(
+      "The following deployments are not ready: [iot-device-registry.daf7b31]"
+    );
+  }
+
+  var iotproject = {
+    metadata: {
+      name: pj.metadata.name,
+      namespace: namespace.metadata.name,
+      uid: uuidv1(),
+      creationTimestamp: pj.metadata.creationTimestamp
+        ? pj.metadata.creationTimestamp
+        : getRandomCreationDate()
+    },
+    enabled: pj.enabled,
+    spec: {
+      downstreamStrategyType: "managed",
+      downstreamStrategy: getMockDownstreamStrategy("managed"),
+      configuration: "{}"
+    },
+    endpoints: getMockIotEndpoints(),
+    status: getMockIotProjectStatus()
+  };
+
+  //TODO : set a timer for iot projects to become ready ?
+  //scheduleSetAddressSpaceStatus(iotproject, phase, messages);
+
+  iotProjects.push(iotproject);
+
+  iotdevices.push({
+    project: iotproject.metadata.name,
+    devices: []
+  });
+  return iotproject.metadata;
+}
+
+function deleteIotProject(iotProject) {
+  let pjIndex = getIotProjectIndex(iotProject.name);
+  let devIndex = getIotDevicesProjectIndex(iotProject.name);
+
+  // delete iot devices for this project
+  iotdevices[devIndex].splice(devIndex, 1);
+
+  iotProjects.splice(pjIndex, 1);
+}
+
+function getMockDownstreamStrategy(strategyType) {
+  if (strategyType === "managed") {
+    return {
+      addressSpace: {
+        name: addressSpaces[0].metadata.name,
+        plan: addressSpaces[0].spec.plan,
+        type: addressSpaces[0].spec.type
+      },
+      addresses: {
+        Telemetry: {
+          name: "telemetry-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        },
+        Event: {
+          name: "event-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        },
+        Command: {
+          name: "command-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        }
+      }
+    };
+  }
+  if (strategyType === "external") {
+    return {
+      connectionInformation: {
+        host: "messaging.external.host.tld",
+        port: 5674,
+        credentials: {
+          username: "admin",
+          password: "pasword"
+        }
+      }
+    };
+  }
+}
+
+function patchIotProject(metadata, jsonPatch, patchType) {
+  var index = getIotDevicesProjectIndex(metadata.name);
+
+  verifyPatchType(patchType);
+
+  var patch = JSON.parse(jsonPatch);
+  var current = JSON.parse(JSON.stringify(iotProjects[index]));
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch);
+  if (patched.newDocument) {
+    var replacement = patched.newDocument;
+
+    if (
+      !_.isEqual(
+        replacement.spec.downstreamStrategyType,
+        current.spec.downstreamStrategyType
+      )
+    ) {
+      if (strategyType !== "managed" && strategyType !== "external") {
+        throw `Unrecognised downstream strategy type '${pj.spec.downstreamStrategyType}', known ones are : managed, external`;
+      }
+      replacement.spec.downstreamStrategy = getDownstreamStrategy(strategyType);
+    }
+
+    iotProjects[index].spec = replacement.spec;
+    return iotProjects[index];
+  } else {
+    throw `Failed to patch iot project with name '${metadata.name}' in namespace ${metadata.namespace}`;
+  }
+}
+
+function getMockIotProjectStatus() {
+  return {
+    phase: "Active",
+
+    tenantName: "tenantName.iot",
+    downstreamEndpoint: {
+      host: "host.domain.com",
+      port: 5674,
+      credentials: {
+        username: "messaging@435bm730c495zx834s53467",
+        password: "verysecret"
+      },
+      tls: true,
+      certificate: "averylongString"
+    }
+  };
+}
+
+function getIotProjectIndex(projectName) {
+  let index = iotProjects.findIndex(
+    existing => projectName === existing.metadata.name
+  );
+  if (index < 0) {
+    throw `Iot project with name '${projectName}' does not exist`;
+  }
+  return index;
+}
+
+function getIotDevicesProjectIndex(projectName) {
+  let devIndex = iotdevices.findIndex(
+    existing => projectName === existing.project
+  );
+  if (devIndex < 0) {
+    throw `Iot project with name '${projectName}' does not exist in iotDevices`;
+  }
+  return devIndex;
+}
+
+function createIotDevice(iotProject, newDevice) {
+  getIotProjectIndex(iotProject);
+  let devIndex = getIotDevicesProjectIndex(iotProject);
+
+  if (
+    iotdevices[devIndex].devices.find(
+      d => d.deviceId === newDevice.deviceId
+    ) !== undefined
+  ) {
+    throw `Iot device with deviceId  '${newDevice.deviceId} already exists in iot project ${iotProject}`;
+  }
+
+  newDevice.credentials = [];
+  iotdevices[devIndex].devices.push(newDevice);
+  return getIotDevice(iotProject, newDevice.deviceId);
+}
+
+function deleteIotDevice(iotProject, deviceId) {
+  getIotProjectIndex(iotProject);
+  let pjIndex = getIotDevicesProjectIndex(iotProject);
+
+  let devIndex = iotdevices[pjIndex].devices.findIndex(
+    d => d.deviceId === deviceId
+  );
+  if (devIndex < 0) {
+    throw `Iot device with deviceId '${deviceId} does not exist in iot project ${iotProject}`;
+  }
+  iotdevices[pjIndex].devices.splice(devIndex, 1);
+}
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "10",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: {
+      imei: "abcdef",
+      manufacturer: "company",
+      specs: {
+        sensor1: "temp",
+        sensor2: "light",
+        sensor3: {
+          lat: "nmea",
+          long: "nmea"
+        }
+      }
+    }
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "11",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({ ext: { ocean: "atlantic" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "12",
+  jsonData: JSON.stringify({ via: 11, ext: { summit: "Mt Blanc" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectIndia", {
+  deviceId: "20",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({ ext: { ocean: "indian" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectIndia", {
+  deviceId: "21",
+  enabled: true,
+  viaGateway: true,
+  jsonData: JSON.stringify({ via: 20, ext: { summit: "Kanchenjunga" } }),
+  credentials: []
+});
+
+function setCredentials(iotProjectName, deviceId, creds) {
+  let device = getIotDevice(iotProjectName, deviceId);
+  device.credentials = creds;
+}
+
+setCredentials(
+  "iotProjectFrance",
+  "10",
+  JSON.stringify([{ "auth-id": "10-id", type: "psk" }])
+);
+setCredentials(
+  "iotProjectFrance",
+  "11",
+  JSON.stringify([{ "auth-id": "11-id", type: "password" }])
+);
+setCredentials(
+  "iotProjectFrance",
+  "12",
+  JSON.stringify([
+    { "auth-id": "12-id", type: "password" },
+    { "auth-id": "12-id", type: "psk" }
+  ])
+);
+
+setCredentials(
+  "iotProjectIndia",
+  "20",
+  JSON.stringify([
+    {
+      "auth-id": "20-id",
+      type: "psk",
+      secrets: [{ key: "verysecret", "not-after": "2027-12-24T19:00:00Z" }]
+    },
+    { "auth-id": "20-id", type: "password" }
+  ])
+);
+setCredentials(
+  "iotProjectIndia",
+  "21",
+  JSON.stringify([{ "auth-id": "21-id", type: "password" }])
+);
+
+function getIotDevice(iotProject, deviceId) {
+  devices = getIotDevices(iotProject);
+  for (var d in devices) {
+    if (devices[d].deviceId == deviceId) {
+      return devices[d];
+    }
+  }
+  throw `device not found`;
+}
+
+function getIotDevices(iotProject) {
+  for (var p in iotdevices) {
+    if (iotdevices[p].project == iotProject) {
+      return iotdevices[p].devices;
+    }
+  }
+  throw `iot project not found`;
+}
+
+function getIotCredentials(iotProject, deviceId) {
+  device = getIotDevice(iotProject, deviceId);
+  return device.credentials;
+}
+
+function getAddressSpacesAndOrIotProjects(projectType) {
+  var result;
+
+  switch (projectType) {
+    case "addressSpace":
+      result = clone(addressSpaces);
+      result.forEach(as => {
+        as.metrics = makeAddressSpaceMetrics(as);
+      });
+      break;
+    case "iotProject":
+      result = clone(iotProjects);
+      break;
+  }
+  return result;
+}
+
 // A map of functions which return data for the schema.
 const resolvers = {
+  IotProjectDownStreamStrategy: {
+    __resolveType(DownStreamStrategy, context, info) {
+      if (DownStreamStrategy.addressSpace) {
+        return "ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1";
+      }
+
+      if (DownStreamStrategy.connectionInformation) {
+        return "ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1";
+      }
+
+      return null;
+    }
+  },
   Mutation: {
     createAddressSpace: (parent, args) => {
       return createAddressSpace(init(args.input));
@@ -1274,9 +1874,42 @@ const resolvers = {
       closeConnection(args.input);
       return true;
     },
+    createIotDevice: (parent, args) => {
+      return createIotDevice(args.iotproject, args.device);
+    },
+    deleteIotDevice: (parent, args) => {
+      deleteIotDevice(args.iotproject, args.deviceId);
+      return true;
+    },
+    updateIotDevice: (parent, args) => {
+      deleteIotDevice(args.iotproject, args.device.deviceId);
+      return createIotDevice(args.iotproject, args.device);
+    },
+    setCredentialsForDevice: (parent, args) => {
+      setCredentials(args.iotproject, args.deviceId, args.jsonData);
+      return true;
+    },
+    deleteCredentialsForDevice: (parent, args) => {
+      setCredentials(args.iotproject, args.deviceId, []);
+      return true;
+    },
+    createIotProject: (parent, args) => {
+      let input = init(args.input);
+      input.spec = { downstreamStrategyType: "managed" };
+
+      return createIotProject(input);
+    },
+    patchIotProject: (parent, args) => {
+      patchIotProject(args.input, args.jsonPatch, args.patchType);
+      return true;
+    },
+    deleteIotProject: (parent, args) => {
+      deleteIotProject(args.input);
+      return true;
+    }
   },
   Query: {
-    hello: () => 'world',
+    hello: () => "world",
 
     messagingCertificateChain: () => `-----BEGIN CERTIFICATE-----
 MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
@@ -1299,7 +1932,6 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     },
 
     addressCommand: (parent, args, context, info) => {
-
       var addr = args.input;
       var addressSpaceName = args.addressSpace;
       return addressCommand(addr, addressSpaceName);
@@ -1317,37 +1949,59 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       );
     },
 
-    addressTypes: () => (['queue', 'topic', 'subscription', 'multicast', 'anycast']),
+    addressTypes: () => [
+      "queue",
+      "topic",
+      "subscription",
+      "multicast",
+      "anycast"
+    ],
     addressTypes_v2: (parent, args, context, info) => {
       return availableAddressTypes
-          .filter(o => args.addressSpaceType === undefined || o.spec.addressSpaceType === args.addressSpaceType)
-          .sort(o => o.spec.displayOrder);
+        .filter(
+          o =>
+            args.addressSpaceType === undefined ||
+            o.spec.addressSpaceType === args.addressSpaceType
+        )
+        .sort(o => o.spec.displayOrder);
     },
-    addressSpaceTypes: () => (['standard', 'brokered']),
+    addressSpaceTypes: () => ["standard", "brokered"],
     addressSpaceTypes_v2: (parent, args, context, info) => {
-      return availableAddressSpaceTypes
-          .sort(o => o.spec.displayOrder);
+      return availableAddressSpaceTypes.sort(o => o.spec.displayOrder);
     },
     addressSpacePlans: (parent, args, context, info) => {
       return availableAddressSpacePlans
-          .filter(o => args.addressSpaceType === undefined || o.spec.addressSpaceType === args.addressSpaceType)
-          .sort(o => o.spec.displayOrder);
+        .filter(
+          o =>
+            args.addressSpaceType === undefined ||
+            o.spec.addressSpaceType === args.addressSpaceType
+        )
+        .sort(o => o.spec.displayOrder);
     },
     addressPlans: (parent, args, context, info) => {
       var plans = availableAddressPlans;
       if (args.addressSpacePlan) {
-        var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === args.addressSpacePlan);
+        var spacePlan = availableAddressSpacePlans.find(
+          o => o.metadata.name === args.addressSpacePlan
+        );
         if (spacePlan === undefined) {
-          var knownPlansNames = availableAddressSpacePlans.map(p => p.metadata.name);
+          var knownPlansNames = availableAddressSpacePlans.map(
+            p => p.metadata.name
+          );
           throw `Unrecognised address space plan '${args.addressSpacePlan}', known ones are : ${knownPlansNames}`;
         }
         plans = spacePlan.spec.addressPlans;
       }
 
-      return plans.filter(p => (args.addressType === undefined || p.spec.addressType === args.addressType)).sort(o => o.spec.displayOrder);
+      return plans
+        .filter(
+          p =>
+            args.addressType === undefined ||
+            p.spec.addressType === args.addressType
+        )
+        .sort(o => o.spec.displayOrder);
     },
-    addressSpaces:(parent, args, context, info) => {
-
+    addressSpaces: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
@@ -1364,11 +2018,9 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         addressSpaces: page
       };
     },
-    addresses:(parent, args, context, info) => {
-
+    addresses: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
-
 
       var copy = clone(addresses);
       copy.forEach(a => {
@@ -1384,7 +2036,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         addresses: page
       };
     },
-    connections:(parent, args, context, info) => {
+    connections: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
       var copy = clone(connections);
@@ -1393,24 +2045,93 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       });
       var cons = copy.filter(c => filterer.evaluate(c)).sort(orderBy);
 
-      var paginationBounds = calcLowerUpper(args.offset, args.first, cons.length);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        cons.length
+      );
       var page = cons.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
         total: cons.length,
         connections: page
       };
+    },
+    devices: (parent, args, context, info) => {
+      var iotProject = args.iotproject;
+      var filterer = buildFilterer(args.filter);
+      var orderBy = orderer(args.orderBy);
 
+      copy = getIotDevices(iotProject);
+
+      var as = copy.filter(as => filterer.evaluate(as)).sort(orderBy);
+      var paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
+      var page = as.slice(paginationBounds.lower, paginationBounds.upper);
+
+      return {
+        total: as.length,
+        devices: page
+      };
+    },
+    credentials: (parent, args, context, info) => {
+      var iotProject = args.iotproject;
+      var deviceId = args.deviceId;
+
+      var creds = getIotCredentials(iotProject, deviceId);
+      return {
+        total: creds.length,
+        credentials: creds
+      };
+    },
+    allProjects: (parent, args, context, info) => {
+      var projectType = args.projectType;
+      var filterer = buildFilterer(args.filter);
+      var orderBy = orderer(args.orderBy);
+
+      // fetch address spaces
+      if (projectType === undefined || projectType === "addressSpace") {
+        resultAs = clone(addressSpaces);
+        resultAs.forEach(as => {
+          as.metrics = makeAddressSpaceMetrics(as);
+        });
+        var as = resultAs.filter(as => filterer.evaluate(as)).sort(orderBy);
+        var paginationBounds = calcLowerUpper(
+          args.offset,
+          args.first,
+          as.length
+        );
+        var pageAs = as.slice(paginationBounds.lower, paginationBounds.upper);
+      }
+      if (projectType === undefined || projectType === "iotProject") {
+        // fetch iot projects
+        resultPj = clone(iotProjects);
+        var pj = resultPj.filter(pj => filterer.evaluate(pj)).sort(orderBy);
+        var paginationBounds = calcLowerUpper(
+          args.offset,
+          args.first,
+          pj.length
+        );
+        var pagePj = pj.slice(paginationBounds.lower, paginationBounds.upper);
+
+        return {
+          total: pj.length,
+          addressSpaces: pageAs,
+          iotProjects: pagePj
+        };
+      }
     }
   },
 
   AddressSpace_consoleapi_enmasse_io_v1beta1: {
-    connections:(parent, args, context, info) => {
+    connections: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
       var as = parent;
-      var cons = as.metadata.uid in addressspace_connection ? addressspace_connection[as.metadata.uid] : [];
+      var cons =
+        as.metadata.uid in addressspace_connection
+          ? addressspace_connection[as.metadata.uid]
+          : [];
       var copy = clone(cons);
       copy.forEach(c => {
         c.metrics = makeMockConnectionMetrics();
@@ -1418,50 +2139,77 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       copy = copy.filter(c => filterer.evaluate(c)).sort(orderBy);
 
-      var paginationBounds = calcLowerUpper(args.offset, args.first, copy.length);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        copy.length
+      );
       var page = copy.slice(paginationBounds.lower, paginationBounds.upper);
-      return {total: copy.length, connections: page};
+      return { total: copy.length, connections: page };
     },
-    addresses:(parent, args, context, info) => {
+    addresses: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
       var as = parent;
 
-      var copy = clone(addresses.filter(a => as.metadata.namespace === a.metadata.namespace && a.metadata.name.startsWith(as.metadata.name + ".")));
+      var copy = clone(
+        addresses.filter(
+          a =>
+            as.metadata.namespace === a.metadata.namespace &&
+            a.metadata.name.startsWith(as.metadata.name + ".")
+        )
+      );
       copy.forEach(a => {
         a.metrics = makeMockAddressMetrics();
       });
 
       var addrs = copy.filter(a => filterer.evaluate(a)).sort(orderBy);
 
-      var paginationBounds = calcLowerUpper(args.offset, args.first, addrs.length);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        addrs.length
+      );
       var page = addrs.slice(paginationBounds.lower, paginationBounds.upper);
-      return {total: addrs.length,
-        addresses: page};
-    },
+      return { total: addrs.length, addresses: page };
+    }
   },
   Address_consoleapi_enmasse_io_v1beta1: {
     links: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
-
       var addr = parent;
-      var copy = clone(links.filter((l) => l.spec.connection.metadata.namespace === addr.metadata.namespace && addr.metadata.name.startsWith(l.spec.connection.spec.addressSpace + ".")));
+      var copy = clone(
+        links.filter(
+          l =>
+            l.spec.connection.metadata.namespace === addr.metadata.namespace &&
+            addr.metadata.name.startsWith(
+              l.spec.connection.spec.addressSpace + "."
+            )
+        )
+      );
       copy.forEach(l => {
         l.metrics = makeMockLinkMetrics(true, l);
       });
       var addrlinks = copy.filter(l => filterer.evaluate(l)).sort(orderBy);
 
-      var paginationBounds = calcLowerUpper(args.offset, args.first, addrlinks.length);
-      var page = addrlinks.slice(paginationBounds.lower, paginationBounds.upper);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        addrlinks.length
+      );
+      var page = addrlinks.slice(
+        paginationBounds.lower,
+        paginationBounds.upper
+      );
 
       return {
         total: addrlinks.length,
         links: page
       };
-    },
+    }
   },
   Connection_consoleapi_enmasse_io_v1beta1: {
     links: (parent, args, context, info) => {
@@ -1469,31 +2217,41 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var orderBy = orderer(args.orderBy);
 
       var con = parent;
-      var copy = clone(links.filter((l) => _.isEqual(l.spec.connection.metadata, con.metadata)));
+      var copy = clone(
+        links.filter(l => _.isEqual(l.spec.connection.metadata, con.metadata))
+      );
       copy.forEach(l => {
         l.metrics = makeMockLinkMetrics(false, l);
       });
 
       var connlinks = copy.filter(l => filterer.evaluate(l)).sort(orderBy);
-      var paginationBounds = calcLowerUpper(args.offset, args.first, connlinks.length);
-      var page = connlinks.slice(paginationBounds.lower, paginationBounds.upper);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        connlinks.length
+      );
+      var page = connlinks.slice(
+        paginationBounds.lower,
+        paginationBounds.upper
+      );
 
       return {
         total: connlinks.length,
         links: page
       };
-    },
+    }
   },
   ConnectionSpec_consoleapi_enmasse_io_v1beta1: {
     addressSpace: (parent, args, context, info) => {
-      var as = addressSpaces.find(as => as.metadata.name ===  parent.AddressSpace);
-      return as
-    },
+      var as = addressSpaces.find(
+        as => as.metadata.name === parent.AddressSpace
+      );
+      return as;
+    }
   },
 
-  Link_consoleapi_enmasse_io_v1beta1: {
-  },
-  ObjectMeta_v1 : {
+  Link_consoleapi_enmasse_io_v1beta1: {},
+  ObjectMeta_v1: {
     creationTimestamp: (parent, args, context, info) => {
       var meta = parent;
       return meta.creationTimestamp;
@@ -1515,8 +2273,6 @@ const mocks = {
   })
 };
 
-
-
 if (require.main === module) {
   console.log(gql);
   console.log(typeDefs);
@@ -1527,14 +2283,13 @@ if (require.main === module) {
     mocks,
     mockEntireSchema: false,
     introspection: true,
-    playground: true,
+    playground: true
   });
 
   server.listen().then(({ url }) => {
     console.log(`? Server ready at ${url}`);
   });
 }
-
 
 module.exports.createAddress = createAddress;
 module.exports.patchAddress = patchAddress;
