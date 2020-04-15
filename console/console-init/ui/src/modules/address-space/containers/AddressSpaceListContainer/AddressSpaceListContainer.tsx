@@ -33,7 +33,6 @@ import {
   IAddressSpace,
   EmptyAddressSpace
 } from "modules/address-space/components";
-import { useWindowDimensions } from "components";
 
 export interface IAddressSpaceListContainerProps {
   page: number;
@@ -71,7 +70,6 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   const { dispatch } = useStoreContext();
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["all_address_spaces"];
-  const { width } = useWindowDimensions();
   const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
     refetchQueries
