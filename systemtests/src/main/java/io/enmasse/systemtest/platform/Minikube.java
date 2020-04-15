@@ -15,16 +15,12 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.utils.HttpClientUtils;
-import io.fabric8.openshift.api.model.Route;
-import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 public class Minikube extends Kubernetes {
     private static Logger log = CustomLogger.getLogger();
