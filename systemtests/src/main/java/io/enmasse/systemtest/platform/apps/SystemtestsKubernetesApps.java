@@ -52,7 +52,6 @@ import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
 import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -126,6 +125,7 @@ public class SystemtestsKubernetesApps {
     private static final Path POSTGRESQL_EXAMPLE_BASE;
     private static final Path[] POSTGRESQL_CREATE_FLAT_SQL;
     private static final Path[] POSTGRESQL_CREATE_TREE_SQL;
+    private static final Path[] POSTGRESQL_CREATE_TABLE_SQL;
 
     public static final String H2_PROJECT = Environment.getInstance().getH2Project();
     public static final String H2_SERVER = "h2";
@@ -156,13 +156,20 @@ public class SystemtestsKubernetesApps {
         };
 
         POSTGRESQL_EXAMPLE_BASE = Paths.get("../templates/iot/examples/postgresql/deploy");
-        var pgBase = Paths.get("../templates/iot/examples/postgresql/create.sql");
+        var pgDevCon = Paths.get("../templates/iot/examples/postgresql/create.devcon.sql");
+        var pgJsonBase = Paths.get("../templates/iot/examples/postgresql/create.sql");
         POSTGRESQL_CREATE_FLAT_SQL = new Path[] {
-                        pgBase
+                        pgDevCon,
+                        pgJsonBase
         };
         POSTGRESQL_CREATE_TREE_SQL = new Path[] {
-                        pgBase,
+                        pgDevCon,
+                        pgJsonBase,
                         Paths.get("../templates/iot/examples/postgresql/create.tree.sql")
+        };
+        POSTGRESQL_CREATE_TABLE_SQL = new Path[] {
+                        pgDevCon,
+                        Paths.get("../templates/iot/examples/postgresql/create.table.sql")
         };
 
         H2_EXAMPLE_BASE = Paths.get("../templates/iot/examples/h2/deploy");
@@ -458,6 +465,9 @@ public class SystemtestsKubernetesApps {
                 break;
             case JSON_TREE:
                 deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TREE_SQL);
+                break;
+            case TABLE:
+                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TABLE_SQL);
                 break;
             default:
                 throw new IllegalArgumentException(String.format("Unsupported test mode: %s", mode));

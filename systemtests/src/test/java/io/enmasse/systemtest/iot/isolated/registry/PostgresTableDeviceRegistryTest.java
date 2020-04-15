@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresFlatBased;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresTableBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
@@ -15,13 +15,13 @@ import org.junit.jupiter.api.Test;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
 
-class PostgresFlatDeviceRegistryTest extends DeviceRegistryTest {
+class PostgresTableDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
         return new IoTConfigBuilder()
                 .withNewSpec()
-                .withServices(newPostgresFlatBased())
+                .withServices(newPostgresTableBased())
                 .withNewAdapters()
                 .withNewMqtt()
                 .endMqtt()
@@ -32,7 +32,7 @@ class PostgresFlatDeviceRegistryTest extends DeviceRegistryTest {
     @Test
     void testCorrectTypeDeployed () {
         assertCorrectRegistryType("jdbc");
-        assertCorrectRegistryMode(Mode.JSON_FLAT);
+        assertCorrectRegistryMode(Mode.TABLE);
     }
 
     @Test

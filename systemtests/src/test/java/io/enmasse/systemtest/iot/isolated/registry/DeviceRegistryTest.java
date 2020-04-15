@@ -65,7 +65,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         return HttpURLConnection.HTTP_UNAUTHORIZED;
     }
 
-   @BeforeEach
+    @BeforeEach
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
         iotConfig = iotConfigBuilder
