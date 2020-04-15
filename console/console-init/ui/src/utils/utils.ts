@@ -38,10 +38,12 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
       0,
       NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
     );
-    records.push({
-      value: TypeAheadMessage.MORE_CHAR_REQUIRED,
-      isDisabled: true
-    });
+    if (top_10_records.length >= 10) {
+      records.push({
+        value: TypeAheadMessage.MORE_CHAR_REQUIRED,
+        isDisabled: true
+      });
+    }
     top_10_records.map((data: string) =>
       records.push(createSelectOptionObject(data, false))
     );
