@@ -56,6 +56,7 @@ arguments are `first` which specifies the number of rows to be returned and `off
 the starting index within the result set. The object return provides a count
 of the number of rows in the result set in total.
 
+
 # Environment
 
 The following environment variables are understood:
@@ -416,6 +417,182 @@ query single_address_with_links_and_metrics {
 }
 ```
 
+## Retrieve all Iot projects
+
+```
+query allProjects {
+  allProjects(projectType:iotProject) {
+    total
+    iotProjects{
+      metadata{
+        name
+        namespace
+        creationTimestamp
+      }
+      enabled
+      spec{
+        downstreamStrategyType
+        configuration
+         downstreamStrategy{
+          __typename
+          	... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+              addressSpace {
+                name
+              }
+              addresses {
+            		Telemetry {
+              		name
+            		}
+            		Event{
+              		name
+            		}
+            		Command{
+              		name
+            		}
+          		}
+            }
+          ... on ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+          	connectionInformation {
+              host
+              port
+            }
+          }
+        }
+      }
+      status{
+        phase
+        phaseReason
+        tenantName
+        downstreamEndpoint{
+          host
+          port
+          credentials{
+            username
+            password
+          }
+          tls
+          certificate
+        }
+      }
+      	endpoints{
+       	  name
+        	url
+       	  host
+      }
+    }
+  }
+}
+```
+
+## Retrieve a filtered iot project
+
+```
+query allProjects {
+  allProjects(
+    filter: "`$.metadata.name`='iotProjectIndia'"
+    projectType: iotProject
+  ) {
+    total
+    iotProjects {
+      metadata {
+        name
+        namespace
+        creationTimestamp
+      }
+      enabled
+      spec {
+        downstreamStrategyType
+        configuration
+        downstreamStrategy {
+          __typename
+          ... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+            addressSpace {
+              name
+            }
+            addresses {
+              Telemetry {
+                name
+              }
+              Event {
+                name
+              }
+              Command {
+                name
+              }
+            }
+          }
+        }
+      }
+      status {
+        phase
+        phaseReason
+        tenantName
+        downstreamEndpoint {
+          host
+          port
+          credentials {
+            username
+            password
+          }
+          tls
+          certificate
+        }
+      }
+      endpoints {
+        name
+        url
+        host
+      }
+    }
+  }
+}
+```
+
+## Retrieve Iot devices for an iot project
+
+```
+query {
+  devices(iotproject: "iotProjectFrance") {
+    total
+    devices {
+      deviceId
+      jsonData
+    }
+  }
+}
+```
+
+## Retrieve Iot device filtered by device ID
+
+```
+query {
+  devices(
+    iotproject: "iotProjectFrance",
+    filter: "`$.deviceId`='10'"
+  ) {
+    total
+    devices {
+      deviceId
+      jsonData
+    }
+  }
+}
+```
+
+## Retrieve credentials for device
+
+```
+query {
+  credentials(
+    iotproject: "iotProjectIndia",
+    deviceId: "20"
+  ) {
+    total
+    credentials
+  }
+}
+```
+
 # Example Mutations
 
 ## Create address space
@@ -542,6 +719,7 @@ $patchType: String!
 args:
 
 (patching a plan)
+
 ```
 
 {
@@ -553,6 +731,7 @@ args:
 ```
 
 (patching a authentication service name)
+
 ```
 
 {
@@ -610,17 +789,17 @@ args:
 
 ```
 
-It is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name is defaulted
+It is also possible to create an address without an ObjectMeta.name. In this case the ObjectMeta.Name is defaulted
 from the Spec.Address:
 
 ```
 
 mutation create_addr($a:Address_enmasse_io_v1beta1_Input!, $as:String) {
-createAddress(input: $a, addressSpace: $as) {
-Name
-Namespace
-Uid
-}
+  createAddress(input: $a, addressSpace: $as) {
+      Name
+      Namespace
+      Uid
+  }
 }
 
 ```
@@ -777,7 +956,7 @@ args:
 
 ```
 
-For addresses, it is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name
+For addresses, it is also possible to create an address without an ObjectMeta.name. In this case the ObjectMeta.Name
 is defaulted from the Spec.Address:
 
 
@@ -800,6 +979,93 @@ args:
 }
 
 ```
+
+## Create Iot project
+
+```
+mutation {
+  createIotProject(input: {
+    metadata: {
+      name: "iotProjectGermany",
+      namespace: "app1_ns"
+    },
+    enabled: true
+  }) {
+    creationTimestamp
+  }
+}
+```
+
+## Create Iot device
+
+```
+mutation {
+  createIotDevice(
+    iotproject: "iotProjectFrance"
+    device: {
+      deviceId: "Jens-phone"
+      enabled: true
+      viaGateway: false
+      jsonData: "{ext: {brand: samsung}}"
+    }
+	) {
+    deviceId
+  }
+}
+```
+
+## Delete Iot device
+
+```
+mutation {
+  deleteIotDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "11"
+  )
+}
+```
+
+## Update iot device
+
+```
+mutation {
+  updateIotDevice(
+    iotproject: "iotProjectFrance"
+    device: {
+      deviceId: "Jens-phone"
+      enabled: true
+      viaGateway: false
+      jsonData: "{ext: {brand: apple, headphone-jack: false}}"
+    }
+	) {
+    deviceId
+  }
+}
+```
+
+## Set credentials for iot device
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: ["{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}"]
+	)
+}
+```
+
+## Delete credentials for iot device
+
+```
+mutation {
+  deleteCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+	)
+}
+```
+
 
 ```
 ````
