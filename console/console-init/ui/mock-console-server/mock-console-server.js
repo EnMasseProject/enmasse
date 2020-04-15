@@ -1621,8 +1621,431 @@ EOF
 `;
 }
 
+var iotProjects = [];
+var iotdevices = [];
+
+createIotProject({
+  metadata: {
+    name: "iotProjectFrance",
+    namespace: availableNamespaces[0].metadata.name
+  },
+  enabled: true,
+  spec: {
+    downstreamStrategyType: "managed"
+  }
+});
+
+createIotProject({
+  metadata: {
+    name: "iotProjectIndia",
+    namespace: availableNamespaces[1].metadata.name
+  },
+  enabled: true,
+  spec: {
+    downstreamStrategyType: "external"
+  }
+});
+
+function getMockIotEndpoints() {
+  return [
+    {
+      name: "HttpAdapter",
+      url: "https://http.amq-online-iot.rhmi.com:8443",
+      host: "http.amq-online-iot.rhmi.com",
+      port: 8443
+    },
+    {
+      name: "MqttAdapter",
+      url: "mqtts://mqtt.amq-online-iot.rhmi.com:8883",
+      host: "mqtt.amq-online-iot.rhmi.com",
+      port: 8883,
+      tls: true
+    },
+    {
+      name: "AmqpAdapter",
+      url: "amqps://amqp.amq-online-iot.rhmi.com:8443",
+      host: "amqp.amq-online-iot.rhmi.com",
+      port: 5671
+    },
+    {
+      name: "DeviceRegistrationManagement",
+      url: "https://management.amq-online-iot.rhmi.com/devices",
+      host: "management.amq-online-iot.rhmi.com",
+      port: 443
+    },
+    {
+      name: "DeviceCredentialManagement",
+      url: "https://management.amq-online-iot.rhmi.com/credentials",
+      host: "management.amq-online-iot.rhmi.com",
+      port: 443
+    }
+  ];
+}
+
+function createIotProject(pj) {
+  var namespace = availableNamespaces.find(
+    n => n.metadata.name === pj.metadata.namespace
+  );
+  if (namespace === undefined) {
+    var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
+    throw `Unrecognised namespace '${pj.metadata.namespace}', known ones are : ${knownNamespaces}`;
+  }
+
+  var strategyType = pj.spec.downstreamStrategyType;
+  if (strategyType !== "managed" && strategyType !== "external") {
+    throw `Unrecognised downstream strategy type '${pj.spec.downstreamStrategyType}', known ones are : managed, external`;
+  }
+
+  if (
+    iotProjects.find(
+      existing =>
+        pj.metadata.name === existing.metadata.name &&
+        pj.metadata.namespace === existing.metadata.namespace
+    ) !== undefined
+  ) {
+    throw `Iot Project with name  '${pj.metadata.name} already exists in namespace ${pj.metadata.namespace}`;
+  }
+
+  var phase = "Active";
+  var messages = [];
+  if (pj.status && pj.status.phase) {
+    phase = pj.status.phase;
+  }
+  if (phase !== "Active") {
+    messages.push(
+      "The following deployments are not ready: [iot-device-registry.daf7b31]"
+    );
+  }
+
+  var iotproject = {
+    metadata: {
+      name: pj.metadata.name,
+      namespace: namespace.metadata.name,
+      uid: uuidv1(),
+      creationTimestamp: pj.metadata.creationTimestamp
+        ? pj.metadata.creationTimestamp
+        : getRandomCreationDate()
+    },
+    enabled: pj.enabled,
+    spec: {
+      downstreamStrategyType: "managed",
+      downstreamStrategy: getMockDownstreamStrategy("managed"),
+      configuration: "{}"
+    },
+    endpoints: getMockIotEndpoints(),
+    status: getMockIotProjectStatus()
+  };
+
+  //TODO : set a timer for iot projects to become ready ?
+  //scheduleSetAddressSpaceStatus(iotproject, phase, messages);
+
+  iotProjects.push(iotproject);
+
+  iotdevices.push({
+    project: iotproject.metadata.name,
+    devices: []
+  });
+  return iotproject.metadata;
+}
+
+function deleteIotProject(iotProject) {
+  let pjIndex = getIotProjectIndex(iotProject.name);
+  let devIndex = getIotDevicesProjectIndex(iotProject.name);
+
+  // delete iot devices for this project
+  iotdevices[devIndex].splice(devIndex, 1);
+
+  iotProjects.splice(pjIndex, 1);
+}
+
+function getMockDownstreamStrategy(strategyType) {
+  if (strategyType === "managed") {
+    return {
+      addressSpace: {
+        name: addressSpaces[0].metadata.name,
+        plan: addressSpaces[0].spec.plan,
+        type: addressSpaces[0].spec.type
+      },
+      addresses: {
+        Telemetry: {
+          name: "telemetry-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        },
+        Event: {
+          name: "event-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        },
+        Command: {
+          name: "command-c127edbe-0242ac130003",
+          plan: "standard-small-queue",
+          type: "queue"
+        }
+      }
+    };
+  }
+  if (strategyType === "external") {
+    return {
+      connectionInformation: {
+        host: "messaging.external.host.tld",
+        port: 5674,
+        credentials: {
+          username: "admin",
+          password: "pasword"
+        }
+      }
+    };
+  }
+}
+
+function patchIotProject(metadata, jsonPatch, patchType) {
+  var index = getIotDevicesProjectIndex(metadata.name);
+
+  verifyPatchType(patchType);
+
+  var patch = JSON.parse(jsonPatch);
+  var current = JSON.parse(JSON.stringify(iotProjects[index]));
+  var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch);
+  if (patched.newDocument) {
+    var replacement = patched.newDocument;
+
+    if (
+      !_.isEqual(
+        replacement.spec.downstreamStrategyType,
+        current.spec.downstreamStrategyType
+      )
+    ) {
+      if (strategyType !== "managed" && strategyType !== "external") {
+        throw `Unrecognised downstream strategy type '${pj.spec.downstreamStrategyType}', known ones are : managed, external`;
+      }
+      replacement.spec.downstreamStrategy = getDownstreamStrategy(strategyType);
+    }
+
+    iotProjects[index].spec = replacement.spec;
+    return iotProjects[index];
+  } else {
+    throw `Failed to patch iot project with name '${metadata.name}' in namespace ${metadata.namespace}`;
+  }
+}
+
+function getMockIotProjectStatus() {
+  return {
+    phase: "Active",
+
+    tenantName: "tenantName.iot",
+    downstreamEndpoint: {
+      host: "host.domain.com",
+      port: 5674,
+      credentials: {
+        username: "messaging@435bm730c495zx834s53467",
+        password: "verysecret"
+      },
+      tls: true,
+      certificate: "averylongString"
+    }
+  };
+}
+
+function getIotProjectIndex(projectName) {
+  let index = iotProjects.findIndex(
+    existing => projectName === existing.metadata.name
+  );
+  if (index < 0) {
+    throw `Iot project with name '${projectName}' does not exist`;
+  }
+  return index;
+}
+
+function getIotDevicesProjectIndex(projectName) {
+  let devIndex = iotdevices.findIndex(
+    existing => projectName === existing.project
+  );
+  if (devIndex < 0) {
+    throw `Iot project with name '${projectName}' does not exist in iotDevices`;
+  }
+  return devIndex;
+}
+
+function createIotDevice(iotProject, newDevice) {
+  getIotProjectIndex(iotProject);
+  let devIndex = getIotDevicesProjectIndex(iotProject);
+
+  if (
+    iotdevices[devIndex].devices.find(
+      d => d.deviceId === newDevice.deviceId
+    ) !== undefined
+  ) {
+    throw `Iot device with deviceId  '${newDevice.deviceId} already exists in iot project ${iotProject}`;
+  }
+
+  newDevice.credentials = [];
+  iotdevices[devIndex].devices.push(newDevice);
+  return getIotDevice(iotProject, newDevice.deviceId);
+}
+
+function deleteIotDevice(iotProject, deviceId) {
+  getIotProjectIndex(iotProject);
+  let pjIndex = getIotDevicesProjectIndex(iotProject);
+
+  let devIndex = iotdevices[pjIndex].devices.findIndex(
+    d => d.deviceId === deviceId
+  );
+  if (devIndex < 0) {
+    throw `Iot device with deviceId '${deviceId} does not exist in iot project ${iotProject}`;
+  }
+  iotdevices[pjIndex].devices.splice(devIndex, 1);
+}
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "10",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: {
+      imei: "abcdef",
+      manufacturer: "company",
+      specs: {
+        sensor1: "temp",
+        sensor2: "light",
+        sensor3: {
+          lat: "nmea",
+          long: "nmea"
+        }
+      }
+    }
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "11",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({ ext: { ocean: "atlantic" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "12",
+  jsonData: JSON.stringify({ via: 11, ext: { summit: "Mt Blanc" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectIndia", {
+  deviceId: "20",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({ ext: { ocean: "indian" } }),
+  credentials: []
+});
+
+createIotDevice("iotProjectIndia", {
+  deviceId: "21",
+  enabled: true,
+  viaGateway: true,
+  jsonData: JSON.stringify({ via: 20, ext: { summit: "Kanchenjunga" } }),
+  credentials: []
+});
+
+function setCredentials(iotProjectName, deviceId, creds) {
+  let device = getIotDevice(iotProjectName, deviceId);
+  device.credentials = creds;
+}
+
+setCredentials(
+  "iotProjectFrance",
+  "10",
+  JSON.stringify([{ "auth-id": "10-id", type: "psk" }])
+);
+setCredentials(
+  "iotProjectFrance",
+  "11",
+  JSON.stringify([{ "auth-id": "11-id", type: "password" }])
+);
+setCredentials(
+  "iotProjectFrance",
+  "12",
+  JSON.stringify([
+    { "auth-id": "12-id", type: "password" },
+    { "auth-id": "12-id", type: "psk" }
+  ])
+);
+
+setCredentials(
+  "iotProjectIndia",
+  "20",
+  JSON.stringify([
+    {
+      "auth-id": "20-id",
+      type: "psk",
+      secrets: [{ key: "verysecret", "not-after": "2027-12-24T19:00:00Z" }]
+    },
+    { "auth-id": "20-id", type: "password" }
+  ])
+);
+setCredentials(
+  "iotProjectIndia",
+  "21",
+  JSON.stringify([{ "auth-id": "21-id", type: "password" }])
+);
+
+function getIotDevice(iotProject, deviceId) {
+  devices = getIotDevices(iotProject);
+  for (var d in devices) {
+    if (devices[d].deviceId == deviceId) {
+      return devices[d];
+    }
+  }
+  throw `device not found`;
+}
+
+function getIotDevices(iotProject) {
+  for (var p in iotdevices) {
+    if (iotdevices[p].project == iotProject) {
+      return iotdevices[p].devices;
+    }
+  }
+  throw `iot project not found`;
+}
+
+function getIotCredentials(iotProject, deviceId) {
+  device = getIotDevice(iotProject, deviceId);
+  return device.credentials;
+}
+
+function getAddressSpacesAndOrIotProjects(projectType) {
+  var result;
+
+  switch (projectType) {
+    case "addressSpace":
+      result = clone(addressSpaces);
+      result.forEach(as => {
+        as.metrics = makeAddressSpaceMetrics(as);
+      });
+      break;
+    case "iotProject":
+      result = clone(iotProjects);
+      break;
+  }
+  return result;
+}
+
 // A map of functions which return data for the schema.
 const resolvers = {
+    IotProjectDownStreamStrategy: {
+        __resolveType(DownStreamStrategy, context, info) {
+          if (DownStreamStrategy.addressSpace) {
+            return "ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1";
+          }
+
+          if (DownStreamStrategy.connectionInformation) {
+            return "ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1";
+          }
+
+          return null;
+        }
+      },
   Mutation: {
     createAddressSpace: (parent, args) => {
       return createAddressSpace(init(args.input));
@@ -1666,6 +2089,40 @@ const resolvers = {
       runOperationForAll(args.input, (t) => closeConnection(t));
       return true;
     },
+
+    createIotDevice: (parent, args) => {
+      return createIotDevice(args.iotproject, args.device);
+    },
+    deleteIotDevice: (parent, args) => {
+      deleteIotDevice(args.iotproject, args.deviceId);
+      return true;
+    },
+    updateIotDevice: (parent, args) => {
+      deleteIotDevice(args.iotproject, args.device.deviceId);
+      return createIotDevice(args.iotproject, args.device);
+    },
+    setCredentialsForDevice: (parent, args) => {
+      setCredentials(args.iotproject, args.deviceId, args.jsonData);
+      return true;
+    },
+    deleteCredentialsForDevice: (parent, args) => {
+      setCredentials(args.iotproject, args.deviceId, []);
+      return true;
+    },
+    createIotProject: (parent, args) => {
+      let input = init(args.input);
+      input.spec = { downstreamStrategyType: "managed" };
+
+      return createIotProject(input);
+    },
+    patchIotProject: (parent, args) => {
+      patchIotProject(args.input, args.jsonPatch, args.patchType);
+      return true;
+    },
+    deleteIotProject: (parent, args) => {
+      deleteIotProject(args.input);
+      return true;
+    }
   },
   Query: {
     hello: () => 'world',
@@ -1793,6 +2250,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         connections: page
       };
     },
+
     messagingEndpoints:(parent, args, context, info) => {
       var messagingEndpoints = makeMessagingEndpoints();
       var filterer = buildFilterer(args.filter);
@@ -1806,8 +2264,71 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         total: endpoints.length,
         messagingEndpoints: page
       };
-    }
+    },
 
+    devices: (parent, args, context, info) => {
+      var iotProject = args.iotproject;
+      var filterer = buildFilterer(args.filter);
+      var orderBy = orderer(args.orderBy);
+
+      copy = getIotDevices(iotProject);
+
+      var as = copy.filter(as => filterer.evaluate(as)).sort(orderBy);
+      var paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
+      var page = as.slice(paginationBounds.lower, paginationBounds.upper);
+
+      return {
+        total: as.length,
+        devices: page
+      };
+    },
+    credentials: (parent, args, context, info) => {
+      var iotProject = args.iotproject;
+      var deviceId = args.deviceId;
+
+      var creds = getIotCredentials(iotProject, deviceId);
+      return {
+        total: creds.length,
+        credentials: creds
+      };
+    },
+    allProjects: (parent, args, context, info) => {
+      var projectType = args.projectType;
+      var filterer = buildFilterer(args.filter);
+      var orderBy = orderer(args.orderBy);
+
+      // fetch address spaces
+      if (projectType === undefined || projectType === "addressSpace") {
+        resultAs = clone(addressSpaces);
+        resultAs.forEach(as => {
+          as.metrics = makeAddressSpaceMetrics(as);
+        });
+        var as = resultAs.filter(as => filterer.evaluate(as)).sort(orderBy);
+        var paginationBounds = calcLowerUpper(
+          args.offset,
+          args.first,
+          as.length
+        );
+        var pageAs = as.slice(paginationBounds.lower, paginationBounds.upper);
+      }
+      if (projectType === undefined || projectType === "iotProject") {
+        // fetch iot projects
+        resultPj = clone(iotProjects);
+        var pj = resultPj.filter(pj => filterer.evaluate(pj)).sort(orderBy);
+        var paginationBounds = calcLowerUpper(
+          args.offset,
+          args.first,
+          pj.length
+        );
+        var pagePj = pj.slice(paginationBounds.lower, paginationBounds.upper);
+
+        return {
+          total: pj.length,
+          addressSpaces: pageAs,
+          iotProjects: pagePj
+        };
+      }
+    }
   },
 
   AddressSpace_consoleapi_enmasse_io_v1beta1: {
