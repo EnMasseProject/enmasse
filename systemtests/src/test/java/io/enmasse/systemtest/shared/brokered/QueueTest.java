@@ -12,6 +12,7 @@ import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
@@ -32,6 +33,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.Session;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -56,6 +58,41 @@ class QueueTest extends TestBase implements ITestSharedBrokered {
             connection.close();
             connection = null;
         }
+    }
+
+
+    // Test reproducing #4317
+    @Test
+    @Tag(NON_PR)
+    void testAddressOrderingIssue4317() throws Exception {
+        Address ab = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "ab"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("AB")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        resourcesManager.setAddresses(ab);
+
+        Address aa = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "aa"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("aa")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        // For this bug, 'ab' will end up in the bad state
+        resourcesManager.setAddresses(TimeoutBudget.ofDuration(Duration.ofMinutes(2)), aa, ab);
     }
 
     @Test
