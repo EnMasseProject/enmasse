@@ -18,7 +18,7 @@ const getTableCells = (row: IAddressSpace) => {
       {
         header: "name",
         title: (
-          <>
+          <span>
             <Link
               to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
             >
@@ -26,16 +26,16 @@ const getTableCells = (row: IAddressSpace) => {
             </Link>
             <br />
             {row.nameSpace}
-          </>
+          </span>
         )
       },
       {
         header: "type",
         title: (
-          <>
+          <span>
             <AddressSpaceIcon />
             {getType(row.type)}
-          </>
+          </span>
         )
       },
       {
@@ -102,6 +102,7 @@ const getTableColumns = [
         </div>
       </span>
     ),
+    dataLabel: "Name / Namespace",
     transforms: [sortable]
   },
   "Type",

@@ -24,9 +24,9 @@ const ConnectionProtocolFormat: React.FunctionComponent<ProtocolIcon> = ({
   encrypted
 }) => {
   return (
-    <>
+    <span>
       {protocol && protocol.toUpperCase()} {protocolIconToDisplay(encrypted)}
-    </>
+    </span>
   );
 };
 const getFilteredValue = (object: IMetrics[], value: string) => {

@@ -47,12 +47,12 @@ const statusToDisplay = (phase: string) => {
       icon = <ExclamationCircleIcon color="red" />;
       break;
     case "":
-      icon = <InProgressIcon />;
+      icon = <ExclamationCircleIcon color="red" />;
       break;
   }
   return (
     <span>
-      {icon}&nbsp;{phase.trim() !== "" ? phase : "Configuring"}
+      {icon}&nbsp;{phase.trim() !== "" ? phase : "Pending"}
     </span>
   );
 };
