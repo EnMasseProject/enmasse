@@ -103,7 +103,7 @@ function same_address_definition_and_status(a, b) {
 }
 
 function address_compare(a, b) {
-    return myutils.string_compare(a.address, b.address);
+    return myutils.string_compare(a.name, b.name);
 }
 
 function by_address(a) {

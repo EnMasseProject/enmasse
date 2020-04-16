@@ -7,6 +7,7 @@
 
 ## 0.31.1
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
+* #4317: Addresses with different casing is not becoming ready
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
