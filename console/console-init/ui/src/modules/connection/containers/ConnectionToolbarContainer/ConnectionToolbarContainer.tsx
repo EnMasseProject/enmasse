@@ -74,16 +74,23 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
     setHostnameInput(undefined);
   };
 
-  const onChangeHostNameInput = async (value: string) => {
+  const getConnectionsHostNameORContainers = async (
+    value: string,
+    proppertyName: string
+  ) => {
     const response = await client.query<IConnectionListNameSearchResponse>({
       query: RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
-        true,
+        proppertyName,
         value.trim(),
         addressSpaceName,
         namespace
       ),
       fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
+    return response;
+  };
+
+  const getOptions = (response: any, propertyName: string) => {
     if (
       response &&
       response.data &&
@@ -92,9 +99,7 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       response.data.connections.connections.length > 0
     ) {
       const obtainedList = response.data.connections.connections.map(
-        (connection: any) => {
-          return connection.spec.hostname;
-        }
+        (connection: any) => connection.spec[propertyName]
       );
       //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
       const filteredHostnameOptions = getSelectOptionList(
@@ -103,6 +108,14 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       );
       if (filteredHostnameOptions.length > 0) return filteredHostnameOptions;
     }
+  };
+
+  const onChangeHostNameInput = async (value: string) => {
+    const response = await getConnectionsHostNameORContainers(
+      value,
+      "hostname"
+    );
+    return getOptions(response, "hostname");
   };
 
   const onContainerSelect = (e: any, selection: SelectOptionObject) => {
@@ -114,34 +127,11 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
   };
 
   const onChangeContainerInput = async (value: string) => {
-    const response = await client.query<IConnectionListNameSearchResponse>({
-      query: RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH(
-        false,
-        value.trim(),
-        addressSpaceName,
-        namespace
-      ),
-      fetchPolicy: FetchPolicy.NETWORK_ONLY
-    });
-    if (
-      response &&
-      response.data &&
-      response.data.connections &&
-      response.data.connections.connections &&
-      response.data.connections.connections.length > 0
-    ) {
-      const obtainedList = response.data.connections.connections.map(
-        (connection: any) => {
-          return connection.spec.containerId;
-        }
-      );
-      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
-      const filteredContainerOptions = getSelectOptionList(
-        obtainedList,
-        response.data.connections.total
-      );
-      if (filteredContainerOptions.length > 0) return filteredContainerOptions;
-    }
+    const response = await getConnectionsHostNameORContainers(
+      value,
+      "containerId"
+    );
+    return getOptions(response, "containerId");
   };
 
   const onSearch = () => {
@@ -214,8 +204,8 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => {
-    let index;
-    switch (category && category.toString().toLocaleLowerCase()) {
+    let index: number;
+    switch (category && category.toString().toLowerCase()) {
       case "hostname":
         if (selectedHostnames && chip) {
           index = selectedHostnames

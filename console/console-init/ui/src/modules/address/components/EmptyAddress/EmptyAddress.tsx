@@ -41,7 +41,7 @@ export const EmptyAddress: React.FunctionComponent<{}> = () => {
       </Title>
       <EmptyStateBody id="empty-address-text">
         There are currently no addresses available. Please click on the button
-        below to create one.Learn more about this in the
+        below to create one. Learn more about this in the
         <a href={process.env.REACT_APP_DOCS}> documentation</a>
       </EmptyStateBody>
       <Button

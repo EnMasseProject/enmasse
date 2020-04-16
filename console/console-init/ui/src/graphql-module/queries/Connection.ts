@@ -6,6 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
+import { getCompplexFilterByPattern, getSimpleFilterByPattern } from "./query";
 
 const ALL_CONECTION_LIST_FILTER = (
   hostnames: any[],
@@ -15,16 +16,7 @@ const ALL_CONECTION_LIST_FILTER = (
 ) => {
   let filter = "";
   let hostnamesLength = hostnames && hostnames.length;
-  let hostname = hostnames && hostnames[0];
-  let hostnameValue =
-    hostname && hostname.value && removeForbiddenChars(hostname.value.trim());
-
   let containersLength = containers && containers.length;
-  let container = containers && containers[0];
-  let containerValue =
-    container &&
-    container.value &&
-    removeForbiddenChars(container.value.trim());
 
   if (name) {
     filter += "`$.spec.addressSpace` = '" + name + "'";
@@ -35,54 +27,16 @@ const ALL_CONECTION_LIST_FILTER = (
   if (hostnamesLength > 0 || (containers && containers.length > 0)) {
     filter += " AND ";
   }
-  if (hostnamesLength > 0) {
-    if (hostnamesLength > 1) {
-      if (hostname.isExact)
-        filter += "(`$.spec.hostname` = '" + hostnameValue + "'";
-      else filter += "(`$.spec.hostname` LIKE '" + hostnameValue + "%' ";
-      for (let i = 1; i < hostnamesLength; i++) {
-        let hostname = hostnames && hostnames[i];
-        let hostnameValue =
-          hostname &&
-          hostname.value &&
-          removeForbiddenChars(hostname.value.trim());
-        if (hostname.isExact)
-          filter += "OR `$.spec.hostname` = '" + hostnameValue + "'";
-        else filter += "OR `$.spec.hostname` LIKE '" + hostnameValue + "%' ";
-      }
-      filter += ")";
-    } else {
-      if (hostname.isExact)
-        filter += "(`$.spec.hostname` = '" + hostnameValue + "')";
-      else filter += "(`$.spec.hostname` LIKE '" + hostnameValue + "%')";
-    }
-  }
+
+  //filter hostnames
+  filter += getCompplexFilterByPattern("spec.hostname", hostnames);
 
   if (containersLength > 0) {
     if (hostnamesLength > 0) {
       filter += " AND ";
     }
-    if (containersLength > 1) {
-      if (container.isExact)
-        filter += "(`$.spec.containerId` = '" + containerValue + "'";
-      else filter += "(`$.spec.containerId` LIKE '" + containerValue + "%' ";
-      for (let i = 1; i < containersLength; i++) {
-        let container = containers && containers[i];
-        let containerValue =
-          container &&
-          container.value &&
-          removeForbiddenChars(container.value.trim());
-        if (container.isExact)
-          filter += "OR `$.spec.containerId` = '" + containerValue + "'";
-        else
-          filter += "OR `$.spec.containerId` LIKE '" + containerValue + "%' ";
-      }
-      filter += ")";
-    } else {
-      if (container.isExact)
-        filter += "(`$.spec.containerId` = '" + containerValue + "')";
-      else filter += "(`$.spec.containerId` LIKE '" + containerValue + "%')";
-    }
+    //filter containers
+    filter += getCompplexFilterByPattern("spec.containerId", containers);
   }
   return filter;
 };
@@ -276,18 +230,7 @@ const CONNECTION_LINKS_FILTER = (
   let filter = "";
   let filterForLink = "";
   let filterNamesLength = filterNames && filterNames.length;
-  let filterName = filterNames && filterNames[0];
-  let filterNameValue =
-    filterName &&
-    filterName.value &&
-    removeForbiddenChars(filterName.value.trim());
-
   let filterAddressesLength = filterAddresses && filterAddresses.length;
-  let filterAddress = filterAddresses && filterAddresses[0];
-  let filterAddressValue =
-    filterAddress &&
-    filterAddress.value &&
-    removeForbiddenChars(filterAddress.value.trim());
 
   if (addressSpaceName) {
     filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
@@ -298,66 +241,29 @@ const CONNECTION_LINKS_FILTER = (
   if (connectionName) {
     filter += "`$.metadata.name` = '" + connectionName + "'";
   }
-  //filter for links
+
   if (filterNamesLength > 0) {
-    if (filterNamesLength > 1) {
-      if (filterName.isExact)
-        filterForLink += "(`$.metadata.name` = '" + filterNameValue + "'";
-      else
-        filterForLink += "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
-      for (let i = 1; i < filterNamesLength; i++) {
-        let filterName = filterNames && filterNames[i];
-        let filterNameValue =
-          filterName &&
-          filterName.value &&
-          removeForbiddenChars(filterName.value.trim());
-        if (filterName.isExact)
-          filterForLink += "OR `$.metadata.name` = '" + filterNameValue + "'";
-        else
-          filterForLink +=
-            "OR `$.metadata.name` LIKE '" + filterNameValue + "%' ";
-      }
-      filterForLink += ")";
-    } else {
-      if (filterName.isExact)
-        filterForLink += "`$.metadata.name` = '" + filterNameValue + "'";
-      else
-        filterForLink += "`$.metadata.name` LIKE '" + filterNameValue + "%' ";
-    }
+    //filter for names
+    filterForLink += getCompplexFilterByPattern("metadata.name", filterNames);
     if (filterAddressesLength > 0 || (filterRole && filterRole.trim() !== "")) {
       filterForLink += " AND ";
     }
   }
+
   if (filterAddressesLength > 0) {
-    if (filterAddressesLength > 1) {
-      if (filterAddress.isExact)
-        filterForLink += "(`$.spec.address` = '" + filterAddressValue + "'";
-      else
-        filterForLink +=
-          "(`$.spec.address` LIKE '" + filterAddressValue + "%' ";
-      for (let i = 1; i < filterAddresses.length; i++) {
-        if (filterAddress.isExact)
-          filterForLink += "OR `$.spec.address` = '" + filterAddressValue + "'";
-        else
-          filterForLink +=
-            "OR `$.spec.address` LIKE '" + filterAddressValue + "%' ";
-      }
-      filterForLink += ")";
-    } else {
-      if (filterAddress.isExact)
-        filterForLink += "`$.spec.address` = '" + filterAddressValue + "'";
-      else
-        filterForLink += "`$.spec.address` LIKE '" + filterAddressValue + "%' ";
-    }
+    //filter addresses
+    filterForLink += getCompplexFilterByPattern(
+      "spec.address",
+      filterAddresses
+    );
     if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";
     }
   }
 
-  if (filterRole && filterRole.trim() !== "") {
-    filterForLink +=
-      "`$.spec.role` = '" + filterRole.trim().toLowerCase() + "' ";
-  }
+  //filter type
+  filterForLink += getSimpleFilterByPattern("spec.role", filterRole);
+
   return { filter, filterForLink };
 };
 
@@ -492,7 +398,7 @@ const RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH = (
 };
 
 const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH = (
-  isHostname: boolean,
+  propertyName: string,
   searchValue: string,
   name?: string,
   namespace?: string
@@ -507,11 +413,8 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
   }
   if (searchValue.trim() !== "") {
     filter += " AND ";
-    if (isHostname) {
-      filter += "`$.spec.hostname` LIKE '" + searchValue.trim() + "%' ";
-    } else {
-      filter += "`$.spec.containerId` LIKE '" + searchValue.trim() + "%' ";
-    }
+    filter +=
+      "`$.spec." + [propertyName] + "` LIKE '" + searchValue.trim() + "%' ";
   }
 
   const ALL_CONECTION_LIST = gql(

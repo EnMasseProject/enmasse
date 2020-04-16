@@ -97,16 +97,23 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     setNameInput(undefined);
   };
 
-  const onChangeNameInput = async (value: string) => {
+  const getAddressSpaceForNameORNameSpace = async (
+    value: string,
+    propertyName: string
+  ) => {
     const response = await client.query<
       ISearchNameOrNameSpaceAddressSpaceListResponse
     >({
       query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
-        true,
+        propertyName,
         value.trim()
       ),
       fetchPolicy: FetchPolicy.NETWORK_ONLY
     });
+    return response;
+  };
+
+  const getOptions = (response: any, propertyname: string) => {
     if (
       response &&
       response.data &&
@@ -115,9 +122,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       response.data.addressSpaces.addressSpaces.length > 0
     ) {
       let obtainedList = response.data.addressSpaces.addressSpaces.map(
-        (link: any) => {
-          return link.metadata.name;
-        }
+        (link: any) => link.metadata[propertyname]
       );
       //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
       const filteredNameOptions = getSelectOptionList(
@@ -126,6 +131,11 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       );
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
+  };
+
+  const onChangeNameInput = async (value: string) => {
+    const response = await getAddressSpaceForNameORNameSpace(value, "name");
+    return getOptions(response, "name");
   };
 
   const onNamespaceSelect = (e: any, selection: SelectOptionObject) => {
@@ -138,34 +148,11 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   };
 
   const onChangeNamespaceInput = async (value: string) => {
-    const response = await client.query<
-      ISearchNameOrNameSpaceAddressSpaceListResponse
-    >({
-      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
-        false,
-        value.trim()
-      ),
-      fetchPolicy: FetchPolicy.NETWORK_ONLY
-    });
-    if (
-      response &&
-      response.data &&
-      response.data.addressSpaces &&
-      response.data.addressSpaces.addressSpaces &&
-      response.data.addressSpaces.addressSpaces.length > 0
-    ) {
-      let obtainedList = response.data.addressSpaces.addressSpaces.map(
-        (link: any) => {
-          return link.metadata.namespace;
-        }
-      );
-      //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
-      const filteredNamespaceOptions = getSelectOptionList(
-        obtainedList,
-        response.data.addressSpaces.total
-      );
-      if (filteredNamespaceOptions.length > 0) return filteredNamespaceOptions;
-    }
+    const response = await getAddressSpaceForNameORNameSpace(
+      value,
+      "namespace"
+    );
+    return getOptions(response, "namespace");
   };
 
   const onTypeToggle = () => {
@@ -243,7 +230,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     category: string | DataToolbarChipGroup,
     chip: string | DataToolbarChip
   ) => {
-    let index;
+    let index: number;
     switch (category && category.toString().toLowerCase()) {
       case "name":
         if (selectedNames && chip) {
