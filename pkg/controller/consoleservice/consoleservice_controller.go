@@ -104,6 +104,14 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 		return err
 	}
 
+	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1beta1.ConsoleService{},
+	})
+	if err != nil {
+		return err
+	}
+
 	if util.IsOpenshift() {
 		// Changes to the secret or routes potentially need to be written to the oauthclient
 		err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
@@ -195,12 +203,16 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 		}
 	}
 
+	// cabundle configmap
+	result, err := r.reconcileCabundleConfigMap(ctx, consoleservice)
+	requeue := result.Requeue
+
 	// service
-	result, err := r.reconcileService(ctx, consoleservice)
+	result, err = r.reconcileService(ctx, consoleservice)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	requeue := result.Requeue
+	requeue = requeue || result.Requeue
 
 	// route
 	result, route, err := r.reconcileRoute(ctx, consoleservice)
@@ -414,6 +426,31 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 	}
 
 	return false, nil
+}
+
+func (r *ReconcileConsoleService) reconcileCabundleConfigMap(ctx context.Context, consoleService *v1beta1.ConsoleService) (reconcile.Result, error) {
+	if !util.IsOpenshift() {
+		return reconcile.Result{}, nil
+	}
+
+	name := getCustomCaConfigMapName(consoleService)
+	configMap := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Namespace: consoleService.Namespace, Name: name},
+	}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, configMap, func() error {
+		if err := controllerutil.SetControllerReference(consoleService, configMap, r.scheme); err != nil {
+			return err
+		}
+		configMap.SetLabels(install.CreateDefaultLabels(configMap.GetLabels(), "console", name))
+		install.ApplyCustomLabel(&configMap.ObjectMeta, "config.openshift.io/inject-trusted-cabundle", "true")
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err, "Failed reconciling cabundle configmap")
+		return reconcile.Result{}, err
+	}
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileConsoleService) reconcileService(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
@@ -662,13 +699,32 @@ func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, 
 }
 
 func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+
+	key := client.ObjectKey{Namespace: consoleservice.Namespace, Name: getCustomCaConfigMapName(consoleservice)}
+	caBundle := &corev1.ConfigMap{}
+	err := r.client.Get(ctx, key, caBundle)
+	if err != nil && !k8errors.IsNotFound(err) {
+		return reconcile.Result{}, err
+	}
+
+	caBundleHash, err := install.ComputeConfigMapHash(*caBundle)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
 	}
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, deployment, func() error {
 		if err := controllerutil.SetControllerReference(consoleservice, deployment, r.scheme); err != nil {
 			return err
 		}
+
+		if deployment.Spec.Template.Annotations == nil {
+			deployment.Spec.Template.Annotations = make(map[string]string)
+		}
+		// Triggers a restart whenever the ca bundle changes
+		deployment.Spec.Template.Annotations["enmasse.io/ca-bundle-hash"] = caBundleHash
 
 		return applyDeployment(consoleservice, deployment)
 	})
@@ -689,8 +745,10 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	}
 
 	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "apps")
-	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "httpd")
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "console-tls", consoleservice.Spec.CertificateSecret.Name)
+
+	openshiftCaTrustFile := "/apps/ca-trust/certs.crt"
+	openshiftCaTrustDir := "/apps/ca-trust"
 
 	if err := install.ApplyInitContainerWithError(deployment, "console-init", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "console-init", nil); err != nil {
@@ -740,19 +798,33 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 
+		install.ApplyEnvSimple(container, "OAUTH2_CA_TRUST_FILE", openshiftCaTrustFile)
+		install.ApplyEnv(container, "OAUTH2_CA_TRUST_PATH", func(envvar *corev1.EnvVar) {
+			caTrustDirs := "/var/run/secrets/kubernetes.io/serviceaccount/"
+			if (util.IsOpenshift()) {
+				caTrustDirs += 	":" + "/etc/pki/ca-trust/"
+			}
+			envvar.Value = caTrustDirs
+		})
+
+		if (util.IsOpenshift()) {
+			install.ApplyVolumeMountSimple(container, "trusted-ca-bundle", "/etc/pki/ca-trust/", true)
+		}
 		return nil
 	}); err != nil {
 		return err
 	}
 
 	if util.IsOpenshift() {
+		install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "trusted-ca-bundle", getCustomCaConfigMapName(consoleservice))
 		if err := install.ApplyDeploymentContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
 			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
 				return err
 			}
-			container.Args = []string{"-config=/apps/cfg/oauth-proxy-openshift.cfg"}
+			container.Args = []string{
+				"-config=/apps/cfg/oauth-proxy-openshift.cfg",
+				fmt.Sprintf("-openshift-ca=%s", openshiftCaTrustFile)}
 			applyOauthProxyContainer(container, consoleservice, "/oauth/healthz")
-
 			return nil
 		}); err != nil {
 			return err
@@ -770,11 +842,9 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			applyOauthProxyContainer(container, consoleservice, "/ping")
 
-			if consoleservice.Spec.Scope != nil {
-				install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
-					envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/"
-				})
-			}
+			install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
+				envvar.Value = openshiftCaTrustDir
+			})
 
 			return nil
 		}); err != nil {
@@ -897,6 +967,10 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	deployment.Spec.Template.Spec.ServiceAccountName = "console-server"
 
 	return nil
+}
+
+func getCustomCaConfigMapName(consoleservice *v1beta1.ConsoleService) string {
+	return consoleservice.Name + "-trusted-ca-bundle"
 }
 
 func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService, path string) {
