@@ -34,7 +34,6 @@
 * #4331: Issues installing monitoring resources (#4200) (#4222)
 * #4332: Unable to drain kube node when broker pod is deployed there
 
-
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
 *  #3686: Add metrics endpoint to controller-managerxs

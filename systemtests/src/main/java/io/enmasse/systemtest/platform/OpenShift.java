@@ -23,6 +23,8 @@ import okhttp3.Protocol;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handles interaction with openshift cluster
@@ -150,5 +152,10 @@ public class OpenShift extends Kubernetes {
     @Override
     public String getOlmNamespace() {
         return OLM_NAMESPACE;
+    }
+
+    @Override
+    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
+        return client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 }

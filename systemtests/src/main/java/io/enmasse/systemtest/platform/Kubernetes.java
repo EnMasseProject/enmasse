@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.fabric8.openshift.api.model.Route;
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.Address;
@@ -470,7 +471,11 @@ public abstract class Kubernetes {
     }
 
     public List<Deployment> listDeployments(Map<String, String> labels) {
-        return client.apps().deployments().inNamespace(infraNamespace).withLabels(labels).list().getItems();
+        return listDeployments(infraNamespace, labels);
+    }
+
+    public List<Deployment> listDeployments(String namespace, Map<String, String> labels) {
+        return client.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 
     public List<StatefulSet> listStatefulSets(Map<String, String> labels) {
@@ -905,7 +910,11 @@ public abstract class Kubernetes {
         } while (!unready.isEmpty() && budget.timeLeft() > 0);
 
         if (!unready.isEmpty()) {
-            fail(String.format(" %d pod(s) still unready", unready.size()));
+            fail(String.format(" %d pod(s) still unready in namespace : %s", unready.size(), infraNamespace));
         }
+    }
+
+    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
+        throw new UnsupportedOperationException();
     }
 }

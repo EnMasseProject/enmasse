@@ -11,11 +11,18 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.certs.openssl.CertPair;
+import io.enmasse.systemtest.certs.openssl.CertSigningRequest;
+import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
@@ -45,6 +52,8 @@ import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.openshift.api.model.Route;
 import org.apache.qpid.proton.message.Message;
 import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
@@ -60,6 +69,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -70,7 +80,7 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.either;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1200,6 +1210,136 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.prepareAddressCreation(address);
         String snippet = consolePage.getDeploymentSnippet();
         KubeCMDClient.createCR(Kubernetes.getInstance().getInfraNamespace(), snippet);
+    }
+
+    protected void doTestOpenShiftWithCustomCert() throws Exception {
+        String openshiftConfigNamespace = "openshift-config";
+        String openshiftIngressNamespace = "openshift-ingress";
+        String openshiftIngressOperatorNamespace = "openshift-ingress-operator";
+        String openshiftAuthenticationNamespace = "openshift-authentication";
+
+        Map<String, String> oauthDeploymentLabels = Map.of(LabelKeys.APP, "oauth-openshift");
+        Map<String, String> oauthRouteLabels = Map.of(LabelKeys.APP, "oauth-openshift");
+        Map<String, String> consoleDeploymentLabels = Map.of(LabelKeys.APP, "enmasse", LabelKeys.NAME, "console");
+
+        Optional<Deployment> oauth = kubernetes.listDeployments(openshiftAuthenticationNamespace, oauthDeploymentLabels).stream().findFirst();
+        assertThat(oauth.isPresent(), is(true));
+
+        Optional<Route> oauthRoute = kubernetes.listRoutes(openshiftAuthenticationNamespace, oauthRouteLabels).stream().findFirst();
+        assertThat(oauthRoute.isPresent(), is(true));
+
+        Optional<Deployment> console = kubernetes.listDeployments(consoleDeploymentLabels).stream().findFirst();
+        assertThat(console.isPresent(), is(true));
+
+        CertPair originalOauthCert = OpenSSLUtil.downloadCert(oauthRoute.get().getSpec().getHost(), 443);
+
+        String customCaCnName = "custom-ca";
+        String customIngressSecretName = "custom-ingress";
+        String wildcardSan = String.format("*.%s", environment.kubernetesDomain());
+        log.info("Wildcard SAN for custom cert: {}", wildcardSan);
+        try (CertPair ca = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse/CN=MyCA");
+             CertPair unsignedCluster = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse//CN=MyCluster");
+             CertSigningRequest csr = OpenSSLUtil.createCsr(unsignedCluster);
+             CertPair cluster = OpenSSLUtil.signCrs(csr, Collections.singletonList(wildcardSan), ca)
+        ) {
+            // Steps from https://docs.openshift.com/container-platform/4.3/authentication/certificates/replacing-default-ingress-certificate.html#replacing-default-ingress_replacing-default-ingress
+
+            assertThat(cluster.getCert().canRead(), is(true));
+            assertThat(cluster.getKey().canRead(), is(true));
+
+            ExecutionResultData ingressSecret = Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "create", "secret", "tls", customIngressSecretName,
+                    "--namespace", openshiftIngressNamespace,
+                    String.format("--cert=%s", cluster.getCert()),
+                    String.format("--key=%s", cluster.getKey())), true);
+            assertThat("failed to create ingress secret", ingressSecret.getRetCode(), is(true));
+
+            ExecutionResultData cmCustomCa = Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "create", "configmap", customCaCnName,
+                    "--namespace", openshiftConfigNamespace,
+                    String.format("--from-file=ca-bundle.crt=%s", ca.getCert().getAbsolutePath())), true);
+            assertThat("failed to create custom-ca configmap", cmCustomCa.getRetCode(), is(true));
+
+            ExecutionResultData patchProxy = Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "proxy/cluster",
+                    "--type=merge",
+                    String.format("--patch={\"spec\":{\"trustedCA\":{\"name\":\"%s\"}}}", customCaCnName)), true);
+            assertThat("failed to patch proxy/cluster", patchProxy.getRetCode(), is(true));
+
+            ExecutionResultData patchIngress = Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "ingresscontroller.operator/default",
+                    "--type=merge",
+                    "--namespace", openshiftIngressOperatorNamespace,
+                    String.format("--patch={\"spec\":{\"defaultCertificate\": {\"name\": \"%s\"}}}", customIngressSecretName)), true);
+            assertThat("failed to patch ingress", patchIngress.getRetCode(), is(true));
+
+
+            awaitCertChange(ca, oauth.get(), console.get(), oauthRoute.get());
+
+            System.out.println(cluster.getCert());
+            System.out.println(cluster.getKey());
+
+            doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
+
+        } finally {
+
+            Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "proxy/cluster",
+                    "--type=merge",
+                    "--patch={\"spec\":{\"trustedCA\": null}}"), false);
+            Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "ingresscontroller.operator/default",
+                    "--type=merge",
+                    "--namespace", openshiftIngressOperatorNamespace,
+                    "--patch={\"spec\":{\"defaultCertificate\": null}}"), false);
+            Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "delete", "configmap", customCaCnName,
+                    "--namespace", openshiftConfigNamespace), false);
+            Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "delete", "secret", customIngressSecretName,
+                    "--namespace", openshiftIngressNamespace), false);
+
+
+            awaitCertChange(originalOauthCert, oauth.get(), console.get(), oauthRoute.get());
+
+        }
+    }
+
+    private void awaitCertChange(CertPair expectedCa, Deployment oauthDeployment, Deployment consoleDeployment, Route oauthRoute) throws Exception {
+        TestUtils.waitUntilCondition("Awaiting cert change", waitPhase -> {
+            try {
+                KubeCMDClient.loginUser(clusterUser.getUsername(), clusterUser.getUsername());
+                verifyCertChange(expectedCa, oauthDeployment, consoleDeployment, oauthRoute);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    private void verifyCertChange(CertPair ca, Deployment oauthDeployment, Deployment consoleDeployment, Route oauthRoute) throws Exception {
+        log.info("Awaiting openshift oauth to be ready again");
+        TestUtils.waitForChangedResourceVersion(new TimeoutBudget(1, TimeUnit.MINUTES), oauthDeployment.getMetadata().getResourceVersion(),
+                () -> {
+                    Optional<Deployment> upd = kubernetes.listDeployments(oauthDeployment.getMetadata().getNamespace(), oauthDeployment.getMetadata().getLabels()).stream().findFirst();
+                    assertThat(upd.isPresent(), is(true));
+                    return upd.get().getMetadata().getResourceVersion();
+                });
+
+        KubeCMDClient.awaitRollout(new TimeoutBudget(3, TimeUnit.MINUTES), oauthDeployment.getMetadata().getNamespace(), oauthDeployment.getMetadata().getName());
+
+        // await for oauth and verify it uses the correct certificate
+        if (ca != null) {
+            String oauthHost = oauthRoute.getSpec().getHost();
+            TestUtils.waitUntilCondition(String.format("Await for oauth http endpoint to become ready: %s", oauthHost), waitPhase -> {
+                List<String> curl = Arrays.asList("curl",
+                        "--cacert", ca.getCert().getAbsolutePath(),
+                        "--verbose", String.format("https://%s", oauthHost));
+                ExecutionResultData consolePing = Exec.execute(curl, true);
+                return consolePing.getRetCode();
+            }, new TimeoutBudget(3, TimeUnit.MINUTES));
+        }
+
+        log.info("Awaiting EnMasse console to be ready again");
+        TestUtils.waitForChangedResourceVersion(new TimeoutBudget(1, TimeUnit.MINUTES), consoleDeployment.getMetadata().getResourceVersion(),
+                () -> {
+                    Optional<Deployment> upd = kubernetes.listDeployments(consoleDeployment.getMetadata().getLabels()).stream().findFirst();
+                    assertThat(upd.isPresent(), is(true));
+                    return upd.get().getMetadata().getResourceVersion();
+                });
+        KubeCMDClient.awaitRollout(new TimeoutBudget(3, TimeUnit.MINUTES), kubernetes.getInfraNamespace(), consoleDeployment.getMetadata().getName());
     }
 
     //============================================================================================

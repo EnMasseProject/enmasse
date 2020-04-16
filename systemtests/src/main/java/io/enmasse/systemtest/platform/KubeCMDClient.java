@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.enmasse.systemtest.bases.ITestBase;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.Environment;
@@ -217,7 +220,10 @@ public class KubeCMDClient {
 
     public static String loginUser(String username, String password) {
         List<String> cmd = Arrays.asList(CMD, "login", "-u", username, "-p", password);
-        Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        ExecutionResultData execute = Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        if (!execute.getRetCode()) {
+            throw new IllegalStateException(String.format("Failed to login user : %s : %s", username, execute.getStdErr()));
+        }
         cmd = Arrays.asList(CMD, "whoami", "-t");
         return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true)
                 .getStdOut().replace(System.getProperty("line.separator"), "");
@@ -378,5 +384,14 @@ public class KubeCMDClient {
         command.add(CMD);
         command.addAll(Arrays.asList(args));
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
+    }
+
+    public static void awaitRollout(TimeoutBudget budget, String namespace, String deploymentName) throws Exception {
+        TestUtils.waitUntilCondition(String.format("Wait for deployment %s in namespace %s rollout to complete", deploymentName, namespace), waitPhase -> {
+            ExecutionResultData rollout = Exec.execute(Arrays.asList(ITestBase.kubernetes.getCluster().getKubeCmd(), "rollout",
+                    "status", "deployment", deploymentName,
+                    "--namespace", namespace), true);
+            return rollout.getRetCode();
+        }, budget);
     }
 }

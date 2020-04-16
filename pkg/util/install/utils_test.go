@@ -6,6 +6,7 @@
 package install
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	appv1 "k8s.io/api/apps/v1"
@@ -127,4 +128,56 @@ func TestTwoContainers(t *testing.T) {
 	if d.Spec.Template.Spec.Containers[1].Image != "baz" {
 		t.Errorf("Container image must be 'baz', was: '%s'", d.Spec.Template.Spec.Containers[0].Image)
 	}
+}
+
+func TestComputeConfigMapHash(t *testing.T) {
+
+	hash := func(cm corev1.ConfigMap) string {
+		hash, err := ComputeConfigMapHash(cm)
+		assert.NoError(t, err)
+		return hash
+	}
+	empty := corev1.ConfigMap{}
+
+
+	assert.NotEqual(t, "", hash(empty))
+
+	nameonly1 := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+	nameonly2 := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "foo",
+		},
+	}
+	bar := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "bar",
+		},
+	}
+	data1 := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "bar",
+		},
+		Data: map[string]string{
+			"wibble": "wobble",
+			"wobble": "wibble",
+		},
+	}
+	data2 := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "bar",
+		},
+		Data: map[string]string{
+			"wobble": "wibble",
+			"wibble": "wobble",
+		},
+	}
+
+	assert.Equal(t, hash(nameonly1), hash(nameonly2))
+	assert.NotEqual(t, hash(nameonly1), hash(bar))
+	assert.Equal(t, hash(data1), hash(data2))
+	assert.NotEqual(t, hash(bar), hash(data2))
 }
