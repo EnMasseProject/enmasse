@@ -17,6 +17,7 @@
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4317: Addresses with different casing is not becoming ready
+* #4332: Unable to drain kube node when broker pod is deployed there
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
