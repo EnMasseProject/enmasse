@@ -35,9 +35,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.enmasse.systemtest.platform.cluster.OpenShiftCluster;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
@@ -746,29 +744,40 @@ public abstract class ConsoleTest extends TestBase {
                 String.format("Console failed, does not contain %d addresses", 0));
     }
 
+
     protected void doTestFilterAddressesByStatus(AddressSpace addressSpace) throws Exception {
         int addressCount = 4;
         List<Address> addresses = generateQueueTopicList(addressSpace, "via-web", IntStream.range(0, addressCount));
 
+        String nonexistentPlan = "foo-plan";
+        IntStream.range(0, addressCount / 2)
+            .forEach(i -> {
+                addresses.get(i).getSpec().setPlan(nonexistentPlan);;
+            });
+        List<Address> goodAddresses = addresses.stream()
+                    .filter(a -> !a.getSpec().getPlan().equals(nonexistentPlan))
+                    .collect(Collectors.toList());
+        List<Address> badAddresses = addresses.stream()
+                .filter(a -> a.getSpec().getPlan().equals(nonexistentPlan))
+                .collect(Collectors.toList());
+
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
-        getResourceManager().appendAddresses(false, addresses.toArray(new Address[0]));
-
-        consolePage.addFilter(FilterType.STATUS, "Configuring");
+        getResourceManager().appendAddresses(true, goodAddresses.toArray(new Address[0]));
+        getResourceManager().appendAddresses(false, badAddresses.toArray(new Address[0]));
 
         TestUtils.waitUntilCondition(() -> consolePage.getAddressItems().size() == addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
 
+        consolePage.addFilter(FilterType.STATUS, "Failed");
         List<AddressWebItem> items = consolePage.getAddressItems();
-        assertEquals(addressCount, items.size(),
-                String.format("Console failed, does not contain %d addresses", addressCount));
-
-        AddressUtils.waitForDestinationsReady(addresses.toArray(new Address[0]));
+        assertEquals(badAddresses.size(), items.size(),
+                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Failed"));
 
         consolePage.addFilter(FilterType.STATUS, "Active");
         items = consolePage.getAddressItems();
-        assertEquals(addressCount, items.size(),
-                String.format("Console failed, does not contain %d addresses", addressCount));
+        assertEquals(goodAddresses.size(), items.size(),
+                String.format("Console failed, does not contain %d addresses when %s filter", goodAddresses.size(), "Active"));
     }
 
     protected void doTestPurgeMessages(AddressSpace addressSpace) throws Exception {
