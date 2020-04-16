@@ -129,51 +129,51 @@ func main() {
 		}()
 	}
 
-	// Create a new Cmd to provide shared dependencies and start components
-	mgr, err := manager.New(cfg, manager.Options{
-		Namespace:          namespace,
-		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
-		NewCache: cache.NewDelegateCacheBuilder(namespace,
-			schema.GroupVersionKind{
-				Group:   "user.enmasse.io",
-				Version: "v1beta1",
-				Kind:    "MessagingUser",
-			},
-			schema.GroupVersionKind{
-				Group:   "user.enmasse.io",
-				Version: "v1beta1",
-				Kind:    "MessagingUserList",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta1",
-				Kind:    "AddressSpace",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta1",
-				Kind:    "AddressSpaceList",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta1",
-				Kind:    "Address",
-			},
-			schema.GroupVersionKind{
-				Group:   "enmasse.io",
-				Version: "v1beta1",
-				Kind:    "AddressList",
-			},
-			schema.GroupVersionKind{
-				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTProject",
-			},
-			schema.GroupVersionKind{
-				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTProjectList",
-			},
+	globalGvks := []schema.GroupVersionKind{
+		schema.GroupVersionKind{
+			Group:   "user.enmasse.io",
+			Version: "v1beta1",
+			Kind:    "MessagingUser",
+		},
+		schema.GroupVersionKind{
+			Group:   "user.enmasse.io",
+			Version: "v1beta1",
+			Kind:    "MessagingUserList",
+		},
+		schema.GroupVersionKind{
+			Group:   "enmasse.io",
+			Version: "v1beta1",
+			Kind:    "AddressSpace",
+		},
+		schema.GroupVersionKind{
+			Group:   "enmasse.io",
+			Version: "v1beta1",
+			Kind:    "AddressSpaceList",
+		},
+		schema.GroupVersionKind{
+			Group:   "enmasse.io",
+			Version: "v1beta1",
+			Kind:    "Address",
+		},
+		schema.GroupVersionKind{
+			Group:   "enmasse.io",
+			Version: "v1beta1",
+			Kind:    "AddressList",
+		},
+		schema.GroupVersionKind{
+			Group:   "iot.enmasse.io",
+			Version: "v1alpha1",
+			Kind:    "IoTProject",
+		},
+		schema.GroupVersionKind{
+			Group:   "iot.enmasse.io",
+			Version: "v1alpha1",
+			Kind:    "IoTProjectList",
+		},
+	}
+
+	if util.IsModuleEnabled("MESSAGING_INFRA") {
+		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
 				Version: "v1beta2",
@@ -184,7 +184,29 @@ func main() {
 				Version: "v1beta2",
 				Kind:    "MessagingInfraList",
 			},
-		),
+		)
+	}
+
+	if util.IsModuleEnabled("MESSAGING_TENANT") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingTenant",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingTenantList",
+			},
+		)
+	}
+
+	// Create a new Cmd to provide shared dependencies and start components
+	mgr, err := manager.New(cfg, manager.Options{
+		Namespace:          namespace,
+		MetricsBindAddress: fmt.Sprintf("%s:%d", metricsHost, metricsPort),
+		NewCache:           cache.NewDelegateCacheBuilder(namespace, globalGvks...),
 	})
 	if err != nil {
 		log.Error(err, "Failed to create manager")
@@ -211,6 +233,11 @@ func main() {
 
 	if err := controller.CheckUpgrade(mgr); err != nil {
 		log.Error(err, "Failed to upgrade")
+		os.Exit(1)
+	}
+
+	if err := controller.InitializeStateManager(ctx, mgr); err != nil {
+		log.Error(err, "Error initializing state manager")
 		os.Exit(1)
 	}
 

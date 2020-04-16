@@ -33,6 +33,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
 		&MessagingInfra{},
 		&MessagingInfraList{},
+		&MessagingTenant{},
+		&MessagingTenantList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

@@ -7,6 +7,8 @@ package test
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/state"
+
+	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
 type FakeState struct {
@@ -27,29 +29,33 @@ func NewFakeManager() *FakeManager {
 	}
 }
 
-func (m *FakeManager) GetOrCreateInfra(name string, _ string) state.InfraState {
-	state, exists := m.Infras[name]
+func (m *FakeManager) GetOrCreateInfra(infra *v1beta2.MessagingInfra) state.InfraState {
+	state, exists := m.Infras[infra.Name]
 	if !exists {
 		infraState := &FakeState{
 			Routers: make([]string, 0),
 			Brokers: make([]string, 0),
 		}
-		m.Infras[name] = infraState
+		m.Infras[infra.Name] = infraState
 		state = infraState
 	}
 	return state
 }
 
-func (m *FakeManager) GetOrCreateTenant(name string, _ string) state.TenantState {
+func (m *FakeManager) GetOrCreateTenant(_ *v1beta2.MessagingTenant) state.TenantState {
 	return nil
 }
 
-func (m *FakeManager) DeleteInfra(name string, _ string) error {
-	delete(m.Infras, name)
+func (m *FakeManager) BindTenantToInfra(_ *v1beta2.MessagingTenant) error {
 	return nil
 }
 
-func (m *FakeManager) DeleteTenant(_ string, _ string) error {
+func (m *FakeManager) DeleteInfra(infra *v1beta2.MessagingInfra) error {
+	delete(m.Infras, infra.Name)
+	return nil
+}
+
+func (m *FakeManager) DeleteTenant(_ *v1beta2.MessagingTenant) error {
 	return nil
 }
 
@@ -70,6 +76,10 @@ func (i *FakeState) Sync() error {
 }
 
 func (i *FakeState) Shutdown() error {
+	return nil
+}
+
+func (i *FakeState) GetSelector() *v1beta2.Selector {
 	return nil
 }
 

@@ -6,7 +6,11 @@
 package controller
 
 import (
+	"context"
+
+	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/upgrader"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
 
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -33,4 +37,35 @@ func CheckUpgrade(m manager.Manager) error {
 	} else {
 		return nil
 	}
+}
+
+func InitializeStateManager(ctx context.Context, m manager.Manager) error {
+	stateManager := state.GetStateManager()
+	client := m.GetAPIReader()
+
+	if util.IsModuleEnabled("MESSAGING_INFRA") {
+
+		infras := v1beta2.MessagingInfraList{}
+		err := client.List(ctx, &infras)
+		if err != nil {
+			return err
+		}
+
+		for _, infra := range infras.Items {
+			stateManager.GetOrCreateInfra(&infra)
+		}
+
+	}
+
+	if util.IsModuleEnabled("MESSAGING_TENANT") {
+		tenants := v1beta2.MessagingTenantList{}
+		err := client.List(ctx, &tenants)
+		if err != nil {
+			return err
+		}
+		for _, tenant := range tenants.Items {
+			stateManager.GetOrCreateTenant(&tenant)
+		}
+	}
+	return nil
 }

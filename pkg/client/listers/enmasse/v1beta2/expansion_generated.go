@@ -14,3 +14,11 @@ type MessagingInfraListerExpansion interface{}
 // MessagingInfraNamespaceListerExpansion allows custom methods to be added to
 // MessagingInfraNamespaceLister.
 type MessagingInfraNamespaceListerExpansion interface{}
+
+// MessagingTenantListerExpansion allows custom methods to be added to
+// MessagingTenantLister.
+type MessagingTenantListerExpansion interface{}
+
+// MessagingTenantNamespaceListerExpansion allows custom methods to be added to
+// MessagingTenantNamespaceLister.
+type MessagingTenantNamespaceListerExpansion interface{}

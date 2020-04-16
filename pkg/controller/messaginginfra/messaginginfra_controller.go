@@ -180,10 +180,10 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Sync state
 	result, err := ic.Process(func(infra *v1beta2.MessagingInfra) (reconcile.Result, error) {
-		err := r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).Sync()
+		err := r.stateManager.GetOrCreateInfra(infra).Sync()
 		// Treat as transient error
 		if err, ok := err.(*state.NotConnectedError); ok {
-			logger.Info("Error syncing addresses", "error", err)
+			logger.Info("Error syncing connectors", "error", err)
 			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
@@ -194,7 +194,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Check status
 	err = ic.ProcessSimple(func(infra *v1beta2.MessagingInfra) error {
-		infraStatus, err := r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).GetStatus()
+		infraStatus, err := r.stateManager.GetOrCreateInfra(infra).GetStatus()
 		if err != nil {
 			return err
 		}
@@ -263,7 +263,7 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingInfra")
 				}
 
-				err := r.stateManager.DeleteInfra(infra.Name, infra.Namespace)
+				err := r.stateManager.DeleteInfra(infra)
 				return reconcile.Result{}, err
 			},
 		},

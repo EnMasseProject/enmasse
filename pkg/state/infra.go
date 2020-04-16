@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"log"
 	"sync"
+
+	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
 type routerStateFunc = func(host string, port int32) *RouterState
@@ -20,6 +22,7 @@ type infra struct {
 	routerStateFactory routerStateFunc
 	brokerStateFactory brokerStateFunc
 	status             InfraStatus
+	selector           *v1beta2.Selector
 	lock               *sync.Mutex
 }
 
@@ -145,6 +148,10 @@ func (i *infra) GetStatus() (InfraStatus, error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 	return i.status, nil
+}
+
+func (i *infra) GetSelector() *v1beta2.Selector {
+	return i.selector
 }
 
 func (i *infra) Shutdown() error {

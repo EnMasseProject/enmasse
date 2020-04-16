@@ -1,0 +1,113 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.2.5
+  creationTimestamp: null
+  name: messagingtenants.enmasse.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The current phase of the MessagingTenant.
+    name: Phase
+    type: string
+  - JSONPath: .status.message
+    description: Message describing the reason for the current Phase.
+    name: Message
+    priority: 1
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: enmasse.io
+  names:
+    kind: MessagingTenant
+    listKind: MessagingTenantList
+    plural: messagingtenants
+    singular: messagingtenant
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            messagingInfraRef:
+              description: Reference to a specific MessagingInfra to use (must be
+                available for this tenant).
+              properties:
+                name:
+                  description: Name of referenced MessagingInfra.
+                  type: string
+                namespace:
+                  description: Namespace of referenced MessagingInfra.
+                  type: string
+              required:
+              - name
+              type: object
+          type: object
+        status:
+          properties:
+            conditions:
+              items:
+                properties:
+                  lastTransitionTime:
+                    format: date-time
+                    type: string
+                  message:
+                    type: string
+                  reason:
+                    type: string
+                  status:
+                    type: string
+                  type:
+                    type: string
+                required:
+                - status
+                - type
+                type: object
+              type: array
+            message:
+              type: string
+            messagingInfraRef:
+              description: MessagingInfra this tenant is bound to.
+              properties:
+                name:
+                  description: Name of referenced MessagingInfra.
+                  type: string
+                namespace:
+                  description: Namespace of referenced MessagingInfra.
+                  type: string
+              required:
+              - name
+              type: object
+            phase:
+              type: string
+          type: object
+      type: object
+  version: v1beta2
+  versions:
+  - name: v1beta2
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

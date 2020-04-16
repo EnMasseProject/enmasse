@@ -14,7 +14,7 @@ import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.SharedIoTManager;
 import io.enmasse.systemtest.manager.SharedResourceManager;
-import io.enmasse.systemtest.messaginginfra.MessagingInfraResourceManager;
+import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -50,7 +50,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
-        MessagingInfraResourceManager.getInstance().setClassResources();
+        ResourceManager.getInstance().setClassResources();
         KubeClusterManager.getInstance().setClassConfigurations();
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
             handleCallBackError("Callback before all", context, () -> {
@@ -102,7 +102,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (!env.skipCleanup()) {
-                MessagingInfraResourceManager.getInstance().deleteClassResources();
+                ResourceManager.getInstance().deleteClassResources();
                 KubeClusterManager.getInstance().restoreClassConfigurations();
             }
             if (env.skipCleanup() || env.skipUninstall()) {
@@ -126,7 +126,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     @Override
     public void beforeEach(ExtensionContext context) throws Exception {
         testInfo.setCurrentTest(context);
-        MessagingInfraResourceManager.getInstance().setMethodResources();
+        ResourceManager.getInstance().setMethodResources();
         KubeClusterManager.getInstance().setMethodConfigurations();
         logPodsInInfraNamespace();
         if (beforeAllException != null) {
@@ -138,7 +138,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     public void afterEach(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after each", extensionContext, () -> {
             LOGGER.info("Teardown section: ");
-            MessagingInfraResourceManager.getInstance().deleteMethodResources();
+            ResourceManager.getInstance().deleteMethodResources();
             KubeClusterManager.getInstance().restoreMethodConfigurations();
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();

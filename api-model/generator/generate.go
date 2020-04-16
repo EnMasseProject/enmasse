@@ -31,8 +31,10 @@ import (
 )
 
 type Schema struct {
-	MessagingInfra     enmasseapi.MessagingInfra
-	MessagingInfraList enmasseapi.MessagingInfraList
+	MessagingInfra      enmasseapi.MessagingInfra
+	MessagingInfraList  enmasseapi.MessagingInfraList
+	MessagingTenant     enmasseapi.MessagingTenant
+	MessagingTenantList enmasseapi.MessagingTenantList
 }
 
 func main() {
