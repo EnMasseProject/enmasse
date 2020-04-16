@@ -11,6 +11,7 @@
 * #4317: Addresses with different casing is not becoming ready
 * #4266: Add broker.globalMaxSize to the infraconfig CRDs 
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
+* #4332: Unable to drain kube node when broker pod is deployed there
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
