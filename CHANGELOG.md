@@ -23,7 +23,7 @@
 * #4280: Edit Address Space dialogue subtitle misleading 
 * #4292: Escape forbidden chars in filters
 * #4317: Addresses with different casing is not becoming ready 
-* *4331: Issues installing monitoring resources (#4200) (#4222)
+* #4331: Issues installing monitoring resources (#4200) (#4222)
 
 
 ## 0.31.0
