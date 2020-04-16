@@ -19,8 +19,8 @@
 :ProductName: EnMasse
 :ProductNamespace: enmasse-infra
 :ProductMonitoringNamespace: enmasse-monitoring
-:ProductVersion: 
-:ProductMajorVersion: 
+:ProductVersion:
+:ProductMajorVersion:
 :ProductBundleName: enmasse
 :OperatorName: enmasse
 :OperatorSourceName: enmasse-operators
@@ -77,3 +77,4 @@
 :Minishift:
 :Prereqs:
 :Asciidoctor:
+// :InventoryFile:

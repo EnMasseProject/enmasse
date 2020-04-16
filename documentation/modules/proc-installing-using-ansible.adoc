@@ -10,10 +10,33 @@ configuring the system. Example inventory files can be found in the `ansible/inv
 
 The following example inventory file enables a minimal installation of {ProductName}:
 
+ifndef::InventoryFile[]
 [source,options="nowrap"]
 ----
 include::../service_admin/example.inventory[]
 ----
+endif::InventoryFile[]
+
+ifdef::InventoryFile[]
+[source,options="nowrap"]
+----
+[enmasse]
+localhost ansible_connection=local
+
+[enmasse:vars]
+namespace=enmasse-infra
+enable_rbac=False
+api_server=True
+service_catalog=False
+register_api_server=True
+keycloak_admin_password=admin
+authentication_services=["standard"]
+standard_authentication_service_postgresql=False.
+monitoring_namespace=enmasse-monitoring
+monitoring_operator=False
+monitoring=False
+----
+endif::InventoryFile[]
 
 The following Ansible configuration settings are supported:
 
@@ -45,4 +68,3 @@ The following Ansible configuration settings are supported:
 ----
 ansible-playbook -i _inventory-file_ ansible/playbooks/openshift/deploy_all.yml
 ----
-
