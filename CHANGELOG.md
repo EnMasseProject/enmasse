@@ -22,9 +22,9 @@
 * #4282: add null check for links in address links page (#4262)
 * #4280: Edit Address Space dialogue subtitle misleading 
 * #4292: Escape forbidden chars in filters
+* #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4317: Addresses with different casing is not becoming ready 
 * #4331: Issues installing monitoring resources (#4200) (#4222)
-
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
