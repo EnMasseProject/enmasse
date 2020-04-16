@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.condition.MultinodeCluster;
 import io.fabric8.openshift.api.model.Route;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
@@ -199,6 +200,11 @@ public abstract class Kubernetes {
     public OpenShiftVersion getOcpVersion() {
         return OpenShiftVersion.fromK8sVersion(getKubernetesVersion());
     }
+
+    public MultinodeCluster isClusterMultinode() {
+        return MultinodeCluster.isMultinode(client.nodes().list().getItems().size());
+    }
+
 
     public String getInfraNamespace() {
         return infraNamespace;

@@ -17,4 +17,5 @@ import java.lang.annotation.Target;
 @ExtendWith(AssumeKubernetesCondition.class)
 public @interface Kubernetes {
     ClusterType type() default ClusterType.MINIKUBE;
+    MultinodeCluster multinode() default MultinodeCluster.WHATEVER;
 }

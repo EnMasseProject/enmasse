@@ -19,7 +19,9 @@ public class AssumeKubernetesCondition implements ExecutionCondition {
         Optional<Kubernetes> annotation = findAnnotation(context.getElement(), Kubernetes.class);
         if (annotation.isPresent()) {
             ClusterType cluster = annotation.get().type();
-            if (!io.enmasse.systemtest.platform.Kubernetes.getInstance().getCluster().toString().equals(cluster.toString().toLowerCase())) {
+            MultinodeCluster multinode = annotation.get().multinode();
+            if (!io.enmasse.systemtest.platform.Kubernetes.getInstance().getCluster().toString().equals(cluster.toString().toLowerCase()) &&
+                    (multinode == MultinodeCluster.WHATEVER || multinode == io.enmasse.systemtest.platform.Kubernetes.getInstance().isClusterMultinode())) {
                 return ConditionEvaluationResult.disabled("Test is not supported on current cluster");
             } else {
                 return ConditionEvaluationResult.enabled("Test is supported on current cluster");
