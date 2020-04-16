@@ -88,10 +88,8 @@ public class ControllerChain implements Watcher<AddressSpace> {
         List<AddressSpace> updatedResources = new ArrayList<>();
 
 
-        boolean requeue = true;
-        while (requeue) {
-
-            requeue = false;
+        boolean requeue = false;
+        do {
             for (final AddressSpace original : resources) {
 
                 AddressSpace addressSpace = new AddressSpaceBuilder(original).build();
@@ -145,7 +143,10 @@ public class ControllerChain implements Watcher<AddressSpace> {
                     log.warn("Exception in {} reconcileAll", controller, e);
                 }
             }
-        }
+            if (requeue) {
+                resources = new ArrayList<>(addressSpaceApi.listAllAddressSpaces());
+            }
+        } while(requeue);
     }
 
     static boolean hasAddressSpaceChanged(AddressSpace original, AddressSpace addressSpace) {
