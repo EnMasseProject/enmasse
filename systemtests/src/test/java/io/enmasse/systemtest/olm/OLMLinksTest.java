@@ -25,7 +25,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.selenium.SeleniumChrome;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
@@ -42,7 +42,7 @@ public class OLMLinksTest extends TestBase implements ITestBaseIsolated {
 
     @Test
     void testOLMLinks() {
-        String namespace = OperatorManager.getInstance().getNamespaceByOlmInstallationType(OLMInstallationType.DEFAULT);
+        String namespace = EnmasseOperatorManager.getInstance().getNamespaceByOlmInstallationType(OLMInstallationType.DEFAULT);
         ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", namespace, "-o", "json", "-l", "app=enmasse");
         JsonObject csvList = new JsonObject(result.getStdOut());
         JsonObject csv = csvList.getJsonArray("items").getJsonObject(0);

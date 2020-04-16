@@ -161,6 +161,7 @@ public abstract class Kubernetes {
                 log.info("Cluster is {}", cluster.toString());
             } catch (NoClusterException ex) {
                 log.error(ex.getMessage());
+                throw new RuntimeException(ex);
             }
             Environment env = Environment.getInstance();
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
@@ -465,7 +466,6 @@ public abstract class Kubernetes {
     /**
      * List <strong>all</strong> pods.
      * <p>
-     * @param namespace The namespace to list pods in.
      * @return The list of all pods.
      */
     public List<Pod> listAllPods() {

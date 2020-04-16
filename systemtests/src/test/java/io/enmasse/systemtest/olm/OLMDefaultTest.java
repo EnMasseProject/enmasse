@@ -8,7 +8,7 @@ import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.bases.olm.OLMTestBase;
 import io.enmasse.systemtest.condition.SupportedInstallType;
-import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -22,7 +22,7 @@ public class OLMDefaultTest extends OLMTestBase{
 
     @Override
     protected String getInstallationNamespace() {
-        return OperatorManager.getInstance().getNamespaceByOlmInstallationType(OLMInstallationType.DEFAULT);
+        return EnmasseOperatorManager.getInstance().getNamespaceByOlmInstallationType(OLMInstallationType.DEFAULT);
     }
 
     @Override

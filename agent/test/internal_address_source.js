@@ -376,4 +376,31 @@ describe('configmap backed address source', function() {
             });
         });
     });
+
+    function equal_properties (a, b) {
+        for (let k in a) {
+            if (a[k] !== b[k]) return false;
+        }
+        for (let k in b) {
+            if (b[k] !== a[k]) return false;
+        }
+        return true;
+    }
+
+    it('compares the name of the address', function(done) {
+        let source = new AddressSource({});
+        source.last = {};
+
+        // Populate the initial
+        source.get_changes('foo', [{name:'ab',address:'AB'}], equal_properties)
+
+        // Add the 'aa' address
+        let c = source.get_changes('foo', [{name:'aa',address:'aa'},{name:'ab',address:'AB'}], equal_properties)
+        assert(c !== undefined);
+        assert.equal(c.added.length, 1);
+        assert.equal(c.added[0].name, 'aa');
+        assert.equal(c.removed.length, 0);
+        assert.equal(c.modified.length, 0);
+        done();
+    });
 });

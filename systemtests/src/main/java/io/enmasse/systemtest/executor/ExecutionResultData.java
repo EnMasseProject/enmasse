@@ -23,6 +23,10 @@ public class ExecutionResultData {
         return stdOut;
     }
 
+    public String getTrimmedStdOut() {
+        return stdOut.trim().replace("'", "");
+    }
+
     public String getStdErr() {
         return stdErr;
     }

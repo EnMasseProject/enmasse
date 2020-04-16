@@ -14,7 +14,7 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
-import io.enmasse.systemtest.operator.OperatorManager;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -131,9 +131,9 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     private void performInfraCleanup() {
         try {
-            OperatorManager.getInstance().removeIoT();
-            OperatorManager.getInstance().deleteEnmasseOlm();
-            OperatorManager.getInstance().deleteEnmasseBundle();
+            EnmasseOperatorManager.getInstance().removeIoT();
+            EnmasseOperatorManager.getInstance().deleteEnmasseOlm();
+            EnmasseOperatorManager.getInstance().deleteEnmasseBundle();
         } catch (Exception e) {
             LOGGER.error("Failed", e);
         }

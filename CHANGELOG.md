@@ -16,6 +16,7 @@
 * #4266: Add broker.globalMaxSize to the infraconfig CRDs 
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
+* #4317: Addresses with different casing is not becoming ready
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
