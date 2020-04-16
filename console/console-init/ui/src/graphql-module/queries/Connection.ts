@@ -283,11 +283,11 @@ const CONNECTION_LINKS_FILTER = (
     removeForbiddenChars(filterName.value.trim());
 
   let filterAddressesLength = filterAddresses && filterAddresses.length;
-  let filterAddresse = filterAddresses && filterAddresses[0];
-  let filterAddresseValue =
-    filterAddresse &&
-    filterAddresse.value &&
-    removeForbiddenChars(filterAddresse.value.trim());
+  let filterAddress = filterAddresses && filterAddresses[0];
+  let filterAddressValue =
+    filterAddress &&
+    filterAddress.value &&
+    removeForbiddenChars(filterAddress.value.trim());
 
   if (addressSpaceName) {
     filter += "`$.spec.addressSpace` = '" + addressSpaceName + "' AND ";
@@ -330,26 +330,24 @@ const CONNECTION_LINKS_FILTER = (
   }
   if (filterAddressesLength > 0) {
     if (filterAddressesLength > 1) {
-      if (filterAddresse.isExact)
-        filterForLink += "(`$.spec.address` = '" + filterAddresseValue + "'";
+      if (filterAddress.isExact)
+        filterForLink += "(`$.spec.address` = '" + filterAddressValue + "'";
       else
         filterForLink +=
-          "(`$.spec.address` LIKE '" + filterAddresseValue + "%' ";
+          "(`$.spec.address` LIKE '" + filterAddressValue + "%' ";
       for (let i = 1; i < filterAddresses.length; i++) {
-        if (filterAddresse.isExact)
-          filterForLink +=
-            "OR `$.spec.address` = '" + filterAddresseValue + "'";
+        if (filterAddress.isExact)
+          filterForLink += "OR `$.spec.address` = '" + filterAddressValue + "'";
         else
           filterForLink +=
-            "OR `$.spec.address` LIKE '" + filterAddresseValue + "%' ";
+            "OR `$.spec.address` LIKE '" + filterAddressValue + "%' ";
       }
       filterForLink += ")";
     } else {
-      if (filterAddresse.isExact)
-        filterForLink += "`$.spec.address` = '" + filterAddresseValue + "'";
+      if (filterAddress.isExact)
+        filterForLink += "`$.spec.address` = '" + filterAddressValue + "'";
       else
-        filterForLink +=
-          "`$.spec.address` LIKE '" + filterAddresseValue + "%' ";
+        filterForLink += "`$.spec.address` LIKE '" + filterAddressValue + "%' ";
     }
     if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import classNames from "classnames";
 import {
   Dropdown,
@@ -59,7 +59,6 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   isDisplayLabelAndValue
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
-
   const dropdowItemCss = classNames(dropdownItemClass);
 
   const onToggle = (isOpen: boolean) => {
@@ -70,6 +69,20 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
     const element = document.getElementById(toggleId || id);
     element && element.focus();
   };
+
+  /*
+   *  If there is only one option use it as default
+   */
+  useEffect(() => {
+    if (!value || value.trim() === "") {
+      if (dropdownItems && dropdownItems.length === 1) {
+        const item = dropdownItems[0];
+        if (item && item.value && onSelectItem) {
+          onSelectItem(item.value);
+        }
+      }
+    }
+  }, [dropdownItems]);
 
   const onSelect = (e: any) => {
     const value =
