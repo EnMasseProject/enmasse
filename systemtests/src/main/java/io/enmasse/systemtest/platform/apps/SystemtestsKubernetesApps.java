@@ -114,6 +114,8 @@ public class SystemtestsKubernetesApps {
     private static final String SCALE_TEST_CLIENT_ID_LABEL = "id";
     private static final String SCALE_TEST_CLIENT_TYPE_LABEL = "client";
 
+    public static final Path TEMPLATES_ROOT = Paths.get(Environment.getInstance().getTemplatesPath());
+
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE;
@@ -145,7 +147,10 @@ public class SystemtestsKubernetesApps {
     };
 
     static {
-        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+
+        final Path examplesIoT = TEMPLATES_ROOT.resolve("iot/examples");
+
+        INFINISPAN_EXAMPLE_BASE = examplesIoT.resolve("infinispan");
         INFINISPAN_OPENSHIFT = new String[] {
                         "common",
                         "openshift"
@@ -155,9 +160,9 @@ public class SystemtestsKubernetesApps {
                         "kubernetes"
         };
 
-        POSTGRESQL_EXAMPLE_BASE = Paths.get("../templates/iot/examples/postgresql/deploy");
-        var pgDevCon = Paths.get("../templates/iot/examples/postgresql/create.devcon.sql");
-        var pgJsonBase = Paths.get("../templates/iot/examples/postgresql/create.sql");
+        POSTGRESQL_EXAMPLE_BASE = examplesIoT.resolve("postgresql/deploy");
+        var pgDevCon = examplesIoT.resolve("postgresql/create.devcon.sql");
+        var pgJsonBase = examplesIoT.resolve("postgresql/create.sql");
         POSTGRESQL_CREATE_FLAT_SQL = new Path[] {
                         pgDevCon,
                         pgJsonBase
@@ -165,15 +170,15 @@ public class SystemtestsKubernetesApps {
         POSTGRESQL_CREATE_TREE_SQL = new Path[] {
                         pgDevCon,
                         pgJsonBase,
-                        Paths.get("../templates/iot/examples/postgresql/create.tree.sql")
+                        examplesIoT.resolve("postgresql/create.tree.sql")
         };
         POSTGRESQL_CREATE_TABLE_SQL = new Path[] {
                         pgDevCon,
-                        Paths.get("../templates/iot/examples/postgresql/create.table.sql")
+                        examplesIoT.resolve("postgresql/create.table.sql")
         };
 
-        H2_EXAMPLE_BASE = Paths.get("../templates/iot/examples/h2/deploy");
-        H2_CREATE_SQL = Paths.get("../templates/iot/examples/h2/create.sql");
+        H2_EXAMPLE_BASE = examplesIoT.resolve("h2/deploy");
+        H2_CREATE_SQL = examplesIoT.resolve("h2/create.sql");
     }
 
     public static String getMessagingAppPodName() throws Exception {
