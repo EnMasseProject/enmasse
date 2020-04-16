@@ -107,9 +107,9 @@ public class ControllerChain implements Watcher<AddressSpace> {
                         addressSpace = result.getAddressSpace();
 
                         // If instructed to requeue, break loop and let the comparison of original vs current
-                        // determine if we need to persist anything. Once persisted, it is assumed that another
-                        // reconciliation event will occur in the near future to allow the reconciliation of this
-                        // AddressSpace to continue.
+                        // determine if we need to persist anything. Signal that the reconcile loop should run
+                        // again by setting requeue. This will refresh the current list of address spaces and rerun the
+                        // reconcile loop with persisted finalizers.
                         if (result.isPersistAndRequeue()) {
                             requeue = true;
                             break;
