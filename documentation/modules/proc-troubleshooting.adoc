@@ -109,7 +109,7 @@ If using the `standard` address space, check the `admin` pod logs for errors:
 = Examining the state of a broker using the {BrokerName} management interfaces
 
 If a problem is suspected with a Broker associated with an address space, you can examine the state of the
-broker directly using its in-built link:{BrokerManagementDocs}[management interfaces].  {ProductName} exposes the
+broker directly using its built-in link:{BrokerManagementDocs}[management interfaces].  {ProductName} exposes the
 {BrokerName}'s CLI and JMX  (via Jolokia).  It does not expose the {BrokerName} Console.
 
 .Procedure
