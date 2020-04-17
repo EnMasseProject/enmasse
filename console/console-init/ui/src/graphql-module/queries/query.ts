@@ -4,7 +4,6 @@
  */
 
 import { removeForbiddenChars } from "utils";
-import { IFilterValue } from "modules/address";
 
 const generateFilterPattern = (filterPattern: string, filterItems?: any[]) => {
   let filter = "";
