@@ -152,7 +152,7 @@ endif::[]
 {cmdcli} get pods -l infraUuid=_uuid_,role=broker
 ----
 +
-In the standard address there may be many brokers.  To identify the broker(s) hosting a particular queue, use this command:
+In the standard address, there may be many brokers.  To identify the broker(s) hosting a particular queue, use this command:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
