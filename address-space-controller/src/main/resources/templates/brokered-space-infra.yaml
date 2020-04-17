@@ -16,6 +16,21 @@ objects:
       infraUuid: ${INFRA_UUID}
       infraType: brokered
 - apiVersion: v1
+  kind: Secret
+  metadata:
+    name: broker-support-${INFRA_UUID}
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+      role: support-credentials
+  type: Opaque
+  data:
+    username: ${BROKER_SUPPORT_USER}
+    password: ${BROKER_SUPPORT_PWD}
+- apiVersion: v1
   kind: PersistentVolumeClaim
   metadata:
     annotations:
@@ -136,6 +151,9 @@ objects:
           - mountPath: /opt/apache-artemis/custom
             name: broker-custom
             readOnly: false
+          - mountPath: /opt/apache-artemis/support
+            name: broker-support
+            readOnly: true
         initContainers:
         - env:
           - name: INFRA_UUID
@@ -193,6 +211,9 @@ objects:
         - name: external-cert
           secret:
             secretName: ${MESSAGING_SECRET}
+        - name: broker-support
+          secret:
+            secretName: broker-support-${INFRA_UUID}
 - apiVersion: v1
   kind: Service
   metadata:
@@ -463,3 +484,7 @@ parameters:
 - description: Interval (in seconds) to use between controller resync
   name: CONTROLLER_RESYNC_INTERVAL
   value: '600'
+- description: Username for broker support access
+  name: BROKER_SUPPORT_USER
+- description: Password for broker support access
+  name: BROKER_SUPPORT_PWD

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ~ Copyright 2020, EnMasse authors.
+  ~ License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+  ~
+  -->
+
+<management-context xmlns="http://activemq.org/schema">
+    <!--<connector connector-port="1099"/>-->
+    <authorisation>
+        <whitelist>
+            <entry domain="hawtio"/>
+        </whitelist>
+        <default-access>
+            <access method="list*" roles="${HAWTIO_ROLE}"/>
+            <access method="get*" roles="${HAWTIO_ROLE}"/>
+            <access method="is*" roles="${HAWTIO_ROLE}"/>
+            <access method="set*" roles="${HAWTIO_ROLE}"/>
+            <access method="*" roles="${HAWTIO_ROLE}"/>
+        </default-access>
+        <role-access>
+            <match domain="org.apache.activemq.artemis">
+                <access method="list*" roles="${HAWTIO_ROLE}"/>
+                <access method="get*" roles="${HAWTIO_ROLE}"/>
+                <access method="is*" roles="${HAWTIO_ROLE}"/>
+                <access method="set*" roles="${HAWTIO_ROLE}"/>
+                <access method="*" roles="${HAWTIO_ROLE}"/>
+            </match>
+        </role-access>
+    </authorisation>
+</management-context>

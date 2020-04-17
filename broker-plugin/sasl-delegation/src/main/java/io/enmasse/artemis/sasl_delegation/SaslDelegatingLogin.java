@@ -26,6 +26,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -41,6 +43,7 @@ import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 import javax.security.auth.spi.LoginModule;
@@ -63,6 +66,8 @@ public class SaslDelegatingLogin implements LoginModule {
     public static final String GROUPS = "groups";
     public static final String PROP_ADDRESS_AUTHZ = "address-authz";
     public static final Symbol CAPABILITY_ADDRESS_AUTHZ = Symbol.valueOf("ADDRESS-AUTHZ");
+    public static final String SUPPORT_USER_PATH = "support_user_path";
+    public static final String SUPPORT_PASSWORD_PATH = "support_password_path";
 
     private final Set<Principal> principals = new HashSet<>();
     private final Set<String> roles = new HashSet<>();
@@ -102,6 +107,9 @@ public class SaslDelegatingLogin implements LoginModule {
 
         }
     }
+
+    private Optional<String> supportUserName;
+    private Optional<String> supportPassword;
 
     @Override
     public void initialize(Subject subject,
@@ -177,6 +185,33 @@ public class SaslDelegatingLogin implements LoginModule {
             }
         }
 
+        if(options.containsKey(SUPPORT_USER_PATH) && options.containsKey(SUPPORT_PASSWORD_PATH)) {
+            String supportUserPath = String.valueOf(options.get(SUPPORT_USER_PATH));
+            String supportPasswordPath = String.valueOf(options.get(SUPPORT_PASSWORD_PATH));
+
+            try {
+                this.supportUserName = Files.readAllLines(Paths.get(supportUserPath)).stream().findFirst();
+            } catch (IOException e) {
+                LOG.warnf(e,"Failed to load support username from file : %s", supportUserPath);
+                this.supportUserName = Optional.empty();
+            }
+            try {
+                this.supportPassword = Files.readAllLines(Paths.get(supportPasswordPath)).stream().findFirst();
+            } catch (IOException e) {
+                LOG.warnf(e,"Failed to load support password from file : %s", supportPasswordPath);
+                this.supportPassword = Optional.empty();
+            }
+
+            if (this.supportPassword.isPresent() && this.supportUserName.isPresent()) {
+                LOG.debug("Support access configured");
+            }
+
+        } else {
+            LOG.debug("Support access not configured");
+            this.supportUserName = Optional.empty();
+            this.supportPassword = Optional.empty();
+        }
+
         this.options = options;
         loginSucceeded = false;
         saslFactories = new SaslMechanismFactory[] { new PlainSaslMechanismFactory() };
@@ -201,10 +236,33 @@ public class SaslDelegatingLogin implements LoginModule {
             if (!success) {
                 List<X509Certificate> certs = new ArrayList<>();
 
-                if (isAuthenticatedUsingCerts(certs)) {
-                    success = populateUserAndRolesFromCert(certs.get(0));
-                } else {
+                NameCallback nameCallback = new NameCallback("user:");
+                PasswordCallback passwordCallback = new PasswordCallback("password:", false);
+                CertificateCallback certificateCallback = new CertificateCallback();
+                callbackHandler.handle(new Callback[] { nameCallback, certificateCallback, passwordCallback});
+                X509Certificate[] certArray = certificateCallback.getCertificates();
 
+                if(certArray != null) {
+                    certs.addAll(Arrays.asList(certArray));
+                }
+
+                if (nameCallback.getName() == null && !certs.isEmpty()) {
+                    success = populateUserAndRolesFromCert(certs.get(0));
+                } else if (this.supportPassword.isPresent()
+                        && this.supportUserName.isPresent()
+                        && this.supportUserName.get().equals(nameCallback.getName())) {
+                    boolean passwordMatched = this.supportPassword.get().equals(new String(passwordCallback.getPassword()));
+                    if (passwordMatched) {
+                        String hawtioRole = System.getProperty("hawtio.role", "amq");
+                        user = nameCallback.getName();
+                        roles.addAll(defaultRolesAuthenticated);
+                        roles.add("admin");
+                        roles.add(hawtioRole);
+                        success = true;
+                    } else {
+                        LOG.debugf("Login failed for user : %s", nameCallback.getName());
+                    }
+                } else {
                     Transport transport = Proton.transport();
                     Connection connection = Proton.connection();
                     transport.bind(connection);
@@ -327,16 +385,6 @@ public class SaslDelegatingLogin implements LoginModule {
         }
     }
 
-    private boolean isAuthenticatedUsingCerts(List<X509Certificate> certs) throws IOException, UnsupportedCallbackException {
-        NameCallback nameHandler = new NameCallback("user:");
-        CertificateCallback certificateCallback = new CertificateCallback();
-        callbackHandler.handle(new Callback[] { nameHandler, certificateCallback });
-        X509Certificate[] certArray = certificateCallback.getCertificates();
-        if(certArray != null) {
-            certs.addAll(Arrays.asList(certArray));
-        }
-        return nameHandler.getName() == null && !certs.isEmpty();
-    }
 
     private void getUserAndRolesFromConnection(Connection connection) {
         final Map<Symbol, Object> remoteProperties = connection.getRemoteProperties();

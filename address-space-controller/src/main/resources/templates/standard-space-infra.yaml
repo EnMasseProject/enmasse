@@ -197,6 +197,21 @@ objects:
       app: enmasse
       infraType: standard
       infraUuid: ${INFRA_UUID}
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: broker-support-${INFRA_UUID}
+    annotations:
+      addressSpace: ${ADDRESS_SPACE}
+    labels:
+      app: enmasse
+      infraType: standard
+      infraUuid: ${INFRA_UUID}
+      role: support-credentials
+  type: Opaque
+  data:
+    username: ${BROKER_SUPPORT_USER}
+    password: ${BROKER_SUPPORT_PWD}
 - apiVersion: apps/v1
   kind: Deployment
   metadata:
@@ -583,3 +598,7 @@ parameters:
   value: ${env.TOPIC_FORWARDER_IMAGE}
 - description:
   name: FS_GROUP_FALLBACK_MAP
+- description: Username for broker support access
+  name: BROKER_SUPPORT_USER
+- description: Password for broker support access
+  name: BROKER_SUPPORT_PWD
