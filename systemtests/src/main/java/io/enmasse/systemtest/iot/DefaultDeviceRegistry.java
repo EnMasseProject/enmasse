@@ -142,22 +142,25 @@ public final class DefaultDeviceRegistry {
         SystemtestsKubernetesApps.deletePostgresqlServer();
     }
 
-    public static ServicesConfig newPostgresTreeBased() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
+    public static ServicesConfig newPostgresBased(final Mode mode) throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(mode);
 
         return new ServicesConfigBuilder()
                 .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(newPostgresTreeBasedRegistry(jdbcEndpoint))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, mode))
                 .build();
     }
 
-    public static ServicesConfig newPostgresFlatBased() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_FLAT);
+    public static ServicesConfig newPostgresTreeBased() throws Exception {
+        return newPostgresBased(Mode.JSON_TREE);
+    }
 
-        return new ServicesConfigBuilder()
-                .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(newPostgresFlatBasedRegistry(jdbcEndpoint))
-                .build();
+    public static ServicesConfig newPostgresFlatBased() throws Exception {
+        return newPostgresBased(Mode.JSON_FLAT);
+    }
+
+    public static ServicesConfig newPostgresTableBased() throws Exception {
+        return newPostgresBased(Mode.TABLE);
     }
 
     public static ServicesConfig newH2Based() throws Exception {
@@ -194,24 +197,12 @@ public final class DefaultDeviceRegistry {
 
     }
 
-    public static DeviceRegistryServiceConfig newPostgresFlatBasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
+    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final Mode mode) throws Exception {
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
-                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, Mode.JSON_FLAT))
-
-                .endServer()
-                .endJdbc()
-                .build();
-    }
-
-    public static DeviceRegistryServiceConfig newPostgresTreeBasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
-        return new DeviceRegistryServiceConfigBuilder()
-                .withNewJdbc()
-                .withNewServer()
-
-                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, Mode.JSON_TREE))
+                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, mode))
 
                 .endServer()
                 .endJdbc()
