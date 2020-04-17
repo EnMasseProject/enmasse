@@ -37,7 +37,7 @@ const infraUuidAnnotation = "enmasse.io/infra-uuid"
 
 func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.name")
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.spec.address")
 		if e != nil {
 			return nil, e
 		}
@@ -52,7 +52,7 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 			return nil, e
 		}
 		// N.B. address name not prefixed in the link index
-		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, addrtoks[0], addrtoks[1], keyElements), fltrfunc)
+		links, e := ar.Cache.Get(cache.AddressLinkObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, addrtoks[0], obj.Spec.Address, keyElements), fltrfunc)
 		if e != nil {
 			return nil, e
 		}

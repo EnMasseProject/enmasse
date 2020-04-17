@@ -139,7 +139,8 @@ func TestQueryAddressLinks(t *testing.T) {
 	addr2 := "myaddr1"
 	addressName := addressspace + "." + addr1
 
-	addr := createAddress(namespace, addressName)
+	addr := createAddress(namespace, addressName,
+		withAddress(addr1))
 
 	err := r.Cache.Add(
 		addr,
@@ -158,6 +159,7 @@ func TestQueryAddressLinks(t *testing.T) {
 			},
 			Spec: v1beta1.AddressSpec{
 				AddressSpace: addressspace,
+				Address:      addr1,
 			},
 		},
 	}
@@ -170,6 +172,46 @@ func TestQueryAddressLinks(t *testing.T) {
 	assert.Equalf(t, expected, actual, "Unexpected number of links for address %s", addr1)
 }
 
+func TestQueryAddressLinksWithDifferentAddressResourceName(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+
+	addr1 := "myaddr"
+	addr1ResourceName := "myaddrdiff"
+	address1NameResourceName := addressspace + "." + addr1ResourceName
+
+	addr := createAddress(namespace, address1NameResourceName,
+		withAddress(addr1))
+
+	link := createAddressLink(namespace, addressspace, addr1, "sender")
+	err := r.Cache.Add(addr, link)
+	assert.NoError(t, err)
+
+	con := &consolegraphql.AddressHolder{
+		Address: v1beta1.Address{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      address1NameResourceName,
+				UID:       types.UID(addr.UID),
+				Namespace: namespace,
+			},
+			Spec: v1beta1.AddressSpec{
+				AddressSpace: addressspace,
+				Address:      addr1,
+			},
+		},
+	}
+
+	objs, err := r.Address_consoleapi_enmasse_io_v1beta1().Links(ctx, con, nil, nil, nil, nil)
+	assert.NoError(t, err)
+
+	expected := 1
+	actual := objs.Total
+	assert.Equalf(t, expected, actual, "Unexpected number of links for a ddress %s", addr1)
+	assert.Equal(t, link.Spec, objs.Links[0].Spec, "Unexpected link spec")
+	assert.Equal(t, link.ObjectMeta, objs.Links[0].ObjectMeta, "Unexpected link object meta")
+}
+
 func TestQueryAddressLinkFilter(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
@@ -178,7 +220,8 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 	addr1 := "myaddr"
 	addressName := addressspace + "." + addr1
 
-	addr := createAddress(namespace, addressName)
+	addr := createAddress(namespace, addressName,
+		withAddress(addr1))
 
 	link1 := createAddressLink(namespace, addressspace, addr1, "sender")
 	link2 := createAddressLink(namespace, addressspace, addr1, "sender")
@@ -194,6 +237,7 @@ func TestQueryAddressLinkFilter(t *testing.T) {
 			},
 			Spec: v1beta1.AddressSpec{
 				AddressSpace: addressspace,
+				Address:      addr1,
 			},
 		},
 	}
@@ -217,7 +261,8 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 	addr1 := "myaddr"
 	addressName := addressspace + "." + addr1
 
-	addr := createAddress(namespace, addressName)
+	addr := createAddress(namespace, addressName,
+		withAddress(addr1))
 
 	link1 := createAddressLink(namespace, addressspace, addr1, "sender")
 	link2 := createAddressLink(namespace, addressspace, addr1, "receiver")
@@ -233,6 +278,7 @@ func TestQueryAddressLinkOrder(t *testing.T) {
 			},
 			Spec: v1beta1.AddressSpec{
 				AddressSpace: addressspace,
+				Address:      addr1,
 			},
 		},
 	}
@@ -256,7 +302,8 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 	addr1 := "myaddr"
 	addressName := "myaddressspace." + addr1
 
-	addr := createAddress(namespace, addressName)
+	addr := createAddress(namespace, addressName,
+		withAddress(addr1))
 
 	link1 := createAddressLink(namespace, addressspace, addr1, "sender")
 	link2 := createAddressLink(namespace, addressspace, addr1, "sender")
@@ -274,6 +321,7 @@ func TestQueryAddressLinkPaginated(t *testing.T) {
 			},
 			Spec: v1beta1.AddressSpec{
 				AddressSpace: addressspace,
+				Address:      addr1,
 			},
 		},
 	}
@@ -315,6 +363,7 @@ func TestQueryAddressMetrics(t *testing.T) {
 			createMetric(namespace, "enmasse_senders", float64(2)),
 			createMetric(namespace, "enmasse_receivers", float64(1)),
 		),
+		withAddress("myaddr"),
 	)
 
 	err := r.Cache.Add(addr)

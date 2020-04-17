@@ -184,6 +184,12 @@ public class ChromeConsoleTest extends ConsoleTest implements ITestSharedStandar
     }
 
     @Test
+    @ExternalClients
+    void testAddressLinksWithMismatchedAddressResourceNameAndSuffix() throws Exception {
+        doTestAddressLinksWithMismatchedAddressResourceNameAndSuffix(getSharedAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
+    }
+
+    @Test
     void testMessagesStoredMetrics() throws Exception {
         doTestMessagesStoredMetrics(getSharedAddressSpace());
     }

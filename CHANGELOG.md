@@ -8,6 +8,7 @@
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
 * #4245:  standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
 * #4242: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
+* #4287: Address links not displayed if address resource name suffix does not match address name
 * #4317: Addresses with different casing is not becoming ready
 * #4266: Add broker.globalMaxSize to the infraconfig CRDs 
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final

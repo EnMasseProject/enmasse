@@ -262,6 +262,12 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     @ExternalClients
+    void testAddressLinksWithMismatchedAddressResourceNameAndSuffix() throws Exception {
+        doTestAddressLinksWithMismatchedAddressResourceNameAndSuffix(getSharedAddressSpace(), DestinationPlan.STANDARD_SMALL_QUEUE);
+    }
+
+    @Test
+    @ExternalClients
     void testFilterConnectionsByContainerId() throws Exception {
         doTestFilterConnectionsByContainerId(getSharedAddressSpace());
     }

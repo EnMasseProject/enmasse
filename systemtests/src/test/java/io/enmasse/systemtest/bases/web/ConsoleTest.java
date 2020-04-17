@@ -19,6 +19,8 @@ import io.enmasse.systemtest.clients.ClientUtils.ClientAttacher;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -751,7 +753,6 @@ public abstract class ConsoleTest extends TestBase {
                 Comparator.comparingInt(ConnectionWebItem::getReceivers));
     }
 
-
     protected void doTestAddressLinks(AddressSpace addressSpace, String destinationPlan) throws Exception {
         Address address = generateAddressObject(addressSpace, destinationPlan);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
@@ -765,6 +766,33 @@ public abstract class ConsoleTest extends TestBase {
         assertThat(consolePage.getClientItems().size(), is(link_count));
     }
 
+    protected void doTestAddressLinksWithMismatchedAddressResourceNameAndSuffix(AddressSpace addressSpace, String destinationPlan) throws Exception {
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+        Address address = doCreateAddressWithMismatchedAddressResourceNameAndSuffix(addressSpace, destinationPlan);
+        consolePage.openClientsList(address);
+        assertThat("Link table is not empty!", consolePage.isClientListEmpty());
+        int link_count = attachClients(addressSpace, address, defaultCredentials);
+        selenium.waitUntilPropertyPresent(60, link_count, () -> consolePage.getClientItems().size());
+        assertThat(consolePage.getClientItems().size(), is(link_count));
+    }
+
+    private Address doCreateAddressWithMismatchedAddressResourceNameAndSuffix(AddressSpace addressSpace, String destinationPlan) throws Exception {
+        Address address = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queues")
+                .withPlan(destinationPlan)
+                .endSpec()
+                .build();
+        getResourceManager().setAddresses(address);
+        return address;
+    }
 
     private void doTestSortConnections(AddressSpace addressSpace, SortType sortType, ClientAttacher attacher, Predicate<ConnectionWebItem> readyCondition, Comparator<ConnectionWebItem> sortingComparator) throws Exception {
         int addressCount = 2;
