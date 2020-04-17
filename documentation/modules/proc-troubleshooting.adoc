@@ -160,7 +160,7 @@ In the standard address, there may be many brokers.  To identify the broker(s) h
 ----
 +
 
-. Execute support commands on the broker's pod
+. Execute support commands on the broker's pod:
 +
 To execute an {BrokerName} Jolokia JMX commands, use a command line like this:
 +
