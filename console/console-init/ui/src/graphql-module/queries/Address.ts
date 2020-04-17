@@ -307,8 +307,10 @@ const ADDRESS_LINKS_FILTER = (
   }
 
   //filter role
-  filterForLink += generateSimpleFilterByPattern("spec.role", filterRole);
-
+  if (filterRole)
+    filterForLink += generateComplexFilterByPattern("spec.role", [
+      { value: filterRole, isExact: true }
+    ]);
   return { filter, filterForLink };
 };
 

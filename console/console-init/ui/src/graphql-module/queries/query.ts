@@ -17,21 +17,27 @@ const generateComplexFilterByPattern = (
     filterItem.value &&
     removeForbiddenChars(filterItem.value.trim());
 
-  if (filterItemsLength && filterItemsLength > 0 && filterPattern) {
+  if (
+    filterItemValue &&
+    filterItemsLength &&
+    filterItemsLength > 0 &&
+    filterPattern
+  ) {
     if (filterItemsLength > 1) {
-      if (filterItem.isExact) {
-        filter += "(`$." + [filterPattern] + "` = '" + filterItemValue + "'";
-      } else {
-        filter +=
-          "(`$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
-      }
+      filter += "(";
+    }
+    if (filterItem.isExact) {
+      filter += "`$." + [filterPattern] + "` = '" + filterItemValue + "'";
+    } else {
+      filter += "`$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
+    }
+    if (filterItemsLength > 1) {
       for (let i = 1; i < filterItemsLength; i++) {
         let filterItem = filterItems && filterItems[i];
         let filterItemValue =
           filterItem &&
           filterItem.value &&
           removeForbiddenChars(filterItem.value.trim());
-
         if (filterItem.isExact) {
           filter +=
             "OR `$." + [filterPattern] + "` = '" + filterItemValue + "'";
@@ -41,12 +47,6 @@ const generateComplexFilterByPattern = (
         }
       }
       filter += ")";
-    } else {
-      if (filterItem.isExact) {
-        filter += "`$." + [filterPattern] + "` = '" + filterItemValue + "'";
-      } else {
-        filter += "`$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
-      }
     }
   }
   return filter;
