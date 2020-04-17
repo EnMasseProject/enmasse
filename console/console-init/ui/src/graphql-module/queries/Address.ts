@@ -6,7 +6,10 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
-import { getCompplexFilterByPattern, getSimpleFilterByPattern } from "./query";
+import {
+  generateComplexFilterByPattern,
+  generateSimpleFilterByPattern
+} from "./query";
 
 const DELETE_ADDRESS = gql`
   mutation delete_addr($a: ObjectMeta_v1_Input!) {
@@ -45,7 +48,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   }
 
   //filter address
-  filter += getCompplexFilterByPattern("spec.address", filterNames);
+  filter += generateComplexFilterByPattern("spec.address", filterNames);
 
   if (
     filterNamesLength &&
@@ -55,7 +58,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
     filter += " AND ";
   }
   //filter type
-  filter += getSimpleFilterByPattern("spec.type", typeValue);
+  filter += generateSimpleFilterByPattern("spec.type", typeValue);
 
   if (typeValue && statusValue) {
     filter += " AND ";
@@ -282,7 +285,7 @@ const ADDRESS_LINKS_FILTER = (
   }
 
   //filter names
-  filterForLink += getCompplexFilterByPattern("metadata.name", filterNames);
+  filterForLink += generateComplexFilterByPattern("metadata.name", filterNames);
   if (filterNamesLength > 0) {
     if (
       filterContainersLength > 0 ||
@@ -294,7 +297,7 @@ const ADDRESS_LINKS_FILTER = (
 
   //filter containers
   if (filterContainersLength > 0) {
-    filterForLink += getCompplexFilterByPattern(
+    filterForLink += generateComplexFilterByPattern(
       "spec.connection.spec.containerId",
       filterContainers
     );
@@ -304,7 +307,7 @@ const ADDRESS_LINKS_FILTER = (
   }
 
   //filter role
-  filterForLink += getSimpleFilterByPattern("spec.role", filterRole);
+  filterForLink += generateSimpleFilterByPattern("spec.role", filterRole);
 
   return { filter, filterForLink };
 };

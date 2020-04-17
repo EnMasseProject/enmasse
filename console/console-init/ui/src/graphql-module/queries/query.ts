@@ -5,7 +5,7 @@
 
 import { removeForbiddenChars } from "utils";
 
-const getCompplexFilterByPattern = (
+const generateComplexFilterByPattern = (
   filterPattern: string,
   filterItems?: any[]
 ) => {
@@ -52,7 +52,7 @@ const getCompplexFilterByPattern = (
   return filter;
 };
 
-const getSimpleFilterByPattern = (
+const generateSimpleFilterByPattern = (
   filterPattern: string,
   filterItem?: string | null
 ) => {
@@ -64,4 +64,4 @@ const getSimpleFilterByPattern = (
   return filter;
 };
 
-export { getCompplexFilterByPattern, getSimpleFilterByPattern };
+export { generateComplexFilterByPattern, generateSimpleFilterByPattern };

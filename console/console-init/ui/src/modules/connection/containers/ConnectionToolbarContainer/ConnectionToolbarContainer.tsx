@@ -90,21 +90,22 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
     return response;
   };
 
-  const getOptions = (response: any, propertyName: string) => {
+  const getOptions = (
+    response: IConnectionListNameSearchResponse,
+    propertyName: string
+  ) => {
     if (
-      response &&
-      response.data &&
-      response.data.connections &&
-      response.data.connections.connections &&
-      response.data.connections.connections.length > 0
+      response.connections &&
+      response.connections.connections &&
+      response.connections.connections.length > 0
     ) {
-      const obtainedList = response.data.connections.connections.map(
+      const obtainedList = response.connections.connections.map(
         (connection: any) => connection.spec[propertyName]
       );
       //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
       const filteredHostnameOptions = getSelectOptionList(
         obtainedList,
-        response.data.connections.total
+        response.connections.total
       );
       if (filteredHostnameOptions.length > 0) return filteredHostnameOptions;
     }
@@ -115,7 +116,7 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       value,
       "hostname"
     );
-    return getOptions(response, "hostname");
+    return getOptions(response.data, "hostname");
   };
 
   const onContainerSelect = (e: any, selection: SelectOptionObject) => {
@@ -131,7 +132,7 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       value,
       "containerId"
     );
-    return getOptions(response, "containerId");
+    return getOptions(response.data, "containerId");
   };
 
   const onSearch = () => {

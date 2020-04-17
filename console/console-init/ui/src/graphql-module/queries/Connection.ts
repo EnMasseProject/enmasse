@@ -6,7 +6,10 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
-import { getCompplexFilterByPattern, getSimpleFilterByPattern } from "./query";
+import {
+  generateComplexFilterByPattern,
+  generateSimpleFilterByPattern
+} from "./query";
 
 const ALL_CONECTION_LIST_FILTER = (
   hostnames: any[],
@@ -29,14 +32,14 @@ const ALL_CONECTION_LIST_FILTER = (
   }
 
   //filter hostnames
-  filter += getCompplexFilterByPattern("spec.hostname", hostnames);
+  filter += generateComplexFilterByPattern("spec.hostname", hostnames);
 
   if (containersLength > 0) {
     if (hostnamesLength > 0) {
       filter += " AND ";
     }
     //filter containers
-    filter += getCompplexFilterByPattern("spec.containerId", containers);
+    filter += generateComplexFilterByPattern("spec.containerId", containers);
   }
   return filter;
 };
@@ -244,7 +247,10 @@ const CONNECTION_LINKS_FILTER = (
 
   if (filterNamesLength > 0) {
     //filter for names
-    filterForLink += getCompplexFilterByPattern("metadata.name", filterNames);
+    filterForLink += generateComplexFilterByPattern(
+      "metadata.name",
+      filterNames
+    );
     if (filterAddressesLength > 0 || (filterRole && filterRole.trim() !== "")) {
       filterForLink += " AND ";
     }
@@ -252,7 +258,7 @@ const CONNECTION_LINKS_FILTER = (
 
   if (filterAddressesLength > 0) {
     //filter addresses
-    filterForLink += getCompplexFilterByPattern(
+    filterForLink += generateComplexFilterByPattern(
       "spec.address",
       filterAddresses
     );
@@ -262,7 +268,7 @@ const CONNECTION_LINKS_FILTER = (
   }
 
   //filter type
-  filterForLink += getSimpleFilterByPattern("spec.role", filterRole);
+  filterForLink += generateSimpleFilterByPattern("spec.role", filterRole);
 
   return { filter, filterForLink };
 };

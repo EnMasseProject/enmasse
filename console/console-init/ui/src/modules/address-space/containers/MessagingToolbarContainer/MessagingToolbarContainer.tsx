@@ -113,21 +113,22 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     return response;
   };
 
-  const getOptions = (response: any, propertyname: string) => {
+  const getOptions = (
+    response: ISearchNameOrNameSpaceAddressSpaceListResponse,
+    propertyname: string
+  ) => {
     if (
-      response &&
-      response.data &&
-      response.data.addressSpaces &&
-      response.data.addressSpaces.addressSpaces &&
-      response.data.addressSpaces.addressSpaces.length > 0
+      response.addressSpaces &&
+      response.addressSpaces.addressSpaces &&
+      response.addressSpaces.addressSpaces.length > 0
     ) {
-      let obtainedList = response.data.addressSpaces.addressSpaces.map(
+      let obtainedList = response.addressSpaces.addressSpaces.map(
         (link: any) => link.metadata[propertyname]
       );
       //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
       const filteredNameOptions = getSelectOptionList(
         obtainedList,
-        response.data.addressSpaces.total
+        response.addressSpaces.total
       );
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
@@ -135,7 +136,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
 
   const onChangeNameInput = async (value: string) => {
     const response = await getAddressSpaceForNameORNameSpace(value, "name");
-    return getOptions(response, "name");
+    return getOptions(response.data, "name");
   };
 
   const onNamespaceSelect = (e: any, selection: SelectOptionObject) => {
@@ -152,7 +153,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       value,
       "namespace"
     );
-    return getOptions(response, "namespace");
+    return getOptions(response.data, "namespace");
   };
 
   const onTypeToggle = () => {
