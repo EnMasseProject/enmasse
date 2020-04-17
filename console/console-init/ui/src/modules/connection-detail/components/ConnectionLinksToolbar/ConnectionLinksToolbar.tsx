@@ -26,7 +26,6 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
   nameInput,
   addressSelected,
   addressInput,
-  roleIsExpanded,
   roleSelected,
   selectedNames,
   selectedAddresses,
@@ -35,7 +34,6 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
   onNameClear,
   onAddressSelect,
   onAddressClear,
-  onRoleToggle,
   onRoleSelect,
   onSearch,
   onDelete,
@@ -68,7 +66,6 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
         nameInput={nameInput}
         addressSelected={addressSelected}
         addressInput={addressInput}
-        roleIsExpanded={roleIsExpanded}
         roleSelected={roleSelected}
         selectedNames={selectedNames}
         selectedAddresses={selectedAddresses}
@@ -77,7 +74,6 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
         onNameClear={onNameClear}
         onAddressSelect={onAddressSelect}
         onAddressClear={onAddressClear}
-        onRoleToggle={onRoleToggle}
         onRoleSelect={onRoleSelect}
         onSearch={onSearch}
         onDelete={onDelete}

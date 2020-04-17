@@ -51,8 +51,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const [nameInput, setNameInput] = useState<string>();
   const [namespaceSelected, setNamespaceSelected] = useState<string>();
   const [namespaceInput, setNamespaceInput] = useState<string>();
-  const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
-
   const [filterSelected, setFilterSelected] = useState<string>("Name");
 
   const onClearAllFilters = () => {
@@ -168,13 +166,8 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     }
   };
 
-  const onTypeToggle = () => {
-    setTypeIsExpanded(!typeIsExpanded);
-  };
-
-  const onTypeSelect = (e: any, selection: SelectOptionObject) => {
-    setTypeSelected(selection.toString());
-    setTypeIsExpanded(false);
+  const onTypeSelect = (selection: string) => {
+    setTypeSelected(selection);
   };
 
   const onSearch = () => {
@@ -278,7 +271,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       nameInput={nameInput}
       namespaceSelected={namespaceSelected}
       namespaceInput={namespaceInput}
-      typeIsExpanded={typeIsExpanded}
       typeSelected={typeSelected}
       selectedNames={selectedNames}
       selectedNamespaces={selectedNamespaces}
@@ -287,7 +279,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       onNameClear={onNameClear}
       onNamespaceSelect={onNamespaceSelect}
       onNamespaceClear={onNamespaceClear}
-      onTypeToggle={onTypeToggle}
       onTypeSelect={onTypeSelect}
       onDeleteAll={onDeleteAll}
       onSearch={onSearch}

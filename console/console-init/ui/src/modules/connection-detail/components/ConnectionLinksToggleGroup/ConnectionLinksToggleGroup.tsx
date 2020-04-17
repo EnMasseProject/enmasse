@@ -1,9 +1,7 @@
 import React from "react";
 import {
-  Select,
   SelectVariant,
   SelectOptionObject,
-  SelectOption,
   DataToolbarToggleGroup,
   DataToolbarGroup,
   DataToolbarFilter,
@@ -18,7 +16,11 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAheadSelect } from "components";
+import {
+  DropdownWithToggle,
+  TypeAheadSelect,
+  SelectWithToggle
+} from "components";
 
 export interface IConnectionLinksToggleGroupProps {
   totalRecords: number;
@@ -27,7 +29,6 @@ export interface IConnectionLinksToggleGroupProps {
   nameInput?: string;
   addressSelected?: string;
   addressInput?: string;
-  roleIsExpanded: boolean;
   roleSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   selectedAddresses: Array<{ value: string; isExact: boolean }>;
@@ -36,8 +37,7 @@ export interface IConnectionLinksToggleGroupProps {
   onNameClear: () => void;
   onAddressSelect: (e: any, selection: SelectOptionObject) => void;
   onAddressClear: () => void;
-  onRoleToggle: () => void;
-  onRoleSelect: (e: any, selection: SelectOptionObject) => void;
+  onRoleSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
     category: string | DataToolbarChipGroup,
@@ -55,7 +55,6 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   nameInput,
   addressSelected,
   addressInput,
-  roleIsExpanded,
   roleSelected,
   selectedNames,
   selectedAddresses,
@@ -64,7 +63,6 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   onNameClear,
   onAddressSelect,
   onAddressClear,
-  onRoleToggle,
   onRoleSelect,
   onSearch,
   onDelete,
@@ -170,22 +168,13 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           categoryName="Role"
         >
           {filterSelected === "Role" && (
-            <Select
+            <SelectWithToggle
               variant={SelectVariant.single}
-              aria-label="Select Role"
-              onToggle={onRoleToggle}
-              onSelect={onRoleSelect}
+              ariaLabel="Select Role"
+              onSelectItem={onRoleSelect}
               selections={roleSelected || "Select Role"}
-              isExpanded={roleIsExpanded}
-            >
-              {roleOptions.map((option, index) => (
-                <SelectOption
-                  isDisabled={option.isDisabled}
-                  key={index}
-                  value={option.value}
-                />
-              ))}
-            </Select>
+              selectOptions={roleOptions}
+            />
           )}
         </DataToolbarFilter>
       </DataToolbarItem>

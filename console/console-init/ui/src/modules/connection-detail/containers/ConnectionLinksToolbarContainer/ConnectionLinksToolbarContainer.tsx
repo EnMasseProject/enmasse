@@ -55,7 +55,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
   const [nameInput, setNameInput] = useState<string>();
   const [addressSelected, setAddressSelected] = useState<string>();
   const [addressInput, setAddressInput] = useState<string>();
-  const [roleIsExpanded, setRoleIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
 
   const onClearAllFilters = () => {
@@ -161,12 +160,8 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
     }
   };
 
-  const onRoleToggle = () => {
-    setRoleIsExpanded(!roleIsExpanded);
-  };
-  const onRoleSelect = (e: any, selection: SelectOptionObject) => {
-    setRoleSelected(selection.toString());
-    setRoleIsExpanded(false);
+  const onRoleSelect = (selection: string) => {
+    setRoleSelected(selection);
   };
 
   const onSearch = () => {
@@ -264,7 +259,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       nameInput={nameInput}
       addressSelected={addressSelected}
       addressInput={addressInput}
-      roleIsExpanded={roleIsExpanded}
       roleSelected={roleSelected}
       selectedNames={selectedNames}
       selectedAddresses={selectedAddresses}
@@ -273,7 +267,6 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
       onNameClear={onNameClear}
       onAddressSelect={onAddressSelect}
       onAddressClear={onAddressClear}
-      onRoleToggle={onRoleToggle}
       onRoleSelect={onRoleSelect}
       onSearch={onSearch}
       onDelete={onDelete}

@@ -59,8 +59,6 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
   const { dispatch } = useStoreContext();
   const [nameSelected, setNameSelected] = useState<string>();
   const [nameInput, setNameInput] = useState<string>();
-  const [typeIsExpanded, setTypeIsExpanded] = useState<boolean>(false);
-  const [statusIsExpanded, setStatusIsExpanded] = useState<boolean>(false);
   const [filterSelected, setFilterSelected] = useState<string>("Name");
 
   const onClearAllFilters = () => {
@@ -120,22 +118,12 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
     }
   };
 
-  const onTypeToggle = () => {
-    setTypeIsExpanded(!typeIsExpanded);
+  const onTypeSelect = (selection: string) => {
+    setTypeSelected(selection);
   };
 
-  const onTypeSelect = (e: any, selection: SelectOptionObject) => {
-    setTypeSelected(selection.toString());
-    setTypeIsExpanded(false);
-  };
-
-  const onStatusToggle = () => {
-    setStatusIsExpanded(!statusIsExpanded);
-  };
-
-  const onStatusSelect = (e: any, selection: SelectOptionObject) => {
-    setStatusSelected(selection.toString());
-    setStatusIsExpanded(false);
+  const onStatusSelect = (selection: string) => {
+    setStatusSelected(selection);
   };
 
   const onSearch = () => {
@@ -208,17 +196,13 @@ export const AddressToolbarContainer: React.FunctionComponent<IAddressToolbarCon
       filterSelected={filterSelected}
       nameSelected={nameSelected}
       nameInput={nameInput}
-      typeIsExpanded={typeIsExpanded}
       typeSelected={typeSelected}
-      statusIsExpanded={statusIsExpanded}
       statusSelected={statusSelected}
       selectedNames={selectedNames}
       onFilterSelect={onFilterSelect}
       onNameSelect={onNameSelect}
       onNameClear={onNameClear}
-      onTypeToggle={onTypeToggle}
       onTypeSelect={onTypeSelect}
-      onStatusToggle={onStatusToggle}
       onStatusSelect={onStatusSelect}
       onSearch={onSearch}
       onDelete={onDelete}
