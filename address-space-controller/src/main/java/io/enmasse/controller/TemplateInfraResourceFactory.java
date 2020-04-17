@@ -14,12 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +39,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.SecretReference;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
@@ -100,6 +96,26 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
         parameters.put(TemplateParameter.MESSAGING_SECRET, serviceCertMapping.get("messaging").getSecretName());
+
+        Optional<Secret> secret = kubernetes.getSecret("broker-support-" + infraUuid);
+        if (secret.isPresent()) {
+            Map<String, String> secretData  = secret.get().getData();
+            if (secretData.containsKey("username") && secretData.containsKey("password")) {
+                parameters.put(TemplateParameter.BROKER_SUPPORT_USER, secret.get().getData().get("username"));
+                parameters.put(TemplateParameter.BROKER_SUPPORT_PWD, secret.get().getData().get("password"));
+            } else {
+                createSupportCredentials(parameters);
+            }
+        } else {
+            createSupportCredentials(parameters);
+        }
+    }
+
+    private void createSupportCredentials(Map<String, String> parameters) {
+        String brokerSupportUser =  String.format("broker-support-%s", UUID.randomUUID());
+        String brokerSupportPwd = UUID.randomUUID().toString();
+        parameters.put(TemplateParameter.BROKER_SUPPORT_USER, Base64.getEncoder().encodeToString(brokerSupportUser.getBytes()));
+        parameters.put(TemplateParameter.BROKER_SUPPORT_PWD, Base64.getEncoder().encodeToString(brokerSupportPwd.getBytes()));
     }
 
     private void prepareMqttParameters(AddressSpace addressSpace, Map<String, String> parameters) {
@@ -314,6 +330,5 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             throw new IllegalArgumentException("Unknown address space type " + addressSpace.getSpec().getType());
         }
     }
-
 
 }

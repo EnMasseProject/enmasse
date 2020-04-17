@@ -11,6 +11,7 @@
 
 ## 0.31.1
 * #4046: add network-only as fetch policy for all queries 
+* #4090: Provide per-address space support credentials facilitating support access to the broker(s) (#4276)
 * #4184: Sometimes controller crashes when reconciling authentication service 
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
 * #4242: #4246: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
@@ -27,6 +28,7 @@
 * #4317: Addresses with different casing is not becoming ready 
 * #4331: Issues installing monitoring resources (#4200) (#4222)
 * #4332: Unable to drain kube node when broker pod is deployed there
+
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
