@@ -145,7 +145,7 @@ endif::[]
 {cmdcli} get secret broker-support-_uuid_  --template='{{.data.password}}' | base64 --decode
 ----
 
-. Identity the broker pod name
+. Identify the broker pod name:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
