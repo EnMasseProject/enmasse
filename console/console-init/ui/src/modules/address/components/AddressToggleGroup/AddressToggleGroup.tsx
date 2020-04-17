@@ -5,10 +5,8 @@
 
 import React from "react";
 import {
-  Select,
   SelectVariant,
   SelectOptionObject,
-  SelectOption,
   DataToolbarToggleGroup,
   DataToolbarGroup,
   DataToolbarFilter,
@@ -23,25 +21,25 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { TypeAheadSelect, DropdownWithToggle } from "components";
+import {
+  TypeAheadSelect,
+  DropdownWithToggle,
+  SelectWithToggle
+} from "components";
 
 export interface IAddressToggleGroupProps {
   totalRecords: number;
   filterSelected?: string;
   nameSelected?: string;
   nameInput?: string;
-  typeIsExpanded: boolean;
   typeSelected?: string | null;
-  statusIsExpanded: boolean;
   statusSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   onFilterSelect: (value: string) => void;
   onNameSelect: (e: any, selection: SelectOptionObject) => void;
   onNameClear: () => void;
-  onTypeToggle: () => void;
-  onTypeSelect: (e: any, selection: SelectOptionObject) => void;
-  onStatusToggle: () => void;
-  onStatusSelect: (e: any, selection: SelectOptionObject) => void;
+  onTypeSelect: (selection: string) => void;
+  onStatusSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
     category: string | DataToolbarChipGroup,
@@ -50,22 +48,19 @@ export interface IAddressToggleGroupProps {
   onChangeNameInput?: (value: string) => Promise<any>;
   setNameInput?: (value: string) => void;
 }
+
 const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
   nameInput,
-  typeIsExpanded,
   typeSelected,
-  statusIsExpanded,
   statusSelected,
   selectedNames,
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onTypeToggle,
   onTypeSelect,
-  onStatusToggle,
   onStatusSelect,
   onSearch,
   onDelete,
@@ -144,22 +139,13 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <Select
+            <SelectWithToggle
               variant={SelectVariant.single}
-              aria-label="Select Type"
-              onToggle={onTypeToggle}
-              onSelect={onTypeSelect}
+              ariaLabel="Select Type"
+              onSelectItem={onTypeSelect}
               selections={typeSelected || "Select Type"}
-              isExpanded={typeIsExpanded}
-            >
-              {typeOptions.map((option, index) => (
-                <SelectOption
-                  isDisabled={option.isDisabled}
-                  key={index}
-                  value={option.value}
-                />
-              ))}
-            </Select>
+              selectOptions={typeOptions}
+            />
           )}
         </DataToolbarFilter>
       </DataToolbarItem>
@@ -172,22 +158,13 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Status"
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
-            <Select
+            <SelectWithToggle
               variant={SelectVariant.single}
-              aria-label="Select Status"
-              onToggle={onStatusToggle}
-              onSelect={onStatusSelect}
+              ariaLabel="Select Status"
+              onSelectItem={onStatusSelect}
               selections={statusSelected || "Select Status"}
-              isExpanded={statusIsExpanded}
-            >
-              {statusOptions.map((option, index) => (
-                <SelectOption
-                  isDisabled={option.isDisabled}
-                  key={index}
-                  value={option.value}
-                />
-              ))}
-            </Select>
+              selectOptions={statusOptions}
+            />
           )}
         </DataToolbarFilter>
       </DataToolbarItem>

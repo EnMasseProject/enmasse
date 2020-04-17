@@ -11,7 +11,8 @@ import {
 
 export interface ISelectOption {
   value: string;
-  isDisabled: boolean;
+  isDisabled?: boolean;
+  key?: string;
 }
 
 /**

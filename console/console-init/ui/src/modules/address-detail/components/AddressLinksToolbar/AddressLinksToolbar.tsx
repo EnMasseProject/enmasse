@@ -32,7 +32,6 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
   containerSelected,
   containerInput,
   containerOptions,
-  roleIsExpanded,
   roleSelected,
   selectedNames,
   selectedContainers,
@@ -41,7 +40,6 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
   onNameClear,
   onContainerSelect,
   onContainerClear,
-  onRoleToggle,
   onRoleSelect,
   onSearch,
   onDelete,
@@ -69,7 +67,6 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
         containerSelected={containerSelected}
         containerInput={containerInput}
         containerOptions={containerOptions}
-        roleIsExpanded={roleIsExpanded}
         roleSelected={roleSelected}
         selectedNames={selectedNames}
         selectedContainers={selectedContainers}
@@ -78,7 +75,6 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
         onNameClear={onNameClear}
         onContainerSelect={onContainerSelect}
         onContainerClear={onContainerClear}
-        onRoleToggle={onRoleToggle}
         onRoleSelect={onRoleSelect}
         onSearch={onSearch}
         onDelete={onDelete}

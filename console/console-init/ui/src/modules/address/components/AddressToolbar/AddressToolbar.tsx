@@ -36,17 +36,13 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
   filterSelected,
   nameSelected,
   nameInput,
-  typeIsExpanded,
   typeSelected,
-  statusIsExpanded,
   statusSelected,
   selectedNames,
   onFilterSelect,
   onNameSelect,
   onNameClear,
-  onTypeToggle,
   onTypeSelect,
-  onStatusToggle,
   onStatusSelect,
   onSearch,
   onDelete,
@@ -78,17 +74,13 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
         filterSelected={filterSelected}
         nameSelected={nameSelected}
         nameInput={nameInput}
-        typeIsExpanded={typeIsExpanded}
         typeSelected={typeSelected}
-        statusIsExpanded={statusIsExpanded}
         statusSelected={statusSelected}
         selectedNames={selectedNames}
         onFilterSelect={onFilterSelect}
         onNameSelect={onNameSelect}
         onNameClear={onNameClear}
-        onTypeToggle={onTypeToggle}
         onTypeSelect={onTypeSelect}
-        onStatusToggle={onStatusToggle}
         onStatusSelect={onStatusSelect}
         onSearch={onSearch}
         onDelete={onDelete}

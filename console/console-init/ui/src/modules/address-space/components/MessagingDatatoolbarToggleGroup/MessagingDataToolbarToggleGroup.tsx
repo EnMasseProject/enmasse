@@ -5,10 +5,8 @@
 
 import React from "react";
 import {
-  Select,
   SelectVariant,
   SelectOptionObject,
-  SelectOption,
   DataToolbarToggleGroup,
   DataToolbarGroup,
   DataToolbarFilter,
@@ -23,7 +21,11 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAheadSelect } from "components";
+import {
+  DropdownWithToggle,
+  TypeAheadSelect,
+  SelectWithToggle
+} from "components";
 
 export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -34,7 +36,6 @@ export interface IMessagingToolbarToggleGroupProps {
   namespaceInput?: string;
   nameOptions?: any[];
   namespaceOptions?: any[];
-  typeIsExpanded: boolean;
   typeSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   selectedNamespaces: Array<{ value: string; isExact: boolean }>;
@@ -43,8 +44,7 @@ export interface IMessagingToolbarToggleGroupProps {
   onNameClear: () => void;
   onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
   onNamespaceClear: () => void;
-  onTypeToggle: () => void;
-  onTypeSelect: (e: any, selection: SelectOptionObject) => void;
+  onTypeSelect: (selection: string) => void;
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
@@ -63,7 +63,6 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   nameInput,
   namespaceSelected,
   namespaceInput,
-  typeIsExpanded,
   typeSelected,
   selectedNames,
   selectedNamespaces,
@@ -72,7 +71,6 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   onNameClear,
   onNamespaceSelect,
   onNamespaceClear,
-  onTypeToggle,
   onTypeSelect,
   onSearch,
   onDelete,
@@ -178,22 +176,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <Select
+            <SelectWithToggle
               variant={SelectVariant.single}
-              aria-label="Select Type"
-              onToggle={onTypeToggle}
-              onSelect={onTypeSelect}
+              ariaLabel="Select Type"
+              onSelectItem={onTypeSelect}
               selections={typeSelected || "Select Type"}
-              isExpanded={typeIsExpanded}
-            >
-              {typeOptions.map((option, index) => (
-                <SelectOption
-                  isDisabled={option.isDisabled}
-                  key={index}
-                  value={option.value}
-                />
-              ))}
-            </Select>
+              selectOptions={typeOptions}
+            />
           )}
         </DataToolbarFilter>
       </DataToolbarItem>
