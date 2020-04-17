@@ -137,7 +137,7 @@ endif::[]
 {cmdcli} get addressspace _myspace_ -o jsonpath='{.metadata.annotations.enmasse\.io/infra-uuid}'
 ----
 
-. Retrieve the broker support credentials (username and password) for the address space
+. Retrieve the broker support credentials (username and password) for the address space:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -180,4 +180,3 @@ IMPORTANT: The double quotes around the broker pod name within the URL are requi
 command shell (as done above using the single quotes surrounding the whole URL). If they are not present, you will
 receive an authorization failure.
 +
-
