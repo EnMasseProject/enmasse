@@ -203,11 +203,11 @@ public class SaslDelegatingLogin implements LoginModule {
             }
 
             if (this.supportPassword.isPresent() && this.supportUserName.isPresent()) {
-                LOG.info("Support access configured");
+                LOG.debug("Support access configured");
             }
 
         } else {
-            LOG.info("Support access not configured");
+            LOG.debug("Support access not configured");
             this.supportUserName = Optional.empty();
             this.supportPassword = Optional.empty();
         }
