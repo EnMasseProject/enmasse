@@ -169,7 +169,7 @@ To execute an {BrokerName} Jolokia JMX commands, use a command line like this:
 {cmdcli} exec _broker pod name_ -- {BrokerCLI} address show --user _username_ --password _password_
 ----
 +
-To execute an {BrokerName} CLI commands, use a command line like this:
+To execute an {BrokerName} CLI command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
