@@ -35,10 +35,13 @@ import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
+import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.iot.model.v1.ServiceConfig;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -68,6 +71,7 @@ public class IoTUtils {
     private static final String IOT_DEVICE_REGISTRY_MANAGEMENT = "iot-device-registry-management";
     private static final String IOT_DEVICE_CONNECTION = "iot-device-connection";
     private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
+    private static final String IOT_SERVICE_MESH = "iot-service-mesh";
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
     private static final Logger log = CustomLogger.getLogger();
@@ -89,10 +93,18 @@ public class IoTUtils {
             throw new IllegalStateException("IoTConfig " + Objects.requireNonNull(config).getMetadata().getName() + " is not in Ready state within timeout: " + jsonStatus);
         }
 
-        String[] expectedDeployments = getExpectedDeploymentsNames(config);
+        final String[] expectedDeployments = getExpectedDeploymentsNames(config);
+        final String[] expectedStatefulSets = new String[] {IOT_SERVICE_MESH};
 
-        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allDeploymentsPresent(kubernetes, expectedDeployments), budget);
-        TestUtils.waitForNReplicas(expectedDeployments.length, config.getMetadata().getNamespace(), IOT_LABELS, budget);
+        final int meshReplicas = Optional.of(config)
+                .map(IoTConfig::getSpec)
+                .map(IoTConfigSpec::getMesh)
+                .map(MeshConfig::getServiceConfig)
+                .map(ServiceConfig::getReplicas)
+                .orElse(1);
+
+        TestUtils.waitUntilCondition("IoT Config to deploy", (phase) -> allThingsReadyPresent(kubernetes, expectedDeployments, expectedStatefulSets), budget);
+        TestUtils.waitForNReplicas(expectedDeployments.length + meshReplicas, config.getMetadata().getNamespace(), IOT_LABELS, budget);
     }
 
     public static void deleteIoTConfigAndWait(Kubernetes kubernetes, IoTConfig config) throws Exception {
@@ -107,14 +119,29 @@ public class IoTUtils {
         TimeMeasuringSystem.stopOperation(operationID);
     }
 
-    private static boolean allDeploymentsPresent(Kubernetes kubernetes, String[] expectedDeployments) {
-        final String[] deployments = kubernetes.listDeployments(IOT_LABELS).stream()
+    private static boolean allThingsReadyPresent(final Kubernetes kubernetes, final String[] expectedDeployments, final String[] expectedStatefulSets) {
+
+        // get deployments
+
+        final String[] deployments = Kubernetes.getInstance().listDeployments(IOT_LABELS).stream()
                 .map(deployment -> deployment.getMetadata().getName())
                 .toArray(String[]::new);
         Arrays.sort(deployments);
         Arrays.sort(expectedDeployments);
 
-        return Arrays.equals(deployments, expectedDeployments);
+        // get stateful sets
+
+        final String[] statefulSets = Kubernetes.getInstance().listStatefulSets(IOT_LABELS).stream()
+                .map(statefulSet -> statefulSet.getMetadata().getName())
+                .toArray(String[]::new);
+        Arrays.sort(statefulSets);
+        Arrays.sort(expectedStatefulSets);
+
+        // compare
+
+        return Arrays.equals(deployments, expectedDeployments)
+                && Arrays.equals(statefulSets, expectedStatefulSets);
+
     }
 
     private static String[] getExpectedDeploymentsNames(IoTConfig config) {

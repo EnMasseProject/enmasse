@@ -7,7 +7,9 @@ package iotconfig
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"github.com/pkg/errors"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
@@ -28,6 +30,9 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
+
+// the name of the router image key
+const imageNameRouter = "router"
 
 type adapter struct {
 	Name      string
@@ -164,13 +169,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 			},
 		}
 
-		if len(container.VolumeMounts) != 1 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 1)
-		}
-
-		container.VolumeMounts[0].Name = "qdr-tmp-certs"
-		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
-		container.VolumeMounts[0].ReadOnly = false
+		install.ApplyVolumeMountSimple(container, "qdr-tmp-certs", "/var/qdr-certs", false)
 
 		// tracing config
 
@@ -191,11 +190,11 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 	err = install.ApplyDeploymentContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
 
-		if err := install.SetContainerImage(container, "router", config); err != nil {
+		if err := install.SetContainerImage(container, imageNameRouter, config); err != nil {
 			return err
 		}
 
-		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/config/qdrouterd.conf"}
+		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/config/qdrouterd.json"}
 
 		// set default resource limits
 
@@ -205,17 +204,10 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 			},
 		}
 
-		if len(container.VolumeMounts) != 2 {
-			container.VolumeMounts = make([]corev1.VolumeMount, 2)
-		}
-
-		container.VolumeMounts[0].Name = "qdr-tmp-certs"
-		container.VolumeMounts[0].MountPath = "/var/qdr-certs"
-		container.VolumeMounts[0].ReadOnly = true
-
-		container.VolumeMounts[1].Name = "qdr-proxy-config"
-		container.VolumeMounts[1].MountPath = "/etc/qdr/config"
-		container.VolumeMounts[1].ReadOnly = true
+		install.ApplyVolumeMountSimple(container, "qdr-tmp-certs", "/var/qdr-certs", true)
+		install.ApplyVolumeMountSimple(container, "qdr-proxy-config", "/etc/qdr/config", true)
+		install.ApplyVolumeMountSimple(container, "qdr-command-config", "/etc/qdr/command", true)
+		install.ApplyVolumeMountSimple(container, tlsServiceCAVolumeName, "/etc/tls-service-ca", true)
 
 		// tracing config
 
@@ -234,8 +226,13 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		return err
 	}
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-config", "qdr-proxy-configurator")
 	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "qdr-tmp-certs")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-config", "qdr-proxy-configurator")
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "qdr-command-config", nameCommandMeshSecretName)
+
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, "", ""); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -311,51 +308,104 @@ func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-
-			if configMap.Data == nil {
-				configMap.Data = make(map[string]string)
-			}
-
-			configMap.Data["qdrouterd.conf"] = `
-router {
-  mode: standalone
-  id: Router.Proxy
-  defaultDistribution: unavailable
-}
-
-listener {
-  host: localhost
-  port: 5672
-  saslMechanisms: ANONYMOUS
-}
-
-connector {
-    name: iot-interior-interconnect
-    host: iot-interior-interconnect
-    port: 5672
-    role: route-container
-    saslMechanisms: ANONYMOUS
-}
-
-linkRoute {
-    pattern: command_internal/#
-    connection: iot-interior-interconnect
-    direction: in
-}
-
-linkRoute {
-    pattern: command_internal/#
-    connection: iot-interior-interconnect
-    direction: out
-}
-`
-			configCtx.AddString(configMap.Data["qdrouterd.conf"])
-
-			return nil
+			return r.reconcileAdapterConfigMap(config, configMap, configCtx)
 		})
 	})
 
 	return rc.Result()
+}
+
+func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
+
+	// tls versions
+
+	tlsVersions := strings.Join(config.Spec.Mesh.TlsVersions(config), " ")
+
+	// build config
+
+	const internalCommandConnectionName = "iot-command-mesh"
+	commandMeshHost := nameCommandMesh + "." + config.Namespace + ".svc"
+
+	router := [][]interface{}{
+		{
+			"router",
+			map[string]interface{}{
+				"mode":                "standalone",
+				"id":                  "Router.Proxy",
+				"timestampsInUTC":     true,
+				"defaultDistribution": "unavailable",
+			},
+		},
+		{
+			// for local management access
+			"listener",
+			map[string]interface{}{
+				"host":             "127.0.0.1",
+				"port":             5672,
+				"role":             "normal",
+				"authenticatePeer": "no",
+				"saslMechanisms":   "ANONYMOUS",
+			},
+		},
+		{
+			"connector",
+			map[string]interface{}{
+				"name":           internalCommandConnectionName, // the name inside the configuration
+				"host":           commandMeshHost,               // the hostname to connect to
+				"port":           5671,
+				"sslProfile":     internalCommandConnectionName + "-ssl",
+				"role":           "route-container",
+				"saslMechanisms": "PLAIN",
+				"saslUsername":   iotCommandMeshUserName + "@" + iotCommandMeshDomainName,
+				"saslPassword":   "file:/etc/qdr/command/password",
+			},
+		},
+		{
+			"sslProfile",
+			map[string]interface{}{
+				"name":       internalCommandConnectionName + "-ssl",
+				"caCertFile": "/etc/tls-service-ca/service-ca.crt",
+				"protocols":  tlsVersions,
+			},
+		},
+		{
+			"linkRoute",
+			map[string]interface{}{
+				"pattern":    "command_internal/#",
+				"connection": internalCommandConnectionName,
+				"direction":  "in",
+			},
+		},
+		{
+			"linkRoute",
+			map[string]interface{}{
+				"pattern":    "command_internal/#",
+				"connection": internalCommandConnectionName,
+				"direction":  "out",
+			},
+		},
+	}
+
+	// serialize config
+
+	j, err := json.MarshalIndent(router, "", "  ")
+	if err != nil {
+		return errors.Wrap(err, "Failed serializing router configuration")
+	}
+	jstr := string(j)
+
+	// set content
+
+	configMap.Data = map[string]string{
+		"qdrouterd.json": jstr,
+	}
+
+	// add to hash
+
+	configCtx.AddString(jstr)
+
+	return nil
+
 }
 
 func applyEndpointDeployment(client client.Client, endpoint iotv1alpha1.EndpointConfig, deployment *appsv1.Deployment, endpointSecretName string, volumeName string) error {

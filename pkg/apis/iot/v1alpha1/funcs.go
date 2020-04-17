@@ -69,6 +69,18 @@ func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
 	return util.DefaultJavaRequiresNativeTls()
 }
 
+//region MeshConfig
+
+func (m MeshConfig) TlsVersions(config *IoTConfig) []string {
+	if len(m.Tls.Versions) > 0 {
+		return m.Tls.Versions
+	} else {
+		return config.Spec.TlsDefaults.Versions
+	}
+}
+
+//endregion
+
 //region CommonAdapterConfig
 
 func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
