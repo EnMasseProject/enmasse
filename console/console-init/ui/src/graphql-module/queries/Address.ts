@@ -6,10 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
-import {
-  generateComplexFilterByPattern,
-  generateSimpleFilterByPattern
-} from "./query";
+import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS = gql`
   mutation delete_addr($a: ObjectMeta_v1_Input!) {
@@ -48,7 +45,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   }
 
   //filter address
-  filter += generateComplexFilterByPattern("spec.address", filterNames);
+  filter += generateFilterPattern("spec.address", filterNames);
 
   if (
     filterNamesLength &&
@@ -58,20 +55,19 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
     filter += " AND ";
   }
   //filter type
-  filter += generateSimpleFilterByPattern("spec.type", typeValue);
+  if (typeValue)
+    filter += generateFilterPattern("spec.type", [
+      { value: typeValue.toLowerCase(), isExact: true }
+    ]);
 
   if (typeValue && statusValue) {
     filter += " AND ";
   }
 
   if (statusValue) {
-    let status = "";
-    if (statusValue === "Failed") {
-      status = "Pending";
-    } else {
-      status = statusValue;
-    }
-    filter += "`$.status.phase` = '" + status + "'";
+    filter += generateFilterPattern("status.phase", [
+      { value: statusValue.toLowerCase(), isExact: true }
+    ]);
   }
   return filter;
 };
@@ -285,7 +281,7 @@ const ADDRESS_LINKS_FILTER = (
   }
 
   //filter names
-  filterForLink += generateComplexFilterByPattern("metadata.name", filterNames);
+  filterForLink += generateFilterPattern("metadata.name", filterNames);
   if (filterNamesLength > 0) {
     if (
       filterContainersLength > 0 ||
@@ -297,7 +293,7 @@ const ADDRESS_LINKS_FILTER = (
 
   //filter containers
   if (filterContainersLength > 0) {
-    filterForLink += generateComplexFilterByPattern(
+    filterForLink += generateFilterPattern(
       "spec.connection.spec.containerId",
       filterContainers
     );
@@ -308,8 +304,8 @@ const ADDRESS_LINKS_FILTER = (
 
   //filter role
   if (filterRole)
-    filterForLink += generateComplexFilterByPattern("spec.role", [
-      { value: filterRole, isExact: true }
+    filterForLink += generateFilterPattern("spec.role", [
+      { value: filterRole.toLowerCase(), isExact: true }
     ]);
   return { filter, filterForLink };
 };

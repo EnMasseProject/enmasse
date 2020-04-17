@@ -6,10 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
-import {
-  generateComplexFilterByPattern,
-  generateSimpleFilterByPattern
-} from "./query";
+import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS_SPACE = gql`
   mutation delete_as($a: ObjectMeta_v1_Input!) {
@@ -26,7 +23,7 @@ const ALL_ADDRESS_SPACES_FILTER = (
   let filterNamesLength = filterNames && filterNames.length;
   let filterNameSpacesLength = filterNameSpaces && filterNameSpaces.length;
   //filter names
-  filter += generateComplexFilterByPattern("metadata.name", filterNames);
+  filter += generateFilterPattern("metadata.name", filterNames);
 
   if (
     filterNamesLength &&
@@ -37,10 +34,7 @@ const ALL_ADDRESS_SPACES_FILTER = (
   }
 
   //filter namsespaces
-  filter += generateComplexFilterByPattern(
-    "metadata.namespace",
-    filterNameSpaces
-  );
+  filter += generateFilterPattern("metadata.namespace", filterNameSpaces);
 
   if (
     ((filterNamesLength && filterNamesLength > 0) ||
@@ -52,8 +46,11 @@ const ALL_ADDRESS_SPACES_FILTER = (
   }
 
   //filter tye
-  filter += generateSimpleFilterByPattern("spec.type", filterType);
-
+  if (filterType) {
+    filter += generateFilterPattern("spec.type", [
+      { value: filterType.toLowerCase(), isExact: true }
+    ]);
+  }
   return filter;
 };
 

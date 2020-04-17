@@ -4,11 +4,9 @@
  */
 
 import { removeForbiddenChars } from "utils";
+import { IFilterValue } from "modules/address";
 
-const generateComplexFilterByPattern = (
-  filterPattern: string,
-  filterItems?: any[]
-) => {
+const generateFilterPattern = (filterPattern: string, filterItems?: any[]) => {
   let filter = "";
   let filterItemsLength = filterItems && filterItems.length;
   let filterItem = filterItems && filterItems[0];
@@ -26,10 +24,12 @@ const generateComplexFilterByPattern = (
     if (filterItemsLength > 1) {
       filter += "(";
     }
-    if (filterItem.isExact) {
-      filter += "`$." + [filterPattern] + "` = '" + filterItemValue + "'";
-    } else {
-      filter += "`$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
+    if (filterItem) {
+      if (filterItem.isExact) {
+        filter += "`$." + [filterPattern] + "` = '" + filterItemValue + "'";
+      } else {
+        filter += "`$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
+      }
     }
     if (filterItemsLength > 1) {
       for (let i = 1; i < filterItemsLength; i++) {
@@ -38,12 +38,14 @@ const generateComplexFilterByPattern = (
           filterItem &&
           filterItem.value &&
           removeForbiddenChars(filterItem.value.trim());
-        if (filterItem.isExact) {
-          filter +=
-            "OR `$." + [filterPattern] + "` = '" + filterItemValue + "'";
-        } else {
-          filter +=
-            "OR `$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
+        if (filterItem) {
+          if (filterItem.isExact) {
+            filter +=
+              "OR `$." + [filterPattern] + "` = '" + filterItemValue + "'";
+          } else {
+            filter +=
+              "OR `$." + [filterPattern] + "` LIKE '" + filterItemValue + "%'";
+          }
         }
       }
       filter += ")";
@@ -52,16 +54,4 @@ const generateComplexFilterByPattern = (
   return filter;
 };
 
-const generateSimpleFilterByPattern = (
-  filterPattern: string,
-  filterItem?: string | null
-) => {
-  let filter = "";
-  if (filterItem && filterItem.trim() !== "" && filterPattern) {
-    filter +=
-      "`$." + [filterPattern] + "` ='" + filterItem.toLowerCase().trim() + "' ";
-  }
-  return filter;
-};
-
-export { generateComplexFilterByPattern, generateSimpleFilterByPattern };
+export { generateFilterPattern };

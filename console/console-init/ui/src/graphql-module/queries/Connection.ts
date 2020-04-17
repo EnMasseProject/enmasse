@@ -6,10 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
-import {
-  generateComplexFilterByPattern,
-  generateSimpleFilterByPattern
-} from "./query";
+import { generateFilterPattern } from "./query";
 
 const ALL_CONECTION_LIST_FILTER = (
   hostnames: any[],
@@ -32,14 +29,14 @@ const ALL_CONECTION_LIST_FILTER = (
   }
 
   //filter hostnames
-  filter += generateComplexFilterByPattern("spec.hostname", hostnames);
+  filter += generateFilterPattern("spec.hostname", hostnames);
 
   if (containersLength > 0) {
     if (hostnamesLength > 0) {
       filter += " AND ";
     }
     //filter containers
-    filter += generateComplexFilterByPattern("spec.containerId", containers);
+    filter += generateFilterPattern("spec.containerId", containers);
   }
   return filter;
 };
@@ -247,10 +244,7 @@ const CONNECTION_LINKS_FILTER = (
 
   if (filterNamesLength > 0) {
     //filter for names
-    filterForLink += generateComplexFilterByPattern(
-      "metadata.name",
-      filterNames
-    );
+    filterForLink += generateFilterPattern("metadata.name", filterNames);
     if (filterAddressesLength > 0 || (filterRole && filterRole.trim() !== "")) {
       filterForLink += " AND ";
     }
@@ -258,18 +252,18 @@ const CONNECTION_LINKS_FILTER = (
 
   if (filterAddressesLength > 0) {
     //filter addresses
-    filterForLink += generateComplexFilterByPattern(
-      "spec.address",
-      filterAddresses
-    );
+    filterForLink += generateFilterPattern("spec.address", filterAddresses);
     if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";
     }
   }
 
-  //filter type
-  filterForLink += generateSimpleFilterByPattern("spec.role", filterRole);
-
+  //filter role
+  if (filterRole) {
+    filterForLink += generateFilterPattern("spec.role", [
+      { value: filterRole.toLowerCase(), isExact: true }
+    ]);
+  }
   return { filter, filterForLink };
 };
 
