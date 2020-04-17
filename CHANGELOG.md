@@ -3,15 +3,29 @@
 
 * #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections
 * #4076: Avoid memory leak if connected router is disconnected
+* #4117: Add support for configuring console to use impersonation
+* #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
+* #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
+* #4299: Bump vertx from 3.8.3 to 3.9.0
+
 
 ## 0.31.1
+* #4046: add network-only as fetch policy for all queries 
+* #4184: Sometimes controller crashes when reconciling authentication service 
 * #4241: Fix a race in upgrader logic that prevented upgrade from continuing
-* #4245:  standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
-* #4242: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
-* #4287: Address links not displayed if address resource name suffix does not match address name
-* #4317: Addresses with different casing is not becoming ready
+* #4242: #4246: Delegate authentication vrtx worker thread pool making authentication multi threaded.  Improve error handling.
+* #4245: standard-auth - use AMQP port probe rather than keycloak HTTP endpoint
+* #4252: Add idleTimeout, role and maxFrameSize settings for connectors
 * #4266: Add broker.globalMaxSize to the infraconfig CRDs 
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
+* #4279: handled null check for address space plan (#4277)
+* #4280: Edit Address Space dialogue subtitle misleading 
+* #4282: add null check for links in address links page (#4262)
+* #4287: Address links not displayed if address resource name suffix does not match address name
+* #4292: Escape forbidden chars in filters
+* #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
+* #4317: Addresses with different casing is not becoming ready 
+* #4331: Issues installing monitoring resources (#4200) (#4222)
 * #4332: Unable to drain kube node when broker pod is deployed there
 
 ## 0.31.0
