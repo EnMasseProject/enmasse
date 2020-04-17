@@ -177,6 +177,6 @@ To execute an {BrokerName} CLI command, use a command similar to the following:
 ----
 +
 IMPORTANT: The double quotes around the broker pod name within the URL are required. Make sure you protect them from your
-command shell (as done above using the single quotes surrounding the whole URL). If they are not present, you will
+command shell using single quotes surrounding the whole URL, as shown in the above command. If they are not present, you will
 receive an authorization failure.
 +
