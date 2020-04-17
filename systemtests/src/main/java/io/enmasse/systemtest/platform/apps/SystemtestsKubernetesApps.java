@@ -148,7 +148,7 @@ public class SystemtestsKubernetesApps {
 
     static {
 
-        final Path examplesIoT = TEMPLATES_ROOT.resolve("iot/examples");
+        final Path examplesIoT = TEMPLATES_ROOT.resolve("install/components/iot/examples");
 
         INFINISPAN_EXAMPLE_BASE = examplesIoT.resolve("infinispan");
         INFINISPAN_OPENSHIFT = new String[] {
