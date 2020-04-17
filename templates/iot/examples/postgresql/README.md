@@ -9,11 +9,22 @@
 
 ## Deploy SQL schema
 
+### For device connection service
+
+	oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.devcon.sql
+
+### For device registry (flat JSON)
+
     oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.sql
 
-When you plan on using the "tree" model (`mode: JSON_TREE`), you should also created the indexes by:
+### For device registry (tree JSON)
 
+    oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.sql
     oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.tree.sql
+
+### For device registry (table)
+
+    oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.table.sql
 
 ## Enter the PostgreSQL container
 

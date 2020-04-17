@@ -52,7 +52,6 @@ import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
 import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -115,6 +114,8 @@ public class SystemtestsKubernetesApps {
     private static final String SCALE_TEST_CLIENT_ID_LABEL = "id";
     private static final String SCALE_TEST_CLIENT_TYPE_LABEL = "client";
 
+    public static final Path TEMPLATES_ROOT = Paths.get(Environment.getInstance().getTemplatesPath());
+
     public static final String INFINISPAN_PROJECT = Environment.getInstance().getInfinispanProject();
     public static final String INFINISPAN_SERVER = "infinispan";
     private static final Path INFINISPAN_EXAMPLE_BASE;
@@ -126,6 +127,7 @@ public class SystemtestsKubernetesApps {
     private static final Path POSTGRESQL_EXAMPLE_BASE;
     private static final Path[] POSTGRESQL_CREATE_FLAT_SQL;
     private static final Path[] POSTGRESQL_CREATE_TREE_SQL;
+    private static final Path[] POSTGRESQL_CREATE_TABLE_SQL;
 
     public static final String H2_PROJECT = Environment.getInstance().getH2Project();
     public static final String H2_SERVER = "h2";
@@ -145,7 +147,10 @@ public class SystemtestsKubernetesApps {
     };
 
     static {
-        INFINISPAN_EXAMPLE_BASE = Paths.get("../templates/iot/examples/infinispan");
+
+        final Path examplesIoT = TEMPLATES_ROOT.resolve("iot/examples");
+
+        INFINISPAN_EXAMPLE_BASE = examplesIoT.resolve("infinispan");
         INFINISPAN_OPENSHIFT = new String[] {
                         "common",
                         "openshift"
@@ -155,18 +160,25 @@ public class SystemtestsKubernetesApps {
                         "kubernetes"
         };
 
-        POSTGRESQL_EXAMPLE_BASE = Paths.get("../templates/iot/examples/postgresql/deploy");
-        var pgBase = Paths.get("../templates/iot/examples/postgresql/create.sql");
+        POSTGRESQL_EXAMPLE_BASE = examplesIoT.resolve("postgresql/deploy");
+        var pgDevCon = examplesIoT.resolve("postgresql/create.devcon.sql");
+        var pgJsonBase = examplesIoT.resolve("postgresql/create.sql");
         POSTGRESQL_CREATE_FLAT_SQL = new Path[] {
-                        pgBase
+                        pgDevCon,
+                        pgJsonBase
         };
         POSTGRESQL_CREATE_TREE_SQL = new Path[] {
-                        pgBase,
-                        Paths.get("../templates/iot/examples/postgresql/create.tree.sql")
+                        pgDevCon,
+                        pgJsonBase,
+                        examplesIoT.resolve("postgresql/create.tree.sql")
+        };
+        POSTGRESQL_CREATE_TABLE_SQL = new Path[] {
+                        pgDevCon,
+                        examplesIoT.resolve("postgresql/create.table.sql")
         };
 
-        H2_EXAMPLE_BASE = Paths.get("../templates/iot/examples/h2/deploy");
-        H2_CREATE_SQL = Paths.get("../templates/iot/examples/h2/create.sql");
+        H2_EXAMPLE_BASE = examplesIoT.resolve("h2/deploy");
+        H2_CREATE_SQL = examplesIoT.resolve("h2/create.sql");
     }
 
     public static String getMessagingAppPodName() throws Exception {
@@ -458,6 +470,9 @@ public class SystemtestsKubernetesApps {
                 break;
             case JSON_TREE:
                 deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TREE_SQL);
+                break;
+            case TABLE:
+                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TABLE_SQL);
                 break;
             default:
                 throw new IllegalArgumentException(String.format("Unsupported test mode: %s", mode));

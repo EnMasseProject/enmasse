@@ -121,7 +121,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .endTenant()
 
                 .withDeviceConnection(DefaultDeviceRegistry.newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(DefaultDeviceRegistry.newPostgresTreeBasedRegistry(jdbcEndpoint))
+                .withDeviceRegistry(DefaultDeviceRegistry.newPostgresBasedRegistry(jdbcEndpoint, Mode.JSON_TREE))
 
                 .editDeviceConnection()
                 .editJdbc()

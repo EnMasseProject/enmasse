@@ -19,12 +19,14 @@
 * #4266: Add broker.globalMaxSize to the infraconfig CRDs 
 * #4269: bump Netty dependency from netty-4.1.45.Final to netty-4.1.48.Final
 * #4279: handled null check for address space plan (#4277)
-* #4282: add null check for links in address links page (#4262)
 * #4280: Edit Address Space dialogue subtitle misleading 
+* #4282: add null check for links in address links page (#4262)
+* #4287: Address links not displayed if address resource name suffix does not match address name
 * #4292: Escape forbidden chars in filters
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4317: Addresses with different casing is not becoming ready 
 * #4331: Issues installing monitoring resources (#4200) (#4222)
+* #4332: Unable to drain kube node when broker pod is deployed there
 
 ## 0.31.0
 *  Adding example partitioned/sharded queue example plans
