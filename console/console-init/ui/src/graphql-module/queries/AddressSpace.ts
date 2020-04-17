@@ -6,6 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
+import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS_SPACE = gql`
   mutation delete_as($a: ObjectMeta_v1_Input!) {
@@ -20,42 +21,10 @@ const ALL_ADDRESS_SPACES_FILTER = (
 ) => {
   let filter = "";
   let filterNamesLength = filterNames && filterNames.length;
-  let filterName = filterNames && filterNames[0];
-  let filterNameValue =
-    filterName &&
-    filterName.value &&
-    removeForbiddenChars(filterName.value.trim());
-
   let filterNameSpacesLength = filterNameSpaces && filterNameSpaces.length;
-  let filterNameSpace = filterNameSpaces && filterNameSpaces[0];
-  let filterNameSpaceValue =
-    filterNameSpace &&
-    filterNameSpace.value &&
-    removeForbiddenChars(filterNameSpace.value.trim());
+  //filter names
+  filter += generateFilterPattern("metadata.name", filterNames);
 
-  if (filterNamesLength && filterNamesLength > 0) {
-    if (filterNamesLength > 1) {
-      if (filterName.isExact)
-        filter += "(`$.metadata.name` = '" + filterNameValue + "'";
-      else filter += "(`$.metadata.name` LIKE '" + filterNameValue + "%'";
-      for (let i = 1; i < filterNamesLength; i++) {
-        let filterName = filterNames && filterNames[i];
-        let filterNameValue =
-          filterName &&
-          filterName.value &&
-          removeForbiddenChars(filterName.value.trim());
-
-        if (filterName.isExact)
-          filter += "OR `$.metadata.name` = '" + filterNameValue + "'";
-        else filter += "OR `$.metadata.name` LIKE '" + filterNameValue + "%'";
-      }
-      filter += ")";
-    } else {
-      if (filterName.isExact)
-        filter += "`$.metadata.name` = '" + filterNameValue + "'";
-      else filter += "`$.metadata.name` LIKE '" + filterNameValue + "%'";
-    }
-  }
   if (
     filterNamesLength &&
     filterNameSpacesLength &&
@@ -63,36 +32,10 @@ const ALL_ADDRESS_SPACES_FILTER = (
   ) {
     filter += " AND ";
   }
-  if (filterNameSpacesLength && filterNameSpacesLength > 0) {
-    if (filterNameSpacesLength > 1) {
-      if (filterNameSpace.isExact) {
-        filter +=
-          "(`$.metadata.namespace` = '" + filterNameSpaceValue.trim() + "'";
-      } else {
-        filter +=
-          "(`$.metadata.namespace` LIKE '" + filterNameSpaceValue.trim() + "%'";
-      }
-      for (let i = 1; i < filterNameSpacesLength; i++) {
-        let filterNameSpace = filterNameSpaces && filterNameSpaces[i];
-        let filterNameSpaceValue =
-          filterNameSpace &&
-          filterNameSpace.value &&
-          removeForbiddenChars(filterNameSpace.value.trim());
-        if (filterNameSpace.isExact)
-          filter +=
-            "OR `$.metadata.namespace` = '" + filterNameSpaceValue + "'";
-        else
-          filter +=
-            "OR `$.metadata.namespace` LIKE '" + filterNameSpaceValue + "%'";
-      }
-      filter += ")";
-    } else {
-      if (filterNameSpace.isExact)
-        filter += "`$.metadata.namespace` = '" + filterNameSpaceValue + "'";
-      else
-        filter += "`$.metadata.namespace` LIKE '" + filterNameSpaceValue + "%'";
-    }
-  }
+
+  //filter namsespaces
+  filter += generateFilterPattern("metadata.namespace", filterNameSpaces);
+
   if (
     ((filterNamesLength && filterNamesLength > 0) ||
       (filterNameSpacesLength && filterNameSpacesLength > 0)) &&
@@ -101,8 +44,12 @@ const ALL_ADDRESS_SPACES_FILTER = (
   ) {
     filter += " AND ";
   }
-  if (filterType && filterType.trim() !== "") {
-    filter += "`$.spec.type` ='" + filterType.toLowerCase().trim() + "' ";
+
+  //filter tye
+  if (filterType) {
+    filter += generateFilterPattern("spec.type", [
+      { value: filterType.toLowerCase(), isExact: true }
+    ]);
   }
   return filter;
 };
@@ -246,18 +193,15 @@ const ADDRESS_SPACE_COMMAND_REVIEW_DETAIL = gql`
 `;
 
 const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
-  isName: boolean,
+  propertyName: string,
   value: string
 ) => {
   let filter = "";
   value = removeForbiddenChars(value);
-  if (value) {
-    if (isName) {
-      filter += "`$.metadata.name` LIKE '" + value + "%'";
-    } else {
-      filter += "`$.metadata.namespace` LIKE '" + value + "%'";
-    }
+  if (value && propertyName) {
+    filter += "`$.metadata." + [propertyName] + "` LIKE '" + value + "%'";
   }
+
   const all_address_spaces = gql`
     query all_address_spaces {
       addressSpaces(filter: "${filter}"  

@@ -6,6 +6,7 @@
 import gql from "graphql-tag";
 import { ISortBy } from "@patternfly/react-table";
 import { removeForbiddenChars } from "utils";
+import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS = gql`
   mutation delete_addr($a: ObjectMeta_v1_Input!) {
@@ -28,11 +29,6 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
 ) => {
   let filter = "";
   let filterNamesLength = filterNames && filterNames.length;
-  let filterName = filterNames && filterNames[0];
-  let filterNameValue =
-    filterName &&
-    filterName.value &&
-    removeForbiddenChars(filterName.value.trim());
 
   if (name && name.trim() !== "") {
     filter += "`$.metadata.name` LIKE '" + name + ".%' AND";
@@ -47,28 +43,10 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   ) {
     filter += " AND ";
   }
-  if (filterNamesLength && filterNamesLength > 0) {
-    if (filterNamesLength > 1) {
-      if (filterName.isExact)
-        filter += "(`$.spec.address` = '" + filterNameValue + "'";
-      else filter += "(`$.spec.address` LIKE '" + filterNameValue + "%' ";
-      for (let i = 1; i < filterNamesLength; i++) {
-        let filterName = filterNames && filterNames[i];
-        let filterNameValue =
-          filterName && removeForbiddenChars(filterName.value.trim());
-        if (filterName.isExact) {
-          filter += "OR `$.spec.address` = '" + filterNameValue + "'";
-        } else {
-          filter += "OR `$.spec.address` LIKE '" + filterNameValue + "%' ";
-        }
-      }
-      filter += ")";
-    } else {
-      if (filterName.isExact)
-        filter += "`$.spec.address` = '" + filterNameValue + "'";
-      else filter += "`$.spec.address` LIKE '" + filterNameValue + "%' ";
-    }
-  }
+
+  //filter address
+  filter += generateFilterPattern("spec.address", filterNames);
+
   if (
     filterNamesLength &&
     filterNamesLength > 0 &&
@@ -76,20 +54,20 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   ) {
     filter += " AND ";
   }
-  if (typeValue) {
-    filter += "`$.spec.type` = '" + typeValue.toLowerCase() + "'";
-  }
+  //filter type
+  if (typeValue)
+    filter += generateFilterPattern("spec.type", [
+      { value: typeValue.toLowerCase(), isExact: true }
+    ]);
+
   if (typeValue && statusValue) {
     filter += " AND ";
   }
+
   if (statusValue) {
-    let status = "";
-    if (statusValue === "Failed") {
-      status = "Pending";
-    } else {
-      status = statusValue;
-    }
-    filter += "`$.status.phase` = '" + status + "'";
+    filter += generateFilterPattern("status.phase", [
+      { value: statusValue.toLowerCase(), isExact: true }
+    ]);
   }
   return filter;
 };
@@ -290,18 +268,7 @@ const ADDRESS_LINKS_FILTER = (
   let filter = "",
     filterForLink = "";
   let filterNamesLength = filterNames && filterNames.length;
-  let filterName = filterNames && filterNames[0];
-  let filterNameValue =
-    filterName &&
-    filterName.value &&
-    removeForbiddenChars(filterName.value.trim());
-
   let filterContainersLength = filterContainers && filterContainers.length;
-  let filterContainer = filterContainers && filterContainers[0];
-  let filterContainerValue =
-    filterContainer &&
-    filterContainer.value &&
-    removeForbiddenChars(filterContainer.value.trim());
 
   if (addressSpace) {
     filter += "`$.metadata.name` LIKE '" + addressSpace + ".%' AND ";
@@ -313,32 +280,9 @@ const ADDRESS_LINKS_FILTER = (
     filter += "`$.metadata.name` = '" + addressName + "'";
   }
 
-  //links filter
+  //filter names
+  filterForLink += generateFilterPattern("metadata.name", filterNames);
   if (filterNamesLength > 0) {
-    if (filterNamesLength > 1) {
-      if (filterName.isExact)
-        filterForLink += "(`$.metadata.name` = '" + filterNameValue + "'";
-      else
-        filterForLink += "(`$.metadata.name` LIKE '" + filterNameValue + "%' ";
-      for (let i = 1; i < filterNamesLength; i++) {
-        let filterName = filterNames && filterNames[i];
-        let filterNameValue =
-          filterName &&
-          filterName.value &&
-          removeForbiddenChars(filterName.value.trim());
-        if (filterName.isExact)
-          filterForLink += "OR `$.metadata.name` = '" + filterNameValue + "'";
-        else
-          filterForLink +=
-            "OR `$.metadata.name` LIKE '" + filterNameValue + "%' ";
-      }
-      filterForLink += ")";
-    } else {
-      if (filterName.isExact)
-        filterForLink += "(`$.metadata.name` = '" + filterNameValue + "')";
-      else
-        filterForLink += "(`$.metadata.name` LIKE '" + filterNameValue + "%')";
-    }
     if (
       filterContainersLength > 0 ||
       (filterRole && filterRole.trim() !== "")
@@ -346,58 +290,23 @@ const ADDRESS_LINKS_FILTER = (
       filterForLink += " AND ";
     }
   }
+
+  //filter containers
   if (filterContainersLength > 0) {
-    if (filterContainersLength > 1) {
-      if (filterContainer.isExact)
-        filterForLink +=
-          "(`$.spec.connection.spec.containerId` = '" +
-          filterContainerValue +
-          "'";
-      else
-        filterForLink +=
-          "(`$.spec.connection.spec.containerId` LIKE '" +
-          filterContainerValue +
-          "%'";
-      for (let i = 1; i < filterContainers.length; i++) {
-        let filterContainer = filterContainers && filterContainers[i];
-        let filterContainerValue =
-          filterContainer &&
-          filterContainer.value &&
-          removeForbiddenChars(filterContainer.value.trim());
-        if (filterContainer.isExact)
-          filterForLink +=
-            "OR `$.spec.connection.spec.containerId` = '" +
-            filterContainerValue +
-            "'";
-        else
-          filterForLink +=
-            "OR `$.spec.connection.spec.containerId` LIKE '" +
-            filterContainerValue +
-            "%";
-      }
-      filterForLink += ")";
-    } else {
-      if (filterContainer.isExact)
-        filterForLink +=
-          "(`$.spec.connection.spec.containerId` = '" +
-          filterContainerValue +
-          "')";
-      else
-        filterForLink +=
-          "(`$.spec.connection.spec.containerId` LIKE '" +
-          filterContainerValue +
-          "%')";
-    }
+    filterForLink += generateFilterPattern(
+      "spec.connection.spec.containerId",
+      filterContainers
+    );
     if (filterRole && filterRole.trim() !== "") {
       filterForLink += " AND ";
     }
   }
 
-  if (filterRole && filterRole.trim() !== "") {
-    filterForLink +=
-      "`$.spec.role` = '" + filterRole.trim().toLowerCase() + "' ";
-  }
-
+  //filter role
+  if (filterRole)
+    filterForLink += generateFilterPattern("spec.role", [
+      { value: filterRole.toLowerCase(), isExact: true }
+    ]);
   return { filter, filterForLink };
 };
 

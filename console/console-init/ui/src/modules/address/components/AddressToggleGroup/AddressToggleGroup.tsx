@@ -73,17 +73,17 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     { key: "filterStatus", value: "Status" }
   ];
   const typeOptions: ISelectOption[] = [
+    { value: "Anycast", isDisabled: false },
+    { value: "Multicast", isDisabled: false },
     { value: "Queue", isDisabled: false },
-    { value: "Topic", isDisabled: false },
     { value: "Subscription", isDisabled: false },
-    { value: "Mulitcast", isDisabled: false },
-    { value: "Anycast", isDisabled: false }
+    { value: "Topic", isDisabled: false }
   ];
 
   const statusOptions: ISelectOption[] = [
     { value: "Active", isDisabled: false },
     { value: "Configuring", isDisabled: false },
-    { value: "Failed", isDisabled: false }
+    { value: "Pending", isDisabled: false }
   ];
   const checkIsFilterApplied = () => {
     if (

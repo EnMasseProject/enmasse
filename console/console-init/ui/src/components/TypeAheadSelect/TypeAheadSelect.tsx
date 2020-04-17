@@ -52,6 +52,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
         <SelectOption
           value={TypeAheadMessage.MORE_CHAR_REQUIRED}
           isDisabled={true}
+          key="2"
         />
       ]);
     } else {
