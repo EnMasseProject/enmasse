@@ -96,7 +96,7 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
 
         // Workaround - addresses may report ready before the broker pod backing the address report ready=true.  This happens because broker liveness/readiness is judged on a
         // Jolokia based probe. As jolokia becomes available after AMQP management, address can be ready when the broker is not. See https://github.com/EnMasseProject/enmasse/issues/2979
-        kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+        kubernetes.awaitPodsReady(new TimeoutBudget(5, TimeUnit.MINUTES));
 
         List<Pod> brokerPods = kubernetes.listPods(brokerLabels);
         assertThat(brokerPods.size(), is(1));
