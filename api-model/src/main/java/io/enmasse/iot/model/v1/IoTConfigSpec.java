@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.iot.model.v1;
@@ -30,6 +30,7 @@ public class IoTConfigSpec {
     private InterServiceCertificates interServiceCertificates;
     private AdaptersConfig adapters;
     private ServicesConfig services;
+    private MeshConfig mesh;
     private JavaContainerDefaults java;
     private TlsOptions tls;
 
@@ -82,4 +83,10 @@ public class IoTConfigSpec {
         return tls;
     }
 
+    public void setMesh(MeshConfig mesh) {
+        this.mesh = mesh;
+    }
+    public MeshConfig getMesh() {
+        return mesh;
+    }
 }

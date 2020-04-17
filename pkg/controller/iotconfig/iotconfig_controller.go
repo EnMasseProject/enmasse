@@ -110,6 +110,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 	}
 
 	// watch owned objects
+	ownerEventLog := log.V(2)
 
 	for _, w := range []watching{
 		{&appsv1.Deployment{}, "Deployment", false},
@@ -129,7 +130,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		err = c.Watch(&source.Kind{Type: w.obj}, loghandler.New(&handler.EnqueueRequestForOwner{
 			OwnerType:    &iotv1alpha1.IoTConfig{},
 			IsController: true,
-		}, log.V(2), w.name))
+		}, ownerEventLog, w.name))
 		if err != nil {
 			return err
 		}
@@ -228,6 +229,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.ProcessSimple(func() error {
 		return r.processInterServiceCAConfigMap(ctx, config)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processServiceMesh(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAuthService(ctx, config)
@@ -351,6 +355,32 @@ func (r *ReconcileIoTConfig) processDeployment(ctx context.Context, name string,
 		}
 
 		return manipulator(config, deployment)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processStatefulSet(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, deployment *appsv1.StatefulSet) error) error {
+
+	statefulSet := &appsv1.StatefulSet{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	if delete {
+		return install.DeleteIgnoreNotFound(ctx, r.client, statefulSet, client.PropagationPolicy(v1.DeletePropagationForeground))
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, statefulSet, func() error {
+		if err := controllerutil.SetControllerReference(config, statefulSet, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, statefulSet)
 	})
 
 	if err != nil {

@@ -74,6 +74,13 @@ func (s secretHandler) allSecrets(meta v1.Object) []string {
 		return result
 	}
 
+	// add common certificates
+
+	result = append(result,
+		nameServiceMesh+"-users",
+		nameCommandMeshSecretName,
+	)
+
 	// add all inter service certificates
 
 	if config.Spec.InterServiceCertificates != nil {
@@ -92,6 +99,8 @@ func (s secretHandler) allSecrets(meta v1.Object) []string {
 				nameDeviceRegistryAdapter+"-tls",
 				nameDeviceRegistryManagement+"-tls",
 				nameTenantService+"-tls",
+				nameServiceMeshInter+"-tls",
+				nameCommandMesh+"-tls",
 			)
 		}
 

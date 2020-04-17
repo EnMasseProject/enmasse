@@ -56,6 +56,10 @@ func ApplyServiceDefaults(service *corev1.Service, component string, name string
 	ApplyDefaultLabels(&service.ObjectMeta, component, name)
 	service.Spec.Selector = CreateDefaultLabels(nil, component, name)
 
+	if service.Annotations == nil {
+		service.Annotations = make(map[string]string)
+	}
+
 }
 
 func ApplyMetricsServiceDefaults(service *corev1.Service, component string, name string) {
@@ -193,6 +197,16 @@ func ApplyDeploymentContainerWithError(deployment *appsv1.Deployment, name strin
 
 	if err == nil {
 		deployment.Spec.Template.Spec.Containers = containers
+	}
+
+	return err
+}
+
+func ApplyStatefulSetContainerWithError(statefulSet *appsv1.StatefulSet, name string, mutator func(*corev1.Container) error) error {
+	containers, err := ApplyContainerWithError(statefulSet.Spec.Template.Spec.Containers, name, mutator)
+
+	if err == nil {
+		statefulSet.Spec.Template.Spec.Containers = containers
 	}
 
 	return err
@@ -483,6 +497,34 @@ func ApplyOrRemoveEnvSimple(container *corev1.Container, name string, value stri
 	}
 }
 
+func FromFieldNamespace() *corev1.EnvVarSource {
+	return FromField("metadata.namespace")
+}
+
+func FromField(fieldPath string) *corev1.EnvVarSource {
+	return &corev1.EnvVarSource{
+		FieldRef: &corev1.ObjectFieldSelector{
+			FieldPath: fieldPath,
+		},
+	}
+}
+
+func FromSecret(secretName string, secretKey string) *corev1.EnvVarSource {
+	return FromOptionalSecret(secretName, secretKey, nil)
+}
+
+func FromOptionalSecret(secretName string, secretKey string, optional *bool) *corev1.EnvVarSource {
+	return &corev1.EnvVarSource{
+		SecretKeyRef: &corev1.SecretKeySelector{
+			Key: secretKey,
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: secretName,
+			},
+			Optional: optional,
+		},
+	}
+}
+
 func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, secretName string) {
 	ApplyEnvOptionalSecret(container, name, secretKey, secretName, nil)
 }
@@ -490,30 +532,30 @@ func ApplyEnvSecret(container *corev1.Container, name string, secretKey string, 
 func ApplyEnvOptionalSecret(container *corev1.Container, name string, secretKey string, secretName string, optional *bool) {
 	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
 		envvar.Value = ""
-		envvar.ValueFrom = &corev1.EnvVarSource{
-			SecretKeyRef: &corev1.SecretKeySelector{
-				Key: secretKey,
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: secretName,
-				},
-				Optional: optional,
-			},
-		}
+		envvar.ValueFrom = FromOptionalSecret(secretName, secretKey, optional)
 	})
+}
+
+func FromConfigMap(configMapName string, configMapKey string, optional *bool) *corev1.EnvVarSource {
+	return FromConfigMap(configMapName, configMapKey, nil)
+}
+
+func FromOptionalConfigMap(configMapName string, configMapKey string, optional *bool) *corev1.EnvVarSource {
+	return &corev1.EnvVarSource{
+		ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+			Key: configMapKey,
+			LocalObjectReference: corev1.LocalObjectReference{
+				Name: configMapName,
+			},
+			Optional: optional,
+		},
+	}
 }
 
 func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey string, configMapName string, optional *bool) {
 	ApplyEnv(container, name, func(envvar *corev1.EnvVar) {
 		envvar.Value = ""
-		envvar.ValueFrom = &corev1.EnvVarSource{
-			ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-				Key: configMapKey,
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: configMapName,
-				},
-				Optional: optional,
-			},
-		}
+		envvar.ValueFrom = FromOptionalConfigMap(configMapName, configMapKey, optional)
 	})
 }
 

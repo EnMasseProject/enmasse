@@ -30,6 +30,10 @@ const openShiftServiceCAAnnotationInjectBundle = "service.beta.openshift.io/inje
 const tlsServiceCAVolumeName = "tls-service-ca"
 const tlsServiceKeyVolumeName = "tls"
 
+func keyHashAnnotationName(serviceName string) string {
+	return iotPrefix + "/" + serviceName + "_service-key-hash"
+}
+
 // process either the path of service ca, or provided secrets
 func handleInterService(config *iotv1alpha1.IoTConfig, handlerServiceCA func() error, handlerSecrets func(iotv1alpha1.SecretCertificatesStrategy) error) error {
 
@@ -116,14 +120,31 @@ func (r *ReconcileIoTConfig) processInterServiceCAConfigMap(ctx context.Context,
 // Apply the inter-service certificate configuration for the deployment.
 // If the "serviceName" is empty, then the service does not want to expose an internal service and does not
 // receive any key/cert for doing so.
-func ApplyInterServiceForDeployment(client client.Client, config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, serviceName string) error {
+func ApplyInterServiceForDeployment(client client.Client, config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, volumeName string, serviceName string) error {
 
 	return handleInterService(config,
 		func() error {
-			return applyInterServiceForDeploymentServiceCa(client, deployment, serviceName)
+			return applyInterServiceForDeploymentServiceCa(client, deployment, volumeName, serviceName)
 		},
 		func(strategy iotv1alpha1.SecretCertificatesStrategy) error {
-			return applyInterServiceForDeploymentSecretCertificates(client, deployment, strategy, serviceName)
+			return applyInterServiceForDeploymentSecretCertificates(client, deployment, strategy, volumeName, serviceName)
+		})
+
+}
+
+// for statefulset
+
+// Apply the inter-service certificate configuration for the stateful set.
+// If the "serviceName" is empty, then the service does not want to expose an internal service and does not
+// receive any key/cert for doing so.
+func ApplyInterServiceForStatefulSet(client client.Client, config *iotv1alpha1.IoTConfig, statefulSet *appsv1.StatefulSet, volumeName string, serviceName string) error {
+
+	return handleInterService(config,
+		func() error {
+			return applyInterServiceForStatefulSetServiceCa(client, statefulSet, volumeName, serviceName)
+		},
+		func(strategy iotv1alpha1.SecretCertificatesStrategy) error {
+			return applyInterServiceForStatefulSetSecretCertificates(client, statefulSet, strategy, volumeName, serviceName)
 		})
 
 }
@@ -175,23 +196,35 @@ func applyInterServiceForServiceServiceCa(service *corev1.Service, serviceName s
 	return nil
 }
 
-func applyInterServiceForDeploymentServiceCa(client client.Client, deployment *appsv1.Deployment, serviceName string) error {
+func applyInterServiceForPodServiceCa(client client.Client, namespace string, pod *corev1.PodTemplateSpec, volumeName string, serviceName string) error {
 
 	// mount the global service ca configmap
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, tlsServiceCAVolumeName, iotServiceCaConfigMapName)
-	if err := install.ApplyConfigMapHash(client, &deployment.Spec.Template, iotPrefix+"/service-ca-hash", deployment.Namespace, iotServiceCaConfigMapName); err != nil {
+	install.ApplyConfigMapVolume(&pod.Spec, tlsServiceCAVolumeName, iotServiceCaConfigMapName)
+	if err := install.ApplyConfigMapHash(client, pod, iotPrefix+"/service-ca-hash", namespace, iotServiceCaConfigMapName); err != nil {
 		return err
 	}
 
 	if serviceName != "" {
 		// mount the key/cert secret
-		install.ApplySecretVolume(&deployment.Spec.Template.Spec, tlsServiceKeyVolumeName, serviceName+"-tls")
-		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-key-hash", deployment.Namespace, serviceName+"-tls"); err != nil {
+		install.ApplySecretVolume(&pod.Spec, volumeName, serviceName+"-tls")
+		if err := install.ApplySecretHash(client, pod, keyHashAnnotationName(serviceName), namespace, serviceName+"-tls"); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func applyInterServiceForDeploymentServiceCa(client client.Client, deployment *appsv1.Deployment, volumeName string, serviceName string) error {
+
+	return applyInterServiceForPodServiceCa(client, deployment.Namespace, &deployment.Spec.Template, volumeName, serviceName)
+
+}
+
+func applyInterServiceForStatefulSetServiceCa(client client.Client, statefulSet *appsv1.StatefulSet, volumeName string, serviceName string) error {
+
+	return applyInterServiceForPodServiceCa(client, statefulSet.Namespace, &statefulSet.Spec.Template, volumeName, serviceName)
+
 }
 
 func appendTrustStoresForServiceCa(container *corev1.Container, env []string) error {
@@ -216,14 +249,14 @@ func applyInterServiceForServiceSecretCertificates(service *corev1.Service, _ st
 	return nil
 }
 
-func applyInterServiceForDeploymentSecretCertificates(client client.Client, deployment *appsv1.Deployment, cfg iotv1alpha1.SecretCertificatesStrategy, serviceName string) error {
+func applyInterServiceForPodSecretCertificates(client client.Client, namespace string, pod *corev1.PodTemplateSpec, cfg iotv1alpha1.SecretCertificatesStrategy, volumeName string, serviceName string) error {
 	if cfg.CASecretName == "" {
 		return util.NewConfigurationError("inter service secret CA name must not be empty")
 	}
 
 	// mount the global service ca configmap
-	install.ApplySecretVolume(&deployment.Spec.Template.Spec, tlsServiceCAVolumeName, cfg.CASecretName)
-	if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-ca-hash", deployment.Namespace, cfg.CASecretName, "service-ca.crt"); err != nil {
+	install.ApplySecretVolume(&pod.Spec, tlsServiceCAVolumeName, cfg.CASecretName)
+	if err := install.ApplySecretHash(client, pod, iotPrefix+"/service-ca-hash", namespace, cfg.CASecretName, "service-ca.crt"); err != nil {
 		return err
 	}
 
@@ -236,14 +269,26 @@ func applyInterServiceForDeploymentSecretCertificates(client client.Client, depl
 		}
 
 		// mount the secret for key/cert
-		install.ApplySecretVolume(&deployment.Spec.Template.Spec, tlsServiceKeyVolumeName, mappedSecretName)
-		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/service-key-hash", deployment.Namespace, mappedSecretName, "tls.crt", "tls.key"); err != nil {
+		install.ApplySecretVolume(&pod.Spec, volumeName, mappedSecretName)
+		if err := install.ApplySecretHash(client, pod, keyHashAnnotationName(serviceName), namespace, mappedSecretName, "tls.crt", "tls.key"); err != nil {
 			return err
 		}
 
 	}
 
 	return nil
+}
+
+func applyInterServiceForDeploymentSecretCertificates(client client.Client, deployment *appsv1.Deployment, cfg iotv1alpha1.SecretCertificatesStrategy, volumeName string, serviceName string) error {
+
+	return applyInterServiceForPodSecretCertificates(client, deployment.Namespace, &deployment.Spec.Template, cfg, volumeName, serviceName)
+
+}
+
+func applyInterServiceForStatefulSetSecretCertificates(client client.Client, statefulSet *appsv1.StatefulSet, cfg iotv1alpha1.SecretCertificatesStrategy, volumeName string, serviceName string) error {
+
+	return applyInterServiceForPodSecretCertificates(client, statefulSet.Namespace, &statefulSet.Spec.Template, cfg, volumeName, serviceName)
+
 }
 
 func appendTrustStoresForSecretCertificates(container *corev1.Container, env []string) error {
