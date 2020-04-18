@@ -26,7 +26,6 @@ velocity.log.*
 
 # Local go binary directory
 /go-bin/
-/local/
 
 # Openshift local cluster files
 **/openshift.local.clusterup/
