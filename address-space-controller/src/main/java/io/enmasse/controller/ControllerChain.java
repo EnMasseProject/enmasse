@@ -87,59 +87,66 @@ public class ControllerChain implements Watcher<AddressSpace> {
 
         List<AddressSpace> updatedResources = new ArrayList<>();
 
-        for (final AddressSpace original : resources) {
 
-            AddressSpace addressSpace = new AddressSpaceBuilder(original).build();
-            final String addressSpaceName = addressSpace.getMetadata().getNamespace() + ":" + addressSpace.getMetadata().getName();
+        boolean requeue = false;
+        do {
+            for (final AddressSpace original : resources) {
 
-            try {
+                AddressSpace addressSpace = new AddressSpaceBuilder(original).build();
+                final String addressSpaceName = addressSpace.getMetadata().getNamespace() + ":" + addressSpace.getMetadata().getName();
 
-                log.debug("Controller chain input: {}", original);
+                try {
 
-                log.info("Checking address space {}", addressSpaceName);
-                for (Controller controller : chain) {
-                    log.info("Controller {}", controller);
-                    log.debug("Address space input: {}", addressSpace);
-                    Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
-                    addressSpace = result.getAddressSpace();
+                    log.debug("Controller chain input: {}", original);
 
-                    // If instructed to requeue, break loop and let the comparison of original vs current
-                    // determine if we need to persist anything. Once persisted, it is assumed that another
-                    // reconciliation event will occur in the near future to allow the reconciliation of this
-                    // AddressSpace to continue.
-                    if (result.isPersistAndRequeue()) {
-                        break;
+                    log.info("Checking address space {}", addressSpaceName);
+                    for (Controller controller : chain) {
+                        log.info("Controller {}", controller);
+                        log.debug("Address space input: {}", addressSpace);
+                        Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
+                        addressSpace = result.getAddressSpace();
+
+                        // If instructed to requeue, break loop and let the comparison of original vs current
+                        // determine if we need to persist anything. Signal that the reconcile loop should run
+                        // again by setting requeue. This will refresh the current list of address spaces and rerun the
+                        // reconcile loop with persisted finalizers.
+                        if (result.isPersistAndRequeue()) {
+                            requeue = true;
+                            break;
+                        }
                     }
-                }
 
-                log.debug("Controller chain output: {}", addressSpace);
+                    log.debug("Controller chain output: {}", addressSpace);
 
-                if (hasAddressSpaceChanged(original, addressSpace)) {
-                    log.debug("Change detected. Executing update.");
-                    if (!this.addressSpaceApi.replaceAddressSpace(addressSpace)) {
-                        log.info("Unable to persist address space state: {}", addressSpaceName);
+                    if (hasAddressSpaceChanged(original, addressSpace)) {
+                        log.debug("Change detected. Executing update.");
+                        if (!this.addressSpaceApi.replaceAddressSpace(addressSpace)) {
+                            log.info("Unable to persist address space state: {}", addressSpaceName);
+                        }
+                    } else {
+                        log.debug("No change detected. Not triggering update.");
                     }
-                } else {
-                    log.debug("No change detected. Not triggering update.");
+                } catch (KubernetesClientException e) {
+                    log.warn("Error syncing address space {}", addressSpace.getMetadata().getName(), e);
+                    eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
+                } catch (Exception e) {
+                    log.warn("Error processing address space {}", addressSpace.getMetadata().getName(), e);
+                } finally {
+                    updatedResources.add(addressSpace);
                 }
-            } catch (KubernetesClientException e) {
-                log.warn("Error syncing address space {}", addressSpace.getMetadata().getName(), e);
-                eventLogger.log(AddressSpaceSyncFailed, "Error syncing address space: " + e.getMessage(), Warning, ControllerKind.AddressSpace, addressSpace.getMetadata().getName());
-            } catch (Exception e) {
-                log.warn("Error processing address space {}", addressSpace.getMetadata().getName(), e);
-            } finally {
-                updatedResources.add(addressSpace);
             }
-        }
 
-        for (Controller controller : chain) {
-            try {
-                controller.reconcileAll(updatedResources);
-            } catch (Exception e) {
-                log.warn("Exception in {} reconcileAll", controller, e);
+            for (Controller controller : chain) {
+                try {
+                    controller.reconcileAll(updatedResources);
+                } catch (Exception e) {
+                    log.warn("Exception in {} reconcileAll", controller, e);
+                }
             }
-        }
-
+            if (requeue) {
+                resources = new ArrayList<>(addressSpaceApi.listAllAddressSpaces());
+            }
+        } while(requeue);
     }
 
     static boolean hasAddressSpaceChanged(AddressSpace original, AddressSpace addressSpace) {
