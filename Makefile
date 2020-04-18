@@ -1,4 +1,4 @@
-TOPDIR          := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
+TOPDIR          := $(dir $(lastword $(MAKEFILE_LIST)))
 include $(TOPDIR)/Makefile.env.mk
 
 GO_DIRS = \
@@ -139,26 +139,38 @@ docu_check:
 docu_clean:
 	make -C documentation clean
 
-# Targets related to kubebuilder
-controller-gen:
-ifeq (, $(shell which controller-gen))
+#region Targets related to kubebuilder
+
+ifeq (, $(shell which controller-gen 2>/dev/null))
+
+LOCALBIN:=$(TOPDIR)/local/go/bin
+CONTROLLER_GEN:=$(abspath $(LOCALBIN)/controller-gen )
+controller-gen: $(CONTROLLER_GEN)
+
+$(CONTROLLER_GEN):
+	@mkdir -p "$(LOCALBIN)"
 	@{ \
 	set -e ;\
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
 	go mod init tmp ;\
-	GOPATH=$(GOPATH) go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5 ;\
+	GOPATH=$(abspath $(LOCALBIN)/../) go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.2.5 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
-CONTROLLER_GEN=$(GOPATH)/bin/controller-gen
+
 else
-CONTROLLER_GEN=$(shell which controller-gen)
+
+controller-gen:
+.PHONY: controller-gen
+CONTROLLER_GEN:=$(shell which controller-gen)
+
 endif
 
 manifests: controller-gen
 	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1beta2 output:dir=./templates/shared-infra
 
+#endregion
 
 .PHONY: test_go_vet test_go_plain build_go imageenv
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean templates
-.PHONY: controller-gen manifests
+.PHONY: manifests
