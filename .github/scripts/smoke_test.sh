@@ -9,6 +9,9 @@ kubectl get pods
 minikube status
 kubectl get nodes
 
+echo "DF"
+df -h
+
 echo "Check DU"
 du -sh *
 
