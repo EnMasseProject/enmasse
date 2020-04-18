@@ -9,6 +9,9 @@ kubectl get pods
 minikube status
 kubectl get nodes
 
+echo "PWD"
+pwd
+
 echo "DF"
 df -h
 
