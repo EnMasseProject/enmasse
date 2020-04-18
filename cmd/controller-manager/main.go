@@ -206,6 +206,36 @@ func main() {
 		)
 	}
 
+	if util.IsModuleEnabled("MESSAGING_ADDRESS") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingAddress",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingAddressList",
+			},
+		)
+	}
+
+	if util.IsModuleEnabled("MESSAGING_ENDPOINT") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingEndpoint",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingEndpointList",
+			},
+		)
+	}
+
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,

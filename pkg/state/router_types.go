@@ -15,9 +15,12 @@ type RouterState struct {
 	initialized   bool
 	commandClient amqpcommand.Client
 	connectors    []*RouterConnector
+	addresses     []*RouterAddress
+	autoLinks     []*RouterAutoLink
 }
 
 type RouterConnector struct {
+	Name               string `json:"name"`
 	Host               string `json:"host"`
 	Port               string `json:"port"`
 	Role               string `json:"role,omitempty"`
@@ -40,13 +43,18 @@ type RouterVhost struct {
 }
 
 type RouterAddress struct {
-	Prefix   string `json:"prefix"`
-	Waypoint bool   `json:"waypoint,omitempty"`
+	Name         string `json:"name"`
+	Prefix       string `json:"prefix"`
+	Waypoint     bool   `json:"waypoint,omitempty"`
+	Distribution string `json:"distribution,omitempty"`
 }
 
 type RouterAutoLink struct {
-	Address     string `json:"address"`
-	ContainerId string `json:"containerId"`
+	Name            string `json:"name"`
+	Address         string `json:"address"`
+	Direction       string `json:"direction"`
+	Connection      string `json:"connection,omitempty"`
+	ExternalAddress string `json:"externalAddress,omitempty"`
 }
 
 type RouterLinkRoute struct {

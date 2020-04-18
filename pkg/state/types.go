@@ -29,6 +29,10 @@ type InfraClient interface {
 	SyncConnectors(routers []string, brokers []string) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
 	Shutdown() error
+	// Sync address for tenant
+	SyncAddress(tenant string, address *v1beta2.MessagingAddress) error
+	// Delete address for tenant
+	DeleteAddress(tenant string, address *v1beta2.MessagingAddress) error
 }
 
 type ConnectorStatus struct {

@@ -108,6 +108,7 @@ func (i *infraClient) SyncConnectors(routers []string, brokers []string) ([]Conn
 	// Ensure all routers are connected to all brokers
 	for _, broker := range i.brokers {
 		connector := &RouterConnector{
+			Name:               connectorName(broker),
 			Host:               broker.Host,
 			Port:               fmt.Sprintf("%d", broker.Port),
 			Role:               "route-container",
@@ -136,6 +137,111 @@ func (i *infraClient) SyncConnectors(routers []string, brokers []string) ([]Conn
 	return connectorStatuses, nil
 }
 
+func (i *infraClient) EnsureAddress(tenant string, address *v1beta1.MessagingAddress) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	// Configure all routers
+	for _, router := range i.routers {
+		err := router.Initialize()
+		if err != nil {
+			return err
+		}
+
+		addressName := fmt.Sprintf("%s-%s", tenantId, address.Name)
+		if address.Spec.Type == v1beta2.MessagingAddressAnycast {
+			err = router.EnsureAddress(&RouterAddress{
+				Name:         addressName,
+				Prefix:       fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+				Distribution: "balanced",
+				Waypoint:     false,
+			})
+			if err != nil {
+				return err
+			}
+		} else if address.Spec.Type == v1beta2.MessagingAddressMulticast {
+			err = router.EnsureAddress(&RouterAddress{
+				Name:         addressName,
+				Prefix:       fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+				Distribution: "multicast",
+				Waypoint:     false,
+			})
+			if err != nil {
+				return err
+			}
+		} else if address.Spec.Type == v1beta2.MessagingAddressQueue {
+			// Message routed
+			err = router.EnsureAddress(&RouterAddress{
+				Name:         addressName,
+				Prefix:       fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+				Distribution: "balanced",
+				Waypoint:     true,
+			})
+			if err != nil {
+				return err
+			}
+
+			for _, broker := range address.Status.Brokers {
+				namePrefix := fmt.Sprintf("%s-%s-%s", tenantId, address.Name, broker.Host)
+				brokerState := i.brokers[broker.Host]
+				if brokerState == nil {
+					return fmt.Errorf("Unable to configure address autoLink %s for unknown broker %s", namePrefix, broker.Host)
+				}
+				err = router.EnsureAutoLink(&RouterAutoLink{
+					Name:            fmt.Sprintf("%s-in", namePrefix),
+					Address:         fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+					Direction:       "in",
+					Connection:      connectorName(brokerState),
+					ExternalAddress: fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+				})
+				if err != nil {
+					return err
+				}
+
+				err = router.EnsureAutoLink(&RouterAutoLink{
+					Name:            fmt.Sprintf("%s-out", namePrefix),
+					Address:         fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+					Direction:       "out",
+					Connection:      connectorName(brokerState),
+					ExternalAddress: fmt.Sprintf("%s/%s", tenantId, address.GetAddress()),
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			// TODO link routed
+		} else if address.Spec.Type == v1beta2.MessagingAddressTopic {
+			// TODO
+		} else if address.Spec.Type == v1beta2.MessagingAddressSubscription {
+			// TODO
+		} else {
+			// TODO
+		}
+	}
+
+	if address.Spec.Type == v1beta2.MessagingAddressQueue {
+		// Configure relevant brokers
+		for _, broker := range address.Status.Brokers {
+			for _, brokerState := range i.brokers {
+				err := brokerState.Initialize()
+				if err != nil {
+					return err
+				}
+				if broker.Host == brokerState.Host {
+					err := brokerState.EnsureQueue(address)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	} else if address.Spec.Type == v1beta2.MessagingAddressTopic {
+	} else if address.Spec.Type == v1beta2.MessagingAddressSubscription {
+	}
+	return nil
+}
+
 func (i *infraClient) Shutdown() error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
@@ -143,5 +249,76 @@ func (i *infraClient) Shutdown() error {
 	for _, router := range i.routers {
 		router.Shutdown()
 	}
+
+	for _, broker := range i.brokers {
+		broker.Shutdown()
+	}
 	return nil
+}
+
+func (i *infraClient) DeleteAddress(tenantId string, address *v1beta2.MessagingAddress) error {
+	// Delete from routers
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	// Configure all routers
+	for _, router := range i.routers {
+		err := router.Initialize()
+		if err != nil {
+			return err
+		}
+
+		err = router.DeleteAddress(fmt.Sprintf("%s-%s", tenantId, address.Name))
+		if err != nil {
+			return err
+		}
+
+		// Delete autolinks
+		if address.Spec.Type == v1beta2.MessagingAddressQueue {
+			for _, broker := range address.Status.Brokers {
+				// Message routed
+				namePrefix := fmt.Sprintf("%s-%s-%s", tenantId, address.Name, broker.Host)
+				err = router.DeleteAutoLink(fmt.Sprintf("%s-in", namePrefix))
+				if err != nil {
+					return err
+				}
+				err = router.DeleteAutoLink(fmt.Sprintf("%s-out", namePrefix))
+				if err != nil {
+					return err
+				}
+			}
+			// TODO link routed
+		} else if address.Spec.Type == v1beta2.MessagingAddressTopic {
+			// TODO
+		} else if address.Spec.Type == v1beta2.MessagingAddressSubscription {
+			// TODO
+		} else {
+			// TODO
+		}
+	}
+
+	if address.Spec.Type == v1beta2.MessagingAddressQueue {
+		// Delete from relevant brokers
+		for _, broker := range address.Status.Brokers {
+			for _, brokerState := range i.brokers {
+				err := brokerState.Initialize()
+				if err != nil {
+					return err
+				}
+				if broker.Host == brokerState.Host {
+					err := brokerState.DeleteQueue(address)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	} else if address.Spec.Type == v1beta2.MessagingAddressTopic {
+	} else if address.Spec.Type == v1beta2.MessagingAddressSubscription {
+	}
+	return nil
+}
+
+func connectorName(broker *BrokerState) string {
+	return fmt.Sprintf("%s-%d", broker.Host, broker.Port)
 }

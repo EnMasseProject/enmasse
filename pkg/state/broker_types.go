@@ -5,7 +5,14 @@
 
 package state
 
+import (
+	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+)
+
 type BrokerState struct {
-	Host string
-	Port int32
+	Host          string
+	Port          int32
+	initialized   bool
+	commandClient amqpcommand.Client
+	queues        map[string]bool
 }

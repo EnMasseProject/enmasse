@@ -13,6 +13,10 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// MessagingAddresses returns a MessagingAddressInformer.
+	MessagingAddresses() MessagingAddressInformer
+	// MessagingEndpoints returns a MessagingEndpointInformer.
+	MessagingEndpoints() MessagingEndpointInformer
 	// MessagingInfras returns a MessagingInfraInformer.
 	MessagingInfras() MessagingInfraInformer
 	// MessagingTenants returns a MessagingTenantInformer.
@@ -28,6 +32,16 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// MessagingAddresses returns a MessagingAddressInformer.
+func (v *version) MessagingAddresses() MessagingAddressInformer {
+	return &messagingAddressInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MessagingEndpoints returns a MessagingEndpointInformer.
+func (v *version) MessagingEndpoints() MessagingEndpointInformer {
+	return &messagingEndpointInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MessagingInfras returns a MessagingInfraInformer.

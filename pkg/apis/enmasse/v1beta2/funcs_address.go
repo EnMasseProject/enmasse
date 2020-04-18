@@ -9,14 +9,22 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (m *MessagingInfraStatus) GetMessagingInfraCondition(t MessagingInfraConditionType) *MessagingInfraCondition {
+func (m *MessagingAddress) GetAddress() string {
+	if m.Spec.Address != nil {
+		return *m.Spec.Address
+	} else {
+		return m.Name
+	}
+}
+
+func (m *MessagingAddressStatus) GetMessagingAddressCondition(t MessagingAddressConditionType) *MessagingAddressCondition {
 	for i, c := range m.Conditions {
 		if c.Type == t {
 			return &m.Conditions[i]
 		}
 	}
 
-	mc := MessagingInfraCondition{
+	mc := MessagingAddressCondition{
 		Type:               t,
 		Status:             corev1.ConditionUnknown,
 		LastTransitionTime: metav1.Now(),
@@ -27,7 +35,7 @@ func (m *MessagingInfraStatus) GetMessagingInfraCondition(t MessagingInfraCondit
 	return &m.Conditions[len(m.Conditions)-1]
 }
 
-func (c *MessagingInfraCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
+func (c *MessagingAddressCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
 
 	if c.Status != status {
 		c.Status = status

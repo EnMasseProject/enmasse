@@ -7,6 +7,10 @@
 
 package v1beta2
 
+type MessagingAddressExpansion interface{}
+
+type MessagingEndpointExpansion interface{}
+
 type MessagingInfraExpansion interface{}
 
 type MessagingTenantExpansion interface{}

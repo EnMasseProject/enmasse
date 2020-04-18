@@ -13,8 +13,12 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+
 	"pack.ag/amqp"
 )
+
+const routerCommandAddress = "$management"
+const routerCommandResponseAddress = "router_command_response"
 
 func NewRouterState(host string, port int32) *RouterState {
 	state := &RouterState{
@@ -70,7 +74,7 @@ func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
 
 	for _, existing := range r.connectors {
 		// This is the same connector. Report error if settings have changed
-		if existing.Host == connector.Host && existing.Port == connector.Port {
+		if existing.Name == connector.Name {
 			if !reflect.DeepEqual(connector, existing) {
 				return fmt.Errorf("Router connector %s:%s was updated - connector updates are not supported", existing.Host, existing.Port)
 			} else {
@@ -82,7 +86,7 @@ func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
 	if !r.commandClient.Connected() {
 		return &NotConnectedError{router: r.host}
 	}
-	log.Printf("[Router %s] Creating connector %s:%s", r.host, connector.Host, connector.Port)
+	log.Printf("[Router %s] Creating connector %s", r.host, connector.Name)
 
 	entity, err := entityToMap(connector)
 	if err != nil {
@@ -204,8 +208,23 @@ func entityToMap(v interface{}) (map[interface{}]interface{}, error) {
 	return result, nil
 }
 
-const routerCommandAddress = "$management"
-const routerCommandResponseAddress = "router_command_response"
+func (r *RouterState) deleteEntity(entity string, name string) error {
+	properties := make(map[string]interface{})
+	properties["operation"] = "DELETE"
+	properties["type"] = entity
+	properties["name"] = name
+
+	request := &amqp.Message{
+		Properties:            &amqp.MessageProperties{},
+		ApplicationProperties: properties,
+	}
+
+	_, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 func (r *RouterState) createEntity(entity string, name string, data map[interface{}]interface{}) error {
 	properties := make(map[string]interface{})
@@ -306,15 +325,73 @@ func (r *RouterState) EnsureVhost(address *RouterVhost) error {
  * Ensure that a given address exists.
  */
 func (r *RouterState) EnsureAddress(address *RouterAddress) error {
-	// TODO: Implement
+	for _, existing := range r.addresses {
+		// This is the same address. Report error if settings have changed
+		if existing.Name == address.Name {
+			if !reflect.DeepEqual(address, existing) {
+				return fmt.Errorf("Router address %s was updated - address updates are not supported", existing.Name)
+			} else {
+				return nil
+			}
+		}
+	}
+
+	if !r.commandClient.Connected() {
+		return &NotConnectedError{router: r.host}
+	}
+	log.Printf("[Router %s] Creating address %s", r.host, address.Name)
+
+	entity, err := entityToMap(address)
+	if err != nil {
+		return err
+	}
+
+	// No address found so we need to create it
+	err = r.createEntity("address", address.Name, entity)
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func (r *RouterState) DeleteAddress(name string) error {
+	return r.deleteEntity("address", name)
+}
+
+func (r *RouterState) DeleteAutoLink(name string) error {
+	return r.deleteEntity("autoLink", name)
 }
 
 /*
  * Ensure that a given autoLink exists.
  */
-func (r *RouterState) EnsureAutoLink(address *RouterAutoLink) error {
-	// TODO: Implement
+func (r *RouterState) EnsureAutoLink(autoLink *RouterAutoLink) error {
+	for _, existing := range r.autoLinks {
+		// This is the same autoLink. Report error if settings have changed
+		if existing.Name == autoLink.Name {
+			if !reflect.DeepEqual(autoLink, existing) {
+				return fmt.Errorf("Router autoLink %s was updated - autoLink updates are not supported", existing.Name)
+			} else {
+				return nil
+			}
+		}
+	}
+
+	if !r.commandClient.Connected() {
+		return &NotConnectedError{router: r.host}
+	}
+	log.Printf("[Router %s] Creating autoLink %s", r.host, autoLink.Name)
+
+	entity, err := entityToMap(autoLink)
+	if err != nil {
+		return err
+	}
+
+	// No autoLink found so we need to create it
+	err = r.createEntity("autoLink", autoLink.Name, entity)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
