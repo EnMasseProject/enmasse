@@ -16,7 +16,6 @@ import (
 	logr "github.com/go-logr/logr"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
-	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -68,16 +67,13 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
 
-	caCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraCaCreated)
-	return common.WithConditionUpdate(caCreated, func() error {
-		_, err := controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
-			if err := controllerutil.SetControllerReference(infra, secret, c.scheme); err != nil {
-				return err
-			}
-			return c.applyCaSecret(secret, logger)
-		})
-		return err
+	_, err := controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
+		if err := controllerutil.SetControllerReference(infra, secret, c.scheme); err != nil {
+			return err
+		}
+		return c.applyCaSecret(secret, logger)
 	})
+	return err
 }
 
 func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger) error {
@@ -127,7 +123,7 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
  * Reconciles the internal certificate for a given component in a shared infrastructure.
  * This function also handles renewal of the certificate.
  */
-func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, set *appsv1.StatefulSet, dnsNames ...string) (*corev1.Secret, error) {
+func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*corev1.Secret, error) {
 
 	caSecretName := fmt.Sprintf("%s-ca", infra.Name)
 	caSecret := &corev1.Secret{
@@ -146,12 +142,12 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 		if err := controllerutil.SetControllerReference(set, secret, c.scheme); err != nil {
 			return err
 		}
-		return c.applyCertSecret(secret, caSecret, logger, dnsNames...)
+		return c.applyCertSecret(secret, caSecret, logger, commonName, dnsNames...)
 	})
 	return secret, err
 }
 
-func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1.Secret, logger logr.Logger, dnsNames ...string) error {
+func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1.Secret, logger logr.Logger, commonName string, dnsNames ...string) error {
 
 	caExpiryDate, err := getCertExpiryDate(caSecret.Data["tls.crt"])
 	if err != nil {
@@ -189,7 +185,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 	if !hasCert {
 		logger.Info("Creating component certificate", "secret", secret.Name)
 		expiryDate := now.Add(c.certExpirationTime)
-		key, cert, keystore, truststore, err := generateCert(nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
 		if err != nil {
 			return err
 		}
@@ -213,7 +209,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		if expiryDate.After(caExpiryDate) {
 			expiryDate = caExpiryDate
 		}
-		key, cert, keystore, truststore, err := generateCert(secret.Data["tls.key"], secret.Data["tls.crt"], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(secret.Data["tls.key"], secret.Data["tls.crt"], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
 		if err != nil {
 			return err
 		}

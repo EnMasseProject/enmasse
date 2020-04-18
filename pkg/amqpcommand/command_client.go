@@ -58,14 +58,14 @@ func NewCommandClient(addr string, commandAddress string, commandResponseAddress
 		commandAddress:         commandAddress,
 		commandResponseAddress: commandResponseAddress,
 		connectOptions:         opts,
-		request:                make(chan *commandRequest),
-		stop:                   make(chan struct{}),
-		stopped:                make(chan struct{}),
 		connected:              0,
 	}
 }
 
 func (c *CommandClient) Start() {
+	c.request = make(chan *commandRequest)
+	c.stop = make(chan struct{})
+	c.stopped = make(chan struct{})
 	go func() {
 		defer close(c.stopped)
 		defer log.Printf("Command Client %s - stopped", c.addr)
@@ -111,7 +111,6 @@ func (c *CommandClient) doProcess() error {
 	background := context.Background()
 	defer func() { _ = session.Close(background) }()
 
-	log.Printf("Command address %s", c.commandAddress)
 	sender, err := session.NewSender(
 		amqp.LinkTargetAddress(c.commandAddress),
 		amqp.LinkSenderSettle(amqp.ModeMixed),
@@ -129,7 +128,6 @@ func (c *CommandClient) doProcess() error {
 		return err
 	}
 	replyTo := receiver.Address()
-	log.Printf("Receiver address is %s", replyTo)
 
 	defer func() { _ = receiver.Close(background) }()
 
@@ -184,6 +182,7 @@ func (c *CommandClient) Stop() {
 	close(c.request)
 	close(c.stop)
 	<-c.stopped
+	atomic.StoreInt32(&c.connected, 0)
 }
 
 func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error) {
@@ -203,7 +202,7 @@ func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.D
 			return result.responseMessage, nil
 		}
 	case <-time.After(timeout):
-		return nil, fmt.Errorf("Timed out waiting for response")
+		return nil, fmt.Errorf("timed out waiting for response")
 	}
 }
 

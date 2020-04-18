@@ -146,7 +146,7 @@ func detectApi(gvk schema.GroupVersionKind) bool {
 		}
 
 		retries -= 1
-		time.Sleep(10 * time.Second)
+		time.Sleep(2 * time.Second)
 
 	}
 

@@ -34,6 +34,10 @@ function configure_brokered() {
 function configure_shared() {
     cp $CONFIG_TEMPLATES/shared/broker.xml /tmp/broker.xml
     cp $CONFIG_TEMPLATES/shared/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
+    cp $CONFIG_TEMPLATES/shared/login.config /tmp/login.config
+    cp $CONFIG_TEMPLATES/shared/artemis-roles.properties $BROKER_CONF_DIR/artemis-roles.properties
+    cp $CONFIG_TEMPLATES/shared/cert-roles.properties $BROKER_CONF_DIR/cert-roles.properties
+    cp $CONFIG_TEMPLATES/shared/cert-users.properties /tmp/cert-users.properties
     export HAWTIO_ROLE=manage
 }
 
@@ -94,14 +98,14 @@ function pre_configuration() {
 
     if [ "$ADDRESS_SPACE_TYPE" == "brokered" ]; then
         configure_brokered
-        envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
     elif [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
         configure_shared
+        envsubst < /tmp/cert-users.properties > $BROKER_CONF_DIR/cert-users.properties
     else
         configure_standard
-        envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
     fi
 
+    envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
     envsubst < /tmp/broker.xml > $BROKER_CONF_DIR/broker.xml
 
     cp $CONFIG_TEMPLATES/jolokia-access.xml $BROKER_CONF_DIR/jolokia-access.xml

@@ -6,6 +6,8 @@
 package state
 
 import (
+	"time"
+
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
@@ -25,10 +27,31 @@ type ClientManager interface {
  * A client for performing changes and querying infrastructure.
  */
 type InfraClient interface {
-	// Synchronize connectors between router and broker hosts
-	SyncConnectors(routers []string, brokers []string) ([]ConnectorStatus, error)
+	// Synchronize all resources for infrastructure for the provided routers and brokers
+	SyncAll(routers []string, brokers []string) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
 	Shutdown() error
+	// Schedule durable address for tenant
+	ScheduleAddress(address *v1beta2.MessagingAddress, scheduler Scheduler) error
+	// Synchronize address
+	SyncAddress(address *v1beta2.MessagingAddress) error
+	// Delete address
+	DeleteAddress(address *v1beta2.MessagingAddress) error
+	// Allocate endpoint ports
+	AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error
+	// Free endpoint ports
+	FreePorts(endpoint *v1beta2.MessagingEndpoint)
+	// Synchronize endpoint
+	SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error
+	// Synchronize endpoint
+	DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error
+}
+
+/**
+ * Interface for retrieving current time.
+ */
+type Clock interface {
+	Now() time.Time
 }
 
 type ConnectorStatus struct {
@@ -36,4 +59,8 @@ type ConnectorStatus struct {
 	Broker    string
 	Connected bool
 	Message   string
+}
+
+type EndpointStatus struct {
+	Port string
 }

@@ -89,7 +89,7 @@ func generateCa(caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []by
 	return encodedPemKey, encodedPemCert, nil
 }
 
-func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, dnsNames []string) ([]byte, []byte, []byte, []byte, error) {
+func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, commonName string, dnsNames []string) ([]byte, []byte, []byte, []byte, error) {
 	caKey, err := parsePemKey(caKeyPem)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -130,6 +130,7 @@ func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []by
 			Province:      []string{""},
 			Locality:      []string{""},
 			StreetAddress: []string{""},
+			CommonName:    commonName,
 			PostalCode:    []string{""},
 		},
 		NotBefore:             time.Now(),

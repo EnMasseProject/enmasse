@@ -5,7 +5,22 @@
 
 package state
 
+import (
+	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+)
+
 type BrokerState struct {
-	Host string
-	Port int32
+	Host          string
+	Port          int32
+	initialized   bool
+	nextResync    time.Time
+	commandClient amqpcommand.Client
+	queues        map[string]bool
+}
+
+type BrokerQueue struct {
+	Name    string
+	Address string
 }

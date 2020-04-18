@@ -10,7 +10,6 @@ import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.api.model.MessagingTenantList;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;

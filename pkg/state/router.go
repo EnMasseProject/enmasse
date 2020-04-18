@@ -6,6 +6,7 @@
 package state
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,7 +14,23 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+	"golang.org/x/sync/errgroup"
+
 	"pack.ag/amqp"
+)
+
+const (
+	routerCommandAddress         = "$management"
+	routerCommandResponseAddress = "router_command_response"
+)
+
+type routerEntity string
+
+const (
+	listenerEntity  routerEntity = "org.apache.qpid.dispatch.listener"
+	connectorEntity routerEntity = "org.apache.qpid.dispatch.connector"
+	addressEntity   routerEntity = "org.apache.qpid.dispatch.router.config.address"
+	autoLinkEntity  routerEntity = "org.apache.qpid.dispatch.router.config.autoLink"
 )
 
 func NewRouterState(host string, port int32) *RouterState {
@@ -31,19 +48,48 @@ func NewRouterState(host string, port int32) *RouterState {
 	return state
 }
 
-func (r *RouterState) Initialize() error {
+func (r *RouterState) Initialize(nextResync time.Time) error {
 	if r.initialized {
 		return nil
 	}
 
+	r.nextResync = nextResync
+
+	log.Printf("[Router %s] Initializing...", r.host)
 	connectors, err := r.readConnectors()
 	if err != nil {
 		return err
 	}
-
 	r.connectors = connectors
+
+	addresses, err := r.readAddresses()
+	if err != nil {
+		return err
+	}
+	r.addresses = addresses
+
+	autoLinks, err := r.readAutoLinks()
+	if err != nil {
+		return err
+	}
+	r.autoLinks = autoLinks
+
+	listeners, err := r.readListeners()
+	if err != nil {
+		return err
+	}
+	r.listeners = listeners
+
+	log.Printf("[Router %s] Initialized controller state with %d connectors, %d addresses, %d autoLinks and %d listeners", r.host, len(connectors), len(addresses), len(autoLinks), len(listeners))
 	r.initialized = true
 	return nil
+}
+
+func (r *RouterState) checkConnection() {
+	// If we are initialized and not connected, we got disconnected and need to re-initialize
+	if r.initialized && !r.commandClient.Connected() {
+		r.Reset()
+	}
 }
 
 /*
@@ -52,8 +98,9 @@ func (r *RouterState) Initialize() error {
 func (r *RouterState) Reset() {
 	if r.commandClient != nil {
 		r.commandClient.Stop()
+		r.initialized = false
+		r.commandClient.Start()
 	}
-	r.commandClient.Start()
 }
 
 func (r *RouterState) Shutdown() {
@@ -66,23 +113,23 @@ func (r *RouterState) Shutdown() {
  * Ensure that a given connector exists.
  */
 func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
-	name := fmt.Sprintf("%s_%s", connector.Host, connector.Port)
-
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
 	for _, existing := range r.connectors {
 		// This is the same connector. Report error if settings have changed
-		if existing.Host == connector.Host && existing.Port == connector.Port {
+		if existing.Name == connector.Name {
 			if !reflect.DeepEqual(connector, existing) {
-				return fmt.Errorf("Router connector %s:%s was updated - connector updates are not supported", existing.Host, existing.Port)
+				log.Printf("Changing from '%+v' to '%+v'\n", existing, connector)
+				return fmt.Errorf("router connector %s:%s was updated - connector updates are not supported", existing.Host, existing.Port)
 			} else {
 				return nil
 			}
 		}
 	}
 
-	if !r.commandClient.Connected() {
-		return &NotConnectedError{router: r.host}
-	}
-	log.Printf("[Router %s] Creating connector %s:%s", r.host, connector.Host, connector.Port)
+	log.Printf("[Router %s] Creating connector %s", r.host, connector.Name)
 
 	entity, err := entityToMap(connector)
 	if err != nil {
@@ -90,21 +137,21 @@ func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
 	}
 
 	// No connector found so we need to create it
-	err = r.createEntity("connector", name, entity)
+	err = r.createEntity(connectorEntity, connector.Name, entity)
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[Router %s] Connector %s:%s created", r.host, connector.Host, connector.Port)
-	r.connectors = append(r.connectors, connector)
+	r.connectors[connector.Name] = connector
 	return nil
 }
 
-func (r *RouterState) readConnectors() ([]*RouterConnector, error) {
+func (r *RouterState) readConnectors() (map[string]*RouterConnector, error) {
 	if !r.commandClient.Connected() {
-		return nil, &NotConnectedError{router: r.host}
+		return nil, NewNotConnectedError(r.host)
 	}
-	v, err := r.queryEntities("connector")
+	v, err := r.queryEntities(connectorEntity)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +164,7 @@ func (r *RouterState) readConnectors() ([]*RouterConnector, error) {
 		return nil, err
 	}
 
-	connectors := make([]*RouterConnector, 0)
+	connectors := make(map[string]*RouterConnector, 0)
 	for _, entry := range data {
 		out, err := json.Marshal(entry)
 		if err != nil {
@@ -130,10 +177,156 @@ func (r *RouterState) readConnectors() ([]*RouterConnector, error) {
 		if err != nil {
 			return nil, err
 		}
-		connectors = append(connectors, &connector)
+		connectors[connector.Name] = &connector
 	}
 
 	return connectors, nil
+}
+
+/*
+ * Ensure that a given listener exists.
+ */
+func (r *RouterState) EnsureListener(listener *RouterListener) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	for _, existing := range r.listeners {
+		// This is the same listener. Report error if settings have changed
+		if existing.Name == listener.Name {
+			if !reflect.DeepEqual(listener, existing) {
+				log.Printf("Changing from '%+v' to '%+v'\n", existing, listener)
+				return fmt.Errorf("router listener %s:%s was updated - listener updates are not supported", existing.Host, existing.Port)
+			} else {
+				return nil
+			}
+		}
+	}
+
+	log.Printf("[Router %s] Creating listener %s", r.host, listener.Name)
+
+	entity, err := entityToMap(listener)
+	if err != nil {
+		return err
+	}
+
+	// No listener found so we need to create it
+	err = r.createEntity(listenerEntity, listener.Name, entity)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[Router %s] Listener %s:%s created", r.host, listener.Host, listener.Port)
+	r.listeners[listener.Name] = listener
+	return nil
+}
+
+func (r *RouterState) readAddresses() (map[string]*RouterAddress, error) {
+	if !r.commandClient.Connected() {
+		return nil, NewNotConnectedError(r.host)
+	}
+	v, err := r.queryEntities(addressEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	attributeNames := v["attributeNames"].([]interface{})
+	results := v["results"].([]interface{})
+
+	data, err := createMapData(attributeNames, results)
+	if err != nil {
+		return nil, err
+	}
+
+	addresses := make(map[string]*RouterAddress, 0)
+	for _, entry := range data {
+		out, err := json.Marshal(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		var address RouterAddress
+
+		err = json.Unmarshal(out, &address)
+		if err != nil {
+			return nil, err
+		}
+		addresses[address.Name] = &address
+	}
+
+	return addresses, nil
+}
+
+func (r *RouterState) readListeners() (map[string]*RouterListener, error) {
+	if !r.commandClient.Connected() {
+		return nil, NewNotConnectedError(r.host)
+	}
+	v, err := r.queryEntities(listenerEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	attributeNames := v["attributeNames"].([]interface{})
+	results := v["results"].([]interface{})
+
+	data, err := createMapData(attributeNames, results)
+	if err != nil {
+		return nil, err
+	}
+
+	listeners := make(map[string]*RouterListener, 0)
+	for _, entry := range data {
+		out, err := json.Marshal(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		var listener RouterListener
+
+		err = json.Unmarshal(out, &listener)
+		if err != nil {
+			return nil, err
+		}
+		listeners[listener.Name] = &listener
+	}
+
+	return listeners, nil
+}
+
+func (r *RouterState) readAutoLinks() (map[string]*RouterAutoLink, error) {
+	if !r.commandClient.Connected() {
+		return nil, NewNotConnectedError(r.host)
+	}
+	v, err := r.queryEntities(autoLinkEntity)
+	if err != nil {
+		return nil, err
+	}
+
+	attributeNames := v["attributeNames"].([]interface{})
+	results := v["results"].([]interface{})
+
+	data, err := createMapData(attributeNames, results)
+	if err != nil {
+		return nil, err
+	}
+
+	autoLinks := make(map[string]*RouterAutoLink, 0)
+	for _, entry := range data {
+		out, err := json.Marshal(entry)
+		if err != nil {
+			return nil, err
+		}
+
+		var autoLink RouterAutoLink
+
+		err = json.Unmarshal(out, &autoLink)
+		if err != nil {
+			return nil, err
+		}
+		autoLinks[autoLink.Name] = &autoLink
+	}
+
+	return autoLinks, nil
 }
 
 func createMapData(attributeNames []interface{}, results []interface{}) ([]map[string]interface{}, error) {
@@ -154,11 +347,11 @@ func createMapData(attributeNames []interface{}, results []interface{}) ([]map[s
 }
 
 func (r *RouterState) GetConnectorStatus(connector *RouterConnector) (*ConnectorStatus, error) {
+	r.checkConnection()
 	if !r.commandClient.Connected() {
-		return nil, &NotConnectedError{router: r.host}
+		return nil, NewNotConnectedError(r.host)
 	}
-	name := fmt.Sprintf("%s_%s", connector.Host, connector.Port)
-	v, err := r.readEntity("connector", name)
+	v, err := r.readEntity(connectorEntity, connector.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -196,6 +389,12 @@ func entityToMap(v interface{}) (map[interface{}]interface{}, error) {
 
 	for k, v := range s {
 		switch t := v.(type) {
+		case int32:
+			result[k] = t
+		case int:
+			result[k] = t
+		case bool:
+			result[k] = t
 		case string:
 			result[k] = t
 		}
@@ -204,13 +403,52 @@ func entityToMap(v interface{}) (map[interface{}]interface{}, error) {
 	return result, nil
 }
 
-const routerCommandAddress = "$management"
-const routerCommandResponseAddress = "router_command_response"
+func getStatusCode(response *amqp.Message) (int32, error) {
+	code := response.ApplicationProperties["statusCode"]
+	switch v := code.(type) {
+	case int32:
+		return code.(int32), nil
+	default:
+		log.Printf("Response: %+v", response)
+		return 0, fmt.Errorf("unexpected value with type %T", v)
+	}
+}
 
-func (r *RouterState) createEntity(entity string, name string, data map[interface{}]interface{}) error {
+func getStatusDescription(response *amqp.Message) interface{} {
+	return response.ApplicationProperties["statusDescription"]
+}
+
+func (r *RouterState) deleteEntity(entity routerEntity, name string) error {
+	properties := make(map[string]interface{})
+	properties["operation"] = "DELETE"
+	properties["type"] = string(entity)
+	properties["name"] = name
+
+	request := &amqp.Message{
+		Properties:            &amqp.MessageProperties{},
+		ApplicationProperties: properties,
+	}
+
+	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	if err != nil {
+		return err
+	}
+
+	code, err := getStatusCode(response)
+	if err != nil {
+		return err
+	}
+
+	if code < 200 || code >= 300 {
+		return fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
+	}
+	return nil
+}
+
+func (r *RouterState) createEntity(entity routerEntity, name string, data map[interface{}]interface{}) error {
 	properties := make(map[string]interface{})
 	properties["operation"] = "CREATE"
-	properties["type"] = entity
+	properties["type"] = string(entity)
 	properties["name"] = name
 	request := &amqp.Message{
 		Properties:            &amqp.MessageProperties{},
@@ -218,18 +456,26 @@ func (r *RouterState) createEntity(entity string, name string, data map[interfac
 		Value:                 data,
 	}
 
-	_, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
 	if err != nil {
 		return err
 	}
-	return nil
 
+	code, err := getStatusCode(response)
+	if err != nil {
+		return err
+	}
+
+	if code < 200 || code >= 300 {
+		return fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
+	}
+	return nil
 }
 
-func (r *RouterState) readEntity(entity string, name string) (map[string]interface{}, error) {
+func (r *RouterState) readEntity(entity routerEntity, name string) (map[string]interface{}, error) {
 	properties := make(map[string]interface{})
 	properties["operation"] = "READ"
-	properties["type"] = entity
+	properties["type"] = string(entity)
 	properties["name"] = name
 
 	request := &amqp.Message{
@@ -242,18 +488,28 @@ func (r *RouterState) readEntity(entity string, name string) (map[string]interfa
 		return nil, err
 	}
 
+	code, err := getStatusCode(response)
+	if err != nil {
+		return nil, err
+	}
+
+	if code < 200 || code >= 300 {
+		return nil, fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
+	}
+
 	switch v := response.Value.(type) {
 	case map[string]interface{}:
 		return response.Value.(map[string]interface{}), nil
 	default:
-		return nil, fmt.Errorf("Unexpected value with type %T", v)
+		log.Printf("Response: %+v", response)
+		return nil, fmt.Errorf("unexpected value with type %T", v)
 	}
 }
 
-func (r *RouterState) queryEntities(entity string, attributes ...string) (map[string]interface{}, error) {
+func (r *RouterState) queryEntities(entity routerEntity, attributes ...string) (map[string]interface{}, error) {
 	properties := make(map[string]interface{})
 	properties["operation"] = "QUERY"
-	properties["entityType"] = entity
+	properties["entityType"] = string(entity)
 
 	data := make(map[string][]string, 0)
 	if len(attributes) > 0 {
@@ -278,26 +534,34 @@ func (r *RouterState) queryEntities(entity string, attributes ...string) (map[st
 		return nil, err
 	}
 
+	// log.Printf("Got response %+v\n", response)
+
+	code, err := getStatusCode(response)
+	if err != nil {
+		return nil, err
+	}
+
+	if code < 200 || code >= 300 {
+		return nil, fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
+	}
+
 	switch v := response.Value.(type) {
 	case map[string]interface{}:
 		return response.Value.(map[string]interface{}), nil
 	default:
-		return nil, fmt.Errorf("Unexpected value with type %T", v)
+		log.Printf("Response: %+v", response)
+		return nil, fmt.Errorf("unexpected value with type %T", v)
 	}
-}
-
-/*
- * Ensure that a given listener exists.
- */
-func (r *RouterState) EnsureListener(address *RouterListener) error {
-	// TODO: Implement
-	return nil
 }
 
 /*
  * Ensure that a given vhost exists.
  */
 func (r *RouterState) EnsureVhost(address *RouterVhost) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
 	// TODO: Implement
 	return nil
 }
@@ -305,23 +569,192 @@ func (r *RouterState) EnsureVhost(address *RouterVhost) error {
 /*
  * Ensure that a given address exists.
  */
-func (r *RouterState) EnsureAddress(address *RouterAddress) error {
-	// TODO: Implement
+func (r *RouterState) EnsureAddresses(addresses []*RouterAddress) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	toCreate := make([]*RouterAddress, 0, len(addresses))
+	for _, address := range addresses {
+		existing, ok := r.addresses[address.Name]
+		if ok {
+			if !reflect.DeepEqual(address, existing) {
+				log.Printf("Changing from '%+v' to '%+v'\n", existing, address)
+				return fmt.Errorf("router address %s was updated - address updates are not supported", existing.Name)
+			}
+		} else {
+			toCreate = append(toCreate, address)
+		}
+	}
+
+	g, _ := errgroup.WithContext(context.Background())
+	completed := make(chan *RouterAddress, len(toCreate))
+	for _, address := range toCreate {
+		a := address
+		entity, err := entityToMap(address)
+		if err != nil {
+			return err
+		}
+		g.Go(func() error {
+			log.Printf("[Router %s] Creating address %s", r.host, a.Name)
+			err := r.createEntity(addressEntity, a.Name, entity)
+			if err != nil {
+				return err
+			}
+			completed <- a
+			return nil
+		})
+	}
+	err := g.Wait()
+	close(completed)
+
+	// Serialize completed
+	for address := range completed {
+		r.addresses[address.Name] = address
+	}
+	return err
+}
+
+func (r *RouterState) DeleteAddresses(names []string) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	g, _ := errgroup.WithContext(context.Background())
+	completed := make(chan string, len(names))
+	for _, name := range names {
+		n := name
+		g.Go(func() error {
+			log.Printf("Deleting address %s", n)
+			err := r.deleteEntity(addressEntity, n)
+			if err != nil {
+				return err
+			}
+			completed <- n
+			return nil
+		})
+	}
+	err := g.Wait()
+	close(completed)
+
+	// Serialize completed
+	for name := range completed {
+		delete(r.addresses, name)
+	}
+	return err
+}
+
+func (r *RouterState) DeleteAutoLinks(names []string) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	g, _ := errgroup.WithContext(context.Background())
+	completed := make(chan string, len(names))
+	for _, name := range names {
+		n := name
+		g.Go(func() error {
+			err := r.deleteEntity(autoLinkEntity, n)
+			if err != nil {
+				return err
+			}
+			completed <- n
+			return nil
+		})
+	}
+	err := g.Wait()
+	close(completed)
+
+	// Serialize completed
+	for name := range completed {
+		delete(r.autoLinks, name)
+	}
+	return err
+}
+
+func (r *RouterState) DeleteConnector(name string) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	err := r.deleteEntity(connectorEntity, name)
+	if err != nil {
+		return err
+	}
+	delete(r.connectors, name)
+	return nil
+}
+
+func (r *RouterState) DeleteListener(name string) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	err := r.deleteEntity(listenerEntity, name)
+	if err != nil {
+		return err
+	}
+	delete(r.listeners, name)
 	return nil
 }
 
 /*
  * Ensure that a given autoLink exists.
  */
-func (r *RouterState) EnsureAutoLink(address *RouterAutoLink) error {
-	// TODO: Implement
-	return nil
+func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
+	toCreate := make([]*RouterAutoLink, 0, len(autoLinks))
+	for _, autoLink := range autoLinks {
+		existing, ok := r.autoLinks[autoLink.Name]
+		if ok {
+			if !reflect.DeepEqual(autoLink, existing) {
+				log.Printf("Changing from '%+v' to '%+v'\n", existing, autoLink)
+				return fmt.Errorf("router autoLink %s was updated - autoLink updates are not supported", existing.Name)
+			}
+		} else {
+			toCreate = append(toCreate, autoLink)
+		}
+	}
+
+	g, _ := errgroup.WithContext(context.Background())
+	completed := make(chan *RouterAutoLink, len(toCreate))
+	for _, autoLink := range toCreate {
+		a := autoLink
+		entity, err := entityToMap(autoLink)
+		if err != nil {
+			return err
+		}
+		g.Go(func() error {
+			log.Printf("[Router %s] Creating autoLink %+v", r.host, a.Name)
+			err := r.createEntity(autoLinkEntity, a.Name, entity)
+			if err != nil {
+				return err
+			}
+			completed <- a
+			return nil
+		})
+	}
+	err := g.Wait()
+	close(completed)
+
+	// Serialize completed
+	for autoLink := range completed {
+		r.autoLinks[autoLink.Name] = autoLink
+	}
+	return err
 }
 
 /*
  * Ensure that a given linkRoute exists.
  */
 func (r *RouterState) EnsureLinkRoute(address *RouterLinkRoute) error {
+	r.checkConnection()
+	if !r.commandClient.Connected() {
+		return NewNotConnectedError(r.host)
+	}
 	// TODO: Implement
 	return nil
 }

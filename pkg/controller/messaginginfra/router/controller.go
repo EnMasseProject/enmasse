@@ -57,137 +57,143 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	routerInfraName := getRouterInfraName(infra)
 	certSecretName := cert.GetCertSecretName(routerInfraName)
 
-	// Update router condition
-	routersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraRoutersCreated)
+	// Reconcile static router config
+	routerConfig := generateConfig(&infra.Spec.Router)
+	routerConfigBytes, err := serializeConfig(&routerConfig)
+	if err != nil {
+		return nil, err
+	}
+	config := &corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+	}
 
-	allHosts := make([]string, 0)
-	err := common.WithConditionUpdate(routersCreated, func() error {
-		// Reconcile static router config
-		routerConfig := generateConfig(&infra.Spec.Router)
-		routerConfigBytes, err := serializeConfig(&routerConfig)
-		if err != nil {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, config, func() error {
+		if err := controllerutil.SetControllerReference(infra, config, r.scheme); err != nil {
 			return err
 		}
-		config := &corev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-		}
-
-		_, err = controllerutil.CreateOrUpdate(ctx, r.client, config, func() error {
-			if err := controllerutil.SetControllerReference(infra, config, r.scheme); err != nil {
-				return err
-			}
-			config.Data = map[string]string{
-				"qdrouterd.json": string(routerConfigBytes),
-			}
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
-		rawSha := sha256.Sum256(routerConfigBytes)
-		routerConfigSha := hex.EncodeToString(rawSha[:])
-
-		// Reconcile statefulset of the router
-		statefulset := &appsv1.StatefulSet{
-			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-		}
-		_, err = controllerutil.CreateOrUpdate(ctx, r.client, statefulset, func() error {
-			if err := controllerutil.SetControllerReference(infra, statefulset, r.scheme); err != nil {
-				return err
-			}
-
-			install.ApplyStatefulSetDefaults(statefulset, "router", infra.Name)
-			statefulset.Labels[common.LABEL_INFRA] = infra.Name
-			statefulset.Spec.Template.Labels[common.LABEL_INFRA] = infra.Name
-
-			statefulset.Annotations[ANNOTATION_ROUTER_CONFIG_DIGEST] = routerConfigSha
-
-			applyScalingStrategy(infra.Spec.Router.ScalingStrategy, statefulset)
-
-			containers, err := install.ApplyContainerWithError(statefulset.Spec.Template.Spec.Containers, "router", func(container *corev1.Container) error {
-				err := install.ApplyContainerImage(container, "router", infra.Spec.Router.Image)
-				if err != nil {
-					return err
-				}
-
-				install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
-				install.ApplyVolumeMountSimple(container, "config", "/etc/qpid-dispatch/config", false)
-
-				install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
-				install.ApplyEnvSimple(container, "QDROUTERD_CONF", "/etc/qpid-dispatch/config/qdrouterd.json")
-				install.ApplyEnvSimple(container, "QDROUTERD_CONF_TYPE", "json")
-				install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_DISCOVERY", "INFER")
-				install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_SERVICE_NAME", routerInfraName)
-
-				container.Ports = []corev1.ContainerPort{
-					{
-						ContainerPort: 55672,
-						Name:          "inter-router",
-					},
-					{
-						ContainerPort: 7777,
-						Name:          "management",
-					},
-				}
-
-				return nil
-			})
-			if err != nil {
-				return err
-			}
-			statefulset.Spec.Template.Spec.Containers = containers
-			statefulset.Spec.ServiceName = routerInfraName
-
-			install.ApplyConfigMapVolume(&statefulset.Spec.Template.Spec, "config", routerInfraName)
-			install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "certs", certSecretName)
-			return nil
-		})
-
-		if err != nil {
-			return err
-		}
-
-		// Reconcile router service
-		service := &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
-		}
-		_, err = controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
-			if err := controllerutil.SetControllerReference(infra, service, r.scheme); err != nil {
-				return err
-			}
-			install.ApplyServiceDefaults(service, "router", infra.Name)
-			service.Spec.ClusterIP = "None"
-			service.Spec.Selector = statefulset.Spec.Template.Labels
-			service.Spec.Ports = []corev1.ServicePort{
-				{
-					Port:       55672,
-					Protocol:   corev1.ProtocolTCP,
-					TargetPort: intstr.FromString("inter-router"),
-					Name:       "inter-router",
-				},
-			}
-
-			return nil
-		})
-		if err != nil {
-			return err
-		}
-
-		// Reconcile router certificate
-		_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
-			fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace))
-		if err != nil {
-			return err
-		}
-
-		// Update discoverable routers
-		for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
-			allHosts = append(allHosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+		config.Data = map[string]string{
+			"qdrouterd.json": string(routerConfigBytes),
 		}
 		return nil
 	})
-	return allHosts, err
+	if err != nil {
+		return nil, err
+	}
+
+	rawSha := sha256.Sum256(routerConfigBytes)
+	routerConfigSha := hex.EncodeToString(rawSha[:])
+
+	// Reconcile statefulset of the router
+	statefulset := &appsv1.StatefulSet{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+	}
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, statefulset, func() error {
+		if err := controllerutil.SetControllerReference(infra, statefulset, r.scheme); err != nil {
+			return err
+		}
+
+		install.ApplyStatefulSetDefaults(statefulset, "router", infra.Name)
+		statefulset.Labels[common.LABEL_INFRA] = infra.Name
+		statefulset.Spec.Template.Labels[common.LABEL_INFRA] = infra.Name
+		statefulset.Spec.Template.Annotations[common.ANNOTATION_INFRA_NAME] = infra.Name
+		statefulset.Spec.Template.Annotations[common.ANNOTATION_INFRA_NAMESPACE] = infra.Namespace
+
+		statefulset.Annotations[common.ANNOTATION_INFRA_NAME] = infra.Name
+		statefulset.Annotations[common.ANNOTATION_INFRA_NAMESPACE] = infra.Namespace
+		statefulset.Annotations[ANNOTATION_ROUTER_CONFIG_DIGEST] = routerConfigSha
+
+		applyScalingStrategy(infra.Spec.Router.ScalingStrategy, statefulset)
+
+		containers, err := install.ApplyContainerWithError(statefulset.Spec.Template.Spec.Containers, "router", func(container *corev1.Container) error {
+			err := install.ApplyContainerImage(container, "router", infra.Spec.Router.Image)
+			if err != nil {
+				return err
+			}
+
+			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
+			install.ApplyVolumeMountSimple(container, "config", "/etc/qpid-dispatch/config", false)
+
+			install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
+			install.ApplyEnvSimple(container, "QDROUTERD_CONF", "/etc/qpid-dispatch/config/qdrouterd.json")
+			install.ApplyEnvSimple(container, "QDROUTERD_CONF_TYPE", "json")
+			install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_DISCOVERY", "INFER")
+			install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_SERVICE_NAME", routerInfraName)
+
+			container.Ports = []corev1.ContainerPort{
+				{
+					ContainerPort: 55672,
+					Name:          "inter-router",
+				},
+				{
+					ContainerPort: 7777,
+					Name:          "management",
+				},
+			}
+
+			for i := 40000; i < 40100; i++ {
+				container.Ports = append(container.Ports, corev1.ContainerPort{
+					ContainerPort: int32(i),
+					Name:          fmt.Sprintf("tenant%d", i),
+				})
+			}
+
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+		statefulset.Spec.Template.Spec.Containers = containers
+		statefulset.Spec.ServiceName = routerInfraName
+
+		install.ApplyConfigMapVolume(&statefulset.Spec.Template.Spec, "config", routerInfraName)
+		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "certs", certSecretName)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Reconcile router service
+	service := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+	}
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
+		if err := controllerutil.SetControllerReference(infra, service, r.scheme); err != nil {
+			return err
+		}
+		install.ApplyServiceDefaults(service, "router", infra.Name)
+		service.Spec.ClusterIP = "None"
+		service.Spec.Selector = statefulset.Spec.Template.Labels
+		service.Spec.Ports = []corev1.ServicePort{
+			{
+				Port:       55672,
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromString("inter-router"),
+				Name:       "inter-router",
+			},
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Reconcile router certificate
+	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
+		fmt.Sprintf("%s", service.Name),
+		fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace))
+	if err != nil {
+		return nil, err
+	}
+
+	// Update discoverable routers
+	allHosts := make([]string, 0)
+	for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
+		allHosts = append(allHosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+	}
+	return allHosts, nil
 }
 
 func getRouterInfraName(infra *v1beta2.MessagingInfra) string {

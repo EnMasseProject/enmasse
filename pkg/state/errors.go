@@ -8,10 +8,24 @@ import (
 	"fmt"
 )
 
+type NotInitializedError struct{}
+
+func (e *NotInitializedError) Error() string {
+	return "infrastructure not yet initialized"
+}
+
+func NewNotInitializedError() error {
+	return &NotInitializedError{}
+}
+
+func NewNotConnectedError(host string) error {
+	return &NotConnectedError{host: host}
+}
+
 type NotConnectedError struct {
-	router string
+	host string
 }
 
 func (e *NotConnectedError) Error() string {
-	return fmt.Sprintf("Not yet connected to router %s", e.router)
+	return fmt.Sprintf("not yet connected to %s", e.host)
 }

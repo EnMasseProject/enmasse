@@ -7,6 +7,22 @@
 
 package v1beta2
 
+// MessagingAddressListerExpansion allows custom methods to be added to
+// MessagingAddressLister.
+type MessagingAddressListerExpansion interface{}
+
+// MessagingAddressNamespaceListerExpansion allows custom methods to be added to
+// MessagingAddressNamespaceLister.
+type MessagingAddressNamespaceListerExpansion interface{}
+
+// MessagingEndpointListerExpansion allows custom methods to be added to
+// MessagingEndpointLister.
+type MessagingEndpointListerExpansion interface{}
+
+// MessagingEndpointNamespaceListerExpansion allows custom methods to be added to
+// MessagingEndpointNamespaceLister.
+type MessagingEndpointNamespaceListerExpansion interface{}
+
 // MessagingInfraListerExpansion allows custom methods to be added to
 // MessagingInfraLister.
 type MessagingInfraListerExpansion interface{}

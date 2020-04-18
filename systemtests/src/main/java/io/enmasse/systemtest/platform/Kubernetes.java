@@ -1026,6 +1026,11 @@ public abstract class Kubernetes {
         }
     }
 
+    /**
+     * Retrieve host or ip address of Kubernetes node.
+     */
+    public abstract String getHost();
+
     @FunctionalInterface
     public static interface AfterInput {
         public void afterInput(final OutputStream remoteInput) throws IOException;

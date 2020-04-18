@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.condition;
 
+import io.enmasse.systemtest.platform.cluster.ClusterType;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
@@ -17,4 +18,5 @@ import java.lang.annotation.Target;
 public @interface OpenShift {
     OpenShiftVersion version() default OpenShiftVersion.WHATEVER;
     MultinodeCluster multinode() default MultinodeCluster.WHATEVER;
+    ClusterType type() default ClusterType.OPENSHIFT;
 }

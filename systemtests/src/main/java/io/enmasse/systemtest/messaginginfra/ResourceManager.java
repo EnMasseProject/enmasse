@@ -13,6 +13,8 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
@@ -41,7 +43,7 @@ public class ResourceManager {
 
     private Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
-    private AmqpClientFactory amqpClientFactory = null;
+    private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(null, new UserCredentials("dummy", "dummy"));
     private MqttClientFactory mqttClientFactory = null;
 
     private static ResourceManager instance;
@@ -85,13 +87,16 @@ public class ResourceManager {
         }
         LOGGER.info("------------------------------------");
         methodResources.clear();
-        cleanDefaults();
         pointerResources = classResources;
     }
 
-    private void cleanDefaults() {
-        defaultInfra = null;
-        defaultTenant = null;
+    private void cleanDefault(HasMetadata resource) {
+        if (defaultInfra != null && defaultInfra.getKind().equals(resource.getKind()) && defaultInfra.getMetadata().getName().equals(resource.getMetadata().getName())) {
+            defaultInfra = null;
+        }
+        if (defaultTenant != null && defaultTenant.getKind().equals(resource.getKind()) && defaultTenant.getMetadata().getName().equals(resource.getMetadata().getName())) {
+            defaultTenant = null;
+        }
     }
 
     //------------------------------------------------------------------------------------------------
@@ -167,6 +172,8 @@ public class ResourceManager {
     private final ResourceType<?>[] resourceTypes = new ResourceType[]{
             new MessagingInfraResourceType(),
             new MessagingTenantResourceType(),
+            new MessagingAddressResourceType(),
+            new MessagingEndpointResourceType(),
             new NamespaceResourceType(),
     };
 
@@ -231,6 +238,7 @@ public class ResourceManager {
             LOGGER.info("Delete of {} {} in namespace {}",
                     resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             type.delete(resource);
+            cleanDefault(resource);
         }
     }
 }

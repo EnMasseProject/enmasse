@@ -17,8 +17,9 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:shortName=msgt;msgtenant;msgtenants,categories=enmasse
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase of the MessagingTenant."
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase."
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",priority=1,description="Message describing the reason for the current Phase."
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MessagingTenant struct {
@@ -53,6 +54,7 @@ type MessagingTenantCondition struct {
 type MessagingTenantConditionType string
 
 const (
+	MessagingTenantBound MessagingTenantConditionType = "Bound"
 	MessagingTenantReady MessagingTenantConditionType = "Ready"
 )
 

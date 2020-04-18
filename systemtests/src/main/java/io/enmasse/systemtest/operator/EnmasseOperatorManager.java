@@ -65,7 +65,7 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "shared-infra"));
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse"));
         TestUtils.waitUntilDeployed(kube.getInfraNamespace());
         LOGGER.info("***********************************************************");
     }

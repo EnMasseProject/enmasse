@@ -46,10 +46,37 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
 	return nil
 }
 
-func (i *FakeClient) SyncConnectors(routers []string, brokers []string) ([]state.ConnectorStatus, error) {
+func (i *FakeClient) SyncAll(routers []string, brokers []string) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers
 	return nil, nil
+}
+
+func (i *FakeClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error {
+	return nil
+}
+
+func (i *FakeClient) FreePorts(endpoint *v1beta2.MessagingEndpoint) {
+}
+
+func (i *FakeClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
+	return nil
+}
+
+func (i *FakeClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
+	return nil
+}
+
+func (i *FakeClient) ScheduleAddress(address *v1beta2.MessagingAddress, scheduler state.Scheduler) error {
+	return nil
+}
+
+func (i *FakeClient) SyncAddress(address *v1beta2.MessagingAddress) error {
+	return nil
+}
+
+func (i *FakeClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
+	return nil
 }
 
 func (i *FakeClient) Shutdown() error {
