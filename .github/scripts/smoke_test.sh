@@ -12,6 +12,12 @@ kubectl get nodes
 echo "PWD"
 pwd
 
+echo "DU PWD"
+du -sh *
+
+echo "DU ROOT"
+sudo du -sh /*
+
 echo "DF"
 df -h
 
