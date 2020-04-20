@@ -6,7 +6,8 @@ set -e
 echo "=============================================================================="
 echo "Freeing up disk space on CI system"
 echo "=============================================================================="
-
+sudo rm -rf "/usr/local/share/boost"
+sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 echo "Listing 100 largest packages"
 dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n | tail -n 100
 df -h
@@ -17,7 +18,7 @@ sudo apt-get remove -y '^llvm-.*'
 sudo apt-get remove -y 'php.*'
 sudo apt-get remove -y azure-cli google-cloud-sdk hhvm google-chrome-stable firefox powershell mono-devel
 sudo apt-get autoremove -y
-sudo apt-get clean
+sudo apt-get clean -y
 df -h
 echo "Removing large directories"
 # deleting 15GB
