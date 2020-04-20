@@ -21,7 +21,7 @@ cleanup() {
 
 echo "Using tmp base: $TMPBASE"
 
-# trap "cleanup" EXIT SIGINT
+trap "cleanup" EXIT SIGINT
 
 mkdir -p "$TMPPROJ"
 
