@@ -4,20 +4,24 @@ set -e
 echo "${VERSION}"
 
 echo "Make"
-make
+#make
 
-echo "Build"
-make docker_build
+#echo "Build"
+#make docker_build
 
-if [[ -v RELEASE ]]
-then
-    echo "Logging in to Docker Hub"
-    docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASS}" "${DOCKER_REGISTRY}"
-    make TAG="${VERSION}" docker_tag docker_push
-fi
+#if [[ -v RELEASE ]]
+#then
+#    echo "Logging in to Docker Hub"
+#    docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASS}" "${DOCKER_REGISTRY}"
+#    make TAG="${VERSION}" docker_tag docker_push
+#fi
 
-echo "Push to registry"
-make -j 4 docker_tag docker_push
+#echo "Push to registry"
+#make -j 4 docker_tag docker_push
+
+
+echo "DF"
+df -h
 
 echo "Generate templates"
 make templates

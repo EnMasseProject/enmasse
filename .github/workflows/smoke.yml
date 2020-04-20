@@ -14,7 +14,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-
+      - name: df
+        run: |
+          echo "DF"
+          df -h
+          
       - name: Set version
         run: |
           echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
@@ -55,6 +59,9 @@ jobs:
         with:
           name: unit-test-logs
           path: test-logs.zip
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v2
 
       - name: Smoke tests
         run: ./.github/scripts/smoke_test.sh
