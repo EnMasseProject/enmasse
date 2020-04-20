@@ -27,7 +27,6 @@ import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
@@ -49,7 +48,6 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
 
     private String randomDeviceId;
-    private IoTConfig iotConfig;
     private IoTProject iotProject;
     private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;
@@ -80,7 +78,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
         // build config
 
-        iotConfig = iotConfigBuilder.build();
+        var iotConfig = iotConfigBuilder.build();
 
         isolatedIoTManager.createIoTConfig(iotConfig);
 

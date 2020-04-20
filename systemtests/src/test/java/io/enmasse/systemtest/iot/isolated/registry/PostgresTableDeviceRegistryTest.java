@@ -14,18 +14,16 @@ import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.iot.IoTTestSession;
 
 class PostgresTableDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
-        return new IoTConfigBuilder()
-                .withNewSpec()
+        return IoTTestSession
+                .createDefaultConfig()
+                .editOrNewSpec()
                 .withServices(newPostgresTableBased())
-                .withNewAdapters()
-                .withNewMqtt()
-                .endMqtt()
-                .endAdapters()
                 .endSpec();
     }
 

@@ -496,11 +496,11 @@ public final class IoTTestSession implements AutoCloseable {
      * @return The new instance.
      * @throws Exception
      */
-    public static IoTTestSession.Builder create(final String namespace) {
+    public static IoTTestSession.Builder create(final String namespace, final boolean isOpenshiftFour) {
 
         // create new default IoT infrastructure
 
-        var config = createDefaultConfig(namespace);
+        var config = createDefaultConfig(namespace, isOpenshiftFour);
 
         // we use the same name for the IoTProject and the AddressSpace
 
@@ -519,6 +519,17 @@ public final class IoTTestSession implements AutoCloseable {
         return new Builder(config, project);
     }
 
+    public static IoTTestSession.Builder create() {
+        return create(
+                Kubernetes.getInstance().getInfraNamespace(),
+                isOpenShiftCompatible(OCP4));
+    }
+
+    public static IoTTestSession.Builder createDefault() {
+        return create()
+                .preDeploy(withDefaultServices());
+    }
+
     /**
      * Create a new default config, using the default namespace.
      * <p>
@@ -527,17 +538,12 @@ public final class IoTTestSession implements AutoCloseable {
      * environment.
      */
     public static IoTConfigBuilder createDefaultConfig() {
-        return createDefaultConfig(Kubernetes.getInstance().getInfraNamespace());
+        return createDefaultConfig(
+                Kubernetes.getInstance().getInfraNamespace(),
+                isOpenShiftCompatible(OCP4));
     }
 
-    public static IoTConfigBuilder createDefaultConfig(final String namespace) {
-
-        log.info("IsOpenShift: {}, IsOpenShiftCompatible: {}, IsOpenShift4: {}, IsCRC: {}, KubernetesVersion: {}",
-                Kubernetes.isOpenShift(),
-                Kubernetes.isOpenShiftCompatible(),
-                Kubernetes.isOpenShiftCompatible(OCP4),
-                Kubernetes.isCRC(),
-                Kubernetes.getInstance().getKubernetesVersion());
+    public static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
 
         var config = new IoTConfigBuilder()
 
@@ -546,7 +552,7 @@ public final class IoTTestSession implements AutoCloseable {
                 .withNamespace(namespace)
                 .endMetadata();
 
-        if (isOpenShiftCompatible(OCP4)) {
+        if (isOpenshiftFour) {
 
             // enable service CA by default
 
@@ -599,11 +605,6 @@ public final class IoTTestSession implements AutoCloseable {
                     .endEndpoint());
         }
         return config;
-    }
-
-    public static IoTTestSession.Builder createDefault() {
-        return create(Kubernetes.getInstance().getInfraNamespace())
-                .preDeploy(withDefaultServices());
     }
 
     private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
