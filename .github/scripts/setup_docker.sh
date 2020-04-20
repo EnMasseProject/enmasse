@@ -26,3 +26,5 @@ sudo rsync -aqxP /var/lib/docker/ /mnt/docker
 
 #Starting docker
 sudo systemctl start docker
+
+df -h
