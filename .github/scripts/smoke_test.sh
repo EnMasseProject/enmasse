@@ -2,6 +2,12 @@
 TAG=${TAG:-latest}
 export TEMPLATES=${PWD}/templates/build/enmasse-${TAG}
 
+sleep 10
+
+echo "Processes"
+
+ps auxww
+
 echo "Running smoke tests"
 kubectl apply -f ${TEMPLATES}/install/bundles/enmasse
 sleep 120
