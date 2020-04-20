@@ -12,4 +12,6 @@ sudo sh -c "sed -i 's#ExecStart=/usr/bin/dockerd -H fd://#ExecStart=/usr/bin/doc
 sudo systemctl daemon-reload
 sudo rsync -aqxP /var/lib/docker/ /mnt/docker
 
+cat /lib/systemd/system/docker.service
+
 sudo systemctl start docker
