@@ -25,8 +25,6 @@ echo "Removing large directories"
 rm -rf /usr/share/dotnet/
 df -h
 
-sudo apt-get -y clean
-
 #Docker installation from google default repositories
 sudo apt-get -y update
 
