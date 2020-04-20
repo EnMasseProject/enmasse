@@ -77,4 +77,3 @@
 :Minishift:
 :Prereqs:
 :Asciidoctor:
-// :InventoryFile:

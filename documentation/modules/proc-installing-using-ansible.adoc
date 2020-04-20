@@ -10,14 +10,6 @@ configuring the system. Example inventory files can be found in the `ansible/inv
 
 The following example inventory file enables a minimal installation of {ProductName}:
 
-ifndef::InventoryFile[]
-[source,options="nowrap"]
-----
-include::../service_admin/example.inventory[]
-----
-endif::InventoryFile[]
-
-ifdef::InventoryFile[]
 [source,options="nowrap"]
 ----
 [enmasse]
@@ -36,7 +28,6 @@ monitoring_namespace=enmasse-monitoring
 monitoring_operator=False
 monitoring=False
 ----
-endif::InventoryFile[]
 
 The following Ansible configuration settings are supported:
 
