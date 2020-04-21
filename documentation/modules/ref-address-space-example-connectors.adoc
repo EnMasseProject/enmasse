@@ -52,7 +52,7 @@ spec:
 <1> (Required) Specifies the name of the connector. All remote addresses are prefixed with the connector name and a forward slash, `/`.
 <2> (Required) Specifies a list of endpoints for this connector. This list must contain at least one entry, and any additional entries are used for failover. If not otherwise specified, the `port` field value is set to the registered IANA port for AMQP (or AMQPS if TLS is enabled).
 <3> (Optional) Idle timeout of the AMQP connection (seconds). 0 disables the idle timeout.
-<4> (Optional) Max frame size of AMQP connection.
+<4> (Optional) Max frame size of the AMQP connection.
 <5> (Optional) Enable TLS. The connector trusts global root CAs by default. To use a custom CA, specify a value for the `caCert` field.
 <6> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
 <7> (Optional) Role of connector. Can be "normal", "route-container", "edge". Defaults to 'route-container'.
