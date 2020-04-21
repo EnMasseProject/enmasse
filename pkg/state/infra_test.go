@@ -14,47 +14,9 @@ import (
 	"pack.ag/amqp"
 )
 
-func TestUpdateRouters(t *testing.T) {
+func TestSyncConnectors(t *testing.T) {
 	client := fakecommand.NewFakeClient()
-	i := &infra{
-		routers: make(map[string]*RouterState, 0),
-		brokers: make(map[string]*BrokerState, 0),
-		routerStateFactory: func(host string, port int32) *RouterState {
-			return &RouterState{
-				host:          host,
-				port:          port,
-				commandClient: client,
-			}
-		},
-		lock: &sync.Mutex{},
-	}
-	assert.NotNil(t, i)
-
-	i.UpdateRouters([]string{"r1.example.com", "r2.example.com"})
-	assert.Equal(t, 2, len(i.routers))
-}
-
-func TestUpdateBrokers(t *testing.T) {
-	i := &infra{
-		routers: make(map[string]*RouterState, 0),
-		brokers: make(map[string]*BrokerState, 0),
-		brokerStateFactory: func(host string, port int32) *BrokerState {
-			return &BrokerState{
-				Host: host,
-				Port: port,
-			}
-		},
-		lock: &sync.Mutex{},
-	}
-	assert.NotNil(t, i)
-
-	i.UpdateBrokers([]string{"r1.example.com", "r2.example.com"})
-	assert.Equal(t, 2, len(i.brokers))
-}
-
-func TestSync(t *testing.T) {
-	client := fakecommand.NewFakeClient()
-	i := &infra{
+	i := &infraClient{
 		routers: make(map[string]*RouterState, 0),
 		brokers: make(map[string]*BrokerState, 0),
 		routerStateFactory: func(host string, port int32) *RouterState {
@@ -73,12 +35,6 @@ func TestSync(t *testing.T) {
 		lock: &sync.Mutex{},
 	}
 	assert.NotNil(t, i)
-
-	i.UpdateRouters([]string{"r1.example.com", "r2.example.com"})
-	i.UpdateBrokers([]string{"b1.example.com", "b2.example.com"})
-
-	assert.Equal(t, 2, len(i.routers))
-	assert.Equal(t, 2, len(i.brokers))
 
 	client.Handler = func(req *amqp.Message) (*amqp.Message, error) {
 		return &amqp.Message{
@@ -90,8 +46,9 @@ func TestSync(t *testing.T) {
 			}}, nil
 	}
 
-	err := i.Sync()
+	statuses, err := i.SyncConnectors([]string{"r1.example.com", "r2.example.com"}, []string{"b1.example.com", "b2.example.com"})
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(i.routers["r1.example.com"].connectors))
 	assert.Equal(t, 2, len(i.routers["r2.example.com"].connectors))
+	assert.Equal(t, 4, len(statuses))
 }

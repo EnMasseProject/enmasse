@@ -25,20 +25,18 @@ import (
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
-	fakeinfra "github.com/enmasseproject/enmasse/pkg/state/test"
 )
 
-func setup(t *testing.T) (*RouterController, *fakeinfra.FakeManager) {
+func setup(t *testing.T) *RouterController {
 	s := scheme.Scheme
 	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfra{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
-	fm := fakeinfra.NewFakeManager()
-	return NewRouterController(cl, s, certController, fm), fm
+	return NewRouterController(cl, s, certController)
 }
 
 func TestReconcileRouterReplicas(t *testing.T) {
-	rc, fm := setup(t)
+	rc := setup(t)
 
 	infra := v1beta2.MessagingInfra{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
@@ -56,7 +54,7 @@ func TestReconcileRouterReplicas(t *testing.T) {
 	err := rc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
-	err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
+	hosts, err := rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	set := &appsv1.StatefulSet{
@@ -66,27 +64,27 @@ func TestReconcileRouterReplicas(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int32(2), *set.Spec.Replicas)
 
-	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc"}, hosts)
 
 	// Scale up
 	infra.Spec.Router.ScalingStrategy.Static.Replicas = 3
-	err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
+	hosts, err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	set = &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: "router-infra1"}}
 	err = rc.client.Get(context.TODO(), types.NamespacedName{Namespace: set.Namespace, Name: set.Name}, set)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(3), *set.Spec.Replicas)
-	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc", "router-infra1-2.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc", "router-infra1-1.router-infra1.test.svc", "router-infra1-2.router-infra1.test.svc"}, hosts)
 
 	// Scale down
 	infra.Spec.Router.ScalingStrategy.Static.Replicas = 1
-	err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
+	hosts, err = rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	set = &appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: "router-infra1"}}
 	err = rc.client.Get(context.TODO(), types.NamespacedName{Namespace: set.Namespace, Name: set.Name}, set)
 	assert.Nil(t, err)
 	assert.Equal(t, int32(1), *set.Spec.Replicas)
-	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc"}, fm.Infras["infra1"].Routers)
+	assert.Equal(t, []string{"router-infra1-0.router-infra1.test.svc"}, hosts)
 }

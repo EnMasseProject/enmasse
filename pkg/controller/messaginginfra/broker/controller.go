@@ -14,7 +14,6 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
-	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -33,15 +32,13 @@ type BrokerController struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	certController *cert.CertController
-	stateManager   state.StateManager
 }
 
-func NewBrokerController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController, stateManager state.StateManager) *BrokerController {
+func NewBrokerController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *BrokerController {
 	return &BrokerController{
 		client:         client,
 		scheme:         scheme,
 		certController: certController,
-		stateManager:   stateManager,
 	}
 }
 
@@ -59,7 +56,7 @@ func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
  *
  * Each instance of a broker is created as a statefulset. If we want to support HA in the future, each statefulset can use replicas to configure HA.
  */
-func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) error {
+func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]string, error) {
 	setDefaultBrokerScalingStrategy(&infra.Spec.Broker)
 	logger.Info("Reconciling brokers", "broker", infra.Spec.Broker)
 
@@ -68,7 +65,8 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 	// Update broker condition
 	brokersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersCreated)
 
-	return common.WithConditionUpdate(brokersCreated, func() error {
+	allHosts := make([]string, 0)
+	err := common.WithConditionUpdate(brokersCreated, func() error {
 		brokers := appsv1.StatefulSetList{}
 		err := b.client.List(ctx, &brokers, client.InNamespace(infra.Namespace), client.MatchingLabels(labels))
 		if err != nil {
@@ -115,13 +113,12 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 		}
 
 		// Update discoverable brokers
-		allHosts := make([]string, 0)
 		for host, _ := range hosts {
 			allHosts = append(allHosts, host)
 		}
-		b.stateManager.GetOrCreateInfra(infra).UpdateBrokers(allHosts)
 		return nil
 	})
+	return allHosts, err
 }
 
 func toHost(broker *appsv1.StatefulSet) string {

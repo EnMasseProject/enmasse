@@ -9,30 +9,26 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
-type StateKey struct {
-	Name      string
-	Namespace string
+/**
+ * Manages clients for messaging infrastructure.
+ */
+type ClientManager interface {
+	// Retrieve a client handle for communicating with messaging infrastructure. Client is thread
+	// safe and shared with multiple threads.
+	GetClient(infra *v1beta2.MessagingInfra) InfraClient
+
+	// Remove client from manager. This will take care to call client.Shutdown() to cleanup client resources.
+	DeleteClient(infra *v1beta2.MessagingInfra) error
 }
 
-type StateManager interface {
-	GetOrCreateInfra(infra *v1beta2.MessagingInfra) InfraState
-	GetOrCreateTenant(tenant *v1beta2.MessagingTenant) TenantState
-	BindTenantToInfra(tenant *v1beta2.MessagingTenant) error
-	DeleteInfra(infra *v1beta2.MessagingInfra) error
-	DeleteTenant(tenant *v1beta2.MessagingTenant) error
-}
-
-type InfraState interface {
-	UpdateRouters(hosts []string)
-	UpdateBrokers(hosts []string)
-	GetSelector() *v1beta2.Selector
-	GetStatus() (InfraStatus, error)
-	Sync() error
+/**
+ * A client for performing changes and querying infrastructure.
+ */
+type InfraClient interface {
+	// Synchronize connectors between router and broker hosts
+	SyncConnectors(routers []string, brokers []string) ([]ConnectorStatus, error)
+	// Stop and cleanup client resources
 	Shutdown() error
-}
-
-type InfraStatus struct {
-	Connectors []ConnectorStatus
 }
 
 type ConnectorStatus struct {
@@ -40,21 +36,4 @@ type ConnectorStatus struct {
 	Broker    string
 	Connected bool
 	Message   string
-}
-
-type TenantState interface {
-	// TODO: Implement
-	// EnsureAddress()
-	// TODO: Implement
-	// EnsureEndpoint()
-	BindInfra(key StateKey, state InfraState)
-	GetInfra() InfraState
-	GetStatus() TenantStatus
-	Shutdown() error
-}
-
-type TenantStatus struct {
-	Bound          bool
-	InfraName      string
-	InfraNamespace string
 }

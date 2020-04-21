@@ -11,78 +11,47 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
-type FakeState struct {
+type FakeClient struct {
 	Routers []string
 	Brokers []string
 }
 
-var _ state.InfraState = &FakeState{}
-var _ state.StateManager = &FakeManager{}
+var _ state.InfraClient = &FakeClient{}
+var _ state.ClientManager = &FakeManager{}
 
 type FakeManager struct {
-	Infras map[string]*FakeState
+	Clients map[string]*FakeClient
 }
 
 func NewFakeManager() *FakeManager {
 	return &FakeManager{
-		Infras: make(map[string]*FakeState),
+		Clients: make(map[string]*FakeClient),
 	}
 }
 
-func (m *FakeManager) GetOrCreateInfra(infra *v1beta2.MessagingInfra) state.InfraState {
-	state, exists := m.Infras[infra.Name]
+func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfra) state.InfraClient {
+	client, exists := m.Clients[infra.Name]
 	if !exists {
-		infraState := &FakeState{
+		client = &FakeClient{
 			Routers: make([]string, 0),
 			Brokers: make([]string, 0),
 		}
-		m.Infras[infra.Name] = infraState
-		state = infraState
+		m.Clients[infra.Name] = client
 	}
-	return state
+	return client
 }
 
-func (m *FakeManager) GetOrCreateTenant(_ *v1beta2.MessagingTenant) state.TenantState {
+func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
+	delete(m.Clients, infra.Name)
 	return nil
 }
 
-func (m *FakeManager) BindTenantToInfra(_ *v1beta2.MessagingTenant) error {
-	return nil
-}
-
-func (m *FakeManager) DeleteInfra(infra *v1beta2.MessagingInfra) error {
-	delete(m.Infras, infra.Name)
-	return nil
-}
-
-func (m *FakeManager) DeleteTenant(_ *v1beta2.MessagingTenant) error {
-	return nil
-}
-
-func (i *FakeState) UpdateRouters(hosts []string) {
-	i.Routers = hosts
-}
-
-func (i *FakeState) GetOrCreateTenant(name string) (state.TenantState, error) {
+func (i *FakeClient) SyncConnectors(routers []string, brokers []string) ([]state.ConnectorStatus, error) {
+	i.Routers = routers
+	i.Brokers = brokers
 	return nil, nil
 }
 
-func (i *FakeState) UpdateBrokers(hosts []string) {
-	i.Brokers = hosts
-}
-
-func (i *FakeState) Sync() error {
+func (i *FakeClient) Shutdown() error {
 	return nil
-}
-
-func (i *FakeState) Shutdown() error {
-	return nil
-}
-
-func (i *FakeState) GetSelector() *v1beta2.Selector {
-	return nil
-}
-
-func (i *FakeState) GetStatus() (state.InfraStatus, error) {
-	return state.InfraStatus{}, nil
 }
