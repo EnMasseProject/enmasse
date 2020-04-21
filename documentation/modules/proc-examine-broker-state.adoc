@@ -71,7 +71,7 @@ To execute an {BrokerName} CLI command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} oc exec _broker pod name_ -- curl --silent --insecure --user _username_:_password_ 'https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker="_broker pod name_"/AddressMemoryUsage'
+{cmdcli} oc exec _broker pod name_ -- curl --silent --insecure --user _username_:_password_ -H "Origin: https://localhost:8161" 'https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker="_broker pod name_"/AddressMemoryUsage'
 ----
 +
 IMPORTANT: The double quotes around the broker pod name within the URL are required. Make sure you protect them from your
