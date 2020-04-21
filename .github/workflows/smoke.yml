@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
+      - name: Clean disk
+        run: ./.github/scripts/clean_disk.sh
+        
       - name: Set version
         run: |
           echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"

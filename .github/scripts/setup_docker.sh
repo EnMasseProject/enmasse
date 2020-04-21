@@ -1,15 +1,17 @@
 #!/bin/bash
 set -e
 
-sudo apt update
-sudo apt install docker.io
-sudo systemctl unmask docker
+#Docker installation from google default repositories
+sudo apt-get -y update
 
-sudo mkdir /mnt/docker
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg-agent software-properties-common
+sudo mkdir -p /mnt/docker
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-sudo sh -c "sed -i 's#ExecStart=/usr/bin/dockerd -H fd://#ExecStart=/usr/bin/dockerd -g /mnt/docker -H fd://#' /lib/systemd/system/docker.service"
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
 
-sudo systemctl daemon-reload
-sudo rsync -aqxP /var/lib/docker/ /mnt/docker
-
-sudo systemctl start docker
+sudo apt-get -y update
+sudo apt-get install docker-ce docker-ce-cli containerd.io
