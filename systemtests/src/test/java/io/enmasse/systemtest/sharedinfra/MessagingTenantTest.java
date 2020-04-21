@@ -12,10 +12,8 @@ import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
-import io.enmasse.systemtest.messaginginfra.MessagingTenantResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

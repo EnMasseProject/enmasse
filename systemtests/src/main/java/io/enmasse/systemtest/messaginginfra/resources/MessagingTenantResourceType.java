@@ -2,14 +2,14 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.messaginginfra;
+package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.address.model.CoreCrd;
-import io.enmasse.api.model.DoneableMessagingInfra;
-import io.enmasse.api.model.MessagingInfra;
-import io.enmasse.api.model.MessagingInfraBuilder;
-import io.enmasse.api.model.MessagingInfraCondition;
-import io.enmasse.api.model.MessagingInfraList;
+import io.enmasse.api.model.DoneableMessagingTenant;
+import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingTenantBuilder;
+import io.enmasse.api.model.MessagingTenantCondition;
+import io.enmasse.api.model.MessagingTenantList;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -21,21 +21,21 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class MessagingInfraResourceType implements ResourceType<MessagingInfra> {
-    private static final MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingInfras(), MessagingInfra.class, MessagingInfraList.class, DoneableMessagingInfra.class);
+public class MessagingTenantResourceType implements ResourceType<MessagingTenant> {
+    private static final MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingTenants(), MessagingTenant.class, MessagingTenantList.class, DoneableMessagingTenant.class);
 
     @Override
     public String getKind() {
-        return "MessagingInfra";
+        return "MessagingTenant";
     }
 
-    public static MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> getOperation() {
+    public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> getOperation() {
         return operation;
     }
 
     @Override
-    public void create(MessagingInfra resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingInfraBuilder(resource)
+    public void create(MessagingTenant resource) {
+        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingTenantBuilder(resource)
                 .editOrNewMetadata()
                 .withNewResourceVersion("")
                 .endMetadata()
@@ -45,17 +45,13 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
     }
 
     @Override
-    public void delete(MessagingInfra resource) throws InterruptedException {
+    public void delete(MessagingTenant resource) {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired() && operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).get() != null) {
-            Thread.sleep(1_000);
-        }
     }
 
     @Override
-    public void waitReady(MessagingInfra infra) {
-        MessagingInfra found = null;
+    public void waitReady(MessagingTenant infra) {
+        MessagingTenant found = null;
         TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
         while (!budget.timeoutExpired()) {
             found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
@@ -73,8 +69,8 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
         infra.setStatus(found.getStatus());
     }
 
-    public static MessagingInfraCondition getCondition(List<MessagingInfraCondition> conditions, String type) {
-        for (MessagingInfraCondition condition : conditions) {
+    public static MessagingTenantCondition getCondition(List<MessagingTenantCondition> conditions, String type) {
+        for (MessagingTenantCondition condition : conditions) {
             if (type.equals(condition.getType())) {
                 return condition;
             }
