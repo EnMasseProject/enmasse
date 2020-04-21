@@ -55,7 +55,7 @@ spec:
 <4> (Optional) Max frame size of the AMQP connection.
 <5> (Optional) Enable TLS. The connector trusts global root CAs by default. To use a custom CA, specify a value for the `caCert` field.
 <6> (Optional) Specifies the username and password credentials to use for this connector. The values can be specified inline or by referencing a secret along with an optional key specifying the location within the secret. The secret must be readable by the `system:serviceaccounts:_{ProductNamespace}_` group.
-<7> (Optional) Role of connector. Can be "normal", "route-container", "edge". Defaults to 'route-container'.
+<7> (Optional) Role of the connector. Valid values are "normal", "edge", and "route-container" (default value).
 <8> (Required) Specifies a list of patterns matching addresses to be exposed on the remote endpoint. The pattern consists of one or more tokens separated by a forward slash, `/`. A token can be one of the following: a * character, a # character, or a sequence of characters that do not include /, *, or #. The * token matches any single token. The # token matches zero or more tokens. * has higher precedence than #, and exact match has the highest precedence.
 
 == Address space connector using mutual TLS
