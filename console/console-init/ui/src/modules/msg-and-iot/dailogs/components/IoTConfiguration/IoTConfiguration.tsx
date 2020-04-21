@@ -3,32 +3,24 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   GridItem,
   Form,
   FormGroup,
   TextInput,
-  DropdownPosition,
-  Flex,
-  FlexItem,
-  FlexModifiers,
   Split,
-  SplitItem
+  SplitItem,
+  Select,
+  SelectOption,
+  SelectVariant,
+  SelectOptionObject
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithToggle, IDropdownOption } from "components";
+import { IDropdownOption } from "components";
 import { ToggleOnIcon, ToggleOffIcon, IconSize } from "@patternfly/react-icons";
-import ColorType from "@storybook/addon-knobs/dist/components/types/Color";
 
-export const dropdown_item_styles = StyleSheet.create({
-    format_item: { whiteSpace: "normal", textAlign: "justify" },
-    dropdown_align: { display: "flex" },
-    dropdown_toggle_align: { flex: "1" },
-    dropdown_item: { fontWeight: "bold" }
-  }),
-  colorOptions = { blue: "var(--pf-global--active-color--100)" };
+const colorOptions = { blue: "var(--pf-global--active-color--100)" };
 
 export interface IIoTConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
@@ -51,6 +43,17 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
   isNameValid,
   isEnabled
 }) => {
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const onSelect = (event: any, selection: string | SelectOptionObject) => {
+    onNameSpaceSelect(selection.toString());
+    setIsExpanded(false);
+  };
+  const onToggle = () => {
+    setIsExpanded(!isExpanded);
+  };
+  const onClear = () => {
+    onNameSpaceSelect("");
+  };
   return (
     <>
       <Grid>
@@ -82,17 +85,24 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               />
             </FormGroup>
             <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
-              <br />
-              <DropdownWithToggle
-                id="cas-dropdown-namespace"
-                className={css(dropdown_item_styles.dropdown_align)}
-                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                dropdownItemClass={dropdown_item_styles.dropdown_item}
-                position={DropdownPosition.left}
-                onSelectItem={onNameSpaceSelect}
-                dropdownItems={namespaceOptions}
-                value={namespace}
-              />
+              <Select
+                variant={SelectVariant.typeahead}
+                ariaLabelTypeAhead="Select a namespace"
+                onToggle={onToggle}
+                onSelect={onSelect}
+                onClear={onClear}
+                selections={namespace}
+                isExpanded={isExpanded}
+                ariaLabelledBy={"select-namespace"}
+              >
+                {namespaceOptions.map((option, index) => (
+                  <SelectOption
+                    isDisabled={option.disabled}
+                    key={index}
+                    value={option.value}
+                  />
+                ))}
+              </Select>
             </FormGroup>
             <FormGroup isInline label="Enable" fieldId="iot-enabled">
               <Split gutter="md">

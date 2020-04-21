@@ -21,13 +21,16 @@ import {
   MessagingProjectConfiguration
 } from "modules/msg-and-iot/dailogs/components/MessagingProjectConfiguration";
 import { useMutationQuery } from "hooks";
-import { CREATE_ADDRESS_SPACE } from "graphql-module";
+import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
 import {
   isMessagingProjectValid,
   isIoTProjectValid
 } from "modules/msg-and-iot/dailogs/utils";
 import { MessagingProjectReview } from "modules/msg-and-iot/dailogs/components";
 import { FinishedStep, IDropdownOption } from "components";
+import { useQuery } from "@apollo/react-hooks";
+import { INamespaces } from "modules/address-space";
+import { Loading } from "use-patternfly";
 const CreateProjectContainer: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
@@ -89,9 +92,21 @@ const CreateProjectContainer: React.FunctionComponent = () => {
       resetForm();
     }
   };
-  const namespaceOptions: IDropdownOption[] = [
-    { label: "app1_ns", value: "app1_ns" }
-  ];
+
+  const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+  if (loading) return <Loading />;
+
+  const { namespaces } = data || {
+    namespaces: []
+  };
+
+  const namespaceOptions = namespaces.map(namespace => {
+    return {
+      value: namespace.metadata.name,
+      label: namespace.metadata.name
+    };
+  });
+
   const handleIoTProjectSave = async () => {
     console.log("iot created");
     resetForm();
