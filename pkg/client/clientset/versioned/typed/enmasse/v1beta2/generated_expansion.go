@@ -8,3 +8,5 @@
 package v1beta2
 
 type MessagingInfraExpansion interface{}
+
+type MessagingTenantExpansion interface{}

@@ -21,6 +21,10 @@ func (c *FakeEnmasseV1beta2) MessagingInfras(namespace string) v1beta2.Messaging
 	return &FakeMessagingInfras{c, namespace}
 }
 
+func (c *FakeEnmasseV1beta2) MessagingTenants(namespace string) v1beta2.MessagingTenantInterface {
+	return &FakeMessagingTenants{c, namespace}
+}
+
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
 func (c *FakeEnmasseV1beta2) RESTClient() rest.Interface {

@@ -5,16 +5,27 @@
 
 package state
 
+import (
+	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+)
+
+type StateKey struct {
+	Name      string
+	Namespace string
+}
+
 type StateManager interface {
-	GetOrCreateInfra(name string, namespace string) InfraState
-	GetOrCreateTenant(name string, namespace string) TenantState
-	DeleteInfra(name string, namespace string) error
-	DeleteTenant(name string, namespace string) error
+	GetOrCreateInfra(infra *v1beta2.MessagingInfra) InfraState
+	GetOrCreateTenant(tenant *v1beta2.MessagingTenant) TenantState
+	BindTenantToInfra(tenant *v1beta2.MessagingTenant) error
+	DeleteInfra(infra *v1beta2.MessagingInfra) error
+	DeleteTenant(tenant *v1beta2.MessagingTenant) error
 }
 
 type InfraState interface {
 	UpdateRouters(hosts []string)
 	UpdateBrokers(hosts []string)
+	GetSelector() *v1beta2.Selector
 	GetStatus() (InfraStatus, error)
 	Sync() error
 	Shutdown() error
@@ -33,7 +44,17 @@ type ConnectorStatus struct {
 
 type TenantState interface {
 	// TODO: Implement
-	EnsureAddress()
+	// EnsureAddress()
 	// TODO: Implement
-	EnsureEndpoint()
+	// EnsureEndpoint()
+	BindInfra(key StateKey, state InfraState)
+	GetInfra() InfraState
+	GetStatus() TenantStatus
+	Shutdown() error
+}
+
+type TenantStatus struct {
+	Bound          bool
+	InfraName      string
+	InfraNamespace string
 }

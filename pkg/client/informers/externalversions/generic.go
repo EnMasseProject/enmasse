@@ -71,6 +71,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		// Group=enmasse.io, Version=v1beta2
 	case enmassev1beta2.SchemeGroupVersion.WithResource("messaginginfras"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingInfras().Informer()}, nil
+	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingtenants"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingTenants().Informer()}, nil
 
 		// Group=iot.enmasse.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("iotconfigs"):

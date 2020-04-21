@@ -8,6 +8,19 @@ metadata:
   creationTimestamp: null
   name: messaginginfras.enmasse.io
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The current phase of the MessagingInfra.
+    name: Phase
+    type: string
+  - JSONPath: .status.message
+    description: Message describing the reason for the current Phase.
+    name: Message
+    priority: 1
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: enmasse.io
   names:
     kind: MessagingInfra
@@ -35,6 +48,7 @@ spec:
         spec:
           properties:
             broker:
+              description: Broker configuration options.
               properties:
                 image:
                   description: Broker image to use instead of default image.
@@ -77,6 +91,7 @@ spec:
                   type: object
               type: object
             router:
+              description: Router configuration options.
               properties:
                 image:
                   description: Router image to use instead of default image.
@@ -105,6 +120,61 @@ spec:
                       - replicas
                       type: object
                   type: object
+              type: object
+            selector:
+              description: A selector defining which namespaces this infra should
+                serve. Default is all namespaces.
+              properties:
+                namespaceSelector:
+                  description: A labelselector for selecting namespaces the messaging
+                    infrastructure should serve based on their labels.
+                  properties:
+                    matchExpressions:
+                      description: matchExpressions is a list of label selector requirements.
+                        The requirements are ANDed.
+                      items:
+                        description: A label selector requirement is a selector that
+                          contains values, a key, and an operator that relates the
+                          key and values.
+                        properties:
+                          key:
+                            description: key is the label key that the selector applies
+                              to.
+                            type: string
+                          operator:
+                            description: operator represents a key's relationship
+                              to a set of values. Valid operators are In, NotIn, Exists
+                              and DoesNotExist.
+                            type: string
+                          values:
+                            description: values is an array of string values. If the
+                              operator is In or NotIn, the values array must be non-empty.
+                              If the operator is Exists or DoesNotExist, the values
+                              array must be empty. This array is replaced during a
+                              strategic merge patch.
+                            items:
+                              type: string
+                            type: array
+                        required:
+                        - key
+                        - operator
+                        type: object
+                      type: array
+                    matchLabels:
+                      additionalProperties:
+                        type: string
+                      description: matchLabels is a map of {key,value} pairs. A single
+                        {key,value} in the matchLabels map is equivalent to an element
+                        of matchExpressions, whose key field is "key", the operator
+                        is "In", and the values array contains only "value". The requirements
+                        are ANDed.
+                      type: object
+                  type: object
+                namespaces:
+                  description: A list of namespaces this selector should serve.
+                  items:
+                    type: string
+                  type: array
               type: object
           type: object
         status:

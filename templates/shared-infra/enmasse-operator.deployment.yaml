@@ -43,6 +43,8 @@ spec:
               fieldPath: metadata.namespace
         - name: CONTROLLER_ENABLE_MESSAGING_INFRA
           value: "true"
+        - name: CONTROLLER_ENABLE_MESSAGING_TENANT
+          value: "true"
         - name: IOT_CONFIG_NAME
           value: "default"
         - name: OPERATOR_NAME

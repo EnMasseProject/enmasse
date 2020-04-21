@@ -120,6 +120,13 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
+ENMASSE_PREVIEW_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/enmasse-1.0
+$(ENMASSE_PREVIEW_BUNDLE): replace_images
+	mkdir -p $(ENMASSE_PREVIEW_BUNDLE)
+	for i in shared-infra; do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_PREVIEW_BUNDLE)/; \
+	done
+
 IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
 $(IOT_BUNDLE): replace_images
 	mkdir -p $(IOT_BUNDLE)
@@ -127,7 +134,7 @@ $(IOT_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
 	done
 
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(IOT_BUNDLE)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -135,4 +142,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(IOT_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)

@@ -10,7 +10,7 @@ import io.enmasse.api.model.MessagingInfraCondition;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
-import io.enmasse.systemtest.messaginginfra.crds.MessagingInfraCrd;
+import io.enmasse.systemtest.messaginginfra.MessagingInfraResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
@@ -39,7 +39,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
 
         infraResourceManager.createResource(infra);
 
-        MessagingInfraCondition condition = MessagingInfraCrd.getCondition(infra.getStatus().getConditions(), "Ready");
+        MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
 
@@ -106,19 +106,19 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
         while (!budget.timeoutExpired()) {
             if (infra.getStatus() != null) {
-                MessagingInfraCondition condition = MessagingInfraCrd.getCondition(infra.getStatus().getConditions(), conditionName);
+                MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
                 if (condition != null && "True".equals(condition.getStatus())) {
                     break;
                 }
             }
             Thread.sleep(1000);
-            infra = MessagingInfraCrd.getClient().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
+            infra = MessagingInfraResourceType.getOperation().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
             assertNotNull(infra);
         }
-        infra = MessagingInfraCrd.getClient().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
+        infra = MessagingInfraResourceType.getOperation().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
         assertNotNull(infra);
         assertNotNull(infra.getStatus());
-        MessagingInfraCondition condition = MessagingInfraCrd.getCondition(infra.getStatus().getConditions(), conditionName);
+        MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
     }

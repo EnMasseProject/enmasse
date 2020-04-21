@@ -19,6 +19,9 @@ import (
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase of the MessagingInfra."
+// +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",priority=1,description="Message describing the reason for the current Phase."
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MessagingInfra struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -27,7 +30,11 @@ type MessagingInfra struct {
 }
 
 type MessagingInfraSpec struct {
+	// A selector defining which namespaces this infra should serve. Default is all namespaces.
+	Selector *Selector `json:"selector,omitempty"`
+	// Router configuration options.
 	Router MessagingInfraSpecRouter `json:"router,omitempty"`
+	// Broker configuration options.
 	Broker MessagingInfraSpecBroker `json:"broker,omitempty"`
 }
 

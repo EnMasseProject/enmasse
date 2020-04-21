@@ -15,6 +15,8 @@ import (
 type Interface interface {
 	// MessagingInfras returns a MessagingInfraInformer.
 	MessagingInfras() MessagingInfraInformer
+	// MessagingTenants returns a MessagingTenantInformer.
+	MessagingTenants() MessagingTenantInformer
 }
 
 type version struct {
@@ -31,4 +33,9 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 // MessagingInfras returns a MessagingInfraInformer.
 func (v *version) MessagingInfras() MessagingInfraInformer {
 	return &messagingInfraInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MessagingTenants returns a MessagingTenantInformer.
+func (v *version) MessagingTenants() MessagingTenantInformer {
+	return &messagingTenantInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }

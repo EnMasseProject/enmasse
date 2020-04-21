@@ -188,7 +188,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
 			hosts = append(hosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
 		}
-		r.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateRouters(hosts)
+		r.stateManager.GetOrCreateInfra(infra).UpdateRouters(hosts)
 		return nil
 	})
 }

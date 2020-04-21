@@ -119,7 +119,7 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 		for host, _ := range hosts {
 			allHosts = append(allHosts, host)
 		}
-		b.stateManager.GetOrCreateInfra(infra.Name, infra.Namespace).UpdateBrokers(allHosts)
+		b.stateManager.GetOrCreateInfra(infra).UpdateBrokers(allHosts)
 		return nil
 	})
 }
