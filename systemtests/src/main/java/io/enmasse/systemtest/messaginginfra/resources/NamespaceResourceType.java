@@ -6,11 +6,16 @@ package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 
 public class NamespaceResourceType implements ResourceType<Namespace> {
     @Override
     public String getKind() {
         return "Namespace";
+    }
+
+    public static Namespace getDefault() {
+        return new NamespaceBuilder().withNewMetadata().withName("enmasse-app").endMetadata().build();
     }
 
     @Override

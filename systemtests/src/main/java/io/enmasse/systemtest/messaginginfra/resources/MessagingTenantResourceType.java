@@ -10,6 +10,7 @@ import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.api.model.MessagingTenantList;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -27,6 +28,15 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     @Override
     public String getKind() {
         return "MessagingTenant";
+    }
+
+    public static MessagingTenant getDefault() {
+        return new MessagingTenantBuilder()
+                .editOrNewMetadata()
+                .withName("default")
+                .withNamespace(NamespaceResourceType.getDefault().getMetadata().getName())
+                .endMetadata()
+                .build();
     }
 
     public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> getOperation() {
