@@ -107,8 +107,9 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
                     "curl",
                     "--silent", "--insecure",
                     "--user", String.format("%s:%s", supportUser, supportPassword),
-                    String.format("https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker=\"%s\"/AddressMemoryUsage", podName)
-            );
+                    "-H", "Origin: https://localhost:8161",
+                    String.format("https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker=\"%s\"/AddressMemoryUsage", podName));
+
 
             assertThat(jmxResponse.getRetCode(), is(true));
             Map<String, Object> readValue = jsonResponseToMap(jmxResponse.getStdOut());
