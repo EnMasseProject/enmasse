@@ -23,11 +23,12 @@ import { ToggleOnIcon, ToggleOffIcon, IconSize } from "@patternfly/react-icons";
 import ColorType from "@storybook/addon-knobs/dist/components/types/Color";
 
 export const dropdown_item_styles = StyleSheet.create({
-  format_item: { whiteSpace: "normal", textAlign: "justify" },
-  dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: "1" },
-  dropdown_item: { fontWeight: "bold" }
-});
+    format_item: { whiteSpace: "normal", textAlign: "justify" },
+    dropdown_align: { display: "flex" },
+    dropdown_toggle_align: { flex: "1" },
+    dropdown_item: { fontWeight: "bold" }
+  }),
+  colorOptions = { blue: "var(--pf-global--active-color--100)" };
 
 export interface IIoTConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
@@ -50,7 +51,6 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
   isNameValid,
   isEnabled
 }) => {
-  console.log(namespaceOptions);
   return (
     <>
       <Grid>
@@ -106,7 +106,7 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
                       onClick={() => {
                         handleEnabledChange(false);
                       }}
-                      color="var(--pf-global--active-color--100)"
+                      color={colorOptions.blue}
                       size={IconSize.lg}
                     />
                   ) : (

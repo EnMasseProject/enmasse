@@ -79,7 +79,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                 </GridItem>
               </>
             )}
-            {isEnabled && (
+            {isEnabled !== undefined && (
               <>
                 <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Enabled

@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { Configuration } from "../../../../address-space/dialogs/CreateAddressSpace/Configuration";
 import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
-import { type } from "os";
+import { dnsSubDomainRfc1123NameRegexp } from "utils";
 
 export interface IMessagingProjectInput {
   messagingProjectName?: string;
@@ -14,95 +14,75 @@ export interface IMessagingProjectInput {
   messagingProjectPlan?: string;
   namespace?: string;
   authenticationService?: string;
-  isNameValid?: boolean;
+  isNameValid: boolean;
 }
 
 const MessagingProjectConfiguration = (
   setProjectDetail: (value: IMessagingProjectInput) => void,
-  projectDetail?: IMessagingProjectInput
+  projectDetail: IMessagingProjectInput
 ) => {
-  const [messagingProjectName, setMessagingProjectName] = useState(
-    (projectDetail && projectDetail.messagingProjectName) || ""
-  );
-  const [messagingProjectType, setMessagingProjectType] = useState(
-    (projectDetail && projectDetail.messagingProjectType) || " "
-  );
-  const [messagingProjectPlan, setMessagingProjectPlan] = useState(
-    (projectDetail && projectDetail.messagingProjectPlan) || " "
-  );
-  const [messagingProjectNamespace, setMessagingProjectNamespace] = useState(
-    (projectDetail && projectDetail.namespace) || " "
-  );
-  const [
-    messagingProjectAuthenticationService,
-    setMessagingProjectAuthenticationService
-  ] = useState((projectDetail && projectDetail.authenticationService) || " ");
-  const [isNameValid, setIsNameValid] = useState(true);
-
   const isReviewEnabled = () => isMessagingProjectValid(projectDetail);
-
-  const setter = (value: string, type?: string) => {
-    let projectCopy: IMessagingProjectInput = projectDetail || {};
-    projectCopy.messagingProjectName = messagingProjectName;
-    projectCopy.messagingProjectType = messagingProjectType;
-    projectCopy.messagingProjectPlan = messagingProjectPlan;
-    projectCopy.namespace = messagingProjectNamespace;
-    projectCopy.authenticationService = messagingProjectAuthenticationService;
-    projectCopy.isNameValid = isNameValid;
-    switch (type) {
+  const setter = (type: string, value?: string) => {
+    let newProject: IMessagingProjectInput = Object.assign({}, projectDetail);
+    switch (type.toLowerCase()) {
       case "name":
-        projectCopy.messagingProjectName = value;
+        newProject.messagingProjectName = value;
+        if (value) {
+          dnsSubDomainRfc1123NameRegexp.test(value)
+            ? (newProject.isNameValid = true)
+            : (newProject.isNameValid = false);
+        }
         break;
       case "namespace":
-        projectCopy.namespace = value;
+        newProject.namespace = value;
         break;
       case "type":
-        projectCopy.messagingProjectType = value;
+        newProject.messagingProjectType = value;
+        newProject.messagingProjectPlan = undefined;
+        newProject.authenticationService = undefined;
         break;
       case "plan":
-        projectCopy.messagingProjectPlan = value;
+        newProject.messagingProjectPlan = value;
         break;
-      case "authenticationService":
-        projectCopy.authenticationService = value;
+      case "authenticationservice":
+        newProject.authenticationService = value;
         break;
     }
-    setProjectDetail(projectCopy);
+    setProjectDetail(newProject);
   };
   const setName = (value: string) => {
-    setMessagingProjectName(value.trim());
-    setter(value.trim(), "name");
+    setter("name", value.trim());
   };
   const setNamespace = (value: string) => {
-    setMessagingProjectNamespace(value.trim());
-    setter(value.trim(), "namespace");
+    setter("namespace", value.trim());
   };
   const setType = (value: string) => {
-    setMessagingProjectType(value.trim());
-    setter(value.trim(), "type");
+    setter("type", value.trim());
   };
   const setPlan = (value: string) => {
-    setMessagingProjectPlan(value.trim());
-    setter(value.trim(), "plan");
+    setter("plan", value.trim());
   };
   const setAuthenticationService = (value: string) => {
-    setMessagingProjectAuthenticationService(value.trim());
-    setter(value.trim(), "authenticationService");
+    setter("authenticationService", value);
+  };
+  const setIsNameValid = (value: boolean) => {
+    // TODO: remove this function
   };
   const steps = {
     name: "Configuration",
     component: (
       <Configuration
-        name={messagingProjectName}
+        name={projectDetail.messagingProjectName || ""}
         setName={setName}
-        namespace={messagingProjectNamespace}
+        namespace={projectDetail.namespace || ""}
         setNamespace={setNamespace}
-        type={messagingProjectType}
+        type={projectDetail.messagingProjectType || ""}
         setType={setType}
-        plan={messagingProjectPlan}
+        plan={projectDetail.messagingProjectPlan || ""}
         setPlan={setPlan}
-        authenticationService={messagingProjectAuthenticationService}
+        authenticationService={projectDetail.authenticationService || ""}
         setAuthenticationService={setAuthenticationService}
-        isNameValid={isNameValid}
+        isNameValid={projectDetail.isNameValid}
         setIsNameValid={setIsNameValid}
       />
     ),

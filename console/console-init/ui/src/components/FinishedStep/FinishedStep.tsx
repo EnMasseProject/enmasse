@@ -11,10 +11,18 @@ import {
   ProgressSize,
   ButtonVariant
 } from "@patternfly/react-core";
+import { StyleSheet, css } from "@patternfly/react-styles";
 interface IFinishedStepProps {
   onClose: () => void;
   sucess: boolean;
 }
+
+const styles = StyleSheet.create({
+  empty_state: { padding: 100 },
+  cog_green_color: { color: "green" },
+  cog_black_color: { color: "black" }
+});
+
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   onClose,
   sucess
@@ -38,8 +46,14 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   return (
     <>
       {!isCompleted || !sucess ? (
-        <EmptyState variant={EmptyStateVariant.full} style={{ padding: 100 }}>
-          <EmptyStateIcon icon={CogsIcon} style={{ color: "black" }} />
+        <EmptyState
+          variant={EmptyStateVariant.full}
+          className={css(styles.empty_state)}
+        >
+          <EmptyStateIcon
+            icon={CogsIcon}
+            className={css(styles.cog_black_color)}
+          />
           <Title headingLevel="h5" size="xl">
             Configuration in Progress
           </Title>
@@ -61,8 +75,14 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
           </Button>
         </EmptyState>
       ) : (
-        <EmptyState variant={EmptyStateVariant.full} style={{ padding: 100 }}>
-          <EmptyStateIcon icon={CheckCircleIcon} style={{ color: "green" }} />
+        <EmptyState
+          variant={EmptyStateVariant.full}
+          className={css(styles.empty_state)}
+        >
+          <EmptyStateIcon
+            icon={CheckCircleIcon}
+            className={css(styles.cog_green_color)}
+          />
           <Title headingLevel="h5" size="xl">
             Creation successful
           </Title>

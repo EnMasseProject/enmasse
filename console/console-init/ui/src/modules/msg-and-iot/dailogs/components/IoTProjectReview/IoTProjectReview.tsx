@@ -4,16 +4,19 @@
  */
 
 import React from "react";
-import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import {
+  isMessagingProjectValid,
+  isIoTProjectValid
+} from "modules/msg-and-iot/dailogs/utils";
 import { IIoTProjectInput } from "modules/msg-and-iot/dailogs/components";
 import { IoTReview } from "../IoTReview";
 
 const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
   const isReviewEnabled = () => {
-    isMessagingProjectValid(projectDetail);
+    isIoTProjectValid(projectDetail);
   };
   const isFinishEnabled = () => {
-    isMessagingProjectValid(projectDetail);
+    isIoTProjectValid(projectDetail);
   };
   return {
     name: "Review",
@@ -24,16 +27,6 @@ const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
         namespace={(projectDetail && projectDetail.namespace) || ""}
         isEnabled={(projectDetail && projectDetail.isEnabled) || false}
       />
-
-      // <Review
-      //   name={projectDetail && projectDetail.messagingProjectName}
-      //   namespace={(projectDetail && projectDetail.namespace) || ""}
-      //   type={(projectDetail && projectDetail.messagingProjectType) || ""}
-      //   plan={(projectDetail && projectDetail.messagingProjectPlan) || ""}
-      //   authenticationService={
-      //     (projectDetail && projectDetail.authenticationService) || ""
-      //   }
-      // />
     ),
     enableNext: isFinishEnabled(),
     canJumpTo: isReviewEnabled(),

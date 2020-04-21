@@ -11,7 +11,6 @@ const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfiguratio
 }) => {
   const onChange = (_: any, event: any) => {
     const data = event.currentTarget.value;
-    console.log("data", data);
     if (data === "messaging") {
       setSelectedStep("messaging");
     } else if (data === "iot") {

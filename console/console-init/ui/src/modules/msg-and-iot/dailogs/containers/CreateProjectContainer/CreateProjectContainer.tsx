@@ -32,8 +32,11 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProjectInput
-  >();
-  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>();
+  >({ isNameValid: true });
+  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
+    isNameValid: true,
+    isEnabled: true
+  });
   const [firstSelectedStep, setFirstSelectedStep] = useState<string>();
   const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
     false
@@ -43,13 +46,13 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     resetForm();
   };
   const resetForm = () => {
-    setMessagingProjectDetail(undefined);
+    setMessagingProjectDetail({ isNameValid: true });
     setFirstSelectedStep(undefined);
   };
   const refetchQueries: string[] = ["all_address_spaces"];
   const resetFormState = () => {
     console.log("success");
-    setMessagingProjectDetail(undefined);
+    setMessagingProjectDetail({ isNameValid: true });
     setIsCreatedSuccessfully(true);
   };
   const [setQueryVariables] = useMutationQuery(
@@ -58,7 +61,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     resetForm,
     resetFormState
   );
-  const handleMessagingProjectSave = async () => {
+  const handleMessagingProjectSave = () => {
     if (
       messagingProjectDetail &&
       isMessagingProjectValid(messagingProjectDetail)
@@ -82,8 +85,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
           }
         }
       };
-      const data: any = await setQueryVariables(variables);
-      console.log(data);
+      setQueryVariables(variables);
       resetForm();
     }
   };
