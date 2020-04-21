@@ -23,6 +23,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      
+      - name: Clean disk
+        run: ./.github/scripts/clean_disk.sh
 
       - name: Set version
         id: version
