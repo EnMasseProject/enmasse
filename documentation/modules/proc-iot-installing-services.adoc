@@ -77,7 +77,7 @@ your database. The following shows an example, how to execute `psql`
 from inside the container, when you installed PostgreSQL as described
 in the previous step:
 
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="attributes,specialchars"]
 ----
 {cmdcli} exec -ti deployment/postgresql bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.sql
 {cmdcli} exec -ti deployment/postgresql bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.tree.sql
@@ -95,4 +95,3 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} apply -f install/components/iot/examples/iot-config.yaml
 endif::[]
 ----
-
