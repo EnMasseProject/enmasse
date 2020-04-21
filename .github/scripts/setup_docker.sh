@@ -15,14 +15,3 @@ sudo add-apt-repository \
 
 sudo apt-get -y update
 sudo apt-get install docker-ce docker-ce-cli containerd.io
-
-#Configuring docker to github actions disk
-
-sudo systemctl stop docker
-sudo sh -c "sed -i 's#ExecStart=/usr/bin/dockerd -H fd://#ExecStart=/usr/bin/dockerd -H fd://#' /lib/systemd/system/docker.service"
-sudo systemctl daemon-reload
-sudo rsync -aqxP /var/lib/docker/ /mnt/docker
-
-
-#Starting docker
-sudo systemctl start docker
