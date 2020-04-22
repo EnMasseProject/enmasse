@@ -5,13 +5,18 @@
 package io.enmasse.systemtest.messaginginfra;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.api.model.MessagingInfra;
+import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.logs.GlobalLogCollector;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.HasMetadata;
@@ -30,11 +35,14 @@ public class ResourceManager {
     private static Stack<ThrowableRunner> classResources = new Stack<>();
     private static Stack<ThrowableRunner> methodResources = new Stack<>();
     private static Stack<ThrowableRunner> pointerResources = classResources;
+
+    private MessagingInfra defaultInfra;
+    private MessagingTenant defaultTenant;
+
     private Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
     private AmqpClientFactory amqpClientFactory = null;
     private MqttClientFactory mqttClientFactory = null;
-    private final GlobalLogCollector logCollector = new GlobalLogCollector(kubeClient, environment.testLogDir());
 
     private static ResourceManager instance;
 
@@ -77,7 +85,32 @@ public class ResourceManager {
         }
         LOGGER.info("------------------------------------");
         methodResources.clear();
+        cleanDefaults();
         pointerResources = classResources;
+    }
+
+    private void cleanDefaults() {
+        defaultInfra = null;
+        defaultTenant = null;
+    }
+
+    //------------------------------------------------------------------------------------------------
+    // Pointers to default resources
+    //------------------------------------------------------------------------------------------------
+    public MessagingInfra getDefaultInfra() {
+        return defaultInfra;
+    }
+
+    public MessagingTenant getDefaultMessagingTenant() {
+        return defaultTenant;
+    }
+
+    public void setDefaultInfra(MessagingInfra infra) {
+        defaultInfra = infra;
+    }
+
+    public void setDefaultMessagingTenant(MessagingTenant tenant) {
+        defaultTenant = tenant;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -177,7 +210,7 @@ public class ResourceManager {
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings(value = "unchecked")
     private <T extends HasMetadata> ResourceType<T> findResourceType(T resource) {
         for (ResourceType<?> type : resourceTypes) {
             if (type.getKind().equals(resource.getKind())) {

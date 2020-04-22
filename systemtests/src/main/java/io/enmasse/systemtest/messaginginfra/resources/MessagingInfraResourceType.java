@@ -2,7 +2,7 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.messaginginfra;
+package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.api.model.DoneableMessagingInfra;
@@ -10,6 +10,7 @@ import io.enmasse.api.model.MessagingInfra;
 import io.enmasse.api.model.MessagingInfraBuilder;
 import io.enmasse.api.model.MessagingInfraCondition;
 import io.enmasse.api.model.MessagingInfraList;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -27,6 +28,17 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
     @Override
     public String getKind() {
         return "MessagingInfra";
+    }
+
+    public static MessagingInfra getDefault() {
+        return new MessagingInfraBuilder()
+                .editOrNewMetadata()
+                .withName("default-infra")
+                .withNamespace(Environment.getInstance().namespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .endSpec()
+                .build();
     }
 
     public static MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> getOperation() {

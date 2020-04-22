@@ -2,15 +2,20 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.messaginginfra;
+package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 
 public class NamespaceResourceType implements ResourceType<Namespace> {
     @Override
     public String getKind() {
         return "Namespace";
+    }
+
+    public static Namespace getDefault() {
+        return new NamespaceBuilder().withNewMetadata().withName("enmasse-app").endMetadata().build();
     }
 
     @Override

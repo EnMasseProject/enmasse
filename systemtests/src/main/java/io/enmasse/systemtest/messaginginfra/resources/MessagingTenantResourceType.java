@@ -2,7 +2,7 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.messaginginfra;
+package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.api.model.DoneableMessagingTenant;
@@ -10,6 +10,7 @@ import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.api.model.MessagingTenantList;
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -27,6 +28,15 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     @Override
     public String getKind() {
         return "MessagingTenant";
+    }
+
+    public static MessagingTenant getDefault() {
+        return new MessagingTenantBuilder()
+                .editOrNewMetadata()
+                .withName("default")
+                .withNamespace(NamespaceResourceType.getDefault().getMetadata().getName())
+                .endMetadata()
+                .build();
     }
 
     public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> getOperation() {

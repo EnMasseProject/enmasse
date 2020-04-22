@@ -10,7 +10,7 @@ import io.enmasse.api.model.MessagingInfraCondition;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
-import io.enmasse.systemtest.messaginginfra.MessagingInfraResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
