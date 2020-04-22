@@ -20,9 +20,11 @@ public class AssumeOpenshiftCondition implements ExecutionCondition {
         Optional<OpenShift> annotation = findAnnotation(context.getElement(), OpenShift.class);
         if (annotation.isPresent()) {
             var version = annotation.get().version();
+            var multinode = annotation.get().multinode();
             if ((Kubernetes.getInstance().getCluster().toString().equals(ClusterType.OPENSHIFT.toString().toLowerCase()) ||
                     Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase())) &&
-                    (version == OpenShiftVersion.WHATEVER || version == Kubernetes.getInstance().getOcpVersion())) {
+                    (version == OpenShiftVersion.WHATEVER || version == Kubernetes.getInstance().getOcpVersion()) &&
+                    (multinode == MultinodeCluster.WHATEVER || multinode == Kubernetes.getInstance().isClusterMultinode())) {
                 return ConditionEvaluationResult.enabled("Test is supported on current cluster");
             } else {
                 return ConditionEvaluationResult.disabled("Test is not supported on current cluster");

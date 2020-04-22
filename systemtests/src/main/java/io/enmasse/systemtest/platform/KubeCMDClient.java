@@ -255,7 +255,7 @@ public class KubeCMDClient {
     }
 
     public static ExecutionResultData deletePodByLabel(String labelName, String labelValue) {
-        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-l", String.format("%s=%s", labelName, labelValue));
+        List<String> deleteCmd = Arrays.asList(CMD, "delete", "pod", "-n", Environment.getInstance().namespace(), "-l", String.format("%s=%s", labelName, labelValue));
         return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 

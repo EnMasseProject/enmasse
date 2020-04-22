@@ -214,7 +214,11 @@ public class Exec {
     }
 
     public static ExecutionResultData executeAndCheck(String... commands) {
-        ExecutionResultData results = execute(Arrays.asList(commands));
+        return executeAndCheck(120_000, commands);
+    }
+
+    public static ExecutionResultData executeAndCheck(int timeout, String... commands) {
+        ExecutionResultData results = execute(timeout, true, commands);
         if (!results.getRetCode()) {
             throw new IllegalStateException(results.getStdErr());
         }
@@ -292,8 +296,7 @@ public class Exec {
          */
         public Future<String> read() {
             return CompletableFuture.supplyAsync(() -> {
-                Scanner scanner = new Scanner(is);
-                try {
+                try (Scanner scanner = new Scanner(is)) {
                     log.debug("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
                         String line = scanner.nextLine();
@@ -309,8 +312,7 @@ public class Exec {
                     subscribers.forEach(sub -> sub.onError(e));
                     throw new CompletionException(e);
                 } finally {
-                    scanner.close();
-                    subscribers.forEach(sub -> sub.onComplete());
+                    subscribers.forEach(Subscriber::onComplete);
                 }
             }, runnable -> new Thread(runnable).start());
         }

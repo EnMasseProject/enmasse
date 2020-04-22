@@ -13,9 +13,9 @@ public enum OpenShiftVersion {
     OCP4(v -> v >= 1.13),
     WHATEVER(v -> true);
 
-    private Predicate<Double> versionChecker;
+    private final Predicate<Double> versionChecker;
 
-    private OpenShiftVersion(Predicate<Double> versionChecker) {
+    OpenShiftVersion(Predicate<Double> versionChecker) {
         this.versionChecker = versionChecker;
     }
 
@@ -26,13 +26,13 @@ public enum OpenShiftVersion {
                 .orElse(OCP3);
     }
 
-    public static enum Openshift4MinorVersion {
+    public enum Openshift4MinorVersion {
         OCP4_PRIOR_4_4(v -> v >= 1.13 && v<1.17),
         OCP4_AFTER_4_4(v -> v>=1.17);
 
-        private Predicate<Double> versionChecker;
+        private final Predicate<Double> versionChecker;
 
-        private Openshift4MinorVersion(Predicate<Double> versionChecker) {
+        Openshift4MinorVersion(Predicate<Double> versionChecker) {
             this.versionChecker = versionChecker;
         }
 

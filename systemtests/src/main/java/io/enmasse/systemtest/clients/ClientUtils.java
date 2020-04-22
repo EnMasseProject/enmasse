@@ -62,6 +62,7 @@ public class ClientUtils {
 
     public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address destination,
                                     UserCredentials credentials, int count) throws Exception {
+        LOGGER.info("Sending durable messages to {}", destination.getSpec().getAddress());
         AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         List<Message> listOfMessages = new ArrayList<>();
@@ -74,6 +75,13 @@ public class ClientUtils {
         Future<Integer> sent = client.sendMessages(destination.getSpec().getAddress(), listOfMessages.toArray(new Message[0]));
         assertThat("Cannot send durable messages to " + destination, sent.get(1, TimeUnit.MINUTES), is(count));
         client.close();
+    }
+
+    public void sendDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace,
+                                    UserCredentials credentials, int count, Address... destination) throws Exception {
+        for (Address address : destination) {
+            sendDurableMessages(resourceManager, addressSpace, address, credentials, count);
+        }
     }
 
     public void connectAddressSpace(ResourceManager resourceManager, AddressSpace addressSpace, UserCredentials credentials) throws Exception {
@@ -94,11 +102,19 @@ public class ClientUtils {
 
     public void receiveDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace, Address dest,
                                        UserCredentials credentials, int count) throws Exception {
+        LOGGER.info("Receiving durable messages from {}", dest.getSpec().getAddress());
         AmqpClient client = resourceManager.getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(credentials);
         ReceiverStatus receiverStatus = client.recvMessagesWithStatus(dest.getSpec().getAddress(), count);
         assertThat("Cannot receive durable messages from " + dest + ". Got " + receiverStatus.getNumReceived(), receiverStatus.getResult().get(1, TimeUnit.MINUTES).size(), is(count));
         client.close();
+    }
+
+    public void receiveDurableMessages(ResourceManager resourceManager, AddressSpace addressSpace,
+                                       UserCredentials credentials, int count, Address... addresses) throws Exception {
+        for (Address address : addresses) {
+            receiveDurableMessages(resourceManager, addressSpace, address, credentials, count);
+        }
     }
 
     private boolean canConnectWithAmqpAddress(ResourceManager resourceManager, AddressSpace addressSpace, UserCredentials credentials, AddressType addressType, String address, boolean defaultValue) throws Exception {
@@ -287,8 +303,8 @@ public class ClientUtils {
      * create M connections with N receivers and K senders
      */
     public ExternalMessagingClient attachConnector(AddressSpace addressSpace, Address destination,
-                                                      int connectionCount,
-                                                      int senderCount, int receiverCount, UserCredentials credentials, int timeout) throws Exception {
+                                                   int connectionCount,
+                                                   int senderCount, int receiverCount, UserCredentials credentials, int timeout) throws Exception {
 
         ExternalMessagingClient connectorClient = new ExternalMessagingClient()
                 .withClientEngine(new RheaClientConnector())
@@ -306,6 +322,7 @@ public class ClientUtils {
 
     /**
      * stop all clients from list of Abstract clients
+     *
      * @throws Exception
      */
     public void stopClients(List<ExternalMessagingClient> clients, ExtensionContext context) throws Exception {
@@ -319,13 +336,14 @@ public class ClientUtils {
                 c.stop();
                 if (context.getExecutionException().isPresent()) {
                     try {
-                        Files.write(logsDir.resolve(c.getId()+"-output.log"), c.getStdOutput().getBytes());
-                        Files.write(logsDir.resolve(c.getId()+"-error.log"), c.getStdError().getBytes());
+                        Files.write(logsDir.resolve(c.getId() + "-output.log"), c.getStdOutput().getBytes());
+                        Files.write(logsDir.resolve(c.getId() + "-error.log"), c.getStdError().getBytes());
                     } catch (Exception ex) {
-                        LOGGER.warn("Cannot save output of client "+c.getId(), ex);
+                        LOGGER.warn("Cannot save output of client " + c.getId(), ex);
                     }
                 }
-            };
+            }
+            ;
         }
     }
 

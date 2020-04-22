@@ -16,4 +16,5 @@ import java.lang.annotation.Target;
 @ExtendWith(AssumeOpenshiftCondition.class)
 public @interface OpenShift {
     OpenShiftVersion version() default OpenShiftVersion.WHATEVER;
+    MultinodeCluster multinode() default MultinodeCluster.WHATEVER;
 }

@@ -127,7 +127,7 @@ public class KubeClusterManager {
     public void drainNode(String nodeName) {
         LOGGER.info("Cluster node {} is going to drain", nodeName);
         setNodeSchedule(nodeName, false);
-        Exec.executeAndCheck(CMD, "adm", "drain", nodeName, "--delete-local-data", "--ignore-daemonsets");
+        Exec.executeAndCheck(600_000, CMD, "adm", "drain", nodeName, "--delete-local-data", "--ignore-daemonsets");
     }
 
     public void setNodeSchedule(String node, boolean schedule) {
