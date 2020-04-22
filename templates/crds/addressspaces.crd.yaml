@@ -97,7 +97,7 @@ spec:
                     description: "Endpoint name. Use to uniquely identify an endpoint."
                   service:
                     type: string
-                    description: "Service referenced by this endpoint."
+                    description: "Service referenced by this endpoint. 'console' is no longer supported."
                     enum:
                       - messaging
                       - mqtt

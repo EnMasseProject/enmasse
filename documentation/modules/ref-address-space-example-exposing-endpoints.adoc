@@ -37,7 +37,7 @@ spec:
     - 10.0.0.0/8
 ----
 <1> (Required) The name of the endpoint. The name specified affects the name of the {KubePlatform} service to be created as well as the name of the endpoint in the status section of the `AddressSpace`.
-<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging`, `console`, and `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
+<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging` and `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
 <3> (Required) The type of endpoint being exposed. The `loadbalancer` type creates an {KubePlatform} `LoadBalancer` service. Valid values are `route` and `loadbalancer`.
 <4> (Required) A list of the ports to be exposed on the `LoadBalancer` service. For the `messaging` service, the valid values are `amqp` and `amqps`.
 <5> (Optional) A set of key-value annotation pairs that are added to the `LoadBalancer` `Service` object.
@@ -69,9 +69,9 @@ spec:
      routeHost: messaging.example.com <5>
 ----
 <1> (Required) The name of the endpoint. The name specified affects the name of the {KubePlatform} service to be created as well as the name of the endpoint in the status section of the `AddressSpace`.
-<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging`, `console`, or `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
-<3> (Required) The name of the port to be exposed. With the `route` type, only a single TLS-enabled port can be specified. For the `messaging` service, the valid values are `amqps` or `https`. For the `console` service, the only valid value is `https`.
-<4> (Required) The TLS termination policy to be used for the {KubePlatform} route. For the `messaging` service, the `amqps` port requires `passthrough` to be specified, whereas `https` (websockets) also allows `reencrypt`. For the `console` service, `reencrypt` can be specified.
+<2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging`, or `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.
+<3> (Required) The name of the port to be exposed. With the `route` type, only a single TLS-enabled port can be specified. For the `messaging` service, the valid values are `amqps` or `https`.
+<4> (Required) The TLS termination policy to be used for the {KubePlatform} route. For the `messaging` service, the `amqps` port requires `passthrough` to be specified, whereas `https` (websockets) also allows `reencrypt`.
 <5> (Optional) The host name to use for the created route.
 endif::[]
 
