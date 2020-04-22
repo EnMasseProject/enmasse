@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(TestTag.ISOLATED_SHARED_INFRA)
-public class MessagingInfraDefaultsTest extends TestBase implements ITestIsolatedSharedInfra {
+public class DefaultsTest extends TestBase implements ITestIsolatedSharedInfra {
 
     @Test
     @DefaultMessagingInfra
