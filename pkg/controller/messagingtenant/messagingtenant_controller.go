@@ -7,20 +7,16 @@ package messagingtenant
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
-	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
-	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
-	logr "github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/tools/record"
 
@@ -37,12 +33,10 @@ var log = logf.Log.WithName("controller_messagingtenant")
 var _ reconcile.Reconciler = &ReconcileMessagingTenant{}
 
 type ReconcileMessagingTenant struct {
-	client       client.Client
-	reader       client.Reader
-	recorder     record.EventRecorder
-	scheme       *runtime.Scheme
-	stateManager state.StateManager
-	namespace    string
+	client    client.Client
+	reader    client.Reader
+	recorder  record.EventRecorder
+	namespace string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -60,20 +54,16 @@ func Add(mgr manager.Manager) error {
 
 const (
 	TENANT_RESOURCE_NAME = "default"
-	FINALIZER_NAME       = "enmasse.io/messaging-infra"
 )
 
 func newReconciler(mgr manager.Manager) *ReconcileMessagingTenant {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
-	stateManager := state.GetStateManager()
 	return &ReconcileMessagingTenant{
-		client:       mgr.GetClient(),
-		stateManager: stateManager,
-		reader:       mgr.GetAPIReader(),
-		recorder:     mgr.GetEventRecorderFor("messagingtenant"),
-		scheme:       mgr.GetScheme(),
-		namespace:    namespace,
+		client:    mgr.GetClient(),
+		reader:    mgr.GetAPIReader(),
+		recorder:  mgr.GetEventRecorderFor("messagingtenant"),
+		namespace: namespace,
 	}
 }
 
@@ -116,33 +106,37 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		return reconcile.Result{}, err
 	}
 
-	fresult, err := r.reconcileFinalizers(ctx, logger, tenant)
-	if err != nil || fresult.Requeue || fresult.Return {
-		return reconcile.Result{Requeue: fresult.Requeue}, err
-	}
-
-	// Make sure tenant state is created
-	tenantState := r.stateManager.GetOrCreateTenant(tenant)
-
-	err = r.stateManager.BindTenantToInfra(tenant)
-	if err != nil {
-		// We don't need to handle this error. It will be reflected in the status and it will be retried
-		logger.Info("Unable to bind tenant to a shared infrastructure")
-	}
-
 	originalStatus := tenant.Status.DeepCopy()
+	var infra *v1beta2.MessagingInfra
 
-	// TODO: Check status and update conditions
-	status := tenantState.GetStatus()
+	if tenant.Status.MessagingInfraRef == nil {
+		// Find a suiting MessagingInfra to bind to
+		infras := &v1beta2.MessagingInfraList{}
+		err := r.client.List(ctx, infras)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		infra = findBestMatch(tenant, infras.Items)
+	} else {
+		// Lookup infra in case it was deleted while we were reconciled
+		err := r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfraRef.Name, Namespace: tenant.Status.MessagingInfraRef.Namespace}, infra)
+		if err != nil {
+			if k8errors.IsNotFound(err) {
+				infra = nil
+			} else {
+				return reconcile.Result{}, err
+			}
+		}
+	}
 
 	requeueAfter := 0 * time.Second
 	ready := tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady)
-	if status.Bound {
+	if infra != nil {
 		ready.SetStatus(corev1.ConditionTrue, "", "")
 		tenant.Status.Phase = v1beta2.MessagingTenantActive
 		tenant.Status.MessagingInfraRef = &v1beta2.MessagingInfraReference{
-			Name:      status.InfraName,
-			Namespace: status.InfraNamespace,
+			Name:      infra.Name,
+			Namespace: infra.Namespace,
 		}
 	} else {
 		ready.SetStatus(corev1.ConditionFalse, "", "Not yet bound to infrastructure")
@@ -161,44 +155,31 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	return reconcile.Result{RequeueAfter: requeueAfter}, nil
 }
 
-type finalizerResult struct {
-	Requeue bool
-	Return  bool
-}
-
-func (r *ReconcileMessagingTenant) reconcileFinalizers(ctx context.Context, logger logr.Logger, tenant *v1beta2.MessagingTenant) (finalizerResult, error) {
-	// Handle finalizing an deletion state first
-	if tenant.DeletionTimestamp != nil && tenant.Status.Phase != v1beta2.MessagingTenantTerminating {
-		tenant.Status.Phase = v1beta2.MessagingTenantTerminating
-		err := r.client.Status().Update(ctx, tenant)
-		return finalizerResult{Requeue: true}, err
-	}
-
-	original := tenant.DeepCopy()
-	result, err := finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, tenant, []finalizer.Finalizer{
-		finalizer.Finalizer{
-			Name: FINALIZER_NAME,
-			Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
-				tenant, ok := c.Object.(*v1beta2.MessagingTenant)
-				if !ok {
-					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingTenant")
+func findBestMatch(tenant *v1beta2.MessagingTenant, infras []v1beta2.MessagingInfra) *v1beta2.MessagingInfra {
+	var bestMatch *v1beta2.MessagingInfra
+	var bestMatchSelector *v1beta2.Selector
+	for _, infra := range infras {
+		selector := infra.Spec.Selector
+		// If there is a global one without a selector, use it
+		if selector == nil && bestMatch == nil {
+			bestMatch = &infra
+		} else if selector != nil {
+			// If selector is applicable to this tenant
+			matched := false
+			for _, ns := range selector.Namespaces {
+				if ns == tenant.Namespace {
+					matched = true
+					break
 				}
+			}
 
-				err := r.stateManager.DeleteTenant(tenant)
-				return reconcile.Result{}, err
-			},
-		},
-	})
-	if err != nil {
-		return finalizerResult{}, err
-	}
-
-	if result.Requeue {
-		// Update and requeue if changed
-		if !reflect.DeepEqual(original, tenant) {
-			err := r.client.Update(ctx, tenant)
-			return finalizerResult{Return: true}, err
+			// Check if this selector is better than the previous (aka. previous was either not set or global)
+			if matched && bestMatchSelector == nil {
+				bestMatch = &infra
+				bestMatchSelector = selector
+			}
+			// TODO: Support more advanced selection mechanism based on namespace labels
 		}
 	}
-	return finalizerResult{Requeue: result.Requeue}, nil
+	return bestMatch
 }

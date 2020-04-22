@@ -17,7 +17,6 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
-	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -36,22 +35,20 @@ type RouterController struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	certController *cert.CertController
-	stateManager   state.StateManager
 }
 
-func NewRouterController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController, stateManager state.StateManager) *RouterController {
+func NewRouterController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *RouterController {
 	return &RouterController{
 		client:         client,
 		scheme:         scheme,
 		certController: certController,
-		stateManager:   stateManager,
 	}
 }
 
 /*
  * Reconciles the router instances for an instance of shared infrastructure.
  */
-func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) error {
+func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]string, error) {
 
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
@@ -63,7 +60,8 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	// Update router condition
 	routersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraRoutersCreated)
 
-	return common.WithConditionUpdate(routersCreated, func() error {
+	allHosts := make([]string, 0)
+	err := common.WithConditionUpdate(routersCreated, func() error {
 		// Reconcile static router config
 		routerConfig := generateConfig(&infra.Spec.Router)
 		routerConfigBytes, err := serializeConfig(&routerConfig)
@@ -184,13 +182,12 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		}
 
 		// Update discoverable routers
-		hosts := make([]string, 0)
 		for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
-			hosts = append(hosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+			allHosts = append(allHosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
 		}
-		r.stateManager.GetOrCreateInfra(infra).UpdateRouters(hosts)
 		return nil
 	})
+	return allHosts, err
 }
 
 func getRouterInfraName(infra *v1beta2.MessagingInfra) string {

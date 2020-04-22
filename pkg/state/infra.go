@@ -9,27 +9,20 @@ import (
 	"fmt"
 	"log"
 	"sync"
-
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
 type routerStateFunc = func(host string, port int32) *RouterState
 type brokerStateFunc = func(host string, port int32) *BrokerState
 
-type infra struct {
+type infraClient struct {
 	routers            map[string]*RouterState
 	brokers            map[string]*BrokerState
 	routerStateFactory routerStateFunc
 	brokerStateFactory brokerStateFunc
-	status             InfraStatus
-	selector           *v1beta2.Selector
 	lock               *sync.Mutex
 }
 
-func (i *infra) UpdateRouters(hosts []string) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
+func (i *infraClient) updateRouters(hosts []string) {
 	toAdd := make(map[string]bool, 0)
 	for _, host := range hosts {
 		toAdd[host] = true
@@ -62,10 +55,7 @@ func (i *infra) UpdateRouters(hosts []string) {
 	}
 }
 
-func (i *infra) UpdateBrokers(hosts []string) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
+func (i *infraClient) updateBrokers(hosts []string) {
 	toAdd := make(map[string]bool, 0)
 	for _, host := range hosts {
 		toAdd[host] = true
@@ -98,15 +88,18 @@ func (i *infra) UpdateBrokers(hosts []string) {
 	}
 }
 
-func (i *infra) Sync() error {
+func (i *infraClient) SyncConnectors(routers []string, brokers []string) ([]ConnectorStatus, error) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
+
+	i.updateRouters(routers)
+	i.updateBrokers(brokers)
 
 	// Ensure all routers are initialized
 	for _, router := range i.routers {
 		err := router.Initialize()
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -126,13 +119,13 @@ func (i *infra) Sync() error {
 		for _, router := range i.routers {
 			err := router.EnsureConnector(connector)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			// Query for status
 			status, err := router.GetConnectorStatus(connector)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			connectorStatuses = append(connectorStatuses, *status)
@@ -140,21 +133,10 @@ func (i *infra) Sync() error {
 		}
 	}
 	log.Printf("State synchronization complete with %d routers and %d brokers", len(i.routers), len(i.brokers))
-	i.status.Connectors = connectorStatuses
-	return nil
+	return connectorStatuses, nil
 }
 
-func (i *infra) GetStatus() (InfraStatus, error) {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-	return i.status, nil
-}
-
-func (i *infra) GetSelector() *v1beta2.Selector {
-	return i.selector
-}
-
-func (i *infra) Shutdown() error {
+func (i *infraClient) Shutdown() error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 

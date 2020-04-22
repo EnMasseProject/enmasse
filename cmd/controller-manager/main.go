@@ -236,11 +236,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := controller.InitializeStateManager(ctx, mgr); err != nil {
-		log.Error(err, "Error initializing state manager")
-		os.Exit(1)
-	}
-
 	// register controller
 	if err := controller.AddToManager(mgr); err != nil {
 		log.Error(err, "Failed to register controller")
