@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -72,6 +73,37 @@ public class ControllerChainTest {
         verify(mockController, times(2)).reconcileAnyState(any());
         verify(mockController).reconcileAnyState(eq(a1));
         verify(mockController).reconcileAnyState(eq(a2));
+
+
+    }
+
+    @Test
+    public void testControllerRequeue() throws Exception {
+        EventLogger testLogger = mock(EventLogger.class);
+        ControllerChain controllerChain = new ControllerChain(testApi, new TestSchemaProvider(), testLogger, Duration.ofSeconds(5), Duration.ofSeconds(5));
+        Controller mockController = mock(Controller.class);
+        controllerChain.addController(mockController);
+
+        AddressSpace a1 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("myspace")
+                .endMetadata()
+
+                .withNewSpec()
+                .withType("type1")
+                .withPlan("myplan")
+                .endSpec()
+
+                .withNewStatus(false)
+
+                .build();
+
+        when(mockController.reconcileAnyState(eq(a1))).thenReturn(Controller.ReconcileResult.createRequeued(a1, true));
+
+        controllerChain.onUpdate(Collections.singletonList(a1));
+
+        verify(mockController, times(1)).reconcileAnyState(any());
+        verify(mockController).reconcileAnyState(eq(a1));
 
 
     }

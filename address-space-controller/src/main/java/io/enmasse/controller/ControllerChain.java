@@ -88,8 +88,9 @@ public class ControllerChain implements Watcher<AddressSpace> {
         List<AddressSpace> updatedResources = new ArrayList<>();
 
 
-        boolean requeue = false;
+        boolean requeue;
         do {
+            requeue = false;
             for (final AddressSpace original : resources) {
 
                 AddressSpace addressSpace = new AddressSpaceBuilder(original).build();
