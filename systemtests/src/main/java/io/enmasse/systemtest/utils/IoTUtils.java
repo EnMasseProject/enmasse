@@ -75,7 +75,7 @@ public class IoTUtils {
     public static void waitForIoTConfigReady(Kubernetes kubernetes, IoTConfig config) throws Exception {
         boolean isReady = false;
         TimeoutBudget budget = new TimeoutBudget(15, TimeUnit.MINUTES);
-        var iotConfigAccess = kubernetes.getIoTConfigClient().withName(config.getMetadata().getName());
+        var iotConfigAccess = kubernetes.getIoTConfigClient(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
         while (budget.timeLeft() >= 0 && !isReady) {
             config = iotConfigAccess.get();
             isReady = config.getStatus() != null && "Active".equals(config.getStatus().getPhase());
@@ -351,13 +351,15 @@ public class IoTUtils {
     }
 
     public static void createIoTConfig(IoTConfig config) throws Exception {
+        var name = config.getMetadata().getName();
+        log.info("Creating IoTConfig - name: {}", name);
         Kubernetes kubernetes = Kubernetes.getInstance();
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_CONFIG);
-        var iotConfigApiClient = kubernetes.getIoTConfigClient();
-        if (iotConfigApiClient.withName(config.getMetadata().getName()).get() != null) {
-            log.info("iot config {} already exists", config.getMetadata().getName());
+        var iotConfigApiClient = kubernetes.getIoTConfigClient(config.getMetadata().getNamespace());
+        if (iotConfigApiClient.withName(name).get() != null) {
+            log.info("iot config {} already exists", name);
         } else {
-            log.info("iot config {} will be created", config.getMetadata().getName());
+            log.info("iot config {} will be created", name);
             iotConfigApiClient.create(config);
         }
         IoTUtils.waitForIoTConfigReady(kubernetes, config);
@@ -366,13 +368,15 @@ public class IoTUtils {
     }
 
     public static void createIoTProject(IoTProject project) throws Exception {
+        var name = project.getMetadata().getName();
+        log.info("Creating IoTProject - name: {}", name);
         Kubernetes kubernetes = Kubernetes.getInstance();
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_IOT_PROJECT);
         var iotProjectApiClient = kubernetes.getIoTProjectClient(project.getMetadata().getNamespace());
-        if (iotProjectApiClient.withName(project.getMetadata().getName()).get() != null) {
-            log.info("iot project {} already exists", project.getMetadata().getName());
+        if (iotProjectApiClient.withName(name).get() != null) {
+            log.info("iot project {} already exists", name);
         } else {
-            log.info("iot project {} will be created", project.getMetadata().getName());
+            log.info("iot project {} will be created", name);
             iotProjectApiClient.create(project);
         }
         IoTUtils.waitForIoTProjectReady(kubernetes, project);

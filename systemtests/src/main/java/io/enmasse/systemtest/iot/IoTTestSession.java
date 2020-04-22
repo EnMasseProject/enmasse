@@ -7,19 +7,29 @@ package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_EVENT;
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_TELEMETRY;
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
+import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
-import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
@@ -42,13 +52,13 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.iot.ITestIoTBase;
-import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
@@ -59,29 +69,43 @@ import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 
 public final class IoTTestSession implements AutoCloseable {
 
+    private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
+
     public static enum Adapter {
         HTTP {
             @Override
-            IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
-                return editAdapter(config, AdaptersConfigFluent::editOrNewHttp, HttpNested::endHttp, a -> a.withEnabled(enabled));
+            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+                return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewHttp, HttpNested::endHttp, a -> {
+                    consumer.accept(a);
+                    return a;
+                });
             }
         },
         MQTT {
             @Override
-            IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
-                return editAdapter(config, AdaptersConfigFluent::editOrNewMqtt, MqttNested::endMqtt, a -> a.withEnabled(enabled));
+            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+                return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewMqtt, MqttNested::endMqtt, a -> {
+                    consumer.accept(a);
+                    return a;
+                });
             }
         },
         SIGFOX {
             @Override
-            IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
-                return editAdapter(config, AdaptersConfigFluent::editOrNewSigfox, SigfoxNested::endSigfox, a -> a.withEnabled(enabled));
+            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+                return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewSigfox, SigfoxNested::endSigfox, a -> {
+                    consumer.accept(a);
+                    return a;
+                });
             }
         },
         LORAWAN {
             @Override
-            IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
-                return editAdapter(config, AdaptersConfigFluent::editOrNewLoraWan, LoraWanNested::endLoraWan, a -> a.withEnabled(enabled));
+            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+                return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewLoraWan, LoraWanNested::endLoraWan, a -> {
+                    consumer.accept(a);
+                    return a;
+                });
             }
         },;
 
@@ -105,15 +129,20 @@ public final class IoTTestSession implements AutoCloseable {
 
         }
 
-        abstract IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled);
+        public abstract IoTConfigBuilder edit(final IoTConfigBuilder config, final Consumer<? super AdapterConfigFluent<?>> consumer);
 
-        IoTConfigBuilder enable(final IoTConfigBuilder config) {
+        public IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
+            return edit(config, a -> a.withEnabled(enabled));
+        }
+
+        public IoTConfigBuilder enable(final IoTConfigBuilder config) {
             return enable(config, true);
         }
 
-        IoTConfigBuilder disable(final IoTConfigBuilder config) {
+        public IoTConfigBuilder disable(final IoTConfigBuilder config) {
             return enable(config, false);
         }
+
     }
 
     @FunctionalInterface
@@ -164,9 +193,12 @@ public final class IoTTestSession implements AutoCloseable {
         public MqttAdapterClient createMqttAdapterClient() throws Exception {
             return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.authId, this.password);
         }
+
+        public String getTenantId() {
+            return IoTTestSession.this.getTenantId();
+        }
     }
 
-    @SuppressWarnings("unused")
     private final IoTConfig config;
     private final IoTProject project;
     private List<ThrowingCallable> cleanup;
@@ -196,6 +228,14 @@ public final class IoTTestSession implements AutoCloseable {
 
     public String getTenantId() {
         return getTenantId(this.project);
+    }
+
+    public IoTConfig getConfig() {
+        return this.config;
+    }
+
+    public IoTProject getProject() {
+        return this.project;
     }
 
     private static String getTenantId(final IoTProject project) {
@@ -307,7 +347,14 @@ public final class IoTTestSession implements AutoCloseable {
                  */
                 try {
                     code.run(session);
-                } catch (Exception e) {
+                } catch (Throwable e) {
+                    // we need to catch Throwables as unit test assertions
+                    // are based on Error instead of Exception.
+                    if (log.isDebugEnabled()) {
+                        log.debug("Caught exception during test", e);
+                    } else {
+                        log.info("Caught exception during test, running exception handler");
+                    }
                     this.exceptionHandler.accept(e);
                     throw e;
                 }
@@ -420,12 +467,20 @@ public final class IoTTestSession implements AutoCloseable {
 
             } catch (Exception e) {
 
+                if (log.isDebugEnabled()) {
+                    log.debug("Caught exception during deployment", e);
+                } else {
+                    log.info("Caught exception during deployment, running exception handler");
+                }
+
                 // first run exception handler
                 try {
                     this.exceptionHandler.accept(e);
                 } catch (Exception e2) {
+                    log.info("Failed to run exception handler", e2);
                     e.addSuppressed(new RuntimeException("Failed to run exception handler", e2));
                 }
+
                 // cleanup in case any creation step failed
                 throw cleanup(cleanup, e);
 
@@ -441,16 +496,11 @@ public final class IoTTestSession implements AutoCloseable {
      * @return The new instance.
      * @throws Exception
      */
-    public static IoTTestSession.Builder create(final String namespace) {
+    public static IoTTestSession.Builder create(final String namespace, final boolean isOpenshiftFour) {
 
         // create new default IoT infrastructure
 
-        var config = new IoTConfigBuilder()
-
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(namespace)
-                .endMetadata();
+        var config = createDefaultConfig(namespace, isOpenshiftFour);
 
         // we use the same name for the IoTProject and the AddressSpace
 
@@ -469,18 +519,102 @@ public final class IoTTestSession implements AutoCloseable {
         return new Builder(config, project);
     }
 
+    public static IoTTestSession.Builder create() {
+        return create(
+                Kubernetes.getInstance().getInfraNamespace(),
+                isOpenShiftCompatible(OCP4));
+    }
+
     public static IoTTestSession.Builder createDefault() {
-        return create(Kubernetes.getInstance().getInfraNamespace())
-                .preDeploy(withDefaultAdapters())
+        return create()
                 .preDeploy(withDefaultServices());
     }
 
-    private static Exception cleanup(final List<ThrowingCallable> cleanup, Exception initialException) {
+    /**
+     * Create a new default config, using the default namespace.
+     * <p>
+     * The default namespace is evaluated by a call to
+     * {@link Kubernetes#getInfraNamespace()}, which requires an active Kubernetes
+     * environment.
+     */
+    public static IoTConfigBuilder createDefaultConfig() {
+        return createDefaultConfig(
+                Kubernetes.getInstance().getInfraNamespace(),
+                isOpenShiftCompatible(OCP4));
+    }
+
+    public static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
+
+        var config = new IoTConfigBuilder()
+
+                .withNewMetadata()
+                .withName("default")
+                .withNamespace(namespace)
+                .endMetadata();
+
+        if (isOpenshiftFour) {
+
+            // enable service CA by default
+
+            config = config
+                    .editOrNewSpec()
+                    .withNewInterServiceCertificates()
+                    .withNewServiceCAStrategy()
+                    .endServiceCAStrategy()
+                    .endInterServiceCertificates()
+                    .endSpec();
+
+            // switch to provided key/cert for adapters that needs it
+
+            config = useSystemtestKeys(config, MQTT);
+
+        } else {
+
+            // fall back to manual secrets for inter-service communication
+
+            final Map<String, String> secrets = new HashMap<>();
+            secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
+            secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
+            secrets.put("iot-device-connection", "systemtests-iot-device-connection-tls");
+            secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
+
+            config = config
+                    .editOrNewSpec()
+                    .withNewInterServiceCertificates()
+                    .withNewSecretCertificatesStrategy()
+                    .withCaSecretName("systemtests-iot-service-ca")
+                    .withServiceSecretNames(secrets)
+                    .endSecretCertificatesStrategy()
+                    .endInterServiceCertificates()
+                    .endSpec();
+
+            // all adapters need explicit endpoint key/certs
+
+            config = useSystemtestKeys(config, Adapter.values());
+
+        }
+
+        return config;
+    }
+
+    private static IoTConfigBuilder useSystemtestKeys(IoTConfigBuilder config, final Adapter... adapters) {
+        for (Adapter adapter : adapters) {
+            config = adapter.edit(config, c -> c
+                    .editOrNewEndpoint()
+                    .withNewSecretNameStrategy("systemtests-iot-" + adapter.name().toLowerCase() + "-adapter-tls")
+                    .endEndpoint());
+        }
+        return config;
+    }
+
+    private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
+
+        log.info("Cleaning up resources...");
 
         for (ThrowingCallable f : Lists.reverse(cleanup)) {
             try {
                 f.call();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 if (initialException == null) {
                     initialException = e;
                 } else {
@@ -489,7 +623,15 @@ public final class IoTTestSession implements AutoCloseable {
             }
         }
 
-        return initialException;
+        log.info("Cleaning up resources... done!");
+
+        if (initialException == null || initialException instanceof Exception) {
+            // return the Exception
+            return (Exception) initialException;
+        } else {
+            // return Throwable wrapped in exception
+            return new Exception(initialException);
+        }
     }
 
     /**
@@ -511,6 +653,12 @@ public final class IoTTestSession implements AutoCloseable {
         GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()));
     }
 
+    /**
+     * Add a pre-deploy step to deploy the default service configuration.
+     * <p>
+     * This will effectively call {@link DefaultDeviceRegistry#newDefaultInstance()} and schedule a call
+     * to {@link DefaultDeviceRegistry#deleteDefaultServer()} for cleanup.
+     */
     public static PreDeployProcessor withDefaultServices() {
         return (context, config, project) -> {
             try {
@@ -532,32 +680,16 @@ public final class IoTTestSession implements AutoCloseable {
         };
     }
 
-    public static PreDeployProcessor withDefaultAdapters() {
-
-        return (context, config, project) -> {
-
-            // cert bundle for MQTT
-
-            final CertBundle certBundle;
-            try {
-                certBundle = CertificateUtils.createCertBundle();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to create certificate bundle", e);
-            }
-
-            config
-                    .editOrNewSpec()
-                    .editOrNewAdapters()
-                    .editOrNewMqtt()
-                    .editOrNewEndpoint()
-                    .withNewKeyCertificateStrategy()
-                    .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                    .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                    .endKeyCertificateStrategy()
-                    .endEndpoint()
-                    .endMqtt()
-                    .endAdapters()
-                    .endSpec();
-        };
+    public static void deployDefaultCerts() throws Exception {
+        if (!Files.isRegularFile(Paths.get("../templates/iot/examples/k8s-tls/build/root-cert.pem"))) {
+            Exec.execute("../templates/iot/examples/k8s-tls/create");
+        }
+        // deploy will try to undeploy first, so it can always be called
+        Exec.execute(
+                asList("../templates/iot/examples/k8s-tls/deploy"),
+                60_000, true, true,
+                Map.of(
+                        "CLI", KubeCMDClient.getCMD(),
+                        "PREFIX", "systemtests-"));
     }
 }

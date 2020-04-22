@@ -84,22 +84,9 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 
 	// create routes
 
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistry+"-external", config, false, r.reconcileDeviceRegistryManagementServiceExternal)
-		})
-	}
-
-	if util.IsOpenshift() {
-		routesEnabled := config.WantDefaultRoutes(nil)
-
-		rc.ProcessSimple(func() error {
-			endpointStatus := config.Status.Services["deviceRegistry"]
-			err := r.processRoute(ctx, routeDeviceRegistry, config, !routesEnabled, &endpointStatus.Endpoint, r.reconcileDeviceRegistryRoute)
-			config.Status.Services["deviceRegistry"] = endpointStatus
-			return err
-		})
-	}
+	rc.ProcessSimple(func() error {
+		return r.processServiceRoute(ctx, config, routeDeviceRegistry, config.Spec.ServicesConfig.DeviceRegistry.Management.Endpoint, r.reconcileDeviceRegistryRoute, r.reconcileDeviceRegistryManagementServiceExternal)
+	})
 
 	// done
 
@@ -151,8 +138,13 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.Io
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
-	route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+	if config.Spec.ServicesConfig.DeviceRegistry.Management.Endpoint.HasCustomCertificate() {
+		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+	} else {
+		route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+	}
 
 	// Service
 
@@ -227,6 +219,10 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryCombinedService(config *iotv
 	}
 
 	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
+		return err
+	}
+
+	if err := applyEndpointService(config.Spec.ServicesConfig.DeviceRegistry.Management.Endpoint, service, nameDeviceRegistry); err != nil {
 		return err
 	}
 

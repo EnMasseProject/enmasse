@@ -6,6 +6,7 @@ package io.enmasse.systemtest.iot.isolated;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newDefaultInstance;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static io.enmasse.user.model.v1.Operation.recv;
 import static io.enmasse.user.model.v1.Operation.send;
@@ -44,12 +45,11 @@ import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.KubeUtil;
 import io.enmasse.address.model.Phase;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -268,15 +268,8 @@ class IoTProjectManagedTest extends TestBase implements ITestIoTIsolated {
 
     void doTestAddressSpaceWithModifications(final TimeoutBudget timeout, final ProjectModificator modificator) throws Exception {
 
-        isolatedIoTManager.createIoTConfig(new IoTConfigBuilder()
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withEnableDefaultRoutes(false)
-                .withServices(DefaultDeviceRegistry.newDefaultInstance())
-                .endSpec()
+        isolatedIoTManager.createIoTConfig(IoTTestSession.createDefaultConfig()
+                .editOrNewSpec().withServices(newDefaultInstance()).endSpec()
                 .build());
 
         final String addressSpaceName = "managed-address-space";

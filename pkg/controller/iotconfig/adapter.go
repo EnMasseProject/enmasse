@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
 	"strings"
 
@@ -19,6 +20,9 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
+
+	routev1 "github.com/openshift/api/route/v1"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -26,38 +30,43 @@ import (
 )
 
 type adapter struct {
-	Name                  string
-	EnvPrefix             string
-	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig
+	Name      string
+	EnvPrefix string
+
+	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig
+}
+
+func (a adapter) FullName() string {
+	return "iot-" + a.Name + "-adapter"
 }
 
 var adapters = []adapter{
 	{
 		Name:      "mqtt",
 		EnvPrefix: "HONO_MQTT_",
-		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
-			return &config.Spec.AdaptersConfig.MqttAdapterConfig.AdapterConfig
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
+			return &config.Spec.AdaptersConfig.MqttAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
 		Name:      "http",
 		EnvPrefix: "HONO_HTTP_",
-		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
-			return &config.Spec.AdaptersConfig.HttpAdapterConfig.AdapterConfig
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
+			return &config.Spec.AdaptersConfig.HttpAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
 		Name:      "lorawan",
 		EnvPrefix: "HONO_LORAWAN_",
-		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
-			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.AdapterConfig
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
+			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
 		Name:      "sigfox",
 		EnvPrefix: "HONO_SIGFOX_",
-		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.AdapterConfig {
-			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.AdapterConfig
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
+			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.CommonAdapterConfig
 		},
 	},
 }
@@ -85,6 +94,58 @@ func findAdapter(name string) adapter {
 	}
 
 	panic(fmt.Errorf("failed to find adapter '%s'", name))
+}
+
+// process the service route
+func (r *ReconcileIoTConfig) processServiceRoute(ctx context.Context, config *iotv1alpha1.IoTConfig,
+	name string,
+	endpoint iotv1alpha1.EndpointConfig,
+	routeManipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error,
+	serviceManipulator func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error,
+) error {
+
+	routesEnabled := config.WantDefaultRoutes(endpoint)
+
+	if util.IsOpenshift() {
+
+		endpoint := config.Status.Services[name]
+		err := r.processRoute(ctx, name, config, !routesEnabled, &endpoint.Endpoint, routeManipulator)
+		config.Status.Services[name] = endpoint
+		return err
+
+	} else {
+
+		return r.processService(ctx, name+"-external", config, !routesEnabled, serviceManipulator)
+
+	}
+
+}
+
+// process the adapter route
+func (r *ReconcileIoTConfig) processAdapterRoute(ctx context.Context, config *iotv1alpha1.IoTConfig, adapter adapter,
+	routeManipulator func(config *iotv1alpha1.IoTConfig, service *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error,
+	serviceManipulator func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error,
+) error {
+
+	enabled := adapter.IsEnabled(config)
+	adapterConfig := adapter.AdapterConfigProvider(config)
+	routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
+
+	name := "iot-" + adapter.Name + "-adapter"
+
+	if util.IsOpenshift() {
+
+		endpoint := config.Status.Adapters[adapter.Name]
+		err := r.processRoute(ctx, name, config, !routesEnabled, &endpoint.Endpoint, routeManipulator)
+		config.Status.Adapters[adapter.Name] = endpoint
+		return err
+
+	} else {
+
+		return r.processService(ctx, name+"-external", config, !routesEnabled, serviceManipulator)
+
+	}
+
 }
 
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, containers iotv1alpha1.CommonAdapterContainers) error {
@@ -275,56 +336,54 @@ listener {
 	return rc.Result()
 }
 
-func hasEndpointKeyAndCert(endpoint *iotv1alpha1.AdapterEndpointConfig) bool {
-	return endpoint != nil &&
-		endpoint.KeyCertificateStrategy != nil &&
-		endpoint.KeyCertificateStrategy.Key != nil &&
-		endpoint.KeyCertificateStrategy.Certificate != nil
-}
+func applyEndpointDeployment(client client.Client, endpoint iotv1alpha1.EndpointConfig, deployment *appsv1.Deployment, endpointSecretName string, volumeName string) error {
 
-func applyAdapterEndpointDeployment(endpoint *iotv1alpha1.AdapterEndpointConfig, deployment *appsv1.Deployment, endpointSecretName string) error {
-	if endpoint != nil && endpoint.SecretNameStrategy != nil {
+	if endpoint.SecretNameStrategy != nil {
 
 		// use provided secret
 
-		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpoint.SecretNameStrategy.TlsSecretName)
-
-	} else if endpoint != nil && endpoint.KeyCertificateStrategy != nil {
-
-		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpointSecretName+"-"+endpoint.KeyCertificateStrategy.HashString())
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, volumeName, endpoint.SecretNameStrategy.TlsSecretName)
+		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/endpoint-secret-hash", deployment.Namespace, endpoint.SecretNameStrategy.TlsSecretName, "tls.crt", "tls.key"); err != nil {
+			return err
+		}
 
 	} else {
 
 		// use service CA as fallback
 
-		if !util.IsOpenshift() {
-			return fmt.Errorf("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
+		if !util.IsOpenshift4() {
+			return util.NewConfigurationError("Not running in OpenShift 4, unable to use service CA. You need to provide a protocol adapter endpoint key/certificate")
 		}
 
-		install.ApplySecretVolume(&deployment.Spec.Template.Spec, "tls", endpointSecretName+"-tls")
+		install.ApplySecretVolume(&deployment.Spec.Template.Spec, volumeName, endpointSecretName+"-tls")
+		if err := install.ApplySecretHash(client, &deployment.Spec.Template, iotPrefix+"/endpoint-secret-hash", deployment.Namespace, endpointSecretName+"-tls"); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func applyAdapterEndpointService(endpoint *iotv1alpha1.AdapterEndpointConfig, service *corev1.Service, endpointSecretName string) error {
+func applyEndpointService(endpoint iotv1alpha1.EndpointConfig, service *corev1.Service, endpointSecretName string) error {
 
 	if service.Annotations != nil {
-		delete(service.Annotations, "service.alpha.openshift.io/serving-cert-secret-name")
+		// always delete "alpha" annotation
+		delete(service.Annotations, openShiftServiceCAAnnotationServingCertAlpha)
 	}
 
-	if endpoint != nil && endpoint.SecretNameStrategy != nil {
+	if endpoint.SecretNameStrategy != nil {
 
 		// use provided secret
 
-	} else if endpoint != nil && endpoint.KeyCertificateStrategy != nil {
-
-		// use provided key/cert
+		if service.Annotations != nil {
+			// delete service ca annotation
+			delete(service.Annotations, openShiftServiceCAAnnotationServingCertBeta)
+		}
 
 	} else {
 
 		if !util.IsOpenshift() {
-			return fmt.Errorf("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
+			return util.NewConfigurationError("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
 		}
 
 		// use service CA as fallback
@@ -333,35 +392,10 @@ func applyAdapterEndpointService(endpoint *iotv1alpha1.AdapterEndpointConfig, se
 			service.Annotations = make(map[string]string)
 		}
 
-		service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = endpointSecretName + "-tls"
+		service.Annotations[openShiftServiceCAAnnotationServingCertBeta] = endpointSecretName + "-tls"
 	}
 
 	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileEndpointKeyCertificateSecret(ctx context.Context, config *iotv1alpha1.IoTConfig, endpoint *iotv1alpha1.AdapterEndpointConfig, adapterName string, delete bool) error {
-
-	if delete || !hasEndpointKeyAndCert(endpoint) {
-
-		// cleanup previous secrets
-		return r.cleanupSecrets(ctx, config, adapterName)
-
-	}
-
-	kc := endpoint.KeyCertificateStrategy
-	name := adapterName + "-" + kc.HashString()
-	return r.processSecret(ctx, name, config, false, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
-
-		// cleanup previous secrets
-		if err := r.cleanupSecrets(ctx, config, adapterName); err != nil {
-			return err
-		}
-
-		install.ApplyDefaultLabels(&secret.ObjectMeta, "iot", adapterName+"tls")
-		install.ApplyTlsSecret(secret, kc.Key, kc.Certificate)
-		return nil
-	})
-
 }
 
 func globalIsAdapterEnabled(name string) bool {

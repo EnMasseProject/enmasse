@@ -133,7 +133,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameTenantService); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameTenantService); err != nil {
 		return err
 	}
 
@@ -166,7 +166,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 

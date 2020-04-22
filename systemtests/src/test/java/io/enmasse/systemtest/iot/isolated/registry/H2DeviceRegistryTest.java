@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -33,13 +34,10 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
-        return new IoTConfigBuilder()
-                .withNewSpec()
+        return IoTTestSession
+                .createDefaultConfig()
+                .editOrNewSpec()
                 .withServices(newH2Based())
-                .withNewAdapters()
-                .withNewMqtt()
-                .endMqtt()
-                .endAdapters()
                 .endSpec();
     }
 

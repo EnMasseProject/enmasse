@@ -150,7 +150,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameDeviceConnection); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameDeviceConnection); err != nil {
 		return err
 	}
 

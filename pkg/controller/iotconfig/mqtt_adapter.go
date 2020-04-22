@@ -14,7 +14,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
 
@@ -29,7 +28,6 @@ import (
 )
 
 const nameMqttAdapter = "iot-mqtt-adapter"
-const routeMqttAdapter = "iot-mqtt-adapter"
 
 func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
@@ -38,7 +36,6 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 
 	adapter := findAdapter("mqtt")
 	enabled := adapter.IsEnabled(config)
-	adapterConfig := config.Spec.AdaptersConfig.MqttAdapterConfig
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -49,28 +46,13 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameMqttAdapter, config, !enabled, r.reconcileMqttAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameMqttAdapter+"-metrics", config, false, r.reconcileMetricsService(nameMqttAdapter))
+		return r.processService(ctx, nameMqttAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameMqttAdapter))
 	})
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, !enabled, r.reconcileMqttAdapterConfigMap)
 	})
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameMqttAdapter+"-external", config, !enabled, r.reconcileMqttAdapterServiceExternal)
-		})
-	}
-	if util.IsOpenshift() {
-		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
-
-		rc.ProcessSimple(func() error {
-			endpoint := config.Status.Adapters["mqtt"]
-			err := r.processRoute(ctx, routeMqttAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileMqttAdapterRoute)
-			config.Status.Adapters["mqtt"] = endpoint
-			return err
-		})
-	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameMqttAdapter, !enabled)
+		return r.processAdapterRoute(ctx, config, adapter, r.reconcileMqttAdapterRoute, r.reconcileMqttAdapterServiceExternal)
 	})
 
 	return rc.Result()
@@ -170,13 +152,13 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, ""); err != nil {
 		return err
 	}
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameMqttAdapter); err != nil {
+	if err := applyEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameMqttAdapter, "tls"); err != nil {
 		return err
 	}
 
@@ -210,7 +192,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterService(config *iotv1alpha1.IoT
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
 		return err
 	}
 
@@ -281,8 +263,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterRoute(config *iotv1alpha1.IoTCo
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	if config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig != nil &&
-		config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig.HasCustomCertificate() {
+	if config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig.HasCustomCertificate() {
 
 		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
 		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
@@ -330,7 +311,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterServiceExternal(config *iotv1al
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.MqttAdapterConfig.EndpointConfig, service, nameMqttAdapter); err != nil {
 		return err
 	}
 

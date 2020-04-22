@@ -4,6 +4,10 @@
  */
 package io.enmasse.systemtest.bases.iot;
 
+import org.junit.jupiter.api.BeforeAll;
+
+import io.enmasse.systemtest.iot.IoTTestSession;
+
 public interface ITestIoTBase {
      String IOT_ADDRESS_EVENT = "event";
      String IOT_ADDRESS_TELEMETRY = "telemetry";
@@ -20,4 +24,9 @@ public interface ITestIoTBase {
      };
 
      String IOT_PROJECT_NAMESPACE = "iot-project-ns";
+
+     @BeforeAll
+     public static void deployDefaultCerts() throws Exception {
+         IoTTestSession.deployDefaultCerts();
+     }
 }

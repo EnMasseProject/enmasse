@@ -63,7 +63,10 @@ public class HttpAdapterClient extends ApiClient {
 
     @Override
     public void close() {
-        this.client.close();
+        if (this.client != null) {
+            this.client.close();
+            this.client = null;
+        }
     }
 
     public HttpResponse<?> send(MessageType messageType, Buffer payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,

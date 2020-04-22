@@ -27,13 +27,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
 import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.condition.Kubernetes;
 import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
@@ -54,6 +54,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
         Map<String, String> secrets = new HashMap<>();
         secrets.put("iot-auth-service", "systemtests-iot-auth-service-tls");
         secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
+        secrets.put("iot-device-connection", "systemtests-iot-device-connection-tls");
         secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
 
         var r1 = new ContainerConfigBuilder()
@@ -71,40 +72,25 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
 
         var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
 
-        config = new IoTConfigBuilder()
+        config = IoTTestSession.createDefaultConfig()
 
-                .withNewMetadata()
-                .withName("default")
-                .endMetadata()
+                .editOrNewSpec()
 
-                .withNewSpec()
+                .editOrNewAdapters()
 
-                .withNewInterServiceCertificates()
-                .withNewSecretCertificatesStrategy()
-                .withCaSecretName("systemtests-iot-service-ca")
-                .withServiceSecretNames(secrets)
-                .endSecretCertificatesStrategy()
-                .endInterServiceCertificates()
-
-                .withNewAdapters()
-
-                .withNewHttp()
-                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-http-adapter-tls").endEndpoint()
+                .editOrNewHttp()
                 .withNewContainersLike(commonContainers).endContainers()
                 .endHttp()
 
-                .withNewMqtt()
-                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-mqtt-adapter-tls").endEndpoint()
+                .editOrNewMqtt()
                 .withNewContainersLike(commonContainers).endContainers()
                 .endMqtt()
 
-                .withNewSigfox()
-                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-sigfox-adapter-tls").endEndpoint()
+                .editOrNewSigfox()
                 .withNewContainersLike(commonContainers).endContainers()
                 .endSigfox()
 
-                .withNewLoraWan()
-                .withNewEndpoint().withNewSecretNameStrategy("systemtests-iot-lorawan-adapter-tls").endEndpoint()
+                .editOrNewLoraWan()
                 .withNewContainersLike(commonContainers).endContainers()
                 .endLoraWan()
 

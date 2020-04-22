@@ -137,7 +137,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, nameAuthService); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameAuthService); err != nil {
 		return err
 	}
 

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static java.net.HttpURLConnection.HTTP_CONFLICT;
 import static java.net.HttpURLConnection.HTTP_CREATED;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
@@ -26,7 +27,6 @@ import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
@@ -37,6 +37,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
+import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.utils.IoTUtils;
 
 @Tag(SMOKE)
@@ -47,7 +48,6 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     private static final String DEVICE_REGISTRY_TEST_PROJECT = "device-registry-test-project";
 
     private String randomDeviceId;
-    private IoTConfig iotConfig;
     private IoTProject iotProject;
     private Endpoint deviceRegistryEndpoint;
     private Endpoint httpAdapterEndpoint;
@@ -68,25 +68,17 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
     @BeforeEach
     public void setAttributes() throws Exception {
         var iotConfigBuilder = provideIoTConfig();
-        iotConfig = iotConfigBuilder
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .editSpec()
-                .withNewAdapters()
-                .withNewMqtt()
-                .withEnabled(false)
-                .endMqtt()
-                .withNewLoraWan()
-                .withEnabled(false)
-                .endLoraWan()
-                .withNewSigfox()
-                .withEnabled(false)
-                .endSigfox()
-                .endAdapters()
-                .endSpec()
-                .build();
+
+        // disable all but HTTP
+
+        for (Adapter adapter : Adapter.values()) {
+            iotConfigBuilder = adapter.disable(iotConfigBuilder);
+        }
+        iotConfigBuilder = HTTP.enable(iotConfigBuilder);
+
+        // build config
+
+        var iotConfig = iotConfigBuilder.build();
 
         isolatedIoTManager.createIoTConfig(iotConfig);
 

@@ -106,21 +106,15 @@ type ContainerConfig struct {
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
-type AdapterEndpointConfig struct {
-	EnableDefaultRoute     *bool                   `json:"enableDefaultRoute,omitempty"`
-	SecretNameStrategy     *SecretNameStrategy     `json:"secretNameStrategy,omitempty"`
-	KeyCertificateStrategy *KeyCertificateStrategy `json:"keyCertificateStrategy,omitempty"`
+type EndpointConfig struct {
+	EnableDefaultRoute *bool               `json:"enableDefaultRoute,omitempty"`
+	SecretNameStrategy *SecretNameStrategy `json:"secretNameStrategy,omitempty"`
 }
 
 type AdapterConfig struct {
 	Enabled *bool `json:"enabled,omitempty"`
 
 	Options *AdapterOptions `json:"options,omitempty"`
-}
-
-type KeyCertificateStrategy struct {
-	Key         []byte `json:"key,omitempty"`
-	Certificate []byte `json:"certificate,omitempty"`
 }
 
 type SecretNameStrategy struct {
@@ -224,6 +218,12 @@ type CommonDeviceRegistry struct {
 type DeviceRegistryServiceConfig struct {
 	Infinispan *InfinispanDeviceRegistry `json:"infinispan,omitempty"`
 	JDBC       *JdbcDeviceRegistry       `json:"jdbc,omitempty"`
+
+	Management ManagementConfig `json:"management,omitempty"`
+}
+
+type ManagementConfig struct {
+	Endpoint EndpointConfig `json:"endpoint,omitempty"`
 }
 
 type InfinispanRegistryServer struct {
@@ -327,7 +327,7 @@ type CommonAdapterConfig struct {
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
 	Java       *JavaContainerOptions   `json:"java,omitempty"`
 
-	EndpointConfig *AdapterEndpointConfig `json:"endpoint,omitempty"`
+	EndpointConfig EndpointConfig `json:"endpoint,omitempty"`
 }
 
 type HttpAdapterConfig struct {

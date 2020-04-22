@@ -6,10 +6,6 @@
 package v1alpha1
 
 import (
-	"crypto/md5"
-	"encoding/pem"
-	"fmt"
-
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 
@@ -26,10 +22,10 @@ func (project *IoTProject) TenantName() string {
 	return util.TenantNameForObject(project)
 }
 
-func (config *IoTConfig) WantDefaultRoutes(adapter *AdapterEndpointConfig) bool {
+func (config *IoTConfig) WantDefaultRoutes(endpoint EndpointConfig) bool {
 
-	if adapter != nil && adapter.EnableDefaultRoute != nil {
-		return *adapter.EnableDefaultRoute
+	if endpoint.EnableDefaultRoute != nil {
+		return *endpoint.EnableDefaultRoute
 	}
 
 	return config.Spec.WantDefaultRoutes()
@@ -61,16 +57,9 @@ func (spec *IoTConfigSpec) HasNoInterServiceConfig() bool {
 	return spec.InterServiceCertificates.ServiceCAStrategy == nil && spec.InterServiceCertificates.SecretCertificatesStrategy == nil
 }
 
-func (k *KeyCertificateStrategy) HashString() string {
-	p, _ := pem.Decode(k.Key)
-	// we are using an MD5 fingerprint here, since this is only a name
-	return fmt.Sprintf("%x", md5.Sum(p.Bytes))
-}
-
 // Evaluates if the adapter endpoint uses a custom certificate setup
-func (a *AdapterEndpointConfig) HasCustomCertificate() bool {
-	return a.KeyCertificateStrategy != nil ||
-		a.SecretNameStrategy != nil
+func (a *EndpointConfig) HasCustomCertificate() bool {
+	return a.SecretNameStrategy != nil
 }
 
 func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
@@ -167,7 +156,7 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 	if ok {
 		c.SetStatusOk()
 	} else {
-		c.SetStatus(corev1.ConditionTrue, "", "")
+		c.SetStatus(corev1.ConditionFalse, reason, message)
 	}
 }
 

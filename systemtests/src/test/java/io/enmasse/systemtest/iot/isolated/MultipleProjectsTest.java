@@ -4,8 +4,9 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newDefaultInstance;
+
 import java.net.HttpURLConnection;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -27,7 +28,6 @@ import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
@@ -35,19 +35,17 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
-import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.iot.CredentialsRegistryClient;
-import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.DeviceRegistryClient;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.IoTProjectTestContext;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.Operation;
@@ -67,25 +65,8 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
 
     @BeforeEach
     void initEnv() throws Exception {
-        CertBundle certBundle = CertificateUtils.createCertBundle();
-        IoTConfig iotConfig = new IoTConfigBuilder()
-                .withNewMetadata()
-                .withName("default")
-                .withNamespace(kubernetes.getInfraNamespace())
-                .endMetadata()
-                .withNewSpec()
-                .withServices(DefaultDeviceRegistry.newDefaultInstance())
-                .withNewAdapters()
-                .withNewMqtt()
-                .withNewEndpoint()
-                .withNewKeyCertificateStrategy()
-                .withCertificate(ByteBuffer.wrap(certBundle.getCert().getBytes()))
-                .withKey(ByteBuffer.wrap(certBundle.getKey().getBytes()))
-                .endKeyCertificateStrategy()
-                .endEndpoint()
-                .endMqtt()
-                .endAdapters()
-                .endSpec()
+        IoTConfig iotConfig = IoTTestSession.createDefaultConfig()
+                .editOrNewSpec().withServices(newDefaultInstance()).endSpec()
                 .build();
         isolatedIoTManager.createIoTConfig(iotConfig);
 

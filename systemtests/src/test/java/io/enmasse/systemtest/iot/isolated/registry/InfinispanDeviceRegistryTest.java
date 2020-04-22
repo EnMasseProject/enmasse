@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.systemtest.iot.IoTTestSession;
 
 class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
 
@@ -24,13 +25,10 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
-        return new IoTConfigBuilder()
-                .withNewSpec()
+        return IoTTestSession
+                .createDefaultConfig()
+                .editOrNewSpec()
                 .withServices(newInfinispanBased())
-                .withNewAdapters()
-                .withNewMqtt()
-                .endMqtt()
-                .endAdapters()
                 .endSpec();
     }
 

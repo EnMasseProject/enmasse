@@ -23,6 +23,7 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
 
 public class IsolatedIoTManager extends ResourceManager {
 
@@ -62,25 +63,48 @@ public class IsolatedIoTManager extends ResourceManager {
         kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
     }
 
+    private static Exception cleanup(ThrowingCallable callable, Exception e) {
+        try {
+            callable.call();
+            return e;
+        } catch (Exception e1) {
+            if (e == null) {
+                return e1;
+            } else {
+                e.addSuppressed(e1);
+                return e;
+            }
+        }
+    }
+
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
+
         if (environment.skipCleanup()) {
+
             LOGGER.info("Skip cleanup is set, no cleanup process");
+
         } else {
-            try {
-                tearDownProjects();
-                tearDownConfigs();
-                if (context.getExecutionException().isPresent()) {
-                    Path path = TestUtils.getFailedTestLogsPath(context);
-                    SystemtestsKubernetesApps.collectInfinispanServerLogs(path);
-                }
-                SystemtestsKubernetesApps.deleteInfinispanServer();
-                SystemtestsKubernetesApps.deletePostgresqlServer();
-                SystemtestsKubernetesApps.deleteH2Server();
-            } catch (Exception e) {
-                LOGGER.error("Error tearing down iot test: {}", e.getMessage());
+
+            // the next lines, using cleanup(...) prevent that the failure of
+            // one cleanup step prevents the next step from being executed.
+
+            Exception e = null;
+            e = cleanup(() -> tearDownProjects(), e);
+            e = cleanup(() -> tearDownConfigs(), e);
+            if (context.getExecutionException().isPresent()) {
+                Path path = TestUtils.getFailedTestLogsPath(context);
+                e = cleanup(() -> SystemtestsKubernetesApps.collectInfinispanServerLogs(path), e);
+            }
+            e = cleanup(() -> SystemtestsKubernetesApps.deleteInfinispanServer(), e);
+            e = cleanup(() -> SystemtestsKubernetesApps.deletePostgresqlServer(), e);
+            e = cleanup(() -> SystemtestsKubernetesApps.deleteH2Server(), e);
+
+            if (e != null) {
+                LOGGER.error("Error tearing down IoT test: {}", e.getMessage());
                 throw e;
             }
+
         }
     }
 

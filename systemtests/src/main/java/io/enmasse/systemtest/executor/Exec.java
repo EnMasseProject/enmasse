@@ -1,12 +1,8 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.executor;
-
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
-import org.slf4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -29,6 +26,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.logs.CustomLogger;
+
 /**
  * Class provide execution of external command
  */
@@ -40,11 +41,11 @@ public class Exec {
     private StreamGobbler stdOutReader;
     private StreamGobbler stdErrReader;
     private Path logPath;
+    private Map<String, String> env;
     private boolean appendLineSeparator;
     private Subscriber<String> stdErrProcessor;
     private static final Pattern PATH_SPLITTER = Pattern.compile(System.getProperty("path.separator"));
     protected static final Object lock = new Object();
-    protected static final Environment env = Environment.getInstance();
 
     public Exec() {
         this.appendLineSeparator = true;
@@ -57,6 +58,10 @@ public class Exec {
 
     public Exec(boolean appendLineSeparator) {
         this.appendLineSeparator = appendLineSeparator;
+    }
+
+    public void setEnv(Map<String, String> env) {
+        this.env = env;
     }
 
     public void setStdErrProcessor(Subscriber<String> stdErrProcessor) {
@@ -121,6 +126,15 @@ public class Exec {
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
+        if (this.env != null ) {
+            for (Map.Entry<String,String> entry : this.env.entrySet()) {
+                if(entry.getValue() != null ) {
+                    builder.environment().put(entry.getKey(), entry.getValue());
+                } else {
+                    builder.environment().remove(entry.getKey());
+                }
+            }
+        }
         process = builder.start();
 
         Future<String> output = readStdOutput();
@@ -229,6 +243,10 @@ public class Exec {
         return execute(command, 60_000, true, true);
     }
 
+    public static ExecutionResultData execute(String ...command) {
+        return execute(Arrays.asList(command), 60_000, true, true);
+    }
+
     public static ExecutionResultData execute(List<String> command, boolean logToOutput) {
         return execute(command, 60_000, logToOutput, true);
     }
@@ -242,8 +260,13 @@ public class Exec {
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator) {
+        return execute(command, timeout, logToOutput, appendLineSeparator, null);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String,String> env) {
         try {
             Exec executor = new Exec(appendLineSeparator);
+            executor.setEnv(env);
             int ret = executor.exec(command, timeout);
             synchronized (lock) {
                 if (logToOutput) {

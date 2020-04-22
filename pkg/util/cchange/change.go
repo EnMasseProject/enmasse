@@ -23,6 +23,33 @@ func NewRecorder() *ConfigChangeRecorder {
 	}
 }
 
+func (c *ConfigChangeRecorder) AddBytesFromMap(data map[string][]byte, onlyKeys ...string) {
+
+	// extract keys, and sort
+	keys := make([]string, len(data))
+	for k, _ := range data {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// sort keys in order to use SearchStrings later on
+	if onlyKeys != nil {
+		sort.Strings(onlyKeys)
+	}
+
+	// iterate with sorted keys
+	for _, k := range keys {
+		if onlyKeys != nil {
+			if !util.ContainsString(onlyKeys, k) {
+				continue
+			}
+		}
+		v := data[k]
+		c.hasher.Write(v)
+	}
+
+}
+
 func (c *ConfigChangeRecorder) AddStringsFromMap(data map[string]string, onlyKeys ...string) {
 
 	// extract keys, and sort
@@ -52,6 +79,10 @@ func (c *ConfigChangeRecorder) AddStringsFromMap(data map[string]string, onlyKey
 
 func (c *ConfigChangeRecorder) AddString(data string) {
 	c.hasher.Write([]byte(data))
+}
+
+func (c *ConfigChangeRecorder) AddBytes(data []byte) {
+	c.hasher.Write(data)
 }
 
 func (c ConfigChangeRecorder) Hash() []byte {

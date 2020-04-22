@@ -11,7 +11,6 @@ import (
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
-	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
@@ -27,7 +26,6 @@ import (
 )
 
 const nameLoraWanAdapter = "iot-lorawan-adapter"
-const routeLoraWanAdapter = "iot-lorawan-adapter"
 
 func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
@@ -36,7 +34,6 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 
 	adapter := findAdapter("lorawan")
 	enabled := adapter.IsEnabled(config)
-	adapterConfig := config.Spec.AdaptersConfig.LoraWanAdapterConfig
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameLoraWanAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -47,28 +44,13 @@ func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *
 		return r.processService(ctx, nameLoraWanAdapter, config, !enabled, r.reconcileLoraWanAdapterService)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processService(ctx, nameLoraWanAdapter+"-metrics", config, false, r.reconcileMetricsService(nameLoraWanAdapter))
+		return r.processService(ctx, nameLoraWanAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameLoraWanAdapter))
 	})
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameLoraWanAdapter+"-config", config, !enabled, r.reconcileLoraWanAdapterConfigMap)
 	})
-	if !util.IsOpenshift() {
-		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameLoraWanAdapter+"-external", config, !enabled, r.reconcileLoraWanAdapterServiceExternal)
-		})
-	}
-	if util.IsOpenshift() {
-		routesEnabled := enabled && config.WantDefaultRoutes(adapterConfig.EndpointConfig)
-
-		rc.ProcessSimple(func() error {
-			endpoint := config.Status.Adapters["lorawan"]
-			err := r.processRoute(ctx, routeLoraWanAdapter, config, !routesEnabled, &endpoint.Endpoint, r.reconcileLoraWanAdapterRoute)
-			config.Status.Adapters["lorawan"] = endpoint
-			return err
-		})
-	}
 	rc.ProcessSimple(func() error {
-		return r.reconcileEndpointKeyCertificateSecret(ctx, config, adapterConfig.EndpointConfig, nameLoraWanAdapter, !enabled)
+		return r.processAdapterRoute(ctx, config, adapter, r.reconcileLoraWanAdapterRoute, r.reconcileLoraWanAdapterServiceExternal)
 	})
 
 	return rc.Result()
@@ -168,13 +150,13 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(config, deployment, ""); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, ""); err != nil {
 		return err
 	}
 
 	// endpoint key/cert
 
-	if err := applyAdapterEndpointDeployment(adapter.EndpointConfig, deployment, nameLoraWanAdapter); err != nil {
+	if err := applyEndpointDeployment(r.client, adapter.EndpointConfig, deployment, nameLoraWanAdapter, "tls"); err != nil {
 		return err
 	}
 
@@ -208,14 +190,14 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterService(config *iotv1alpha1.
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig, service, nameLoraWanAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig, service, nameLoraWanAdapter); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileLoraWanAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileLoraWanAdapterConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -279,8 +261,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterRoute(config *iotv1alpha1.Io
 		route.Spec.TLS = &routev1.TLSConfig{}
 	}
 
-	if config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig != nil &&
-		config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig.HasCustomCertificate() {
+	if config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig.HasCustomCertificate() {
 
 		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
 		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
@@ -327,7 +308,7 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterServiceExternal(config *iotv
 		return err
 	}
 
-	if err := applyAdapterEndpointService(config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig, service, nameLoraWanAdapter); err != nil {
+	if err := applyEndpointService(config.Spec.AdaptersConfig.LoraWanAdapterConfig.EndpointConfig, service, nameLoraWanAdapter); err != nil {
 		return err
 	}
 
