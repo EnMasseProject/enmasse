@@ -38,12 +38,12 @@ var log = logf.Log.WithName("controller_messagingaddress")
 var _ reconcile.Reconciler = &ReconcileMessagingAddress{}
 
 type ReconcileMessagingAddress struct {
-	client       client.Client
-	reader       client.Reader
-	recorder     record.EventRecorder
-	scheme       *runtime.Scheme
-	stateManager state.StateManager
-	namespace    string
+	client        client.Client
+	reader        client.Reader
+	recorder      record.EventRecorder
+	scheme        *runtime.Scheme
+	clientManager state.ClientManager
+	namespace     string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -67,14 +67,14 @@ const (
 func newReconciler(mgr manager.Manager) *ReconcileMessagingAddress {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
-	stateManager := state.GetStateManager()
+	clientManager := state.GetClientManager()
 	return &ReconcileMessagingAddress{
-		client:       mgr.GetClient(),
-		stateManager: stateManager,
-		reader:       mgr.GetAPIReader(),
-		recorder:     mgr.GetEventRecorderFor("messagingaddress"),
-		scheme:       mgr.GetScheme(),
-		namespace:    namespace,
+		client:        mgr.GetClient(),
+		clientManager: clientManager,
+		reader:        mgr.GetAPIReader(),
+		recorder:      mgr.GetEventRecorderFor("messagingaddress"),
+		scheme:        mgr.GetScheme(),
+		namespace:     namespace,
 	}
 }
 
@@ -91,6 +91,25 @@ func add(mgr manager.Manager, r *ReconcileMessagingAddress) error {
 	}
 
 	return err
+}
+
+/*
+ * Very dumb scheduler that doesn't look at broker capacity.
+ */
+type DummyScheduler struct {
+}
+
+func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*BrokerState) error {
+	if len(brokers) > 0 {
+		broker := brokers[0]
+		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
+			State: v1beta2.MessagingAddressBrokerScheduled,
+			Host:  broker.Host,
+		})
+	} else {
+		return fmt.Errorf("No available broker")
+	}
+	return nil
 }
 
 func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconcile.Result, error) {
@@ -136,6 +155,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result, err
 	}
 
+	// Retrieve the MessagingTenant for this MessagingAddress
 	tenant := &v1beta2.MessagingTenant{}
 	result, err = ac.Process(func(address *v1beta2.MessagingAddress) (reconcile.Result, error) {
 		err = r.client.Get(ctx, types.NamespacedName{Name: TENANT_RESOURCE_NAME, Namespace: address.Namespace}, tenant)
@@ -147,6 +167,10 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 			} else {
 				logger.Error(err, "Failed to get MessagingTenant")
 			}
+		} else if tenant.Status.MessagingInfraRef == nil {
+			ready := address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
+			ready.SetStatus(corev1.ConditionFalse, "", "MessagingTenant is not yet bound")
+			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
 		}
 		return reconcile.Result{}, err
 	})
@@ -154,13 +178,18 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result, err
 	}
 
-	tenantState := r.stateManager.GetOrCreateTenant(tenant)
+	// Retrieve the MessagingInfra for this MessagingTenant
+	infra := &v1beta2.MessagingInfra{}
 	result, err = ac.Process(func(address *v1beta2.MessagingAddress) (reconcile.Result, error) {
-		tenantStatus := tenantState.GetStatus()
-		if !tenantStatus.Bound {
-			ready := address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
-			ready.SetStatus(corev1.ConditionFalse, "", "MessagingTenant is not yet bound")
-			return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+		err = r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfraRef.Name, Namespace: tenant.Status.MessagingInfraRef.Namespace}, infra)
+		if err != nil {
+			if k8errors.IsNotFound(err) {
+				ready := address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
+				ready.SetStatus(corev1.ConditionFalse, "", "Unable to find MessagingInfra for the MessagingTenant")
+				return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+			} else {
+				logger.Error(err, "Failed to get MessagingInfra")
+			}
 		}
 		return reconcile.Result{}, err
 	})
@@ -172,14 +201,24 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	// the case where a scheduled address is forgotten if the operator crashes. Once persisted, the operator will
 	// be able to reconcile the broker state as specified in the address status.
 	result, err = ac.Process(func(address *v1beta2.MessagingAddress) (reconcile.Result, error) {
+		// TODO: Handle changes to partitions etc.
+		if len(address.Status.Brokers) > 0 {
+			// We're already scheduled so don't change
+			return reconcile.Result{}, nil
+		}
 
-		err = tenantState.ScheduleAddress(address)
+		// TODO: Make configurable and a better scheduler
+		scheduler := DummyScheduler{}
+
+		client := r.clientManager.GetClient(infra)
+		err = client.ScheduleAddress(address, scheduler)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
 
 		// Signal requeue so that status gets persisted
 		return reconcile.Result{Requeue: true}, nil
+
 	})
 	if needReturn(result, err) {
 		return result, err
@@ -187,7 +226,8 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	// Ensure address exists. We know where the address should exist now, so just ensure it is done.
 	result, err = ac.Process(func(address *v1beta2.MessagingAddress) (reconcile.Result, error) {
-		err = tenantState.EnsureAddress(address)
+		client := r.clientManager.GetClient(infra)
+		err = client.EnsureAddress(address)
 		return reconcile.Result{}, err
 	})
 	if needReturn(result, err) {
@@ -197,8 +237,9 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	// Update address status and schedule requeue. Requeue will trigger status update
 	result, err = ac.Process(func(address *v1beta2.MessagingAddress) (reconcile.Result, error) {
 		ready := address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
+		address.Status.Phase = v1beta2.MessagingAddressActive
 		ready.SetStatus(corev1.ConditionTrue, "", "")
-		return reconcile.Result{RequeueAfter: 30 * time.Second}, nil
+		return reconcile.Result{}, nil
 	})
 	return result, err
 }
@@ -227,7 +268,7 @@ func (r *ReconcileMessagingAddress) reconcileFinalizers(ctx context.Context, log
 				}
 
 				if tenant != nil {
-					tenantState := r.stateManager.GetOrCreateTenant(tenant)
+					tenantState := r.clientManager.GetOrCreateTenant(tenant)
 					err := tenantState.DeleteAddress(address)
 					return reconcile.Result{}, err
 				}

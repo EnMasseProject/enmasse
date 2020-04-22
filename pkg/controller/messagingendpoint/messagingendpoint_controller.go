@@ -38,12 +38,12 @@ var log = logf.Log.WithName("controller_messagingendpoint")
 var _ reconcile.Reconciler = &ReconcileMessagingEndpoint{}
 
 type ReconcileMessagingEndpoint struct {
-	client       client.Client
-	reader       client.Reader
-	recorder     record.EventRecorder
-	scheme       *runtime.Scheme
-	stateManager state.StateManager
-	namespace    string
+	client        client.Client
+	reader        client.Reader
+	recorder      record.EventRecorder
+	scheme        *runtime.Scheme
+	clientManager state.ClientManager
+	namespace     string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -68,14 +68,14 @@ const (
 func newReconciler(mgr manager.Manager) *ReconcileMessagingEndpoint {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
-	stateManager := state.GetStateManager()
+	clientManager := state.GetClientManager()
 	return &ReconcileMessagingEndpoint{
-		client:       mgr.GetClient(),
-		stateManager: stateManager,
-		reader:       mgr.GetAPIReader(),
-		recorder:     mgr.GetEventRecorderFor("messagingendpoint"),
-		scheme:       mgr.GetScheme(),
-		namespace:    namespace,
+		client:        mgr.GetClient(),
+		clientManager: clientManager,
+		reader:        mgr.GetAPIReader(),
+		recorder:      mgr.GetEventRecorderFor("messagingendpoint"),
+		scheme:        mgr.GetScheme(),
+		namespace:     namespace,
 	}
 }
 
@@ -138,7 +138,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	tenant := &v1beta2.MessagingTenant{}
-	result, err = ac.Process(func(endpoint *v1beta2.MessagingEndpoint) (reconcile.Result, error) {
+	result, err = ec.Process(func(endpoint *v1beta2.MessagingEndpoint) (reconcile.Result, error) {
 		err = r.client.Get(ctx, types.NamespacedName{Name: TENANT_RESOURCE_NAME, Namespace: endpoint.Namespace}, tenant)
 		if err != nil {
 			if k8errors.IsNotFound(err) {
@@ -155,7 +155,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		return result, err
 	}
 
-	tenantState := r.stateManager.GetOrCreateTenant(tenant)
+	tenantState := r.clientManager.GetOrCreateTenant(tenant)
 	result, err = ac.Process(func(endpoint *v1beta2.MessagingEndpoint) (reconcile.Result, error) {
 		tenantStatus := tenantState.GetStatus()
 		if !tenantStatus.Bound {
@@ -211,7 +211,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizers(ctx context.Context, lo
 				}
 
 				if tenant != nil {
-					tenantState := r.stateManager.GetOrCreateTenant(tenant)
+					tenantState := r.clientManager.GetOrCreateTenant(tenant)
 					err := tenantState.DeleteEndpoint(endpoint)
 					return reconcile.Result{}, err
 				}
