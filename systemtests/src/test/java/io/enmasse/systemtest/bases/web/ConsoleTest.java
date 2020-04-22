@@ -132,6 +132,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
+        waitUntilAddressSpaceActive(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
         try {
             consolePage.awaitGoneAwayPage();

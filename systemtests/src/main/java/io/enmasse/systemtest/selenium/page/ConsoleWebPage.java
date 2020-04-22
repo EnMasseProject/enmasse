@@ -995,11 +995,11 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean waitUntilConsolePage() {
         try {
-            checkReachableWebPage();
+            selenium.getDriverWait().until(ExpectedConditions.visibilityOfElementLocated(By.id("root")));
             return true;
         } catch (Exception ex) {
             selenium.takeScreenShot();
-            log.error("Console page is unreachable in timeout duration!", ex);
+            log.info("Error waitUntilConsolePage", ex);
             return false;
         }
     }
