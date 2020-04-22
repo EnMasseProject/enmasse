@@ -42,6 +42,7 @@ import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRuleBuilde
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeer;
 import io.fabric8.kubernetes.api.model.networking.NetworkPolicyPeerBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -53,6 +54,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 
 @OpenShift(version = OpenShiftVersion.OCP4)
 class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandard {
@@ -71,6 +73,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testNetworkPolicyWithPodSelector() throws Exception {
         int expectedMsgCount = 5;
         HashMap<String, String> map = new HashMap<>();
@@ -113,6 +116,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testNetworkPolicyWithNamespaceSelector() throws Exception {
         int expectedMsgCount = 5;
 
