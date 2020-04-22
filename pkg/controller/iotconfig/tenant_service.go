@@ -9,6 +9,7 @@ import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -91,7 +92,8 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_TENANT_ENDPOINT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
+			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
+			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.TlsVersions(config), ",")},
 		}
 
 		SetupTracing(config, deployment, container)

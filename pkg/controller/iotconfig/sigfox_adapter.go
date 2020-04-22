@@ -7,8 +7,6 @@ package iotconfig
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -102,8 +100,6 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-
-			{Name: "HONO_SIGFOX_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(adapter.IsNativeTlsRequired(config))},
 		}
 
 		SetupTracing(config, deployment, container)

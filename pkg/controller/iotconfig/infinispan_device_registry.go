@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"strconv"
+	"strings"
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -78,15 +79,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
-		// eval native TLS flag
-
-		var nativeTls bool
-		if service.Infinispan != nil {
-			nativeTls = service.Infinispan.IsNativeTlsRequired(config)
-		} else {
-			nativeTls = false
-		}
-
 		// environment
 
 		container.Env = []corev1.EnvVar{
@@ -98,9 +90,12 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.Infinispan.IsNativeTlsRequired(config))},
+			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.Infinispan.TlsVersions(config), ",")},
 
-			{Name: "ENMASSE_IOT_REST_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_REST_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.Infinispan.IsNativeTlsRequired(config))},
+			{Name: "ENMASSE_IOT_REST_SECURE_PROTOCOLS", Value: strings.Join(service.Infinispan.TlsVersions(config), ",")},
+
 			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 

@@ -26,6 +26,7 @@ public class CommonServiceConfig extends ServiceConfig {
 
     private ContainerConfig container;
     private JavaContainerOptions java;
+    private TlsOptions tls;
 
     public ContainerConfig getContainer() {
         return container;
@@ -39,5 +40,12 @@ public class CommonServiceConfig extends ServiceConfig {
     }
     public JavaContainerOptions getJava() {
         return java;
+    }
+
+    public void setTls(TlsOptions tls) {
+        this.tls = tls;
+    }
+    public TlsOptions getTls() {
+        return tls;
     }
 }

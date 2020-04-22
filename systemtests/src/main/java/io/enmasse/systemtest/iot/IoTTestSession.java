@@ -16,6 +16,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -175,17 +177,29 @@ public final class IoTTestSession implements AutoCloseable {
         }
 
         /**
-         * A new http adapter client.
+         * Create a new http adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
          */
         public HttpAdapterClient createHttpAdapterClient() {
-            return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password);
+            return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, null);
         }
 
         /**
-         * A new mqtt adapter client.
+         * Create a new http adapter client.
+         *
+         * @param tlsVersions The supported TLS versions.
+         * @return The new instance. It will automatically be closed when the test session is being cleaned
+         *         up.
+         */
+        public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) {
+            return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, tlsVersions);
+        }
+
+
+        /**
+         * Create a new mqtt adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
@@ -242,10 +256,10 @@ public final class IoTTestSession implements AutoCloseable {
         return project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
     }
 
-    private HttpAdapterClient createHttpAdapterClient(final String authId, final String password) {
+    private HttpAdapterClient createHttpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-http-adapter");
-        var result = new HttpAdapterClient(endpoint, authId, getTenantId(), password);
+        var result = new HttpAdapterClient(endpoint, authId, getTenantId(), password, tlsVersions);
         this.cleanup.add(() -> result.close());
 
         return result;
@@ -645,6 +659,12 @@ public final class IoTTestSession implements AutoCloseable {
         return new Device(deviceId);
     }
 
+    public Device registerNewRandomDeviceWithPassword() throws Exception {
+        return new Device(UUID.randomUUID().toString())
+                .register()
+                .setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    }
+
     protected static void defaultExceptionHandler(final Throwable error) {
         if (Environment.getInstance().isSkipSaveState()) {
             return;
@@ -681,12 +701,16 @@ public final class IoTTestSession implements AutoCloseable {
     }
 
     public static void deployDefaultCerts() throws Exception {
-        if (!Files.isRegularFile(Paths.get("../templates/iot/examples/k8s-tls/build/root-cert.pem"))) {
-            Exec.execute("../templates/iot/examples/k8s-tls/create");
+
+        final Path examplesIoT = Paths.get(Environment.getInstance().getTemplatesPath())
+                .resolve("install/components/iot/examples");
+
+        if (!Files.isRegularFile(examplesIoT.resolve("k8s-tls/build/root-cert.pem"))) {
+            Exec.execute(examplesIoT.resolve("k8s-tls/create").toAbsolutePath().toString());
         }
         // deploy will try to undeploy first, so it can always be called
         Exec.execute(
-                asList("../templates/iot/examples/k8s-tls/deploy"),
+                asList(examplesIoT.resolve("k8s-tls/deploy").toAbsolutePath().toString()),
                 60_000, true, true,
                 Map.of(
                         "CLI", KubeCMDClient.getCMD(),

@@ -30,6 +30,7 @@ type IoTConfigSpec struct {
 	InterServiceCertificates *InterServiceCertificates `json:"interServiceCertificates,omitempty"`
 
 	JavaDefaults JavaContainerDefaults `json:"java,omitempty"`
+	TlsDefaults  TlsOptions            `json:"tls,omitempty"`
 
 	ServicesConfig ServicesConfig `json:"services"`
 	AdaptersConfig AdaptersConfig `json:"adapters"`
@@ -61,6 +62,10 @@ type ExtensionImage struct {
 
 type JavaContainerDefaults struct {
 	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
+}
+
+type TlsOptions struct {
+	Versions []string `json:"versions,omitempty"`
 }
 
 type JavaContainerOptions struct {
@@ -291,6 +296,7 @@ type JdbcRegistryManagement struct {
 type CommonServiceConfig struct {
 	Container *ContainerConfig      `json:"container,omitempty"`
 	Java      *JavaContainerOptions `json:"java,omitempty"`
+	Tls       TlsOptions            `json:"tls,omitempty"`
 }
 
 //region TenantService
@@ -326,6 +332,7 @@ type CommonAdapterConfig struct {
 
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
 	Java       *JavaContainerOptions   `json:"java,omitempty"`
+	Tls        TlsOptions              `json:"tls,omitempty"`
 
 	EndpointConfig EndpointConfig `json:"endpoint,omitempty"`
 }

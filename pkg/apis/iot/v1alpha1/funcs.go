@@ -69,6 +69,8 @@ func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
 	return util.DefaultJavaRequiresNativeTls()
 }
 
+//region CommonAdapterConfig
+
 func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
 	if c.Java == nil {
 		return config.Spec.DefaultNativeTlsRequired()
@@ -79,6 +81,18 @@ func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
 	return *c.Java.RequireNativeTls
 }
 
+func (c *CommonAdapterConfig) TlsVersions(config *IoTConfig) []string {
+	if len(c.Tls.Versions) > 0 {
+		return c.Tls.Versions
+	} else {
+		return config.Spec.TlsDefaults.Versions
+	}
+}
+
+//endregion
+
+//region CommonServiceConfig
+
 func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
 	if c.Java == nil {
 		return config.Spec.DefaultNativeTlsRequired()
@@ -88,6 +102,16 @@ func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
 	}
 	return *c.Java.RequireNativeTls
 }
+
+func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
+	if len(c.Tls.Versions) > 0 {
+		return c.Tls.Versions
+	} else {
+		return config.Spec.TlsDefaults.Versions
+	}
+}
+
+//endregion
 
 func (p *IoTProjectStatus) GetProjectCondition(t ProjectConditionType) *ProjectCondition {
 	for i, c := range p.Conditions {

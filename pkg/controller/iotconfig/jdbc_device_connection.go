@@ -9,6 +9,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/ext"
 	"strconv"
+	"strings"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
@@ -88,15 +89,6 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
-		// eval native TLS flag
-
-		var nativeTls bool
-		if service.Infinispan != nil {
-			nativeTls = service.Infinispan.IsNativeTlsRequired(config)
-		} else {
-			nativeTls = false
-		}
-
 		// environment
 
 		container.Env = []corev1.EnvVar{
@@ -108,7 +100,8 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
+			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.JDBC.IsNativeTlsRequired(config))},
+			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.JDBC.TlsVersions(config), ",")},
 		}
 
 		SetupTracing(config, deployment, container)
