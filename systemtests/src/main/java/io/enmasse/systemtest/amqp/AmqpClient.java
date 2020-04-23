@@ -5,6 +5,22 @@
 
 package io.enmasse.systemtest.amqp;
 
+import io.enmasse.systemtest.VertxFactory;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.Count;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.vertx.core.CompositeFuture;
+import io.vertx.core.Promise;
+import io.vertx.core.Vertx;
+import io.vertx.core.impl.ConcurrentHashSet;
+import io.vertx.proton.ProtonConnection;
+import io.vertx.proton.ProtonDelivery;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.amqp.messaging.Target;
+import org.apache.qpid.proton.message.Message;
+import org.slf4j.Logger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -16,23 +32,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import io.enmasse.systemtest.utils.TestUtils;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.amqp.messaging.Target;
-import org.apache.qpid.proton.message.Message;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.VertxFactory;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.utils.Count;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.Promise;
-import io.vertx.core.Vertx;
-import io.vertx.core.impl.ConcurrentHashSet;
-import io.vertx.proton.ProtonConnection;
-import io.vertx.proton.ProtonDelivery;
 
 public class AmqpClient implements AutoCloseable {
     private static final Logger log = CustomLogger.getLogger();

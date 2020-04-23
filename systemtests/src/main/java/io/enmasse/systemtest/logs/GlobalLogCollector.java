@@ -287,6 +287,8 @@ public class GlobalLogCollector {
             if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
                 nsList.add("openshift-authentication");
             }
+            // TMP: check logs from openshift router.
+            nsList.add("default");
             for (String ns : nsList) {
                 if (kube.namespaceExists(ns)) {
                     List<Pod> pods = kube.listAllPods(ns);
