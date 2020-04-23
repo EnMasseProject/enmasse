@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.iot.isolated;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newDefaultInstance;
 
 import java.net.HttpURLConnection;
@@ -101,6 +102,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testMultipleProjects() throws Exception {
 
         for (final IoTProjectTestContext ctx : projects) {

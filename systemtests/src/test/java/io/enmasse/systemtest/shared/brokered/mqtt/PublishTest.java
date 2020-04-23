@@ -10,8 +10,12 @@ import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+
+@Tag(ACCEPTANCE)
 public class PublishTest extends MqttPublishTestBase implements ITestSharedBrokered {
 
     @Test
