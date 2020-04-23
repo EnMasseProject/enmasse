@@ -228,6 +228,7 @@ ConnectedRouter.prototype._realise_address_definitions = function () {
     }).catch(function (error) {
         console.error('[%s] error while synchronizing addresses: %s', self.container_id, error);
         log.error('[%s] error while synchronizing addresses: %s', self.container_id, error);
+        throw error;
     });
 };
 
