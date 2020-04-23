@@ -72,9 +72,6 @@ func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
 //region CommonAdapterConfig
 
 func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
-	if c.Java == nil {
-		return config.Spec.DefaultNativeTlsRequired()
-	}
 	if c.Java.RequireNativeTls == nil {
 		return config.Spec.DefaultNativeTlsRequired()
 	}

@@ -6,13 +6,10 @@ package iotconfig
 
 import (
 	"context"
-	"github.com/enmasseproject/enmasse/pkg/util"
-	"github.com/enmasseproject/enmasse/pkg/util/ext"
-	"strconv"
-	"strings"
-
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+	"github.com/enmasseproject/enmasse/pkg/util/ext"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"github.com/ghodss/yaml"
@@ -99,10 +96,9 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.JDBC.IsNativeTlsRequired(config))},
-			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.JDBC.TlsVersions(config), ",")},
 		}
+
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.JDBC.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)

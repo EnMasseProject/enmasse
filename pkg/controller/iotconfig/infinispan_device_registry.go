@@ -7,12 +7,10 @@ package iotconfig
 
 import (
 	"context"
-	"strconv"
-	"strings"
-
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
@@ -90,14 +88,11 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.Infinispan.IsNativeTlsRequired(config))},
-			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.Infinispan.TlsVersions(config), ",")},
-
-			{Name: "ENMASSE_IOT_REST_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.Infinispan.IsNativeTlsRequired(config))},
-			{Name: "ENMASSE_IOT_REST_SECURE_PROTOCOLS", Value: strings.Join(service.Infinispan.TlsVersions(config), ",")},
-
 			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
+
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.Infinispan.CommonServiceConfig)
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_REST_", config, &service.Infinispan.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)

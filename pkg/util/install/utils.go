@@ -676,7 +676,7 @@ func ComputeConfigMapHash(cm corev1.ConfigMap) (hash string, err error) {
 	}
 	sort.Strings(keys)
 
-	for _, key := range keys  {
+	for _, key := range keys {
 		_, err = d.Write([]byte(key))
 		if err != nil {
 			return

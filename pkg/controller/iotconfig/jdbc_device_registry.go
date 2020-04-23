@@ -13,10 +13,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"github.com/ghodss/yaml"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"strings"
-
-	"strconv"
-
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -181,9 +177,6 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	deployment.Annotations[RegistryJdbcModeAnnotation] = mode
 	deployment.Spec.Template.Annotations[RegistryJdbcModeAnnotation] = mode
 
-	// eval native TLS
-	nativeTls := commonConfig.IsNativeTlsRequired(config)
-
 	// container
 
 	var tracingContainer *corev1.Container
@@ -225,14 +218,11 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
-			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(commonConfig.TlsVersions(config), ",")},
-
-			{Name: "ENMASSE_IOT_REST_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
-			{Name: "ENMASSE_IOT_REST_SECURE_PROTOCOLS", Value: strings.Join(commonConfig.TlsVersions(config), ",")},
-
 			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.JDBC.Management.AuthTokenCacheExpiration},
 		}
+
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &commonConfig)
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_REST_", config, &commonConfig)
 
 		AppendStandardHonoJavaOptions(container)
 

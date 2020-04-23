@@ -8,6 +8,8 @@ package iotconfig
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -227,4 +229,16 @@ func processReconcileMetricsService(_ *iotv1alpha1.IoTConfig, serviceName string
 	}
 
 	return nil
+}
+
+func appendCommonHonoJavaEnv(container *corev1.Container, envVarPrefix string, config *iotv1alpha1.IoTConfig, commonJavaService iotv1alpha1.CommonJavaContainerOptions) {
+
+	// add native tls flag
+
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"NATIVE_TLS_REQUIRED", strconv.FormatBool(commonJavaService.IsNativeTlsRequired(config)))
+
+	// configure tls versions
+
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"SECURE_PROTOCOLS", strings.Join(commonJavaService.TlsVersions(config), ","))
+
 }
