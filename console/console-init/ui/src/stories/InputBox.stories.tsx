@@ -17,6 +17,7 @@ export const InputTextBox = () => {
   return (
     <MemoryRouter>
       <InputText
+        label={text("Label", "label to display")}
         value={text("value of input", "text")}
         setValue={action("change text")}
         enableCopy={boolean("Enable copy", false)}
@@ -33,6 +34,7 @@ export const EncryptedTextBox = () => {
   return (
     <MemoryRouter>
       <InputText
+        label={text("Label", "label to display")}
         value={text("value of input", "text")}
         enableCopy={boolean("Enable copy", false)}
         type={"password"}

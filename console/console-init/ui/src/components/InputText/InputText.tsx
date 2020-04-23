@@ -3,10 +3,13 @@ import {
   TextInput,
   TextInputProps,
   ClipboardCopy,
-  ClipboardCopyVariant
+  ClipboardCopyVariant,
+  Grid,
+  GridItem
 } from "@patternfly/react-core";
 
 interface IInputTextProps {
+  label: string;
   value?: string | number;
   type?:
     | "number"
@@ -27,6 +30,7 @@ interface IInputTextProps {
   isExpandable?: boolean;
 }
 const InputText: React.FunctionComponent<IInputTextProps> = ({
+  label,
   type,
   value,
   setValue,
@@ -42,32 +46,37 @@ const InputText: React.FunctionComponent<IInputTextProps> = ({
     setValue && setValue(value + "");
   };
   return (
-    <>
-      {enableCopy ? (
-        <>
-          <ClipboardCopy
-            variant={
-              isExpandable
-                ? ClipboardCopyVariant.expansion
-                : ClipboardCopyVariant.inline
-            }
-            onChange={onTextChange}
+    <Grid>
+      <GridItem span={4}>
+        <b>{label}</b>
+      </GridItem>
+      <GridItem span={8}>
+        {enableCopy ? (
+          <>
+            <ClipboardCopy
+              variant={
+                isExpandable
+                  ? ClipboardCopyVariant.expansion
+                  : ClipboardCopyVariant.inline
+              }
+              onChange={onTextChange}
+              type={type}
+              isReadOnly={isReadOnly}
+            >
+              {value}
+            </ClipboardCopy>
+          </>
+        ) : (
+          <TextInput
+            value={value}
             type={type}
+            onChange={onChange}
             isReadOnly={isReadOnly}
-          >
-            {value}
-          </ClipboardCopy>
-        </>
-      ) : (
-        <TextInput
-          value={value}
-          type={type}
-          onChange={onChange}
-          isReadOnly={isReadOnly}
-          aria-label={ariaLabel}
-        />
-      )}
-    </>
+            aria-label={ariaLabel}
+          />
+        )}
+      </GridItem>
+    </Grid>
   );
 };
 
