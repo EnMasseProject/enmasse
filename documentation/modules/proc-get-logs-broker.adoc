@@ -3,7 +3,7 @@
 // assembly-monitoring-oc.adoc
 // assembly-monitoring-kube.adoc
 
-[id='get-logs-router-{context}']
+[id='get-logs-broker-{context}']
 = Viewing broker logs
 
 For the `brokered` or `standard` address space type, you can view the broker logs to troubleshoot issues with clients not connecting or issues with sending and receiving messages.
