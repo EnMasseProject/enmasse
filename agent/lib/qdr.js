@@ -157,7 +157,7 @@ Router.prototype._abort_requests = function (error) {
 }
 
 Router.prototype.on_sender_error = function (context) {
-    log.info('[%s] sender error %s', this.get_id(), error);
+    log.info('[%s] sender error %s', this.get_id(), context.sender.error);
 };
 
 Router.prototype.disconnected = function (context) {

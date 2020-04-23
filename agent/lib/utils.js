@@ -17,6 +17,7 @@
 
 var rhea = require('rhea');
 var util = require('util');
+var log = require("./log.js").logger();
 
 module.exports.remove = function (list, predicate) {
     var count = 0;
@@ -130,9 +131,30 @@ module.exports.kubernetes_name = function (name) {
     return clean;
 }
 
-module.exports.serialize = function (f) {
+module.exports.serialize = function (f, retry_timeout = 5000) {
     var in_progress = false;
     var pending = false;
+    var timeout = null;
+    function doIt() {
+        if (in_progress) {
+            pending = true;
+        } else {
+            in_progress = true;
+            execute();
+        }
+    }
+    function scheduleRetry (error) {
+        if (retry_timeout) {
+            log.warn("Rescheduling failed serialized func (%s) in %dms.", error, retry_timeout);
+            timeout = setTimeout(doIt, retry_timeout);
+        }
+    }
+    function cancelRetry() {
+        if (timeout) {
+            clearTimeout(timeout);
+            timeout = null;
+        }
+    }
     function execute() {
         try {
             f().then(function () {
@@ -143,23 +165,21 @@ module.exports.serialize = function (f) {
                 }
             }).catch(function(error) {
                 in_progress = false;
+                scheduleRetry(error);
             });
         } catch (error) {
             in_progress = false;
+            scheduleRetry(error);
         }
     }
     function next() {
         pending = false;
         setImmediate(execute);
     };
-    return function () {
-        if (in_progress) {
-            pending = true;
-        } else {
-            in_progress = true;
-            execute();
-        }
-    };
+    return function() {
+        cancelRetry();
+        doIt();
+    }
 };
 
 module.exports.string_compare = function (a, b) {

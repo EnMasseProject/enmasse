@@ -122,34 +122,47 @@ describe('kubernetes_name', function () {
 });
 
 describe('serialize', function () {
-    var in_use = false;
-    var calls = 0;
-    function one_at_a_time() {
-        assert.equal(in_use, false, 'function already in use');
-        in_use = true;
-        calls++;
+    var SerializeTester = function(initial_failures = 0) {
+        this.in_use = false;
+        this.calls = 0;
+        this.success_count = 0;
+        this.failure_count = 0;
+        this.initial_failures = initial_failures;
+    };
+
+    SerializeTester.prototype.one_at_a_time = function() {
+        assert.equal(this.in_use, false, 'function already in use');
+        this.in_use = true;
+        this.calls++;
+        var self = this;
         return new Promise(function (resolve, reject) {
             setTimeout(function () {
-                in_use = false;
-                resolve();
+                self.in_use = false;
+                if (self.initial_failures && self.initial_failures > self.failure_count) {
+                    self.failure_count++;
+                    reject();
+                } else {
+                    self.success_count++;
+                    resolve();
+                }
             }, 10);
         });
-    }
+    };
 
     it ('ensures a new invocation is not made until the previous one has finished', function (done) {
-        calls = 0;
-        var f = myutils.serialize(one_at_a_time);
+        var s = new SerializeTester();
+        var f = myutils.serialize(s.one_at_a_time.bind(s));
         for (var i = 0; i < 10; i++) {
             f();
         }
         setTimeout(function () {
-            assert(calls > 1);
+            assert(s.calls > 1);
             done();
         }, 500);
     });
     it ('handles invocations at different times', function (done) {
-        calls = 0;
-        var f = myutils.serialize(one_at_a_time);
+        var s = new SerializeTester();
+        var f = myutils.serialize(s.one_at_a_time.bind(s));
         setTimeout(f, 5);
         setTimeout(f, 15);
         setTimeout(f, 16);
@@ -157,7 +170,30 @@ describe('serialize', function () {
         setTimeout(f, 28);
 
         setTimeout(function () {
-            assert(calls > 1);
+            assert(s.calls > 1);
+            done();
+        }, 100);
+    });
+    it ('failures_rerun', function (done) {
+        var s = new SerializeTester(1);
+        var f = myutils.serialize(s.one_at_a_time.bind(s), 10);
+        setTimeout(f, 5);
+
+        setTimeout(function () {
+            assert(s.success_count === 1);
+            assert(s.failure_count === 1);
+            done();
+        }, 100);
+    });
+    it ('rerun_cancelled', function (done) {
+        var s = new SerializeTester(1);
+        var f = myutils.serialize(s.one_at_a_time.bind(s), 50);
+        setTimeout(f, 5);
+        setTimeout(f, 10);
+
+        setTimeout(function () {
+            assert(s.success_count === 2);
+            assert(s.failure_count === 1);
             done();
         }, 100);
     });

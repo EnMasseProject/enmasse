@@ -552,6 +552,7 @@ BrokerController.prototype._sync_broker_addresses = function (retry) {
             });
     }).catch(function (e) {
         log.error('[%s] failed to retrieve addresses: %s', self.id, e);
+        throw e;
     });
 };
 
@@ -595,41 +596,41 @@ BrokerController.prototype._sync_broker_forwarders = function () {
     var self = this;
     var desired = [];
     for (var address in this.addresses) {
-	var address_type = this.addresses[address].type;
-	// We will only check queues and subscriptions for forwarders
-	if (address_type == "queue" || address_type == "subscription") {
-	    var address_name = this.addresses[address].name;
-	    var forwarders = this.addresses[address].forwarders;
-	    if (forwarders !== undefined) {
-		for (var fwdidx in forwarders) {
-		    var forwarder = forwarders[fwdidx];
-		    var forwarder_name = address_name + "." + forwarder.name + "." + forwarder.direction;
-		    // Only create forwarder for subscriptions if the direction is outward
-		    if (address_type === "queue" || (address_type === "subscription" && forwarder.direction === "out")) {
-			var sourceAddress = forwarder.direction === "out" ? address : forwarder.remoteAddress;
-			var targetAddress = forwarder.direction === "out" ? forwarder.remoteAddress : address;
-			var forwarder_entry = {
-			    name: forwarder_name,
-			    clusterId: address_name,
-			    containerId: address_name,
-			    linkName: forwarder_name,
-			    targetAddress: targetAddress,
-			    sourceAddress: sourceAddress,
-			    direction: forwarder.direction
-			};
-			desired.push(forwarder_entry);
-		    }
-		}
-	    }
-	}
+        var address_type = this.addresses[address].type;
+        // We will only check queues and subscriptions for forwarders
+        if (address_type === "queue" || address_type === "subscription") {
+            var address_name = this.addresses[address].name;
+            var forwarders = this.addresses[address].forwarders;
+            if (forwarders !== undefined) {
+                for (var fwdidx in forwarders) {
+                    var forwarder = forwarders[fwdidx];
+                    var forwarder_name = address_name + "." + forwarder.name + "." + forwarder.direction;
+                    // Only create forwarder for subscriptions if the direction is outward
+                    if (address_type === "queue" || (address_type === "subscription" && forwarder.direction === "out")) {
+                        var sourceAddress = forwarder.direction === "out" ? address : forwarder.remoteAddress;
+                        var targetAddress = forwarder.direction === "out" ? forwarder.remoteAddress : address;
+                        var forwarder_entry = {
+                            name: forwarder_name,
+                            clusterId: address_name,
+                            containerId: address_name,
+                            linkName: forwarder_name,
+                            targetAddress: targetAddress,
+                            sourceAddress: sourceAddress,
+                            direction: forwarder.direction
+                        };
+                        desired.push(forwarder_entry);
+                    }
+                }
+            }
+        }
     }
     log.debug("desired connectors: %j", desired);
     return this.broker.getConnectorServices().then(function (results) {
         var actual = results.filter(connectors_of_interest);
         actual.sort();
-	actual = actual.map(function (name) {
-	    return {name: name}
-	});
+        actual = actual.map(function (name) {
+            return {name: name}
+        });
 
         var difference = myutils.changes(actual, desired, connector_compare);
         if (difference) {
@@ -642,6 +643,7 @@ BrokerController.prototype._sync_broker_forwarders = function () {
         }
     }).catch(function (e) {
         log.error('[%s] failed to retrieve connectors: %s', self.id, e);
+        throw e;
     });
 };
 
