@@ -3,8 +3,4 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-export * from "./ProjectTypeConfiguration";
 export * from "./IoTProjectConfiguration";
-export * from "./MessagingProjectReview";
-export * from "./IoTReview";
-export * from "./IoTProjectReview";

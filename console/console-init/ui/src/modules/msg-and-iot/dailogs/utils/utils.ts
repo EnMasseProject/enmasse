@@ -1,4 +1,5 @@
 import { IMessagingProjectInput } from "../components/MessagingProjectConfiguration";
+import { IIoTProjectInput } from "../components";
 
 /*
  * Copyright 2020, EnMasse authors.
@@ -21,9 +22,21 @@ const isMessagingProjectValid = (projectDetail?: IMessagingProjectInput) => {
     projectDetail.isNameValid
   ) {
     return true;
-  } else {
-    return false;
   }
+  return false;
 };
 
-export { isMessagingProjectValid };
+const isIoTProjectValid = (projectDetail?: IIoTProjectInput) => {
+  if (
+    projectDetail &&
+    projectDetail.iotProjectName &&
+    projectDetail.iotProjectName.trim() !== "" &&
+    projectDetail.namespace &&
+    projectDetail.namespace.trim() !== "" &&
+    projectDetail.isNameValid
+  ) {
+    return true;
+  }
+  return false;
+};
+export { isMessagingProjectValid, isIoTProjectValid };
