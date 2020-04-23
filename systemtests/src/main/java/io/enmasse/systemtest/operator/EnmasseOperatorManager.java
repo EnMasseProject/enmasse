@@ -37,9 +37,11 @@ public class EnmasseOperatorManager {
     private Kubernetes kube = Kubernetes.getInstance();
     private String productName;
     private static EnmasseOperatorManager instance;
+    private OLMOperatorManager olm;
 
     private EnmasseOperatorManager() {
         productName = Environment.getInstance().getProductName();
+        olm = OLMOperatorManager.getInstance();
     }
 
     public static synchronized EnmasseOperatorManager getInstance() {
@@ -47,6 +49,10 @@ public class EnmasseOperatorManager {
             instance = new EnmasseOperatorManager();
         }
         return instance;
+    }
+
+    public OLMOperatorManager olm() {
+        return olm;
     }
 
     public void installEnmasseBundle() throws Exception {
@@ -109,7 +115,9 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse OLM install");
         LOGGER.info("***********************************************************");
-        installOlm(installation);
+        LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
+        generateTemplates();
+        olm.install(installation);
         waitUntilOperatorReadyOlm(installation);
         LOGGER.info("***********************************************************");
     }
@@ -127,33 +135,6 @@ public class EnmasseOperatorManager {
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
-    }
-
-    private void installOlm(OLMInstallationType installation) throws Exception {
-        String namespace = getNamespaceByOlmInstallationType(installation);
-
-        if (installation == OLMInstallationType.SPECIFIC) {
-            kube.createNamespace(namespace, Collections.singletonMap("allowed", "true"));
-        }
-
-        Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
-        String catalogSource = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "catalog-source.yaml"));
-        Files.writeString(catalogSourceFile, catalogSource.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
-        KubeCMDClient.applyFromFile(namespace, catalogSourceFile);
-
-        if (installation == OLMInstallationType.SPECIFIC) {
-            Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
-            String operatorGroup = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "operator-group.yaml"));
-            Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
-            KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
-        }
-
-        Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
-        String subscription = Files.readString(Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-olm", "subscription.yaml"));
-        Files.writeString(subscriptionFile, subscription.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
-        KubeCMDClient.applyFromFile(namespace, subscriptionFile);
-
-        TestUtils.waitForPodReady("enmasse-operator", namespace);
     }
 
     public void installExamplePlans(String namespace) {
@@ -187,7 +168,6 @@ public class EnmasseOperatorManager {
         LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         LOGGER.info("***********************************************************");
-
     }
 
     public void removeOperators() {
@@ -356,6 +336,6 @@ public class EnmasseOperatorManager {
     }
 
     public String getNamespaceByOlmInstallationType(OLMInstallationType installation) {
-        return installation == OLMInstallationType.DEFAULT ? kube.getOlmNamespace() : kube.getInfraNamespace();
+        return olm.getNamespaceByOlmInstallationType(installation);
     }
 }
