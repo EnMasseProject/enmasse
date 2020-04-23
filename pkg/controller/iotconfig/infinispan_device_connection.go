@@ -7,12 +7,10 @@ package iotconfig
 
 import (
 	"context"
-	"strconv"
-	"strings"
-
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	appsv1 "k8s.io/api/apps/v1"
@@ -75,15 +73,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 		container.Ports = appendHonoStandardPorts(container.Ports)
 		SetHonoProbes(container)
 
-		// eval native TLS flag
-
-		var nativeTls bool
-		if service.Infinispan != nil {
-			nativeTls = service.Infinispan.IsNativeTlsRequired(config)
-		} else {
-			nativeTls = false
-		}
-
 		// environment
 
 		container.Env = []corev1.EnvVar{
@@ -94,10 +83,9 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-
-			{Name: "ENMASSE_IOT_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(nativeTls)},
-			{Name: "ENMASSE_IOT_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.Infinispan.TlsVersions(config), ",")},
 		}
+
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.Infinispan.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)

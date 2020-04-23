@@ -197,11 +197,7 @@ func (in *CommonAdapterConfig) DeepCopyInto(out *CommonAdapterConfig) {
 	in.ServiceConfig.DeepCopyInto(&out.ServiceConfig)
 	in.AdapterConfig.DeepCopyInto(&out.AdapterConfig)
 	in.Containers.DeepCopyInto(&out.Containers)
-	if in.Java != nil {
-		in, out := &in.Java, &out.Java
-		*out = new(JavaContainerOptions)
-		(*in).DeepCopyInto(*out)
-	}
+	in.Java.DeepCopyInto(&out.Java)
 	in.Tls.DeepCopyInto(&out.Tls)
 	in.EndpointConfig.DeepCopyInto(&out.EndpointConfig)
 	return
