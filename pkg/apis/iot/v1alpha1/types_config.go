@@ -32,9 +32,10 @@ type IoTConfigSpec struct {
 	JavaDefaults JavaContainerDefaults `json:"java,omitempty"`
 	TlsDefaults  TlsOptions            `json:"tls,omitempty"`
 
-	ServicesConfig ServicesConfig `json:"services"`
-	AdaptersConfig AdaptersConfig `json:"adapters"`
-	Tracing        TracingConfig  `json:"tracing"`
+	ServicesConfig ServicesConfig   `json:"services"`
+	AdaptersConfig AdaptersConfig   `json:"adapters"`
+	Tracing        TracingConfig    `json:"tracing"`
+	Monitoring     MonitoringConfig `json:"monitoring"`
 }
 
 //region Tracing
@@ -52,6 +53,14 @@ type SidecarTracingStrategy struct {
 }
 
 type DaemonSetTracingStrategy struct {
+}
+
+//endregion
+
+//region Monitoring
+
+type MonitoringConfig struct {
+	Labels map[string]string `json:"labels,omitempty"`
 }
 
 //endregion

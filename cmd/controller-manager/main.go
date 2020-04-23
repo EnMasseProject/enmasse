@@ -9,6 +9,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/monitoring"
 	"time"
 
 	"os"
@@ -44,8 +45,6 @@ import (
 	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
-
-	customMetrics "github.com/enmasseproject/enmasse/pkg/custom-metrics"
 )
 
 // Change below variables to serve metrics on different host or port.
@@ -105,12 +104,9 @@ func main() {
 	log.Info("Running on OpenShift", "result", util.IsOpenshift())
 	log.Info("Running on OpenShift 4", "result", util.IsOpenshift4())
 
-	// Register custom metrics
-	customMetrics.Init()
+	monitoringEnabled := monitoring.IsEnabled()
 
 	// Install monitoring resources
-	monitoringEnabled := util.GetBooleanEnv("ENABLE_MONITORING")
-
 	if monitoringEnabled {
 		// Attempt to install the monitoring resources when the operator starts, and every 5 minutes thereafter
 		go func() {
@@ -248,6 +244,7 @@ func main() {
 
 	// Add the Metrics Service
 	if monitoringEnabled {
+		monitoring.StartIoTMetrics(mgr)
 		addMetrics(ctx, cfg, namespace)
 	}
 

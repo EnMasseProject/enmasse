@@ -7,9 +7,13 @@ package iotconfig
 
 import (
 	"context"
+
 	"github.com/enmasseproject/enmasse/pkg/util/iot"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"github.com/pkg/errors"
+
+	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+
 	"k8s.io/client-go/tools/record"
 	"reflect"
 
@@ -249,6 +253,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processLoraWanAdapter(ctx, config, qdrProxyConfigCtx)
 	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processMonitoring(ctx, config)
+	})
 
 	return r.updateFinalStatus(ctx, original, config, rc)
 }
@@ -457,6 +464,35 @@ func (r *ReconcileIoTConfig) processPersistentVolumeClaim(ctx context.Context, n
 		}
 
 		return manipulator(config, pvc)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processPrometheusRule(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, rule *promv1.PrometheusRule) error) error {
+
+	pr := &promv1.PrometheusRule{
+		ObjectMeta: v1.ObjectMeta{
+			Namespace: config.Namespace,
+			Name:      name,
+		},
+	}
+
+	if delete {
+		return install.DeleteIgnoreNotFound(ctx, r.client, pr, client.PropagationPolicy(v1.DeletePropagationForeground))
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, pr, func() error {
+		if err := controllerutil.SetControllerReference(config, pr, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, pr)
 	})
 
 	if err != nil {

@@ -36,10 +36,6 @@ type adapter struct {
 	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig
 }
 
-func (a adapter) FullName() string {
-	return "iot-" + a.Name + "-adapter"
-}
-
 var adapters = []adapter{
 	{
 		Name:      "mqtt",
@@ -84,6 +80,10 @@ func (a adapter) IsEnabled(config *iotv1alpha1.IoTConfig) bool {
 	// return setting from env-var
 
 	return globalIsAdapterEnabled(a.Name)
+}
+
+func (a adapter) FullName() string {
+	return "iot-" + a.Name + "-adapter"
 }
 
 func findAdapter(name string) adapter {
