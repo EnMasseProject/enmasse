@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.iot.isolated.registry;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newH2Based;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -48,11 +50,13 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testRegisterDevice() throws Exception {
         super.doTestRegisterDevice();
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testDisableDevice() throws Exception {
         super.doTestDisableDevice();
     }
