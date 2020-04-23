@@ -2,13 +2,21 @@ import React from "react";
 import { Radio, Title } from "@patternfly/react-core";
 
 interface IProjectTypeConfigurationProps {
-  selectedStep?: string;
-  setSelectedStep: (value: string) => void;
+  selectedStep?: string | "messaging" | "iot";
+  setSelectedStep: (value: "messaging" | "iot") => void;
 }
 const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfigurationProps> = ({
   selectedStep,
   setSelectedStep
 }) => {
+  const onChange = (_: any, event: any) => {
+    const data = event.currentTarget.value;
+    if (data === "messaging") {
+      setSelectedStep("messaging");
+    } else if (data === "iot") {
+      setSelectedStep("iot");
+    }
+  };
   return (
     <div style={{ paddingLeft: 20 }}>
       <Title headingLevel="h2" size="3xl">
@@ -19,9 +27,7 @@ const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfiguratio
         <Radio
           value="iot"
           isChecked={selectedStep === "iot"}
-          onChange={(_, event: any) =>
-            setSelectedStep(event.currentTarget.value)
-          }
+          onChange={onChange}
           label={
             <Title headingLevel="h5" size="lg">
               <b>Create a IoT Project</b>
@@ -37,7 +43,7 @@ const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfiguratio
         <Radio
           value="messaging"
           isChecked={selectedStep === "messaging"}
-          onChange={(_, event) => setSelectedStep(event.currentTarget.value)}
+          onChange={onChange}
           label={
             <Title headingLevel="h5" size="lg">
               <b>Create a Messaging Project</b>

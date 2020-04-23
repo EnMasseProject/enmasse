@@ -10,21 +10,36 @@ import {
   Button,
   Wizard
 } from "@patternfly/react-core";
-import { ProjectTypeConfiguration } from "modules/msg-and-iot/dailogs/components";
+import {
+  ProjectTypeConfiguration,
+  IIoTProjectInput,
+  IoTProjectConfiguration,
+  IoTProjectReview
+} from "modules/msg-and-iot/dailogs/components";
 import {
   IMessagingProjectInput,
   MessagingProjectConfiguration
 } from "modules/msg-and-iot/dailogs/components/MessagingProjectConfiguration";
 import { useMutationQuery } from "hooks";
-import { CREATE_ADDRESS_SPACE } from "graphql-module";
-import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
+import {
+  isMessagingProjectValid,
+  isIoTProjectValid
+} from "modules/msg-and-iot/dailogs/utils";
 import { MessagingProjectReview } from "modules/msg-and-iot/dailogs/components";
-import { FinishedStep } from "components";
+import { FinishedStep, IDropdownOption } from "components";
+import { useQuery } from "@apollo/react-hooks";
+import { INamespaces } from "modules/address-space";
+import { Loading } from "use-patternfly";
 const CreateProjectContainer: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProjectInput
-  >();
+  >({ isNameValid: true });
+  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
+    isNameValid: true,
+    isEnabled: true
+  });
   const [firstSelectedStep, setFirstSelectedStep] = useState<string>();
   const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
     false
@@ -34,15 +49,13 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     resetForm();
   };
   const resetForm = () => {
-    setMessagingProjectDetail(undefined);
+    setMessagingProjectDetail({ isNameValid: true });
     setFirstSelectedStep(undefined);
   };
-  const isMessagingFinishEnabled = () =>
-    isMessagingProjectValid(messagingProjectDetail);
   const refetchQueries: string[] = ["all_address_spaces"];
   const resetFormState = () => {
     console.log("success");
-    setMessagingProjectDetail(undefined);
+    setMessagingProjectDetail({ isNameValid: true });
     setIsCreatedSuccessfully(true);
   };
   const [setQueryVariables] = useMutationQuery(
@@ -51,7 +64,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     resetForm,
     resetFormState
   );
-  const handleMessagingProjectSave = async () => {
+  const handleMessagingProjectSave = () => {
     if (
       messagingProjectDetail &&
       isMessagingProjectValid(messagingProjectDetail)
@@ -75,10 +88,28 @@ const CreateProjectContainer: React.FunctionComponent = () => {
           }
         }
       };
-      const data: any = await setQueryVariables(variables);
-      console.log(data);
+      setQueryVariables(variables);
       resetForm();
     }
+  };
+
+  const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+  if (loading) return <Loading />;
+
+  const { namespaces } = data || {
+    namespaces: []
+  };
+
+  const namespaceOptions = namespaces.map(namespace => {
+    return {
+      value: namespace.metadata.name,
+      label: namespace.metadata.name
+    };
+  });
+
+  const handleIoTProjectSave = async () => {
+    console.log("iot created");
+    resetForm();
   };
 
   const step1 = {
@@ -91,16 +122,14 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     )
   };
 
-  const configurationStepForIot = {
-    name: "Configuration",
-    component: <>iot</>
-  };
+  const configurationStepForIot = IoTProjectConfiguration(
+    setiotProjectDetail,
+    namespaceOptions,
+    iotProjectDetail
+  );
 
-  const finalStepForIot = {
-    name: "Review",
-    component: <>Iot review</>,
-    nextButtonText: "Finish"
-  };
+  const finalStepForIot = IoTProjectReview(iotProjectDetail);
+
   const finishedStep = {
     name: "Finish",
     component: <FinishedStep onClose={onToggle} sucess={true} />,
@@ -122,12 +151,33 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     }
   }
   steps.push(finishedStep);
+  const handleNextIsEnabled = () => {
+    if (firstSelectedStep) {
+      if (firstSelectedStep === "messaging") {
+        if (isMessagingProjectValid(messagingProjectDetail)) {
+          return true;
+        } else {
+          return false;
+        }
+      } else if (firstSelectedStep === "iot") {
+        if (isIoTProjectValid(iotProjectDetail)) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return false;
+  };
 
   const CustomFooter = (
     <WizardFooter>
       <WizardContextConsumer>
         {({ activeStep, onNext, onBack, onClose }) => {
-          if (activeStep.name === "Project Type" || "Finish") {
+          if (
+            activeStep.name === "Project Type" ||
+            activeStep.name === "Finish"
+          ) {
             return (
               <>
                 <Button
@@ -160,22 +210,11 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                   variant="primary"
                   type="submit"
                   onClick={onNext}
-                  className={
-                    firstSelectedStep === "messaging" &&
-                    !isMessagingFinishEnabled()
-                      ? "pf-m-disabled"
-                      : ""
-                  }
+                  className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
                 >
                   Next
                 </Button>
-                <Button
-                  variant="secondary"
-                  onClick={onBack}
-                  className={
-                    activeStep.name === "Project Type" ? "pf-m-disabled" : ""
-                  }
-                >
+                <Button variant="secondary" onClick={onBack}>
                   Back
                 </Button>
                 <Button variant="link" onClick={onClose}>
@@ -184,34 +223,20 @@ const CreateProjectContainer: React.FunctionComponent = () => {
               </>
             );
           }
-          // Final step buttons
-          let confirmButton;
-          if (firstSelectedStep && firstSelectedStep === "iot") {
-            confirmButton = (
-              <Button
-                variant="primary"
-                type="submit"
-                onClick={() => {
-                  console.log("iot created");
-                }}
-              >
-                Finish
-              </Button>
-            );
-          } else {
-            confirmButton = (
-              <Button
-                variant="primary"
-                type="submit"
-                onClick={handleMessagingProjectSave}
-              >
-                Finish
-              </Button>
-            );
-          }
+
           return (
             <>
-              {confirmButton}
+              <Button
+                variant="primary"
+                type="submit"
+                onClick={
+                  firstSelectedStep && firstSelectedStep === "messaging"
+                    ? handleMessagingProjectSave
+                    : handleIoTProjectSave
+                }
+              >
+                Finish
+              </Button>
               <Button onClick={onBack} variant="secondary">
                 Back
               </Button>
