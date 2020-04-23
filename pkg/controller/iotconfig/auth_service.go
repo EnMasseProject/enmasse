@@ -8,9 +8,6 @@ package iotconfig
 import (
 	"context"
 	"encoding/json"
-	"strconv"
-	"strings"
-
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -97,13 +94,12 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
 
 			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-
-			{Name: "HONO_AUTH_AMQP_NATIVE_TLS_REQUIRED", Value: strconv.FormatBool(service.IsNativeTlsRequired(config))},
-			{Name: "HONO_AUTH_AMQP_SECURE_PROTOCOLS", Value: strings.Join(service.TlsVersions(config), ",")},
 		}
 		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_AMQP_TRUST_STORE_PATH"}); err != nil {
 			return err
 		}
+
+		appendCommonHonoJavaEnv(container, "HONO_AUTH_", config, &service)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)

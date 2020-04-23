@@ -331,7 +331,7 @@ type CommonAdapterConfig struct {
 	AdapterConfig `json:",inline"`
 
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
-	Java       *JavaContainerOptions   `json:"java,omitempty"`
+	Java       JavaContainerOptions    `json:"java,omitempty"`
 	Tls        TlsOptions              `json:"tls,omitempty"`
 
 	EndpointConfig EndpointConfig `json:"endpoint,omitempty"`
