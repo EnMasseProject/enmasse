@@ -12,6 +12,7 @@
 ## 0.31.2
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4342: address stuck unready - failed to retrieve addresses: null (##4345)
+* #4358: broker init.sh stop script execution of a script if a command has an error (#4359)
 
 ## 0.31.1
 * #4046: add network-only as fetch policy for all queries 

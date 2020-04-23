@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 #ENV_VARS
 BROKER_DIR=$ARTEMIS_HOME
 BROKER_PLUGIN_DIR=/opt/broker-plugin
@@ -31,7 +33,7 @@ function configure_brokered() {
 function configure_standard() {
     if [ -n "$TOPIC_NAME" ]; then
         cp $CONFIG_TEMPLATES/standard/sharded-topic/broker.xml /tmp/broker.xml
-    elif [ -n $QUEUE_NAME ] && [ "$QUEUE_NAME" != "" ]; then
+    elif [ -n "$QUEUE_NAME" ] && [ "$QUEUE_NAME" != "" ]; then
         cp $CONFIG_TEMPLATES/standard/sharded-queue/broker.xml /tmp/broker.xml
     else
         cp $CONFIG_TEMPLATES/standard/colocated/broker.xml /tmp/broker.xml
