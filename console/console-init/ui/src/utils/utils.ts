@@ -101,6 +101,7 @@ const kFormatter = (num: number) => {
     ? sign * parseInt((absoluteNumber / 1000).toFixed(1)) + "k"
     : sign * absoluteNumber;
 };
+
 export {
   getSelectOptionList,
   compareObject,
