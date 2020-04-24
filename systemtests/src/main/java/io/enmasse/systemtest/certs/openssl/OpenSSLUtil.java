@@ -172,7 +172,7 @@ public class OpenSSLUtil {
                     "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12");
 
             // Generate truststore with client cert
-            CertPair client = createSelfSignedCert(null);
+            CertPair client = createSelfSignedCert(DEFAULT_SUBJECT);
             CertSigningRequest clientCsr = createCsr(client);
             client = signCsr(clientCsr, Collections.emptyList(), ca);
 
