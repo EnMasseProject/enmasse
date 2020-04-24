@@ -155,6 +155,10 @@ public class TestInfo {
         return currentTest;
     }
 
+    public ExtensionContext getActualTestClass() {
+        return currentTestClass;
+    }
+
     public void setCurrentTest(ExtensionContext test) {
         currentTest = test;
     }

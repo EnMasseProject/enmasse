@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -422,6 +423,10 @@ public abstract class Kubernetes {
 
     public abstract Endpoint getExternalEndpoint(String name, String namespace);
 
+    public abstract String getClusterExternalImageRegistry();
+
+    public abstract String getClusterInternalImageRegistry();
+
     public Map<String, String> getLogsOfTerminatedPods(String namespace) {
         Map<String, String> terminatedPodsLogs = new HashMap<>();
         client.pods().inNamespace(namespace).list().getItems().forEach(pod -> {
@@ -540,8 +545,8 @@ public abstract class Kubernetes {
         }).collect(Collectors.toList());
     }
 
-    public Pod getPod(String name) {
-        return client.pods().withName(name).get();
+    public Pod getPod(String namespace, String name) {
+        return client.pods().inNamespace(namespace).withName(name).get();
     }
 
     public Set<String> listNamespaces() {
@@ -645,6 +650,25 @@ public abstract class Kubernetes {
     public void deletePod(String namespace, String podName) {
         client.pods().inNamespace(namespace).withName(podName).cascading(true).delete();
         log.info("Pod {} removed", podName);
+    }
+
+    /**
+     * Creates pod from resource
+     * @param namespace
+     * @param resources
+     * @throws Exception
+     */
+    public void createPodFromResource(String namespace, Pod resources) throws Exception {
+        if (getPod(namespace, resources.getMetadata().getName()) == null) {
+            Pod podRes = client.pods().inNamespace(namespace).create(resources);
+            if (verboseLog) {
+                log.info("Pod {} created", podRes.getMetadata().getName());
+            }
+        } else {
+            if (verboseLog) {
+                log.info("Pod {} already exists", resources.getMetadata().getName());
+            }
+        }
     }
 
     /***
@@ -862,6 +886,19 @@ public abstract class Kubernetes {
     public void waitUntilPodIsReady(Pod pod) throws InterruptedException {
         log.info("Waiting until pod: {} is ready", pod.getMetadata().getName());
         client.resource(pod).inNamespace(pod.getMetadata().getNamespace()).waitUntilReady(5, TimeUnit.MINUTES);
+    }
+
+    /***
+     * Wait pod until condition
+     * @param pod pod instance
+     * @param condition predicate
+     * @param amount timeout amount
+     * @param timeUnit time unit of the timeout
+     * @throws Exception when pod is not ready in timeout
+     */
+    public void waitPodUntilCondition(Pod pod, Predicate<Pod> condition, long amount, TimeUnit timeUnit) throws InterruptedException {
+        log.info("Waiting pod: {} with predicate", pod.getMetadata().getName());
+        client.pods().inNamespace(pod.getMetadata().getNamespace()).withName(pod.getMetadata().getName()).waitUntilCondition(condition, amount, timeUnit);
     }
 
     /***
