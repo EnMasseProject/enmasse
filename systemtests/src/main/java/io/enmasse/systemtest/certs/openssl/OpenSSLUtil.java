@@ -58,6 +58,36 @@ public class OpenSSLUtil {
         }
     }
 
+    public static CertPair createStore(CertPair cert, String name) {
+        File keystore = null;
+        File p12Store = null;
+        boolean success = false;
+        try {
+            keystore = File.createTempFile("tls", ".jks");
+            p12Store = File.createTempFile("tls", ".p12");
+            success = Exec.executeAndCheck("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                    "-in", cert.getCert().getAbsolutePath(), "-inkey", cert.getKey().getAbsolutePath(), "-name", name, "-out", p12Store.getAbsolutePath()).getRetCode();
+
+            keystore.delete();
+            success = Exec.executeAndCheck("keytool", "-importkeystore", "-srcstorepass", "123456",
+                    "-deststorepass", "123456", "-destkeystore", keystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12").getRetCode();
+
+            return new CertPair(null, keystore, null);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            if (!success) {
+
+                if (keystore != null) {
+                    keystore.delete();
+                }
+                if (p12Store != null) {
+                    p12Store.delete();
+                }
+            }
+        }
+    }
+
     public static CertSigningRequest createCsr(CertPair target) {
         File csr = null;
         boolean success = false;
@@ -160,33 +190,15 @@ public class OpenSSLUtil {
             CertPair broker = createSelfSignedCert(DEFAULT_SUBJECT + "/CN=" + cn);
             CertSigningRequest brokerCsr = createCsr(broker);
             broker = signCsr(brokerCsr, Collections.emptyList(), ca);
-            File brokerKeystore = File.createTempFile("broker-keystore", "jks");
+            File brokerKeystore = createStore(broker, "broker").getCert();
 
-            File p12Store = File.createTempFile("keystore", "p12");
-            // create p12 keystore
-            Exec.executeAndCheck("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                    "-in", broker.getCert().getAbsolutePath(), "-inkey", broker.getKey().getAbsolutePath(), "-name", "broker", "-out", p12Store.getAbsolutePath());
-
-            brokerKeystore.delete();
-            Exec.executeAndCheck("keytool", "-importkeystore", "-srcstorepass", "123456",
-                    "-deststorepass", "123456", "-destkeystore", brokerKeystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12");
-
-            // Generate truststore with client cert
+            // Generate truststore with client cert and put into truststore
             CertPair client = createSelfSignedCert(DEFAULT_SUBJECT);
             CertSigningRequest clientCsr = createCsr(client);
             client = signCsr(clientCsr, Collections.emptyList(), ca);
 
             //import client cert into broker TRUSTSTORE
-            File brokerTrustStore = File.createTempFile("broker-truststore", "jks");
-
-            File truststoreP12 = File.createTempFile("truststorestore", "p12");
-            // create p12 keystore
-            Exec.execute(Arrays.asList("openssl", "pkcs12", "-export", "-passout", "pass:123456",
-                    "-in", client.getCert().getAbsolutePath(), "-inkey", client.getKey().getAbsolutePath(), "-name", "client", "-out", truststoreP12.getAbsolutePath()));
-
-            brokerTrustStore.delete();
-            Exec.executeAndCheck("keytool", "-importkeystore", "-srcstorepass", "123456",
-                    "-deststorepass", "123456", "-destkeystore", brokerTrustStore.getAbsolutePath(), "-srckeystore", truststoreP12.getAbsolutePath(), "-srcstoretype", "PKCS12");
+            File brokerTrustStore = createStore(client, "client").getCert();
 
             try {
                 //return ca.crt keystore and truststore
