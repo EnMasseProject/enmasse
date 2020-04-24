@@ -42,6 +42,8 @@
     <module>iot-jdbc-base</module>
     <module>iot-tenant-cleaner</module>
     <module>iot-utils</module>
+
+    <module>images/iot-device-registry</module>
   </modules>
 
   <dependencyManagement>
@@ -197,13 +199,11 @@
         <artifactId>protostream-processor</artifactId>
         <version>${infinispan-protostream.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.infinispan</groupId>
         <artifactId>infinispan-server-hotrod</artifactId>
         <version>${infinispan.version}</version>
         <scope>test</scope>
-
       </dependency>
       <dependency>
         <groupId>org.infinispan</groupId>

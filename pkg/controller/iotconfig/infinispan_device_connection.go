@@ -52,11 +52,11 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 		tracingContainer = container
 
 		// we indeed re-use the device registry image here
-		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
+		if err := install.SetContainerImage(container, "iot-device-connection-infinispan", config); err != nil {
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-device-registry-infinispan.jar"}
 
 		// set default resource limits
 
@@ -170,7 +170,7 @@ func appendInfinispanExternalConnectionServer(container *v1.Container, external 
 		deviceStates = external.CacheNames.DeviceConnections
 	}
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_CACHENAMES_DEVICES", deviceStates)
+	install.ApplyOrRemoveEnvSimple(container, "HONO_DEVICECONNECTION_COMMON_CACHE_NAME", deviceStates)
 
 	// done
 
