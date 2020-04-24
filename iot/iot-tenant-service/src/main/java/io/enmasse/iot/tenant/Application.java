@@ -23,6 +23,7 @@ import io.vertx.core.Verticle;
 
 @ComponentScan("io.enmasse.iot.tenant")
 @ComponentScan("org.eclipse.hono.service.metric")
+@ComponentScan("org.eclipse.hono.deviceregistry.service.tenant")
 @EnableAutoConfiguration
 public class Application extends AbstractBaseApplication {
 
@@ -80,7 +81,6 @@ public class Application extends AbstractBaseApplication {
                     return Future.succeededFuture();
                 });
     }
-
 
     public static void main(final String[] args) {
         CustomResourceDefinitions.registerAll();

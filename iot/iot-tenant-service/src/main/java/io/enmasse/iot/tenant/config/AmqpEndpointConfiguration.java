@@ -6,24 +6,16 @@
 package io.enmasse.iot.tenant.config;
 
 import org.eclipse.hono.config.ServiceConfigProperties;
-import org.eclipse.hono.service.tenant.TenantAmqpEndpoint;
 import org.eclipse.hono.util.Constants;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import io.enmasse.iot.utils.ConfigBase;
-import io.vertx.core.Vertx;
 
 @Configuration
 public class AmqpEndpointConfiguration {
-
-    @Bean
-    public TenantAmqpEndpoint tenantAmqpEndpoint(@Autowired final Vertx vertx) {
-        return new TenantAmqpEndpoint(vertx);
-    }
 
     @Qualifier(Constants.QUALIFIER_AMQP)
     @Bean

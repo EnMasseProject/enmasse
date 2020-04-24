@@ -16,4 +16,5 @@ public final class TenantAmqpService extends AmqpServiceBase<ServiceConfigProper
     protected String getServiceName() {
         return "EnMasse-IoT-TenantService";
     }
+
 }
