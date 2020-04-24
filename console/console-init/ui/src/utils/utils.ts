@@ -113,11 +113,20 @@ const dnsSubDomainRfc1123NameRegexp = new RegExp(
 );
 const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
 
+const kFormatter = (num: number) => {
+  const absoluteNumber: number = Math.abs(num);
+  const sign = Math.sign(num);
+  return absoluteNumber > 999
+    ? sign * parseInt((absoluteNumber / 1000).toFixed(1)) + "k"
+    : sign * absoluteNumber;
+};
+
 export {
   getSelectOptionList,
   compareObject,
   getType,
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
-  messagingAddressNameRegexp
+  messagingAddressNameRegexp,
+  kFormatter
 };

@@ -3,30 +3,27 @@ import AceEditor, { IAceEditorProps } from "react-ace";
 
 const Editor: React.FunctionComponent<IAceEditorProps> = ({
   value,
+  readOnly,
   mode,
+  style,
   name,
   onChange,
   enableBasicAutocompletion,
   enableLiveAutocompletion
 }) => {
   return (
-    <>
-      <AceEditor
-        mode={mode}
-        theme="github"
-        fontSize={14}
-        onChange={onChange}
-        value={value}
-        name={name}
-        enableBasicAutocompletion={enableBasicAutocompletion}
-        enableLiveAutocompletion={enableLiveAutocompletion}
-        style={{
-          width: 700,
-          border: "1px solid",
-          borderColor: "lightgrey"
-        }}
-      />
-    </>
+    <AceEditor
+      mode={mode}
+      theme="github"
+      fontSize={14}
+      readOnly={readOnly}
+      onChange={onChange}
+      value={value}
+      name={name}
+      enableBasicAutocompletion={enableBasicAutocompletion}
+      enableLiveAutocompletion={enableLiveAutocompletion}
+      style={style}
+    />
   );
 };
 

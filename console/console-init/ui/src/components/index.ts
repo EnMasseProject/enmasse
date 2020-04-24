@@ -26,3 +26,4 @@ export * from "./Editor";
 export * from "./FormAndJson";
 export * from "./InputText";
 export * from "./ProjectHeaderCard";
+export * from "./JsonViewEditor";
