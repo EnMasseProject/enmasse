@@ -7,13 +7,14 @@ package io.enmasse.iot.jdbc.store.device;
 
 import java.util.Optional;
 
+
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.jdbc.store.AbstractStore;
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
 import io.vertx.core.Future;
@@ -41,7 +42,6 @@ public abstract class AbstractDeviceStore extends AbstractStore {
                 .validateParameters(
                         "tenant_id",
                         "device_id");
-
     }
 
     protected Future<ResultSet> readDevice(final SQLOperations operations, final DeviceKey key, final Span span) {
@@ -64,5 +64,4 @@ public abstract class AbstractDeviceStore extends AbstractStore {
 
         return expanded.trace(this.tracer, span).query(this.client);
     }
-
 }

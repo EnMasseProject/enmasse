@@ -26,7 +26,8 @@ import io.vertx.core.json.JsonObject;
 /**
  * A {@link DeviceConnectionService} that use an JDBC as a backend service.
  */
-@Component
+//@Component
+//TODO - enable it again when https://github.com/EnMasseProject/enmasse/issues/4338 is implemented
 @Profile(PROFILE_DEVICE_CONNECTION)
 public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService {
 

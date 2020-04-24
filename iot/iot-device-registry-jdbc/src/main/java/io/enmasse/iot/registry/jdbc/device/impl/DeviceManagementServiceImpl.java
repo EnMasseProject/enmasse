@@ -19,7 +19,10 @@ import static org.eclipse.hono.service.management.OperationResult.ok;
 import static org.eclipse.hono.util.CacheDirective.maxAgeDirective;
 
 import java.util.Optional;
+import java.util.UUID;
 
+import org.eclipse.hono.deviceregistry.service.device.AbstractDeviceManagementService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.Result;
@@ -31,8 +34,6 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.DuplicateKeyException;
 import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
-import io.enmasse.iot.registry.device.AbstractDeviceManagementService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.jdbc.config.DeviceServiceProperties;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -116,4 +117,8 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
 
     }
 
+    @Override
+    protected String generateDeviceId(String tenantId) {
+        return UUID.randomUUID().toString();
+    }
 }

@@ -6,11 +6,14 @@
 package io.enmasse.iot.registry.jdbc.device.impl;
 
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_ADAPTER;
+import io.vertx.core.json.JsonArray;
 import static io.vertx.core.json.JsonObject.mapFrom;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static org.eclipse.hono.util.RegistrationResult.from;
 
+import org.eclipse.hono.deviceregistry.service.device.AbstractRegistrationService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +21,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
-import io.enmasse.iot.registry.device.AbstractRegistrationService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.opentracing.Span;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -36,9 +37,8 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
     }
 
     @Override
-    protected Future<RegistrationResult> processGetDevice(final DeviceKey key, final Span span) {
-
-        return this.store.readDevice(key, span.context())
+    protected Future<RegistrationResult> processAssertRegistration(DeviceKey deviceKey, Span span) {
+        return this.store.readDevice(deviceKey, span.context())
                 .map(r -> {
 
                     if (r.isPresent()) {
@@ -56,7 +56,11 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
                     }
 
                 });
-
     }
 
+    @Override
+    protected Future<JsonArray> resolveGroupMembers(String tenantId, JsonArray viaGroups, Span span) {
+        //TODO implement with https://github.com/EnMasseProject/enmasse/issues/4339
+        return null;
+    }
 }

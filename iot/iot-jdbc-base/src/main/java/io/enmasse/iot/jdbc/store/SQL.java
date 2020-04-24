@@ -89,7 +89,7 @@ public final class SQL {
         }
 
         final SpanBuilder builder = TracingHelper
-                .buildChildSpan(tracer, context, operationName)
+                .buildChildSpan(tracer, context, operationName, SQL.class.getSimpleName())
                 .withTag(Tags.DB_TYPE.getKey(), "sql");
 
         if (customizer != null) {

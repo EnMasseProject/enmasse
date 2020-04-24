@@ -122,7 +122,7 @@ public class CredentialKey implements Serializable {
         return new CredentialKey(tenantHandle.getId(), authId, type);
     }
 
-    public static CredentialKey credentialKey(final io.enmasse.iot.registry.device.CredentialKey other) {
+    public static CredentialKey credentialKey(final org.eclipse.hono.deviceregistry.service.credentials.CredentialKey other) {
         Objects.requireNonNull(other);
         return new CredentialKey(other.getTenantId(), other.getAuthId(), other.getType());
     }

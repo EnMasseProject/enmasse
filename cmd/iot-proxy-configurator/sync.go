@@ -246,6 +246,8 @@ var routes = []RouteConfig{
 	{"cl_o", "out", "control"},
 	{"c_i", "in", "command_response"},
 	{"c_o", "out", "command"},
+	{"c_int_o", "out", "command_internal"},
+	{"c_int_i", "in", "command_internal"},
 }
 
 func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {

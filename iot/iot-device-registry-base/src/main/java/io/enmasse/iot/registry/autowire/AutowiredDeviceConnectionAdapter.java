@@ -17,8 +17,6 @@ import org.springframework.stereotype.Component;
  * This wires up the actual service instance with the mapping to the event bus implementation. It is intended to be used
  * in a Spring Boot environment.
  */
-@Component
-@ConditionalOnBean(DeviceConnectionService.class)
 public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter {
 
     private DeviceConnectionService service;

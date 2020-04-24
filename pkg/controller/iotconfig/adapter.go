@@ -328,6 +328,26 @@ listener {
   port: 5672
   saslMechanisms: ANONYMOUS
 }
+
+connector {
+    name: iot-interior-interconnect
+    host: iot-interior-interconnect
+    port: 5672
+    role: route-container
+    saslMechanisms: ANONYMOUS
+}
+
+linkRoute {
+    pattern: command_internal/#
+    connection: iot-interior-interconnect
+    direction: in
+}
+
+linkRoute {
+    pattern: command_internal/#
+    connection: iot-interior-interconnect
+    direction: out
+}
 `
 			configCtx.AddString(configMap.Data["qdrouterd.conf"])
 

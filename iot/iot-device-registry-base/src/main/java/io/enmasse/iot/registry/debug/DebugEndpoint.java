@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.debug;
 
+import io.vertx.core.Future;
 import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
 
 import org.eclipse.hono.service.credentials.CredentialsService;
@@ -67,9 +68,8 @@ public class DebugEndpoint extends AbstractVerticle {
                     var type = ctx.pathParam("type");
                     var authId = ctx.pathParam("authId");
 
-                    this.crendentialService.get(tenantId, type, authId, ar -> {
-                        handleResult(ctx, ar);
-                    });
+                    this.crendentialService.get(tenantId, type, authId)
+                            .setHandler(ar -> handleResult(ctx, ar));
                 });
 
         router
@@ -79,9 +79,8 @@ public class DebugEndpoint extends AbstractVerticle {
                     var tenantId = ctx.pathParam("tenant");
                     var deviceId = ctx.pathParam("device");
 
-                    this.registrationService.assertRegistration(tenantId, deviceId, ar -> {
-                        handleResult(ctx, ar);
-                    });
+                    this.registrationService.assertRegistration(tenantId, deviceId)
+                            .setHandler(ar -> handleResult(ctx, ar));
                 });
 
         this.vertx

@@ -10,7 +10,7 @@ spec:
           external:
             username: registry
             password: user12
-            url: jdbc:postgresql://postgresql.device-registry-storage.svc/device-registry
+            url: jdbc:postgresql://postgresql/device-registry
     deviceRegistry:
       jdbc:
         server:
@@ -20,7 +20,7 @@ spec:
               connection:
                 username: registry
                 password: user12
-                url: jdbc:postgresql://postgresql.device-registry-storage.svc/device-registry
+                url: jdbc:postgresql://postgresql/device-registry
   adapters:
     mqtt:
       enabled: true

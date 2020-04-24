@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.device.Device;
 import org.eclipse.hono.tracing.TracingHelper;
@@ -19,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import io.enmasse.iot.jdbc.store.SQL;
 import io.enmasse.iot.jdbc.store.Statement;
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -99,7 +99,7 @@ public abstract class AbstractDeviceManagementStore extends AbstractDeviceStore 
 
         final String json = Json.encode(device);
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "create device")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "create device", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .withTag("data", json)
@@ -147,7 +147,7 @@ public abstract class AbstractDeviceManagementStore extends AbstractDeviceStore 
 
         final String json = Json.encode(device);
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "update device")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "update device", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .withTag("data", json)
@@ -179,7 +179,7 @@ public abstract class AbstractDeviceManagementStore extends AbstractDeviceStore 
 
     public Future<Optional<DeviceReadResult>> readDevice(final DeviceKey key, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .start();
@@ -207,7 +207,7 @@ public abstract class AbstractDeviceManagementStore extends AbstractDeviceStore 
 
     public Future<UpdateResult> deleteDevice(final DeviceKey key, final Optional<String> resourceVersion, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "delete device")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "delete device", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .start();
@@ -238,7 +238,7 @@ public abstract class AbstractDeviceManagementStore extends AbstractDeviceStore 
 
     public Future<UpdateResult> dropTenant(final String tenantId, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "drop tenant")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "drop tenant", getClass().getSimpleName())
                 .withTag("tenant_instance_id", tenantId)
                 .start();
 

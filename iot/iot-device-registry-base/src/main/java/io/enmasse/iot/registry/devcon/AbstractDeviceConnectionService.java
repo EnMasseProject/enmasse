@@ -15,6 +15,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 
+import java.util.List;
+
 public abstract class AbstractDeviceConnectionService implements DeviceConnectionService {
 
     protected abstract Future<DeviceConnectionResult> processSetLastKnownGatewayForDevice(final DeviceConnectionKey key, final String gatewayId, final Span span);
@@ -22,16 +24,32 @@ public abstract class AbstractDeviceConnectionService implements DeviceConnectio
     protected abstract Future<DeviceConnectionResult> processGetLastKnownGatewayForDevice(final DeviceConnectionKey key, final Span span);
 
     @Override
-    public void getLastKnownGatewayForDevice(final String tenantId, final String deviceId, final Span span, final Handler<AsyncResult<DeviceConnectionResult>> resultHandler) {
+    public Future<DeviceConnectionResult> getLastKnownGatewayForDevice(final String tenantId, final String deviceId, final Span span) {
         final var key = DeviceConnectionKey.deviceConnectionKey(tenantId, deviceId);
-        finishHandler(() -> processGetLastKnownGatewayForDevice(key, span), resultHandler);
+        return processGetLastKnownGatewayForDevice(key, span);
     }
 
     @Override
-    public void setLastKnownGatewayForDevice(final String tenantId, final String deviceId, final String gatewayId, final Span span,
-            final Handler<AsyncResult<DeviceConnectionResult>> resultHandler) {
+    public Future<DeviceConnectionResult> setLastKnownGatewayForDevice(final String tenantId, final String deviceId, final String gatewayId, final Span span) {
         final var key = DeviceConnectionKey.deviceConnectionKey(tenantId, deviceId);
-        finishHandler(() -> processSetLastKnownGatewayForDevice(key, gatewayId, span), resultHandler);
+        return processSetLastKnownGatewayForDevice(key, gatewayId, span);
     }
 
+    @Override
+    public Future<DeviceConnectionResult> setCommandHandlingAdapterInstance(String tenantId, String deviceId, String adapterInstanceId, Span span) {
+        //TODO - implement new methods https://github.com/EnMasseProject/enmasse/issues/4338
+        return null;
+    }
+
+    @Override
+    public Future<DeviceConnectionResult> removeCommandHandlingAdapterInstance(String tenantId, String deviceId, String adapterInstanceId, Span span) {
+        //TODO - implement new methods https://github.com/EnMasseProject/enmasse/issues/4338
+        return null;
+    }
+
+    @Override
+    public Future<DeviceConnectionResult> getCommandHandlingAdapterInstances(String tenantId, String deviceId, List<String> viaGateways, Span span) {
+        //TODO - implement new methods https://github.com/EnMasseProject/enmasse/issues/4338
+        return null;
+    }
 }

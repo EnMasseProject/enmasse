@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.hono.auth.HonoPasswordEncoder;
+import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsManagementService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.util.CacheDirective;
@@ -24,8 +26,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
-import io.enmasse.iot.registry.device.AbstractCredentialsManagementService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.registry.jdbc.config.DeviceServiceProperties;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -39,14 +39,14 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     private final Optional<CacheDirective> ttl;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final Vertx vertx, final HonoPasswordEncoder passwordEncoder, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
-        super(passwordEncoder, vertx);
+    public CredentialsManagementServiceImpl(final Vertx vertx, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
+        super(vertx);
         this.store = store;
         this.ttl = Optional.of(CacheDirective.maxAgeDirective(properties.getCredentialsTtl().toSeconds()));
     }
 
     @Override
-    protected Future<OperationResult<Void>> processSet(final DeviceKey key, final Optional<String> resourceVersion,
+    protected Future<OperationResult<Void>> processUpdateCredentials(final DeviceKey key, final Optional<String> resourceVersion,
             final List<CommonCredential> credentials, final Span span) {
 
         return this.store
@@ -62,7 +62,7 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     }
 
     @Override
-    protected Future<OperationResult<List<CommonCredential>>> processGet(final DeviceKey key, final Span span) {
+    protected Future<OperationResult<List<CommonCredential>>> processReadCredentials(final DeviceKey key, final Span span) {
 
         return this.store.getCredentials(key, span.context())
                 .<OperationResult<List<CommonCredential>>>map(r -> {
@@ -83,6 +83,5 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
                 .otherwise(err -> empty(HttpURLConnection.HTTP_INTERNAL_ERROR));
 
     }
-
 
 }

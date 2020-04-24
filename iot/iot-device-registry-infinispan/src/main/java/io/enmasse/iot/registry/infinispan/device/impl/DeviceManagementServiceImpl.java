@@ -18,9 +18,12 @@ import static java.util.concurrent.CompletableFuture.failedFuture;
 import static org.eclipse.hono.service.management.OperationResult.ok;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.hono.client.ServiceInvocationException;
+import org.eclipse.hono.deviceregistry.service.device.AbstractDeviceManagementService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.Id;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.Result;
@@ -35,8 +38,6 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.AbstractDeviceManagementService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -176,4 +177,8 @@ public class DeviceManagementServiceImpl extends AbstractDeviceManagementService
         return MoreFutures.map(future);
     }
 
+    @Override
+    protected String generateDeviceId(String tenantId) {
+        return UUID.randomUUID().toString();
+    }
 }

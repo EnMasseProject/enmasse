@@ -7,9 +7,12 @@ package io.enmasse.iot.registry.infinispan.device.impl;
 
 import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
+import io.vertx.core.json.JsonArray;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import static java.net.HttpURLConnection.HTTP_OK;
 
+import org.eclipse.hono.deviceregistry.service.device.AbstractRegistrationService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.util.RegistrationConstants;
 import org.eclipse.hono.util.RegistrationResult;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -20,8 +23,6 @@ import org.springframework.stereotype.Component;
 
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
-import io.enmasse.iot.registry.device.AbstractRegistrationService;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.vertx.core.Future;
@@ -42,7 +43,7 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
     }
 
     @Override
-    protected Future<RegistrationResult> processGetDevice(final DeviceKey key, final Span span) {
+    protected Future<RegistrationResult> processAssertRegistration(final DeviceKey key, final Span span) {
 
         var f = this.managementCache
 
@@ -60,6 +61,12 @@ public class RegistrationServiceImpl extends AbstractRegistrationService {
 
         return MoreFutures.map(f);
 
+    }
+
+    @Override
+    protected Future<JsonArray> resolveGroupMembers(String tenantId, JsonArray viaGroups, Span span) {
+        //TODO implement with https://github.com/EnMasseProject/enmasse/issues/4339
+        return null;
     }
 
     private static JsonObject convertTo(final JsonObject deviceInfo) {

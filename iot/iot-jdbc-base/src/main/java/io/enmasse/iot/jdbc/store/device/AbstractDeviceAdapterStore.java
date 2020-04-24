@@ -8,12 +8,12 @@ package io.enmasse.iot.jdbc.store.device;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.eclipse.hono.deviceregistry.service.credentials.CredentialKey;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.device.Device;
 import org.eclipse.hono.tracing.TracingHelper;
 
 import io.enmasse.iot.jdbc.store.StatementConfiguration;
-import io.enmasse.iot.registry.device.CredentialKey;
-import io.enmasse.iot.registry.device.DeviceKey;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.Span;
 import io.opentracing.SpanContext;
@@ -37,7 +37,7 @@ public abstract class AbstractDeviceAdapterStore extends AbstractDeviceStore {
 
     public Future<Optional<DeviceReadResult>> readDevice(final DeviceKey key, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .start();

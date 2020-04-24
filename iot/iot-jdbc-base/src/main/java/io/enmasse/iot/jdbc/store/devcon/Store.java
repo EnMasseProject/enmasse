@@ -79,7 +79,7 @@ public class Store extends AbstractStore {
 
     public Future<Optional<DeviceState>> readDeviceState(final DeviceConnectionKey key, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device state")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "read device state", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .start();
@@ -118,7 +118,7 @@ public class Store extends AbstractStore {
 
     public Future<UpdateResult> setLastKnownGateway(final DeviceConnectionKey key, final String gatewayId, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "update device state")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "update device state", getClass().getSimpleName())
                 .withTag("tenant_instance_id", key.getTenantId())
                 .withTag("device_id", key.getDeviceId())
                 .withTag("gateway_id", gatewayId)
@@ -140,7 +140,7 @@ public class Store extends AbstractStore {
 
     public Future<UpdateResult> dropTenant(final String tenantId, final SpanContext spanContext) {
 
-        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "drop tenant")
+        final Span span = TracingHelper.buildChildSpan(this.tracer, spanContext, "drop tenant", getClass().getSimpleName())
                 .withTag("tenant_instance_id", tenantId)
                 .start();
 
