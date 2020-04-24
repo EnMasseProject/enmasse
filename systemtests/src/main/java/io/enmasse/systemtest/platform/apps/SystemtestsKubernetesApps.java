@@ -37,12 +37,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
 import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -54,6 +56,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
+import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.DoneablePod;
@@ -67,6 +70,7 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodBuilder;
 import io.fabric8.kubernetes.api.model.PodCondition;
 import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -94,6 +98,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
+import io.vertx.core.json.JsonObject;
 
 public class SystemtestsKubernetesApps {
 
@@ -108,6 +113,7 @@ public class SystemtestsKubernetesApps {
     public static final String SELENIUM_CONFIG_MAP = "rhea-configmap";
     public static final String OPENSHIFT_CERT_VALIDATOR = "systemtests-cert-validator";
     public static final String POSTGRES_APP = "postgres-app";
+    public static final String CONTAINER_BUILDS_PROJECT = "systemtests-container-builds";
 
     private static final String SCALE_TEST_CLIENTS_PROJECT = "systemtests-scale-test-clients";
     private static final String SCALE_TEST_CLIENT = "scale-test-client";
@@ -859,6 +865,158 @@ public class SystemtestsKubernetesApps {
         }
 
         kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);
+    }
+
+    public static void buildOperatorRegistryImage(Kubernetes kubeClient, String olmManifestsImage, String destinationImage, String destinationRegistry, Path... buildWorkspaceFiles) throws Exception {
+        kubeClient.createNamespace(CONTAINER_BUILDS_PROJECT);
+
+        String secretName = "olm-manifests-docker-config";
+        String username = "foo";
+        String pwd = kubeClient.getApiToken();
+        JsonObject dockerconfigjson = new JsonObject();
+        dockerconfigjson.put("auths", new JsonObject()
+                .put(destinationRegistry, new JsonObject()
+                        .put("username", username)
+                        .put("password", pwd)
+                        .put("auth", Base64.getEncoder().encodeToString((username + ":" + pwd).getBytes(StandardCharsets.UTF_8)))));
+
+        Secret secret = new SecretBuilder()
+                .withNewMetadata()
+                .withName(secretName)
+                .endMetadata()
+                .withType("kubernetes.io/dockerconfigjson")
+                .addToData(".dockerconfigjson", Base64.getEncoder().encodeToString(dockerconfigjson.encode().getBytes(StandardCharsets.UTF_8)))
+                .build();
+        kubeClient.createSecret(CONTAINER_BUILDS_PROJECT, secret);
+
+        String workspaceConfigMap = "workspace-cm";
+        var configmap = new ConfigMapBuilder()
+                .withNewMetadata()
+                .withName(workspaceConfigMap)
+                .endMetadata();
+        for (Path file : buildWorkspaceFiles) {
+            log.info("Adding file {} to build workspace", file.getFileName().toString());
+            configmap.addToData(file.getFileName().toString(), Files.readString(file));
+        }
+        kubeClient.createConfigmapFromResource(CONTAINER_BUILDS_PROJECT, configmap.build());
+
+        StringBuilder copyCommand = new StringBuilder();
+        for (Path file : buildWorkspaceFiles) {
+            String name = file.getFileName().toString();
+            copyCommand.append("cp").append(" ")
+                .append("dockerfile-storage/").append(name)
+                .append(" ").append("workspace/").append(name)
+                .append(" ").append("&&").append(" ");
+        }
+        String command = copyCommand.substring(0, copyCommand.length()-3);
+
+        Pod pod = new PodBuilder()
+                .withNewMetadata()
+                .withName("container-image-builder")
+                .withNamespace(CONTAINER_BUILDS_PROJECT)
+                .endMetadata()
+                .withNewSpec()
+                .withInitContainers(new ContainerBuilder()
+                        .withName("set-up-workspace")
+                        .withImage("busybox:latest")
+                        .withCommand("sh", "-c")
+                        .withArgs(command)
+                        .withVolumeMounts(
+                                new VolumeMountBuilder()
+                                .withName("build-workspace")
+                                .withMountPath("/workspace")
+                                .build(),
+                                new VolumeMountBuilder()
+                                .withName("dockerfile-storage")
+                                .withMountPath("/dockerfile-storage")
+                                .build())
+                        .build())
+                .withContainers(new ContainerBuilder()
+                        .withName("kaniko")
+                        .withImage("gcr.io/kaniko-project/executor:v0.19.0")
+                        .withArgs(
+                                "--context=dir:///workspace",
+                                "--destination=" + destinationImage,
+                                "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
+                                "--insecure-registry=true",
+                                "--skip-tls-verify=true")
+                        .withVolumeMounts(
+                                new VolumeMountBuilder()
+                                .withName("docker-config")
+                                .withMountPath("/kaniko/.docker")
+                                .build(),
+                                new VolumeMountBuilder()
+                                .withName("build-workspace")
+                                .withMountPath("/workspace")
+                                .build())
+                        .build()
+                        )
+                .withRestartPolicy("Never")
+                .withVolumes(
+                        new VolumeBuilder()
+                        .withName("docker-config")
+                        .withSecret(new SecretVolumeSourceBuilder()
+                                .withSecretName(secretName)
+                                .addNewItem()
+                                .withKey(".dockerconfigjson")
+                                .withPath("config.json")
+                                .endItem()
+                                .build())
+                        .build(),
+                        new VolumeBuilder()
+                        .withName("dockerfile-storage")
+                        .withConfigMap(new ConfigMapVolumeSourceBuilder()
+                                .withName(workspaceConfigMap)
+                                .build())
+                        .build(),
+                        new VolumeBuilder()
+                        .withName("build-workspace")
+                        .withNewEmptyDir()
+                        .endEmptyDir()
+                        .build()
+                        )
+                .endSpec()
+                .build();
+
+        kubeClient.createPodFromResource(CONTAINER_BUILDS_PROJECT, pod);
+
+        Function<Pod, String> containerReasonGetter = p -> {
+            return Optional.ofNullable(p)
+                .map(c -> c.getStatus())
+                .map(c -> c.getContainerStatuses().get(0).getState())
+                .map(c -> c.getTerminated())
+                .map(c -> c.getReason())
+                .orElse("");
+        };
+
+        try {
+            kubeClient.waitPodUntilCondition(pod, p -> {
+                String reason = containerReasonGetter.apply(p);
+                return reason.equals("Completed") || reason.equals("Error");
+            }, 3, TimeUnit.MINUTES);
+            Pod podRes = kubeClient.getPod(CONTAINER_BUILDS_PROJECT, pod.getMetadata().getName());
+            String reason = containerReasonGetter.apply(podRes);
+            if (reason.equals("Error")) {
+                log.error("Operator registry image build failed because of error");
+                collectContainerBuildLogs(kubeClient);
+                Assertions.fail("Failed to build custom operator registry because of error");
+            }
+        } catch (InterruptedException e) {
+            log.error("Operator registry image build failed because of timeout");
+            collectContainerBuildLogs(kubeClient);
+            Assertions.fail("Failed to build custom operator registry because of timeout");
+        }
+
+    }
+
+    private static void collectContainerBuildLogs(Kubernetes kubeClient) {
+        GlobalLogCollector collector = new GlobalLogCollector(kubeClient,
+                TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTestClass()), CONTAINER_BUILDS_PROJECT);
+        collector.collectLogsOfPodsInNamespace(CONTAINER_BUILDS_PROJECT);
+    }
+
+    public static void cleanBuiltContainerImages(Kubernetes kubeClient) throws Exception {
+        kubeClient.deleteNamespace(CONTAINER_BUILDS_PROJECT);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////

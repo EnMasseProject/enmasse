@@ -4,13 +4,10 @@
  */
 package io.enmasse.systemtest.operator;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import org.slf4j.Logger;
 
@@ -18,11 +15,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.TestUtils;
 
 public class OLMOperatorManager {
@@ -36,7 +32,14 @@ public class OLMOperatorManager {
 
     private OLMOperatorManager() {
         clusterExternalImageRegistry = Environment.getInstance().getClusterExternalImageRegistry();
+        if (clusterExternalImageRegistry == null || clusterExternalImageRegistry.isBlank()) {
+            clusterExternalImageRegistry = kube.getClusterExternalImageRegistry();
+        }
         clusterInternalImageRegistry = Environment.getInstance().getClusterInternalImageRegistry();
+        if (clusterInternalImageRegistry == null || clusterInternalImageRegistry.isBlank()) {
+            clusterInternalImageRegistry = kube.getClusterInternalImageRegistry();
+        }
+        log.info("Using image registries: {} and {}", clusterExternalImageRegistry, clusterInternalImageRegistry);
     }
 
     public static synchronized OLMOperatorManager getInstance() {
@@ -77,6 +80,11 @@ public class OLMOperatorManager {
 
     }
 
+    public void clean() throws Exception {
+        //TODO investigate how to remove images pushed to image registry
+        SystemtestsKubernetesApps.cleanBuiltContainerImages(kube);
+    }
+
     public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
         String subscription = Files.readString(Paths.get("custom-operator-registry", "subscription.yaml"));
@@ -105,17 +113,10 @@ public class OLMOperatorManager {
 
         String olmManifestsImage = manifestsImage.replace(clusterInternalImageRegistry, clusterExternalImageRegistry);
 
-        int retries = 5;
-        ExecutionResultData results = null;
-        while (retries > 0) {
-            results = Exec.execute(Arrays.asList("make", "-C", "custom-operator-registry", "FROM="+olmManifestsImage, "TAG="+customRegistryImageToPush), true);
-            if(results.getRetCode()) {
-                return;
-            }
-            Thread.sleep(1000);
-            retries--;
-        }
-        assertTrue(results != null && results.getRetCode(), "custom operator registry image build failed ");
+        Path dockerfilePath = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "Dockerfile");
+        Path manifestsReplacerScript = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "manifests_replacer.sh");
+
+        SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
     }
 
     public String getCustomOperatorRegistryInternalImage(String namespace) {
