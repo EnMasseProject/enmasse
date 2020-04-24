@@ -358,13 +358,13 @@ public class KubeCMDClient {
     public static ExecutionResultData createFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "create", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
+        return Exec.executeAndCheck(CMD, "-n", namespace, "create", "-f", path.toString());
     }
 
     public static ExecutionResultData applyFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return Exec.execute(Arrays.asList(CMD, "-n", namespace, "apply", "-f", path.toString()), ONE_MINUTE_TIMEOUT, true);
+        return Exec.executeAndCheck(CMD, "-n", namespace, "apply", "-f", path.toString());
     }
 
     public static ExecutionResultData deleteFromFile(String namespace, Path path) {
