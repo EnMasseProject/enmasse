@@ -1,21 +1,174 @@
-import { Wizard } from "@patternfly/react-core";
-import React from "react";
-import { DeviceInformation } from "modules/device/components/DeviceInformation";
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
 
-export const CreateDevice: React.FunctionComponent<{}> = () => {
+import React, { useState } from "react";
+import {
+  Wizard,
+  WizardFooter,
+  WizardContextConsumer,
+  Button
+} from "@patternfly/react-core";
+import { DeviceInformation } from "modules/device/components/DeviceInformation";
+import { ConnectionType } from "modules/device/components/ConnectionTypeStep";
+
+const CreateDevice: React.FunctionComponent<any> = () => {
+  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(true);
+  const [connectionType, setConnectionType] = useState<string>();
+  const onToggle = () => {
+    setIsWizardOpen(!isWizardOpen);
+    resetForm();
+  };
+  const resetForm = () => {};
+  const addGateway = {
+    name: "Add gateways",
+    component: <p>Add gateway</p>
+  };
+  const addCredentials = {
+    name: "Add credentials",
+    component: <p>Add credentials</p>
+  };
+  const reviewForm = {
+    name: "Review",
+    component: <p>Review</p>
+  };
+  const onConnectionChange = (_: boolean, event: any) => {
+    const data = event.target.value;
+    if (data) {
+      setConnectionType(data);
+    }
+  };
   const steps = [
-    { name: "Step 1", component: <DeviceInformation /> },
-    { name: "Step 2", component: <p>Step 2</p> },
-    { name: "Step 3", component: <p>Step 3</p> },
-    { name: "Step 4", component: <p>Step 4</p> },
+    { name: "Device information", component: <DeviceInformation /> },
     {
-      name: "Final Step",
-      component: <p>Final Step</p>,
-      hideCancelButton: true,
-      nextButtonText: "Close"
+      name: "Connection Type",
+      component: (
+        <ConnectionType
+          connectionType={connectionType}
+          onConnectionChange={onConnectionChange}
+        />
+      )
     }
   ];
+  if (connectionType) {
+    if (connectionType === "directly") {
+      steps.push(addCredentials);
+    } else {
+      steps.push(addGateway);
+    }
+    steps.push(reviewForm);
+  }
+
+  const handleNextIsEnabled = () => {
+    return false;
+  };
+
+  const CustomFooter = (
+    <WizardFooter>
+      <WizardContextConsumer>
+        {({ activeStep, onNext, onBack, onClose }) => {
+          if (
+            activeStep.name === "Device information" ||
+            activeStep.name === "Connection Type"
+          ) {
+            return (
+              <>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  onClick={onNext}
+                  className={
+                    activeStep.name === "Connection Type" && !connectionType
+                      ? "pf-m-disabled"
+                      : ""
+                  }
+                >
+                  Next
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={onBack}
+                  className={
+                    activeStep.name === "Device information"
+                      ? "pf-m-disabled"
+                      : ""
+                  }
+                >
+                  Back
+                </Button>
+                <Button variant="link" onClick={onClose}>
+                  Cancel
+                </Button>
+              </>
+            );
+          }
+          if (activeStep.name !== "Review") {
+            return (
+              <>
+                <Button
+                  variant="primary"
+                  type="submit"
+                  onClick={onNext}
+                  className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
+                >
+                  Next
+                </Button>
+                <Button variant="secondary" onClick={onBack}>
+                  Back
+                </Button>
+                <Button variant="link" onClick={onClose}>
+                  Cancel
+                </Button>
+              </>
+            );
+          }
+
+          return (
+            <>
+              <Button
+                variant="primary"
+                type="submit"
+                // onClick={
+                //   firstSelectedStep && firstSelectedStep === "messaging"
+                //     ? handleMessagingProjectSave
+                //     : handleIoTProjectSave
+                // }
+              >
+                Finish
+              </Button>
+              <Button onClick={onBack} variant="secondary">
+                Back
+              </Button>
+              <Button variant="link" onClick={onClose}>
+                Cancel
+              </Button>
+            </>
+          );
+        }}
+      </WizardContextConsumer>
+    </WizardFooter>
+  );
+
   return (
-    <Wizard isInPage onClose={() => console.log("closed")} steps={steps} />
+    <>
+      {isWizardOpen ? (
+        <>
+          <Wizard
+            isInPage
+            isOpen={isWizardOpen}
+            onClose={onToggle}
+            footer={CustomFooter}
+            steps={steps}
+          />
+        </>
+      ) : (
+        <Button variant="primary" onClick={onToggle}>
+          Create
+        </Button>
+      )}
+    </>
   );
 };
+
+export { CreateDevice };

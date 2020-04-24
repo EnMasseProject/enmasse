@@ -12,9 +12,9 @@ import {
   Split,
   SplitItem,
   Text,
-  TextVariants
+  TextVariants,
+  Switch
 } from "@patternfly/react-core";
-import { ToggleOffIcon, ToggleOnIcon } from "@patternfly/react-icons";
 import { InputText, JsonViewEditor } from "components";
 
 export interface IConfig {
@@ -39,10 +39,14 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
   const onToggle = () => {
     setIsHidden(!isHidden);
   };
-  const EditIcon = isHidden ? (
-    <ToggleOffIcon onClick={onToggle} size="lg" />
-  ) : (
-    <ToggleOnIcon onClick={onToggle} size="lg" />
+  const EditIcon = (
+    <Switch
+      id="device-registry-management-switch"
+      label="View in Json"
+      labelOff="View in Json"
+      isChecked={isHidden}
+      onChange={onToggle}
+    />
   );
   const RegistrationApi = registrationApi && (
     <>

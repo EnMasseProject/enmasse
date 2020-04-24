@@ -25,6 +25,7 @@ import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
+import { Graph } from "components/Graphs";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
