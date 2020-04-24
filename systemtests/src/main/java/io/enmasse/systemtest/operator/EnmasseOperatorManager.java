@@ -204,6 +204,7 @@ public class EnmasseOperatorManager {
         if (isEnmasseOlmDeployed(kube.getInfraNamespace())) {
             remover.accept(kube.getInfraNamespace());
         }
+        olm.clean();
         return clean();
     }
 
