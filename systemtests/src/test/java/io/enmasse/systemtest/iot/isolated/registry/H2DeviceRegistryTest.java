@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newH2Based;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectDeviceConnectionType;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -45,6 +46,7 @@ class H2DeviceRegistryTest extends DeviceRegistryTest {
 
     @Test
     void testCorrectTypeDeployed () {
+        assertCorrectDeviceConnectionType("jdbc");
         assertCorrectRegistryType("jdbc");
         assertCorrectRegistryMode(Mode.TABLE);
     }

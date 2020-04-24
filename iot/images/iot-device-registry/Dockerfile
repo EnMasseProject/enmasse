@@ -6,7 +6,9 @@ ARG commit
 ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
 ADD \
+  target/dependency/iot-device-connection-infinispan.jar \
   target/dependency/iot-device-registry-infinispan.jar \
+  \
   target/dependency/iot-device-registry-jdbc.jar \
   /
 

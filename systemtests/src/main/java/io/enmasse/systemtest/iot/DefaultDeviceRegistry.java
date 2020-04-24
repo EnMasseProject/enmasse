@@ -137,7 +137,7 @@ public final class DefaultDeviceRegistry {
      * @throws Exception In case the deployment of the backend failed.
      */
     public static ServicesConfig newDefaultInstance() throws Exception {
-        return newPostgresTreeBased();
+        return newMixed();
     }
 
     /**
@@ -146,6 +146,7 @@ public final class DefaultDeviceRegistry {
     public static void deleteDefaultServer() throws Exception {
         // align with newDefaultInstance
         SystemtestsKubernetesApps.deletePostgresqlServer();
+        SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
     public static ServicesConfig newPostgresBased(final Mode mode, final boolean split) throws Exception {
@@ -186,25 +187,43 @@ public final class DefaultDeviceRegistry {
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
 
         return new ServicesConfigBuilder()
-
-                .withNewDeviceConnection()
-                .withNewInfinispan()
-                .withNewServer()
-                .withExternal(externalInfinispanConnectionServer(infinispanEndpoint))
-                .endServer()
-                .endInfinispan()
-                .endDeviceConnection()
-
-                .withNewDeviceRegistry()
-                .withNewInfinispan()
-                .withNewServer()
-                .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
-                .endServer()
-                .endInfinispan()
-                .endDeviceRegistry()
-
+                .withDeviceConnection(newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceRegistry(newInfinispanDeviceRegistryService(infinispanEndpoint))
                 .build();
+    }
 
+    public static ServicesConfig newMixed() throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.TABLE);
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
+
+        return new ServicesConfigBuilder()
+                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, Mode.TABLE, false))
+                .build();
+    }
+
+    public static DeviceConnectionServiceConfig newInfinispanDeviceConnectionService(final Endpoint infinispanEndpoint) {
+        return new DeviceConnectionServiceConfigBuilder()
+                .withNewInfinispan()
+                .withNewServer()
+
+                .withExternal(externalInfinispanConnectionServer(infinispanEndpoint))
+
+                .endServer()
+                .endInfinispan()
+                .build();
+    }
+
+    public static DeviceRegistryServiceConfig newInfinispanDeviceRegistryService(final Endpoint infinispanEndpoint) {
+        return new DeviceRegistryServiceConfigBuilder()
+                .withNewInfinispan()
+                .withNewServer()
+
+                .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
+
+                .endServer()
+                .endInfinispan()
+                .build();
     }
 
     public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final Mode mode, final boolean split) throws Exception {
@@ -269,29 +288,6 @@ public final class DefaultDeviceRegistry {
 
         return builder.build();
     }
-
-    /*
-     * public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
-     * var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
-     * return new DeviceRegistryServiceConfigBuilder()
-     * .withNewInfinispan()
-     * .withNewServer()
-     *
-     * .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
-     *
-     * .endServer()
-     * .endInfinispan()
-     * .build();
-     * }
-     *
-     * public static DeviceRegistryServiceConfig newFileBased() {
-     * return new DeviceRegistryServiceConfigBuilder()
-     * .withNewFile()
-     * .withNumberOfDevicesPerTenant(100_000)
-     * .endFile()
-     * .build();
-     * }
-     */
 
     public static DeviceConnectionServiceConfig newPostgresBasedConnection(final Endpoint jdbcEndpoint) throws Exception {
         return new DeviceConnectionServiceConfigBuilder()

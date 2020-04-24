@@ -35,6 +35,7 @@
     <module>iot-sigfox-adapter</module>
     <module>iot-tenant-service</module>
     <module>iot-proxy-configurator</module>
+    <module>iot-device-connection-infinispan</module>
     <module>iot-device-registry-base</module>
     <module>iot-device-registry-infinispan</module>
     <module>iot-device-registry-jdbc</module>

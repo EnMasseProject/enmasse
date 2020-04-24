@@ -16,16 +16,24 @@
   <packaging>pom</packaging>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-device-connection-infinispan</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>iot-device-registry-infinispan</artifactId>
       <version>${project.version}</version>
     </dependency>
+
     <dependency>
       <groupId>io.enmasse</groupId>
       <artifactId>iot-device-registry-jdbc</artifactId>
       <version>${project.version}</version>
     </dependency>
+
   </dependencies>
 
   <build>

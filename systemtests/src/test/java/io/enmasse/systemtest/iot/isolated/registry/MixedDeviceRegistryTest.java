@@ -6,39 +6,45 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newInfinispanBased;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBasedRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectDeviceConnectionType;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
-
-import java.net.HttpURLConnection;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.iot.model.v1.Mode;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
-class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
-
-    @Override
-    protected int tenantDoesNotExistCode() {
-        return HttpURLConnection.HTTP_UNAUTHORIZED;
-    }
+class MixedDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
+
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.TABLE);
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
+
         return IoTTestSession
                 .createDefaultConfig()
                 .editOrNewSpec()
-                .withServices(newInfinispanBased())
+                .withNewServices()
+                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, Mode.TABLE, false))
+                .endServices()
                 .endSpec();
+
     }
 
     @Test
     void testCorrectTypeDeployed () {
         assertCorrectDeviceConnectionType("infinispan");
-        assertCorrectRegistryType("infinispan");
+        assertCorrectRegistryType("jdbc");
+        assertCorrectRegistryMode(Mode.JSON_TREE);
     }
 
     @Test
