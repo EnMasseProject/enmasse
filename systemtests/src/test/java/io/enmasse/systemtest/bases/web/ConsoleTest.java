@@ -131,8 +131,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
-        consolePage.openAddressList(addressSpace);
         waitUntilAddressSpaceActive(addressSpace);
+        consolePage.openAddressList(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
         try {
             consolePage.awaitGoneAwayPage();
