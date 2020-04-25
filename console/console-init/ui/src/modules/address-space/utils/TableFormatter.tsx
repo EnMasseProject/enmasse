@@ -73,14 +73,17 @@ const getActionResolver = (
       return [
         {
           title: "Edit",
+          id: "edit-address-space",
           onClick: () => onEdit(originalData)
         },
         {
           title: "Delete",
+          id: "delete-address-space",
           onClick: () => onDelete(originalData)
         },
         {
           title: "Download Certificate",
+          id: "download-certificate-address-space",
           onClick: () =>
             onDownload({
               name: originalData.name,
