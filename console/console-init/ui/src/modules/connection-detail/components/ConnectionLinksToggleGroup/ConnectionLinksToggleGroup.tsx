@@ -77,13 +77,13 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   setAddressInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterAddress", value: "Address" },
-    { key: "filterRole", value: "Role" }
+    { key: "name", value: "Name" },
+    { key: "address", value: "Address" },
+    { key: "role", value: "Role" }
   ];
   const roleOptions: ISelectOption[] = [
-    { value: "Sender", isDisabled: false },
-    { value: "Receiver", isDisabled: false }
+    { key: "sender", value: "Sender", isDisabled: false },
+    { key: "receiver", value: "Receiver", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -106,9 +106,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           deleteChip={onDelete}
           categoryName="Name"
         >
-          {filterSelected && filterSelected === "Name" && (
+          {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="cl-filter-select-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -120,7 +121,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="cl-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -190,8 +191,9 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="cl-filter-dropdown"
+          toggleId="cl-filter-dropdown"
+          dropdownItemId="cl-filter-dropdown"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

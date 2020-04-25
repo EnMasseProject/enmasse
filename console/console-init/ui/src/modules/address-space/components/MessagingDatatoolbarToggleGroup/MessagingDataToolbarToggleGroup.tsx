@@ -21,11 +21,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  DropdownWithToggle,
-  TypeAheadSelect,
-  SelectWithToggle
-} from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -80,13 +76,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   setNameSpaceInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterNamespace", value: "Namespace" },
-    { key: "filterType", value: "Type" }
+    { key: "name", value: "Name" },
+    { key: "namespace", value: "Namespace" },
+    { key: "type", value: "Type" }
   ];
   const typeOptions: ISelectOption[] = [
-    { value: "Standard", isDisabled: false },
-    { value: "Brokered", isDisabled: false }
+    { key: "standard", value: "Standard", isDisabled: false },
+    { key: "brokered", value: "Brokered", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -112,6 +108,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="al-filter-input-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -123,7 +120,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="al-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -145,6 +142,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
+                id="al-filter-input-namespace"
                 ariaLabelTypeAhead={"Select namespace"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
@@ -156,7 +154,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameSpaceInput}
               />
               <Button
-                id="ad-links-filter-search-namespace"
+                id="al-filter-search-namespace"
                 variant={ButtonVariant.control}
                 aria-label="search button for search namespace"
                 onClick={onSearch}
@@ -176,12 +174,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Type"
+            <DropdownWithToggle
+              id={"al-filter-dropdown-type"}
+              dropdownItemId={"al-filter-dropdown-item-type"}
+              position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              selectOptions={typeOptions}
+              dropdownItems={typeOptions}
+              value={typeSelected || "Select Type"}
             />
           )}
         </DataToolbarFilter>

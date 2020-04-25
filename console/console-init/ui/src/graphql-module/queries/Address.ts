@@ -66,7 +66,7 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
 
   if (statusValue) {
     filter += generateFilterPattern("status.phase", [
-      { value: statusValue.toLowerCase(), isExact: true }
+      { value: statusValue, isExact: true }
     ]);
   }
   return filter;

@@ -5,7 +5,6 @@
 
 import React from "react";
 import {
-  SelectVariant,
   SelectOptionObject,
   DataToolbarToggleGroup,
   DataToolbarGroup,
@@ -21,11 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  TypeAheadSelect,
-  DropdownWithToggle,
-  SelectWithToggle
-} from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 
 export interface IAddressToggleGroupProps {
   totalRecords: number;
@@ -68,23 +63,25 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   setNameInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterType", value: "Type" },
-    { key: "filterStatus", value: "Status" }
+    { key: "name", value: "Name" },
+    { key: "type", value: "Type" },
+    { key: "status", value: "Status" }
   ];
   const typeOptions: ISelectOption[] = [
-    { value: "Anycast", isDisabled: false },
-    { value: "Multicast", isDisabled: false },
-    { value: "Queue", isDisabled: false },
-    { value: "Subscription", isDisabled: false },
-    { value: "Topic", isDisabled: false }
+    { key: "anycast", value: "Anycast", isDisabled: false },
+    { key: "multicast", value: "Multicast", isDisabled: false },
+    { key: "queue", value: "Queue", isDisabled: false },
+    { key: "subscription", value: "Subscription", isDisabled: false },
+    { key: "topic", value: "Topic", isDisabled: false }
   ];
 
   const statusOptions: ISelectOption[] = [
-    { value: "Active", isDisabled: false },
-    { value: "Configuring", isDisabled: false },
-    { value: "Pending", isDisabled: false }
+    { key: "active", value: "Active", isDisabled: false },
+    { key: "configuring", value: "Configuring", isDisabled: false },
+    { key: "pending", value: "Pending", isDisabled: false },
+    { key: "failed", value: "Failed", isDisabled: false }
   ];
+
   const checkIsFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
@@ -95,6 +92,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     }
     return false;
   };
+
   const toggleItems = (
     <>
       <DataToolbarItem
@@ -119,7 +117,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="al-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -139,12 +137,13 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Type"
+            <DropdownWithToggle
+              id="al-filter-select-type-dropdown"
+              dropdownItemId="al-filter-select-type-dropdown-item"
+              position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              selectOptions={typeOptions}
+              dropdownItems={typeOptions}
+              value={typeSelected || "Select Type"}
             />
           )}
         </DataToolbarFilter>
@@ -158,12 +157,13 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Status"
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Status"
+            <DropdownWithToggle
+              id="al-filter-select-status-dropdown"
+              dropdownItemId="al-filter-select-status-dropdown-item"
+              position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
-              selections={statusSelected || "Select Status"}
-              selectOptions={statusOptions}
+              dropdownItems={statusOptions}
+              value={statusSelected || "Select Status"}
             />
           )}
         </DataToolbarFilter>
@@ -177,6 +177,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
         <DropdownWithToggle
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
+          dropdownItemId="al-filter-dropdown"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

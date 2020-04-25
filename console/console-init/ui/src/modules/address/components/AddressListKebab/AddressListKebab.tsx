@@ -78,7 +78,8 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="al-filter-overflow-dropdown"
+            id="al-select-kebab-overflow-dropdown-"
+            toggleId="al-filter-overflow-kebab"
             onSelect={onKebabSelect}
             dropdownItems={dropdownItems}
             isPlain
