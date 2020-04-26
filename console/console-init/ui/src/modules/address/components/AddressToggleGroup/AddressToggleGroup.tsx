@@ -119,7 +119,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="al-filter-select-name-search"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -139,12 +139,12 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Type"
+            <DropdownWithToggle
+              id="al-filter-select-type-dropdown"
+              position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              selectOptions={typeOptions}
+              dropdownItems={typeOptions}
+              value={typeSelected || "Select Type"}
             />
           )}
         </DataToolbarFilter>
@@ -158,12 +158,12 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           categoryName="Status"
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Status"
+            <DropdownWithToggle
+              id="al-filter-select-status-dropdown"
+              position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
-              selections={statusSelected || "Select Status"}
-              selectOptions={statusOptions}
+              dropdownItems={statusOptions}
+              value={statusSelected || "Select Status"}
             />
           )}
         </DataToolbarFilter>

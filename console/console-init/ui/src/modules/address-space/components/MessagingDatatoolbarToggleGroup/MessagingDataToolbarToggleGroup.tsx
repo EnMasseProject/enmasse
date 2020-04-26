@@ -176,12 +176,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Type"
+            <DropdownWithToggle
+              id="al-filter-dropdown"
+              toggleId={"al-filter-dropdown-type"}
+              position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              selectOptions={typeOptions}
+              dropdownItems={typeOptions}
+              value={typeSelected || "Select Type"}
             />
           )}
         </DataToolbarFilter>
