@@ -78,14 +78,17 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     ) {
       return [
         {
+          id: "edit-address",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
+          id: "delete-address",
           title: "Delete",
           onClick: () => onDelete(originalData)
         },
         {
+          id: "purge-address",
           title: "Purge",
           onClick: () => onPurge(originalData)
         }
@@ -93,10 +96,12 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       return [
         {
+          id: "edit-address",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
+          id: "delete-address",
           title: "Delete",
           onClick: () => onDelete(originalData)
         }

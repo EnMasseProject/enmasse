@@ -136,15 +136,15 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     }
 
     public WebElement getEditMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Edit')]"));
+        return getActionDropDown().findElement(By.xpath("//*[@id='edit-address']/div"));
     }
 
     public WebElement getDeleteMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Delete')]"));
+        return getActionDropDown().findElement(By.xpath("//*[@id='delete-address']/div"));
     }
 
     public WebElement getPurgeMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Purge')])]"));
+        return getActionDropDown().findElement(By.xpath("//*[@id='purge-address']/div"));
     }
 
     private String parseName(WebElement elem) {
