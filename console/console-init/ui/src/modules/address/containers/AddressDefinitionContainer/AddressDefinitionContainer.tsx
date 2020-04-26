@@ -100,6 +100,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
       if (addressPlans.data && addressPlans.data.addressPlans.length > 0) {
         const planOptions = addressPlans.data.addressPlans.map(plan => {
           return {
+            key: plan.metadata.name,
             value: plan.metadata.name,
             label: plan.spec.displayName || plan.metadata.name,
             description: plan.spec.shortDescription || plan.spec.longDescription
@@ -147,6 +148,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
 
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
+      key: type.spec.displayName.toLowerCase(),
       value: type.spec.displayName,
       label: type.spec.displayName,
       description: type.spec.shortDescription

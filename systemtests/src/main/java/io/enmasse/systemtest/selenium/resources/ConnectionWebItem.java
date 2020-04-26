@@ -20,8 +20,8 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
 
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
-        this.host = parseName(webItem.findElement(By.xpath("./td[@data-label='host']")));
-        this.hostRoute = webItem.findElement(By.xpath("./td[@data-label='host']"));
+        this.host = parseName(webItem.findElement(By.xpath("./td[@data-label='Hostname']")));
+        this.hostRoute = webItem.findElement(By.xpath("./td[@data-label='Hostname']"));
         this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
         this.protocol = webItem.findElement(By.xpath("./td[@data-label='Protocol']")).getText().split(" ")[0];
         this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();

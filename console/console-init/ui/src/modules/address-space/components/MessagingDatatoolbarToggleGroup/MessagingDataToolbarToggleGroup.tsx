@@ -123,7 +123,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="al-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -156,7 +156,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameSpaceInput}
               />
               <Button
-                id="ad-links-filter-search-namespace"
+                id="al-filter-search-namespace"
                 variant={ButtonVariant.control}
                 aria-label="search button for search namespace"
                 onClick={onSearch}

@@ -380,7 +380,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getAddressFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterAddress"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterName"));
     }
 
     private WebElement getNamespaceFilterDropDownItem() throws Exception {

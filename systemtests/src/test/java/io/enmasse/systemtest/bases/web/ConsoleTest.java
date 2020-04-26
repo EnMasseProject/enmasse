@@ -1135,7 +1135,7 @@ public abstract class ConsoleTest extends TestBase {
 
     }
 
-    protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
+    protected void  doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace, SortType.CONTAINER_ID,
                 this::attachClients,
                 c -> c.getContainerId() != null,
