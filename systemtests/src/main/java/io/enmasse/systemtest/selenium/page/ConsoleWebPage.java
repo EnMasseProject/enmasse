@@ -712,7 +712,7 @@ public class ConsoleWebPage implements IWebPage {
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
                 selenium.fillInputItem(getSelectNameTextBox(), filterValue);
-                selenium.clickOnItem(getSearchButtonName(), "Search");
+                selenium.clickOnItem(getSearchButtonAddress(), "Search");
                 break;
             case NAMESPACE:
                 selenium.clickOnItem(getNamespaceFilterDropDownItem());

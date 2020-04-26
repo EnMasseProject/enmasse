@@ -150,7 +150,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
       isOpen={isOpen}
       toggle={
         <DropdownToggle
-          id={toggleId || id}
+          id={toggleId}
           onToggle={onToggle}
           className={toggleClass}
           isDisabled={isDisabled}
