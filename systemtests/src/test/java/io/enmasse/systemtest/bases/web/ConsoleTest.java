@@ -30,7 +30,6 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.isolated.Credentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
@@ -1490,7 +1489,7 @@ public abstract class ConsoleTest extends TestBase {
         try (CertPair ca = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse/CN=MyCA");
              CertPair unsignedCluster = OpenSSLUtil.createSelfSignedCert("/O=io.enmasse//CN=MyCluster");
              CertSigningRequest csr = OpenSSLUtil.createCsr(unsignedCluster);
-             CertPair cluster = OpenSSLUtil.signCrs(csr, Collections.singletonList(wildcardSan), ca)
+             CertPair cluster = OpenSSLUtil.signCsr(csr, Collections.singletonList(wildcardSan), ca)
         ) {
             // Steps from https://docs.openshift.com/container-platform/4.3/authentication/certificates/replacing-default-ingress-certificate.html#replacing-default-ingress_replacing-default-ingress
 

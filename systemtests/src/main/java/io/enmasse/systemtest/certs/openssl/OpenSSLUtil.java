@@ -5,19 +5,28 @@
 
 package io.enmasse.systemtest.certs.openssl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.enmasse.systemtest.certs.BrokerCertBundle;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import org.apache.commons.io.FileUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class OpenSSLUtil {
-    private static final Logger log = LoggerFactory.getLogger(OpenSSLUtil.class);
+    public static final String DEFAULT_SUBJECT = "/O=enmasse-systemtests";
+
+    public static CertPair createSelfSignedCert() {
+        return createSelfSignedCert(DEFAULT_SUBJECT);
+    }
 
     public static CertPair createSelfSignedCert(String subject) {
         File key = null;
@@ -26,15 +35,13 @@ public class OpenSSLUtil {
         try {
             key = File.createTempFile("tls", ".key");
             cert = File.createTempFile("tls", ".crt");
-            List<String> cmd = Arrays.asList("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
+
+            success = Exec.executeAndCheck("openssl", "req", "-new", "-days", "11000", "-x509", "-batch", "-nodes",
                     "-out", cert.getAbsolutePath(),
                     "-keyout", key.getAbsolutePath(),
                     "-subj",
-                    subject);
+                    subject).getRetCode();
 
-            runCommand(cmd.toArray(new String[] {}));
-
-            success = true;
             return new CertPair(key, cert, subject);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -50,14 +57,44 @@ public class OpenSSLUtil {
             }
         }
     }
+
+    public static CertPair createStore(CertPair cert, String name) {
+        File keystore = null;
+        File p12Store = null;
+        boolean success = false;
+        try {
+            keystore = File.createTempFile("tls", ".jks");
+            p12Store = File.createTempFile("tls", ".p12");
+            success = Exec.executeAndCheck("openssl", "pkcs12", "-export", "-passout", "pass:123456",
+                    "-in", cert.getCert().getAbsolutePath(), "-inkey", cert.getKey().getAbsolutePath(), "-name", name, "-out", p12Store.getAbsolutePath()).getRetCode();
+
+            keystore.delete();
+            success = Exec.executeAndCheck("keytool", "-importkeystore", "-srcstorepass", "123456",
+                    "-deststorepass", "123456", "-destkeystore", keystore.getAbsolutePath(), "-srckeystore", p12Store.getAbsolutePath(), "-srcstoretype", "PKCS12").getRetCode();
+
+            return new CertPair(null, keystore, null);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        } finally {
+            if (!success) {
+
+                if (keystore != null) {
+                    keystore.delete();
+                }
+                if (p12Store != null) {
+                    p12Store.delete();
+                }
+            }
+        }
+    }
+
     public static CertSigningRequest createCsr(CertPair target) {
         File csr = null;
         boolean success = false;
         try {
             csr = File.createTempFile("server", ".csr");
-            runCommand("openssl", "req", "-new", "-batch", "-nodes", "-keyout", target.getKey().getAbsolutePath(), "-subj", target.getSubject(), "-out", csr.getAbsolutePath());
-            success = true;
-            return new CertSigningRequest(csr,target.getKey());
+            success = Exec.executeAndCheck("openssl", "req", "-new", "-batch", "-nodes", "-keyout", target.getKey().getAbsolutePath(), "-subj", target.getSubject(), "-out", csr.getAbsolutePath()).getRetCode();
+            return new CertSigningRequest(csr, target.getKey());
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         } finally {
@@ -67,24 +104,23 @@ public class OpenSSLUtil {
                 }
             }
         }
-
     }
 
-    public static CertPair signCrs(CertSigningRequest request, Collection<String> sans, CertPair ca) {
+    public static CertPair signCsr(CertSigningRequest request, Collection<String> sans, CertPair ca) {
         File crt = null;
         boolean success = false;
         try {
             crt = File.createTempFile("server", ".crt");
             if (sans.size() > 0) {
-                String sansString = "subjectAltName=DNS:" + sans.stream().collect(Collectors.joining(",DNS:"));
-                runCommand("bash",
+                String sansString = "subjectAltName=DNS:" + String.join(",DNS:", sans);
+                success = Exec.executeAndCheck("bash",
                         "-c",
                         "openssl x509 -req -extfile <(printf \"" + sansString + "\") -days 11000 -in " + request.getCsrFile().getAbsolutePath() +
                                 " -CA " + ca.getCert().getAbsolutePath() +
                                 " -CAkey " + ca.getKey().getAbsolutePath() +
-                                " -CAcreateserial -out " + crt.getAbsolutePath());
+                                " -CAcreateserial -out " + crt.getAbsolutePath()).getRetCode();
             } else {
-                runCommand("openssl",
+                success = Exec.executeAndCheck("openssl",
                         "x509",
                         "-req",
                         "-days",
@@ -97,9 +133,8 @@ public class OpenSSLUtil {
                         ca.getKey().getAbsolutePath(),
                         "-CAcreateserial",
                         "-out",
-                        crt.getAbsolutePath());
+                        crt.getAbsolutePath()).getRetCode();
             }
-            success = true;
             return new CertPair(request.getKeyFile(), crt, null);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -118,9 +153,9 @@ public class OpenSSLUtil {
         try {
             cert = File.createTempFile(String.format("host_%s:%d", host, port), ".crt");
             List<String> cmd = Arrays.asList("openssl", "s_client", "-crlf", "-showcerts", "-servername", host, "-connect", String.format("%s:%d", host, port));
-            String pems = runCommandWithInput("GET / HTTP/1.1\n", cmd.toArray(new String[] {}));
-            Files.writeString(cert.toPath(), pems);
-            success = true;
+            ExecutionResultData data = Exec.executeAndCheck("GET / HTTP/1.1\n", cmd);
+            Files.writeString(cert.toPath(), data.getStdOut());
+            success = data.getRetCode();
             return new CertPair(null, cert, null);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
@@ -133,49 +168,57 @@ public class OpenSSLUtil {
         }
     }
 
-    private static String runCommand(String... cmd) {
-        return runCommandWithInput(null, cmd);
+    public static CertBundle createCertBundle(String cn) throws Exception {
+        CertPair ca = createSelfSignedCert();
+        CertPair cert = createSelfSignedCert(DEFAULT_SUBJECT + "/CN=" + cn);
+        CertSigningRequest csr = createCsr(cert);
+        cert = signCsr(csr, Collections.emptyList(), ca);
+        try {
+            return new CertBundle(FileUtils.readFileToString(ca.getCert(), StandardCharsets.UTF_8),
+                    FileUtils.readFileToString(cert.getKey(), StandardCharsets.UTF_8),
+                    FileUtils.readFileToString(cert.getCert(), StandardCharsets.UTF_8));
+        } finally {
+            deleteFiles(ca.getCert(), ca.getKey(), cert.getKey(), cert.getCert());
+        }
     }
 
-    private static String runCommandWithInput(String stdin, String... cmd) {
-        ProcessBuilder keyGenBuilder = new ProcessBuilder(cmd).redirectInput(ProcessBuilder.Redirect.PIPE).redirectErrorStream(true);
-
-        log.info("Running command '{}'", keyGenBuilder.command());
-        String outBuf = null;
-        boolean success = false;
+    public static BrokerCertBundle createBrokerCertBundle(String cn) throws Exception {
+        // Generate CA used to sign certs
+        CertPair ca = createSelfSignedCert();
         try {
-            Process process = keyGenBuilder.start();
-            try (Writer writer = new OutputStreamWriter(process.getOutputStream());
-                 BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                if (stdin != null) {
-                    writer.write(stdin);
-                }
-                writer.close();
+            // Create broker certs and put into keystore
+            CertPair broker = createSelfSignedCert(DEFAULT_SUBJECT + "/CN=" + cn);
+            CertSigningRequest brokerCsr = createCsr(broker);
+            broker = signCsr(brokerCsr, Collections.emptyList(), ca);
+            File brokerKeystore = createStore(broker, "broker").getCert();
 
-                outBuf = reader.lines().collect(Collectors.joining("\n"));
-            }
-            if (!process.waitFor(1, TimeUnit.MINUTES)) {
-                throw new RuntimeException(String.format("Command '%s' timed out", keyGenBuilder.command()));
+            // Generate truststore with client cert and put into truststore
+            CertPair client = createSelfSignedCert(DEFAULT_SUBJECT);
+            CertSigningRequest clientCsr = createCsr(client);
+            client = signCsr(clientCsr, Collections.emptyList(), ca);
+
+            //import client cert into broker TRUSTSTORE
+            File brokerTrustStore = createStore(client, "client").getCert();
+
+            try {
+                //return ca.crt keystore and truststore
+                return new BrokerCertBundle(Files.readAllBytes(ca.getCert().toPath()),
+                        Files.readAllBytes(brokerKeystore.toPath()),
+                        Files.readAllBytes(brokerTrustStore.toPath()),
+                        Files.readAllBytes(client.getCert().toPath()),
+                        Files.readAllBytes(client.getKey().toPath()));
+            } finally {
+                deleteFiles(broker.getCert(), broker.getKey(), client.getCert(), client.getKey());
             }
 
-            final int exitValue = process.waitFor();
-            success = exitValue == 0;
-            String msg = String.format("Command '%s' completed with exit value %d", keyGenBuilder.command(), exitValue);
-            if (success) {
-                log.info(msg);
-            } else {
-                log.error(msg);
-                throw new RuntimeException(String.format("Command '%s' failed with exit value %d", keyGenBuilder.command(), exitValue));
-            }
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         } finally {
-            if (!success && outBuf != null) {
-                log.error("Command output: {}", outBuf);
-            }
+            deleteFiles(ca.getCert(), ca.getKey());
         }
-        return outBuf.toString();
+    }
+
+    private static void deleteFiles(File... files) {
+        for (File file : files) {
+            FileUtils.deleteQuietly(file);
+        }
     }
 }

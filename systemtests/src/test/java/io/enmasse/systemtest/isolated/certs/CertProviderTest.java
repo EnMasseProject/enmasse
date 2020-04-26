@@ -22,6 +22,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.CertProvider;
+import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -33,7 +34,6 @@ import io.enmasse.systemtest.shared.standard.TopicTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -74,7 +74,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
     void testCertBundle() throws Exception {
         String domain = environment.kubernetesDomain();
         String messagingHost = String.format("messaging.%s", domain);
-        CertBundle messagingCert = CertificateUtils.createCertBundle(messagingHost);
+        CertBundle messagingCert = OpenSSLUtil.createCertBundle(messagingHost);
 
         createTestEnv(
                 createEndpoint("messaging", new CertSpecBuilder()

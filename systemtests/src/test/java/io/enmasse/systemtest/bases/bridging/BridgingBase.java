@@ -21,13 +21,13 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
+import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.CertificateUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.vertx.proton.ProtonClientOptions;
@@ -60,7 +60,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     @BeforeEach
     void deployBroker() throws Exception {
         String serviceName = String.format("%s.%s.svc.cluster.local", remoteBrokerName, remoteBrokerNamespace);
-        certBundle = CertificateUtils.createBrokerCertBundle(serviceName);
+        certBundle = OpenSSLUtil.createBrokerCertBundle(serviceName);
         SystemtestsKubernetesApps.deployAMQBroker(remoteBrokerNamespace, remoteBrokerName, remoteBrokerUsername, remoteBrokerPassword, certBundle);
         remoteBrokerEndpoint = new Endpoint(serviceName, 5672);
         remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);

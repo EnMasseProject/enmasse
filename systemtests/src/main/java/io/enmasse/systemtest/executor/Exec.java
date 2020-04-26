@@ -4,9 +4,14 @@
  */
 package io.enmasse.systemtest.executor;
 
+import io.enmasse.systemtest.logs.CustomLogger;
+import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,10 +30,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.logs.CustomLogger;
 
 /**
  * Class provide execution of external command
@@ -122,13 +123,28 @@ public class Exec {
      * @throws ExecutionException
      */
     public int exec(List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
+        return exec(null, commands, timeout);
+    }
+
+    /**
+     * Method executes external command
+     *
+     * @param input    execute commands during execution
+     * @param commands arguments for command
+     * @param timeout  timeout in ms for kill
+     * @return returns ecode of execution
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
+    public int exec(String input, List<String> commands, int timeout) throws IOException, InterruptedException, ExecutionException {
         log.info("Running command - " + String.join(" ", commands.toArray(new String[0])));
         ProcessBuilder builder = new ProcessBuilder();
         builder.command(commands);
         builder.directory(new File(System.getProperty("user.dir")));
-        if (this.env != null ) {
-            for (Map.Entry<String,String> entry : this.env.entrySet()) {
-                if(entry.getValue() != null ) {
+        if (this.env != null) {
+            for (Map.Entry<String, String> entry : this.env.entrySet()) {
+                if (entry.getValue() != null) {
                     builder.environment().put(entry.getKey(), entry.getValue());
                 } else {
                     builder.environment().remove(entry.getKey());
@@ -139,6 +155,12 @@ public class Exec {
 
         Future<String> output = readStdOutput();
         Future<String> error = readStdError();
+
+        if (input != null) {
+            try (Writer writer = new OutputStreamWriter(process.getOutputStream())) {
+                writer.write(input);
+            }
+        }
 
         int retCode = 1;
         if (timeout > 0) {
@@ -170,6 +192,7 @@ public class Exec {
 
     /**
      * Method kills process
+     *
      * @throws InterruptedException
      */
     public void stop() throws InterruptedException {
@@ -232,7 +255,15 @@ public class Exec {
     }
 
     public static ExecutionResultData executeAndCheck(int timeout, String... commands) {
-        ExecutionResultData results = execute(timeout, true, commands);
+        return executeAndCheck(null, timeout, commands);
+    }
+
+    public static ExecutionResultData executeAndCheck(String input, List<String> commands) {
+        return executeAndCheck(input, 60_000, commands.toArray(new String[0]));
+    }
+
+    public static ExecutionResultData executeAndCheck(String input, int timeout, String... commands) {
+        ExecutionResultData results = execute(Arrays.asList(commands), timeout, true, true, null, input);
         if (!results.getRetCode()) {
             throw new IllegalStateException(results.getStdErr());
         }
@@ -243,7 +274,7 @@ public class Exec {
         return execute(command, 60_000, true, true);
     }
 
-    public static ExecutionResultData execute(String ...command) {
+    public static ExecutionResultData execute(String... command) {
         return execute(Arrays.asList(command), 60_000, true, true);
     }
 
@@ -263,11 +294,15 @@ public class Exec {
         return execute(command, timeout, logToOutput, appendLineSeparator, null);
     }
 
-    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String,String> env) {
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String, String> env) {
+        return execute(command, timeout, logToOutput, appendLineSeparator, env, null);
+    }
+
+    public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String, String> env, String input) {
         try {
             Exec executor = new Exec(appendLineSeparator);
             executor.setEnv(env);
-            int ret = executor.exec(command, timeout);
+            int ret = executor.exec(input, command, timeout);
             synchronized (lock) {
                 if (logToOutput) {
                     log.info("Return code: {}", ret);
@@ -289,7 +324,7 @@ public class Exec {
     /**
      * Class represent async reader
      */
-    private class StreamGobbler implements Publisher<String>{
+    private class StreamGobbler implements Publisher<String> {
         private InputStream is;
         private StringBuilder data = new StringBuilder();
         private Collection<Subscriber<? super String>> subscribers = new ConcurrentLinkedQueue<>();
