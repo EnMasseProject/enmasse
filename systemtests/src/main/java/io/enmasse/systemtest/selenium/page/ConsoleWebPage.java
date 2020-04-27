@@ -180,7 +180,7 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.xpath("//option[@value='" + plan + "']"));
     }
 
-    private WebElement getChaneAuthService() {
+    private WebElement getEditAuthService() {
         return selenium.getDriver().findElement(By.id("edit-addr-auth"));
     }
     //==============================================================
@@ -635,7 +635,7 @@ public class ConsoleWebPage implements IWebPage {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "AddressSpaceDropdown");
         selenium.clickOnItem(item.getEditMenuItem());
-        selenium.clickOnItem(getChaneAuthService());
+        selenium.clickOnItem(getEditAuthService());
         selenium.clickOnItem(getAuthServiceElement(authServiceName));
         selenium.clickOnItem(getEditConfirmButton());
         selenium.refreshPage();
