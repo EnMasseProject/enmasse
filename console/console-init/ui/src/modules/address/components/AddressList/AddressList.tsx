@@ -190,7 +190,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   };
   const tableRows = rowsData.map(toTableCells);
   const tableColumns = [
-    { title: "Address", transforms: [sortable] },
+    { title: "Name", transforms: [sortable] },
     "Type/Plan",
     "Status",
     { title: "Time created", transforms: [sortable] },

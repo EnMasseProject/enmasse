@@ -718,20 +718,20 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddressesAndWait(addresses.toArray(new Address[0]));
 
         String subText = "queue";
-        consolePage.addFilter(FilterType.NAME, subText);
+        consolePage.addFilter(FilterType.ADDRESS, subText);
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "topic";
-        consolePage.addFilter(FilterType.NAME, subText);
+        consolePage.addFilter(FilterType.ADDRESS, subText);
         items = consolePage.getAddressItems();
         assertEquals(addressCount, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount));
 
 
-        consolePage.removeAddressFilter(FilterType.NAME, "queue");
+        consolePage.removeAddressFilter(FilterType.ADDRESS, "queue");
         items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
