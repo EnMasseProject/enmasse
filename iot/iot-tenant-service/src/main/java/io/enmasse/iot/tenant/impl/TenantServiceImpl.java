@@ -5,8 +5,6 @@
 
 package io.enmasse.iot.tenant.impl;
 
-import io.enmasse.iot.service.base.AbstractProjectBasedService;
-import io.opentracing.noop.NoopSpan;
 import static io.vertx.core.Future.failedFuture;
 import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 
@@ -22,16 +20,20 @@ import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.service.base.AbstractProjectBasedService;
 import io.opentracing.Span;
+import io.opentracing.noop.NoopSpan;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 @Service
+@Qualifier("backend")
 public class TenantServiceImpl extends AbstractProjectBasedService implements TenantService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
