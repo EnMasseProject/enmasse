@@ -8,6 +8,7 @@ import static io.enmasse.systemtest.utils.AssertionPredicate.from;
 import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
 import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Assertions;
@@ -31,10 +32,10 @@ public class CustomPredicatesTest {
         isPresent(value).or(v -> false).assertTrue("");
 
         isNotPresent(empty).assertTrue("");
-        isNotPresent(empty).and(v -> v == null).assertTrue("");
+        isNotPresent(empty).and(Objects::isNull).assertTrue("");
         isNotPresent(empty).or(v -> {
             //this isn't executed
-            return v.chars()!=null;
+            return true;
         }).assertTrue("");
         isNotPresent(empty).or(v -> false).assertTrue("");
 
@@ -45,19 +46,19 @@ public class CustomPredicatesTest {
     void testNegativeAssertionPredicate() {
         Assertions.assertThrows(AssertionFailedError.class, () -> {
             isNotPresent(value).assertTrue("expected to fail");
-            });
+        });
         Assertions.assertThrows(AssertionFailedError.class, () -> {
             isPresent(value).negate().assertTrue("expected to fail");
-            });
+        });
 
 
         Assertions.assertThrows(AssertionFailedError.class, () -> {
             isPresent(empty).assertTrue("expected to fail");
-            });
+        });
 
         Assertions.assertThrows(AssertionFailedError.class, () -> {
             from(text, v -> v != null && v.length() == 0).assertTrue("");
-            });
+        });
     }
 
 }

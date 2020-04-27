@@ -25,7 +25,7 @@ import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
-import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;

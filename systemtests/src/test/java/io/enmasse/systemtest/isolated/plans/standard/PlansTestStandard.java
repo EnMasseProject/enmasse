@@ -31,7 +31,7 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.shared.standard.TopicTest;

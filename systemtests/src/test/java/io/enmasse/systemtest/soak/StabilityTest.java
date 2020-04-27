@@ -19,7 +19,7 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.cluster.KubeClusterManager;
-import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.page.ConsoleWebPage;
 import io.enmasse.systemtest.utils.AddressUtils;

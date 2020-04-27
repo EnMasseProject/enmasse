@@ -8,7 +8,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
 import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.selenium.SeleniumFirefox;
+import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Test;
 
