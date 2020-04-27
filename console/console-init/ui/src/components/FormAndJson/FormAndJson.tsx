@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { ToggleOffIcon, ToggleOnIcon, IconSize } from "@patternfly/react-icons";
 import { Editor } from "components";
+import { Switch } from "@patternfly/react-core";
 interface IFormAndJsonProps {
   detail?: string;
   detailInJson?: any;
@@ -52,9 +52,9 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
   return (
     <>
       {!isValid && <h1 style={{ color: "red" }}>inValid</h1>}
+      <Switch id="iot-enable-switch" isChecked={showJson} onChange={onToggle} />
       {showJson ? (
         <>
-          <ToggleOnIcon color="blue" size={IconSize.lg} onClick={onToggle} />
           <Editor
             mode="json"
             value={detail}
@@ -64,10 +64,7 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
           />
         </>
       ) : (
-        <>
-          <ToggleOffIcon color="black" size={IconSize.lg} onClick={onToggle} />
-          {console.log(detailInJson)}
-        </>
+        <>{console.log(detailInJson)}</>
       )}
     </>
   );

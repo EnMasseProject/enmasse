@@ -15,10 +15,10 @@ import {
   Select,
   SelectOption,
   SelectVariant,
-  SelectOptionObject
+  SelectOptionObject,
+  Switch
 } from "@patternfly/react-core";
 import { IDropdownOption } from "components";
-import { ToggleOnIcon, ToggleOffIcon, IconSize } from "@patternfly/react-icons";
 
 const colorOptions = { blue: "var(--pf-global--active-color--100)" };
 
@@ -111,22 +111,11 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
                 </SplitItem>
                 <SplitItem isFilled> </SplitItem>
                 <SplitItem>
-                  {isEnabled ? (
-                    <ToggleOnIcon
-                      onClick={() => {
-                        handleEnabledChange(false);
-                      }}
-                      color={colorOptions.blue}
-                      size={IconSize.lg}
-                    />
-                  ) : (
-                    <ToggleOffIcon
-                      onClick={() => {
-                        handleEnabledChange(true);
-                      }}
-                      size={IconSize.lg}
-                    />
-                  )}
+                  <Switch
+                    id="iot-enable-switch"
+                    isChecked={isEnabled}
+                    onChange={() => handleEnabledChange(!isEnabled)}
+                  />
                 </SplitItem>
               </Split>
             </FormGroup>

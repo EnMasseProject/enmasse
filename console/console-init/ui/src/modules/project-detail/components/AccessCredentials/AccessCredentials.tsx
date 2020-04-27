@@ -14,14 +14,10 @@ import {
   Text,
   TextVariants,
   Grid,
-  GridItem
+  GridItem,
+  Switch
 } from "@patternfly/react-core";
-import {
-  ToggleOffIcon,
-  ToggleOnIcon,
-  CheckCircleIcon,
-  ErrorCircleOIcon
-} from "@patternfly/react-icons";
+import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 import { InputText, JsonViewEditor } from "components";
 import { IInfoTypePlan } from "../GeneralInfo";
 
@@ -69,10 +65,14 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
   const onToggle = () => {
     setIsHidden(!isHidden);
   };
-  const EditIcon = isHidden ? (
-    <ToggleOffIcon onClick={onToggle} size="lg" />
-  ) : (
-    <ToggleOnIcon onClick={onToggle} size="lg" />
+  const EditIcon = (
+    <Switch
+      id="access-credential-switch"
+      label="View in Json"
+      labelOff="View in Json"
+      isChecked={isHidden}
+      onChange={onToggle}
+    />
   );
   const data = {
     access_credentials: {

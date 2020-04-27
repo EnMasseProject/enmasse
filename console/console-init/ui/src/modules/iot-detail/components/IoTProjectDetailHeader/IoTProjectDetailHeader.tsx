@@ -9,12 +9,11 @@ import {
   DropdownPosition,
   PageSection,
   PageSectionVariants,
-  Badge
+  Badge,
+  Switch
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { TypeBadge } from "modules/address-detail";
 import { DropdownWithKebabToggle } from "components";
-import { ToggleOnIcon, ToggleOffIcon, IconSize } from "@patternfly/react-icons";
 
 interface IIoTProjectDetailHeaderProps {
   projectName: string;
@@ -109,31 +108,18 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
       </SplitItem>
     </>
   );
-
-  const EnabledIcon = () => {
-    return isEnabled ? (
-      <span>
-        <ToggleOnIcon
-          onClick={() => {
-            changeEnable(false);
-          }}
-          color="var(--pf-global--active-color--100)"
-          size={IconSize.lg}
-        />
-        &nbsp; Enabled
-      </span>
-    ) : (
-      <span>
-        <ToggleOffIcon
-          onClick={() => {
-            changeEnable(true);
-          }}
-          size={IconSize.lg}
-        />
-        &nbsp; Disabled
-      </span>
-    );
+  const onChange = () => {
+    changeEnable(!isEnabled);
   };
+  const EnabledIcon = (
+    <Switch
+      id="simple-switch"
+      label="View in Json"
+      labelOff="View in Json"
+      isChecked={isEnabled}
+      onChange={onChange}
+    />
+  );
 
   const KebabOptionsLayout = () => {
     const dropdownItems = [
@@ -174,7 +160,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
         <AddressDetailLayout />
         <SplitItem isFilled />
         <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <EnabledIcon />
+          {EnabledIcon}
         </SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
           <KebabOptionsLayout />
