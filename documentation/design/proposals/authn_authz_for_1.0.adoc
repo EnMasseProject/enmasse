@@ -5,17 +5,21 @@
 1.0 will introduce a new Access Control Service.  This will replace the existing authentication services.
 It will have responsibility for identity management and authorization for the messaging use-case.
 
-For identity, it will have provision to:
+For identity, it will have provision for:
 
-* leverage an external identity provdier (such as a LDAP provider),
-* leverage an external AMQP authentication endpoint (implementing the `authServicePlugin` interface),
-* provide an internal identity source (where users are represented by a kubernetes custom resources),
-* provide an anonymous identity provider (SASL ANONYMOUS),
-* utilize client auth (in collabration with the `MessagingEndpoint` and the Qpid Dispatch Router), and
-* utilise service account tokens for messaging authentication purposes.
+* leverage an external identity provider (such as a LDAP provider),
+* leverage an external AMQP SASL authentication endpoint (implementing the `authServicePlugin` interface),
+* provide an internal identity provider (where users are represented by a kubernetes custom resources),
+* utilize client auth (in collabration with the `MessagingEndpoint` and the Qpid Dispatch Router),
+* utilise service account tokens for messaging authentication purposes, and
+* provide an anonymous identity provider (SASL ANONYMOUS)
 
 For authorization, authorization rules sourced from custom kubernetes resources will allow individual users, or
 groups of users to be permissioned for sending to or receiving from address(es) within the namespace.
+
+The Service Admin will be able to selectively enable/disable identity providers by configuring the Access Control Service
+resource. This will allow EnMasse to conform to the identity management rules of a particular organisation.  For instance, it will be possible for the Access Control Service to be configured so that only the external LDAP is available, or that
+service account and the external LDAP are available.
 
 Each Messaging Tenant will be associated with exactly one Access Control Service. This can be done locally by a Tenant
 Admin, or alternatively the Service Admin will be able to configure one or more Access Control Services centrally. Selectors will automatically associate an Access Control Service with the Tenants.
@@ -30,17 +34,14 @@ Service is defined by the Service Admin.  The in-built default will provide ANON
 ==== Access Control Server
 
 An Access Control Server instance will provide identity management and authorization services to all the tenants of an instance of shared infrastructure.  The Access Control Server will be a stateless component that will be scaleable for
-availability and performance.
+availability and performance.  It will be implemented in Go.
 
 The Access Control Server will be created by EnMasse Operator according to configuration within the MessagingInfra object.
 
-The Access Control Server will act on the `AccessControlService`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` objects that exist in the scope defined by the `MessagingInfra` (i.e. its namespace selector).  It
-will act as the controller for all of these objects and be responsible for maintaintence of the status sections.  In addition it will watch `ServiceAccounts` thus enabling the service account authentication use-case. 
+The Access Control Server will provide an AMQP SASL endpoint that implements `authServicePlugin` interface.
 
-The Access Control Server will present an AMQP SASL endpoint, implementing the `authServicePlugin` interface, per
-messaging tenant.  It will be the responsibility of the EnMasse Operator to configure a router listener _per tenant_ each
-with its own authServicePlugin configuration referencing the correct endpoint.  TLS SNI will allow the Access Control Server
-to work out which `AccessControlService` to apply when processing each authentication event.
+On each incoming AMQP connection, the Access Control Server will use TLS SNI will allow it to determine which
+`AccessControlService` to apply when processing each authentication event.
 
 The algorithm for processing each authentication event:
 
@@ -53,14 +54,92 @@ The algorithm for processing each authentication event:
 1. SASL-CHALLENGE / SASL RESPONSE as necessary
 1. Access Control Server calls out to the external authentication service / uses `MessagingUser`/`ServiceAccount` (as appropiate) to determine if the authentication is successful.
 1. SASL-OUTCOME flows to the Client.
-1. Access Control Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `ADDRESS-AUTHZ`.
+1. Access Control Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
 1. AMQP OPEN flows to the Router carrying the authorisation policy.
 
-When the messaging clients authenticate, the SASL username passed by the application must be qualified with a domain suffix (`@DOMAIN`). This allows the Access Control Server to disambiguate identities between providers. 
+===== Provider Behaviour
 
-=== Qpid Dispatch Router
+====== External LDAP Provider
 
-The existing `authServicePlugin` is reused unchnaged by this proposal.   There are no router changes required.
+Allows the use of an Open Directory implementing the LDAP protocol to provide an identity and, optionally, group information.
+The Access Control Server will perform a simple bind against the LDAP in order to determine the success or failure of the authentication.
+
+Simple bind requires the plain text password from the client, so SASL PLAIN will be offered when this identity provider is used.
+
+Later, support will be added for LDAP SASL.
+
+====== External AMQP SASL Provider
+
+Allows the use of an AMQP SASL authentication endpoint that implements the `authServicePlugin` protocol.  When this identity
+provider is used, the Access Control Server acts a SASL proxy.  It will connect to the external provider and relay the
+the AMQP SASL performatives to/from the client.
+
+The response from the External AMQP SASL server must provides an `authenticated-identity`.  It may also provide
+`groups` and may provide `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated from the `MessagingRoles` and `MessagingRoleBindings`.
+
+The SASL mechanisms offered when this identity provider are in use depend on the mechansims required by the External AMQP SASL server.
+
+====== Internal Identity Provider
+
+The Internal Identity Provider uses the `MessagingUser` resources are a identity/password database.
+
+The password in the MessagingUser record will usually stored salted (defined by  https://tools.ietf.org/html/rfc5802). However
+it will be possible for a request for authentication to arrive before the salting has taken place, to cater for this
+case, the Internal Identity Provider will also accept plain passwords from the database.
+
+This identity provider will offer SASL mechanism PLAIN and SCRAM-SHA-256.
+
+====== Client Auth Identity Provider
+
+For client auth, the identity is established during the TLS negotiation phase between Client and Router.  The router will
+pass the established identity through the `authServicePlugin` to the Access Control Server via the SASL EXTERNAL mechanism
+via the link:https://tools.ietf.org/html/rfc4422#appendix-A[authz-id-string].  (TODO: check Router behaviour).
+
+This identity provider will offer SASL mechanism EXTERNAL.
+
+====== Service Account Identity Provider
+
+For the Service Account provider, the client passes the Service Account's bearer token as a password and a special user-id
+`@@serviceaccount@@`. The Access Control Server will perform a `TokenReview` to check the token's validity and retrieve the user username.  A check is made to ensure that the username refers to a Service Account which is annotated with `enmasse.io/messaging-authentication`.
+
+This identity provider will offer SASL mechanisms PLAIN, XOAUTH2 (Obsolete), link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER]
+
+====== Anonymous Identity Provider 
+
+For the Anonymous Provider, the SASL mechnism ANONYMOUS will be used.
+
+===== Behaviour Without AccessControlService
+
+To support the simple getting started use case, if there are no `AccessControlService` defined in the infra namespace,
+the system will behaves as if there is an `AccessControlService` with the anonymous identity provider defined.  For
+authorization, it will be as if an authorisation policy grant all access to all addresses exists.
+
+As soon as an `AccessControlService` is defined in the infra namespace, the default described here becomes unavailable for
+use.
+
+===== Go AMQP server implementation
+
+The Access Control Server's Go AMQP server requirements are quite limited.   It does not require a full-blown AMQP server
+implementation.  It is sufficient to handle the AMQP SASL performatives and the AMQP Open/Close performatives.  This can
+be implemented within the Access Control Server code-base.  It will borrow codec implementation from Azure AMQP client.
+
+==== EnMasse Operator
+
+The EnMasse Operator will act as the controller for `AccessControlService`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources and be responsible for maintaintence of the status sections.  For `MessagingUser`
+resources it will be responsible for salting passwords. 
+
+The EnMasse operator will watch for `MessagingTenants` resources.  For each it will and define a Kubernetes service
+exposing the AMQP SASL endpoint of the Access Control Servcie  The MessagingInfra controller will configure a router listener/authServicePlugin _per tenant_  with a reference to the correct  AMQP SASL endpoint.
+
+==== Messaging Client
+
+When the messaging clients authenticate, in some cases the username must be qualified with an `@DOMAIN` suffix.  The qualification must be used when authenticatiing with an identity from an external LDAP or external AMQP SASL server.
+
+For theinternal identity provider, the domain suffix may be omitted.  The service accounts, the username is always `@@serviceaccount@@`.  For client auth, the identity is the common name from the certificate.
+
+==== Qpid Dispatch Router
+
+This proposal reuses the existing `authServicePlugin` of the Qpid Dispatch Router unchnaged.
 
 === Resources
 
@@ -72,6 +151,8 @@ the parameters to establish connection with external identity provider (if any).
 * Configuration provided by `MessagingInfra` will define the Access Control Server deployment.
 
 At the tenant level:
+
+* `MessagingTennant`: can be used to specify a specific `AccessControlService` to be used for the tenant.
 
 * `MessagingUser` (v2beta1): used with the internal identity source to provide a messaging username/password pairing.  The password will be stored in the resource a secure fashion.  `MessagingUser` is scoped to the messaging tenant. It cannot
 be used to access any other namespace apart from the only in which it exists.
@@ -88,23 +169,15 @@ the messaging tenant.
 
 ==== AccessControlService
 
-The `AccessControlService` used to define an instance of an accesss control service.  It allows the configuration of
-one or more identity providers.
+The `AccessControlService` used to define an instance of an accesss control service.  It allows the configuration the external
+identity providers and gives the ability to disable the internal identity providers.
 
-Each identity provider instance will have a `domain`.  This name will be formed following RFC 1123 convetions (DNS
-subdomain). The domain of each identity provider must be unique.  The domain will serve for identification of the
-provider and will ensure unquiness of the identities from the provider within the messaging tenant by preventing
-collision. 
-
-When the messaging client authenticates the domain part must be provided as patrt of the SASL username.  An exception
+When the messaging client authenticates the domain part must be provided as part of the SASL username.  An exception
 is made for the client authentication provider and the anonymous provider.
 
-The inclusion of the identity provider in the resource enables the use of that identity provider.  Each provider type may appear exactly once.   There is an exception for the anonymous identity provider.  If used, no other provider may be defined.
-
-The `AccessControlService` has a selector for namespaces that should use this accesscontrol by default.  This selector is ANDed with the selector of the `MessagingInfra` itself. The `MessagingTenant` may override the the `AccessControlService` by specifying the service's name and namespace.  An annotation of the `AccessControlService` will be used to prevent overriding.
-
-The access control service will use the capabilities of the configured identity providers to determine which SASL
-mechanism(s) to offer during SASL negociation.
+The `AccessControlService` has a selector for namespaces that should use this AccessControlService by default.  This selector
+is ANDed with the selector of the `MessagingInfra` itself. The `MessagingTenant` may override the the `AccessControlService` by specifying the service's name and namespace.  An annotation of the `AccessControlService` will be used to prevent
+overriding.
 
 Example:
 
@@ -114,9 +187,10 @@ kind: AccessControlService
 metadata:
   name: myaccesscontrol1
 spec:
-  identityProvider:
+  identityProviders:
     ldap:
-      domain:
+      enabled: boolean
+      domain: # RFC 1123 convetions (DNS subdomain)
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
@@ -125,19 +199,21 @@ spec:
       searchFilter:
       groupAttributeName: # more fields required to flexibly support LDAP groups.
     external:
-      domain:
+      enabled: boolean
+      domain: RFC 1123 convetions (DNS subdomain)
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
       credentials: # borrow structure from connector
     internal:
-      domain:
+      enabled: boolean
     clientAuth:
-      domain:
+      enabled: boolean
     serviceAccount:
-      domain:
+       enabled: boolean
     anonymous:
-      domain:
+       enabled: boolean
+
   # Allows specifying a selector for namespaces that should use this accesscontrol by default.
   namespaceSelector:
     matchLabels:
@@ -157,8 +233,8 @@ accessControl:
 
 ==== MessagingTennant
 
-A `MessagingTennant`can explictly reference a AccessControlService in order to override default configuration provided by the
-Service Admin.  (Should there be a mechanism to prevent overriding?).
+A `MessagingTennant` can explictly reference a AccessControlService in order to override default configuration provided by the
+Service Admin.
 
 ```
 accessControlService:
@@ -189,11 +265,11 @@ spec:
 ==== ServiceAccount
 
 The Tenant Admin is able to create an ServiceAccount in the namespace.  Annotating the service account with a special
-annotation enables the user of the service account for messaging authentication.  
+annotation (enmasse.io/messaging-authentication: true) enables the user of the service account for messaging authentication.  
 
 ==== MessagingRole
 
-`MessagingRole` is with `MessagingRoleBinding` too define authorisation rules.  The `MessagingRole` allows
+`MessagingRole` is used with `MessagingRoleBinding` to define authorisation rules.  The `MessagingRole` allows
 one or more address patterns to the associated with the verbs "send" and/or "receive".   Permissions are purely additive (there are no “deny” rules).
 
 ```
@@ -222,52 +298,34 @@ subjects:
   name: myuser  # refers to a MessagingUser
 - kind: ServiceAccount
   name: myapp  # refers to a ServiceAccount  
-- kind: ExternalSubject
+- kind: Subject
   name: "foouser@ldap.mycompany.com". # refers to an external subject which must be domain qualified.
+                                      # @@anonymous@@ refers to the anonymous user.
 messagingRoleRef:
   name: myrole
 ```
 
-Other stuff to incorporate somewhere:
 
+=== Ensuring Uniquely Identifiable Identities in the Router Logs
+ 
+As the Routers are shared by all the Tenants, it is possible that two or more tenants could define an identites with
+colliding names.  In order to ensure that activity of the users is attributable from the routers logs, the 
+`preferred_username` field of the `address-authz` response will return a qualified name:
 
-To support the simple getting started use case, if there are no access control services defined in the infra namespace,
-the system behaves as if there is an access control provider defined with anonymous defined with an access all authorisation policy.  As soon as an access control provider is defined in the infra namespace, the default becomes unavailable for use.
+1. External LDAP / External AMQP SASL `<username>@<domain>.<namespace>`
+1. Internal Provider `<username>@messaginguser.<namespace>`
+1. Service Account `<username>@serviceaccount.<namespace>`
+1. Client Auth - certificate distinguished name
+1. Anonynous - `anonymous@namespace`
 
+=== Metrics
 
-Need to make sure identities in the router logs are identifiable.   i.e. the activity of messaging tenant 1's fred should be distinguishable from messaging tenant 2's fred.  use the preferred_username field of the address-authz to return the user identity in the form <prinicipal>@<domain>.<accesscontrolservice name>.<namespace> so that fully qualified names appear in the 
-logs.
+The AccessControlService will expose a Prometheus endpoint will the following metrics:
 
-
-
-
-
-
-
-
-The SASL integration point with the Qpid Dispatch Router will be unchanged i.e. the authServicePlugin with use of the
-`ADDRESS-AUTHZ` capability retained. For the client auth use case, there will need to be a mechanism for Qpid Dispatch
-to pass the authenticated DN from Qpid Dispatch to the authentication server.  For this purpose a private SASL mechanism will
-be used that merely transpoorts the authenticated DN.
-
-
-
-
-
-There will be a scalable access control server that will be responsible for processing authentications and turning the
-authorization rules into the address authz map.  It will present an AMQP authServicePlugin server.  It will refer to the
-external identity provider and/or the kubernetes custom resources to process each authentication event.
-
-
-The service will be scoped to 
-
-
-
-
+1. `auth_requests_total{domain="", sasl_outcome=""}`
+1. `auth_requests_duration_milliseconds{domain="", sasl_outcome="", le=<buckets>}`
 
 
 https://github.com/EnMasseProject/enmasse/issues/4106
 https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/proposals/shared-infrastructure.adoc
-
-
 https://qpid.apache.org/releases/qpid-dispatch-master/man/qdrouterd.conf.html#_authserviceplugin
