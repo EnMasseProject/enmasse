@@ -52,7 +52,7 @@ The algorithm for processing each authentication event:
 1. Client selects mechanism
 1. SASL-INIT flows to the Access Control Server
 1. SASL-CHALLENGE / SASL RESPONSE as necessary
-1. Access Control Server calls out to the external authentication service / uses `MessagingUser`/`ServiceAccount` (as appropiate) to determine if the authentication is successful.
+1. Access Control Server calls out to the external authentication service / uses `MessagingUser` / `TokenReview` (as appropiate) to determine if the authentication is successful.
 1. SASL-OUTCOME flows to the Client.
 1. Access Control Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
 1. AMQP OPEN flows to the Router carrying the authorisation policy.
@@ -157,9 +157,7 @@ At the tenant level:
 * `MessagingUser` (v2beta1): used with the internal identity source to provide a messaging username/password pairing.  The password will be stored in the resource a secure fashion.  `MessagingUser` is scoped to the messaging tenant. It cannot
 be used to access any other namespace apart from the only in which it exists.
 
-* `ServiceAccount`: kubernetes `serviceaccounts` can be used to authenticate to the namespace for messaging.  This feature is
-enabled by adding a special annotation to the `serviceaccount`.  The service account must exist within the namespace of
-the messaging tenant.
+* `ServiceAccount`: a bearer token of a  `ServiceAccounts` can be used to authenticate to the namespace for messaging.  The service account must exist within the namespace of the messaging tenant.
 
 * `MessagingRole`: define access to one or more addresses.  Its design will be analogous to the kubernetes role object but will not have any relation to kubernetes `roles` or `clusterroles`.
 
@@ -264,13 +262,14 @@ spec:
 
 ==== ServiceAccount
 
-The Tenant Admin is able to create an ServiceAccount in the namespace.  Annotating the service account with a special
-annotation (enmasse.io/messaging-authentication: true) enables the user of the service account for messaging authentication.  
+The bearer token of a `ServiceAccounts` can be used to authenticate to the namespace for messaging.  The service accoun
+must exist within the namespace of the messaging tenant.
 
 ==== MessagingRole
 
 `MessagingRole` is used with `MessagingRoleBinding` to define authorisation rules.  The `MessagingRole` allows
-one or more address patterns to the associated with the verbs "send" and/or "receive".   Permissions are purely additive (there are no “deny” rules).
+one or more address patterns to the associated with the verbs "send" and/or "receive".   Permissions are purely additive (there are no “deny” rules).  There is no referential integrity enforced between the address prefixes and the
+messaging addresses.
 
 ```
 apiVersion: enmasse.io/v1
@@ -285,7 +284,7 @@ spec:
 
 ==== MessagingRoleBinding
 
-The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`.
+The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`. There is no referential integrity enforced between the referenced messaging users or service accounts and the object themselves.
 
 ```
 apiVersion: enmasse.io/v1
@@ -304,7 +303,6 @@ subjects:
 messagingRoleRef:
   name: myrole
 ```
-
 
 === Ensuring Uniquely Identifiable Identities in the Router Logs
  
