@@ -57,7 +57,6 @@ class PostgresTableDeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
-    @Disabled("Fixed in hono/pull/1711")
     void testDeviceCredentialsDoesNotContainsPasswordDetails() throws Exception {
         super.doTestDeviceCredentialsDoesNotContainsPasswordDetails();
     }
