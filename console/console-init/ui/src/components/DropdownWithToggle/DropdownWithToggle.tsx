@@ -39,7 +39,7 @@ export interface IDropdownWithToggleProps
   onSelectItem?: (value: string, event?: any) => void;
   dropdownItemIdPrefix?: string;
   dropdownItemClass?: string;
-  isDisplayLabelAndValue?: boolean;
+  shouldDisplayLabelAndValue?: boolean;
   isLabelAndValueNotSame?: boolean;
   name?: string;
 }
@@ -60,7 +60,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   isDisabled,
   dropdownItemIdPrefix,
   dropdownItemClass,
-  isDisplayLabelAndValue,
+  shouldDisplayLabelAndValue,
   isLabelAndValueNotSame
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
@@ -109,7 +109,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   };
 
   const getItems = (option: IDropdownOption) => {
-    if (isDisplayLabelAndValue) {
+    if (shouldDisplayLabelAndValue) {
       return (
         <>
           <span className={dropdowItemCss}>{option.label || option.value}</span>
