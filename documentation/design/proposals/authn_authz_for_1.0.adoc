@@ -320,8 +320,8 @@ colliding names.  In order to ensure that activity of the users is attributable 
 
 The AccessControlService will expose a Prometheus endpoint will the following metrics:
 
-1. `auth_requests_total{domain="", sasl_outcome=""}`
-1. `auth_requests_duration_milliseconds{domain="", sasl_outcome="", le=<buckets>}`
+1. `auth_requests_total{namespace="", domain="", sasl_outcome=""}`
+1. `auth_requests_duration_seconds{namespace="", domain="", sasl_outcome="", le=<buckets>}`
 
 
 https://github.com/EnMasseProject/enmasse/issues/4106
