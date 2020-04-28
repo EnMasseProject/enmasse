@@ -30,8 +30,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     public AddressWebItem(WebElement item) {
         this.webItem = item;
         this.checkBox = webItem.findElement(By.xpath("./td[@data-key='0']")).findElement(By.tagName("input"));
-        this.address = parseName(webItem.findElement(By.xpath("./td[@data-label='Address']")));
-        this.clientsRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-label='Address']")));
+        this.address = parseName(webItem.findElement(By.xpath("./td[@data-label='Name']")));
+        this.clientsRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-label='Name']")));
         try {
             this.plan = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().toLowerCase().substring(2);
         } catch (Exception ex) {
@@ -136,15 +136,15 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     }
 
     public WebElement getEditMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Edit')]"));
+        return getActionDropDown().findElement(By.id("edit-address"));
     }
 
     public WebElement getDeleteMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Delete')]"));
+        return getActionDropDown().findElement(By.id("delete-address"));
     }
 
     public WebElement getPurgeMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Purge')])]"));
+        return getActionDropDown().findElement(By.id("purge-address"));
     }
 
     private String parseName(WebElement elem) {

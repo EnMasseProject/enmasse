@@ -85,8 +85,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     { key: "filterType", value: "Type" }
   ];
   const typeOptions: ISelectOption[] = [
-    { value: "Standard", isDisabled: false },
-    { value: "Brokered", isDisabled: false }
+    { key: "Standard", value: "Standard", isDisabled: false },
+    { key: "Brokered", value: "Brokered", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -176,12 +176,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Type"
+            <DropdownWithToggle
+              id="al-filter-dropdown-item-type"
+              toggleId={"al-filter-dropdown-type"}
+              position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
-              selections={typeSelected || "Select Type"}
-              selectOptions={typeOptions}
+              dropdownItems={typeOptions}
+              value={typeSelected || "Select Type"}
             />
           )}
         </DataToolbarFilter>

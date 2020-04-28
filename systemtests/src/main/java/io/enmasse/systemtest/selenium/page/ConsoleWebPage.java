@@ -712,7 +712,7 @@ public class ConsoleWebPage implements IWebPage {
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
                 selenium.fillInputItem(getSelectNameTextBox(), filterValue);
-                selenium.clickOnItem(getSearchButtonName(), "Search");
+                selenium.clickOnItem(getSearchButtonAddress(), "Search");
                 break;
             case NAMESPACE:
                 selenium.clickOnItem(getNamespaceFilterDropDownItem());
@@ -725,10 +725,10 @@ public class ConsoleWebPage implements IWebPage {
                 WebElement selectedType;
                 try {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-select-type-dropdown-itemtype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
                 } catch (Exception ex) {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-dropdown-item-typetype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
                 }
                 selenium.clickOnItem(selectedType);
                 break;

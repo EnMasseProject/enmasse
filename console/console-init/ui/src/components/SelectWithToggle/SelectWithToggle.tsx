@@ -58,6 +58,7 @@ export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
     >
       {selectOptions.map((option, index) => (
         <SelectOption
+          id={id}
           isDisabled={option.isDisabled}
           key={index}
           value={option.value}
