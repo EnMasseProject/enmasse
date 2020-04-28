@@ -228,6 +228,12 @@ Configuration provided by `MessagingInfra` will define the Access Control Server
 ```
 accessControl:
     replicas: <integer>
+    podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
+      spec:
+        affinity: # Allow explicitly setting affinity rules to enforce specific nodes
+        tolerations: # Allow enforcing which nodes to run on
+        resources: # Memory and CPU settings
+        priorityClassName: # Pod priority settings
 ```
 
 ==== MessagingTennant
