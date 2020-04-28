@@ -34,7 +34,7 @@ public class Minikube extends Kubernetes {
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
-                    .protocols(Collections.singletonList(Protocol.HTTP_2))
+                    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
                     .connectTimeout(environment.getKubernetesApiConnectTimeout())
                     .writeTimeout(environment.getKubernetesApiWriteTimeout())
                     .readTimeout(environment.getKubernetesApiReadTimeout())
