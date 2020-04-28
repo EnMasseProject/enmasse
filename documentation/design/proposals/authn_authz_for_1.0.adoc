@@ -362,7 +362,7 @@ colliding names.  In order to ensure that activity of the users is attributable 
 1. External LDAP / External AMQP SASL `enamsse.io:ldap.mycompany.com:myns:bill`
 1. Internal Provider `enamsse.io:messaginguser:myns:myappuser`
 1. Service Account `system:serviceaccount:myns:myapp`
-1. TLS Client Auth - enamsse.io:tlsclientauth:myns:cn=John Doe,dc=example,dc=com
+1. TLS Client Auth - `enamsse.io:tlsclientauth:myns:cn=John Doe,dc=example,dc=com`
 1. Anonynous - `system:unauthenticated`
 
 === Metrics
