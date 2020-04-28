@@ -145,9 +145,15 @@ exposing the AMQP SASL endpoint of the Access Control Servcie  The MessagingInfr
 
 ==== Messaging Client
 
-When the messaging clients authenticate, in some cases the username must be qualified with an `@DOMAIN` suffix.  The qualification must be used when authenticatiing with an identity from an external LDAP or external AMQP SASL server.
+When using the service accounts, the following username must be used:
 
-For theinternal identity provider, the domain suffix may be omitted.  The service accounts, the username is always `@@serviceaccount@@`.  For client auth, the identity is the common name from the certificate.
+* `system:serviceaccount`. (for backward compatibility, `@@serviceaccount@@` will also be accepted)
+
+If more than one identity provider is configured in the `AccessControlService`, for identity providers that require a
+username, the user must be qualified with the domain name of the identity provider.
+
+* `enamsse.io:messaginguser:<namespace>:<name>`
+* `enamsse.io:<domain>:<namespace>:<name>`
 
 ==== Qpid Dispatch Router
 
