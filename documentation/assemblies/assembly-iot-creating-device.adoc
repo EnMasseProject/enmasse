@@ -10,7 +10,7 @@ After installing the IoT services and creating an IoT project, you can create an
 
 :headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
 ifeval::["{cmdcli}" == "oc"]
-:registry: $(oc -n enmasse-infra get routes device-registry --template='{{ .spec.host }}')
+:registry: $(oc -n {ProductNamespace} get routes device-registry --template='{{ .spec.host }}')
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
 :registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
@@ -23,4 +23,3 @@ endif::[]
 include::../modules/proc-iot-register-new-device.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-set-username-password-device.adoc[leveloffset=+1]
-
