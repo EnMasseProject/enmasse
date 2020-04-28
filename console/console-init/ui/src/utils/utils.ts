@@ -18,6 +18,7 @@ export interface ISelectOption {
   value: string;
   isDisabled?: boolean;
   key?: string;
+  label?: string;
 }
 
 /**
@@ -121,6 +122,31 @@ const kFormatter = (num: number) => {
     : sign * absoluteNumber;
 };
 
+const uniqueId = () => {
+  return Math.random()
+    .toString(16)
+    .slice(-4);
+};
+
+const findIndexByProperty = (
+  items: any[],
+  targetProperty: string,
+  targetPropertyValue: string
+) => {
+  if (items && targetProperty && targetPropertyValue) {
+    return items.findIndex(
+      item => item[targetProperty] === targetPropertyValue
+    );
+  }
+  return -1;
+};
+
+const hasOwnProperty = (obj: Object, property: string) => {
+  if (obj && property) {
+    return obj.hasOwnProperty(property);
+  }
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -128,5 +154,8 @@ export {
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
   messagingAddressNameRegexp,
-  kFormatter
+  kFormatter,
+  uniqueId,
+  findIndexByProperty,
+  hasOwnProperty
 };
