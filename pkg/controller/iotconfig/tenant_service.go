@@ -84,7 +84,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 		container.Env = []corev1.EnvVar{
 			{Name: "SPRING_PROFILES_ACTIVE", Value: "prod"},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
-			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
@@ -131,7 +131,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 	// inter service secrets
 
-	if err := ApplyInterServiceForDeployment(r.client, config, deployment, nameTenantService); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, tlsServiceKeyVolumeName, nameTenantService); err != nil {
 		return err
 	}
 

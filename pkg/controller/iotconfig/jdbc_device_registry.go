@@ -213,7 +213,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
 			{Name: "SPRING_PROFILES_ACTIVE", Value: profiles},
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
-			{Name: "KUBERNETES_NAMESPACE", ValueFrom: &corev1.EnvVarSource{FieldRef: &corev1.ObjectFieldSelector{FieldPath: "metadata.namespace"}}},
+			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
@@ -295,7 +295,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	} else {
 		interServiceName = ""
 	}
-	if err := ApplyInterServiceForDeployment(r.client, config, deployment, interServiceName); err != nil {
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, tlsServiceKeyVolumeName, interServiceName); err != nil {
 		return err
 	}
 

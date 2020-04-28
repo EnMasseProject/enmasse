@@ -32,11 +32,23 @@ type IoTConfigSpec struct {
 	JavaDefaults JavaContainerDefaults `json:"java,omitempty"`
 	TlsDefaults  TlsOptions            `json:"tls,omitempty"`
 
+	Mesh           MeshConfig       `json:"mesh"`
 	ServicesConfig ServicesConfig   `json:"services"`
 	AdaptersConfig AdaptersConfig   `json:"adapters"`
 	Tracing        TracingConfig    `json:"tracing"`
 	Monitoring     MonitoringConfig `json:"monitoring"`
 }
+
+//region Mesh
+
+type MeshConfig struct {
+	ServiceConfig   `json:",inline"`
+	ContainerConfig `json:",inline"`
+
+	Tls TlsOptions `json:"tls,omitempty"`
+}
+
+//endregion
 
 //region Tracing
 
