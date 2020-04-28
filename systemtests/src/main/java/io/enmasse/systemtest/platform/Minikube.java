@@ -137,11 +137,11 @@ public class Minikube extends Kubernetes {
 
     @Override
     public String getClusterExternalImageRegistry() {
-        return "localhost:5000";
+        return "registry.kube-system.svc.cluster.local:5000";
     }
 
     @Override
     public String getClusterInternalImageRegistry() {
-        return "localhost:5000";
+        return "registry.kube-system.svc.cluster.local:5000";
     }
 }
