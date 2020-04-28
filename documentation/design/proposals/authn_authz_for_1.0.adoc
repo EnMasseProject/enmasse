@@ -154,7 +154,7 @@ At the tenant level:
 
 * `MessagingTennant`: can be used to specify a specific `AccessControlService` to be used for the tenant.
 
-* `MessagingUser` (v2beta1): used with the internal identity source to provide a messaging username/password pairing.  The password will be stored in the resource a secure fashion.  `MessagingUser` is scoped to the messaging tenant. It cannot
+* `MessagingUser`: used with the internal identity source to provide a messaging username/password pairing.  The password will be stored in the resource a secure fashion.  `MessagingUser` is scoped to the messaging tenant. It cannot
 be used to access any other namespace apart from the only in which it exists.
 
 * `ServiceAccount`: a bearer token of a  `ServiceAccounts` can be used to authenticate to the namespace for messaging.  The service account must exist within the namespace of the messaging tenant.
@@ -180,7 +180,7 @@ overriding.
 Example:
 
 ```
-apiVersion: enmasse.io/v1
+apiVersion: enmasse.io/v1beta2
 kind: AccessControlService
 metadata:
   name: myaccesscontrol1
@@ -251,7 +251,7 @@ The controller will detect newly created MessagingUser resource and automaticall
 In this first version, there will be no provision for password policies (constitunency rules, aging etc).
 
 ```
-apiVersion: enmasse.io/v1
+apiVersion: enmasse.io/v1beta2
 kind: MessagingUser
 metadata:
   name: myuser
@@ -272,7 +272,7 @@ one or more address patterns to the associated with the verbs "send" and/or "rec
 messaging addresses.
 
 ```
-apiVersion: enmasse.io/v1
+apiVersion: enmasse.io/v1beta2
 kind: MessagingRole
 metadata:
   name: myrole
@@ -287,7 +287,7 @@ spec:
 The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`. There is no referential integrity enforced between the referenced messaging users or service accounts and the object themselves.
 
 ```
-apiVersion: enmasse.io/v1
+apiVersion: enmasse.io/v1beta2
 kind: MessagingRoleBinding
 metadata:
   name: myapps1-permissions
