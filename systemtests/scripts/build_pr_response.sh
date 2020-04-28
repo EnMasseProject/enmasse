@@ -30,7 +30,7 @@ TEST_FAILURES_COUNT=$(get_test_count "failures")
 TEST_ALL_FAILED_COUNT=$((TEST_ERRORS_COUNT + TEST_FAILURES_COUNT))
 
 
-if [[ "${OCP_VERSION}" == "4*" ]]; then
+if [[ "${OCP_VERSION}" == "4" ]]; then
   BUILD_ENV="crc"
 else
   BUILD_ENV="oc cluster up"
