@@ -100,7 +100,7 @@ This identity provider will offer SASL mechanism EXTERNAL.
 ====== Service Account Identity Provider
 
 For the Service Account provider, the client passes the Service Account's bearer token as a password and a special user-id
-`@@serviceaccount@@`. The Access Control Server will perform a `TokenReview` to check the token's validity and retrieve the user username.  A check is made to ensure that the username refers to a Service Account which is annotated with `enmasse.io/messaging-authentication`.
+`@@serviceaccount@@`. The Access Control Server will perform a `TokenReview` to check the token's validity and retrieve the user username. 
 
 This identity provider will offer SASL mechanisms PLAIN, XOAUTH2 (Obsolete), link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER]
 
