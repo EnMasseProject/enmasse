@@ -27,7 +27,7 @@ import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.selenium.SeleniumChrome;
+import io.enmasse.systemtest.annotations.SeleniumChrome;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.vertx.core.json.JsonObject;
 

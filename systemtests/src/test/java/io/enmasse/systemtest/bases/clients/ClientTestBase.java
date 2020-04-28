@@ -14,7 +14,7 @@ import io.enmasse.systemtest.bases.shared.ITestBaseShared;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientType;
-import io.enmasse.systemtest.messagingclients.ExternalClients;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
