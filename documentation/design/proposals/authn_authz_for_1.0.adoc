@@ -298,7 +298,7 @@ subjects:
 - kind: ServiceAccount
   name: myapp  # refers to a ServiceAccount  
 - kind: Subject
-  name: "foouser@ldap.mycompany.com". # refers to an external subject which must be domain qualified.
+  name: "foouser@ldap.mycompany.com". # refers to an external subject which must be domain qualified.   This can refer to either user or group subjects.
                                       # @@anonymous@@ refers to the anonymous user.
 messagingRoleRef:
   name: myrole
