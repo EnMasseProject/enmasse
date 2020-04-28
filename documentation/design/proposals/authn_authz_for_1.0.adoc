@@ -284,7 +284,23 @@ spec:
 
 ==== MessagingRoleBinding
 
-The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`. There is no referential integrity enforced between the referenced messaging users or service accounts and the object themselves.
+The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`.
+
+There is no referential integrity enforced between the referenced messaging users or service accounts and the `MessagingUser` or `ServiceAccount` themselves.
+
+For the subject references, the following will be used:
+
+1.  `ServiceAccount` - the subject will follow the Kubernetes conventions for service accounts
+  - `system:serviceaccount:<namespace>:<serivceaccount name>` (refers the named service account),
+  - `system:serviceaccount:<namespace>` (refers to all serviceaccounts in the namespace), or
+  - `system:serviceaccount`  (refers to all serviceaccounts system wide)
+1. `MessagingUser` - the subject will follow the conventions for service accounts, with the exception that the system
+   wide form is disallowed.  The namespace must refer to the namespace of this tenant.
+  - `enamsse.io:messaginguser:<namespace>:<name>` (refers the named messaginguser),
+  - `enamsse.io:messaginguser:<namespace>` (refers to all messagingusers in the namespace)
+1. `Subject` - a user or group subject belonging to an External, TLS Client Auth or Anonymous Identity Provider.
+  - `enamsse.io:<domain>:<namespace>:<name>` (refers to subject _name_ from the provider with the given domain)
+  - `system:unauthenticated` - corresponds to the unauthenticated identity from the the anonymous identity provider.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -293,28 +309,29 @@ metadata:
   name: myapps1-permissions
   namespace: mynamespace
 subjects:
-- kind: MessagingUser
-  name: myuser  # refers to a MessagingUser
-- kind: ServiceAccount
-  name: myapp  # refers to a ServiceAccount  
 - kind: Subject
-  name: "foouser@ldap.mycompany.com". # refers to an external subject which must be domain qualified.   This can refer to either user or group subjects.
-                                      # @@anonymous@@ refers to the anonymous user.
+  name: system:serviceaccount:myns:myappuser # refers to ServiceAccount myapp in myns 
+- kind: Subject
+  name: enamsse.io:messaginguser:myns:myappuser  # refers to MessagingUser myappuser in myns 
+- kind: Subject
+  name: enamsse.io:ldap.mycompany.com:myns:bill
+- kind: Subject
+  name: enamsse.io:tlsclientauth:myns:cn=John Doe,dc=example,dc=com
 messagingRoleRef:
   name: myrole
 ```
 
 === Ensuring Uniquely Identifiable Identities in the Router Logs
  
-As the Routers are shared by all the Tenants, it is possible that two or more tenants could define an identites with
+As the Routers are shared by all the Tenants, it is possible that two or more tenants could define an identities with
 colliding names.  In order to ensure that activity of the users is attributable from the routers logs, the 
 `preferred_username` field of the `address-authz` response will return a qualified name:
 
-1. External LDAP / External AMQP SASL `<username>@<domain>.<namespace>`
-1. Internal Provider `<username>@messaginguser.<namespace>`
-1. Service Account `<username>@serviceaccount.<namespace>`
-1. Client Auth - certificate distinguished name
-1. Anonynous - `anonymous@namespace`
+1. External LDAP / External AMQP SASL `enamsse.io:ldap.mycompany.com:myns:bill`
+1. Internal Provider `enamsse.io:messaginguser:myns:myappuser`
+1. Service Account `system:serviceaccount:myns:myapp`
+1. TLS Client Auth - enamsse.io:tlsclientauth:myns:cn=John Doe,dc=example,dc=com
+1. Anonynous - `system:unauthenticated`
 
 === Metrics
 
