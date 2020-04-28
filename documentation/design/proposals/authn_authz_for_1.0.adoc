@@ -110,11 +110,10 @@ This identity provider will offer SASL mechanism EXTERNAL.
 
 ====== Service Account Identity Provider
 
-For the Service Account provider, the client passes the Service Account's bearer token as a password and a special user-id
-`@@serviceaccount@@`. The Access Control Server will perform a `TokenReview` to confirm the token's validity and retrieve
-the username asscoiated with the service account. 
+The Access Control Server will perform a `TokenReview` to confirm the token's validity and retrieve the username
+and groups asscoiated with the token.  The identity provider will ensure that the token refer to a service account.   
 
-This identity provider will offer SASL mechanisms PLAIN, XOAUTH2 (Obsolete), link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER]
+This identity provider will offer SASL mechanisms PLAIN, link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER]
 
 ====== Anonymous Identity Provider 
 
