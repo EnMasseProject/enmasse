@@ -104,7 +104,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostNameInput}
               />
               <Button
-                id="ad-links-filter-search-hostname"
+                id="cl-filter-search--hostname-btn"
                 variant={ButtonVariant.control}
                 aria-label="search button for search hostname"
                 onClick={onSearch}
@@ -137,7 +137,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostContainerInput}
               />
               <Button
-                id="ad-links-filter-search-container"
+                id="cl-filter-search--container-btn"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -155,8 +155,9 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="cl-filter-dropdown"
+          toggleId={"cl-filter-dropdown"}
+          dropdownItemIdPrefix={"cl-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

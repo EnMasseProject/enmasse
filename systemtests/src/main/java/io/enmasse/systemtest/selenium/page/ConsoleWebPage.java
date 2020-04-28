@@ -361,7 +361,7 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getSelectTypeDropDown() throws Exception {
         try {
-            return getToolBarMenu().findElement(By.id("al-filter-select-type-dropdown"));
+            return getToolBarMenu().findElement(By.id("al-filter-select-type-dropdown-item"));
         } catch (Exception ex) {
             return getToolBarMenu().findElement(By.id("al-filter-dropdown-type"));
         }
@@ -432,11 +432,11 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionsHostnameSearchButton() throws Exception {
-        return getToolBarMenu().findElement(By.id("cl-filter-search-btn"));
+        return getToolBarMenu().findElement(By.id("cl-filter-search--hostname-btn"));
     }
 
     private WebElement getConnectionsContainerSearchButton() throws Exception {
-        return getToolBarMenu().findElement(By.id("cl-filter-search"));
+        return getToolBarMenu().findElement(By.id("cl-filter-search--container-btn"));
     }
 
     private WebElement getAppliedFilterBar() throws Exception {
@@ -707,7 +707,7 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getStatusFilterDropDownItem());
                 selenium.clickOnItem(getSelectStatusDropDown(), "Status phase dropdown");
                 selenium.clickOnItem(getSelectStatusDropDown()
-                        .findElement(By.id("al-filter-select-status-dropdown-itemstatus" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1))));
+                        .findElement(By.id("al-filter-select-status-dropdown" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1))));
                 break;
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
@@ -720,8 +720,7 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getSearchButtonNamespace(), "Search");
                 break;
             case TYPE:
-                selenium.clickOnItem(getTypeFilterDropDownItem());
-                selenium.clickOnItem(getSelectTypeDropDown(), "Type filter dropdown");
+                selenium.clickOnItem(getTypeFilterDropDownItem(),"Type filter dropdown");
                 WebElement selectedType;
                 try {
                     selectedType = getSelectTypeDropDown()

@@ -81,9 +81,9 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   ];
 
   const statusOptions: ISelectOption[] = [
-    { value: "Active", isDisabled: false },
-    { value: "Configuring", isDisabled: false },
-    { value: "Pending", isDisabled: false }
+    { key: "Active", value: "Active", isDisabled: false },
+    { key: "Configuring", value: "Configuring", isDisabled: false },
+    { key: "Pending", value: "Pending", isDisabled: false }
   ];
   const checkIsFilterApplied = () => {
     if (
@@ -140,7 +140,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id="al-filter-select-type-dropdown-item"
+              id="al-filter-select-type-dropdown"
+              dropdownItemIdPrefix={"al-filter-select-type-dropdown-item"}
               position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
               dropdownItems={typeOptions}

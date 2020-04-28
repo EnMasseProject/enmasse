@@ -907,9 +907,9 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.createAddresses(addresses.toArray(new Address[0]));
-        consolePage.sortAddresses(SortType.ADDRESS, true);
+        consolePage.sortAddresses(SortType.NAME, true);
         assertSorted("Console failed, items are not sorted by name asc", consolePage.getAddressItems());
-        consolePage.sortAddresses(SortType.ADDRESS, false);
+        consolePage.sortAddresses(SortType.NAME, false);
         assertSorted("Console failed, items are not sorted by name desc", consolePage.getAddressItems(), true);
     }
 

@@ -190,7 +190,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
+          id="al==-filter-dropdown"
           toggleId={"al-filter-dropdown"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
