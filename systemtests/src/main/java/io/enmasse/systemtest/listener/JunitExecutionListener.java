@@ -35,7 +35,8 @@ public class JunitExecutionListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
-
+        LOGGER.info("================================================================");
+        LOGGER.info("Test plan finished");
         var tags = TestInfo.getInstance().getTestRunTags();
         if (tags != null && tags.size() == 1 && tags.get(0).equals(TestTag.FRAMEWORK)) {
             LOGGER.info("Running framework tests, no cleanup performed");

@@ -242,7 +242,7 @@ public class EnmasseOperatorManager {
     public void removeIoT() {
         LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
-        KubeCMDClient.runOnCluster("delete", "iotconfigs", "-n", kube.getInfraNamespace());
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "iotconfigs", "-n", kube.getInfraNamespace());
     }
 
     public void deleteEnmasseAnsible() {
@@ -259,14 +259,14 @@ public class EnmasseOperatorManager {
 
     public boolean clean() throws Exception {
         cleanCRDs();
-        KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
-        KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");
-        KubeCMDClient.runOnCluster("delete", "apiservices", "-l", "app=enmasse");
-        KubeCMDClient.runOnCluster("delete", "oauthclients", "-l", "app=enmasse");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "clusterrolebindings", "-l", "app=enmasse");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "clusterroles", "-l", "app=enmasse");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "apiservices", "-l", "app=enmasse");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "oauthclients", "-l", "app=enmasse");
         if (kube.getOcpVersion() == OpenShiftVersion.OCP4) {
-            KubeCMDClient.runOnCluster("delete", "consolelinks", "-l", "app=enmasse");
+            KubeCMDClient.runOnClusterWithoutLogger("delete", "consolelinks", "-l", "app=enmasse");
         }
-        KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
             kube.deleteNamespace(kube.getInfraNamespace(), Duration.ofMinutes(kube.getOcpVersion() == OpenShiftVersion.OCP4 ? 10 : 5));
         }
@@ -274,8 +274,8 @@ public class EnmasseOperatorManager {
     }
 
     private void cleanCRDs() {
-        KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse,enmasse-component=iot");
-        KubeCMDClient.runOnClusterWithTimeout(600_000, "delete", "crd", "-l", "app=enmasse", "--timeout=600s");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "crd", "-l", "app=enmasse,enmasse-component=iot");
+        KubeCMDClient.runOnClusterWithoutLogger("delete", "crd", "-l", "app=enmasse", "--timeout=300s");
     }
 
     public void waitUntilOperatorReadyOlm() throws Exception {
