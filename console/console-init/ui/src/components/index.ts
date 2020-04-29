@@ -28,3 +28,4 @@ export * from "./InputText";
 export * from "./ProjectHeaderCard";
 export * from "./JsonViewEditor";
 export * from "./ToggleIcon";
+export * from "./NoResultFound";
