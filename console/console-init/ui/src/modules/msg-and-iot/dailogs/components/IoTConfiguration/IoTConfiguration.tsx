@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Grid,
   GridItem,
@@ -12,15 +12,10 @@ import {
   TextInput,
   Split,
   SplitItem,
-  Select,
-  SelectOption,
   SelectVariant,
-  SelectOptionObject,
   Switch
 } from "@patternfly/react-core";
-import { IDropdownOption } from "components";
-
-const colorOptions = { blue: "var(--pf-global--active-color--100)" };
+import { IDropdownOption, SelectWithToggle } from "components";
 
 export interface IIoTConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
@@ -43,17 +38,6 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
   isNameValid,
   isEnabled
 }) => {
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const onSelect = (event: any, selection: string | SelectOptionObject) => {
-    onNameSpaceSelect(selection.toString());
-    setIsExpanded(false);
-  };
-  const onToggle = () => {
-    setIsExpanded(!isExpanded);
-  };
-  const onClear = () => {
-    onNameSpaceSelect("");
-  };
   return (
     <>
       <Grid>
@@ -85,24 +69,15 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               />
             </FormGroup>
             <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
-              <Select
-                variant={SelectVariant.typeahead}
-                ariaLabelTypeAhead="Select a namespace"
-                onToggle={onToggle}
-                onSelect={onSelect}
-                onClear={onClear}
+              <SelectWithToggle
+                selectOptions={namespaceOptions}
+                onSelectItem={onNameSpaceSelect}
                 selections={namespace}
-                isExpanded={isExpanded}
-                ariaLabelledBy={"select-namespace"}
-              >
-                {namespaceOptions.map((option, index) => (
-                  <SelectOption
-                    isDisabled={option.disabled}
-                    key={index}
-                    value={option.value}
-                  />
-                ))}
-              </Select>
+                ariaLabel={"iot-namespace"}
+                id="iot-config-select-namespace"
+                optionId="iot-namespace-select-option"
+                variant={SelectVariant.typeahead}
+              />
             </FormGroup>
             <FormGroup isInline label="Enable" fieldId="iot-enabled">
               <Split gutter="md">

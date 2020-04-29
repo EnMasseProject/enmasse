@@ -16,7 +16,6 @@ import {
 } from "@patternfly/react-core";
 import {
   DeviceRegistationManagement,
-  IConfig,
   IAdapter,
   IAdapterConfig,
   AccessCredentials
@@ -27,12 +26,12 @@ export default {
 };
 
 export const projectDetailPage = () => {
-  const registrationApi: IConfig = {
+  const registrationApi: IAdapterConfig = {
     url: "https://http.bosch-iot-hub.com",
     host: "mange.bosh-iot-hub.com",
     port: 5647
   };
-  const credentialApi: IConfig = {
+  const credentialApi: IAdapterConfig = {
     url: "https://http.bosch-iot-hub.com",
     host: "mange.bosh-iot-hub.com",
     port: 268

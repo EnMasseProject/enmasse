@@ -4,14 +4,11 @@
  */
 
 import React from "react";
-import {
-  isMessagingProjectValid,
-  isIoTProjectValid
-} from "modules/msg-and-iot/dailogs/utils";
-import { IIoTProjectInput } from "modules/msg-and-iot/dailogs/components";
+import { isIoTProjectValid } from "modules/msg-and-iot/dailogs";
+import { IIoTProjectInput } from "modules/msg-and-iot/dailogs";
 import { IoTReview } from "../IoTReview";
 
-const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
+const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
   const isReviewEnabled = () => {
     isIoTProjectValid(projectDetail);
   };
@@ -34,4 +31,4 @@ const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
   };
 };
 
-export { IoTProjectReview };
+export { IoTReviewStep };

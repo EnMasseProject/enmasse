@@ -1,9 +1,9 @@
-import {
-  Dropdown,
-  DropdownToggle,
-  DropdownItem,
-  DropdownSeparator
-} from "@patternfly/react-core";
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
+import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import React, { useState } from "react";
 import { CaretDownIcon } from "@patternfly/react-icons";
 

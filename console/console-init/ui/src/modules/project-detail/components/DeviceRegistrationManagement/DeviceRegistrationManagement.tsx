@@ -16,17 +16,13 @@ import {
   Switch
 } from "@patternfly/react-core";
 import { InputText, JsonViewEditor } from "components";
+import { IAdapter, IAdapterConfig } from "../AccessCredentials";
 
-export interface IConfig {
-  url?: string;
-  host?: string;
-  port?: number;
-}
 interface IDeviceRegistationManagementProps {
   username?: string;
   password?: string;
-  registrationApi?: IConfig;
-  credentialApi?: IConfig;
+  registrationApi?: IAdapterConfig;
+  credentialApi?: IAdapterConfig;
 }
 
 const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationManagementProps> = ({
@@ -48,88 +44,104 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       onChange={onToggle}
     />
   );
-  const RegistrationApi = registrationApi && (
-    <>
-      <Text component={TextVariants.h2}>Registration API</Text>
-      <br />
-      {registrationApi.url && (
-        <InputText
-          label={"Url"}
-          type={"text"}
-          value={registrationApi.url}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-registration-api-url"}
-          isExpandable={false}
-        />
-      )}
-      <br />
-      {registrationApi.host && (
-        <InputText
-          label={"Host"}
-          type={"number"}
-          value={registrationApi.host}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-registration-api-host"}
-          isExpandable={false}
-        />
-      )}
-      <br />
-      {registrationApi.port && (
-        <InputText
-          label={"Port"}
-          type={"number"}
-          value={registrationApi.port}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-registration-api-port"}
-          isExpandable={false}
-        />
-      )}
-    </>
-  );
-  const CredentialApi = credentialApi && (
-    <>
-      <Text component={TextVariants.h2}>Credential API</Text>
-      <br />
-      {credentialApi.url && (
-        <InputText
-          label={"Url"}
-          type={"text"}
-          value={credentialApi.url}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-credential-api-url"}
-          isExpandable={false}
-        />
-      )}
-      <br />
-      {credentialApi.host && (
-        <InputText
-          label={"Host"}
-          type={"number"}
-          value={credentialApi.host}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-credential-api-host"}
-          isExpandable={false}
-        />
-      )}
-      <br />
-      {credentialApi.port && (
-        <InputText
-          label={"Port"}
-          type={"number"}
-          value={credentialApi.port}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-credential-api-port"}
-          isExpandable={false}
-        />
-      )}
-    </>
-  );
+  const RegistrationApi = () => {
+    if (registrationApi) {
+      const { url, host, port } = registrationApi;
+      return (
+        <>
+          <Text component={TextVariants.h2}>Registration API</Text>
+          <br />
+          {url && (
+            <InputText
+              label={"Url"}
+              type={"text"}
+              value={url}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-registration-api-url"}
+              isExpandable={false}
+            />
+          )}
+          <br />
+          {host && (
+            <InputText
+              label={"Host"}
+              type={"number"}
+              value={host}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-registration-api-host"}
+              isExpandable={false}
+            />
+          )}
+          <br />
+          {port && (
+            <InputText
+              label={"Port"}
+              type={"number"}
+              value={port}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-registration-api-port"}
+              isExpandable={false}
+            />
+          )}
+        </>
+      );
+    } else {
+      return <></>;
+    }
+  };
+
+  const CredentialApi = () => {
+    if (credentialApi) {
+      const { url, host, port } = credentialApi;
+      return (
+        <>
+          <Text component={TextVariants.h2}>Credential API</Text>
+          <br />
+          {url && (
+            <InputText
+              label={"Url"}
+              type={"text"}
+              value={url}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-credential-api-url"}
+              isExpandable={false}
+            />
+          )}
+          <br />
+          {host && (
+            <InputText
+              label={"Host"}
+              type={"number"}
+              value={host}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-credential-api-host"}
+              isExpandable={false}
+            />
+          )}
+          <br />
+          {port && (
+            <InputText
+              label={"Port"}
+              type={"number"}
+              value={port}
+              isReadOnly={true}
+              enableCopy={true}
+              ariaLabel={"input-credential-api-port"}
+              isExpandable={false}
+            />
+          )}
+        </>
+      );
+    } else {
+      return <></>;
+    }
+  };
+
   const data = {
     device_registry: {
       username: username,
@@ -138,16 +150,15 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       credentialApi: credentialApi
     }
   };
+
   const CardToDisplay = (
     <Card>
       <CardHeader style={{ fontSize: 20 }}>
         <Split>
           <SplitItem>
-            {/* <Text component={TextVariants.h1}> */}
             <h1>
               <b>Device Registration Management</b>
             </h1>
-            {/* </Text> */}
           </SplitItem>
           <SplitItem isFilled />
           <SplitItem>{EditIcon}</SplitItem>
@@ -181,9 +192,9 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             />
           )}
           <br />
-          {RegistrationApi}
+          <RegistrationApi />
           <br />
-          {CredentialApi}
+          <CredentialApi />
         </CardBody>
       )}
     </Card>

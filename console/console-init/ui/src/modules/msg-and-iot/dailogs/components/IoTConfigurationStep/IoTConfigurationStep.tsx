@@ -16,7 +16,7 @@ export interface IIoTProjectInput {
   isNameValid: boolean;
 }
 
-const IoTProjectConfiguration = (
+const IoTConfigurationStep = (
   setProjectDetail: (value: IIoTProjectInput) => void,
   namespaces: IDropdownOption[],
   projectDetail: IIoTProjectInput
@@ -75,4 +75,4 @@ const IoTProjectConfiguration = (
   return steps;
 };
 
-export { IoTProjectConfiguration };
+export { IoTConfigurationStep };

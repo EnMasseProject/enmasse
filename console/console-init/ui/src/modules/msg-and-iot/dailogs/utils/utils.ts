@@ -1,4 +1,4 @@
-import { IMessagingProjectInput } from "../components/MessagingProjectConfiguration";
+import { IMessagingProjectInput } from "../components/MessagingConfigurationStep";
 import { IIoTProjectInput } from "../components";
 
 /*

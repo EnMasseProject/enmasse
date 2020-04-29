@@ -147,6 +147,15 @@ const hasOwnProperty = (obj: Object, property: string) => {
   }
 };
 
+const getCombinedString = (a: string, b?: string) => {
+  let s: string = "";
+  s += a;
+  if (b !== undefined) {
+    s += ", ";
+    s += b;
+  }
+  return s;
+};
 export {
   getSelectOptionList,
   compareObject,
@@ -157,5 +166,6 @@ export {
   kFormatter,
   uniqueId,
   findIndexByProperty,
-  hasOwnProperty
+  hasOwnProperty,
+  getCombinedString
 };

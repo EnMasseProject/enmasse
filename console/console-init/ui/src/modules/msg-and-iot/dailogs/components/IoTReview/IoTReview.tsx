@@ -84,7 +84,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                 <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
                   Enabled
                 </GridItem>
-                <GridItem id="preview-addr-type" span={7}>
+                <GridItem id="preview-iot-enabled" span={7}>
                   {isEnabled ? "true" : "false"}
                 </GridItem>
               </>
@@ -95,7 +95,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
           <Title size={"lg"} className={css(Style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
-              id="preview-as-feedback-tooltip"
+              id="iot-preview-feedback"
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
@@ -104,7 +104,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
             >
               <span>
                 <Tooltip
-                  id="preview-as-copy-tooltip"
+                  id="iot-preview-copy-feedback"
                   position={TooltipPosition.top}
                   enableFlip={false}
                   content={
@@ -112,9 +112,9 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                   }
                 >
                   <Button
-                    id="preview-addr-copy-configuration-button"
+                    id="preview-iot-copy-button"
                     variant={ButtonVariant.link}
-                    aria-label="copy-configuration"
+                    aria-label="copy-iot-config"
                     onClick={() => {
                       //   navigator.clipboard.writeText(data.addressSpaceCommand);
                       setIsCopied(true);
@@ -123,7 +123,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                       setIsCopied(false);
                     }}
                   >
-                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                    <OutlinedCopyIcon id="preview-iot-copy-icon" size="md" />
                   </Button>
                 </Tooltip>
               </span>

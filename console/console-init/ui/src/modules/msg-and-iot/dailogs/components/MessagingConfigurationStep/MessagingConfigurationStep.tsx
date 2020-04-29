@@ -3,10 +3,10 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
-import { Configuration } from "../../../../address-space/dialogs/CreateAddressSpace/Configuration";
-import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import React from "react";
+import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
+import { Configuration } from "modules/address-space";
 
 export interface IMessagingProjectInput {
   messagingProjectName?: string;
@@ -17,7 +17,7 @@ export interface IMessagingProjectInput {
   isNameValid: boolean;
 }
 
-const MessagingProjectConfiguration = (
+const MessagingConfigurationStep = (
   setProjectDetail: (value: IMessagingProjectInput) => void,
   projectDetail: IMessagingProjectInput
 ) => {
@@ -92,4 +92,4 @@ const MessagingProjectConfiguration = (
   return steps;
 };
 
-export { MessagingProjectConfiguration };
+export { MessagingConfigurationStep };
