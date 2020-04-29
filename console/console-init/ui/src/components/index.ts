@@ -27,3 +27,4 @@ export * from "./FormAndJson";
 export * from "./InputText";
 export * from "./ProjectHeaderCard";
 export * from "./JsonViewEditor";
+export * from "./ToggleIcon";

@@ -140,7 +140,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                   dropdownItems={topicsForSubscription}
                   dropdownItemIdPrefix="address-definition-topic-dropdown-item"
                   isDisabled={type.trim() !== "subscription"}
-                  isDisplayLabelAndValue={true}
+                  shouldDisplayLabelAndValue={true}
                 />
               </FormGroup>
             )}
