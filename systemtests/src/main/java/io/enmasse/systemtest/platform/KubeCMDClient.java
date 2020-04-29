@@ -370,7 +370,7 @@ public class KubeCMDClient {
     public static ExecutionResultData deleteFromFile(String namespace, Path path) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(path);
-        return runOnClusterWithoutLogger(CMD, "-n", namespace, "delete", "-f", path.toString());
+        return runOnClusterWithoutLogger("-n", namespace, "delete", "-f", path.toString());
     }
 
     public static String getMessagingEndpoint(String namespace, String addressspace) {
