@@ -67,8 +67,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
   setHostContainerInput
 }) => {
   const filterMenuItems = [
-    { key: "filterHostname", value: "Hostname" },
-    { key: "filterContainer", value: "Container" }
+    { key: "hostname", value: "Hostname" },
+    { key: "container", value: "Container" }
   ];
 
   const checkIsFilterApplied = () => {
@@ -155,8 +155,9 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="cl-filter-dropdown"
+          toggleId={"cl-filter-dropdown"}
+          dropdownItemId="cl-filter-dropdown-item"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

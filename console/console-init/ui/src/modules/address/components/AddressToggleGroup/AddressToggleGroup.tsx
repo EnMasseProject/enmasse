@@ -68,22 +68,22 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   setNameInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterType", value: "Type" },
-    { key: "filterStatus", value: "Status" }
+    { key: "name", value: "Name" },
+    { key: "type", value: "Type" },
+    { key: "status", value: "Status" }
   ];
   const typeOptions: ISelectOption[] = [
-    { key: "Anycast", value: "Anycast", isDisabled: false },
-    { key: "Multicast", value: "Multicast", isDisabled: false },
-    { key: "Queue", value: "Queue", isDisabled: false },
-    { key: "Subscription", value: "Subscription", isDisabled: false },
-    { key: "Topic", value: "Topic", isDisabled: false }
+    { key: "anycast", value: "Anycast", isDisabled: false },
+    { key: "multicast", value: "Multicast", isDisabled: false },
+    { key: "queue", value: "Queue", isDisabled: false },
+    { key: "subscription", value: "Subscription", isDisabled: false },
+    { key: "topic", value: "Topic", isDisabled: false }
   ];
 
   const statusOptions: ISelectOption[] = [
-    { value: "Active", isDisabled: false },
-    { value: "Configuring", isDisabled: false },
-    { value: "Pending", isDisabled: false }
+    { key: "active", value: "Active", isDisabled: false },
+    { key: "configuring", value: "Configuring", isDisabled: false },
+    { key: "pending", value: "Pending", isDisabled: false }
   ];
   const checkIsFilterApplied = () => {
     if (
@@ -140,7 +140,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id="al-filter-select-type-dropdown-item"
+              id="al-filter-select-type-dropdown"
+              dropdownItemId="al-filter-select-type-dropdown-item"
               position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
               dropdownItems={typeOptions}
@@ -160,6 +161,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           {filterSelected && filterSelected.toLowerCase() === "status" && (
             <DropdownWithToggle
               id="al-filter-select-status-dropdown"
+              dropdownItemId="al-filter-select-status-dropdown-item"
               position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
               dropdownItems={statusOptions}
@@ -177,6 +179,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
         <DropdownWithToggle
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
+          dropdownItemId="al-filter-dropdown"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

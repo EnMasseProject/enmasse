@@ -103,7 +103,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 onSelectItem={onTypeSelect}
                 value={type}
                 dropdownItems={typeOptions}
-                dropdownItemIdPrefix="address-definition-type-dropdown-item"
+                dropdownItemId="address-definition-type-dropdown-item"
               />
             </FormGroup>
 
@@ -118,7 +118,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 dropdownItemClass={styles.dropdownItem}
                 value={plan}
                 dropdownItems={planOptions}
-                dropdownItemIdPrefix="address-definition-plan-dropdown-item"
+                dropdownItemId="address-definition-plan-dropdown-item"
                 isDisabled={type.trim() === ""}
               />
             </FormGroup>
@@ -138,7 +138,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                   onSelectItem={onTopicSelect}
                   value={topic}
                   dropdownItems={topicsForSubscription}
-                  dropdownItemIdPrefix="address-definition-topic-dropdown-item"
+                  dropdownItemId="address-definition-topic-dropdown-item"
                   isDisabled={type.trim() !== "subscription"}
                   isDisplayLabelAndValue={true}
                 />

@@ -80,13 +80,13 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   setNameSpaceInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterNamespace", value: "Namespace" },
-    { key: "filterType", value: "Type" }
+    { key: "name", value: "Name" },
+    { key: "namespace", value: "Namespace" },
+    { key: "type", value: "Type" }
   ];
   const typeOptions: ISelectOption[] = [
-    { key: "Standard", value: "Standard", isDisabled: false },
-    { key: "Brokered", value: "Brokered", isDisabled: false }
+    { key: "standard", value: "Standard", isDisabled: false },
+    { key: "brokered", value: "Brokered", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -177,8 +177,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id="al-filter-dropdown-item-type"
-              toggleId={"al-filter-dropdown-type"}
+              id={"al-filter-dropdown-type"}
+              dropdownItemId={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
               dropdownItems={typeOptions}

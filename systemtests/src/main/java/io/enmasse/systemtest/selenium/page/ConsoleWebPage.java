@@ -372,23 +372,23 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getTypeFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterType"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdowntype"));
     }
 
     private WebElement getStatusFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterStatus"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownstatus"));
     }
 
     private WebElement getAddressFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterName"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownname"));
     }
 
     private WebElement getNamespaceFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterNamespace"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownnamespace"));
     }
 
     private WebElement getNameFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterName"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownname"));
     }
 
     private WebElement getSearchButtonAddress() throws Exception {
@@ -404,23 +404,23 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionsHostnameFilterDropDownItem() throws Exception {
-        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterHostName"));
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemhostname"));
     }
 
     private WebElement getConnectionsContainerFilterDropDownItem() throws Exception {
-        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterContainer"));
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemcontainer"));
     }
 
     private WebElement getClientsContainerFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterContainers"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemcontainers"));
     }
 
     private WebElement getClientsNameFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterName"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemname"));
     }
 
     private WebElement getClientsRoleFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterRole"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemrole"));
     }
 
     private WebElement getClientsContainerSearchButton() throws Exception {
@@ -707,7 +707,7 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getStatusFilterDropDownItem());
                 selenium.clickOnItem(getSelectStatusDropDown(), "Status phase dropdown");
                 selenium.clickOnItem(getSelectStatusDropDown()
-                        .findElement(By.id("al-filter-select-status-dropdown-itemstatus" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1))));
+                        .findElement(By.id("al-filter-select-status-dropdown-item" + filterValue.toLowerCase()})));
                 break;
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
@@ -725,10 +725,10 @@ public class ConsoleWebPage implements IWebPage {
                 WebElement selectedType;
                 try {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.toLowerCase());
                 } catch (Exception ex) {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.toLowerCase());
                 }
                 selenium.clickOnItem(selectedType);
                 break;
