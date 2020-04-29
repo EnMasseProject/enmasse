@@ -127,6 +127,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
           const topics = topics_addresses.data.addresses.addresses.map(
             address => {
               return {
+                key: address.spec.address,
                 value: address.spec.address,
                 label: address.metadata.name
               };
