@@ -268,6 +268,19 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.I
 
 	tlsVersions := strings.Join(config.Spec.Mesh.TlsVersions(config), " ")
 
+	sslProfile := func(name string) []interface{} {
+		m := map[string]interface{}{
+			"name":           name + "-tls",
+			"privateKeyFile": "/etc/tls-" + name + "/tls.key",
+			"certFile":       "/etc/tls-" + name + "/tls.crt",
+			"caCertFile":     "/etc/tls-service-ca/service-ca.crt",
+		}
+		if len(tlsVersions) > 0 {
+			m["protocols"] = tlsVersions
+		}
+		return []interface{}{"sslProfile", m}
+	}
+
 	// build config
 
 	router := [][]interface{}{
@@ -306,26 +319,8 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.I
 				"httpRootDir":      "invalid",
 			},
 		},
-		{
-			"sslProfile",
-			map[string]interface{}{
-				"name":           "inter-service-tls",
-				"privateKeyFile": "/etc/tls-inter/tls.key",
-				"certFile":       "/etc/tls-inter/tls.crt",
-				"caCertFile":     "/etc/tls-service-ca/service-ca.crt",
-				"protocols":      tlsVersions,
-			},
-		},
-		{
-			"sslProfile",
-			map[string]interface{}{
-				"name":           "command-tls",
-				"privateKeyFile": "/etc/tls-command/tls.key",
-				"certFile":       "/etc/tls-command/tls.crt",
-				"caCertFile":     "/etc/tls-service-ca/service-ca.crt",
-				"protocols":      tlsVersions,
-			},
-		},
+		sslProfile("inter"),
+		sslProfile("command"),
 		{
 			// for the internal command mesh
 			"listener",
@@ -348,7 +343,7 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.I
 				"role":             "inter-router",
 				"authenticatePeer": "yes",
 				"saslMechanisms":   "PLAIN",
-				"sslProfile":       "inter-service-tls",
+				"sslProfile":       "inter-tls",
 				"requireSsl":       true,
 			},
 		},
