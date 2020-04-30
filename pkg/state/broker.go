@@ -217,6 +217,7 @@ func newManagementMessage(resource string, operation string, attribute string, p
  */
 func (b *BrokerState) Reset() {
 	if b.commandClient != nil {
+		log.Printf("[Broker %s] Resetting connection", b.Host)
 		b.commandClient.Stop()
 		b.initialized = false
 		b.commandClient.Start()

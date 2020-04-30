@@ -87,10 +87,11 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 }
 
 /*
- * Reset router state from router (i.e. drop all internal state and rebuild from actual router state)
+ * Reset router state from router (i.e. drop all internal state and rebuild from actual router state) if it has an initialized state.
  */
 func (r *RouterState) Reset() {
-	if r.commandClient != nil {
+	if r.commandClient != nil && r.initialized {
+		log.Printf("[Router %s] Resetting connection", r.host)
 		r.commandClient.Stop()
 		r.initialized = false
 		r.commandClient.Start()
@@ -423,10 +424,25 @@ func (r *RouterState) deleteEntity(entity routerEntity, name string, resetOnDisc
 func (r *RouterState) doRequest(request *amqp.Message, resetOnDisconnect bool) (*amqp.Message, error) {
 	// If by chance we got disconnected while waiting for the request
 	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
-	if resetOnDisconnect && errors.Is(err, amqp.ErrConnClosed) {
+	if resetOnDisconnect && isConnectionError(err) {
 		r.Reset()
+	} else {
+		log.Printf("Error is: %+v", err)
 	}
 	return response, err
+}
+
+func isConnectionError(err error) bool {
+	return errors.Is(err, amqp.ErrConnClosed) || errors.Is(err, amqpcommand.NotConnectedError)
+}
+
+func isError(err error, targets ...error) bool {
+	for _, target := range targets {
+		if errors.Is(err, target) {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *RouterState) createEntity(entity routerEntity, name string, data map[interface{}]interface{}, resetOnDisconnect bool) error {
@@ -589,7 +605,7 @@ func (r *RouterState) EnsureAddresses(addresses []*RouterAddress) error {
 		r.addresses[address.Name] = address
 	}
 
-	if errors.Is(err, amqp.ErrConnClosed) {
+	if isConnectionError(err) {
 		r.Reset()
 	}
 	return err
@@ -617,7 +633,7 @@ func (r *RouterState) DeleteAddresses(names []string) error {
 		delete(r.addresses, name)
 	}
 
-	if errors.Is(err, amqp.ErrConnClosed) {
+	if isConnectionError(err) {
 		r.Reset()
 	}
 	return err
@@ -708,7 +724,7 @@ func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
 		r.autoLinks[autoLink.Name] = autoLink
 	}
 
-	if errors.Is(err, amqp.ErrConnClosed) {
+	if isConnectionError(err) {
 		r.Reset()
 	}
 	return err
