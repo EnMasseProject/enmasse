@@ -707,7 +707,7 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getStatusFilterDropDownItem());
                 selenium.clickOnItem(getSelectStatusDropDown(), "Status phase dropdown");
                 selenium.clickOnItem(getSelectStatusDropDown()
-                        .findElement(By.id("al-filter-select-status-dropdown-item" + filterValue.toLowerCase()})));
+                        .findElement(By.id("al-filter-select-status-dropdown-item" + filterValue.toLowerCase())));
                 break;
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
@@ -725,10 +725,10 @@ public class ConsoleWebPage implements IWebPage {
                 WebElement selectedType;
                 try {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.toLowerCase());
+                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.toLowerCase()));
                 } catch (Exception ex) {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.toLowerCase());
+                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.toLowerCase()));
                 }
                 selenium.clickOnItem(selectedType);
                 break;
