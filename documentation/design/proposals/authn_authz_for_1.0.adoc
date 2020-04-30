@@ -25,21 +25,22 @@ For authorization, authorization rules sourced from custom kubernetes resources 
 groups of users to be permissioned for sending to or receiving from address(es) within the namespace.
 
 The Service Admin will configure one or more Identity Providers.  Configuration within the Identity Provider will
-automatically assigned the Identity Provider(s) to the Messaging Tenants (selector mechanism).  
+automatically assign the Identity Provider(s) to the Messaging Tenants (selector mechanism).  
 
 The Messaging Tenant will can override the set of Identity Provider(s) if required and suitably permissioned.  If
 they have RBAC permission they will be able to create their own Identity Provider(s).  The Tenant will be able to assign
-Identity Provider(s) to his namespace drawing from those provided by the Service Admin and any the Tenant has created.
+Identity Provider(s) to his namespace, drawing from those provided by the Service Admin and any the Tenant has created.
 
 The Messaging Tenant will also be able to restrict each Messaging Endpoints to a subset of Identity Providers
 
 By default the system will ensure that clear text credentials (passwords or bearer tokens) do not travel over insecure
 network paths. In concrete terms, this means the system will not offer SASL PLAIN and OAUTHBEARER when it detects the client
-has connected over an unecrypted network.
+has connected over an unencrypted network.
 
-For the Getting Started use case, there will be an implict default that apply until the first explict Identity Provider
+For the Getting Started use case, there will be an implict default that applies until the first explict Identity Provider
 is created.  The user will need to create some objects in order to be able to authenticate and authorize a messaging
-application but these resource will be simple and short.  The system will meet the Secure by Default software design principle even when operating in this mode. 
+application but these resource will be simple and short.  The system will meet the Secure by Default software design principle
+even when operating in this mode. 
 
 == Design overview
 
@@ -182,7 +183,8 @@ username, the user must be qualified as follows.
   of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
 * `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be ommited.  
 
-If exactly one identity provider is configured for the tenant, or the getting started use-case applies, the username my be passed unqualified.
+If exactly one identity provider is configured for the tenant, or the getting started use-case applies, the username may be
+passed unqualified.
 
 ==== Qpid Dispatch Router
 
@@ -237,7 +239,6 @@ metadata:
 spec:
     # oneOf..
     ldapProvider:
-      enabled: boolean
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
@@ -246,14 +247,12 @@ spec:
       searchFilter:
       groupAttributeName: # more fields required to flexibly support LDAP groups.
     keycloakProvider:
-      enabled: boolean
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
       credentials: # borrow structure from connector
       realm: # keycloak realm
     externalProvider:
-      enabled: boolean
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
