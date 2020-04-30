@@ -12,7 +12,7 @@ import {
 
 export type OneOf<T, K extends keyof T> = T[K];
 
-export type IconType = React.SFC<any>;
+export type IconType = React.FC<any>;
 
 export interface IToggleIconProps {
   isEnabled: boolean;
