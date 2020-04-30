@@ -67,7 +67,9 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 				)
 			})
 		})
-		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryAdapter}})
+
+		// delete extra management deployment
+
 		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement}})
 
 	} else if config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management != nil &&
@@ -76,14 +78,14 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 		// split deployment
 
 		rc.ProcessSimple(func() error {
-			return r.processDeployment(ctx, nameDeviceRegistryAdapter, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 				return r.reconcileCommonJdbcDeviceRegistryDeployment(
 					config,
 					deployment,
 					change,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
-					nameDeviceRegistryAdapter,
+					nameDeviceRegistry,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
 					true, false,
@@ -105,7 +107,6 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 				)
 			})
 		})
-		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistry}})
 
 	} else if config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management == nil &&
 		config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter != nil {
@@ -113,25 +114,29 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 		// read-only deployment
 
 		rc.ProcessSimple(func() error {
-			return r.processDeployment(ctx, nameDeviceRegistryAdapter, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 				return r.reconcileCommonJdbcDeviceRegistryDeployment(
 					config,
 					deployment,
 					change,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
-					nameDeviceRegistryAdapter,
+					nameDeviceRegistry,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
 					true, false,
 				)
 			})
 		})
-		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistry}})
+
+		// delete extra management
+
 		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement}})
 
 	} else {
+
 		return reconcile.Result{}, util.NewConfigurationError("illegal device registry configuration")
+
 	}
 
 	// done
@@ -157,19 +162,6 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	deployment.Annotations[util.ConnectsTo] = "iot-auth-service"
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-device-registry"
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "jdbc"
-
-	// reset and set features
-
-	if adapter {
-		deployment.Spec.Template.Labels[RegistryAdapterFeatureLabel] = "true"
-	} else {
-		delete(deployment.Spec.Template.Labels, RegistryAdapterFeatureLabel)
-	}
-	if management {
-		deployment.Spec.Template.Labels[RegistryManagementFeatureLabel] = "true"
-	} else {
-		delete(deployment.Spec.Template.Labels, RegistryManagementFeatureLabel)
-	}
 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, serviceConfig, change)

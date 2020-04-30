@@ -65,7 +65,7 @@ public final class DefaultDeviceRegistry {
         return builder.build();
     }
 
-    public static ExternalJdbcRegistryServer externalPostgresRegistryServer(final Endpoint jdbcEndpoint, final Mode mode) {
+    public static ExternalJdbcRegistryServer externalPostgresRegistryServer(final Endpoint jdbcEndpoint, final Mode mode, final boolean split) {
         var builder = new ExternalJdbcRegistryServerBuilder()
                 .withNewManagement()
                 .withNewConnection()
@@ -81,6 +81,12 @@ public final class DefaultDeviceRegistry {
                 .withPassword("user12")
                 .endConnection()
                 .endManagement();
+
+        if (split) {
+            builder = builder.withNewAdapter()
+                    .withConnection(builder.build().getManagement().getConnection())
+                    .endAdapter();
+        }
 
         builder = builder
                 .withMode(mode);
@@ -131,7 +137,7 @@ public final class DefaultDeviceRegistry {
      * @throws Exception In case the deployment of the backend failed.
      */
     public static ServicesConfig newDefaultInstance() throws Exception {
-       return newPostgresTreeBased();
+        return newPostgresTreeBased();
     }
 
     /**
@@ -142,25 +148,29 @@ public final class DefaultDeviceRegistry {
         SystemtestsKubernetesApps.deletePostgresqlServer();
     }
 
-    public static ServicesConfig newPostgresBased(final Mode mode) throws Exception {
+    public static ServicesConfig newPostgresBased(final Mode mode, final boolean split) throws Exception {
         var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(mode);
 
         return new ServicesConfigBuilder()
                 .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, mode))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, mode, split))
                 .build();
     }
 
     public static ServicesConfig newPostgresTreeBased() throws Exception {
-        return newPostgresBased(Mode.JSON_TREE);
+        return newPostgresBased(Mode.JSON_TREE, false);
     }
 
     public static ServicesConfig newPostgresFlatBased() throws Exception {
-        return newPostgresBased(Mode.JSON_FLAT);
+        return newPostgresBased(Mode.JSON_FLAT, false);
     }
 
     public static ServicesConfig newPostgresTableBased() throws Exception {
-        return newPostgresBased(Mode.TABLE);
+        return newPostgresBased(Mode.TABLE, false);
+    }
+
+    public static ServicesConfig newPostgresSplitTableBased() throws Exception {
+        return newPostgresBased(Mode.TABLE, true);
     }
 
     public static ServicesConfig newH2Based() throws Exception {
@@ -197,12 +207,12 @@ public final class DefaultDeviceRegistry {
 
     }
 
-    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final Mode mode) throws Exception {
+    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final Mode mode, final boolean split) throws Exception {
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
-                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, mode))
+                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, mode, split))
 
                 .endServer()
                 .endJdbc()
@@ -220,7 +230,6 @@ public final class DefaultDeviceRegistry {
                 .endJdbc()
                 .build();
     }
-
 
     private static ExternalJdbcDeviceConnectionServer externalPostgresConnectionServer(final Endpoint jdbcEndpoint) {
         var builder = new ExternalJdbcDeviceConnectionServerBuilder()
@@ -262,27 +271,27 @@ public final class DefaultDeviceRegistry {
     }
 
     /*
-    public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
-        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
-        return new DeviceRegistryServiceConfigBuilder()
-                .withNewInfinispan()
-                .withNewServer()
-
-                .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
-
-                .endServer()
-                .endInfinispan()
-                .build();
-    }
-
-    public static DeviceRegistryServiceConfig newFileBased() {
-        return new DeviceRegistryServiceConfigBuilder()
-                .withNewFile()
-                .withNumberOfDevicesPerTenant(100_000)
-                .endFile()
-                .build();
-    }
-    */
+     * public static DeviceRegistryServiceConfig newInfinispanBased() throws Exception {
+     * var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
+     * return new DeviceRegistryServiceConfigBuilder()
+     * .withNewInfinispan()
+     * .withNewServer()
+     *
+     * .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
+     *
+     * .endServer()
+     * .endInfinispan()
+     * .build();
+     * }
+     *
+     * public static DeviceRegistryServiceConfig newFileBased() {
+     * return new DeviceRegistryServiceConfigBuilder()
+     * .withNewFile()
+     * .withNumberOfDevicesPerTenant(100_000)
+     * .endFile()
+     * .build();
+     * }
+     */
 
     public static DeviceConnectionServiceConfig newPostgresBasedConnection(final Endpoint jdbcEndpoint) throws Exception {
         return new DeviceConnectionServiceConfigBuilder()
@@ -307,6 +316,5 @@ public final class DefaultDeviceRegistry {
                 .endJdbc()
                 .build();
     }
-
 
 }

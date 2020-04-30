@@ -67,7 +67,6 @@ public class IoTUtils {
     private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
     private static final String IOT_AUTH_SERVICE = "iot-auth-service";
     private static final String IOT_DEVICE_REGISTRY = "iot-device-registry";
-    private static final String IOT_DEVICE_REGISTRY_ADAPTER = "iot-device-registry-adapter";
     private static final String IOT_DEVICE_REGISTRY_MANAGEMENT = "iot-device-registry-management";
     private static final String IOT_DEVICE_CONNECTION = "iot-device-connection";
     private static final String IOT_TENANT_SERVICE = "iot-tenant-service";
@@ -157,6 +156,8 @@ public class IoTUtils {
 
         // device registry
 
+        expectedDeployments.add(IOT_DEVICE_REGISTRY);
+
         if (config.getSpec().getServices() != null &&
                 config.getSpec().getServices().getDeviceRegistry() != null &&
                 config.getSpec().getServices().getDeviceRegistry().getJdbc() != null &&
@@ -167,15 +168,8 @@ public class IoTUtils {
 
             var external = config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal();
             if ( external.getManagement() != null && external.getAdapter() != null ) {
-                expectedDeployments.add(IOT_DEVICE_REGISTRY_ADAPTER);
                 expectedDeployments.add(IOT_DEVICE_REGISTRY_MANAGEMENT);
-            } else if (external.getManagement() == null && external.getAdapter() != null ) {
-                expectedDeployments.add(IOT_DEVICE_REGISTRY_ADAPTER);
-            } else {
-                expectedDeployments.add(IOT_DEVICE_REGISTRY);
             }
-        } else {
-            expectedDeployments.add(IOT_DEVICE_REGISTRY);
         }
 
         // common services

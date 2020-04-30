@@ -19,7 +19,6 @@ import (
 )
 
 const nameDeviceRegistry = "iot-device-registry"
-const nameDeviceRegistryAdapter = "iot-device-registry-adapter"
 const nameDeviceRegistryManagement = "iot-device-registry-management"
 const routeDeviceRegistry = "device-registry"
 
@@ -61,22 +60,44 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 	// create services
 
 	if splitRegistry {
+
+		// endpoint - adapter
+
 		rc.ProcessSimple(func() error {
-			return r.processService(ctx, nameDeviceRegistryAdapter, config, false, r.reconcileDeviceRegistryAdapterService)
+			return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileDeviceRegistryAdapterService)
 		})
+
+		// endpoint - add extra management
+
 		rc.ProcessSimple(func() error {
 			return r.processService(ctx, nameDeviceRegistryManagement, config, false, r.reconcileDeviceRegistryManagementService)
 		})
-		rc.Delete(ctx, r.client, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistry}})
+
+		// metrics - add extra management
+
+		rc.ProcessSimple(func() error {
+			return r.processService(ctx, nameDeviceRegistryManagement+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistryManagement))
+		})
+
 	} else {
+
+		// endpoint - combined
+
 		rc.ProcessSimple(func() error {
 			return r.processService(ctx, nameDeviceRegistry, config, false, r.reconcileDeviceRegistryCombinedService)
 		})
-		rc.Delete(ctx, r.client, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryAdapter}})
+
+		// endpoint - delete extra management
+
 		rc.Delete(ctx, r.client, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement}})
+
+		// metrics - delete extra management
+
+		rc.Delete(ctx, r.client, &corev1.Service{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement + "-metrics"}})
+
 	}
 
-	// create metrics service
+	// metrics - common service
 
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameDeviceRegistry+"-metrics", config, false, r.reconcileMetricsService(nameDeviceRegistry))
@@ -92,18 +113,6 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 
 	return rc.Result()
 
-}
-
-func getRegistryAdapterServiceName(config *iotv1alpha1.IoTConfig) (string, error) {
-	is, err := isSplitRegistry(config)
-	if err != nil {
-		return "", err
-	}
-	if is {
-		return nameDeviceRegistryAdapter, nil
-	} else {
-		return nameDeviceRegistry, nil
-	}
 }
 
 func getRegistryManagementServiceName(config *iotv1alpha1.IoTConfig) (string, error) {
@@ -166,8 +175,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.Io
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(_ *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", nameDeviceRegistry)
-	service.Spec.Selector[RegistryManagementFeatureLabel] = "true"
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	service.Spec.Type = corev1.ServiceTypeLoadBalancer
 
@@ -189,9 +197,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(_ 
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryCombinedService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", nameDeviceRegistry)
-	service.Spec.Selector[RegistryAdapterFeatureLabel] = "true"
-	service.Spec.Selector[RegistryManagementFeatureLabel] = "true"
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	service.Spec.Type = corev1.ServiceTypeClusterIP
 
@@ -231,8 +237,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryCombinedService(config *iotv
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryAdapterService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", nameDeviceRegistry)
-	service.Spec.Selector[RegistryAdapterFeatureLabel] = "true"
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	service.Spec.Type = corev1.ServiceTypeClusterIP
 
@@ -253,7 +258,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryAdapterService(config *iotv1
 		service.Annotations = make(map[string]string)
 	}
 
-	if err := ApplyInterServiceForService(config, service, nameDeviceRegistryAdapter); err != nil {
+	if err := ApplyInterServiceForService(config, service, nameDeviceRegistry); err != nil {
 		return err
 	}
 
@@ -262,8 +267,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryAdapterService(config *iotv1
 
 func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", nameDeviceRegistry)
-	service.Spec.Selector[RegistryManagementFeatureLabel] = "true"
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	service.Spec.Type = corev1.ServiceTypeClusterIP
 
