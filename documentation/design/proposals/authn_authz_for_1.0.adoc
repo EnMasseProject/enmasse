@@ -25,7 +25,7 @@ For authorization, authorization rules sourced from custom kubernetes resources 
 groups of users to be permissioned for sending to or receiving from address(es) within the namespace.
 
 The Service Admin will configure one or more Identity Providers.  Configuration within the Identity Provider will
-automatically assign the Identity Provider(s) to the Messaging Tenants (selector mechanism).  
+automatically assigned the Identity Provider(s) to the Messaging Tenants (selector mechanism).  
 
 The Messaging Tenant will can override the set of Identity Provider(s) if required and suitably permissioned.  If
 they have RBAC permission they will be able to create their own Identity Provider(s).  The Tenant will be able to assign
