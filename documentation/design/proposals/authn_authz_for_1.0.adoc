@@ -170,8 +170,8 @@ When using the service accounts, the following username must be used:
 If more than one IdentityProvider is configured for the tenant, for identity providers that require a
 username, the user must be qualified as follows.
 
-* `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.
-* `enamsse.io:<domain>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.
+* `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.  For the sake of information hiding and bervity, the namespace may be ommitted if the `MessagingUser` exists in the namespace of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
+* `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be ommited.  
 
 ==== Qpid Dispatch Router
 
@@ -182,50 +182,53 @@ DISPATCH-1634 is required.
 
 The new API will consist of the following types at the infrastructure level:
 
-* `AccessControlService`: used to define an instance of an accesss control service. The `AccessControlService` will define
-the parameters to establish connection with external identity provider (if any).  Selectors will be to configure to which namespaces it should be applied.
+* `IdentityProvider`: used to define an instance of an identity provider instance. The `IdentityProvider` will define
+the parameters to establish connection with external identity provider (if any).  Selectors will be used to configure to
+which namespaces it will be applied.
 
 * Configuration provided by `MessagingInfra` will define the Access Control Server deployment.
 
 At the tenant level:
 
-* `MessagingTennant`: can be used to specify a specific `AccessControlService` to be used for the tenant.
+* `MessagingTennant`: optional override the set of IdentityProviders to be used for the tenant.
 
-* `MessagingUser`: used with the internal identity source to provide a messaging username/password pairing.  The password will be stored in the resource a secure fashion.  `MessagingUser` is scoped to the messaging tenant. It cannot
-be used to access any other namespace apart from the only in which it exists.
+* `IdentityProvider`: configure a local `IdentityProvider`.
 
-* `ServiceAccount`: a bearer token of a  `ServiceAccounts` can be used to authenticate to the namespace for messaging.  The service account must exist within the namespace of the messaging tenant.
+* `MessagingUser`: used by the namespace identity provider.  It stores messaging username/password pairing with an option
+to store the password securely.
 
-* `MessagingRole`: define access to one or more addresses.  Its design will be analogous to the kubernetes role object but will not have any relation to kubernetes `roles` or `clusterroles`.
+* `ServiceAccount`: the bearer token of a `ServiceAccounts` can be used to authenticate to the namespace for messaging.
 
-* `MessagingRoleBinding`: grants permission for messaging within the namespace.  A MessagingRoleBinding may reference any `MessagingRole` in the same namespace and any subject produced by the identity providers (user or group).  Its design will be analogous to the kubernetes rolebinding object but will not have any relation to kubernetes `rolebindings` or `clusterrolebindings`.
+* `MessagingRole`: define access to one or more addresses.  Its design will be analogous to the kubernetes role object but will not have any direct relation to kubernetes `roles` or `clusterroles`.
+
+* `MessagingRoleBinding`: grants permission for messaging within the namespace.  A `MessagingRoleBinding` references   
+  `MessagingRole` in the same namespace and subject belonging to the identity providers (which may be users or groups).
+  Its design will be analogous to the kubernetes rolebinding object but will not have any relation to kubernetes
+  `rolebindings` or `clusterrolebindings`.
 
 === Resources
 
-==== AccessControlService
+==== IdentityProvider
 
-The `AccessControlService` used to define an instance of an accesss control service.  It allows the configuration the external
-identity providers and gives the ability to disable the internal identity providers.
+The `IdentityProvider` used to define an instance of an identity provider instance.   It may be defined by either
+the Service Admin where it is used to provide system wide defaults, or by a Tenant Admin to define a local identity provider.
+RBAC can be used to disallow tenants creating their own `IdentityProviders`.
 
-When the messaging client authenticates the domain part must be provided as part of the SASL username.  An exception
-is made for the client authentication provider and the anonymous provider.
-
-The `AccessControlService` has a selector for namespaces that should use this AccessControlService by default.  This selector
-is ANDed with the selector of the `MessagingInfra` itself. The `MessagingTenant` may override the the `AccessControlService` by specifying the service's name and namespace.  An annotation of the `AccessControlService` will be used to prevent
-overriding.
+The `IdentityProvider` carries a namespace selector.  If the selector matches a Tenant's namespace the `IdentityProvider`
+is automatically available to it.  If the `IdentityProvider` is configured by a tenant the namespace selector is unused and
+will be ignored.
 
 Example:
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: AccessControlService
+kind: IdentityProvider
 metadata:
-  name: myaccesscontrol1
+  name: myidentityprovider
 spec:
-  identityProviders:
-    ldap:
+    # oneOf..
+    ldapProvider:
       enabled: boolean
-      domain: # RFC 1123 convetions (DNS subdomain)
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
@@ -233,36 +236,32 @@ spec:
       searchContext:
       searchFilter:
       groupAttributeName: # more fields required to flexibly support LDAP groups.
-    keycloak:
+    keycloakProvider:
       enabled: boolean
-      domain: # RFC 1123 convetions (DNS subdomain)
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
       credentials: # borrow structure from connector
       realm: # keycloak realm
-    external:
+    externalProvider:
       enabled: boolean
-      domain: RFC 1123 convetions (DNS subdomain)
       host:
       port:
       tls: # borrow structure from connector (trust, client cert)
       credentials: # borrow structure from connector
-    internal:
-      enabled: boolean
-    clientAuth:
-      enabled: boolean
-    serviceAccount:
-       enabled: boolean
-    anonymous:
-       enabled: boolean
+    namespaceProvider: {}    # the empty object is required to enable the type
+    clientAuthProvider: {}
+    serviceAccountProvider: {}
+    anonymousProvider: {}
 
-  # Allows specifying a selector for namespaces that should use this accesscontrol by default.
+  # Allows specifying a selector for namespaces that should get this IdentityProvider by default.
   namespaceSelector:
     matchLabels:
       type: messaging
 status:
   phase: Active
+  type: ldap | keycloak | external | clientauth | serviceAccount | anonymous
+  # ConnectedCondition etc.
 ```
 
 ==== MessagingInfra
@@ -270,7 +269,10 @@ status:
 Configuration provided by `MessagingInfra` will define the Access Control Server deployment.
 
 ```
-accessControl:
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfra
+spec:
+  accessControl:
     replicas: <integer>
     podTemplate: # Same as in standard infra config today. Based on Kubernetes spec
       spec:
@@ -282,13 +284,61 @@ accessControl:
 
 ==== MessagingTennant
 
-A `MessagingTennant` can explictly reference a AccessControlService in order to override default configuration provided by the
-Service Admin.
+The `MessagingTennant` resource may override the default set of IdentityProviders provided by the Service Admin.  It
+does this using an `identityProviderSelector` to select from those IdentityProviders available which includes
+those from the Service Admin and any defined by the Tenant.
+
+The status section of the object enumerates the set of the names of identity providers that are currently applicable to the namespace. 
 
 ```
-accessControlService:
-    name: myaccesscontrol1
-    namespace: custom
+apiVersion: enmasse.io/v1beta2
+kind: MessagingTennant
+spec:
+  identityProviderSelector:
+    matchLabels:
+      type: messaging
+    matchExpressions:
+      - {key: tier, operator: In, values: [cache]}
+      - {key: environment, operator: NotIn, values: [dev]}
+status:
+  identityProviders:
+  - name:  myldap
+    namespace: infrastuff
+    subjectPrefix: enamsse.io:myldap:infrastuff: # helps the user compose their MessageRoleBindings
+                                                 # and Messaging Application connection details.
+```
+
+==== MessagingEndpoint
+
+The `MessagingEndpoint` resource will allow the identityProvider(s) available to a endpoint to be restricted.  This
+restriction is defined using an `identityProviderSelector`.  The identity provider selection is made from *within* those
+already realised at the tenant (i.e. respecting the tenant's identityProviderSelector) and thus includes any locally
+defined IdentityProviders.
+
+The `MessagingEndpoint`resource will also allow expose a configuration option `secureOnlyMechanism`.  If this not provided
+the system will provide a default `PLAIN`, `OAUTHBEARER`.  If the user wishes to relax a the default (and thus allow those mechansims to be used on a insecure channel, the user can override.
+
+The status section of the `MessagingEndpoint` will expose the identity providers that are being used by this endpoint and the 
+secureOnlyMechanism setting.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingEndpoint
+metadata:
+  name: endpoint1
+  namespace: myapp
+spec:
+  identityProviderSelector:
+    matchLabels:
+      type: messaging
+    matchExpressions:
+      - {key: tier, operator: In, values: [cache]}
+      - {key: environment, operator: NotIn, values: [dev]}
+status:
+  identityProviders:
+  - name:  myldap
+    namespace: infrastuff
+    secureOnlyMechanism: PLAIN, OAUTHBEARER
 ```
 
 ==== MessagingUser
@@ -300,6 +350,10 @@ The stored password will be the Salted Password defined by  https://tools.ietf.o
 The controller will detect newly created MessagingUser resource and automatically salt plain text passwords.
 
 In this first version, there will be no provision for password policies (constitunency rules, aging etc).
+
+`MessagingUser` are created by the Tenant Admin and in their own namespace.  QUESTION: the system's design will
+accomodate `MessagingUsers` to be shared by tenants (perhaps created in shared namespace - do we value this functionality?
+do we inhibit it?).
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -313,14 +367,15 @@ spec:
 
 ==== ServiceAccount
 
-The bearer token of a `ServiceAccounts` can be used to authenticate to the namespace for messaging.  The service accoun
-must exist within the namespace of the messaging tenant.
+The bearer token of a `ServiceAccounts` can be used to authenticate to the namespace for messaging.
 
 ==== MessagingRole
 
 `MessagingRole` is used with `MessagingRoleBinding` to define authorisation rules.  The `MessagingRole` allows
 one or more address patterns to the associated with the verbs "send" and/or "receive".   Permissions are purely additive (there are no “deny” rules).  There is no referential integrity enforced between the address prefixes and the
 messaging addresses.
+
+`MessagingRole` are created by the Tenant Admin in their own namespace.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -335,9 +390,14 @@ spec:
 
 ==== MessagingRoleBinding
 
-The `MessagingRoleBinding` provides the linkage between the user and the `MessagingRole`.
+The `MessagingRoleBinding` provides the linkage between the a subject (user or group) and the `MessagingRole`.
 
-There is no referential integrity enforced between the referenced messaging users or service accounts and the `MessagingUser` or `ServiceAccount` themselves.
+There is no referential integrity enforced between the subjects relating to messaging users or services accounts
+and the `MessagingUser` or `ServiceAccount` themselves.
+
+`MessagingRoleBinding` are created by the Tenant Admin in their own namespace.  The referred `MessagingRole` must
+exist in the same namespace.
+
 
 For the subject references, the following will be used:
 
@@ -347,10 +407,13 @@ For the subject references, the following will be used:
   - `system:serviceaccount`  (refers to all serviceaccounts system wide)
 1. `MessagingUser` - the subject will follow the conventions for service accounts, with the exception that the system
    wide form is disallowed.  The namespace must refer to the namespace of this tenant.
-  - `enamsse.io:messaginguser:<namespace>:<name>` (refers the named messaginguser),
-  - `enamsse.io:messaginguser:<namespace>` (refers to all messagingusers in the namespace)
+  - `enamsse.io:messaginguser:<namespace>:<name>` (refers the named MessagingUser),
+  - `enamsse.io:messaginguser:<namespace>` (refers to all messagingusers in the given namespace)
+  - `enamsse.io:messaginguser::<name>` (refers the named MessagingUser in this namespace),
+  - `enamsse.io:messaginguser::` (refers to all messagingusers in the namespace)
+  - `enamsse.io:messaginguser:` (refers to all messagingusers in all the namespace)
 1. `Subject` - a user or group subject belonging to an External, TLS Client Auth or Anonymous Identity Provider.
-  - `enamsse.io:<domain>:<namespace>:<name>` (refers to subject _name_ from the provider with the given domain)
+  - `enamsse.io:<identity provider name>:<namespace>:<subject>` (refers to subject from the given provider)
   - `system:unauthenticated` - corresponds to the unauthenticated identity from the the anonymous identity provider.
 
 ```
@@ -361,13 +424,15 @@ metadata:
   namespace: mynamespace
 subjects:
 - kind: Subject
-  name: system:serviceaccount:myns:myappuser # refers to ServiceAccount myapp in myns 
+  name: system:serviceaccount:mynamespace:myappuser # refers to ServiceAccount myapp in myns
 - kind: Subject
-  name: enamsse.io:messaginguser:myns:myappuser  # refers to MessagingUser myappuser in myns 
+  name: enamsse.io:messaginguser:mynamespace:myappuser  # refers to MessagingUser myappuser in myns 
 - kind: Subject
-  name: enamsse.io:ldap.mycompany.com:myns:bill
+  name: enamsse.io:messaginguser::myappuser  # refers to MessagingUser myappuser in mynamespace (implict form)
 - kind: Subject
-  name: enamsse.io:tlsclientauth:myns:cn=John Doe,dc=example,dc=com
+  name: enamsse.io:ldap.mycompany.com:myrootns:bill
+- kind: Subject
+  name: enamsse.io:tlsclientauth:myrootns:cn=John Doe,dc=example,dc=com
 messagingRoleRef:
   name: myrole
 ```
