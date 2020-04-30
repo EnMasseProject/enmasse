@@ -1,4 +1,5 @@
 :toc:
+:toclevels: 3
 
 # Proposal - Authentication and Authorization for 1.0
 
@@ -211,8 +212,6 @@ to store the password securely.
   `MessagingRole` in the same namespace and subject belonging to the identity providers (which may be users or groups).
   Its design will be analogous to the kubernetes rolebinding object but will not have any relation to kubernetes
   `rolebindings` or `clusterrolebindings`.
-
-=== Resources
 
 ==== IdentityProvider
 
