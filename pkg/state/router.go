@@ -426,8 +426,6 @@ func (r *RouterState) doRequest(request *amqp.Message, resetOnDisconnect bool) (
 	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
 	if resetOnDisconnect && isConnectionError(err) {
 		r.Reset()
-	} else {
-		log.Printf("Error is: %+v", err)
 	}
 	return response, err
 }

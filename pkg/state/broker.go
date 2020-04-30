@@ -8,7 +8,6 @@ package state
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -67,7 +66,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 func (b *BrokerState) doRequest(request *amqp.Message, resetOnDisconnect bool) (*amqp.Message, error) {
 	// If by chance we got disconnected while waiting for the request
 	response, err := b.commandClient.RequestWithTimeout(request, 10*time.Second)
-	if resetOnDisconnect && errors.Is(err, amqp.ErrConnClosed) {
+	if resetOnDisconnect && isConnectionError(err) {
 		b.Reset()
 	}
 	return response, err
@@ -136,7 +135,7 @@ func (b *BrokerState) EnsureQueues(queues []string) error {
 	for queue := range completed {
 		b.queues[queue] = true
 	}
-	if errors.Is(err, amqp.ErrConnClosed) {
+	if isConnectionError(err) {
 		b.Reset()
 	}
 	return err
@@ -177,7 +176,7 @@ func (b *BrokerState) DeleteQueues(queues []string) error {
 	for queue := range completed {
 		delete(b.queues, queue)
 	}
-	if errors.Is(err, amqp.ErrConnClosed) {
+	if isConnectionError(err) {
 		b.Reset()
 	}
 	return err
@@ -216,7 +215,7 @@ func newManagementMessage(resource string, operation string, attribute string, p
  * Reset broker state from broker (i.e. drop all internal state and rebuild from actual router state)
  */
 func (b *BrokerState) Reset() {
-	if b.commandClient != nil {
+	if b.commandClient != nil && b.initialized {
 		log.Printf("[Broker %s] Resetting connection", b.Host)
 		b.commandClient.Stop()
 		b.initialized = false
