@@ -37,7 +37,7 @@ endif::[]
 +
 [options="nowrap",subs="attributes"]
 ----
-export MESSAGING_HOST=$({cmdcli} -n myapp get addressspace iot -o jsonpath={.status.endpointStatuses[?\(@.name==\'messaging\'\)].externalHost})
+export MESSAGING_HOST=$({cmdcli} get -n myapp addressspace iot -o jsonpath='{.status.endpointStatuses[?(@.name=="messaging")].externalHost}')
 export MESSAGING_PORT=443
 ----
 ifeval::["{cmdcli}" == "kubectl"]
@@ -52,4 +52,3 @@ export MESSAGING_PORT=5671
 ----
 ====
 endif::[]
-
