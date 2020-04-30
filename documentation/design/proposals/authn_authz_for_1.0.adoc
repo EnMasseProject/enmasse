@@ -1,10 +1,8 @@
-
 :toc:
-:toc-placement!:
 
 # Proposal - Authentication and Authorization for 1.0
 
-
+:toc-placement!:
 toc::[]
 
 
@@ -44,7 +42,7 @@ application but these resource will be simple and short.  The system will meet t
 
 == Design overview
 
-=== Compoenents
+=== Components
 
 ==== Access Control Server
 
