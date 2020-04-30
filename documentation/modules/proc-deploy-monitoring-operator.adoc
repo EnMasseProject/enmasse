@@ -20,19 +20,19 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. (Optional) If you want to deploy to a namespace other than `{ProductMonitoringNamespace}` you must run the following command and substitute `{ProductMonitoringNamespace}` in subsequent steps:
+. (Optional) If you want to deploy to a namespace other than `{ApplicationMonitoringNamespace}` you must run the following command and substitute `{ApplicationMonitoringNamespace}` in subsequent steps:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-sed -i 's/{ProductMonitoringNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
+sed -i 's/{ApplicationMonitoringNamespace}/_my-namespace_/' install/bundles/{ProductBundleName}/*.yaml
 ----
 
 ifeval::["{cmdcli}" == "oc"]
-. Create the {ProductMonitoringNamespace} namespace:
+. Create the {ApplicationMonitoringNamespace} namespace:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} new-project _{ProductMonitoringNamespace}_
+{cmdcli} new-project _{ApplicationMonitoringNamespace}_
 ----
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]

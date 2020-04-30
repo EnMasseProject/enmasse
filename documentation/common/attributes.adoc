@@ -37,6 +37,7 @@
 :BaseProductVersion: master
 :ConsoleName: {ProductName} Console
 :DataGridProductName: Infinispan
+:ApplicationMonitoringNamespace: enmasse-monitoring
 
 // Component attributes
 :BrokerName: Apache ActiveMQ Artemis
