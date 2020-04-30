@@ -90,7 +90,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           deleteChip={onDelete}
           categoryName="Hostname"
         >
-          {filterSelected && filterSelected === "Hostname" && (
+          {filterSelected && filterSelected.toLowerCase() === "hostname" && (
             <InputGroup>
               <TypeAheadSelect
                 ariaLabelTypeAhead={"Select hostname"}
@@ -104,7 +104,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostNameInput}
               />
               <Button
-                id="ad-links-filter-search-hostname"
+                id="cl-filter-search-btn"
                 variant={ButtonVariant.control}
                 aria-label="search button for search hostname"
                 onClick={onSearch}
@@ -123,7 +123,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           deleteChip={onDelete}
           categoryName="Container"
         >
-          {filterSelected && filterSelected === "Container" && (
+          {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
                 ariaLabelTypeAhead={"Select container"}
@@ -137,7 +137,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostContainerInput}
               />
               <Button
-                id="ad-links-filter-search-container"
+                id="cl-filter-search"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}

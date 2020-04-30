@@ -712,7 +712,7 @@ public class ConsoleWebPage implements IWebPage {
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
                 selenium.fillInputItem(getSelectNameTextBox(), filterValue);
-                selenium.clickOnItem(getSearchButtonAddress(), "Search");
+                selenium.clickOnItem(getSearchButtonName(), "Search");
                 break;
             case NAMESPACE:
                 selenium.clickOnItem(getNamespaceFilterDropDownItem());
@@ -920,6 +920,7 @@ public class ConsoleWebPage implements IWebPage {
             case ADDRESS:
             case SENDERS:
             case RECEIVERS:
+            case NAME:
                 return dataLabel.toUpperCase().equals(sortType.toString());
             default:
                 return false;
