@@ -177,8 +177,12 @@ When using the service accounts, the following username must be used:
 If more than one IdentityProvider is configured for the tenant, for identity providers that require a
 username, the user must be qualified as follows.
 
-* `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.  For the sake of information hiding and bervity, the namespace may be ommitted if the `MessagingUser` exists in the namespace of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
+* `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.
+  For the sake of information hiding and bervity, the namespace may be omitted if the `MessagingUser` exists in the namespace
+  of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
 * `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be ommited.  
+
+If exactly one identity provider is configured for the tenant, or the getting started use-case applies, the username my be passed unqualified.
 
 ==== Qpid Dispatch Router
 
