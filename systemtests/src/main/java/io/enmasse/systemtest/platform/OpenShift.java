@@ -8,6 +8,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.platform.cluster.CRCCluster;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.Endpoint;
@@ -156,6 +158,15 @@ public class OpenShift extends Kubernetes {
     @Override
     public String getOlmNamespace() {
         return OLM_NAMESPACE;
+    }
+
+    @Override
+    public String getHost() {
+        if (isCRC()) {
+            return "api.crc.testing";
+        } else {
+            throw new UnsupportedOperationException();
+        }
     }
 
     @Override

@@ -4,14 +4,12 @@
  */
 package state
 
-import (
-	"fmt"
-)
+type NotInitializedError struct{}
 
-type NotConnectedError struct {
-	router string
+func (e *NotInitializedError) Error() string {
+	return "not initialized"
 }
 
-func (e *NotConnectedError) Error() string {
-	return fmt.Sprintf("Not yet connected to router %s", e.router)
+func NewNotInitializedError() error {
+	return &NotInitializedError{}
 }

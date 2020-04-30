@@ -37,32 +37,3 @@ func (c *MessagingInfraCondition) SetStatus(status corev1.ConditionStatus, reaso
 	c.Reason = reason
 	c.Message = message
 }
-
-func (m *MessagingTenantStatus) GetMessagingTenantCondition(t MessagingTenantConditionType) *MessagingTenantCondition {
-	for i, c := range m.Conditions {
-		if c.Type == t {
-			return &m.Conditions[i]
-		}
-	}
-
-	mc := MessagingTenantCondition{
-		Type:               t,
-		Status:             corev1.ConditionUnknown,
-		LastTransitionTime: metav1.Now(),
-	}
-
-	m.Conditions = append(m.Conditions, mc)
-
-	return &m.Conditions[len(m.Conditions)-1]
-}
-
-func (c *MessagingTenantCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
-
-	if c.Status != status {
-		c.Status = status
-		c.LastTransitionTime = metav1.Now()
-	}
-
-	c.Reason = reason
-	c.Message = message
-}

@@ -10,7 +10,7 @@ metadata:
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
-    description: The current phase of the MessagingInfra.
+    description: The current phase.
     name: Phase
     type: string
   - JSONPath: .status.message
@@ -23,9 +23,15 @@ spec:
     type: date
   group: enmasse.io
   names:
+    categories:
+    - enmasse
     kind: MessagingInfra
     listKind: MessagingInfraList
     plural: messaginginfras
+    shortNames:
+    - msgi
+    - msginfra
+    - msginfras
     singular: messaginginfra
   scope: Namespaced
   subresources:

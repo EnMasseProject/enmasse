@@ -17,6 +17,14 @@ type FakeEnmasseV1beta2 struct {
 	*testing.Fake
 }
 
+func (c *FakeEnmasseV1beta2) MessagingAddresses(namespace string) v1beta2.MessagingAddressInterface {
+	return &FakeMessagingAddresses{c, namespace}
+}
+
+func (c *FakeEnmasseV1beta2) MessagingEndpoints(namespace string) v1beta2.MessagingEndpointInterface {
+	return &FakeMessagingEndpoints{c, namespace}
+}
+
 func (c *FakeEnmasseV1beta2) MessagingInfras(namespace string) v1beta2.MessagingInfraInterface {
 	return &FakeMessagingInfras{c, namespace}
 }

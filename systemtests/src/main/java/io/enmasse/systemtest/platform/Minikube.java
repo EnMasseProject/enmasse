@@ -129,4 +129,9 @@ public class Minikube extends Kubernetes {
     public String getOlmNamespace() {
         return OLM_NAMESPACE;
     }
+
+    @Override
+    public String getHost() {
+        return runCommand("minikube", "ip");
+    }
 }

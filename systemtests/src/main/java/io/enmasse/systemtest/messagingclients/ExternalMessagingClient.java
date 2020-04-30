@@ -25,10 +25,14 @@ public class ExternalMessagingClient {
     private AbstractClient client;
     private ClientArgumentMap arguments;
 
-    public ExternalMessagingClient() {
+    public ExternalMessagingClient(boolean enableTls) {
         this.arguments = new ClientArgumentMap();
         arguments.put(ClientArgument.LOG_MESSAGES, "json");
-        arguments.put(ClientArgument.CONN_SSL, "true");
+        arguments.put(ClientArgument.CONN_SSL, String.valueOf(enableTls));
+    }
+
+    public ExternalMessagingClient() {
+        this(true);
     }
 
     public ExternalMessagingClient withClientEngine(AbstractClient clientEngine) {
@@ -55,6 +59,12 @@ public class ExternalMessagingClient {
 
     public ExternalMessagingClient withMessagingRoute(Endpoint route) {
         this.arguments.put(ClientArgument.BROKER, route.toString());
+        return this;
+    }
+
+    public ExternalMessagingClient withAddress(String address) {
+        this.arguments.put(ClientArgument.ADDRESS, address);
+        this.client.updateIdWithAddressName(address);
         return this;
     }
 

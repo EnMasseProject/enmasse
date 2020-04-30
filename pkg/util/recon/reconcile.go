@@ -22,6 +22,7 @@ import (
 type ReconcileContext struct {
 	requeue      bool
 	requeueAfter time.Duration
+	returnNow    bool
 	error        error
 }
 

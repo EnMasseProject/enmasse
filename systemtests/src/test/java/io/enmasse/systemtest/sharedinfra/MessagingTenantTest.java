@@ -106,12 +106,16 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
             t2 = MessagingTenantResourceType.getOperation().inNamespace(t2.getMetadata().getNamespace()).withName(t2.getMetadata().getName()).get();
             assertNotNull(t2);
             if (t2.getStatus() != null && t2.getStatus().getConditions() != null) {
-                condition = MessagingTenantResourceType.getCondition(t2.getStatus().getConditions(), "Ready");
-                break;
+                condition = MessagingTenantResourceType.getCondition(t2.getStatus().getConditions(), "Bound");
+                if (condition != null && "False".equals(condition.getStatus())) {
+                    break;
+                }
             }
         }
 
         assertNotNull(condition);
         assertEquals("False", condition.getStatus());
     }
+
+
 }

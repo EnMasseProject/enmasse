@@ -18,8 +18,9 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:resource:shortName=msgi;msginfra;msginfras,categories=enmasse
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase of the MessagingInfra."
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase."
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",priority=1,description="Message describing the reason for the current Phase."
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MessagingInfra struct {
@@ -96,6 +97,7 @@ const (
 	MessagingInfraCaCreated        MessagingInfraConditionType = "CaCreated"
 	MessagingInfraBrokersCreated   MessagingInfraConditionType = "BrokersCreated"
 	MessagingInfraRoutersCreated   MessagingInfraConditionType = "RoutersCreated"
+	MessagingInfraSynchronized     MessagingInfraConditionType = "Synchronized"
 	MessagingInfraBrokersConnected MessagingInfraConditionType = "BrokersConnected"
 )
 

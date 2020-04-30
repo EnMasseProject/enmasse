@@ -446,7 +446,7 @@ public abstract class AbstractClient {
      * @return argument map
      */
     protected ClientArgumentMap javaBrokerTransformation(ClientArgumentMap args) {
-        if (args.getValues(ClientArgument.CONN_SSL) != null) {
+        if (args.getValues(ClientArgument.CONN_SSL) != null && args.getValues(ClientArgument.CONN_SSL).get(0).equals("true")) {
             if (clientType == ClientType.CLI_JAVA_PROTON_JMS_SENDER
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER) {
                 args.put(ClientArgument.BROKER, "amqps://" + args.getValues(ClientArgument.BROKER).get(0));

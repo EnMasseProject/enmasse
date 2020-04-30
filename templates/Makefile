@@ -120,7 +120,7 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-ENMASSE_PREVIEW_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/enmasse-1.0
+ENMASSE_PREVIEW_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/enmasse
 $(ENMASSE_PREVIEW_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_PREVIEW_BUNDLE)
 	for i in shared-infra; do \

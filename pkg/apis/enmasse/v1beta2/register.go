@@ -35,6 +35,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&MessagingInfraList{},
 		&MessagingTenant{},
 		&MessagingTenantList{},
+		&MessagingAddress{},
+		&MessagingAddressList{},
+		&MessagingEndpoint{},
+		&MessagingEndpointList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

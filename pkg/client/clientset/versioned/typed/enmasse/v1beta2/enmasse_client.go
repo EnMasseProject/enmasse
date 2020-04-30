@@ -15,6 +15,8 @@ import (
 
 type EnmasseV1beta2Interface interface {
 	RESTClient() rest.Interface
+	MessagingAddressesGetter
+	MessagingEndpointsGetter
 	MessagingInfrasGetter
 	MessagingTenantsGetter
 }
@@ -22,6 +24,14 @@ type EnmasseV1beta2Interface interface {
 // EnmasseV1beta2Client is used to interact with features provided by the enmasse.io group.
 type EnmasseV1beta2Client struct {
 	restClient rest.Interface
+}
+
+func (c *EnmasseV1beta2Client) MessagingAddresses(namespace string) MessagingAddressInterface {
+	return newMessagingAddresses(c, namespace)
+}
+
+func (c *EnmasseV1beta2Client) MessagingEndpoints(namespace string) MessagingEndpointInterface {
+	return newMessagingEndpoints(c, namespace)
 }
 
 func (c *EnmasseV1beta2Client) MessagingInfras(namespace string) MessagingInfraInterface {

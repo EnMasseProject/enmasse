@@ -10,7 +10,7 @@ metadata:
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
-    description: The current phase of the MessagingTenant.
+    description: The current phase.
     name: Phase
     type: string
   - JSONPath: .status.message
@@ -23,9 +23,15 @@ spec:
     type: date
   group: enmasse.io
   names:
+    categories:
+    - enmasse
     kind: MessagingTenant
     listKind: MessagingTenantList
     plural: messagingtenants
+    shortNames:
+    - msgt
+    - msgtenant
+    - msgtenants
     singular: messagingtenant
   scope: Namespaced
   subresources:

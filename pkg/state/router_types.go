@@ -6,6 +6,8 @@
 package state
 
 import (
+	"time"
+
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
 )
 
@@ -13,11 +15,16 @@ type RouterState struct {
 	host          string
 	port          int32
 	initialized   bool
+	nextResync    time.Time
 	commandClient amqpcommand.Client
-	connectors    []*RouterConnector
+	connectors    map[string]*RouterConnector
+	addresses     map[string]*RouterAddress
+	autoLinks     map[string]*RouterAutoLink
+	listeners     map[string]*RouterListener
 }
 
 type RouterConnector struct {
+	Name               string `json:"name"`
 	Host               string `json:"host"`
 	Port               string `json:"port"`
 	Role               string `json:"role,omitempty"`
@@ -32,7 +39,16 @@ type RouterConnector struct {
 }
 
 type RouterListener struct {
-	Port int `json:"port"`
+	Name               string `json:"name"`
+	Host               string `json:"host"`
+	Port               string `json:"port"`
+	Role               string `json:"role,omitempty"`
+	SslProfile         string `json:"sslProfile,omitempty"`
+	SaslMechanisms     string `json:"saslMechanisms,omitempty"`
+	LinkCapacity       int    `json:"linkCapacity,omitempty"`
+	IdleTimeoutSeconds int    `json:"idleTimeoutSeconds,omitempty"`
+	PolicyVhost        string `json:"policyVhost,omitempty"`
+	MultiTenant        bool   `json:"multiTenant,omitempty"`
 }
 
 type RouterVhost struct {
@@ -40,13 +56,18 @@ type RouterVhost struct {
 }
 
 type RouterAddress struct {
-	Prefix   string `json:"prefix"`
-	Waypoint bool   `json:"waypoint,omitempty"`
+	Name         string `json:"name"`
+	Prefix       string `json:"prefix"`
+	Waypoint     bool   `json:"waypoint"`
+	Distribution string `json:"distribution"`
 }
 
 type RouterAutoLink struct {
-	Address     string `json:"address"`
-	ContainerId string `json:"containerId"`
+	Name            string `json:"name"`
+	Address         string `json:"address"`
+	Direction       string `json:"direction"`
+	Connection      string `json:"connection,omitempty"`
+	ExternalAddress string `json:"externalAddress,omitempty"`
 }
 
 type RouterLinkRoute struct {

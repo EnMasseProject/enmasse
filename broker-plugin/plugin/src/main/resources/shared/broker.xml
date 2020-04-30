@@ -73,8 +73,26 @@ under the License.
 
       <acceptors>
          <acceptor name="artemis">tcp://127.0.0.1:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE</acceptor>
+         <!-- TODO: Remove this once go client supports SASL EXTERNAL -->
+         <acceptor name="amqp">tcp://0.0.0.0:5672?protocols=AMQP;saslMechanisms=PLAIN</acceptor>
          <acceptor name="amqps">tcp://0.0.0.0:5671?protocols=AMQP;saslMechanisms=EXTERNAL;sslEnabled=true;keyStorePath=${KEYSTORE_PATH};keyStorePassword=enmasse;trustStorePath=${TRUSTSTORE_PATH};trustStorePassword=enmasse;verifyHost=false;needClientAuth=true</acceptor>
       </acceptors>
+
+      <security-settings>
+         <security-setting match="#">
+            <permission type="createNonDurableQueue" roles="manage"/>
+            <permission type="deleteNonDurableQueue" roles="manage"/>
+            <permission type="createDurableQueue" roles="manage"/>
+            <permission type="deleteDurableQueue" roles="manage"/>
+            <permission type="createAddress" roles="manage"/>
+            <permission type="deleteAddress" roles="manage"/>
+            <permission type="consume" roles="manage,router"/>
+            <permission type="browse" roles="manage"/>
+            <permission type="send" roles="manage,router"/>
+            <!-- we need this otherwise ./artemis data imp wouldn't work -->
+            <permission type="manage" roles="manage"/>
+         </security-setting>
+      </security-settings>
 
       <address-settings>
          <!--default for catch all-->

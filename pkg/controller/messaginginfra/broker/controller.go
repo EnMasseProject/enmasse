@@ -62,67 +62,65 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 
 	labels := getBrokerLabels(infra)
 
-	// Update broker condition
-	brokersCreated := infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersCreated)
+	brokers := appsv1.StatefulSetList{}
+	err := b.client.List(ctx, &brokers, client.InNamespace(infra.Namespace), client.MatchingLabels(labels))
+	if err != nil {
+		return nil, err
+	}
 
-	allHosts := make([]string, 0)
-	err := common.WithConditionUpdate(brokersCreated, func() error {
-		brokers := appsv1.StatefulSetList{}
-		err := b.client.List(ctx, &brokers, client.InNamespace(infra.Namespace), client.MatchingLabels(labels))
+	hosts := make(map[string]bool, 0)
+	for _, broker := range brokers.Items {
+		err := b.reconcileBroker(ctx, logger, infra, &broker)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		hosts := make(map[string]bool, 0)
-		for _, broker := range brokers.Items {
-			err := b.reconcileBroker(ctx, logger, infra, &broker)
+		hosts[toHost(&broker)] = true
+	}
+
+	toCreate := numBrokersToCreate(infra.Spec.Broker.ScalingStrategy, brokers.Items)
+	if toCreate > 0 {
+		logger.Info("Creating brokers", "toCreate", toCreate)
+		for i := 0; i < toCreate; i++ {
+			broker := &appsv1.StatefulSet{
+				ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: fmt.Sprintf("broker-%s-%s", infra.Name, util.RandomBrokerName())},
+			}
+			err = b.reconcileBroker(ctx, logger, infra, broker)
 			if err != nil {
-				return err
+				return nil, err
 			}
-
-			hosts[toHost(&broker)] = true
+			hosts[toHost(broker)] = true
 		}
 
-		toCreate := numBrokersToCreate(infra.Spec.Broker.ScalingStrategy, brokers.Items)
-		if toCreate > 0 {
-			logger.Info("Creating brokers", "toCreate", toCreate)
-			for i := 0; i < toCreate; i++ {
-				broker := &appsv1.StatefulSet{
-					ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: fmt.Sprintf("broker-%s-%s", infra.Name, util.RandomBrokerName())},
-				}
-				err = b.reconcileBroker(ctx, logger, infra, broker)
-				if err != nil {
-					return err
-				}
-				hosts[toHost(broker)] = true
+	}
+
+	toDelete := numBrokersToDelete(infra.Spec.Broker.ScalingStrategy, brokers.Items)
+	if toDelete > 0 {
+		logger.Info("Removing brokers", "toDelete", toDelete)
+		for i := len(brokers.Items) - 1; toDelete > 0; i-- {
+			err := b.client.Delete(ctx, &brokers.Items[i])
+			if err != nil {
+				return nil, err
 			}
-
+			delete(hosts, toHost(&brokers.Items[i]))
+			toDelete--
 		}
+	}
 
-		toDelete := numBrokersToDelete(infra.Spec.Broker.ScalingStrategy, brokers.Items)
-		if toDelete > 0 {
-			logger.Info("Removing brokers", "toDelete", toDelete)
-			for i := len(brokers.Items) - 1; toDelete > 0; i-- {
-				err := b.client.Delete(ctx, &brokers.Items[i])
-				if err != nil {
-					return err
-				}
-				delete(hosts, toHost(&brokers.Items[i]))
-				toDelete--
-			}
-		}
-
-		// Update discoverable brokers
-		for host, _ := range hosts {
-			allHosts = append(allHosts, host)
-		}
-		return nil
-	})
-	return allHosts, err
+	// Update discoverable brokers
+	allHosts := make([]string, 0)
+	for host, _ := range hosts {
+		allHosts = append(allHosts, host)
+	}
+	return allHosts, nil
 }
 
 func toHost(broker *appsv1.StatefulSet) string {
 	return fmt.Sprintf("%s-0.%s.%s.svc", broker.Name, broker.Name, broker.Namespace)
+}
+
+func toNamespacedHost(broker *appsv1.StatefulSet) string {
+	return fmt.Sprintf("%s-0", broker.Name)
 }
 
 func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, statefulset *appsv1.StatefulSet) error {
@@ -138,6 +136,12 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 		install.ApplyStatefulSetDefaults(statefulset, "broker", statefulset.Name)
 		statefulset.Labels[common.LABEL_INFRA] = infra.Name
 		statefulset.Spec.Template.Labels[common.LABEL_INFRA] = infra.Name
+
+		statefulset.Spec.Template.Annotations[common.ANNOTATION_INFRA_NAME] = infra.Name
+		statefulset.Spec.Template.Annotations[common.ANNOTATION_INFRA_NAMESPACE] = infra.Namespace
+
+		statefulset.Annotations[common.ANNOTATION_INFRA_NAME] = infra.Name
+		statefulset.Annotations[common.ANNOTATION_INFRA_NAMESPACE] = infra.Namespace
 
 		statefulset.Spec.ServiceName = statefulset.Name
 		statefulset.Spec.Replicas = int32ptr(1)
@@ -252,7 +256,7 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 		return err
 	}
 
-	_, err = b.certController.ReconcileCert(ctx, logger, infra, statefulset, toHost(statefulset))
+	_, err = b.certController.ReconcileCert(ctx, logger, infra, statefulset, toNamespacedHost(statefulset), toHost(statefulset))
 	if err != nil {
 		return err
 	}

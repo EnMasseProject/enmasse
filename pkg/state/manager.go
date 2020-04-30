@@ -23,6 +23,12 @@ type manager struct {
 	lock           *sync.Mutex
 }
 
+type systemClock struct{}
+
+func (s *systemClock) Now() time.Time {
+	return time.Now()
+}
+
 var clientManager ClientManager
 var once sync.Once
 
@@ -44,6 +50,11 @@ func NewClientManager() ClientManager {
 	}
 }
 
+const (
+	PORT_RANGE_START = 40000
+	PORT_RANGE_END   = 50000
+)
+
 // Signal that an instance of infrastructure is updated
 func (m *manager) GetClient(i *v1beta2.MessagingInfra) InfraClient {
 	m.lock.Lock()
@@ -51,14 +62,7 @@ func (m *manager) GetClient(i *v1beta2.MessagingInfra) InfraClient {
 	key := clientKey{Name: i.Name, Namespace: i.Namespace}
 	client, exists := m.clients[key]
 	if !exists {
-		client = &infraClient{
-
-			routers:            make(map[string]*RouterState, 0),
-			brokers:            make(map[string]*BrokerState, 0),
-			routerStateFactory: NewRouterState,
-			brokerStateFactory: NewBrokerState,
-			lock:               &sync.Mutex{},
-		}
+		client = NewInfra(NewRouterState, NewBrokerState, &systemClock{})
 		m.clients[key] = client
 	}
 	return client

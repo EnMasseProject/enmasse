@@ -45,6 +45,10 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_MESSAGING_TENANT
           value: "true"
+        - name: CONTROLLER_ENABLE_MESSAGING_ADDRESS
+          value: "true"
+        - name: CONTROLLER_ENABLE_MESSAGING_ENDPOINT
+          value: "true"
         - name: IOT_CONFIG_NAME
           value: "default"
         - name: OPERATOR_NAME

@@ -20,7 +20,8 @@ public class AssumeOpenshiftCondition implements ExecutionCondition {
         Optional<OpenShift> annotation = findAnnotation(context.getElement(), OpenShift.class);
         if (annotation.isPresent()) {
             var version = annotation.get().version();
-            var multinode = annotation.get().multinode();
+            var type = annotation.get().type();
+            var multinode = type.equals(ClusterType.CRC) ? MultinodeCluster.NO : annotation.get().multinode();
             if ((Kubernetes.getInstance().getCluster().toString().equals(ClusterType.OPENSHIFT.toString().toLowerCase()) ||
                     Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase())) &&
                     (version == OpenShiftVersion.WHATEVER || version == Kubernetes.getInstance().getOcpVersion()) &&

@@ -6,38 +6,53 @@
 package state
 
 import (
-	"sync"
 	"testing"
+	"time"
 
 	fakecommand "github.com/enmasseproject/enmasse/pkg/amqpcommand/test"
 	"github.com/stretchr/testify/assert"
 	"pack.ag/amqp"
 )
 
+type testClock struct {
+	now time.Time
+}
+
+func (t *testClock) Now() time.Time {
+	return t.now
+}
+
 func TestSyncConnectors(t *testing.T) {
-	client := fakecommand.NewFakeClient()
-	i := &infraClient{
-		routers: make(map[string]*RouterState, 0),
-		brokers: make(map[string]*BrokerState, 0),
-		routerStateFactory: func(host string, port int32) *RouterState {
-			return &RouterState{
-				host:          host,
-				port:          port,
-				commandClient: client,
-			}
-		},
-		brokerStateFactory: func(host string, port int32) *BrokerState {
-			return &BrokerState{
-				Host: host,
-				Port: port,
-			}
-		},
-		lock: &sync.Mutex{},
-	}
+	rclient := fakecommand.NewFakeClient()
+	bclient := fakecommand.NewFakeClient()
+	i := NewInfra(func(host string, port int32) *RouterState {
+		return &RouterState{
+			host:          host,
+			port:          port,
+			connectors:    make(map[string]*RouterConnector, 0),
+			commandClient: rclient,
+		}
+	}, func(host string, port int32) *BrokerState {
+		return &BrokerState{
+			Host:          host,
+			Port:          port,
+			commandClient: bclient,
+		}
+	}, &testClock{})
 	assert.NotNil(t, i)
 
-	client.Handler = func(req *amqp.Message) (*amqp.Message, error) {
+	bclient.Handler = func(req *amqp.Message) (*amqp.Message, error) {
 		return &amqp.Message{
+			ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
+			Value:                 "[[\"q1\",\"q2\"]]",
+		}, nil
+	}
+
+	rclient.Handler = func(req *amqp.Message) (*amqp.Message, error) {
+		return &amqp.Message{
+			ApplicationProperties: map[string]interface{}{
+				"statusCode": int32(201),
+			},
 			Value: map[string]interface{}{
 				"attributeNames":   []interface{}{},
 				"results":          []interface{}{},
@@ -46,7 +61,7 @@ func TestSyncConnectors(t *testing.T) {
 			}}, nil
 	}
 
-	statuses, err := i.SyncConnectors([]string{"r1.example.com", "r2.example.com"}, []string{"b1.example.com", "b2.example.com"})
+	statuses, err := i.SyncAll([]string{"r1.example.com", "r2.example.com"}, []string{"b1.example.com", "b2.example.com"})
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(i.routers["r1.example.com"].connectors))
 	assert.Equal(t, 2, len(i.routers["r2.example.com"].connectors))
