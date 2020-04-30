@@ -4,9 +4,15 @@
  */
 
 import React from "react";
-import { ToggleOffIcon, ToggleOnIcon, IconSize } from "@patternfly/react-icons";
+import {
+  IconSize,
+  ToggleOnIcon as OnIcon,
+  ToggleOffIcon as OffIcon
+} from "@patternfly/react-icons";
 
 export type OneOf<T, K extends keyof T> = T[K];
+
+export type IconType = React.SFC<any>;
 
 export interface IToggleIconProps {
   isEnabled: boolean;
@@ -17,6 +23,8 @@ export interface IToggleIconProps {
   enabledTitle?: string;
   disabledTitle?: string;
   name?: string;
+  ToggleOnIcon?: IconType;
+  ToggleOffIcon?: IconType;
 }
 
 export const ToggleIcon: React.FC<IToggleIconProps> = ({
@@ -27,7 +35,9 @@ export const ToggleIcon: React.FC<IToggleIconProps> = ({
   iconSize,
   enabledTitle,
   disabledTitle,
-  name
+  name,
+  ToggleOnIcon = OnIcon,
+  ToggleOffIcon = OffIcon
 }) => {
   const onToggleIcon = (isEnabled: boolean, event: any) => {
     if (name && !event.target.name) {
@@ -39,7 +49,7 @@ export const ToggleIcon: React.FC<IToggleIconProps> = ({
   return isEnabled ? (
     <span>
       <ToggleOnIcon
-        onClick={event => onToggleIcon(false, event)}
+        onClick={(event: any) => onToggleIcon(false, event)}
         color={toggleOnIconColor || "var(--pf-global--active-color--100)"}
         size={iconSize || IconSize.lg}
       />
@@ -48,7 +58,7 @@ export const ToggleIcon: React.FC<IToggleIconProps> = ({
   ) : (
     <span>
       <ToggleOffIcon
-        onClick={event => onToggleIcon(true, event)}
+        onClick={(event: any) => onToggleIcon(true, event)}
         size={iconSize || IconSize.lg}
         color={toggleOffIconColor}
       />
