@@ -7,10 +7,12 @@ package messaginginfra
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
+	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/broker"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
@@ -358,7 +360,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
 		statuses, err := r.clientManager.GetClient(infra).SyncAll(routerHosts, brokerHosts)
 		// Treat as transient error
-		if err, ok := err.(*state.NotConnectedError); ok {
+		if errors.Is(err, amqpcommand.NotConnectedError) {
 			logger.Info("Error syncing infra", "error", err.Error())
 			infra.Status.Message = err.Error()
 			synchronized.SetStatus(corev1.ConditionFalse, "", err.Error())

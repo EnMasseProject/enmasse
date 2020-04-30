@@ -8,6 +8,7 @@ package state
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -58,16 +59,27 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 	return nil
 }
 
-func (b *BrokerState) readQueues() (map[string]bool, error) {
-	if !b.commandClient.Connected() {
-		return nil, NewNotConnectedError(b.Host)
+/**
+ * Perform management request against this broker. If resetOnDisconnect is set, the broker state will be instructed
+ * to be reset. This should be set to true if running in a single-threaded context, and the error should be handled
+ * by the caller.
+ */
+func (b *BrokerState) doRequest(request *amqp.Message, resetOnDisconnect bool) (*amqp.Message, error) {
+	// If by chance we got disconnected while waiting for the request
+	response, err := b.commandClient.RequestWithTimeout(request, 10*time.Second)
+	if resetOnDisconnect && errors.Is(err, amqp.ErrConnClosed) {
+		b.Reset()
 	}
+	return response, err
+}
+
+func (b *BrokerState) readQueues() (map[string]bool, error) {
 	message, err := newManagementMessage("broker", "getQueueNames", "", "ANYCAST")
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := b.commandClient.RequestWithTimeout(message, 10*time.Second)
+	result, err := b.doRequest(message, true)
 	if err != nil {
 		return nil, err
 	}
@@ -95,9 +107,6 @@ func (b *BrokerState) readQueues() (map[string]bool, error) {
 }
 
 func (b *BrokerState) EnsureQueues(queues []string) error {
-	if !b.commandClient.Connected() {
-		return NewNotConnectedError(b.Host)
-	}
 	g, _ := errgroup.WithContext(context.Background())
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {
@@ -109,7 +118,7 @@ func (b *BrokerState) EnsureQueues(queues []string) error {
 					return err
 				}
 				log.Printf("Creating queue %s on %s", q, b.Host)
-				response, err := b.commandClient.RequestWithTimeout(message, 10*time.Second)
+				response, err := b.doRequest(message, false)
 				if err != nil {
 					return err
 				}
@@ -127,13 +136,13 @@ func (b *BrokerState) EnsureQueues(queues []string) error {
 	for queue := range completed {
 		b.queues[queue] = true
 	}
+	if errors.Is(err, amqp.ErrConnClosed) {
+		b.Reset()
+	}
 	return err
 }
 
 func (b *BrokerState) DeleteQueues(queues []string) error {
-	if !b.commandClient.Connected() {
-		return NewNotConnectedError(b.Host)
-	}
 	g, _ := errgroup.WithContext(context.Background())
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {
@@ -147,7 +156,7 @@ func (b *BrokerState) DeleteQueues(queues []string) error {
 
 				log.Printf("Destroying queue %s on %s", q, b.Host)
 
-				response, err := b.commandClient.RequestWithTimeout(message, 10*time.Second)
+				response, err := b.doRequest(message, false)
 				if err != nil {
 					return err
 				}
@@ -167,6 +176,9 @@ func (b *BrokerState) DeleteQueues(queues []string) error {
 	close(completed)
 	for queue := range completed {
 		delete(b.queues, queue)
+	}
+	if errors.Is(err, amqp.ErrConnClosed) {
+		b.Reset()
 	}
 	return err
 }
@@ -198,13 +210,6 @@ func newManagementMessage(resource string, operation string, attribute string, p
 		ApplicationProperties: properties,
 		Value:                 string(encoded),
 	}, nil
-}
-
-func (b *BrokerState) checkConnection() {
-	// If we are initialized and not connected, we got disconnected and need to re-initialize
-	if b.initialized && !b.commandClient.Connected() {
-		b.Reset()
-	}
 }
 
 /*

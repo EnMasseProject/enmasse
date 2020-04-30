@@ -8,6 +8,7 @@ package state
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -85,13 +86,6 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 	return nil
 }
 
-func (r *RouterState) checkConnection() {
-	// If we are initialized and not connected, we got disconnected and need to re-initialize
-	if r.initialized && !r.commandClient.Connected() {
-		r.Reset()
-	}
-}
-
 /*
  * Reset router state from router (i.e. drop all internal state and rebuild from actual router state)
  */
@@ -113,10 +107,6 @@ func (r *RouterState) Shutdown() {
  * Ensure that a given connector exists.
  */
 func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	for _, existing := range r.connectors {
 		// This is the same connector. Report error if settings have changed
 		if existing.Name == connector.Name {
@@ -137,7 +127,7 @@ func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
 	}
 
 	// No connector found so we need to create it
-	err = r.createEntity(connectorEntity, connector.Name, entity)
+	err = r.createEntity(connectorEntity, connector.Name, entity, true)
 	if err != nil {
 		return err
 	}
@@ -148,9 +138,6 @@ func (r *RouterState) EnsureConnector(connector *RouterConnector) error {
 }
 
 func (r *RouterState) readConnectors() (map[string]*RouterConnector, error) {
-	if !r.commandClient.Connected() {
-		return nil, NewNotConnectedError(r.host)
-	}
 	v, err := r.queryEntities(connectorEntity)
 	if err != nil {
 		return nil, err
@@ -187,10 +174,6 @@ func (r *RouterState) readConnectors() (map[string]*RouterConnector, error) {
  * Ensure that a given listener exists.
  */
 func (r *RouterState) EnsureListener(listener *RouterListener) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	for _, existing := range r.listeners {
 		// This is the same listener. Report error if settings have changed
 		if existing.Name == listener.Name {
@@ -211,7 +194,7 @@ func (r *RouterState) EnsureListener(listener *RouterListener) error {
 	}
 
 	// No listener found so we need to create it
-	err = r.createEntity(listenerEntity, listener.Name, entity)
+	err = r.createEntity(listenerEntity, listener.Name, entity, true)
 	if err != nil {
 		return err
 	}
@@ -222,9 +205,6 @@ func (r *RouterState) EnsureListener(listener *RouterListener) error {
 }
 
 func (r *RouterState) readAddresses() (map[string]*RouterAddress, error) {
-	if !r.commandClient.Connected() {
-		return nil, NewNotConnectedError(r.host)
-	}
 	v, err := r.queryEntities(addressEntity)
 	if err != nil {
 		return nil, err
@@ -258,9 +238,6 @@ func (r *RouterState) readAddresses() (map[string]*RouterAddress, error) {
 }
 
 func (r *RouterState) readListeners() (map[string]*RouterListener, error) {
-	if !r.commandClient.Connected() {
-		return nil, NewNotConnectedError(r.host)
-	}
 	v, err := r.queryEntities(listenerEntity)
 	if err != nil {
 		return nil, err
@@ -294,9 +271,6 @@ func (r *RouterState) readListeners() (map[string]*RouterListener, error) {
 }
 
 func (r *RouterState) readAutoLinks() (map[string]*RouterAutoLink, error) {
-	if !r.commandClient.Connected() {
-		return nil, NewNotConnectedError(r.host)
-	}
 	v, err := r.queryEntities(autoLinkEntity)
 	if err != nil {
 		return nil, err
@@ -347,10 +321,6 @@ func createMapData(attributeNames []interface{}, results []interface{}) ([]map[s
 }
 
 func (r *RouterState) GetConnectorStatus(connector *RouterConnector) (*ConnectorStatus, error) {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return nil, NewNotConnectedError(r.host)
-	}
 	v, err := r.readEntity(connectorEntity, connector.Name)
 	if err != nil {
 		return nil, err
@@ -418,7 +388,7 @@ func getStatusDescription(response *amqp.Message) interface{} {
 	return response.ApplicationProperties["statusDescription"]
 }
 
-func (r *RouterState) deleteEntity(entity routerEntity, name string) error {
+func (r *RouterState) deleteEntity(entity routerEntity, name string, resetOnDisconnect bool) error {
 	properties := make(map[string]interface{})
 	properties["operation"] = "DELETE"
 	properties["type"] = string(entity)
@@ -429,7 +399,7 @@ func (r *RouterState) deleteEntity(entity routerEntity, name string) error {
 		ApplicationProperties: properties,
 	}
 
-	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := r.doRequest(request, true)
 	if err != nil {
 		return err
 	}
@@ -445,7 +415,21 @@ func (r *RouterState) deleteEntity(entity routerEntity, name string) error {
 	return nil
 }
 
-func (r *RouterState) createEntity(entity routerEntity, name string, data map[interface{}]interface{}) error {
+/**
+ * Perform management request against this router. If resetOnDisconnect is set, the router state will be instructed
+ * to be reset. This should be set to true if running in a single-threaded context, and the error should be handled
+ * by the caller.
+ */
+func (r *RouterState) doRequest(request *amqp.Message, resetOnDisconnect bool) (*amqp.Message, error) {
+	// If by chance we got disconnected while waiting for the request
+	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	if resetOnDisconnect && errors.Is(err, amqp.ErrConnClosed) {
+		r.Reset()
+	}
+	return response, err
+}
+
+func (r *RouterState) createEntity(entity routerEntity, name string, data map[interface{}]interface{}, resetOnDisconnect bool) error {
 	properties := make(map[string]interface{})
 	properties["operation"] = "CREATE"
 	properties["type"] = string(entity)
@@ -456,7 +440,7 @@ func (r *RouterState) createEntity(entity routerEntity, name string, data map[in
 		Value:                 data,
 	}
 
-	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := r.doRequest(request, resetOnDisconnect)
 	if err != nil {
 		return err
 	}
@@ -483,7 +467,7 @@ func (r *RouterState) readEntity(entity routerEntity, name string) (map[string]i
 		ApplicationProperties: properties,
 	}
 
-	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := r.doRequest(request, true)
 	if err != nil {
 		return nil, err
 	}
@@ -529,7 +513,7 @@ func (r *RouterState) queryEntities(entity routerEntity, attributes ...string) (
 		Value:                 body,
 	}
 
-	response, err := r.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := r.doRequest(request, true)
 	if err != nil {
 		return nil, err
 	}
@@ -558,10 +542,6 @@ func (r *RouterState) queryEntities(entity routerEntity, attributes ...string) (
  * Ensure that a given vhost exists.
  */
 func (r *RouterState) EnsureVhost(address *RouterVhost) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	// TODO: Implement
 	return nil
 }
@@ -570,10 +550,6 @@ func (r *RouterState) EnsureVhost(address *RouterVhost) error {
  * Ensure that a given address exists.
  */
 func (r *RouterState) EnsureAddresses(addresses []*RouterAddress) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	toCreate := make([]*RouterAddress, 0, len(addresses))
 	for _, address := range addresses {
 		existing, ok := r.addresses[address.Name]
@@ -597,7 +573,7 @@ func (r *RouterState) EnsureAddresses(addresses []*RouterAddress) error {
 		}
 		g.Go(func() error {
 			log.Printf("[Router %s] Creating address %s", r.host, a.Name)
-			err := r.createEntity(addressEntity, a.Name, entity)
+			err := r.createEntity(addressEntity, a.Name, entity, false)
 			if err != nil {
 				return err
 			}
@@ -612,21 +588,20 @@ func (r *RouterState) EnsureAddresses(addresses []*RouterAddress) error {
 	for address := range completed {
 		r.addresses[address.Name] = address
 	}
+
+	if errors.Is(err, amqp.ErrConnClosed) {
+		r.Reset()
+	}
 	return err
 }
 
 func (r *RouterState) DeleteAddresses(names []string) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	g, _ := errgroup.WithContext(context.Background())
 	completed := make(chan string, len(names))
 	for _, name := range names {
 		n := name
 		g.Go(func() error {
-			log.Printf("Deleting address %s", n)
-			err := r.deleteEntity(addressEntity, n)
+			err := r.deleteEntity(addressEntity, n, false)
 			if err != nil {
 				return err
 			}
@@ -641,20 +616,20 @@ func (r *RouterState) DeleteAddresses(names []string) error {
 	for name := range completed {
 		delete(r.addresses, name)
 	}
+
+	if errors.Is(err, amqp.ErrConnClosed) {
+		r.Reset()
+	}
 	return err
 }
 
 func (r *RouterState) DeleteAutoLinks(names []string) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	g, _ := errgroup.WithContext(context.Background())
 	completed := make(chan string, len(names))
 	for _, name := range names {
 		n := name
 		g.Go(func() error {
-			err := r.deleteEntity(autoLinkEntity, n)
+			err := r.deleteEntity(autoLinkEntity, n, false)
 			if err != nil {
 				return err
 			}
@@ -673,11 +648,7 @@ func (r *RouterState) DeleteAutoLinks(names []string) error {
 }
 
 func (r *RouterState) DeleteConnector(name string) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
-	err := r.deleteEntity(connectorEntity, name)
+	err := r.deleteEntity(connectorEntity, name, true)
 	if err != nil {
 		return err
 	}
@@ -686,11 +657,7 @@ func (r *RouterState) DeleteConnector(name string) error {
 }
 
 func (r *RouterState) DeleteListener(name string) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
-	err := r.deleteEntity(listenerEntity, name)
+	err := r.deleteEntity(listenerEntity, name, true)
 	if err != nil {
 		return err
 	}
@@ -702,10 +669,6 @@ func (r *RouterState) DeleteListener(name string) error {
  * Ensure that a given autoLink exists.
  */
 func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	toCreate := make([]*RouterAutoLink, 0, len(autoLinks))
 	for _, autoLink := range autoLinks {
 		existing, ok := r.autoLinks[autoLink.Name]
@@ -729,7 +692,7 @@ func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
 		}
 		g.Go(func() error {
 			log.Printf("[Router %s] Creating autoLink %+v", r.host, a.Name)
-			err := r.createEntity(autoLinkEntity, a.Name, entity)
+			err := r.createEntity(autoLinkEntity, a.Name, entity, false)
 			if err != nil {
 				return err
 			}
@@ -744,6 +707,10 @@ func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
 	for autoLink := range completed {
 		r.autoLinks[autoLink.Name] = autoLink
 	}
+
+	if errors.Is(err, amqp.ErrConnClosed) {
+		r.Reset()
+	}
 	return err
 }
 
@@ -751,10 +718,6 @@ func (r *RouterState) EnsureAutoLinks(autoLinks []*RouterAutoLink) error {
  * Ensure that a given linkRoute exists.
  */
 func (r *RouterState) EnsureLinkRoute(address *RouterLinkRoute) error {
-	r.checkConnection()
-	if !r.commandClient.Connected() {
-		return NewNotConnectedError(r.host)
-	}
 	// TODO: Implement
 	return nil
 }
