@@ -79,8 +79,9 @@ in the previous step:
 
 [options="nowrap",subs="attributes,specialchars"]
 ----
-{cmdcli} exec -ti deployment/postgresql bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.sql
-{cmdcli} exec -ti deployment/postgresql bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.tree.sql
+{cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.sql
+{cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.tree.sql
+{cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.devcon.sql
 ----
 --
 
