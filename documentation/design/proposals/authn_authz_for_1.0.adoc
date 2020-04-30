@@ -460,7 +460,7 @@ colliding names.  In order to ensure that activity of the users is attributable 
 
 === Metrics
 
-The AccessControlService will expose a Prometheus endpoint will the following metrics:
+The AccessControlServer will expose a Prometheus endpoint will the following metrics:
 
 1. `auth_requests_total{namespace="", domain="", sasl_outcome=""}`
 1. `auth_requests_duration_seconds{namespace="", domain="", sasl_outcome="", le=<buckets>}`
