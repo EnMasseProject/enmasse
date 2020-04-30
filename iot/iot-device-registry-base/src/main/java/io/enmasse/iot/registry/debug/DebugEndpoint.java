@@ -1,11 +1,10 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.registry.debug;
 
-import io.vertx.core.Future;
 import static io.vertx.core.http.HttpHeaders.CACHE_CONTROL;
 
 import org.eclipse.hono.service.credentials.CredentialsService;
@@ -14,6 +13,7 @@ import org.eclipse.hono.util.RequestResponseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -30,6 +30,7 @@ import io.vertx.ext.web.RoutingContext;
 @Component
 @ConditionalOnProperty(ConfigBase.CONFIG_BASE + ".registry.debug.enabled")
 @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".registry.debug")
+@ConditionalOnBean({CredentialsService.class, RegistrationService.class})
 public class DebugEndpoint extends AbstractVerticle {
 
     private static final Logger log = LoggerFactory.getLogger(DebugEndpoint.class);
@@ -69,7 +70,7 @@ public class DebugEndpoint extends AbstractVerticle {
                     var authId = ctx.pathParam("authId");
 
                     this.crendentialService.get(tenantId, type, authId)
-                            .setHandler(ar -> handleResult(ctx, ar));
+                            .onComplete(ar -> handleResult(ctx, ar));
                 });
 
         router
@@ -80,7 +81,7 @@ public class DebugEndpoint extends AbstractVerticle {
                     var deviceId = ctx.pathParam("device");
 
                     this.registrationService.assertRegistration(tenantId, deviceId)
-                            .setHandler(ar -> handleResult(ctx, ar));
+                            .onComplete(ar -> handleResult(ctx, ar));
                 });
 
         this.vertx
