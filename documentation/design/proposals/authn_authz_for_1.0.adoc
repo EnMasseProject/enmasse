@@ -9,7 +9,7 @@ For identity, it will have provision for:
 
 * leverage an external identity provider (such as a LDAP/Keycloak/OAuth provider),
 * leverage an external AMQP SASL authentication endpoint (implementing the `authServicePlugin` interface),
-* provide an internal identity provider (where users are represented by a kubernetes custom resources),
+* provide an Namespace Identity Provider (where users are represented by a kubernetes custom resources),
 * utilize client auth (in collabration with the `MessagingEndpoint` and the Qpid Dispatch Router),
 * utilise service account tokens for messaging authentication purposes, and
 * provide an anonymous identity provider (SASL ANONYMOUS)
@@ -17,15 +17,22 @@ For identity, it will have provision for:
 For authorization, authorization rules sourced from custom kubernetes resources will allow individual users, or
 groups of users to be permissioned for sending to or receiving from address(es) within the namespace.
 
-The Service Admin will be able to selectively enable/disable identity providers by configuring the Access Control Service
-resource. This will allow EnMasse to conform to the identity management rules of a particular organisation.  For instance, it will be possible for the Access Control Service to be configured so that only the external LDAP is available, or that
-service account and the external LDAP are available.
+The Service Admin will configure one or more Identity Providers.  Configuration within the Identity Provider will
+automatically assign the Identity Provider(s) to the Messaging Tenants (selector mechanism).  
 
-Each Messaging Tenant will be associated with exactly one Access Control Service. This can be done locally by a Tenant
-Admin, or alternatively the Service Admin will be able to configure one or more Access Control Services centrally. Selectors will automatically associate an Access Control Service with the Tenants.
+The Messaging Tenant will can override the set of Identity Provider(s) if required and suitably permissioned.  If
+they have RBAC permission they will be able to create their own Identity Provider(s).  The Tenant will be able to assign
+Identity Provider(s) to his namespace drawing from those provided by the Service Admin and any the Tenant has created.
 
-For the getting started use case, there will be a implict in-built default which will apply until the first Access Control
-Service is defined by the Service Admin.  The in-built default will provide ANONYMOUS access with an allow all policy.
+The Messaging Tenant will also be able to restrict each Messaging Endpoints to a subset of Identity Providers
+
+By default the system will ensure that clear text credentials (passwords or bearer tokens) do not travel over insecure
+network paths. In concrete terms, this means the system will not offer SASL PLAIN and OAUTHBEARER when it detects the client
+has connected over an unecrypted network.
+
+For the Getting Started use case, there will be an implict default that apply until the first explict Identity Provider
+is created.  The user will need to create some objects in order to be able to authenticate and authorize a messaging
+application but these resource will be simple and short.  The system will meet the Secure by Default software design principle even when operating in this mode. 
 
 == Design overview
 
@@ -33,28 +40,28 @@ Service is defined by the Service Admin.  The in-built default will provide ANON
 
 ==== Access Control Server
 
-An Access Control Server instance will provide identity management and authorization services to all the tenants of an instance of shared infrastructure.  The Access Control Server will be a stateless component that will be scaleable for
+An Access Control Server (the server) instance will provide identity management and authorization services to all the tenants of an instance of shared infrastructure.  The Access Control Server will be a stateless component that will be scaleable for
 availability and performance.  It will be implemented in Go.
 
-The Access Control Server will be created by EnMasse Operator according to configuration within the MessagingInfra object.
+The server will be created by EnMasse Operator according to configuration within the MessagingInfra object.
 
-The Access Control Server will provide an AMQP SASL endpoint that implements `authServicePlugin` interface.
+The server will provide an AMQP SASL endpoint that implements `authServicePlugin` interface.
 
-On each incoming AMQP connection, the Access Control Server will use TLS SNI will allow it to determine which
-`AccessControlService` to apply when processing each authentication event.
+On each incoming AMQP connection from the Router, the server will use TLS SNI will allow it to determine
+which `MessagingEndpoint` the connection is using and thus which `IdentityProvider(s)` to apply.
 
 The algorithm for processing each authentication event:
 
-1. Router connects to the AMQP SASL endpoint associated with the router listener.
-1. Access Control Server uses the SNI information to resolve the applicable `AccessControlService`
-1. Access Control Service uses the configuration of the `AccessControlService` determine the avaiable SASL mechanism(s).
+1. Router connects to the AMQP SASL endpoint associated with the Router listener and begins to relay SASL.
+1. Server uses the SNI information to resolve the `MessagingEndpoint` and the applicable `IdentityProvider(s)`.
+1. Server calculates the available SASL mechanisms.
 1. SASL-MECHANISMS performative flows the Client.
-1. Client selects mechanism
-1. SASL-INIT flows to the Access Control Server
+1. Client selects a mechanism
+1. SASL-INIT flows from Client to the Server
 1. SASL-CHALLENGE / SASL RESPONSE as necessary
-1. Access Control Server calls out to the external authentication service / uses `MessagingUser` / `TokenReview` (as appropiate) to determine if the authentication is successful.
+1. Server calls out to the external identity provider / uses `MessagingUser` / uses `TokenReview` to determine if the authentication is successful.
 1. SASL-OUTCOME flows to the Client.
-1. Access Control Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
+1. Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
 1. AMQP OPEN flows to the Router carrying the authorisation policy.
 
 ===== Provider Behaviour
@@ -86,13 +93,13 @@ provider is used, the Access Control Server acts a SASL proxy.  It will connect 
 the AMQP SASL performatives to/from the client.
 
 The response from the External AMQP SASL server must provides an `authenticated-identity`.  It may also provide
-`groups` and may provide `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated from the `MessagingRoles` and `MessagingRoleBindings`.
+`groups` and a `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated from the `MessagingRoles` and `MessagingRoleBindings`.
 
 The SASL mechanisms offered when this identity provider are in use depend on the mechansims required by the External AMQP SASL server.
 
-====== Internal Identity Provider
+====== Namespace Identity Provider
 
-The Internal Identity Provider uses the `MessagingUser` resources are a identity/password database.
+The Namespace Identity Provider uses the `MessagingUser` resources as a identity/password database.
 
 The password in the MessagingUser record will usually stored salted (defined by  https://tools.ietf.org/html/rfc5802). However
 it will be possible for a request for authentication to arrive before the salting has taken place, to cater for this
@@ -102,9 +109,9 @@ This identity provider will offer SASL mechanism PLAIN and SCRAM-SHA-1, SCRAM-SH
 
 ====== Client Auth Identity Provider
 
-For client auth, the identity is established during the TLS negotiation phase between Client and Router.  The router will
+For client auth, the identity is established during the TLS negotiation phase between Client and Router.  The Router will
 pass the established identity through the `authServicePlugin` to the Access Control Server via the SASL EXTERNAL mechanism
-via the link:https://tools.ietf.org/html/rfc4422#appendix-A[authz-id-string].  (TODO: check Router behaviour).
+via the link:https://tools.ietf.org/html/rfc4422#appendix-A[authz-id-string].  (Requires Qpid Dispatch Router change: DISPATCH-1634).
 
 This identity provider will offer SASL mechanism EXTERNAL.
 
@@ -119,14 +126,25 @@ This identity provider will offer SASL mechanisms PLAIN, link:https://tools.ietf
 
 For the Anonymous Provider, the SASL mechnism ANONYMOUS will be used.
 
-===== Behaviour Without AccessControlService
+===== Getting Started Use-Case
 
-To support the simple getting started use case, if there are no `AccessControlService` defined in the infra namespace,
-the system will behaves as if there is an `AccessControlService` with the anonymous identity provider defined.  For
-authorization, it will be as if an authorisation policy grant all access to all addresses exists.
+For the Getting Started use case, there will be an implict default of the Namespace Identity Provider which will
+apply until the first explict Identity Provider is created.  It will be as if a `IdentityProvider` resource exists which
+declares the `namespace` type with a selector that matches all namespaces.
 
-As soon as an `AccessControlService` is defined in the infra namespace, the default described here becomes unavailable for
-use.
+For the Getting Started use case, the Developer will be required to create three objects:
+
+1. MessagingUser with username/password,
+2. MessagingRole granting send/receive to all addresses,
+3. MessagingRoleBinding linking the user to the role.
+
+All of these will be a few lines of simple YAML.
+
+As soons as the System Admin declares the first explict `IdentityProvider` the implict default no longer applies. This is
+true even if the selector of the `IdentityProvider` does not a namespace.  Conversely removing the last explict  `IdentityProvider` will return the system to the implict default.
+
+If whilst the system is the implict default, a Tenant creates a local `IdentityProvider` the implict rule no longer applies
+to that namespace.  Other tenants are unaffected.
 
 ===== Go AMQP server implementation
 
@@ -136,11 +154,12 @@ be implemented within the Access Control Server code-base.  It will borrow codec
 
 ==== EnMasse Operator
 
-The EnMasse Operator will act as the controller for `AccessControlService`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources and be responsible for maintaintence of the status sections.  For `MessagingUser`
-resources it will be responsible for salting passwords. 
+The EnMasse Operator will act as the controller for `IdentityProvider`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources and be responsible for maintaintence of the status sections.
+
+For `MessagingUser` resources it will be responsible for salting passwords. [TODO: bad idea? better to use an external tool/console to salt the password?]
 
 The EnMasse operator will watch for `MessagingTenants` resources.  For each it will and define a Kubernetes service
-exposing the AMQP SASL endpoint of the Access Control Servcie  The MessagingInfra controller will configure a router listener/authServicePlugin _per tenant_  with a reference to the correct  AMQP SASL endpoint.
+exposing the AMQP SASL endpoint of the Access Control Servcie  The `MessagingInfra` controller will configure a router listener/authServicePlugin _per endpoint_  with a reference to the correct  AMQP SASL endpoint.
 
 ==== Messaging Client
 
@@ -148,15 +167,16 @@ When using the service accounts, the following username must be used:
 
 * `system:serviceaccount`. (for backward compatibility, `@@serviceaccount@@` will also be accepted)
 
-If more than one identity provider is configured in the `AccessControlService`, for identity providers that require a
-username, the user must be qualified with the domain name of the identity provider.
+If more than one IdentityProvider is configured for the tenant, for identity providers that require a
+username, the user must be qualified as follows.
 
-* `enamsse.io:messaginguser:<namespace>:<name>`
-* `enamsse.io:<domain>:<namespace>:<name>`
+* `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.
+* `enamsse.io:<domain>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.
 
 ==== Qpid Dispatch Router
 
-This proposal reuses the existing `authServicePlugin` of the Qpid Dispatch Router unchnaged.
+For all use-cases except TLS client-auth the proposal uses the existing features of the Router.  For TLS client-auth
+DISPATCH-1634 is required.
 
 === Resources
 
