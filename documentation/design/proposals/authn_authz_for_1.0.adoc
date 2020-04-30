@@ -215,7 +215,7 @@ to store the password securely.
 
 ==== IdentityProvider
 
-The `IdentityProvider` used to define an instance of an identity provider instance.   It may be defined by either
+The `IdentityProvider` used to define an instance of an identity provider.   It may be defined by either
 the Service Admin where it is used to provide system wide defaults, or by a Tenant Admin to define a local identity provider.
 RBAC can be used to disallow tenants creating their own `IdentityProviders`.
 
