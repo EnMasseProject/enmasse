@@ -1,4 +1,12 @@
+
+:toc:
+:toc-placement!:
+
 # Proposal - Authentication and Authorization for 1.0
+
+
+toc::[]
+
 
 ## Overview
 
