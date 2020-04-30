@@ -435,27 +435,43 @@ spec:
 
 === Specify default plans for messaging tenants
 
-Specify the following in the `MessagingInfra` to select which plan should be the default for that infra. By default,
-an unrestricted plan will be used as default.
+When creating the plan, define a selector with the desired namespaces it should be available for.
 
-* If the reference does not resolve, the infra status will contain a message describing the issue.
-* A warning status will be set if the union of the `MessagingInfra` and the `MessagingPlan` selector is a disjoint set.
+* The plan will automatically be the default for namespaces matching its selector.
+* If multiple plans are overlapping the same namespace, the default will be the oldest plan (ordered by creationTimestamp)
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingPlan
 metadata:
-  name: myinfra
-  namespace: infraspace
+  name: myplan
+  namespace: planspace
 spec:
-  defaultPlanRef:
-    name: myplan
-    namespace: planspace
+  selector:
+    namespaceSelector:
+      matchLabels:
+        environment: dev
 ```
 
 === Specify default address plans for messaging tenants
 
-TODO
+When creating the plan, define a selector with the desired namespaces it should be available for.
+
+* The plan will automatically be the default for addresses in the namespaces matching its selector.
+* If multiple plans are overlapping the same namespace, the default will be the oldest plan (ordered by creationTimestamp)
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddressPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  selector:
+    namespaceSelector:
+      matchLabels:
+        environment: dev
+```
 
 === Specify default endpoints and cert providers to be created for messaging tenants
 
@@ -550,7 +566,7 @@ spec:
 
 === Restrict how much memory and storage is consumed per address
 
-Create the following `MessagingAddressPlan` to enforce limits:
+Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -567,6 +583,9 @@ spec:
       limits:
         memory: 10Mi
         storage: 30Mi
+  topic:
+    resources:
+
 ```
 
 NOTE: Allow `MessagingAddressPlan` to cover multiple address types in order to allow more flexible plan management.
