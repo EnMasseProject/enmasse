@@ -14,6 +14,8 @@ public class DeviceState {
 
     private Optional<String> lastKnownGateway = empty();
 
+    private Optional<String> commandHandlingAdapterInstance = empty();
+
     public DeviceState() {}
 
     public void setLastKnownGateway(final Optional<String> lastKnownGateway) {
@@ -23,5 +25,14 @@ public class DeviceState {
 
     public Optional<String> getLastKnownGateway() {
         return lastKnownGateway;
+    }
+
+    public void setCommandHandlingAdapterInstance(Optional<String> commandHandlingAdapterInstance) {
+        Objects.requireNonNull(commandHandlingAdapterInstance);
+        this.commandHandlingAdapterInstance = commandHandlingAdapterInstance;
+    }
+
+    public Optional<String> getCommandHandlingAdapterInstance() {
+        return commandHandlingAdapterInstance;
     }
 }

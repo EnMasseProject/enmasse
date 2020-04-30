@@ -2,8 +2,7 @@
  * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-
-package io.enmasse.iot.registry.autowire;
+package io.enmasse.iot.registry.jdbc.devcon.impl;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.service.deviceconnection.EventBusDeviceConnectionAdapter;
@@ -17,6 +16,8 @@ import org.springframework.stereotype.Component;
  * This wires up the actual service instance with the mapping to the event bus implementation. It is intended to be used
  * in a Spring Boot environment.
  */
+@Component
+@ConditionalOnBean(DeviceConnectionService.class)
 public final class AutowiredDeviceConnectionAdapter extends EventBusDeviceConnectionAdapter {
 
     private DeviceConnectionService service;

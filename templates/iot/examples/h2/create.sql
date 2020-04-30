@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS device_states (
 	device_id varchar(256) NOT NULL,
 
 	last_known_gateway varchar(256),
+	adapter_instance_id varchar(256),
 
 	PRIMARY KEY (tenant_id, device_id)
 );
