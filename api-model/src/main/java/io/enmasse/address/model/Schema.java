@@ -4,7 +4,10 @@
  */
 package io.enmasse.address.model;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -13,7 +16,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;

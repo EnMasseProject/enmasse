@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.registry.infinispan.device.impl;
 
-import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import static io.enmasse.iot.infinispan.device.DeviceKey.deviceKey;
 import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
 import static io.enmasse.iot.registry.infinispan.util.Credentials.fromInternal;
@@ -31,9 +30,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsManagementService;
+import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.OperationResult;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.infinispan.client.hotrod.RemoteCache;

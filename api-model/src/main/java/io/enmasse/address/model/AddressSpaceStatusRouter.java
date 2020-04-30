@@ -5,21 +5,21 @@
 
 package io.enmasse.address.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
-import io.fabric8.kubernetes.api.model.Doneable;
-import io.sundr.builder.annotations.Buildable;
-import io.sundr.builder.annotations.BuildableReference;
-import io.sundr.builder.annotations.Inline;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import javax.validation.constraints.NotNull;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
+
+import io.enmasse.admin.model.v1.AbstractWithAdditionalProperties;
+import io.fabric8.kubernetes.api.model.Doneable;
+import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
+import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
@@ -77,8 +77,12 @@ public class AddressSpaceStatusRouter extends AbstractWithAdditionalProperties {
 
         @Override
         public boolean equals(Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
+                if (this == o) {
+                    return true;
+                }
+                if (o == null || getClass() != o.getClass()) {
+                    return false;
+                }
                 AddressSpaceStatusRouter that = (AddressSpaceStatusRouter) o;
                 return Objects.equals(id, that.id) &&
                         Objects.equals(undelivered, that.undelivered) &&

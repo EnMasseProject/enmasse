@@ -5,10 +5,6 @@
 
 package io.enmasse.iot.registry.device;
 
-import io.enmasse.iot.registry.tenant.NoopTenantInformationService;
-import io.vertx.junit5.VertxExtension;
-import io.vertx.junit5.VertxTestContext;
-import static java.net.HttpURLConnection.HTTP_OK;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
 
@@ -29,11 +25,13 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import io.enmasse.iot.utils.MoreFutures;
+import io.enmasse.iot.registry.tenant.NoopTenantInformationService;
 import io.opentracing.Span;
 import io.opentracing.noop.NoopSpan;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.junit5.VertxExtension;
+import io.vertx.junit5.VertxTestContext;
 
 /**
  * Tests for {@link AbstractCredentialsManagementService}.

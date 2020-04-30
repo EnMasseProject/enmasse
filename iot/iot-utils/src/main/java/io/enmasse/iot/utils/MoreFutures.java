@@ -45,7 +45,7 @@ public final class MoreFutures {
             return;
         }
 
-        future.setHandler(ar -> {
+        future.onComplete(ar -> {
             if (ar.failed()) {
                 log.info("Future failed", ar.cause());
             }
@@ -114,7 +114,7 @@ public final class MoreFutures {
 
         final CompletableFuture<T> result = new CompletableFuture<>();
 
-        future.setHandler(ar -> {
+        future.onComplete(ar -> {
             if (ar.succeeded()) {
                 result.complete(ar.result());
             } else {
@@ -157,7 +157,7 @@ public final class MoreFutures {
 
         final Future<T> nextFuture = Promise.<T>promise().future();
 
-        future.setHandler(ar -> {
+        future.onComplete(ar -> {
             try {
                 runnable.accept(ar.result(), ar.cause());
             } catch (Exception e) {
@@ -186,7 +186,7 @@ public final class MoreFutures {
 
         final AtomicReference<AsyncResult<T>> result = new AtomicReference<>();
         final Semaphore sem = new Semaphore(0);
-        future.setHandler(ar -> {
+        future.onComplete(ar -> {
             result.set(ar);
             sem.release();
         });

@@ -23,7 +23,7 @@ public class MoreFuturesTest {
         p.complete("Foo");
 
         MoreFutures.whenComplete(p.future(), () -> counter.incrementAndGet())
-                .setHandler(ar -> counter.incrementAndGet());
+                .onComplete(ar -> counter.incrementAndGet());
 
         assertEquals(2, counter.get());
     }
@@ -34,7 +34,7 @@ public class MoreFuturesTest {
 
         final Promise<String> p = Promise.promise();
         MoreFutures.whenComplete(p.future(), () -> counter.incrementAndGet())
-                .setHandler(ar -> counter.incrementAndGet());
+                .onComplete(ar -> counter.incrementAndGet());
 
         p.complete("Foo");
 
@@ -50,7 +50,7 @@ public class MoreFuturesTest {
                 () -> {
                     throw new RuntimeException("This exception is expected. It shouldn't fail the test though.");
                 })
-                .setHandler(ar -> counter.incrementAndGet());
+                .onComplete(ar -> counter.incrementAndGet());
 
         p.complete("Foo");
 
