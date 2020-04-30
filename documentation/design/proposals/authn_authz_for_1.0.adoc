@@ -327,7 +327,7 @@ The `MessagingEndpoint`resource will also allow expose a configuration option `s
 the system will provide a default `PLAIN`, `OAUTHBEARER`.  If the user wishes to relax a the default (and thus allow those mechansims to be used on a insecure channel, the user can override.
 
 The status section of the `MessagingEndpoint` will expose the identity providers that are being used by this endpoint and the 
-secureOnlyMechanism setting.
+`secureOnlyMechanisms` setting.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -413,8 +413,7 @@ For the subject references, the following will be used:
   - `system:serviceaccount:<namespace>:<serivceaccount name>` (refers the named service account),
   - `system:serviceaccount:<namespace>` (refers to all serviceaccounts in the namespace), or
   - `system:serviceaccount`  (refers to all serviceaccounts system wide)
-1. `MessagingUser` - the subject will follow the conventions for service accounts, with the exception that the system
-   wide form is disallowed.  The namespace must refer to the namespace of this tenant.
+1. `MessagingUser` - the subject will follow the conventions for service accounts but with shorten form for when refering to this namespace.
   - `enamsse.io:messaginguser:<namespace>:<name>` (refers the named MessagingUser),
   - `enamsse.io:messaginguser:<namespace>` (refers to all messagingusers in the given namespace)
   - `enamsse.io:messaginguser::<name>` (refers the named MessagingUser in this namespace),
