@@ -9,8 +9,8 @@ import { MemoryRouter } from "react-router";
 import { GeneralInfo, IInfoTypePlan } from "./GeneralInfo";
 import { kFormatter } from "utils";
 
-describe("General Info", () => {
-  test("it renders a general info", () => {
+describe("<GeneralInfo />", () => {
+  it("should renders a general info", () => {
     const eventAddressName: IInfoTypePlan = {
       type: "qpid-jms:sender"
     };

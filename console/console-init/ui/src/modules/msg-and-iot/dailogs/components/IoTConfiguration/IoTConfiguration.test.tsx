@@ -9,11 +9,11 @@ import { MemoryRouter } from "react-router";
 import { IoTConfiguration } from "./IoTConfiguration";
 import { IDropdownOption } from "components";
 
-describe("IoT Configuration", () => {
-  test("it renders a iot configuration", () => {
-    const onNameSpaceSelect = () => {},
-      handleNameChange = () => {},
-      handleEnabledChange = () => {},
+describe("<IoTConfiguration />", () => {
+  it("shouldrenders a iot configuration component", () => {
+    const onNameSpaceSelect = jest.fn(),
+      handleNameChange = jest.fn(),
+      handleEnabledChange = jest.fn(),
       namespaceOptions: IDropdownOption[] = [
         { key: "app1_ns", value: "app1_ns", label: "app1_ns" },
         { key: "app2_ns", value: "app2_ns", label: "app2_ns" }

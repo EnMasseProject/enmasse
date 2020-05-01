@@ -8,16 +8,16 @@ import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
 import { IoTProjectDetailHeader } from "./IoTProjectDetailHeader";
 
-describe("IoT Project header", () => {
-  test("it renders a iot project header", () => {
+describe("<IoTProjectDetailHeader />", () => {
+  it("should renders a iot project header", () => {
     const props = {
       projectName: "iot-project-name",
       type: "iot-project-type",
       status: "Active",
       isEnabled: true,
-      changeEnable: () => {},
-      onEdit: () => {},
-      onDelete: () => {}
+      changeEnable: jest.fn(),
+      onEdit: jest.fn(),
+      onDelete: jest.fn()
     };
     const { getByText } = render(
       <MemoryRouter>

@@ -9,28 +9,14 @@ import {
   ClipboardCopy,
   ClipboardCopyVariant,
   Grid,
-  GridItem
+  GridItem,
+  TextInputProps
 } from "@patternfly/react-core";
 
-interface IInputTextProps {
-  label: string;
-  value?: string | number;
-  type?:
-    | "number"
-    | "time"
-    | "text"
-    | "tel"
-    | "url"
-    | "email"
-    | "search"
-    | "date"
-    | "datetime-local"
-    | "month"
-    | "password";
+interface IInputTextProps extends TextInputProps {
   setValue?: (value?: string) => void;
   enableCopy?: boolean;
   ariaLabel?: string;
-  isReadOnly?: boolean;
   isExpandable?: boolean;
 }
 const InputText: React.FunctionComponent<IInputTextProps> = ({
