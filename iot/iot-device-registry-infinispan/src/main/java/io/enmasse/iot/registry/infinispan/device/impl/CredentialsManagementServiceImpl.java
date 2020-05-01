@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.client.ServiceInvocationException;
 import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsManagementService;
 import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
@@ -61,8 +62,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     private final RemoteCache<io.enmasse.iot.infinispan.device.DeviceKey, DeviceInformation> managementCache;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final Vertx vertx, final DeviceManagementCacheProvider cacheProvider) {
-        super(vertx);
+    public CredentialsManagementServiceImpl(final Vertx vertx, HonoPasswordEncoder passwordEncoder, final DeviceManagementCacheProvider cacheProvider) {
+        super(vertx, passwordEncoder);
         this.managementCache = cacheProvider
                 .getDeviceManagementCache()
                 .orElseThrow(() -> new NoSuchElementException("Missing device management cache"));

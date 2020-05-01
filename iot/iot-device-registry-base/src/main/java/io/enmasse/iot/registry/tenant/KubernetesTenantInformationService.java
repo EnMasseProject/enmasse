@@ -30,7 +30,6 @@ import io.enmasse.iot.service.base.AbstractProjectBasedService;
 import io.opentracing.Span;
 import io.vertx.core.Future;
 
-@Component
 public class KubernetesTenantInformationService extends AbstractProjectBasedService implements TenantInformationService {
 
     private static final Logger log = LoggerFactory.getLogger(KubernetesTenantInformationService.class);

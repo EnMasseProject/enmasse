@@ -145,6 +145,20 @@
         <module>templates</module>
     </modules>
 
+    <repositories>
+        <repository>
+            <id>hono.snapshots</id>
+            <name>Eclipse Hono Development Snapshot Repository</name>
+            <url>https://repo.eclipse.org/content/repositories/hono-snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <dependencyManagement>
         <dependencies>
 

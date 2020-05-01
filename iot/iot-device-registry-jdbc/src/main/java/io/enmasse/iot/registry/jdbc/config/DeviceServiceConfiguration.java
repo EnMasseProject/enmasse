@@ -5,18 +5,34 @@
 
 package io.enmasse.iot.registry.jdbc.config;
 
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_ADAPTER;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_MANAGEMENT;
+import io.enmasse.iot.registry.jdbc.device.impl.CredentialsManagementServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.CredentialsServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.DeviceManagementServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.RegistrationServiceImpl;
+import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
+import io.opentracing.Tracer;
+import io.vertx.core.Vertx;
+import static io.vertx.core.Vertx.vertx;
+import io.vertx.ext.auth.AuthProvider;
+import io.vertx.ext.web.handler.AuthHandler;
 
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
-import org.eclipse.hono.service.credentials.CredentialsAmqpEndpoint;
+import org.eclipse.hono.service.amqp.AmqpEndpoint;
 import org.eclipse.hono.service.credentials.CredentialsService;
-import org.eclipse.hono.service.management.credentials.CredentialsManagementHttpEndpoint;
+import org.eclipse.hono.service.credentials.DelegatingCredentialsAmqpEndpoint;
+import org.eclipse.hono.service.http.HttpEndpoint;
 import org.eclipse.hono.service.management.credentials.CredentialsManagementService;
-import org.eclipse.hono.service.management.device.DeviceManagementHttpEndpoint;
+import org.eclipse.hono.service.management.credentials.DelegatingCredentialsManagementHttpEndpoint;
+import org.eclipse.hono.service.management.device.DelegatingDeviceManagementHttpEndpoint;
 import org.eclipse.hono.service.management.device.DeviceManagementService;
-import org.eclipse.hono.service.registration.RegistrationAmqpEndpoint;
+import org.eclipse.hono.service.registration.DelegatingRegistrationAmqpEndpoint;
 import org.eclipse.hono.service.registration.RegistrationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -24,63 +40,111 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
-import io.opentracing.Tracer;
-import io.vertx.core.Vertx;
-import io.vertx.ext.auth.AuthProvider;
-import io.vertx.ext.web.handler.AuthHandler;
-
 @Configuration
 @Profile({PROFILE_REGISTRY_ADAPTER, PROFILE_REGISTRY_MANAGEMENT})
 public class DeviceServiceConfiguration {
 
     /**
+     * Exposes the JDBC registration service as a Spring bean.
+     *
+     * @param store The JDBC store.
+     * @return The JDBC registration service.
+     */
+    @Bean
+    @Profile(PROFILE_REGISTRY_ADAPTER)
+    public RegistrationService registrationService(AbstractDeviceAdapterStore store) {
+        return new RegistrationServiceImpl(store);
+    }
+
+    /**
+     * Exposes the JDBC credentials service as a Spring bean.
+     *
+     * @param store The JDBC store.
+     * @return The JDBC credentials service.
+     */
+    @Bean
+    @Profile(PROFILE_REGISTRY_ADAPTER)
+    public CredentialsService credentialsService(AbstractDeviceAdapterStore store) {
+        return new CredentialsServiceImpl(store);
+    }
+
+    /**
+     * Exposes JDBC device management service as a Spring bean
+     *
+     * @param store The JDBC store.
+     * @param properties The service properties.
+     * @return The JDBC device management service
+     */
+    @Bean
+    @Profile(PROFILE_REGISTRY_MANAGEMENT)
+    public DeviceManagementService deviceManagementService(final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
+        return new DeviceManagementServiceImpl(store, properties);
+    }
+
+    /**
+     * Exposes JDBC credential management service as a Spring bean
+     *
+     * @param vertx The Verx instance.
+     * @param store The JDBC store
+     * @param properties The service properties.
+     * @return The JDBC credential management service
+     */
+    @Bean
+    @Profile(PROFILE_REGISTRY_MANAGEMENT)
+    public CredentialsManagementService credentialsManagementService(final Vertx vertx, HonoPasswordEncoder passwordEncoder, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
+        return new CredentialsManagementServiceImpl(vertx, passwordEncoder, store, properties);
+    }
+
+    /**
      * Creates a new instance of an AMQP 1.0 protocol handler for Hono's <em>Device Registration</em> API.
      *
+     * @param service The service instance to delegate to.
      * @return The handler.
      */
-    @Autowired
     @Bean
     @ConditionalOnBean(RegistrationService.class)
-    public RegistrationAmqpEndpoint registrationAmqpEndpoint(final Vertx vertx) {
-        return new RegistrationAmqpEndpoint(vertx);
+    public AmqpEndpoint registrationAmqpEndpoint(final RegistrationService service) {
+        return new DelegatingRegistrationAmqpEndpoint<RegistrationService>(vertx(), service);
     }
 
     /**
      * Creates a new instance of an AMQP 1.0 protocol handler for Hono's <em>Credentials</em> API.
      *
+     * @param service The service instance to delegate to.
      * @return The handler.
      */
-    @Autowired
     @Bean
     @ConditionalOnBean(CredentialsService.class)
-    public CredentialsAmqpEndpoint credentialsAmqpEndpoint(final Vertx vertx) {
-        return new CredentialsAmqpEndpoint(vertx);
+    public AmqpEndpoint credentialsAmqpEndpoint(final CredentialsService service) {
+        return new DelegatingCredentialsAmqpEndpoint<CredentialsService>(vertx(), service);
     }
 
     /**
-     * Creates a new instance of an HTTP protocol handler for Hono's <em>Device Registration</em> API.
+     * Creates a new instance of an HTTP protocol handler for the <em>devices</em> resources
+     * of Hono's Device Registry Management API's.
      *
+     * @param vertx The vert.x instance to run on.
+     * @param service The service instance to delegate to.
      * @return The handler.
      */
-    @Autowired
     @Bean
     @ConditionalOnBean(DeviceManagementService.class)
-    public DeviceManagementHttpEndpoint registrationHttpEndpoint(final Vertx vertx) {
-        return new DeviceManagementHttpEndpoint(vertx);
+    public HttpEndpoint deviceHttpEndpoint(final Vertx vertx, final DeviceManagementService service) {
+        return new DelegatingDeviceManagementHttpEndpoint<DeviceManagementService>(vertx, service);
     }
 
     /**
-     * Creates a new instance of an HTTP protocol handler for Hono's <em>Credentials</em> API.
+     * Creates a new instance of an HTTP protocol handler for the <em>credentials</em> resources
+     * of Hono's Device Registry Management API's.
      *
+     * @param vertx The vert.x instance to run on.
+     * @param service The service instance to delegate to.
      * @return The handler.
      */
-    @Autowired
     @Bean
     @ConditionalOnBean(CredentialsManagementService.class)
-    public CredentialsManagementHttpEndpoint credentialsHttpEndpoint(final Vertx vertx) {
-        return new CredentialsManagementHttpEndpoint(vertx);
+    public HttpEndpoint credentialsHttpEndpoint(final Vertx vertx, final CredentialsManagementService service) {
+        return new DelegatingCredentialsManagementHttpEndpoint<CredentialsManagementService>(vertx, service);
     }
 
     /**
@@ -111,6 +175,11 @@ public class DeviceServiceConfiguration {
     @Profile(PROFILE_REGISTRY_MANAGEMENT)
     public HonoPasswordEncoder passwordEncoder(final DeviceServiceProperties deviceServiceProperties) {
         return new SpringBasedHonoPasswordEncoder(deviceServiceProperties.getMaxBcryptIterations());
+    }
+
+    @Bean
+    public KubernetesTenantInformationService tenantInformationService() {
+        return new KubernetesTenantInformationService();
     }
 
 }

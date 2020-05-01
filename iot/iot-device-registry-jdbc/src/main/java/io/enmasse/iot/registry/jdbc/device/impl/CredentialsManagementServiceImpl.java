@@ -39,8 +39,8 @@ public class CredentialsManagementServiceImpl extends AbstractCredentialsManagem
     private final Optional<CacheDirective> ttl;
 
     @Autowired
-    public CredentialsManagementServiceImpl(final Vertx vertx, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
-        super(vertx);
+    public CredentialsManagementServiceImpl(final Vertx vertx, HonoPasswordEncoder passwordEncoder, final AbstractDeviceManagementStore store, final DeviceServiceProperties properties) {
+        super(vertx, passwordEncoder);
         this.store = store;
         this.ttl = Optional.of(CacheDirective.maxAgeDirective(properties.getCredentialsTtl().toSeconds()));
     }

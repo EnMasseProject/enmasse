@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
 import org.eclipse.hono.deviceregistry.service.credentials.AbstractCredentialsManagementService;
 import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.OperationResult;
@@ -46,7 +47,7 @@ public class AbstractCredentialsManagementServiceTest {
     @BeforeEach
     public void setup() {
         this.vertx = Vertx.factory.vertx();
-        this.service = new AbstractCredentialsManagementService(this.vertx) {
+        this.service = new AbstractCredentialsManagementService(this.vertx, new SpringBasedHonoPasswordEncoder()) {
 
             @Override
             protected Future<OperationResult<Void>> processUpdateCredentials(DeviceKey key, Optional<String> resourceVersion, List<CommonCredential> credentials, Span span) {

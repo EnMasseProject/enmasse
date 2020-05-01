@@ -8,6 +8,7 @@ package io.enmasse.iot.registry.jdbc.devcon.impl;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_DEVICE_CONNECTION;
 
 import java.net.HttpURLConnection;
+import java.time.Duration;
 import java.util.List;
 
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
@@ -27,14 +28,11 @@ import io.vertx.core.json.JsonObject;
 /**
  * A {@link DeviceConnectionService} that use an JDBC as a backend service.
  */
-@Component
-@Profile(PROFILE_DEVICE_CONNECTION)
 public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService {
 
     private Store store;
 
-    @Autowired
-    protected DeviceConnectionServiceImpl(final Store store) {
+    public DeviceConnectionServiceImpl(final Store store) {
         this.store = store;
     }
 
@@ -65,7 +63,8 @@ public class DeviceConnectionServiceImpl extends AbstractDeviceConnectionService
     }
 
     @Override
-    protected Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(DeviceConnectionKey key, String adapterInstanceId, Span span) {
+    protected Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(DeviceConnectionKey key, String adapterInstanceId, Duration lifespan, Span span) {
+        //TODO handle lifespan
         return this.store
                 .processSetCommandHandlingAdapterInstance(key, adapterInstanceId, span.context())
                 .map(r -> DeviceConnectionResult.from(HttpURLConnection.HTTP_NO_CONTENT));

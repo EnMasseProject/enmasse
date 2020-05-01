@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 
 import org.eclipse.hono.config.ServiceConfigProperties;
+import org.eclipse.hono.deviceregistry.server.DeviceRegistryHttpServer;
 import org.eclipse.hono.util.Constants;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -46,5 +47,16 @@ public class RestEndpointConfiguration {
 
     public void setAuthTokenCacheExpiration(Duration authTokenCacheExpiration) {
         this.authTokenCacheExpiration = authTokenCacheExpiration;
+    }
+
+    /**
+     * Creates a new server for exposing the device registry's AMQP 1.0 based
+     * endpoints.
+     *
+     * @return The server.
+     */
+    @Bean
+    public DeviceRegistryHttpServer httpServer() {
+        return new DeviceRegistryHttpServer();
     }
 }
