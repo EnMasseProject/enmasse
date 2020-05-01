@@ -21,7 +21,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Verticle;
 
-@ComponentScan("io.enmasse.iot.tenant")
+@ComponentScan("io.enmasse.iot.tenant.config")
 @ComponentScan("org.eclipse.hono.service.metric")
 @ComponentScan("org.eclipse.hono.deviceregistry.service.tenant")
 @EnableAutoConfiguration

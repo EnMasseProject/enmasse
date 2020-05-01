@@ -107,7 +107,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         client.registerDevice(isolatedIoTManager.getTenantId(), randomDeviceId);
         final Device result = client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         assertNotNull(result);
-        assertDefaultEnabled(result.getEnabled());
+        assertDefaultEnabled(result.isEnabled());
 
         client.deleteDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
@@ -124,7 +124,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         final Device result = client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
 
         // as we set it explicitly, we expect the explicit value of "false"
-        assertEquals(Boolean.FALSE, result.getEnabled());
+        assertEquals(Boolean.FALSE, result.isEnabled());
 
         client.deleteDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId);
         client.getDeviceRegistration(isolatedIoTManager.getTenantId(), randomDeviceId, HTTP_NOT_FOUND);
@@ -375,7 +375,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         for (final String deviceId : devices) {
             final Device result = client.getDeviceRegistration(tenantId, deviceId);
             assertNotNull(result);
-            assertDefaultEnabled(result.getEnabled());
+            assertDefaultEnabled(result.isEnabled());
         }
 
         for (final String deviceId : devices) {

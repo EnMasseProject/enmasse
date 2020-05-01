@@ -5,6 +5,7 @@
 
 package io.enmasse.iot.registry.devcon;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public abstract class AbstractDeviceConnectionService implements DeviceConnectio
 
     protected abstract Future<DeviceConnectionResult> processGetLastKnownGatewayForDevice(final DeviceConnectionKey key, final Span span);
 
-    protected abstract Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(final DeviceConnectionKey key, final String adapterInstanceId, final Span span);
+    protected abstract Future<DeviceConnectionResult> processSetCommandHandlingAdapterInstance(final DeviceConnectionKey key, final String adapterInstanceId, Duration lifespan, final Span span);
 
     protected abstract Future<DeviceConnectionResult> processGetCommandHandlingAdapterInstances(final DeviceConnectionKey key, final List<String> viaGateways, final Span span);
 
@@ -43,8 +44,8 @@ public abstract class AbstractDeviceConnectionService implements DeviceConnectio
     }
 
     @Override
-    public Future<DeviceConnectionResult> setCommandHandlingAdapterInstance(String tenantId, String deviceId, String adapterInstanceId, Span span) {
-        return processSetCommandHandlingAdapterInstance(DeviceConnectionKey.deviceConnectionKey(tenantId, deviceId), adapterInstanceId, span);
+    public Future<DeviceConnectionResult> setCommandHandlingAdapterInstance(String tenantId, String deviceId, String adapterInstanceId, Duration lifespan, Span span) {
+        return processSetCommandHandlingAdapterInstance(DeviceConnectionKey.deviceConnectionKey(tenantId, deviceId), adapterInstanceId, lifespan, span);
     }
 
     @Override

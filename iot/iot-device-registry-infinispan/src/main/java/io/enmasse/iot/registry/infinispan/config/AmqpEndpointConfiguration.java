@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
+import io.enmasse.iot.registry.server.DeviceRegistryAmqpServer;
 import io.enmasse.iot.utils.ConfigBase;
 
 @Configuration
@@ -27,6 +29,17 @@ public class AmqpEndpointConfiguration {
     @Qualifier(Constants.QUALIFIER_AMQP)
     public ServiceConfigProperties amqpProperties() {
         return new ServiceConfigProperties();
+    }
+
+    /**
+     * Creates a new server for exposing the device registry's AMQP 1.0 based
+     * endpoints.
+     *
+     * @return The server.
+     */
+    @Bean
+    public DeviceRegistryAmqpServer amqpServer() {
+        return new DeviceRegistryAmqpServer();
     }
 
 }
