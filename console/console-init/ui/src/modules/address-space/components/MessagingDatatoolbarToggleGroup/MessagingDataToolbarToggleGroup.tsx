@@ -21,11 +21,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  DropdownWithToggle,
-  TypeAheadSelect,
-  SelectWithToggle
-} from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -112,6 +108,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="al-filter-input-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -145,6 +142,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
+                id="al-filter-input-namespace"
                 ariaLabelTypeAhead={"Select namespace"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}

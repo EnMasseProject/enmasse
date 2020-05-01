@@ -111,6 +111,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="ad-links-filter-select-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}

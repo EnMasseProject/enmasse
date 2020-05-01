@@ -119,7 +119,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
                 setInput={setNameInput}
               />
               <Button
-                id="al-filter-select-name-search"
+                id="al-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}

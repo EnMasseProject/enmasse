@@ -106,9 +106,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           deleteChip={onDelete}
           categoryName="Name"
         >
-          {filterSelected && filterSelected === "Name" && (
+          {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="cl-filter-select-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -120,7 +121,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="cl-filter-search-name"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
