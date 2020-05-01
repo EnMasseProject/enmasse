@@ -359,6 +359,7 @@ status:
   - name:  myldap
     namespace: infrastuff
     secureOnlyMechanisms: PLAIN, OAUTHBEARER
+    subjectPrefix: enamsse.io:myldap:infrastuff:
 ```
 
 ==== MessagingUser
