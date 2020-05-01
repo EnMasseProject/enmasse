@@ -191,7 +191,7 @@ func (r *RouterState) createEntity(entity RouterEntityType, name string, data ma
 		return err
 	}
 
-	if code < 200 || code >= 300 {
+	if (code < 200 || code >= 300) && code != 404 {
 		return fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
 	}
 	return nil

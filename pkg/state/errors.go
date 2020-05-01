@@ -4,12 +4,13 @@
  */
 package state
 
-type NotInitializedError struct{}
+import (
+	"fmt"
+)
 
-func (e *NotInitializedError) Error() string {
-	return "not initialized"
-}
-
-func NewNotInitializedError() error {
-	return &NotInitializedError{}
-}
+var (
+	NotInitializedError error = fmt.Errorf("not initialized")
+	NotSyncedError      error = fmt.Errorf("not synchronized")
+	NoEndpointsError    error = fmt.Errorf("no endpoints")
+	NotDeletedError     error = fmt.Errorf("error deleting")
+)

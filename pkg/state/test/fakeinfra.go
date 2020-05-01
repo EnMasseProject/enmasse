@@ -46,6 +46,9 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
 	return nil
 }
 
+func (i *FakeClient) Start() {
+}
+
 func (i *FakeClient) SyncAll(routers []string, brokers []string) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers

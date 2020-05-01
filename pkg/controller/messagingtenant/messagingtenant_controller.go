@@ -242,7 +242,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		tenant.Status.Message = ""
 		ready.SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, tenant.Status) {
-			logger.Info("Tenant has changed")
+			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status)
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
 			err := r.client.Status().Update(ctx, tenant)

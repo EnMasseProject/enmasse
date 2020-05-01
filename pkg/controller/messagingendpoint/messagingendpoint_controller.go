@@ -7,6 +7,7 @@ package messagingendpoint
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -225,7 +226,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		if err != nil {
 			allocated.SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
-			if _, ok := err.(*state.NotInitializedError); ok {
+			if errors.Is(err, state.NotInitializedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			client.FreePorts(endpoint)
@@ -248,7 +249,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
-			if _, ok := err.(*state.NotInitializedError); ok {
+			if errors.Is(err, state.NotInitializedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
