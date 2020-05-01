@@ -4,15 +4,14 @@
  */
 
 import React from "react";
-import { isIoTProjectValid } from "modules/msg-and-iot/dailogs";
-import { IIoTProjectInput } from "modules/msg-and-iot/dailogs";
-import { IoTReview } from "../IoTReview";
+import {
+  isIoTProjectValid,
+  IIoTProjectInput,
+  IoTReview
+} from "modules/msg-and-iot/dailogs";
 
 const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
-  const isReviewEnabled = () => {
-    isIoTProjectValid(projectDetail);
-  };
-  const isFinishEnabled = () => {
+  const isEnabled = () => {
     isIoTProjectValid(projectDetail);
   };
   return {
@@ -25,8 +24,8 @@ const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
         isEnabled={(projectDetail && projectDetail.isEnabled) || false}
       />
     ),
-    enableNext: isFinishEnabled(),
-    canJumpTo: isReviewEnabled(),
+    enableNext: isEnabled(),
+    canJumpTo: isEnabled(),
     nextButtonText: "Finish"
   };
 };

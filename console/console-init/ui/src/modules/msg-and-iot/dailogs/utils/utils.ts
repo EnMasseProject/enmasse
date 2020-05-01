@@ -1,10 +1,12 @@
-import { IMessagingProjectInput } from "../components/MessagingConfigurationStep";
-import { IIoTProjectInput } from "../components";
-
 /*
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
+import {
+  IMessagingProjectInput,
+  IIoTProjectInput
+} from "modules/msg-and-iot/dailogs";
 
 const isMessagingProjectValid = (projectDetail?: IMessagingProjectInput) => {
   if (
