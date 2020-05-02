@@ -706,6 +706,10 @@ public class TestUtils {
         return getLogsPath(extensionContext, "failed_test_logs");
     }
 
+    public static Path getPerformanceTestLogsPath(ExtensionContext extensionContext) {
+        return getLogsPath(extensionContext, "performance_test");
+    }
+
     public static Path getScaleTestLogsPath(ExtensionContext extensionContext) {
         return getLogsPath(extensionContext, "scale_test");
     }
