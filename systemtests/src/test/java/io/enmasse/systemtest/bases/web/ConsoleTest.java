@@ -1280,6 +1280,71 @@ public abstract class ConsoleTest extends TestBase {
 
     }
 
+    protected void doTestSortMessagesCount(AddressSpace addressSpace) throws Exception {
+
+        Address dest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-stored-msg"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-stored-msg")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        Address dest2 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-stored-msg-2"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-stored-msg-2")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        Address dest3 = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "queue-stored-msg-3"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("queue-stored-msg-3")
+                .withPlan(getDefaultPlan(AddressType.QUEUE))
+                .endSpec()
+                .build();
+
+        getResourceManager().setAddresses(dest, dest2, dest3);
+
+        var countMessages = 50;
+        AmqpClient amqpClient = getResourceManager().getAmqpClientFactory().createQueueClient(addressSpace);
+
+        Future<Integer> numSent1 = amqpClient.sendMessages(dest.getSpec().getAddress(), countMessages);
+        Future<Integer> numSent2 = amqpClient.sendMessages(dest2.getSpec().getAddress(), countMessages - 10);
+        Future<Integer> numSent3 = amqpClient.sendMessages(dest3.getSpec().getAddress(), countMessages - 30);
+
+        assertThat(numSent1.get(1, TimeUnit.MINUTES), is(countMessages));
+        assertThat(numSent2.get(1, TimeUnit.MINUTES), is(countMessages - 10));
+        assertThat(numSent3.get(1, TimeUnit.MINUTES), is(countMessages - 30));
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openAddressList(addressSpace);
+
+        selenium.waitUntilPropertyPresent(30, countMessages, () -> consolePage.getAddressItem(dest).getMessagesStored());
+        selenium.waitUntilPropertyPresent(30, countMessages - 10, () -> consolePage.getAddressItem(dest2).getMessagesStored());
+        selenium.waitUntilPropertyPresent(30, countMessages - 30, () -> consolePage.getAddressItem(dest3).getMessagesStored());
+
+        consolePage.sortAddresses(SortType.STORED_MESSAGES, true);
+        assertSorted("Addresses are not sorted by stored messages", consolePage.getAddressItems(), Comparator.comparingInt(AddressWebItem::getMessagesStored));
+        consolePage.sortAddresses(SortType.STORED_MESSAGES, false);
+        assertSorted("Addresses are not sorted by stored messages", consolePage.getAddressItems(), true, Comparator.comparingInt(AddressWebItem::getMessagesStored));
+    }
+
     protected void doTestCanOpenConsolePage(AddressSpace addressSpace, UserCredentials credentials, boolean userAllowed) throws Exception {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), credentials);
         consolePage.openConsolePage();

@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -165,6 +166,10 @@ public class AmqpClient implements AutoCloseable {
         this.clients.clear();
 
         closeVertxAndWait(clients);
+    }
+
+    public CompletableFuture<Integer> sendMessages(String address, int count) {
+        return sendMessages(address, TestUtils.generateMessages(count), new Count<>(count));
     }
 
     public CompletableFuture<Integer> sendMessages(String address, List<String> messages) {
