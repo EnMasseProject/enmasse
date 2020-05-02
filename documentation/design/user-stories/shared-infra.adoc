@@ -568,6 +568,11 @@ spec:
 
 Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
 
+* Multiple address types can be defined in the same plan
+* If resource limit is not set - limit is not specified
+* If resource request is not set - it equals the limit
+* If resource is not set - no limits are specified
+
 ```
 apiVersion: enmasse.io/v1beta2
 kind: MessagingAddressPlan
@@ -585,6 +590,9 @@ spec:
         storage: 30Mi
   topic:
     resources:
+      limits:
+        memory: 5Mi
+        storage: 20Mi
 
 ```
 
