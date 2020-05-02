@@ -252,6 +252,11 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 			return processorResult{}, nil
 		}
 
+		// These addresses don't require scheduling
+		if address.Spec.Anycast != nil || address.Spec.Multicast != nil {
+			return processorResult{}, nil
+		}
+
 		// TODO: Make configurable and a better scheduler
 		scheduler := &DummyScheduler{}
 

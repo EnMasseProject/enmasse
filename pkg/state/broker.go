@@ -50,6 +50,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	queues, err := b.readQueues()
 	if err != nil {
+		log.Printf("[Broker %s] Error initializing: %+v", b.Host, err)
 		return err
 	}
 	b.queues = queues
@@ -59,16 +60,11 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 }
 
 /**
- * Perform management request against this broker. If resetOnDisconnect is set, the broker state will be instructed
- * to be reset. This should be set to true if running in a single-threaded context, and the error should be handled
- * by the caller.
+ * Perform management request against this broker.
  */
-func (b *BrokerState) doRequest(request *amqp.Message, resetOnDisconnect bool) (*amqp.Message, error) {
+func (b *BrokerState) doRequest(request *amqp.Message) (*amqp.Message, error) {
 	// If by chance we got disconnected while waiting for the request
 	response, err := b.commandClient.RequestWithTimeout(request, 10*time.Second)
-	if resetOnDisconnect && isConnectionError(err) {
-		b.Reset()
-	}
 	return response, err
 }
 
@@ -78,7 +74,7 @@ func (b *BrokerState) readQueues() (map[string]bool, error) {
 		return nil, err
 	}
 
-	result, err := b.doRequest(message, true)
+	result, err := b.doRequest(message)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +101,8 @@ func (b *BrokerState) readQueues() (map[string]bool, error) {
 	}
 }
 
-func (b *BrokerState) EnsureQueues(queues []string) error {
-	g, _ := errgroup.WithContext(context.Background())
+func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
+	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {
 		q := queue
@@ -117,7 +113,7 @@ func (b *BrokerState) EnsureQueues(queues []string) error {
 					return err
 				}
 				log.Printf("Creating queue %s on %s", q, b.Host)
-				response, err := b.doRequest(message, false)
+				response, err := b.doRequest(message)
 				if err != nil {
 					return err
 				}
@@ -132,17 +128,21 @@ func (b *BrokerState) EnsureQueues(queues []string) error {
 	}
 	err := g.Wait()
 	close(completed)
-	for queue := range completed {
-		b.queues[queue] = true
-	}
 	if isConnectionError(err) {
 		b.Reset()
+	}
+	if err != nil {
+		log.Printf("[Broker %s] EnsureQueues error: %+v", b.Host, err)
+		return err
+	}
+	for queue := range completed {
+		b.queues[queue] = true
 	}
 	return err
 }
 
-func (b *BrokerState) DeleteQueues(queues []string) error {
-	g, _ := errgroup.WithContext(context.Background())
+func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
+	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {
 		q := queue
@@ -155,7 +155,7 @@ func (b *BrokerState) DeleteQueues(queues []string) error {
 
 				log.Printf("Destroying queue %s on %s", q, b.Host)
 
-				response, err := b.doRequest(message, false)
+				response, err := b.doRequest(message)
 				if err != nil {
 					return err
 				}
@@ -173,11 +173,15 @@ func (b *BrokerState) DeleteQueues(queues []string) error {
 
 	err := g.Wait()
 	close(completed)
-	for queue := range completed {
-		delete(b.queues, queue)
-	}
 	if isConnectionError(err) {
 		b.Reset()
+	}
+	if err != nil {
+		log.Printf("[Broker %s] DeleteQueues error: %+v", b.Host, err)
+		return err
+	}
+	for queue := range completed {
+		delete(b.queues, queue)
 	}
 	return err
 }

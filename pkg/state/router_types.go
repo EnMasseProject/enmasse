@@ -17,10 +17,27 @@ type RouterState struct {
 	initialized   bool
 	nextResync    time.Time
 	commandClient amqpcommand.Client
-	connectors    map[string]*RouterConnector
-	addresses     map[string]*RouterAddress
-	autoLinks     map[string]*RouterAutoLink
-	listeners     map[string]*RouterListener
+	entities      map[RouterEntityType]map[string]RouterEntity
+}
+
+type RouterEntityType string
+
+const (
+	RouterAddressEntity   RouterEntityType = "org.apache.qpid.dispatch.router.config.address"
+	RouterListenerEntity  RouterEntityType = "org.apache.qpid.dispatch.listener"
+	RouterConnectorEntity RouterEntityType = "org.apache.qpid.dispatch.connector"
+	RouterAutoLinkEntity  RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
+)
+
+type RouterEntity interface {
+	Type() RouterEntityType
+	GetName() string
+	Equals(RouterEntity) bool
+}
+
+type NamedEntity struct {
+	EntityType RouterEntityType
+	Name       string
 }
 
 type RouterConnector struct {
@@ -36,6 +53,8 @@ type RouterConnector struct {
 	IdleTimeoutSeconds int    `json:"idleTimeoutSeconds,omitempty"`
 	VerifyHostname     bool   `json:"verifyHostname,omitempty"`
 	PolicyVhost        string `json:"policyVhost,omitempty"`
+	ConnectionStatus   string `json:"connectionStatus,omitempty"`
+	ConnectionMsg      string `json:"connectionMsg,omitempty"`
 }
 
 type RouterListener struct {

@@ -219,8 +219,6 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		if infra != nil {
 			bound.SetStatus(corev1.ConditionTrue, "", "")
-			tenant.Status.Message = ""
-			tenant.Status.Phase = v1beta2.MessagingTenantActive
 			tenant.Status.MessagingInfraRef = &v1beta2.MessagingInfraReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
@@ -241,15 +239,16 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		originalStatus := tenant.Status.DeepCopy()
 		tenant.Status.Phase = v1beta2.MessagingTenantActive
+		tenant.Status.Message = ""
 		ready.SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, tenant.Status) {
+			logger.Info("Tenant has changed")
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
 			err := r.client.Status().Update(ctx, tenant)
 			return processorResult{}, err
-		} else {
-			return processorResult{}, nil
 		}
+		return processorResult{}, nil
 	})
 	return result.Result(), err
 }

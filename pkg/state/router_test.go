@@ -20,9 +20,15 @@ func TestInitialize(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &RouterState{
-		host:          "",
-		port:          0,
-		initialized:   false,
+		host:        "",
+		port:        0,
+		initialized: false,
+		entities: map[RouterEntityType]map[string]RouterEntity{
+			RouterConnectorEntity: make(map[string]RouterEntity, 0),
+			RouterListenerEntity:  make(map[string]RouterEntity, 0),
+			RouterAddressEntity:   make(map[string]RouterEntity, 0),
+			RouterAutoLinkEntity:  make(map[string]RouterEntity, 0),
+		},
 		commandClient: client,
 	}
 
@@ -39,16 +45,17 @@ func TestInitialize(t *testing.T) {
 
 	err := state.Initialize(time.Time{})
 	assert.Nil(t, err)
-	assert.NotNil(t, state.connectors)
-	assert.Equal(t, 1, len(state.connectors))
-	assert.Equal(t, "example.com", state.connectors["conn1"].Host)
+	assert.NotNil(t, state.entities)
+	assert.NotNil(t, state.entities[RouterConnectorEntity])
+	assert.Equal(t, 1, len(state.entities[RouterConnectorEntity]))
+	assert.Equal(t, "example.com", state.entities[RouterConnectorEntity]["conn1"].(*RouterConnector).Host)
 
 	// Adding connector should not call any command client
-	err = state.EnsureConnector(&RouterConnector{
+	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
-	})
+	}})
 	assert.Nil(t, err)
 }
 
@@ -56,9 +63,15 @@ func TestEnsureConnector(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &RouterState{
-		host:          "",
-		port:          0,
-		initialized:   false,
+		host:        "",
+		port:        0,
+		initialized: false,
+		entities: map[RouterEntityType]map[string]RouterEntity{
+			RouterConnectorEntity: make(map[string]RouterEntity, 0),
+			RouterListenerEntity:  make(map[string]RouterEntity, 0),
+			RouterAddressEntity:   make(map[string]RouterEntity, 0),
+			RouterAutoLinkEntity:  make(map[string]RouterEntity, 0),
+		},
 		commandClient: client,
 	}
 
@@ -75,31 +88,32 @@ func TestEnsureConnector(t *testing.T) {
 
 	err := state.Initialize(time.Time{})
 	assert.Nil(t, err)
-	assert.NotNil(t, state.connectors)
-	assert.Equal(t, 0, len(state.connectors))
+	assert.NotNil(t, state.entities)
+	assert.NotNil(t, state.entities[RouterConnectorEntity])
+	assert.Equal(t, 0, len(state.entities[RouterConnectorEntity]))
 
 	// Adding connector should not call any command client
-	err = state.EnsureConnector(&RouterConnector{
+	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
-	})
+	}})
 	assert.Nil(t, err)
 
 	// Adding again should be no problem as long as it is the same
-	err = state.EnsureConnector(&RouterConnector{
+	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
-	})
+	}})
 	assert.Nil(t, err)
 
 	// Adding again is not ok when attributes have changed (not supported by qpid dispatch router)
-	err = state.EnsureConnector(&RouterConnector{
+	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
 		Role: "edge",
-	})
+	}})
 	assert.NotNil(t, err)
 }
