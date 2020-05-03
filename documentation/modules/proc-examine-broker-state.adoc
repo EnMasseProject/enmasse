@@ -60,14 +60,14 @@ In the standard address, there may be many brokers.  To identify the broker(s) h
 
 . Execute support commands on the broker's pod:
 +
-To execute an {BrokerName} Jolokia JMX command, use a command similar to the following:
+To execute an {BrokerName} CLI command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} exec _broker pod name_ -- {BrokerCLI} address show --user _username_ --password _password_
 ----
 +
-To execute an {BrokerName} CLI command, use a command similar to the following:
+To execute an {BrokerName} Jolokia JMX command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
