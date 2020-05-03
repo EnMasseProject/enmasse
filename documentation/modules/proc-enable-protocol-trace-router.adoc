@@ -34,7 +34,7 @@ ifeval::["{cmdcli}" == "oc"]
 
 . Change to the project where {ProductName} is installed:
 +
-[subs="attributes",options="nowrap"]
+[subs="+quotes,attributes",options="nowrap"]
 ----
 {cmdcli} project _{ProductNamespace}_
 ----
@@ -80,7 +80,7 @@ ifeval::["{cmdcli}" == "oc"]
 
 . Change to the project where {ProductName} is installed:
 +
-[subs="attributes",options="nowrap"]
+[subs="+quotes,attributes",options="nowrap"]
 ----
 {cmdcli} project _{ProductNamespace}_
 ----
