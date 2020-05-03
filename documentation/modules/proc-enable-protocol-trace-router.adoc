@@ -1,0 +1,122 @@
+// Module included in the following assemblies:
+//
+// assembly-ops-procedures.adoc
+
+[id='enable-protocol-trace-router-{context}']
+= Enabling an AMQP protocol trace for the router
+
+For diagnostic purposes, it is possible to enable an AMQP protocol trace for a router.   This can be helpful to
+to troubleshoot issues with clients not connecting or problems sending or receiving messages.  There are two
+ways this can be achieved.
+
+* It is possible to enable/disable the protocol trace, dynamically, for a single broker using a `qdmange` command. This
+method avoids the need to restart the router.  The setting will be lost next time the router restarts.
+
+* Alternatively, configuration can be applied to the  `standardinfaconfig` that enables the protocol trace for all
+routers of  all the address spaces that use that `standardinfaconfig`.  This method will cause all the routers to
+restart.
+
+Both procedures are described next.
+
+WARNING: The protocol trace is verbose.  Enabling it increases the CPU overhead of the router(s) and may decrease
+messaging performance. It may also increase the disk space requirements associated with any log retention system.
+Therefore it is recommended to enable the protocol trace for as shorter time as possible.
+
+.Procedure (dynamic)
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Change to the project where {ProductName} is installed:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
+
+. List all router Pods and choose the Pod for the relevant address space:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} get pods -l name=qdrouterd -o go-template --template '{{range .items}}{{.metadata.name}}{{"\t"}}{{.metadata.annotations.addressSpace}}{{"\n"}}{{end}}'
+----
+
+. Enable the protocol trace for a single router:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+echo '{"enable":"trace+"}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tty=false -- qdmanage update -b 127.0.0.1:7777 --type=log --name=log/SERVER --stdin
+----
+
+. Display the logs for the Pod which will include the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs _pod_
+----
+
+. Disable the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+echo '{"enable":null}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tty=false -- qdmanage update -b 127.0.0.1:7777 --type=log --name=log/SERVER --stdin
+----
+
+.Procedure (environment variable)
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Change to the project where {ProductName} is installed:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
+
+. Determine the `addresspaceplan` name for the address space concerned:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get addressspace -n _namespace_ _addressspace name_ --output "jsonpath={.spec.plan}"
+----
+
+. Determine the `standardinfraconfig` name for the `addressspaceplan` name:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
+----
+
+. Enable the protocol trace for all the routers of the all the address spaces using that use that `standardinfaconfig`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} patch standardinfraconfig _standardinfraconfigname_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"router"}]}}}}}'
+----
+
+. Display the logs for the Pod which will include the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs _pod_
+----
+
+. Disable the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} patch standardinfraconfig _standardinfraconfig name_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"router"}]}}}}}'
+----

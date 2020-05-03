@@ -1,0 +1,72 @@
+// Module included in the following assemblies:
+//
+// assembly-ops-procedures.adoc
+
+[id='enable-protocol-trace-broker-{context}']
+= Enabling an AMQP protocol trace for the broker
+
+For diagnostic purposes, it is possible to enable an AMQP protocol trace for a broker.   This can be helpful to
+to troubleshoot problems sending or receiving messages.
+
+To enable the protocol trace, configuration is be applied to the  `standardinfaconfig` (for standard
+address spaces) or `brokeredinfraconfig` (for brokered address spaces) that enables the protocol trace for all
+brokers of all the address spaces that use that configuration.  Applying this configuration will cause the
+brokers to restart.
+
+WARNING: The protocol trace is verbose.  Enabling it increases the CPU overhead of the broker(s) and may decrease
+messaging performance. It may also increase the disk space requirements associated with any log retention system.
+Therefore it is recommended to enable the protocol trace for as shorter time as possible.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service operator:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+
+. Change to the project where {ProductName} is installed:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} project _{ProductNamespace}_
+----
+endif::[]
+
+. Determine the `addresspaceplan` name for the address space concerned:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get addressspace -n _namespace_ _addressspace name_ --output 'jsonpath={.spec.plan}{"\n"}'
+----
+
+. Determine the `standardinfraconfig` or `brokeredinfraconfig` name for the `addressspaceplan` name:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
+----
+
+. Enable the protocol trace for all the brokers of the all the address spaces using that use that `standardinfraconfig`
+or `brokeredinfraconfig`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} patch _infraconfigresource_ _infraconfigname_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"broker"}]}}}}}'
+----
+
+. Display the logs for the Pod which will include the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs _pod_
+----
+
+. Disable the protocol trace:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} patch _infraconfigresource_ _infraconfigname_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"broker"}]}}}}}'
+----
