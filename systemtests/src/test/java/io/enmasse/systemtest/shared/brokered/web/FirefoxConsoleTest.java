@@ -114,6 +114,11 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     }
 
     @Test
+    void testSortMessagesCount() throws Exception {
+        doTestSortMessagesCount(getSharedAddressSpace());
+    }
+
+    @Test
     @ExternalClients
     @Disabled
     void testClientsMetrics() throws Exception {

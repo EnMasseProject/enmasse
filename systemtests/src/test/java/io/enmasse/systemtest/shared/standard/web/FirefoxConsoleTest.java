@@ -298,6 +298,11 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    void testSortMessagesCount() throws Exception {
+        doTestSortMessagesCount(getSharedAddressSpace());
+    }
+
+    @Test
     @ExternalClients
     void testClientsMetrics() throws Exception {
         doTestClientsMetrics(getSharedAddressSpace());
