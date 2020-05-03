@@ -22,19 +22,19 @@ public class ResultWriter {
     }
 
     public void write(Map<String, Object> result) throws Exception {
-        saveResultsFile("results.json", result);
-        savePlotCSV("plot.dat", result);
+        Files.createDirectories(rootDir);
+        saveResultsFile(rootDir.resolve("results.json"), result);
+        Path plotDir = rootDir.resolve("plot-data");
+        Files.createDirectories(plotDir);
+        savePlotCSV(plotDir.resolve("plot.dat"),result);
     }
 
-    private void saveResultsFile(String filename, Map<String, Object> result) throws Exception {
+    private void saveResultsFile(Path file, Map<String, Object> result) throws Exception {
         var mapper = new ObjectMapper().writerWithDefaultPrettyPrinter();
-        Files.createDirectories(rootDir);
-        Files.write(rootDir.resolve(filename), mapper.writeValueAsBytes(result));
+        Files.write(file, mapper.writeValueAsBytes(result));
     }
 
-    private void savePlotCSV(String fileName, Map<String, Object> data) throws IOException {
-        Files.createDirectories(rootDir);
-        Path file = rootDir.resolve(fileName);
+    private void savePlotCSV(Path file, Map<String, Object> data) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
             writer.write(String.join(",", data.keySet().toArray(new String[0])));
             writer.newLine();

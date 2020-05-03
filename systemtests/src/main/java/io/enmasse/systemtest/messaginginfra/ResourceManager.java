@@ -185,8 +185,6 @@ public class ResourceManager {
     @SafeVarargs
     public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
 
-        LOGGER.info("Creating {} resources", resources.length);
-
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -199,7 +197,7 @@ public class ResourceManager {
                 createResource(waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
             }
 
-            LOGGER.debug("Create/Update of {} {} in namespace {}",
+            LOGGER.info("Create/Update of {} {} in namespace {}",
                     resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
 
             type.create(resource);
@@ -208,9 +206,6 @@ public class ResourceManager {
         pointerResources.push(() -> {
             deleteResource(resources);
         });
-
-
-        LOGGER.info("Waiting for {} resources to be ready", resources.length);
 
         if (waitReady) {
             for (T resource : resources) {
@@ -236,14 +231,13 @@ public class ResourceManager {
 
     @SafeVarargs
     public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
-        LOGGER.info("Deleting {} resources", resources.length);
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
                 LOGGER.warn("Can't find resource type, please create it manually");
                 continue;
             }
-            LOGGER.debug("Delete of {} {} in namespace {}",
+            LOGGER.info("Delete of {} {} in namespace {}",
                     resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             type.delete(resource);
             cleanDefault(resource);
