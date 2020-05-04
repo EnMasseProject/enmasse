@@ -104,6 +104,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
             case "Active":
                 return AddressStatus.READY;
             case "Configuring":
+            case "Pending":
                 return AddressStatus.PENDING;
             default:
                 return AddressStatus.ERROR;
