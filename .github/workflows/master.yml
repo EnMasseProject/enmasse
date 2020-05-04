@@ -40,7 +40,7 @@ jobs:
         run: ./.github/scripts/setup_docker.sh
 
       - name: Minikube setup with registry
-        uses: EnMasseProject/minikube-setup@V1.1.5
+        uses: EnMasseProject/minikube-setup@V1.1.6
         with:
           k8s-version: 1.15.0
 
