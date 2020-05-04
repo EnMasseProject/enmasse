@@ -6,6 +6,7 @@
 package state
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -51,7 +52,7 @@ func TestInitialize(t *testing.T) {
 	assert.Equal(t, "example.com", state.entities[RouterConnectorEntity]["conn1"].(*RouterConnector).Host)
 
 	// Adding connector should not call any command client
-	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
+	err = state.EnsureEntities(context.TODO(), []RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
@@ -93,7 +94,7 @@ func TestEnsureConnector(t *testing.T) {
 	assert.Equal(t, 0, len(state.entities[RouterConnectorEntity]))
 
 	// Adding connector should not call any command client
-	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
+	err = state.EnsureEntities(context.TODO(), []RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
@@ -101,7 +102,7 @@ func TestEnsureConnector(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Adding again should be no problem as long as it is the same
-	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
+	err = state.EnsureEntities(context.TODO(), []RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
@@ -109,7 +110,7 @@ func TestEnsureConnector(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Adding again is not ok when attributes have changed (not supported by qpid dispatch router)
-	err = state.EnsureEntities([]RouterEntity{&RouterConnector{
+	err = state.EnsureEntities(context.TODO(), []RouterEntity{&RouterConnector{
 		Name: "conn1",
 		Host: "example.com",
 		Port: "5672",
