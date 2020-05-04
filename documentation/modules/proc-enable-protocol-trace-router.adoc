@@ -22,7 +22,8 @@ WARNING: The protocol trace is verbose.  Enabling it increases the CPU overhead 
 messaging performance. It may also increase the disk space requirements associated with any log retention system.
 Therefore it is recommended to enable the protocol trace for as shorter time as possible.
 
-.Procedure (dynamic)
+== Dynamic
+.Procedure
 
 ifeval::["{cmdcli}" == "oc"]
 . Log in as a service operator:
@@ -68,7 +69,9 @@ echo '{"enable":"trace+"}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tt
 echo '{"enable":null}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tty=false -- qdmanage update -b 127.0.0.1:7777 --type=log --name=log/SERVER --stdin
 ----
 
-.Procedure (environment variable)
+== `StandardInfraConfig` environment variable
+
+.Procedure
 
 ifeval::["{cmdcli}" == "oc"]
 . Log in as a service operator:
