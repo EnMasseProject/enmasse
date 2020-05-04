@@ -4,6 +4,7 @@
  */
 
 export * from "./ProjectTypeConfigurationStep";
+export * from "./IoTConfiguration";
 export * from "./IoTConfigurationStep";
 export * from "./MessagingConfigurationStep";
 export * from "./MessagingReviewStep";

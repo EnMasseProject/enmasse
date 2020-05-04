@@ -123,9 +123,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                       //   navigator.clipboard.writeText(data.addressSpaceCommand);
                       setIsCopied(true);
                     }}
-                    onMouseLeave={() => {
-                      setIsCopied(false);
-                    }}
+                    onMouseLeave={() => setIsCopied(false)}
                   >
                     <OutlinedCopyIcon id="preview-iot-copy-icon" size="md" />
                   </Button>
