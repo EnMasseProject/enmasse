@@ -11,6 +11,9 @@
 * #4314: [IoT] Add alerts for infrastructure and projects
 * #4438: Address space connector - offer SASL ANONYMOUS if it cannot offer PLAIN or EXTERNAL.
 
+## 0.32.0
+* #4232: Allow configuring standard authentication service in HA mode
+
 ## 0.31.2
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4342: address stuck unready - failed to retrieve addresses: null (##4345)

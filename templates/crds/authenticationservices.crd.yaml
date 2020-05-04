@@ -49,6 +49,8 @@ spec:
             none:
               type: object
               properties:
+                replicas:
+                  type: integer
                 certificateSecret:
                   type: object
                   properties:
@@ -83,6 +85,8 @@ spec:
             standard:
               type: object
               properties:
+                replicas:
+                  type: integer
                 certificateSecret:
                   type: object
                   properties:

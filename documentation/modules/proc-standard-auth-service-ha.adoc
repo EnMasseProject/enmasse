@@ -1,0 +1,57 @@
+// Module included in the following assemblies:
+//
+// assembly-deploying-auth-services.adoc
+
+[id='proc-deploying-standard-auth-service-{context}']
+= Deploying the `standard` authentication service for HA
+
+To implement the `standard` authentication service, you deploy it.
+
+.Prerequisites
+* A PostgreSQL Database.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u admin
+----
+endif::[]
+. Create a `Secret` with the database credentials:
++
+[source,yaml,options="nowrap"]
+----
+{cmdcli} create secret generic db-creds -n _{ProductNamespace} --from-literal=database-user=_admin_ --from-literal=database-user=_securepassword_
+----
+
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+  standard:
+    replicas: 2
+    datasource:
+      type: postgresql
+      host: database.example.com
+      port: 5431
+      database: auth
+      credentialsSecret:
+        name: db-creds
+----
+
+. Deploy the authentication service:
++
+[options="nowrap",subs="attributes"]
+----
+{cmdcli} create -f standard-authservice.yaml -n _{ProductNamespace}_
+----
+

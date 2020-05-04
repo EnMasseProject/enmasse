@@ -5,6 +5,8 @@
 package authenticationservice
 
 import (
+	"fmt"
+
 	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -18,7 +20,7 @@ func applyNoneAuthServiceDefaults(authservice *adminv1beta1.AuthenticationServic
 		authservice.Spec.None = &adminv1beta1.AuthenticationServiceSpecNone{}
 	}
 	if authservice.Spec.None.CertificateSecret == nil {
-		secretName := "none-authservice-cert"
+		secretName := fmt.Sprintf("%s-cert", authservice.Name)
 		authservice.Spec.None.CertificateSecret = &corev1.SecretReference{
 			Name: secretName,
 		}
@@ -82,6 +84,10 @@ func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationServ
 		return err
 	}
 
+	if authservice.Spec.None.Replicas != nil {
+		deployment.Spec.Replicas = authservice.Spec.None.Replicas
+	}
+
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "none-authservice-cert", authservice.Spec.None.CertificateSecret.Name)
 
 	return nil
@@ -92,7 +98,7 @@ func applyNoneAuthServiceService(authservice *adminv1beta1.AuthenticationService
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
-	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = "none-authservice-cert"
+	service.Annotations["service.alpha.openshift.io/serving-cert-secret-name"] = authservice.Spec.None.CertificateSecret.Name
 	service.Spec.Ports = []corev1.ServicePort{
 		{
 			Port:       5671,

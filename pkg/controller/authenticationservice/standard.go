@@ -168,7 +168,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 			InitialDelaySeconds: 30,
 			Handler: corev1.Handler{
 				TCPSocket: &corev1.TCPSocketAction{
-					Port:   intstr.FromString("amqps"),
+					Port: intstr.FromString("amqps"),
 				},
 			},
 		}
@@ -176,7 +176,7 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 			InitialDelaySeconds: 120,
 			Handler: corev1.Handler{
 				TCPSocket: &corev1.TCPSocketAction{
-					Port:   intstr.FromString("amqps"),
+					Port: intstr.FromString("amqps"),
 				},
 			},
 		}
@@ -205,6 +205,10 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		} else {
 			install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "keycloak-persistence")
 		}
+	}
+
+	if authservice.Spec.Standard.Replicas != nil && authservice.Spec.Standard.Datasource.Type == adminv1beta1.PostgresqlDatasource {
+		deployment.Spec.Replicas = authservice.Spec.Standard.Replicas
 	}
 
 	if authservice.Spec.Standard.ServiceAccountName != nil {

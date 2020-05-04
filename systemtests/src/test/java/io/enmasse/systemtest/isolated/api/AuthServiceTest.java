@@ -11,6 +11,7 @@ import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceSettings;
 import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AuthenticationService;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
@@ -19,6 +20,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -447,4 +449,100 @@ class AuthServiceTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().receiveDurableMessages(resourcesManager, addressSpace, queue, cred2, 100);
     }
+
+    @Test
+    void testHANoneAuthService() throws Exception {
+
+        AuthenticationService noneAuth = new AuthenticationServiceBuilder()
+                .withNewMetadata()
+                .withName("test-none-authservice-ha")
+                .withNamespace(Kubernetes.getInstance().getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(io.enmasse.admin.model.v1.AuthenticationServiceType.none)
+                .editOrNewNone()
+                .withReplicas(2)
+                .endNone()
+                .endSpec()
+                .build();
+        resourcesManager.createAuthService(noneAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(noneAuth.getMetadata().getName())).toString());
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-none-auth-ha")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(noneAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(queue);
+
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user1", "password"), Collections.singletonList(queue), resourcesManager);
+        getClientUtils().assertCanConnect(addressSpace, new UserCredentials("test-user2", "password"), Collections.singletonList(queue), resourcesManager);
+    }
+
+    @Test
+    void testHAStandardAuthService() throws Exception {
+        Endpoint endpoint = SystemtestsKubernetesApps.deployPostgresDB(kubernetes.getInfraNamespace());
+        AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject("test-standard-auth-ha",
+                endpoint.getHost(), endpoint.getPort(), "postgresql", "postgresdb", SystemtestsKubernetesApps.POSTGRES_APP);
+        standardAuth.getSpec().getStandard().setReplicas(2);
+        resourcesManager.createAuthService(standardAuth);
+        log.info(AuthServiceUtils.authenticationServiceToJson(resourcesManager.getAuthService(standardAuth.getMetadata().getName())).toString());
+
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-standard-auth-ha")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName(standardAuth.getMetadata().getName())
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(DestinationPlan.BROKERED_QUEUE)
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(queue);
+
+        UserCredentials cred = new UserCredentials("david", "pepinator");
+        resourcesManager.createOrUpdateUser(addressSpace, cred);
+
+        getClientUtils().assertCanConnect(addressSpace, cred, Collections.singletonList(queue), resourcesManager);
+    }
+
 }
