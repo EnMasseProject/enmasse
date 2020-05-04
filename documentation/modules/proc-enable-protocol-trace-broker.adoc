@@ -39,7 +39,7 @@ endif::[]
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-{cmdcli} get addressspace -n _namespace_ _addressspace name_ --output 'jsonpath={.spec.plan}{"\n"}'
+{cmdcli} get addressspace -n _namespace_ _addressspacename_ --output 'jsonpath={.spec.plan}{"\n"}'
 ----
 
 . Determine the `standardinfraconfig` or `brokeredinfraconfig` name for the `addressspaceplan` name:
