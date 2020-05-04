@@ -132,7 +132,8 @@ public class OLMOperatorManager {
             List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
                     "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
                     "--insecure-registry=true",
-                    "--skip-tls-verify=true");
+                    "--skip-tls-verify=true",
+                    "--force");
             var result = Exec.execute(command);
             assertTrue(result.getRetCode(), "Build image failed");
         }
