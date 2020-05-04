@@ -36,7 +36,7 @@ export interface IDropdownWithToggleProps
   toggleClass?: string;
   value?: string;
   onSelectItem?: (value: string) => void;
-  dropdownItemIdPrefix?: string;
+  dropdownItemId?: string;
   dropdownItemClass?: string;
   isDisplayLabelAndValue?: boolean;
 }
@@ -54,7 +54,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   toggleClass,
   value,
   isDisabled,
-  dropdownItemIdPrefix,
+  dropdownItemId,
   dropdownItemClass,
   isDisplayLabelAndValue
 }) => {
@@ -128,7 +128,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
     if (dropdownItems && dropdownItems.length > 0) {
       items = dropdownItems.map((option: IDropdownOption) => (
         <DropdownItem
-          id={`${dropdownItemIdPrefix || id}${option.key}`}
+          id={`${dropdownItemId || id}${option.key}`}
           key={option.key}
           value={option.value}
           itemID={option.key}

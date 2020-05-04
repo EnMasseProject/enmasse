@@ -78,13 +78,14 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
   setContainerInput
 }) => {
   const filterMenuItems = [
-    { key: "filterName", value: "Name" },
-    { key: "filterContainer", value: "Container" },
-    { key: "filterRole", value: "Role" }
+    { key: "name", value: "Name" },
+    { key: "container", value: "Container" },
+    { key: "role", value: "Role" }
   ];
+
   const roleOptions: ISelectOption[] = [
-    { value: "Sender", isDisabled: false },
-    { value: "Receiver", isDisabled: false }
+    { key: "sender", value: "Sender", isDisabled: false },
+    { key: "receiver", value: "Receiver", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
@@ -107,9 +108,10 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           deleteChip={onDelete}
           categoryName="Name"
         >
-          {filterSelected && filterSelected === "Name" && (
+          {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
+                id="ad-links-filter-select-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -140,7 +142,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           deleteChip={onDelete}
           categoryName="Container"
         >
-          {filterSelected && filterSelected === "Container" && (
+          {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
                 ariaLabelTypeAhead={"Select container"}
@@ -173,13 +175,15 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           deleteChip={onDelete}
           categoryName="Role"
         >
-          {filterSelected === "Role" && (
-            <SelectWithToggle
-              variant={SelectVariant.single}
-              ariaLabel="Select Role"
+          {filterSelected && filterSelected.toLowerCase() === "role" && (
+            <DropdownWithToggle
+              id="ad-links-filter-select-role"
+              toggleId="ad-links-filter-select-role"
+              dropdownItemId="ad-links-filter-select-option-role"
+              position={DropdownPosition.left}
               onSelectItem={onRoleSelect}
-              selections={roleSelected || "Select Role"}
-              selectOptions={roleOptions}
+              dropdownItems={roleOptions}
+              value={roleSelected || "Select Role"}
             />
           )}
         </DataToolbarFilter>
@@ -191,8 +195,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="ad-links-filter-dropdown"
+          dropdownItemId={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}

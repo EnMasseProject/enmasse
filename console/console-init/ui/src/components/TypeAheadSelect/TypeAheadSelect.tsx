@@ -15,6 +15,7 @@ import { TYPEAHEAD_REQUIRED_LENGTH, TypeAheadMessage } from "constant";
 import { initalSelectOption } from "utils";
 
 export interface ITypeAheadSelectProps extends Omit<SelectProps, "onToggle"> {
+  id?: string;
   selected?: string;
   inputData?: string;
   onChangeInput?: (value: string) => Promise<any>;
@@ -30,7 +31,8 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   inputData,
   placeholderText,
   onChangeInput,
-  setInput
+  setInput,
+  id
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const [options, setOptions] = useState<any>(initalSelectOption);
@@ -94,6 +96,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
 
   return (
     <Select
+      id={id}
       variant={SelectVariant.typeahead}
       ariaLabelTypeAhead={ariaLabelTypeAhead}
       onToggle={onToggle}

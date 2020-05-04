@@ -149,7 +149,7 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
 
   const types: IDropdownOption[] = addressTypes_v2.map(type => {
     return {
-      key: type.spec.displayName.toLowerCase(),
+      key: type.spec.displayName,
       value: type.spec.displayName,
       label: type.spec.displayName,
       description: type.spec.shortDescription

@@ -57,6 +57,7 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
             id="al-filter-overflow-dropdown"
+            toggleId="al-filter-overflow-kebab"
             onSelect={onSelectDeleteAll}
             dropdownItems={dropdownItems}
             isPlain

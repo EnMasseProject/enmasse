@@ -67,8 +67,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
   setHostContainerInput
 }) => {
   const filterMenuItems = [
-    { key: "filterHostname", value: "Hostname" },
-    { key: "filterContainer", value: "Container" }
+    { key: "hostname", value: "Hostname" },
+    { key: "container", value: "Container" }
   ];
 
   const checkIsFilterApplied = () => {
@@ -90,7 +90,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           deleteChip={onDelete}
           categoryName="Hostname"
         >
-          {filterSelected && filterSelected === "Hostname" && (
+          {filterSelected && filterSelected.toLowerCase() === "hostname" && (
             <InputGroup>
               <TypeAheadSelect
                 ariaLabelTypeAhead={"Select hostname"}
@@ -104,7 +104,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostNameInput}
               />
               <Button
-                id="ad-links-filter-search-hostname"
+                id="cl-filter-search-btn"
                 variant={ButtonVariant.control}
                 aria-label="search button for search hostname"
                 onClick={onSearch}
@@ -123,7 +123,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           deleteChip={onDelete}
           categoryName="Container"
         >
-          {filterSelected && filterSelected === "Container" && (
+          {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
                 ariaLabelTypeAhead={"Select container"}
@@ -137,7 +137,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostContainerInput}
               />
               <Button
-                id="ad-links-filter-search-container"
+                id="cl-filter-search"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -155,8 +155,9 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
     <DataToolbarGroup variant="filter-group">
       <DataToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="cl-filter-dropdown"
+          toggleId={"cl-filter-dropdown"}
+          dropdownItemId="cl-filter-dropdown-item"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}
