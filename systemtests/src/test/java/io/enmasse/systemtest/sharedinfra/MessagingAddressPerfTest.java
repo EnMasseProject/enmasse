@@ -26,8 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static io.enmasse.systemtest.TestTag.SCALE;
 
+@Tag(ISOLATED_SHARED_INFRA)
 @Tag(SCALE)
 public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
     /**
@@ -44,7 +46,6 @@ public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedS
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost(kubernetes.getHost())
                 .addToProtocols("AMQP")
                 .editOrNewNodePort()
                 .endNodePort()
