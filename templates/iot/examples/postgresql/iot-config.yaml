@@ -11,7 +11,6 @@ spec:
           # This example only focuses on the aspect of the "external" JDBC device registry.
           # It is not a complete configuration.
           external:
-            mode: JSON_TREE
             connection:
               password: user12
               url: jdbc:postgresql://postgresql.device-registry-storage.svc/device-registry

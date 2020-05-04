@@ -57,20 +57,11 @@ the former user is assumed to be named "admin", and the latter "registry".
 .Prerequisites
 * Created a database instance
 * Have access credentials for the "admin" database user
-* Have selected a storage model
 
 .Procedure
 
 . Connect to your database instance using the admin user
-. Execute either of the following steps, depending on which data model
-  you chose
-.. If you chose the hierarchical JSON model, or want to use the default choice,
-   review and deploy the SQL schema from
-   `templates/iot/examples/postgresql/create.sql` and `templates/iot/examples/postgresql/create.tree.sql`.
-.. If you chose the flat JSON model, review and deploy the SQL schema
-   from `templates/iot/examples/postgresql/create.sql`
-.. If you chose the table storage model, review and deploy the SQL schema
-   from `templates/iot/examples/postgresql/create.table.sql`
+. Review and deploy the SQL schema `templates/iot/examples/postgresql/create.sql`
 
 == Configure the IoT infrastructure
 

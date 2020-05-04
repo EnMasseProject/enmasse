@@ -30,7 +30,6 @@ public final class DeviceStores {
     }
 
     public static interface StoreFactory<T extends AbstractDeviceStore> {
-        public T createJson(final Vertx vertx, final Tracer tracer, final JdbcProperties properties, boolean hierarchical) throws IOException;
         public T createTable(final Vertx vertx, final Tracer tracer, final JdbcProperties properties, final Optional<String> credentials, final Optional<String> registrations) throws IOException;
     }
 
@@ -39,15 +38,6 @@ public final class DeviceStores {
         private static final StoreFactory<AbstractDeviceAdapterStore> INSTANCE = new AdapterStoreFactory();
 
         private AdapterStoreFactory() {
-        }
-
-        @Override
-        public AbstractDeviceAdapterStore createJson(final Vertx vertx, final Tracer tracer, final JdbcProperties properties, boolean hierarchical) throws IOException {
-            return new JsonAdapterStore(
-                    dataSource(vertx, properties),
-                    tracer,
-                    hierarchical,
-                    Configurations.jsonConfiguration(properties.getUrl(), Optional.ofNullable(properties.getTableName()), hierarchical));
         }
 
         @Override
@@ -67,15 +57,6 @@ public final class DeviceStores {
         }
 
         @Override
-        public AbstractDeviceManagementStore createJson(final Vertx vertx, final Tracer tracer, final JdbcProperties properties, boolean hierarchical) throws IOException {
-            return new JsonManagementStore(
-                    dataSource(vertx, properties),
-                    tracer,
-                    hierarchical,
-                    Configurations.jsonConfiguration(properties.getUrl(), Optional.ofNullable(properties.getTableName()), hierarchical));
-        }
-
-        @Override
         public AbstractDeviceManagementStore createTable(final Vertx vertx, final Tracer tracer, final JdbcProperties properties, final Optional<String> credentials, final Optional<String> registrations) throws IOException {
             return new TableManagementStore(
                     dataSource(vertx, properties),
@@ -88,19 +69,11 @@ public final class DeviceStores {
 
         var properties = extractor.apply(deviceProperties);
 
-        switch (deviceProperties.getMode()) {
-            case JSON_FLAT:
-                return factory.createJson(vertx, tracer, properties, false);
-            case JSON_TREE:
-                return factory.createJson(vertx, tracer, properties, true);
-            case TABLE:
-                var prefix = Optional.ofNullable(properties.getTableName());
-                var credentials = prefix.map(s -> s + "_credentials");
-                var registrations = prefix.map(s -> s + "_registrations");
-                return factory.createTable(vertx, tracer, properties, credentials, registrations);
-            default:
-                throw new IllegalStateException(String.format("Unknown store type: %s", deviceProperties.getMode()));
-        }
+        var prefix = Optional.ofNullable(properties.getTableName());
+        var credentials = prefix.map(s -> s + "_credentials");
+        var registrations = prefix.map(s -> s + "_registrations");
+
+        return factory.createTable(vertx, tracer, properties, credentials, registrations);
 
     }
 

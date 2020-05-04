@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
 import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
@@ -70,7 +69,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .withNewProxyConfiguratorLike(r1).endProxyConfigurator()
                 .build();
 
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.JSON_TREE);
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
 
         config = IoTTestSession.createDefaultConfig()
 
@@ -107,7 +106,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .endTenant()
 
                 .withDeviceConnection(DefaultDeviceRegistry.newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(DefaultDeviceRegistry.newPostgresBasedRegistry(jdbcEndpoint, Mode.JSON_TREE, false))
+                .withDeviceRegistry(DefaultDeviceRegistry.newPostgresBasedRegistry(jdbcEndpoint, false))
 
                 .editDeviceConnection()
                 .editJdbc()

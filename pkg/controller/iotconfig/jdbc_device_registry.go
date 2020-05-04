@@ -25,8 +25,6 @@ import (
 
 // this aligns with the Java side properties
 type JdbcDeviceProperties struct {
-	Mode string `json:"mode,omitempty"`
-
 	Adapter    *iotv1alpha1.JdbcConnectionInformation `json:"adapter,omitempty"`
 	Management *iotv1alpha1.JdbcConnectionInformation `json:"management,omitempty"`
 }
@@ -61,7 +59,6 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistry,
-					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter,registry-management",
 					true, true,
 				)
@@ -86,7 +83,6 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
-					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
 					true, false,
 				)
@@ -101,7 +97,6 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistryManagement,
-					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-management",
 					false, true,
 				)
@@ -122,7 +117,6 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
-					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Mode,
 					"registry-adapter",
 					true, false,
 				)
@@ -151,7 +145,6 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	serviceConfig iotv1alpha1.ServiceConfig,
 	commonConfig iotv1alpha1.CommonServiceConfig,
 	serviceNameForTls string,
-	mode string,
 	profiles string,
 	adapter bool,
 	management bool,
@@ -165,9 +158,6 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, serviceConfig, change)
-
-	deployment.Annotations[RegistryJdbcModeAnnotation] = mode
-	deployment.Spec.Template.Annotations[RegistryJdbcModeAnnotation] = mode
 
 	// container
 
@@ -316,21 +306,18 @@ func ExternalJdbcRegistryConnections(config *iotv1alpha1.IoTConfig) (*JdbcDevice
 		return &JdbcDeviceProperties{
 			Adapter:    &service.Management.Connection,
 			Management: &service.Management.Connection,
-			Mode:       service.Mode,
 		}, nil
 	} else if service.Management != nil && service.Adapter != nil {
 		// split mode
 		return &JdbcDeviceProperties{
 			Adapter:    &service.Adapter.Connection,
 			Management: &service.Management.Connection,
-			Mode:       service.Mode,
 		}, nil
 	} else if service.Management == nil && service.Adapter != nil {
 		// read only mode
 		return &JdbcDeviceProperties{
 			Adapter:    &service.Adapter.Connection,
 			Management: nil, // remains nil
-			Mode:       service.Mode,
 		}, nil
 	} else {
 		return nil, util.NewConfigurationError("illegal device registry configuration")

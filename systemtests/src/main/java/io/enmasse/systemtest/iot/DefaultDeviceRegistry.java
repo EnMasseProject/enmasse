@@ -17,7 +17,6 @@ import io.enmasse.iot.model.v1.ExternalJdbcDeviceConnectionServer;
 import io.enmasse.iot.model.v1.ExternalJdbcDeviceConnectionServerBuilder;
 import io.enmasse.iot.model.v1.ExternalJdbcRegistryServer;
 import io.enmasse.iot.model.v1.ExternalJdbcRegistryServerBuilder;
-import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.iot.model.v1.ServicesConfig;
 import io.enmasse.iot.model.v1.ServicesConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
@@ -65,7 +64,7 @@ public final class DefaultDeviceRegistry {
         return builder.build();
     }
 
-    public static ExternalJdbcRegistryServer externalPostgresRegistryServer(final Endpoint jdbcEndpoint, final Mode mode, final boolean split) {
+    public static ExternalJdbcRegistryServer externalPostgresRegistryServer(final Endpoint jdbcEndpoint, final boolean split) {
         var builder = new ExternalJdbcRegistryServerBuilder()
                 .withNewManagement()
                 .withNewConnection()
@@ -88,9 +87,6 @@ public final class DefaultDeviceRegistry {
                     .endAdapter();
         }
 
-        builder = builder
-                .withMode(mode);
-
         return builder.build();
     }
 
@@ -112,8 +108,6 @@ public final class DefaultDeviceRegistry {
                 .endManagement();
 
         builder = builder
-                .withMode(Mode.TABLE)
-
                 .addNewExtension()
                 .withNewContainer()
                 .withName("ext-add-h2-driver")
@@ -149,29 +143,13 @@ public final class DefaultDeviceRegistry {
         SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
-    public static ServicesConfig newPostgresBased(final Mode mode, final boolean split) throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(mode);
+    public static ServicesConfig newPostgresBased(final boolean split) throws Exception {
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
 
         return new ServicesConfigBuilder()
                 .withDeviceConnection(newPostgresBasedConnection(jdbcEndpoint))
-                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, mode, split))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, split))
                 .build();
-    }
-
-    public static ServicesConfig newPostgresTreeBased() throws Exception {
-        return newPostgresBased(Mode.JSON_TREE, false);
-    }
-
-    public static ServicesConfig newPostgresFlatBased() throws Exception {
-        return newPostgresBased(Mode.JSON_FLAT, false);
-    }
-
-    public static ServicesConfig newPostgresTableBased() throws Exception {
-        return newPostgresBased(Mode.TABLE, false);
-    }
-
-    public static ServicesConfig newPostgresSplitTableBased() throws Exception {
-        return newPostgresBased(Mode.TABLE, true);
     }
 
     public static ServicesConfig newH2Based() throws Exception {
@@ -193,12 +171,12 @@ public final class DefaultDeviceRegistry {
     }
 
     public static ServicesConfig newMixed() throws Exception {
-        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer(Mode.TABLE);
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
 
         return new ServicesConfigBuilder()
                 .withDeviceConnection(DefaultDeviceRegistry.newInfinispanDeviceConnectionService(infinispanEndpoint))
-                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, Mode.TABLE, false))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, false))
                 .build();
     }
 
@@ -226,12 +204,12 @@ public final class DefaultDeviceRegistry {
                 .build();
     }
 
-    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final Mode mode, final boolean split) throws Exception {
+    public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final boolean split) throws Exception {
         return new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
-                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, mode, split))
+                .withExternal(externalPostgresRegistryServer(jdbcEndpoint, split))
 
                 .endServer()
                 .endJdbc()

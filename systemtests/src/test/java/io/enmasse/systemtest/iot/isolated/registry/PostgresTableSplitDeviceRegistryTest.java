@@ -6,8 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresSplitTableBased;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBased;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 import org.junit.jupiter.api.Disabled;
@@ -15,7 +14,6 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.iot.IoTTestSession;
 
 /**
@@ -28,14 +26,13 @@ class PostgresTableSplitDeviceRegistryTest extends DeviceRegistryTest {
         return IoTTestSession
                 .createDefaultConfig()
                 .editOrNewSpec()
-                .withServices(newPostgresSplitTableBased())
+                .withServices(newPostgresBased(true))
                 .endSpec();
     }
 
     @Test
     void testCorrectTypeDeployed () {
         assertCorrectRegistryType("jdbc");
-        assertCorrectRegistryMode(Mode.TABLE);
     }
 
     @Test
