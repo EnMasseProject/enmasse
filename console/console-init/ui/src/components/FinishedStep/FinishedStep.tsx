@@ -15,6 +15,7 @@ import { StyleSheet, css } from "@patternfly/react-styles";
 interface IFinishedStepProps {
   onClose: () => void;
   sucess: boolean;
+  projectType?: "IoT" | "Messaging";
 }
 
 const styles = StyleSheet.create({
@@ -25,7 +26,8 @@ const styles = StyleSheet.create({
 
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   onClose,
-  sucess
+  sucess,
+  projectType
 }) => {
   const [percent, setPercent] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
@@ -87,8 +89,8 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
             Creation successful
           </Title>
           <EmptyStateBody>
-            Enter your IoTProject for management, or return to homepage to view
-            all projects.
+            Enter your {projectType} Project for management, or return to
+            homepage to view all projects.
           </EmptyStateBody>
           <Button variant={ButtonVariant.primary} component="a" href="/">
             View the project

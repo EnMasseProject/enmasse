@@ -109,7 +109,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             isReadOnly={true}
             enableCopy={true}
             id={"messaging-tenant-id-input"}
-            ariaLabel={"messaging-tenant-id"}
+            ariaLabel={"messaging tenant id"}
           />
         )}
         <br />
@@ -121,7 +121,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             isReadOnly={true}
             enableCopy={true}
             id={"messaging-username-input"}
-            ariaLabel={"messaging-username"}
+            ariaLabel={"messaging username"}
           />
         )}
         <br />
@@ -132,7 +132,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={password}
             isReadOnly={true}
             id={"messaging-password-input"}
-            ariaLabel={"messaging-password"}
+            ariaLabel={"messaging password"}
           />
         )}
         <br />
@@ -144,7 +144,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             isReadOnly={true}
             enableCopy={true}
             id={"messaging-addressspace-input"}
-            ariaLabel={"messaging-addressSpace"}
+            ariaLabel={"messaging addressSpace"}
           />
         )}
         <br />
@@ -160,7 +160,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             enableCopy={true}
             isExpandable={eventsAddressName.plan ? true : false}
             id={"messaging-event-address-name-input"}
-            ariaLabel={"messaging-eventsAddressName"}
+            ariaLabel={"messaging event Address Name"}
           />
         )}
         <br />
@@ -176,7 +176,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             enableCopy={true}
             isExpandable={telemetryAddressName.plan ? true : false}
             id={"messaging-telemetry-address-name-input"}
-            ariaLabel={"messaging-telemetryAddressName"}
+            ariaLabel={"messaging telemetry Address Name"}
           />
         )}
         <br />
@@ -192,7 +192,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             enableCopy={true}
             isExpandable={commandAddressName.plan ? true : false}
             id={"messaging-command-address-name-input"}
-            ariaLabel={"messaging-commandAddressName"}
+            ariaLabel={"messaging command Address Name"}
           />
         )}
         <br />
@@ -243,7 +243,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               isReadOnly={true}
               enableCopy={true}
               id={`adapter-${type}-api-host-input`}
-              ariaLabel={`adapter-${type}-api-host`}
+              ariaLabel={`adapter ${type} api host`}
               isExpandable={false}
             />
           </>
@@ -258,7 +258,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               isReadOnly={true}
               enableCopy={true}
               id={`adapter-${type}-api-port-input`}
-              ariaLabel={`adapter-${type}-api-port`}
+              ariaLabel={`adapter ${type} api port`}
               isExpandable={false}
             />
           </>
@@ -309,7 +309,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               isReadOnly={true}
               enableCopy={true}
               id={"tenant-id-input"}
-              ariaLabel={"tenant-id"}
+              ariaLabel={"tenant id"}
             />
           )}
           <br />

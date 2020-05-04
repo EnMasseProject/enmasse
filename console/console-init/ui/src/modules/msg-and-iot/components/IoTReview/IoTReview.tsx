@@ -118,7 +118,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                   <Button
                     id="preview-iot-copy-button"
                     variant={ButtonVariant.link}
-                    aria-label="copy-iot-config"
+                    aria-label="copy iot configuration"
                     onClick={() => {
                       //   navigator.clipboard.writeText(data.addressSpaceCommand);
                       setIsCopied(true);

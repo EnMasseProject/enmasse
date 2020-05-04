@@ -156,6 +156,111 @@ const getCombinedString = (a: string, b?: string) => {
   }
   return s;
 };
+
+const getOptions = (object: any) => {
+  const keys = Object.keys(object);
+  let data = [];
+  for (var i of keys) {
+    if (typeof object[i] === "object") {
+      if (Array.isArray(object[i])) {
+        const datas: any[] = getOptions(object[i]);
+        data.push({
+          key: i,
+          value: datas,
+          type: "array"
+        });
+      } else {
+        const datas: any[] = getOptions(object[i]);
+        data.push({
+          key: i,
+          value: datas,
+          type: "object"
+        });
+      }
+    } else {
+      data.push({
+        key: i,
+        value: object[i],
+        type: typeof object[i]
+      });
+    }
+  }
+  return data;
+};
+
+const getJsonForObject = (object: any) => {
+  const obj: any = {};
+  switch (object.type) {
+    case "array":
+      let res: any[] = [];
+      for (let i of object.value) {
+        const data = getJson(i);
+        res.push(data[i.key]);
+      }
+      obj[object.key] = res;
+      break;
+    case "object":
+      let objs: any = {};
+      for (let i of object.value) {
+        const data = getJsonForObject(i);
+        const key = Object.keys(data)[0];
+        const value = data[key];
+        objs[key] = value;
+      }
+      obj[object.key] = objs;
+      break;
+    default:
+      obj[object.key] = object.value;
+      break;
+  }
+  return obj;
+};
+
+const getJson = (objects: any[]) => {
+  let options: any[];
+  if (!Array.isArray(objects)) {
+    options = [objects];
+  } else {
+    options = objects;
+  }
+  let object: any = {};
+  for (let i of options) {
+    const data = getJsonForObject(i);
+    object = Object.assign(object, data);
+  }
+  return object;
+};
+
+// const json = {
+//   prop_1: [
+//     {
+//       prop_11: {
+//         prop_111: [
+//           { prop_1111: "val_1111" },
+//           { prop_1112: "val_1112" },
+//           {
+//             prop_1111: [
+//               { prop_11111: "val_11111" },
+//               { prop_11112: "val_11112" }
+//             ]
+//           }
+//         ]
+//       }
+//     },
+//     { prop_12: "val_12" }
+//   ],
+//   prop_2: "val_2",
+//   prop_3: "val_3"
+// };
+
+// const jsonString = JSON.stringify(json);
+// const jsonData = JSON.parse(jsonString);
+// console.log("jsonData", jsonData);
+// const options = getOptions(jsonData);
+// console.log(options)
+// const convertedJson = getJson(options);
+// console.log("converted json", convertedJson);
+// console.log("converyted json string"
 export {
   getSelectOptionList,
   compareObject,
@@ -167,5 +272,7 @@ export {
   uniqueId,
   findIndexByProperty,
   hasOwnProperty,
-  getCombinedString
+  getCombinedString,
+  getJson,
+  getJsonForObject
 };

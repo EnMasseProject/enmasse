@@ -8,7 +8,7 @@ import {
   isIoTProjectValid,
   IIoTProjectInput,
   IoTReview
-} from "modules/msg-and-iot/dailogs";
+} from "modules/msg-and-iot";
 
 const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
   const isEnabled = () => {

@@ -22,8 +22,8 @@ import {
   isMessagingProjectValid,
   isIoTProjectValid,
   MessagingReviewStep
-} from "modules/msg-and-iot/dailogs";
-import { IMessagingProjectInput } from "modules/msg-and-iot/dailogs/components/MessagingConfigurationStep";
+} from "modules/msg-and-iot";
+import { IMessagingProjectInput } from "modules/msg-and-iot/components/MessagingConfigurationStep";
 import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
 import { FinishedStep } from "components";
@@ -60,7 +60,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     setIsCreatedSuccessfully(true);
   };
 
-  const [setQueryVariables] = useMutationQuery(
+  const [setMessagingVariables] = useMutationQuery(
     CREATE_ADDRESS_SPACE,
     refetchQueries,
     resetForm,
@@ -91,7 +91,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
           }
         }
       };
-      setQueryVariables(variables);
+      setMessagingVariables(variables);
       resetForm();
     }
   };
@@ -143,7 +143,13 @@ const CreateProjectContainer: React.FunctionComponent = () => {
 
   const finishedStep = {
     name: "Finish",
-    component: <FinishedStep onClose={onToggle} sucess={true} />,
+    component: (
+      <FinishedStep
+        onClose={onToggle}
+        sucess={isCreatedSuccessfully}
+        projectType={messagingProjectDetail ? "Messaging" : "IoT"}
+      />
+    ),
     isFinishedStep: true
   };
 
@@ -157,8 +163,8 @@ const CreateProjectContainer: React.FunctionComponent = () => {
       steps.push(configurationStepForMessaging);
       steps.push(finalStepForMessaging);
     }
-    steps.push(finishedStep);
   }
+  steps.push(finishedStep);
 
   const handleNextIsEnabled = () => {
     if (firstSelectedStep) {

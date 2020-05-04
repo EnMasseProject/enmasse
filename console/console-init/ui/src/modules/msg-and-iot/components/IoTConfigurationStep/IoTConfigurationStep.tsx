@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { isIoTProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import { isIoTProjectValid } from "modules/msg-and-iot/utils";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { IDropdownOption } from "components";
 import { IoTConfiguration } from "../IoTConfiguration";
