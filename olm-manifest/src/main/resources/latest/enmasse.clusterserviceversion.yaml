@@ -727,6 +727,10 @@ spec:
                   value: ${CONTROLLER_MANAGER_IMAGE}
                 - name: IOT_AUTH_SERVICE_IMAGE
                   value: ${IOT_AUTH_SERVICE_IMAGE}
+                - name: IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE
+                  value: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
+                - name: IOT_DEVICE_CONNECTION_JDBC_IMAGE
+                  value: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
                   value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
                 - name: IOT_DEVICE_REGISTRY_JDBC_IMAGE

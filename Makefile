@@ -28,6 +28,8 @@ DOCKER_DIRS = \
 	iot/iot-lorawan-adapter \
 	iot/iot-sigfox-adapter \
 	iot/iot-tenant-cleaner \
+	iot/images/iot-device-registry \
+
 
 FULL_BUILD       = true
 GOOPTS          ?= -mod=vendor

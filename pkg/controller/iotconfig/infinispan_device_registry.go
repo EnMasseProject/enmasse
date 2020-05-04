@@ -55,7 +55,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-device-registry-infinispan.jar"}
 
 		// set default resource limits
 

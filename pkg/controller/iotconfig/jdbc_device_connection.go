@@ -65,11 +65,11 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 		tracingContainer = container
 
 		// we indeed re-use the device registry image here
-		if err := install.SetContainerImage(container, "iot-device-registry-jdbc", config); err != nil {
+		if err := install.SetContainerImage(container, "iot-device-connection-jdbc", config); err != nil {
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-device-registry-jdbc.jar"}
 
 		// set default resource limits
 

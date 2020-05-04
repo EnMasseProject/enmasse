@@ -12,14 +12,14 @@
     <relativePath>../iot-application-base</relativePath>
   </parent>
 
-  <artifactId>iot-device-registry-file</artifactId>
+  <artifactId>iot-device-connection-infinispan</artifactId>
   <!-- used in the banner -->
-  <name>EnMasse IoT Device Registry (non-production, File)</name>
+  <name>EnMasse IoT Device Connection Service (Infinispan)</name>
 
   <dependencies>
     <dependency>
       <groupId>org.eclipse.hono</groupId>
-      <artifactId>hono-service-device-registry-file</artifactId>
+      <artifactId>hono-service-device-connection</artifactId>
       <version>${hono.version}</version>
     </dependency>
 
@@ -36,7 +36,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
         <configuration>
-          <mainClass>org.eclipse.hono.deviceregistry.Application</mainClass>
+          <mainClass>org.eclipse.hono.deviceconnection.infinispan.Application</mainClass>
         </configuration>
       </plugin>
     </plugins>

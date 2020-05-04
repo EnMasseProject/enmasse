@@ -180,7 +180,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-device-registry-jdbc.jar"}
 
 		// set default resource limits
 

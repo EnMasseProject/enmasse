@@ -443,6 +443,12 @@ public class IoTUtils {
         }
     }
 
+    public static void assertCorrectDeviceConnectionType(final String type) {
+        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-connection").get();
+        assertNotNull(deployment);
+        assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/deviceConnection.type"));
+    }
+
     public static void assertCorrectRegistryType(final String type) {
         final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);

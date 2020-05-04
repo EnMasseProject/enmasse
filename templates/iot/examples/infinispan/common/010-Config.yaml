@@ -289,7 +289,7 @@ data:
                          <indexing index="NONE"/>
                       </distributed-cache>
 
-                      <distributed-cache owners="1" mode="SYNC" remote-timeout="15000" name="deviceStates">
+                      <distributed-cache owners="1" mode="SYNC" remote-timeout="15000" name="device-connection">
                          <transaction mode="NONE"/>
                          <indexing index="NONE"/>
                          <memory>

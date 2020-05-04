@@ -52,11 +52,11 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 		tracingContainer = container
 
 		// we indeed re-use the device registry image here
-		if err := install.SetContainerImage(container, "iot-device-registry-infinispan", config); err != nil {
+		if err := install.SetContainerImage(container, "iot-device-connection-infinispan", config); err != nil {
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-device-connection-infinispan.jar"}
 
 		// set default resource limits
 
@@ -85,7 +85,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
 		}
 
-		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.Infinispan.CommonServiceConfig)
+		appendCommonHonoJavaEnv(container, "HONO_DEVICECONNECTION_AMQP_", config, &service.Infinispan.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)
@@ -153,15 +153,14 @@ func appendInfinispanExternalConnectionServer(container *v1.Container, external 
 
 	// basic connection
 
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_HOST", external.Host)
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_PORT", strconv.Itoa(int(external.Port)))
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_USERNAME", external.Username)
-	install.ApplyEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_PASSWORD", external.Password)
+	install.ApplyEnvSimple(container, "HONO_DEVICECONNECTION_REMOTE_SERVERLIST", external.Host+":"+strconv.Itoa(int(external.Port)))
+	install.ApplyEnvSimple(container, "HONO_DEVICECONNECTION_REMOTE_AUTHUSERNAME", external.Username)
+	install.ApplyEnvSimple(container, "HONO_DEVICECONNECTION_REMOTE_AUTHPASSWORD", external.Password)
 
 	// SASL
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_SASLSERVERNAME", external.SaslServerName)
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_SASLREALM", external.SaslRealm)
+	install.ApplyOrRemoveEnvSimple(container, "HONO_DEVICECONNECTION_REMOTE_AUTHSERVERNAME", external.SaslServerName)
+	install.ApplyOrRemoveEnvSimple(container, "HONO_DEVICECONNECTION_REMOTE_AUTHREALM", external.SaslRealm)
 
 	// cache names
 
@@ -170,7 +169,7 @@ func appendInfinispanExternalConnectionServer(container *v1.Container, external 
 		deviceStates = external.CacheNames.DeviceConnections
 	}
 
-	install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_DEVICECONNECTION_INFINISPAN_CACHENAMES_DEVICES", deviceStates)
+	install.ApplyOrRemoveEnvSimple(container, "HONO_DEVICECONNECTION_COMMON_CACHENAME", deviceStates)
 
 	// done
 
@@ -200,26 +199,18 @@ hono:
     trustStorePath: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
     trustStoreFormat: PEM
 
-enmasse:
-  iot:
+  app:
+    maxInstances: 1
 
-    app:
-      maxInstances: 1
+  vertx:
+    preferNative: true
 
-    vertx:
-      preferNative: true
+  healthCheck:
+    insecurePortBindAddress: 0.0.0.0
+    startupTimeout: 90
 
-    healthCheck:
-      insecurePortBindAddress: 0.0.0.0
-      startupTimeout: 90
-
+  deviceConnection:
     amqp:
-      bindAddress: 0.0.0.0
-      keyPath: /etc/tls/tls.key
-      certPath: /etc/tls/tls.crt
-      keyFormat: PEM
-
-    rest:
       bindAddress: 0.0.0.0
       keyPath: /etc/tls/tls.key
       certPath: /etc/tls/tls.crt

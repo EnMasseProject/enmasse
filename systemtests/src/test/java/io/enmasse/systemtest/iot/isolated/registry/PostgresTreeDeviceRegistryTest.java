@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresTreeBased;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectDeviceConnectionType;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryMode;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
@@ -31,6 +32,7 @@ class PostgresTreeDeviceRegistryTest extends DeviceRegistryTest {
 
     @Test
     void testCorrectTypeDeployed () {
+        assertCorrectDeviceConnectionType("jdbc");
         assertCorrectRegistryType("jdbc");
         assertCorrectRegistryMode(Mode.JSON_TREE);
     }
