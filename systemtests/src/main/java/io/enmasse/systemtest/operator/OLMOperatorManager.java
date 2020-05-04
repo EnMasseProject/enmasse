@@ -4,17 +4,23 @@
  */
 package io.enmasse.systemtest.operator;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -116,7 +122,20 @@ public class OLMOperatorManager {
         Path dockerfilePath = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "Dockerfile");
         Path manifestsReplacerScript = Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "workspace", "manifests_replacer.sh");
 
-        SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
+        log.info("Going to build and push image {}", customRegistryImageToPush);
+
+        if (Kubernetes.isOpenShiftCompatible()) {
+            SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
+        } else {
+            String volume = System.getProperty("user.dir") + "/custom-operator-registry/workspace:/workspace";
+            String kanikoImage = "gcr.io/kaniko-project/executor:v0.19.0";
+            List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
+                    "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
+                    "--insecure-registry=true",
+                    "--skip-tls-verify=true");
+            var result = Exec.execute(command);
+            assertTrue(result.getRetCode(), "Build image failed");
+        }
     }
 
     public String getCustomOperatorRegistryInternalImage(String namespace) {
