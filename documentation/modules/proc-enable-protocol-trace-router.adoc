@@ -9,7 +9,7 @@ For diagnostic purposes, it is possible to enable an AMQP protocol trace for a r
 to troubleshoot issues with clients not connecting or problems sending or receiving messages.  There are two
 ways this can be achieved.
 
-* It is possible to enable/disable the protocol trace, dynamically, for a single broker using a `qdmange` command. This
+* It is possible to enable/disable the protocol trace, dynamically, for a single router using a `qdmange` command. This
 method avoids the need to restart the router.  The setting will be lost next time the router restarts.
 
 * Alternatively, configuration can be applied to the  `standardinfaconfig` that enables the protocol trace for all
