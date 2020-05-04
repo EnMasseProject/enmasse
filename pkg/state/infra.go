@@ -154,7 +154,7 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []string) error {
 	// Shutdown and remove unknown hosts
 	for host, _ := range toRemove {
 		err := i.applyRouters(ctx, func(router *RouterState) error {
-			return router.DeleteConnector(connectorName(i.brokers[host]))
+			return router.DeleteEntities(ctx, []RouterEntity{&NamedEntity{EntityType: RouterConnectorEntity, Name: connectorName(i.brokers[host])}})
 		})
 		if err != nil {
 			return err
@@ -212,17 +212,15 @@ func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorSt
 	}
 
 	// Sync all known addresses and endpoints
-	err = i.syncConfiguration()
+	err = i.syncConfiguration(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	totalConnectors := len(i.routers) * len(i.brokers)
-	connectorStatuses := make(chan ConnectorStatus, totalConnectors)
 	// Ensure all routers are connected to all brokers
-	err = i.applyBrokers(ctx, func(b *BrokerState) error {
-		broker := b
-		connector := &RouterConnector{
+	connectors := make([]RouterEntity, 0, len(i.brokers))
+	for _, broker := range i.brokers {
+		connectors = append(connectors, &RouterConnector{
 			Name:               connectorName(broker),
 			Host:               broker.Host,
 			Port:               fmt.Sprintf("%d", broker.Port),
@@ -231,26 +229,30 @@ func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorSt
 			SaslMechanisms:     "EXTERNAL",
 			IdleTimeoutSeconds: 16,
 			VerifyHostname:     true,
+		})
+	}
+
+	totalConnectors := len(i.routers) * len(i.brokers)
+	connectorStatuses := make(chan ConnectorStatus, totalConnectors)
+	err = i.applyRouters(ctx, func(r *RouterState) error {
+		router := r
+		err := router.EnsureEntities(ctx, connectors)
+		if err != nil {
+			log.Println("Error ensuring connector", err)
+			return err
 		}
 
-		return i.applyRouters(ctx, func(r *RouterState) error {
-			router := r
-			err := router.EnsureConnector(connector)
-			if err != nil {
-				log.Println("Error ensuring connector", err)
-				return err
-			}
+		// Query for status
+		readConnectors, err := router.ReadEntities(ctx, connectors)
+		if err != nil {
+			log.Println("Error getting connector status", err)
+			return err
+		}
 
-			// Query for status
-			status, err := router.GetConnectorStatus(connector)
-			if err != nil {
-				log.Println("Error getting connector status", err)
-				return err
-			}
-
-			connectorStatuses <- *status
-			return nil
-		})
+		for _, c := range readConnectors {
+			connectorStatuses <- connectorToStatus(router.host, c.(*RouterConnector))
+		}
+		return nil
 	})
 	// Close immediately to avoid leaking channel. Channel is not in use once applyBrokers/applyRouters have returned
 	close(connectorStatuses)
@@ -276,7 +278,7 @@ func (i *infraClient) initPorts() {
 
 }
 
-func (i *infraClient) syncConfiguration() error {
+func (i *infraClient) syncConfiguration(ctx context.Context) error {
 	i.initPorts()
 	for _, endpoint := range i.endpoints {
 		if endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != "" {
@@ -286,11 +288,11 @@ func (i *infraClient) syncConfiguration() error {
 					addresses = append(addresses, address)
 				}
 			}
-			err := i.syncAddressesInternal(endpoint, addresses)
+			err := i.syncAddressesInternal(ctx, endpoint, addresses)
 			if err != nil {
 				return err
 			}
-			err = i.syncEndpointInternal(endpoint)
+			err = i.syncEndpointInternal(ctx, endpoint)
 			if err != nil {
 				return err
 			}
@@ -347,7 +349,8 @@ func (i *infraClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
 		return NewNotInitializedError()
 	}
 
-	err := i.syncEndpointInternal(endpoint)
+	ctx := context.Background()
+	err := i.syncEndpointInternal(ctx, endpoint)
 	if err != nil {
 		return err
 	}
@@ -413,6 +416,11 @@ func (i *infraClient) FreePorts(endpoint *v1beta2.MessagingEndpoint) {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
+	i.freePortsInternal(endpoint)
+}
+
+func (i *infraClient) freePortsInternal(endpoint *v1beta2.MessagingEndpoint) {
+
 	// Not strictly necessary with this guard, but keep it just in case
 	if !i.initialized {
 		return
@@ -424,28 +432,36 @@ func (i *infraClient) FreePorts(endpoint *v1beta2.MessagingEndpoint) {
 	endpoint.Status.InternalPorts = make([]v1beta2.MessagingEndpointPort, 0)
 }
 
-func (i *infraClient) syncEndpointInternal(endpoint *v1beta2.MessagingEndpoint) error {
+func (i *infraClient) syncEndpointInternal(ctx context.Context, endpoint *v1beta2.MessagingEndpoint) error {
+	listeners := make([]RouterEntity, 0)
 	for _, internalPort := range endpoint.Status.InternalPorts {
 		if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
-			err := i.applyRouters(context.Background(), func(router *RouterState) error {
-				return router.EnsureListener(&RouterListener{
-					Name:               internalPort.Name,
-					Host:               "0.0.0.0",
-					Port:               fmt.Sprintf("%d", internalPort.Port),
-					Role:               "normal",
-					IdleTimeoutSeconds: 16,
-					MultiTenant:        true,
-				})
+			listeners = append(listeners, &RouterListener{
+				Name:               internalPort.Name,
+				Host:               "0.0.0.0",
+				Port:               fmt.Sprintf("%d", internalPort.Port),
+				Role:               "normal",
+				IdleTimeoutSeconds: 16,
+				MultiTenant:        true,
 			})
-			if err != nil {
-				return err
-			}
 		} else {
 			// TODO
 			return fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
 		}
 	}
-	return nil
+
+	return i.applyRouters(ctx, func(router *RouterState) error {
+		return router.EnsureEntities(ctx, listeners)
+	})
+}
+
+func connectorToStatus(host string, connector *RouterConnector) ConnectorStatus {
+	return ConnectorStatus{
+		Router:    host,
+		Broker:    connector.Host,
+		Connected: connector.ConnectionStatus == "SUCCESS",
+		Message:   connector.ConnectionMsg,
+	}
 }
 
 func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
@@ -455,11 +471,12 @@ func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
 	if !i.initialized {
 		return NewNotInitializedError()
 	}
+	ctx := context.Background()
 
 	synced := 0
 	for _, endpoint := range i.endpoints {
 		if endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != "" {
-			err := i.syncAddressesInternal(endpoint, []*v1beta2.MessagingAddress{address})
+			err := i.syncAddressesInternal(ctx, endpoint, []*v1beta2.MessagingAddress{address})
 			if err != nil {
 				return err
 			}
@@ -473,9 +490,7 @@ func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
 	return nil
 }
 
-func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint, addresses []*v1beta2.MessagingAddress) error {
-	ctx := context.Background()
-
+func (i *infraClient) syncAddressesInternal(ctx context.Context, endpoint *v1beta2.MessagingEndpoint, addresses []*v1beta2.MessagingAddress) error {
 	// Skip endpoints that are not active or do not have hosts defined
 	if endpoint.Status.Phase != v1beta2.MessagingEndpointActive || endpoint.Status.Host == "" {
 		return nil
@@ -483,8 +498,7 @@ func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint,
 
 	tenantId := endpoint.Status.Host
 
-	routerAddresses := make([]*RouterAddress, 0, len(addresses))
-	routerAutoLinks := make([]*RouterAutoLink, 0, len(addresses))
+	routerEntities := make([]RouterEntity, 0, len(addresses))
 	brokerQueues := make(map[string][]string, len(i.brokers))
 
 	// Build desired state
@@ -492,21 +506,21 @@ func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint,
 		addressName := addressName(tenantId, address)
 		fullAddress := fullAddress(tenantId, address)
 		if address.Spec.Anycast != nil {
-			routerAddresses = append(routerAddresses, &RouterAddress{
+			routerEntities = append(routerEntities, &RouterAddress{
 				Name:         addressName,
 				Prefix:       fullAddress,
 				Distribution: "balanced",
 				Waypoint:     false,
 			})
 		} else if address.Spec.Multicast != nil {
-			routerAddresses = append(routerAddresses, &RouterAddress{
+			routerEntities = append(routerEntities, &RouterAddress{
 				Name:         addressName,
 				Prefix:       fullAddress,
 				Distribution: "multicast",
 				Waypoint:     false,
 			})
 		} else if address.Spec.Queue != nil {
-			routerAddresses = append(routerAddresses, &RouterAddress{
+			routerEntities = append(routerEntities, &RouterAddress{
 				Name:         addressName,
 				Prefix:       fullAddress,
 				Distribution: "balanced",
@@ -522,7 +536,7 @@ func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint,
 					brokerQueues[broker.Host] = make([]string, 0)
 				}
 				brokerQueues[broker.Host] = append(brokerQueues[broker.Host], fullAddress)
-				routerAutoLinks = append(routerAutoLinks, &RouterAutoLink{
+				routerEntities = append(routerEntities, &RouterAutoLink{
 					Name:            autoLinkName(tenantId, address, broker.Host, "in"),
 					Address:         fullAddress,
 					Direction:       "in",
@@ -530,7 +544,7 @@ func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint,
 					ExternalAddress: fullAddress,
 				})
 
-				routerAutoLinks = append(routerAutoLinks, &RouterAutoLink{
+				routerEntities = append(routerEntities, &RouterAutoLink{
 					Name:            autoLinkName(tenantId, address, broker.Host, "out"),
 					Address:         fullAddress,
 					Direction:       "out",
@@ -550,19 +564,14 @@ func (i *infraClient) syncAddressesInternal(endpoint *v1beta2.MessagingEndpoint,
 	// Configure brokers first
 	err := i.applyBrokers(ctx, func(broker *BrokerState) error {
 		if len(brokerQueues[broker.Host]) > 0 {
-			return broker.EnsureQueues(brokerQueues[broker.Host])
+			return broker.EnsureQueues(ctx, brokerQueues[broker.Host])
 		}
 		return nil
 	})
 
 	// Configure all routers
 	err = i.applyRouters(ctx, func(router *RouterState) error {
-		err := router.EnsureAddresses(routerAddresses)
-		if err != nil {
-			return err
-		}
-
-		return router.EnsureAutoLinks(routerAutoLinks)
+		return router.EnsureEntities(ctx, routerEntities)
 	})
 	if err != nil {
 		return err
@@ -593,19 +602,17 @@ func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error 
 	}
 
 	ctx := context.Background()
+	toDelete := make([]RouterEntity, 0)
 	for _, internalPort := range endpoint.Status.InternalPorts {
 		if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
-			err := i.applyRouters(ctx, func(router *RouterState) error {
-				return router.DeleteListener(internalPort.Name)
+			toDelete = append(toDelete, &NamedEntity{
+				EntityType: RouterListenerEntity,
+				Name:       internalPort.Name,
 			})
-			if err != nil {
-				return err
-			}
 		} else {
 			// TODO
 			return fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
 		}
-		i.freePort(internalPort.Port)
 	}
 
 	// TODO: Once router supports multiple endpoints per address, addresses should no
@@ -623,6 +630,14 @@ func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error 
 			return err
 		}
 	}
+
+	err := i.applyRouters(ctx, func(router *RouterState) error {
+		return router.DeleteEntities(ctx, toDelete)
+	})
+	if err != nil {
+		return err
+	}
+	i.freePortsInternal(endpoint)
 
 	delete(i.endpoints, resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace})
 	return nil
@@ -651,36 +666,26 @@ func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
 }
 
 func (i *infraClient) deleteAddressesInternal(ctx context.Context, tenantId string, addresses []*v1beta2.MessagingAddress) error {
-	addressNames := make([]string, 0, len(addresses))
+	routerEntities := make([]RouterEntity, 0, len(addresses))
 	brokerQueues := make([]string, 0, len(addresses))
-	autoLinkNames := make([]string, 0, len(addresses))
 	for _, address := range addresses {
 		if address.Spec.Anycast != nil || address.Spec.Multicast != nil || address.Spec.Queue != nil {
-			addressNames = append(addressNames, addressName(tenantId, address))
+			routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAddressEntity, Name: addressName(tenantId, address)})
 		}
 
 		if address.Spec.Queue != nil {
 			brokerQueues = append(brokerQueues, fullAddress(tenantId, address))
 
 			for _, broker := range address.Status.Brokers {
-				autoLinkNames = append(autoLinkNames, autoLinkName(tenantId, address, broker.Host, "in"))
-				autoLinkNames = append(autoLinkNames, autoLinkName(tenantId, address, broker.Host, "out"))
+				routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAutoLinkEntity, Name: autoLinkName(tenantId, address, broker.Host, "in")})
+				routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAutoLinkEntity, Name: autoLinkName(tenantId, address, broker.Host, "out")})
 			}
 		}
 	}
 
 	// Delete from routers
 	err := i.applyRouters(ctx, func(router *RouterState) error {
-		err := router.DeleteAddresses(addressNames)
-		if err != nil {
-			return err
-		}
-
-		err = router.DeleteAutoLinks(autoLinkNames)
-		if err != nil {
-			return err
-		}
-		return nil
+		return router.DeleteEntities(ctx, routerEntities)
 	})
 	if err != nil {
 		return err
@@ -688,7 +693,7 @@ func (i *infraClient) deleteAddressesInternal(ctx context.Context, tenantId stri
 
 	// Delete from brokers
 	return i.applyBrokers(ctx, func(brokerState *BrokerState) error {
-		return brokerState.DeleteQueues(brokerQueues)
+		return brokerState.DeleteQueues(ctx, brokerQueues)
 	})
 }
 

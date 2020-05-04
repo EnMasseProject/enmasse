@@ -29,7 +29,7 @@ func TestSyncConnectors(t *testing.T) {
 		return &RouterState{
 			host:          host,
 			port:          port,
-			connectors:    make(map[string]*RouterConnector, 0),
+			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
 			commandClient: rclient,
 		}
 	}, func(host string, port int32) *BrokerState {
@@ -63,7 +63,7 @@ func TestSyncConnectors(t *testing.T) {
 
 	statuses, err := i.SyncAll([]string{"r1.example.com", "r2.example.com"}, []string{"b1.example.com", "b2.example.com"})
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(i.routers["r1.example.com"].connectors))
-	assert.Equal(t, 2, len(i.routers["r2.example.com"].connectors))
+	assert.Equal(t, 2, len(i.routers["r1.example.com"].entities[RouterConnectorEntity]))
+	assert.Equal(t, 2, len(i.routers["r2.example.com"].entities[RouterConnectorEntity]))
 	assert.Equal(t, 4, len(statuses))
 }
