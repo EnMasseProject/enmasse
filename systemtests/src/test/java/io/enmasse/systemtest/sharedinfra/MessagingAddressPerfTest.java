@@ -11,6 +11,7 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfra;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.info.TestInfo;
@@ -31,6 +32,7 @@ import static io.enmasse.systemtest.TestTag.SCALE;
 
 @Tag(ISOLATED_SHARED_INFRA)
 @Tag(SCALE)
+@SkipResourceLogging
 public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
     /**
      * Simple performance test to be able to track create and delete performance of addresses.

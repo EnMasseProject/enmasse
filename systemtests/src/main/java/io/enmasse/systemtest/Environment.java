@@ -57,6 +57,8 @@ public class Environment {
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
+    private String token = System.getenv(K8S_API_TOKEN_ENV);
+    private String url = System.getenv(K8S_API_URL_ENV);
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
     private final String enmasseOlmDocsUrl = System.getProperty("enmasse.olm.docs.url");
@@ -100,8 +102,6 @@ public class Environment {
      * Store screenshots every time
      */
     private final boolean storeScreenshots = Boolean.parseBoolean(System.getenv(STORE_SCREENSHOTS_ENV));
-    private String token = System.getenv(K8S_API_TOKEN_ENV);
-    private String url = System.getenv(K8S_API_URL_ENV);
 
 
     // Constructor and getters
