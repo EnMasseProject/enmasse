@@ -6,6 +6,7 @@ package io.enmasse.systemtest.scale;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.utils.TestUtils;
 
 import java.io.BufferedWriter;
@@ -28,7 +29,7 @@ public class ResultWriter {
         saveResultsFile(rootDir.resolve("results.json"), result);
         var plotDir = Environment.getInstance().testLogDir().resolve("plot-data");
         Files.createDirectories(plotDir);
-        savePlotCSV(plotDir.resolve("plot.csv"),result);
+        savePlotCSV(plotDir.resolve(TestInfo.getInstance().getActualTest().getRequiredTestClass().getSimpleName() + "-" + TestInfo.getInstance().getActualTest().getDisplayName() + ".csv"),result);
     }
 
     private void saveResultsFile(Path file, Map<String, Object> result) throws Exception {
