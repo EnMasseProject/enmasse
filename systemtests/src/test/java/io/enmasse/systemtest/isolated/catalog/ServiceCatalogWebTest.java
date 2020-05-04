@@ -208,7 +208,7 @@ class ServiceCatalogWebTest extends TestBase implements ITestIsolatedStandard {
         long end = System.currentTimeMillis() + 30_000;
         String username = credentials.getCredentials().getUsername();
         while (UserUtils.userExist(brokered, username) && end > System.currentTimeMillis()) {
-            Thread.sleep(5000);
+            Thread.sleep(5_000);
             log.info("Still awaiting user {} to be removed.", username);
         }
 

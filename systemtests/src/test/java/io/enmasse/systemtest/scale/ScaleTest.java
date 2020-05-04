@@ -377,7 +377,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
             for (var pod : enmassePods) {
                 kubernetes.deletePod(kubernetes.getInfraNamespace(), pod.getMetadata().getName());
-                Thread.sleep(5000);
+                Thread.sleep(5_000);
 
                 DowntimeData data = new DowntimeData();
                 data.setName(pod.getMetadata().getName());
