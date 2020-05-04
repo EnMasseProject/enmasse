@@ -184,6 +184,7 @@ public class ResourceManager {
 
     @SafeVarargs
     public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
+
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -200,10 +201,11 @@ public class ResourceManager {
                     resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
 
             type.create(resource);
-            pointerResources.push(() -> {
-                deleteResource(resource);
-            });
         }
+
+        pointerResources.push(() -> {
+            deleteResource(resources);
+        });
 
         if (waitReady) {
             for (T resource : resources) {
