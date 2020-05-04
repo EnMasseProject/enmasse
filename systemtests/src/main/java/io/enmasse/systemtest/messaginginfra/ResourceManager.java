@@ -193,8 +193,6 @@ public class ResourceManager {
 
     @SafeVarargs
     public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
-        LOGGER.info("Create/Update {} resources", resources.length);
-
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -213,11 +211,11 @@ public class ResourceManager {
             }
 
             type.create(resource);
-        }
 
-        pointerResources.push(() -> {
-            deleteResource(resources);
-        });
+            pointerResources.push(() -> {
+                deleteResource(resource);
+            });
+        }
 
         if (waitReady) {
             waitResourceReady(resources);
@@ -226,7 +224,6 @@ public class ResourceManager {
 
     @SafeVarargs
     public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
-        LOGGER.info("Delete {} resources", resources.length);
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
