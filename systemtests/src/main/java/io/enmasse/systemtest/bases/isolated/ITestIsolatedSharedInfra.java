@@ -4,23 +4,13 @@
  */
 package io.enmasse.systemtest.bases.isolated;
 
-import io.enmasse.address.model.CoreCrd;
-import io.enmasse.api.model.DoneableMessagingInfra;
-import io.enmasse.api.model.MessagingInfra;
-import io.enmasse.api.model.MessagingInfraList;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
-import org.junit.jupiter.api.Tag;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 
-@Tag(ISOLATED_SHARED_INFRA)
 public interface ITestIsolatedSharedInfra extends ITestBase {
 
     IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();

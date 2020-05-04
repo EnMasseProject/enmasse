@@ -32,6 +32,7 @@ import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -43,10 +44,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@Tag(ISOLATED_SHARED_INFRA)
 @DefaultMessagingInfra
 public class MessagingEndpointTest extends TestBase implements ITestIsolatedSharedInfra {
 
