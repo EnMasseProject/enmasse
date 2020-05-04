@@ -213,11 +213,11 @@ public class ResourceManager {
             }
 
             type.create(resource);
-        }
 
-        pointerResources.push(() -> {
-            deleteResource(resources);
-        });
+            pointerResources.push(() -> {
+                deleteResource(resource);
+            });
+        }
 
         if (waitReady) {
             waitResourceReady(resources);
