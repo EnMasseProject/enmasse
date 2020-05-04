@@ -5,10 +5,12 @@
 
 import React from "react";
 import { Review } from "modules/address-space";
-import { IMessagingProjectInput } from "modules/msg-and-iot/dailogs/components/MessagingProjectConfiguration";
-import { isMessagingProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import {
+  IMessagingProjectInput,
+  isMessagingProjectValid
+} from "modules/msg-and-iot";
 
-const MessagingProjectReview = (projectDetail?: IMessagingProjectInput) => {
+const MessagingReviewStep = (projectDetail?: IMessagingProjectInput) => {
   const isReviewEnabled = () => {
     isMessagingProjectValid(projectDetail);
   };
@@ -36,4 +38,4 @@ const MessagingProjectReview = (projectDetail?: IMessagingProjectInput) => {
   };
 };
 
-export { MessagingProjectReview };
+export { MessagingReviewStep };

@@ -25,7 +25,7 @@ interface IIoTProjectDetailHeaderProps {
   onDelete: (name: string) => void;
 }
 
-const styles = StyleSheet.create({
+export const project_header_styles = StyleSheet.create({
   flex_left_border: {
     paddingLeft: "1em",
     borderLeft: "0.05em solid",
@@ -50,6 +50,14 @@ const styles = StyleSheet.create({
   },
   no_bottom_padding: {
     paddingBottom: 0
+  },
+  badge_style: {
+    backgroundColor: "#EC7A08",
+    fontSize: 25,
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 5,
+    paddingBottom: 5
   }
 });
 
@@ -65,7 +73,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const AddressTitle = () => (
     <Split gutter="md">
       <SplitItem>
-        <Title headingLevel="h1" size="4xl" id="adheader-name">
+        <Title headingLevel="h1" size="4xl" id="iot-project-name">
           {projectName}
         </Title>
       </SplitItem>
@@ -73,13 +81,13 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   );
 
   const AddressDetailInFlex = () => (
-    <Flex className={css(styles.namespace_info_margin)}>
-      <FlexItem id="adheader-plans">
+    <Flex className={css(project_header_styles.namespace_info_margin)}>
+      <FlexItem id="iot-project-type">
         Type : <b>{type}</b>
       </FlexItem>
       <FlexItem
-        id="adheader-subscription-topic"
-        className={css(styles.flex_left_border)}
+        id="iot-project-status"
+        className={css(project_header_styles.flex_left_border)}
       >
         Status : <b>{status}</b>
       </FlexItem>
@@ -88,19 +96,8 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
 
   const AddressDetailLayout = () => (
     <>
-      <SplitItem className={css(styles.address_icon_align)}>
-        <Badge
-          style={{
-            backgroundColor: "#EC7A08",
-            fontSize: 25,
-            paddingLeft: 15,
-            paddingRight: 15,
-            paddingTop: 5,
-            paddingBottom: 5
-          }}
-        >
-          IoT
-        </Badge>
+      <SplitItem className={css(project_header_styles.address_icon_align)}>
+        <Badge className={css(project_header_styles.badge_style)}>IoT</Badge>
       </SplitItem>
       <SplitItem>
         <AddressTitle />
@@ -111,11 +108,9 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const onChange = () => {
     changeEnable(!isEnabled);
   };
-  const EnabledIcon = (
+  const EnabledIcon = () => (
     <Switch
-      id="simple-switch"
-      label="View in Json"
-      labelOff="View in Json"
+      id="iot-project-header-switch"
       isChecked={isEnabled}
       onChange={onChange}
     />
@@ -124,15 +119,15 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const KebabOptionsLayout = () => {
     const dropdownItems = [
       <DropdownItem
-        id="adheader-dropdown-item-edit"
-        key="download"
-        aria-label="download"
+        id="iot-project-header-kebab-option-edit"
+        key="edit"
+        aria-label="edit"
         onClick={() => onEdit(projectName)}
       >
         Edit
       </DropdownItem>,
       <DropdownItem
-        id="adheader-dropdown-item-delete"
+        id="iot-project-header-kebab-option-delete"
         key="delete"
         aria-label="delete"
         onClick={() => onDelete(projectName)}
@@ -142,10 +137,10 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
     ];
     return (
       <DropdownWithKebabToggle
-        id="adheader-dropdown"
+        id="iot-project-header-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
-        toggleId="iot-project-header-kebab"
+        toggleId="iot-project-header-kebab-toggle"
         dropdownItems={dropdownItems}
       />
     );
@@ -154,15 +149,15 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}
+      className={css(project_header_styles.no_bottom_padding)}
     >
       <Split>
         <AddressDetailLayout />
         <SplitItem isFilled />
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
-          {EnabledIcon}
+        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
+          <EnabledIcon />
         </SplitItem>
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
+        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
           <KebabOptionsLayout />
         </SplitItem>
       </Split>

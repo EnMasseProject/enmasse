@@ -19,6 +19,7 @@ export interface SelectWithToggleProps
   onSelectItem?: (selection: string) => void;
   ariaLabel?: string;
   id?: string;
+  optionId?: string;
 }
 
 export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
@@ -27,6 +28,7 @@ export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
   selections,
   ariaLabel,
   id,
+  optionId,
   variant
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>();
@@ -35,11 +37,7 @@ export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
     setIsExpanded(isExpanded);
   };
 
-  const onSelect = (
-    e: any,
-    selection: string | SelectOptionObject,
-    isPlaceholder?: boolean
-  ) => {
+  const onSelect = (_: any, selection: string | SelectOptionObject) => {
     const selectedValue =
       typeof selection === "string" ? selection : selection.toString();
     setIsExpanded(!isExpanded);
@@ -59,6 +57,7 @@ export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
       {selectOptions.map((option, index) => (
         <SelectOption
           isDisabled={option.isDisabled}
+          id={optionId + "-" + option.key}
           key={index}
           value={option.value}
         />

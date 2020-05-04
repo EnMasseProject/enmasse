@@ -4,10 +4,9 @@
  */
 
 import React from "react";
-import { isIoTProjectValid } from "modules/msg-and-iot/dailogs/utils";
+import { IoTConfiguration, isIoTProjectValid } from "modules/msg-and-iot";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { IDropdownOption } from "components";
-import { IoTConfiguration } from "../IoTConfiguration";
 
 export interface IIoTProjectInput {
   iotProjectName?: string;
@@ -16,7 +15,7 @@ export interface IIoTProjectInput {
   isNameValid: boolean;
 }
 
-const IoTProjectConfiguration = (
+const IoTConfigurationStep = (
   setProjectDetail: (value: IIoTProjectInput) => void,
   namespaces: IDropdownOption[],
   projectDetail: IIoTProjectInput
@@ -75,4 +74,4 @@ const IoTProjectConfiguration = (
   return steps;
 };
 
-export { IoTProjectConfiguration };
+export { IoTConfigurationStep };

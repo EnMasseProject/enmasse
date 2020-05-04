@@ -10,27 +10,25 @@ import {
   Button,
   Wizard
 } from "@patternfly/react-core";
+import { useQuery } from "@apollo/react-hooks";
+import { Loading } from "use-patternfly";
+
 import {
-  ProjectTypeConfiguration,
+  ProjectTypeConfigurationStep,
   IIoTProjectInput,
-  IoTProjectConfiguration,
-  IoTProjectReview
-} from "modules/msg-and-iot/dailogs/components";
-import {
-  IMessagingProjectInput,
-  MessagingProjectConfiguration
-} from "modules/msg-and-iot/dailogs/components/MessagingProjectConfiguration";
+  IoTConfigurationStep,
+  IoTReviewStep,
+  MessagingConfigurationStep,
+  isMessagingProjectValid,
+  isIoTProjectValid,
+  MessagingReviewStep
+} from "modules/msg-and-iot";
+import { IMessagingProjectInput } from "modules/msg-and-iot/components/MessagingConfigurationStep";
 import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
-import {
-  isMessagingProjectValid,
-  isIoTProjectValid
-} from "modules/msg-and-iot/dailogs/utils";
-import { MessagingProjectReview } from "modules/msg-and-iot/dailogs/components";
-import { FinishedStep, IDropdownOption } from "components";
-import { useQuery } from "@apollo/react-hooks";
+import { FinishedStep } from "components";
 import { INamespaces } from "modules/address-space";
-import { Loading } from "use-patternfly";
+
 const CreateProjectContainer: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
@@ -44,26 +42,31 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
     false
   );
+
   const onToggle = () => {
     setIsWizardOpen(!isWizardOpen);
     resetForm();
   };
+
   const resetForm = () => {
     setMessagingProjectDetail({ isNameValid: true });
     setFirstSelectedStep(undefined);
   };
+
   const refetchQueries: string[] = ["all_address_spaces"];
+
   const resetFormState = () => {
-    console.log("success");
     setMessagingProjectDetail({ isNameValid: true });
     setIsCreatedSuccessfully(true);
   };
-  const [setQueryVariables] = useMutationQuery(
+
+  const [setMessagingVariables] = useMutationQuery(
     CREATE_ADDRESS_SPACE,
     refetchQueries,
     resetForm,
     resetFormState
   );
+
   const handleMessagingProjectSave = () => {
     if (
       messagingProjectDetail &&
@@ -88,12 +91,13 @@ const CreateProjectContainer: React.FunctionComponent = () => {
           }
         }
       };
-      setQueryVariables(variables);
+      setMessagingVariables(variables);
       resetForm();
     }
   };
 
   const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
+
   if (loading) return <Loading />;
 
   const { namespaces } = data || {
@@ -115,32 +119,42 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   const step1 = {
     name: "Project Type",
     component: (
-      <ProjectTypeConfiguration
+      <ProjectTypeConfigurationStep
         selectedStep={firstSelectedStep}
         setSelectedStep={setFirstSelectedStep}
       />
     )
   };
 
-  const configurationStepForIot = IoTProjectConfiguration(
+  const configurationStepForIot = IoTConfigurationStep(
     setiotProjectDetail,
     namespaceOptions,
     iotProjectDetail
   );
 
-  const finalStepForIot = IoTProjectReview(iotProjectDetail);
+  const finalStepForIot = IoTReviewStep(iotProjectDetail);
 
-  const finishedStep = {
-    name: "Finish",
-    component: <FinishedStep onClose={onToggle} sucess={true} />,
-    isFinishedStep: true
-  };
-  const configurationStepForMessaging = MessagingProjectConfiguration(
+  const configurationStepForMessaging = MessagingConfigurationStep(
     setMessagingProjectDetail,
     messagingProjectDetail
   );
-  const finalStepForMessaging = MessagingProjectReview(messagingProjectDetail);
+
+  const finalStepForMessaging = MessagingReviewStep(messagingProjectDetail);
+
+  const finishedStep = {
+    name: "Finish",
+    component: (
+      <FinishedStep
+        onClose={onToggle}
+        success={isCreatedSuccessfully}
+        projectType={messagingProjectDetail ? "Messaging" : "IoT"}
+      />
+    ),
+    isFinishedStep: true
+  };
+
   const steps = [step1];
+
   if (firstSelectedStep) {
     if (firstSelectedStep === "iot") {
       steps.push(configurationStepForIot);
@@ -151,6 +165,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     }
   }
   steps.push(finishedStep);
+
   const handleNextIsEnabled = () => {
     if (firstSelectedStep) {
       if (firstSelectedStep === "messaging") {
@@ -183,6 +198,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                 <Button
                   variant="primary"
                   type="submit"
+                  id="next-btn"
                   onClick={onNext}
                   className={!firstSelectedStep ? "pf-m-disabled" : ""}
                 >
@@ -190,6 +206,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                 </Button>
                 <Button
                   variant="secondary"
+                  id="back-btn"
                   onClick={onBack}
                   className={
                     activeStep.name === "Project Type" ? "pf-m-disabled" : ""
@@ -197,7 +214,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                 >
                   Back
                 </Button>
-                <Button variant="link" onClick={onClose}>
+                <Button variant="link" id="cancel-btn" onClick={onClose}>
                   Cancel
                 </Button>
               </>
@@ -209,15 +226,16 @@ const CreateProjectContainer: React.FunctionComponent = () => {
                 <Button
                   variant="primary"
                   type="submit"
+                  id="submit-btn"
                   onClick={onNext}
                   className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
                 >
                   Next
                 </Button>
-                <Button variant="secondary" onClick={onBack}>
+                <Button variant="secondary" id="back-btn" onClick={onBack}>
                   Back
                 </Button>
-                <Button variant="link" onClick={onClose}>
+                <Button variant="link" id="cancel-btn" onClick={onClose}>
                   Cancel
                 </Button>
               </>
@@ -229,6 +247,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
               <Button
                 variant="primary"
                 type="submit"
+                id="submit-btn"
                 onClick={
                   firstSelectedStep && firstSelectedStep === "messaging"
                     ? handleMessagingProjectSave
@@ -237,10 +256,10 @@ const CreateProjectContainer: React.FunctionComponent = () => {
               >
                 Finish
               </Button>
-              <Button onClick={onBack} variant="secondary">
+              <Button onClick={onBack} id="back-btn" variant="secondary">
                 Back
               </Button>
-              <Button variant="link" onClick={onClose}>
+              <Button variant="link" id="cancel-btn" onClick={onClose}>
                 Cancel
               </Button>
             </>
@@ -252,7 +271,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
 
   return (
     <>
-      <Button variant="primary" onClick={onToggle}>
+      <Button variant="primary" id="create-project-btn" onClick={onToggle}>
         Create
       </Button>
       {isWizardOpen && (
@@ -260,6 +279,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
           isOpen={isWizardOpen}
           onClose={onToggle}
           footer={CustomFooter}
+          id={"create-project"}
           title="Create"
           description="Following three steps to create new project"
           steps={steps}

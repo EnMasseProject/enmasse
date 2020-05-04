@@ -1,11 +1,11 @@
 import React from "react";
 import { Radio, Title } from "@patternfly/react-core";
 
-interface IProjectTypeConfigurationProps {
+interface IProjectTypeConfigurationStepProps {
   selectedStep?: string | "messaging" | "iot";
   setSelectedStep: (value: "messaging" | "iot") => void;
 }
-const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfigurationProps> = ({
+const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigurationStepProps> = ({
   selectedStep,
   setSelectedStep
 }) => {
@@ -58,4 +58,4 @@ const ProjectTypeConfiguration: React.FunctionComponent<IProjectTypeConfiguratio
   );
 };
 
-export { ProjectTypeConfiguration };
+export { ProjectTypeConfigurationStep };

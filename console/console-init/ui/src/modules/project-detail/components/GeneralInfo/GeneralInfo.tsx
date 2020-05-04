@@ -12,6 +12,16 @@ import {
   PageSection
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
+import { StyleSheet, css } from "@patternfly/react-styles";
+
+const styles = StyleSheet.create({
+  style_margin: {
+    marginRight: 20
+  },
+  font_size: {
+    fontSize: 20
+  }
+});
 export interface IInfoTypePlan {
   type: string;
   plan?: string;
@@ -41,32 +51,32 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
   return (
     <PageSection>
       <Card>
-        <CardHeader style={{ fontSize: 20 }}>General Info</CardHeader>
+        <CardHeader className={css(styles.font_size)}>General Info</CardHeader>
         <CardBody>
-          <b style={{ marginRight: 20 }}>Address space</b>
+          <b className={css(styles.style_margin)}>Address space</b>
           {addressSpace} <br />
-          <b style={{ marginRight: 20 }}>Event address name</b>
+          <b className={css(styles.style_margin)}>Event address name</b>
           {eventAddressName.type}{" "}
           {eventAddressName.plan ? ", " + eventAddressName.plan : ""}
           <br />
-          <b style={{ marginRight: 20 }}>Telemetry address name</b>
+          <b className={css(styles.style_margin)}>Telemetry address name</b>
           {telemetryAddressName.type}
           {telemetryAddressName.plan ? ", " + telemetryAddressName.plan : ""}
           <br />
-          <b style={{ marginRight: 20 }}>Command address name</b>
+          <b className={css(styles.style_margin)}>Command address name</b>
           {commandAddressName.type}
           {commandAddressName.plan ? ", " + commandAddressName.plan : ""}
           <br />
           <br />
           <Divider />
           <br />
-          <b style={{ marginRight: 20 }}>Max Connection</b>
+          <b className={css(styles.style_margin)}>Max Connection</b>
           {kFormatter(maxConnection)} <br />
-          <b style={{ marginRight: 20 }}>Data Volume</b>
+          <b className={css(styles.style_margin)}>Data Volume</b>
           {kFormatter(dataVolume)} <br />
-          <b style={{ marginRight: 20 }}>Start Date</b>
+          <b className={css(styles.style_margin)}>Start Date</b>
           {startDate} <br />
-          <b style={{ marginRight: 20 }}>End Date</b>
+          <b className={css(styles.style_margin)}>End Date</b>
           {endDate} <br />
         </CardBody>
       </Card>

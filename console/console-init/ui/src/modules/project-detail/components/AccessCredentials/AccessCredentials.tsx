@@ -19,7 +19,8 @@ import {
 } from "@patternfly/react-core";
 import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 import { InputText, JsonViewEditor } from "components";
-import { IInfoTypePlan } from "../GeneralInfo";
+import { IInfoTypePlan } from "modules/project-detail/components/GeneralInfo";
+import { getCombinedString } from "utils";
 
 export interface IMessagingObject {
   url?: string;
@@ -47,15 +48,6 @@ export interface IAccessCredentialsProps {
   adapters: IAdapter[];
 }
 
-const getCombinedString = (a: string, b?: string) => {
-  let s: string = "";
-  s += a;
-  if (b !== undefined) {
-    s += ", ";
-    s += b;
-  }
-  return s;
-};
 const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
   tenantId,
   messaging,
@@ -65,7 +57,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
   const onToggle = () => {
     setIsHidden(!isHidden);
   };
-  const EditIcon = (
+  const EditIcon = () => (
     <Switch
       id="access-credential-switch"
       label="View in Json"
@@ -74,6 +66,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       onChange={onToggle}
     />
   );
+
   const data = {
     access_credentials: {
       tenantId: tenantId,
@@ -82,167 +75,190 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     }
   };
 
-  const IsEnabled = (value: boolean) => {
+  const isEnabled = (value: boolean) => {
     return value ? (
       <>
         <CheckCircleIcon color={"green"} /> &nbsp;Enabled
       </>
     ) : (
       <>
-        <ErrorCircleOIcon color={"red"} /> Disabled
+        <ErrorCircleOIcon color={"red"} /> &nbsp;Disabled
       </>
     );
   };
-  const Messaging = messaging && (
-    <>
-      <Text component={TextVariants.h2}>Messaging</Text>
-      <br />
-      {messaging.url && (
-        <InputText
-          label={"Tenant Id"}
-          type={"text"}
-          value={messaging.url}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-messaging-url"}
-        />
-      )}
-      <br />
-      {messaging.username && (
-        <InputText
-          label={"User name"}
-          type={"text"}
-          value={messaging.username}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-messaging-username"}
-        />
-      )}
-      <br />
-      {messaging.password && (
-        <InputText
-          label={"Password"}
-          type={"password"}
-          value={messaging.password}
-          isReadOnly={true}
-          ariaLabel={"input-messaging-password"}
-        />
-      )}
-      <br />
-      {messaging.addressSpace && (
-        <InputText
-          label={"Address Space"}
-          type={"text"}
-          value={messaging.addressSpace}
-          isReadOnly={true}
-          enableCopy={true}
-          ariaLabel={"input-messaging-addressSpace"}
-        />
-      )}
-      <br />
-      {messaging.eventsAddressName && (
-        <InputText
-          label={"Events address name"}
-          type={"text"}
-          value={getCombinedString(
-            messaging.eventsAddressName.type,
-            messaging.eventsAddressName.plan
-          )}
-          isReadOnly={true}
-          enableCopy={true}
-          isExpandable={messaging.eventsAddressName.plan ? true : false}
-          ariaLabel={"input-messaging-eventsAddressName"}
-        />
-      )}
-      <br />
-      {messaging.telemetryAddressName && (
-        <InputText
-          label={"Telemetry address name"}
-          type={"text"}
-          value={getCombinedString(
-            messaging.telemetryAddressName.type,
-            messaging.telemetryAddressName.plan
-          )}
-          isReadOnly={true}
-          enableCopy={true}
-          isExpandable={messaging.telemetryAddressName.plan ? true : false}
-          ariaLabel={"input-messaging-telemetryAddressName"}
-        />
-      )}
-      <br />
-      {messaging.commandAddressName && (
-        <InputText
-          label={"Command address name"}
-          type={"text"}
-          value={getCombinedString(
-            messaging.commandAddressName.type,
-            messaging.commandAddressName.plan
-          )}
-          isReadOnly={true}
-          enableCopy={true}
-          isExpandable={messaging.commandAddressName.plan ? true : false}
-          ariaLabel={"input-messaging-commandAddressName"}
-        />
-      )}
-      <br />
-    </>
-  );
-  const getAdapter = (adapter: IAdapter) => {
-    let title = adapter.type.toUpperCase() + " Adapter";
+
+  const Messaging = () => {
+    const {
+      url,
+      username,
+      password,
+      addressSpace,
+      commandAddressName,
+      eventsAddressName,
+      telemetryAddressName
+    } = messaging || {};
     return (
       <>
-        <Text component={TextVariants.h2}>{title}</Text>
-        {adapter.value.tlsEnabled && (
+        <Text component={TextVariants.h2}>Messaging</Text>
+        <br />
+        {url && (
+          <InputText
+            label={"Tenant Id"}
+            type={"text"}
+            value={url}
+            isReadOnly={true}
+            enableCopy={true}
+            id={"messaging-tenant-id-input"}
+            ariaLabel={"messaging tenant id"}
+          />
+        )}
+        <br />
+        {username && (
+          <InputText
+            label={"User name"}
+            type={"text"}
+            value={username}
+            isReadOnly={true}
+            enableCopy={true}
+            id={"messaging-username-input"}
+            ariaLabel={"messaging username"}
+          />
+        )}
+        <br />
+        {password && (
+          <InputText
+            label={"Password"}
+            type={"password"}
+            value={password}
+            isReadOnly={true}
+            id={"messaging-password-input"}
+            ariaLabel={"messaging password"}
+          />
+        )}
+        <br />
+        {addressSpace && (
+          <InputText
+            label={"Address Space"}
+            type={"text"}
+            value={addressSpace}
+            isReadOnly={true}
+            enableCopy={true}
+            id={"messaging-addressspace-input"}
+            ariaLabel={"messaging addressSpace"}
+          />
+        )}
+        <br />
+        {eventsAddressName && (
+          <InputText
+            label={"Events address name"}
+            type={"text"}
+            value={getCombinedString(
+              eventsAddressName.type,
+              eventsAddressName.plan
+            )}
+            isReadOnly={true}
+            enableCopy={true}
+            isExpandable={eventsAddressName.plan ? true : false}
+            id={"messaging-event-address-name-input"}
+            ariaLabel={"messaging event Address Name"}
+          />
+        )}
+        <br />
+        {telemetryAddressName && (
+          <InputText
+            label={"Telemetry address name"}
+            type={"text"}
+            value={getCombinedString(
+              telemetryAddressName.type,
+              telemetryAddressName.plan
+            )}
+            isReadOnly={true}
+            enableCopy={true}
+            isExpandable={telemetryAddressName.plan ? true : false}
+            id={"messaging-telemetry-address-name-input"}
+            ariaLabel={"messaging telemetry Address Name"}
+          />
+        )}
+        <br />
+        {commandAddressName && (
+          <InputText
+            label={"Command address name"}
+            type={"text"}
+            value={getCombinedString(
+              commandAddressName.type,
+              commandAddressName.plan
+            )}
+            isReadOnly={true}
+            enableCopy={true}
+            isExpandable={commandAddressName.plan ? true : false}
+            id={"messaging-command-address-name-input"}
+            ariaLabel={"messaging command Address Name"}
+          />
+        )}
+        <br />
+      </>
+    );
+  };
+
+  const getAdapter = (adapter: IAdapter) => {
+    const { value, type } = adapter;
+    return (
+      <>
+        <Text component={TextVariants.h2}>
+          {type.toUpperCase() + " Adapter"}
+        </Text>
+        {value.tlsEnabled && (
           <>
             <br />
             <Grid>
               <GridItem span={4}>
                 <b>tls</b>
               </GridItem>
-              <GridItem span={8}>
-                {IsEnabled(adapter.value.tlsEnabled)}
-              </GridItem>
+              <GridItem span={8}>{isEnabled(value.tlsEnabled)}</GridItem>
             </Grid>
           </>
         )}
-        {adapter.value.url && (
+        {value.url && (
           <>
             <br />
             <InputText
               label={"Url"}
               type={"text"}
-              value={adapter.value.url}
+              value={value.url}
               isReadOnly={true}
               enableCopy={true}
-              ariaLabel={`input-${adapter.type}-api-url`}
+              id={`adapter-${type}-api-url-input`}
+              ariaLabel={`adapter-${type}-api-url`}
               isExpandable={false}
             />
           </>
         )}
-        {adapter.value.host && (
+        {value.host && (
           <>
             <br />
             <InputText
               label={"Host"}
               type={"number"}
-              value={adapter.value.host}
+              value={value.host}
               isReadOnly={true}
               enableCopy={true}
-              ariaLabel={"input-registration-api-host"}
+              id={`adapter-${type}-api-host-input`}
+              ariaLabel={`adapter ${type} api host`}
               isExpandable={false}
             />
           </>
         )}
-        {adapter.value.port && (
+        {value.port && (
           <>
             <br />
             <InputText
               label={"Port"}
               type={"number"}
-              value={adapter.value.port}
+              value={value.port}
               isReadOnly={true}
               enableCopy={true}
-              ariaLabel={"input-registration-api-port"}
+              id={`adapter-${type}-api-port-input`}
+              ariaLabel={`adapter ${type} api port`}
               isExpandable={false}
             />
           </>
@@ -251,18 +267,20 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     );
   };
 
-  const Adapters = adapters && (
+  const Adapters = () => (
     <>
-      {adapters.map((adapter: IAdapter) => (
-        <>
-          {" "}
-          {getAdapter(adapter)}
-          <br />
-        </>
-      ))}
+      {adapters &&
+        adapters.map((adapter: IAdapter) => (
+          <>
+            {" "}
+            {getAdapter(adapter)}
+            <br />
+          </>
+        ))}
     </>
   );
-  const CardToDisplay = (
+
+  const CardToDisplay = () => (
     <Card>
       <CardHeader style={{ fontSize: 20 }}>
         <Split>
@@ -272,7 +290,9 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             </h1>
           </SplitItem>
           <SplitItem isFilled />
-          <SplitItem>{EditIcon}</SplitItem>
+          <SplitItem>
+            <EditIcon />
+          </SplitItem>
         </Split>
       </CardHeader>
       {isHidden ? (
@@ -288,7 +308,8 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               value={tenantId}
               isReadOnly={true}
               enableCopy={true}
-              ariaLabel={"input-username"}
+              id={"tenant-id-input"}
+              ariaLabel={"tenant id"}
             />
           )}
           <br />
@@ -306,12 +327,17 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           */}
           {Messaging}
           <br />
-          {Adapters}
+          <Adapters />
         </CardBody>
       )}
     </Card>
   );
-  return <PageSection>{CardToDisplay}</PageSection>;
+
+  return (
+    <PageSection>
+      <CardToDisplay />
+    </PageSection>
+  );
 };
 
 export { AccessCredentials };

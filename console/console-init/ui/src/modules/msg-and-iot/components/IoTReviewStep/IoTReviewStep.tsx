@@ -5,17 +5,13 @@
 
 import React from "react";
 import {
-  isMessagingProjectValid,
-  isIoTProjectValid
-} from "modules/msg-and-iot/dailogs/utils";
-import { IIoTProjectInput } from "modules/msg-and-iot/dailogs/components";
-import { IoTReview } from "../IoTReview";
+  isIoTProjectValid,
+  IIoTProjectInput,
+  IoTReview
+} from "modules/msg-and-iot";
 
-const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
-  const isReviewEnabled = () => {
-    isIoTProjectValid(projectDetail);
-  };
-  const isFinishEnabled = () => {
+const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
+  const isEnabled = () => {
     isIoTProjectValid(projectDetail);
   };
   return {
@@ -28,10 +24,10 @@ const IoTProjectReview = (projectDetail?: IIoTProjectInput) => {
         isEnabled={(projectDetail && projectDetail.isEnabled) || false}
       />
     ),
-    enableNext: isFinishEnabled(),
-    canJumpTo: isReviewEnabled(),
+    enableNext: isEnabled(),
+    canJumpTo: isEnabled(),
     nextButtonText: "Finish"
   };
 };
 
-export { IoTProjectReview };
+export { IoTReviewStep };

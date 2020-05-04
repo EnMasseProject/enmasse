@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     paddingRight: 10
   }
 });
+
 export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> = ({
   activeItem
 }) => {
