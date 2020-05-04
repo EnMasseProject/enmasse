@@ -33,6 +33,7 @@ import java.util.Stack;
 public class ResourceManager {
 
     private static final Logger LOGGER = CustomLogger.getLogger();
+    private static boolean verbose = true;
 
     private static Stack<ThrowableRunner> classResources = new Stack<>();
     private static Stack<ThrowableRunner> methodResources = new Stack<>();
@@ -97,6 +98,14 @@ public class ResourceManager {
         if (defaultTenant != null && defaultTenant.getKind().equals(resource.getKind()) && defaultTenant.getMetadata().getName().equals(resource.getMetadata().getName())) {
             defaultTenant = null;
         }
+    }
+
+    public void enableVerboseLogging() {
+        verbose = true;
+    }
+
+    public void disableVerboseLogging() {
+        verbose = false;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -184,6 +193,7 @@ public class ResourceManager {
 
     @SafeVarargs
     public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
+        LOGGER.info("Create/Update {} resources", resources.length);
 
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
@@ -197,8 +207,10 @@ public class ResourceManager {
                 createResource(waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
             }
 
-            LOGGER.info("Create/Update of {} {} in namespace {}",
-                    resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+            if (verbose) {
+                LOGGER.info("Create/Update of {} {} in namespace {}",
+                        resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+            }
 
             type.create(resource);
         }
@@ -208,14 +220,37 @@ public class ResourceManager {
         });
 
         if (waitReady) {
-            for (T resource : resources) {
-                ResourceType<T> type = findResourceType(resource);
-                if (type == null) {
-                    LOGGER.warn("Can't find resource in list, please create it manually");
-                    continue;
-                }
-                type.waitReady(resource);
+            waitResourceReady(resources);
+        }
+    }
+
+    @SafeVarargs
+    public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
+        LOGGER.info("Delete {} resources", resources.length);
+        for (T resource : resources) {
+            ResourceType<T> type = findResourceType(resource);
+            if (type == null) {
+                LOGGER.warn("Can't find resource type, please create it manually");
+                continue;
             }
+            if (verbose) {
+                LOGGER.info("Delete of {} {} in namespace {}",
+                        resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+            }
+            type.delete(resource);
+            cleanDefault(resource);
+        }
+    }
+
+    @SafeVarargs
+    public final <T extends HasMetadata> void waitResourceReady(T... resources) {
+        for (T resource : resources) {
+            ResourceType<T> type = findResourceType(resource);
+            if (type == null) {
+                LOGGER.warn("Can't find resource in list, please create it manually");
+                continue;
+            }
+            type.waitReady(resource);
         }
     }
 
@@ -227,20 +262,5 @@ public class ResourceManager {
             }
         }
         return null;
-    }
-
-    @SafeVarargs
-    public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
-        for (T resource : resources) {
-            ResourceType<T> type = findResourceType(resource);
-            if (type == null) {
-                LOGGER.warn("Can't find resource type, please create it manually");
-                continue;
-            }
-            LOGGER.info("Delete of {} {} in namespace {}",
-                    resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
-            type.delete(resource);
-            cleanDefault(resource);
-        }
     }
 }

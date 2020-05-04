@@ -341,10 +341,10 @@ public class TestUtils {
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
         for (int i = 0; i < retry; i++) {
             try {
-                log.info("Running command, attempt: {}", i);
+                log.debug("Running command, attempt: {}", i);
                 return fn.call();
             } catch (Exception ex) {
-                log.info("Command failed", ex);
+                log.warn("Command failed", ex);
             }
             Thread.sleep(1000);
         }
