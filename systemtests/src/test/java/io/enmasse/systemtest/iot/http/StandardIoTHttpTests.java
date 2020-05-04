@@ -5,27 +5,26 @@
 
 package io.enmasse.systemtest.iot.http;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.SSLHandshakeException;
-
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.StandardIoTTests;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import javax.net.ssl.SSLHandshakeException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public interface StandardIoTHttpTests extends StandardIoTTests {
 
@@ -60,6 +59,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventSingle-{0}")
     @MethodSource("getDevices")
+    @Disabled
     default void testHttpEventSingle(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -82,6 +82,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpTelemetryBatch50-{0}")
     @MethodSource("getDevices")
+    @Disabled
     default void testHttpTelemetryBatch50(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -106,6 +107,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5After-{0}")
     @MethodSource("getDevices")
+    @Disabled
     default void testHttpEventBatch5After(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -130,6 +132,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5Before-{0}")
     @MethodSource("getDevices")
+    @Disabled
     default void testHttpEventBatch5Before(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -153,6 +156,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpDeviceFails-{0}")
     @MethodSource("getInvalidDevices")
+    @Disabled
     default void testHttpDeviceFails(final DeviceSupplier deviceSupplier) throws Exception {
 
         log.info("Testing invalid devices, the following exception may be expected");

@@ -5,13 +5,6 @@
 
 package io.enmasse.systemtest.iot.isolated;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
 import io.enmasse.systemtest.iot.IoTTestSession;
@@ -21,6 +14,12 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public abstract class AbstractMaxPayloadSizeTest extends TestBase implements ITestIoTIsolated {
 

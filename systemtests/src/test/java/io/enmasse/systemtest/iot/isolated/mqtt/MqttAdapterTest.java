@@ -5,20 +5,19 @@
 
 package io.enmasse.systemtest.iot.isolated.mqtt;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
-import static io.enmasse.systemtest.iot.DeviceSupplier.named;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
-
-import java.util.Arrays;
-import java.util.List;
-
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
+import java.util.Arrays;
+import java.util.List;
+
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 
 /**
  * Testing MQTT message transmission.

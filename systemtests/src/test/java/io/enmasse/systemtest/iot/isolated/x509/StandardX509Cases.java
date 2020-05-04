@@ -5,20 +5,19 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
-import static io.enmasse.systemtest.iot.DeviceSupplier.named;
+import io.enmasse.systemtest.iot.DeviceCertificateManager;
+import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.StandardIoTTests;
 
+import javax.security.auth.x500.X500Principal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import javax.security.auth.x500.X500Principal;
-
-import io.enmasse.systemtest.iot.DeviceCertificateManager;
-import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
 
 public interface StandardX509Cases extends StandardIoTTests {
 

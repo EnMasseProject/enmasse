@@ -5,25 +5,7 @@
 
 package io.enmasse.systemtest.iot.isolated;
 
-import static io.enmasse.systemtest.TestTag.SMOKE;
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
-import static java.util.Collections.singletonMap;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
 import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -39,6 +21,22 @@ import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Quantity;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.enmasse.systemtest.TestTag.SMOKE;
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonMap;
 
 @Tag(SMOKE)
 @Kubernetes

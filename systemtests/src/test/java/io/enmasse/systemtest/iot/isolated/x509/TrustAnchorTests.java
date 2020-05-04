@@ -5,22 +5,6 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
-
-import java.time.Duration;
-import java.util.Optional;
-import java.util.UUID;
-
-import javax.security.auth.x500.X500Principal;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectStatus;
@@ -33,6 +17,20 @@ import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.security.auth.x500.X500Principal;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.UUID;
+
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(ISOLATED_IOT)
 public class TrustAnchorTests implements IoTTests {

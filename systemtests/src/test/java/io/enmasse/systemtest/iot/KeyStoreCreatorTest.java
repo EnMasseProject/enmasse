@@ -5,20 +5,18 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.Assert.assertNotNull;
-
-import java.time.Duration;
-import java.time.Instant;
-
-import javax.security.auth.x500.X500Principal;
-
+import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import javax.security.auth.x500.X500Principal;
+import java.time.Duration;
+import java.time.Instant;
+
+import static org.junit.Assert.assertNotNull;
 
 @Tag(TestTag.FRAMEWORK)
 public class KeyStoreCreatorTest {

@@ -5,20 +5,18 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.TestTag.FRAMEWORK;
-import static org.junit.Assert.assertNotNull;
+import io.enmasse.systemtest.iot.DeviceCertificateManager.Device;
+import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
+import javax.security.auth.x500.X500Principal;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 
-import javax.security.auth.x500.X500Principal;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.systemtest.iot.DeviceCertificateManager.Device;
-import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import static io.enmasse.systemtest.TestTag.FRAMEWORK;
+import static org.junit.Assert.assertNotNull;
 
 @Tag(FRAMEWORK)
 public class DeviceCertificateManagerTest {

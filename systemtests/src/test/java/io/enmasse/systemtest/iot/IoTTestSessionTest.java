@@ -5,19 +5,18 @@
 
 package io.enmasse.systemtest.iot;
 
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import static io.enmasse.systemtest.TestTag.FRAMEWORK;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 
 @Tag(FRAMEWORK)
 public class IoTTestSessionTest {

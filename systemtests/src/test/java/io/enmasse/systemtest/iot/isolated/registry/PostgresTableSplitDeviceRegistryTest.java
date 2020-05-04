@@ -5,20 +5,18 @@
 
 package io.enmasse.systemtest.iot.isolated.registry;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBased;
-import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
-
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.iot.IoTTestSession;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBased;
+import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
 /**
  * Postgres table model, split adapter and management pods.
  */
+
 class PostgresTableSplitDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
@@ -36,13 +34,11 @@ class PostgresTableSplitDeviceRegistryTest extends DeviceRegistryTest {
     }
 
     @Test
-    @Tag(ACCEPTANCE)
     void testRegisterDevice() throws Exception {
         super.doTestRegisterDevice();
     }
 
     @Test
-    @Tag(ACCEPTANCE)
     void testDisableDevice() throws Exception {
         super.doTestDisableDevice();
     }

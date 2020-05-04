@@ -4,11 +4,23 @@
  */
 package io.enmasse.systemtest.logs;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,18 +32,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -276,6 +278,9 @@ public class GlobalLogCollector {
         try {
             LOGGER.info("Saving pod logs and info...");
             // check for marker file
+
+            Exec.execute("free","--mega");
+
             if (Files.exists(path.resolve("done.txt"))) {
                 LOGGER.info("Information already saved in {}", path);
                 return;

@@ -5,15 +5,12 @@
 
 package io.enmasse.systemtest.iot.mqtt;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.SSLHandshakeException;
-
+import com.google.common.base.Throwables;
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.MqttAdapterClient;
+import io.enmasse.systemtest.iot.StandardIoTTests;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,13 +18,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import javax.net.ssl.SSLHandshakeException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.MqttAdapterClient;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Standard MQTT IoT tests

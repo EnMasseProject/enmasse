@@ -4,6 +4,16 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ITestBase;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,17 +27,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import io.enmasse.systemtest.bases.ITestBase;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.TestUtils;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.api.model.Pod;
 
 /**
  * Class represent abstract client which keeps common features of client

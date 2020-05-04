@@ -5,16 +5,6 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED;
-import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -22,6 +12,15 @@ import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
+
+import static io.enmasse.systemtest.TestTag.ISOLATED;
+import static java.util.Collections.singleton;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(ISOLATED)
 public class TlsVersionTest {

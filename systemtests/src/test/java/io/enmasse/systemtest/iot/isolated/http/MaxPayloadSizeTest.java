@@ -5,12 +5,12 @@
 
 package io.enmasse.systemtest.iot.isolated.http;
 
-import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
-
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
+
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
 
 public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
 

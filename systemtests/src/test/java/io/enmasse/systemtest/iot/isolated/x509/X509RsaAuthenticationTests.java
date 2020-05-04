@@ -5,22 +5,21 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
-
-import javax.security.auth.x500.X500Principal;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
 import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+
+import javax.security.auth.x500.X500Principal;
+
+import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
+import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(ISOLATED_IOT)
 public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
