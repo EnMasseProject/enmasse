@@ -17,6 +17,7 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -25,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.SCALE;
+
+@Tag(SCALE)
 public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
     /**
      * Simple performance test to be able to track create and delete performance of addresses.
