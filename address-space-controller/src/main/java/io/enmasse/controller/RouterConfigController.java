@@ -620,6 +620,10 @@ public class RouterConfigController implements Controller {
                 saslMechanisms.add("PLAIN");
             }
 
+            if (saslMechanisms.isEmpty()) {
+                saslMechanisms.add("ANONYMOUS");
+            }
+
             remoteConnector.setSaslMechanisms(String.join(" ", saslMechanisms));
 
             String prefix = String.format("%s/", connector.getName());
