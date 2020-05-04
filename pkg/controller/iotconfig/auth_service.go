@@ -69,6 +69,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 		}
 
 		container.Args = nil
+		container.Command = nil
 
 		// set default resource limits
 

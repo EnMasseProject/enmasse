@@ -74,7 +74,8 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-sigfox-adapter.jar"}
+		container.Command = nil
 
 		// set default resource limits
 

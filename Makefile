@@ -21,13 +21,8 @@ DOCKER_DIRS = \
 	olm-manifest \
 	iot/iot-tenant-service \
 	iot/iot-auth-service \
-	iot/iot-device-registry-infinispan \
-	iot/iot-device-registry-jdbc \
-	iot/iot-http-adapter \
-	iot/iot-mqtt-adapter \
-	iot/iot-lorawan-adapter \
-	iot/iot-sigfox-adapter \
 	iot/iot-tenant-cleaner \
+	iot/images/iot-adapters \
 	iot/images/iot-device-registry \
 
 

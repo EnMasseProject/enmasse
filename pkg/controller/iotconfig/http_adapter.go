@@ -74,7 +74,8 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-http-adapter.jar"}
+		container.Command = nil
 
 		// set default resource limits
 

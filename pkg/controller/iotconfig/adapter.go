@@ -161,6 +161,9 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 			return err
 		}
 
+		container.Args = nil
+		container.Command = nil
+
 		// set default resource limits
 
 		container.Resources = corev1.ResourceRequirements{
@@ -195,6 +198,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		}
 
 		container.Args = []string{"/sbin/qdrouterd", "-c", "/etc/qdr/config/qdrouterd.json"}
+		container.Command = nil
 
 		// set default resource limits
 

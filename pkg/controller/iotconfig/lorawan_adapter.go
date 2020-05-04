@@ -73,7 +73,8 @@ func (r *ReconcileIoTConfig) reconcileLoraWanAdapterDeployment(config *iotv1alph
 			return err
 		}
 
-		container.Args = nil
+		container.Args = []string{"/iot-lorawan-adapter.jar"}
+		container.Command = nil
 
 		// set default resource limits
 
