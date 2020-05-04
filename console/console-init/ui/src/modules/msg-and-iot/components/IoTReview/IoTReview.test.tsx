@@ -25,6 +25,6 @@ describe("IoT Review", () => {
     getByText("Enabled");
     getByText(props.name);
     getByText(props.namespace);
-    getByText(props.isEnabled + "");
+    getByText(props.isEnabled.toString());
   });
 });

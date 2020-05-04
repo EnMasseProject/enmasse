@@ -146,7 +146,7 @@ const CreateProjectContainer: React.FunctionComponent = () => {
     component: (
       <FinishedStep
         onClose={onToggle}
-        sucess={isCreatedSuccessfully}
+        success={isCreatedSuccessfully}
         projectType={messagingProjectDetail ? "Messaging" : "IoT"}
       />
     ),

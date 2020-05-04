@@ -14,7 +14,7 @@ import {
 import { StyleSheet, css } from "@patternfly/react-styles";
 interface IFinishedStepProps {
   onClose: () => void;
-  sucess: boolean;
+  success: boolean;
   projectType?: "IoT" | "Messaging";
 }
 
@@ -26,7 +26,7 @@ const styles = StyleSheet.create({
 
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   onClose,
-  sucess,
+  success,
   projectType
 }) => {
   const [percent, setPercent] = useState<number>(0);
@@ -47,7 +47,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
 
   return (
     <>
-      {!isCompleted || !sucess ? (
+      {!isCompleted || !success ? (
         <EmptyState
           variant={EmptyStateVariant.full}
           className={css(styles.empty_state)}
