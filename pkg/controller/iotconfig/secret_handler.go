@@ -96,7 +96,6 @@ func (s secretHandler) allSecrets(meta v1.Object) []string {
 				nameAuthService+"-tls",
 				nameDeviceConnection+"-tls",
 				nameDeviceRegistry+"-tls",
-				nameDeviceRegistryAdapter+"-tls",
 				nameDeviceRegistryManagement+"-tls",
 				nameTenantService+"-tls",
 				nameServiceMeshInter+"-tls",

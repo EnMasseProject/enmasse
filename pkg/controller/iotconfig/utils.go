@@ -221,7 +221,7 @@ func (r *ReconcileIoTConfig) reconcileMetricsService(serviceName string) func(co
 
 // Configure a metrics service for hono standard components.
 // Hono exposes metrics on /prometheus on the health endpoint. We create a "<component>-metrics" service and map
-// the "prometheus" port form the service to the "health" port of the container. So we can define a "prometheus"
+// the "prometheus" port from the service to the "health" port of the container. So we can define a "prometheus"
 // port on the ServiceMonitor on EnMasse with a custom path of "/prometheus".
 func processReconcileMetricsService(_ *iotv1alpha1.IoTConfig, serviceName string, service *corev1.Service) error {
 

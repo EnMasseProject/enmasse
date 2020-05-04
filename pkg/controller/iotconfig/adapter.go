@@ -242,21 +242,16 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 	username := adapter.Name + "-adapter@HONO"
 	password := config.Status.Adapters[adapter.Name].InterServicePassword
 
-	registryServiceName, err := getRegistryAdapterServiceName(config)
-	if err != nil {
-		return err
-	}
-
 	container.Env = append(container.Env, []corev1.EnvVar{
 		{Name: "HONO_MESSAGING_HOST", Value: "localhost"},
 		{Name: "HONO_MESSAGING_PORT", Value: "5672"},
 		{Name: "HONO_COMMAND_HOST", Value: "localhost"},
 		{Name: "HONO_COMMAND_PORT", Value: "5672"},
 
-		{Name: "HONO_REGISTRATION_HOST", Value: FullHostNameForEnvVar(registryServiceName)},
+		{Name: "HONO_REGISTRATION_HOST", Value: FullHostNameForEnvVar(nameDeviceRegistry)},
 		{Name: "HONO_REGISTRATION_USERNAME", Value: username},
 		{Name: "HONO_REGISTRATION_PASSWORD", Value: password},
-		{Name: "HONO_CREDENTIALS_HOST", Value: FullHostNameForEnvVar(registryServiceName)},
+		{Name: "HONO_CREDENTIALS_HOST", Value: FullHostNameForEnvVar(nameDeviceRegistry)},
 		{Name: "HONO_CREDENTIALS_USERNAME", Value: username},
 		{Name: "HONO_CREDENTIALS_PASSWORD", Value: password},
 		{Name: "HONO_DEVICE_CONNECTION_HOST", Value: FullHostNameForEnvVar("iot-device-connection")},
@@ -499,5 +494,5 @@ func mergeAdapterOptions(first, second *iotv1alpha1.AdapterOptions) iotv1alpha1.
 
 func applyDefaultAdapterDeploymentSpec(deployment *appsv1.Deployment) {
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-protocol-adapter"
-	deployment.Annotations[util.ConnectsTo] = "iot-auth-service,iot-device-registry,iot-tenant-service"
+	deployment.Annotations[util.ConnectsTo] = "iot-auth-service,iot-device-connection,iot-device-registry,iot-tenant-service"
 }

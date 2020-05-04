@@ -54,7 +54,7 @@ func allTargets(config *iotv1alpha1.IoTConfig) []MonitoringTarget {
 		// we can ignore the error here, as it will be handled by the reconcile loop anyway
 		if split {
 			targets = append(targets, []MonitoringTarget{
-				{nameDeviceRegistryAdapter},
+				{nameDeviceRegistry},
 				{nameDeviceRegistryManagement},
 			}...)
 		} else {
