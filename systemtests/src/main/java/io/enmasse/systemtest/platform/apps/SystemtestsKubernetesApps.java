@@ -81,7 +81,9 @@ import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
+import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
+import io.fabric8.kubernetes.api.model.VolumeMount;
 import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
@@ -870,25 +872,6 @@ public class SystemtestsKubernetesApps {
     public static void buildOperatorRegistryImage(Kubernetes kubeClient, String olmManifestsImage, String destinationImage, String destinationRegistry, Path... buildWorkspaceFiles) throws Exception {
         kubeClient.createNamespace(CONTAINER_BUILDS_PROJECT);
 
-        String secretName = "olm-manifests-docker-config";
-        String username = "foo";
-        String pwd = kubeClient.getApiToken();
-        JsonObject dockerconfigjson = new JsonObject();
-        dockerconfigjson.put("auths", new JsonObject()
-                .put(destinationRegistry, new JsonObject()
-                        .put("username", username)
-                        .put("password", pwd)
-                        .put("auth", Base64.getEncoder().encodeToString((username + ":" + pwd).getBytes(StandardCharsets.UTF_8)))));
-
-        Secret secret = new SecretBuilder()
-                .withNewMetadata()
-                .withName(secretName)
-                .endMetadata()
-                .withType("kubernetes.io/dockerconfigjson")
-                .addToData(".dockerconfigjson", Base64.getEncoder().encodeToString(dockerconfigjson.encode().getBytes(StandardCharsets.UTF_8)))
-                .build();
-        kubeClient.createSecret(CONTAINER_BUILDS_PROJECT, secret);
-
         String workspaceConfigMap = "workspace-cm";
         var configmap = new ConfigMapBuilder()
                 .withNewMetadata()
@@ -909,6 +892,46 @@ public class SystemtestsKubernetesApps {
                 .append(" ").append("&&").append(" ");
         }
         String command = copyCommand.substring(0, copyCommand.length()-3);
+
+        List<VolumeMount> volumeMounts = new ArrayList<>();
+        List<Volume> volumes = new ArrayList<>();
+
+        volumeMounts.add(new VolumeMountBuilder()
+                .withName("build-workspace")
+                .withMountPath("/workspace")
+                .build());
+
+        volumes.add(new VolumeBuilder()
+                .withName("dockerfile-storage")
+                .withConfigMap(new ConfigMapVolumeSourceBuilder()
+                        .withName(workspaceConfigMap)
+                        .build())
+                .build());
+        volumes.add(new VolumeBuilder()
+                .withName("build-workspace")
+                        .withNewEmptyDir()
+                        .endEmptyDir()
+                .build());
+
+        if (!Kubernetes.isOpenShiftCompatible()) {
+            volumeMounts.add(new VolumeMountBuilder()
+                    .withName("docker-config")
+                    .withMountPath("/kaniko/.docker")
+                    .build());
+
+            String secretName = createDockerConfigSecret(kubeClient, destinationRegistry);
+
+            volumes.add(new VolumeBuilder()
+                    .withName("docker-config")
+                    .withSecret(new SecretVolumeSourceBuilder()
+                            .withSecretName(secretName)
+                            .addNewItem()
+                            .withKey(".dockerconfigjson")
+                            .withPath("config.json")
+                            .endItem()
+                            .build())
+                    .build());
+        }
 
         Pod pod = new PodBuilder()
                 .withNewMetadata()
@@ -940,41 +963,10 @@ public class SystemtestsKubernetesApps {
                                 "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
                                 "--insecure-registry=true",
                                 "--skip-tls-verify=true")
-                        .withVolumeMounts(
-                                new VolumeMountBuilder()
-                                .withName("docker-config")
-                                .withMountPath("/kaniko/.docker")
-                                .build(),
-                                new VolumeMountBuilder()
-                                .withName("build-workspace")
-                                .withMountPath("/workspace")
-                                .build())
-                        .build()
-                        )
+                        .withVolumeMounts(volumeMounts)
+                        .build())
                 .withRestartPolicy("Never")
-                .withVolumes(
-                        new VolumeBuilder()
-                        .withName("docker-config")
-                        .withSecret(new SecretVolumeSourceBuilder()
-                                .withSecretName(secretName)
-                                .addNewItem()
-                                .withKey(".dockerconfigjson")
-                                .withPath("config.json")
-                                .endItem()
-                                .build())
-                        .build(),
-                        new VolumeBuilder()
-                        .withName("dockerfile-storage")
-                        .withConfigMap(new ConfigMapVolumeSourceBuilder()
-                                .withName(workspaceConfigMap)
-                                .build())
-                        .build(),
-                        new VolumeBuilder()
-                        .withName("build-workspace")
-                        .withNewEmptyDir()
-                        .endEmptyDir()
-                        .build()
-                        )
+                .withVolumes(volumes)
                 .endSpec()
                 .build();
 
@@ -1007,6 +999,28 @@ public class SystemtestsKubernetesApps {
             Assertions.fail("Failed to build custom operator registry because of timeout");
         }
 
+    }
+
+    private static String createDockerConfigSecret(Kubernetes kubeClient, String destinationRegistry) {
+        String secretName = "olm-manifests-docker-config";
+        String username = "foo";
+        String pwd = kubeClient.getApiToken();
+        JsonObject dockerconfigjson = new JsonObject();
+        dockerconfigjson.put("auths", new JsonObject()
+                .put(destinationRegistry, new JsonObject()
+                        .put("username", username)
+                        .put("password", pwd)
+                        .put("auth", Base64.getEncoder().encodeToString((username + ":" + pwd).getBytes(StandardCharsets.UTF_8)))));
+
+        Secret secret = new SecretBuilder()
+                .withNewMetadata()
+                .withName(secretName)
+                .endMetadata()
+                .withType("kubernetes.io/dockerconfigjson")
+                .addToData(".dockerconfigjson", Base64.getEncoder().encodeToString(dockerconfigjson.encode().getBytes(StandardCharsets.UTF_8)))
+                .build();
+        kubeClient.createSecret(CONTAINER_BUILDS_PROJECT, secret);
+        return secretName;
     }
 
     private static void collectContainerBuildLogs(Kubernetes kubeClient) {
