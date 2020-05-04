@@ -210,7 +210,7 @@ public class ResourceManager {
                 LOGGER.info("Create/Update of {} {} in namespace {}",
                         resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             } else {
-                LOGGER.info("Delete {} resources", resources.length);
+                LOGGER.info("Create/Update {} resources", resources.length);
             }
 
             type.create(resource);
