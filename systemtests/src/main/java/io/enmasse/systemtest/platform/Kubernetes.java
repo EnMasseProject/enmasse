@@ -11,6 +11,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -22,10 +27,14 @@ import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.condition.MultinodeCluster;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.openshift.api.model.Route;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
@@ -133,6 +142,52 @@ public abstract class Kubernetes {
         }
     }
 
+    public static Kubernetes getInstance() {
+        if (instance == null) {
+            try {
+                cluster = KubeCluster.detect();
+                log.info("Cluster is {}", cluster.toString());
+            } catch (NoClusterException ex) {
+                log.error(ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+            Environment env = Environment.getInstance();
+            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
+                instance = new Minikube(env);
+            } else {
+                instance = new OpenShift(env);
+            }
+            try {
+                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
+                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
+                if (instance.olmAvailable) {
+                    log.info("OLM is available in this cluster");
+                } else {
+                    log.info("OLM is not available in this cluster");
+                }
+            } catch (Exception e) {
+                log.error("Error checking olm availability", e);
+                instance.olmAvailable = false;
+            }
+        }
+        return instance;
+    }
+
+    public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
+
+    public abstract void deleteExternalEndpoint(String namespace, String name);
+
+    public abstract String getOlmNamespace();
+
+    /**
+     * Retrieve host or ip address of Kubernetes node.
+     */
+    public abstract String getHost();
+
+    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Check if tests are running a platform which is compatible to a specific OpenShift version
      * (OpenShift or CRC).
@@ -198,37 +253,6 @@ public abstract class Kubernetes {
                 "Unable to find port " + portName + " for service " + service.getMetadata().getName());
     }
 
-    public static Kubernetes getInstance() {
-        if (instance == null) {
-            try {
-                cluster = KubeCluster.detect();
-                log.info("Cluster is {}", cluster.toString());
-            } catch (NoClusterException ex) {
-                log.error(ex.getMessage());
-                throw new RuntimeException(ex);
-            }
-            Environment env = Environment.getInstance();
-            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
-                instance = new Minikube(env);
-            } else {
-                instance = new OpenShift(env);
-            }
-            try {
-                instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
-                        && instance.getCRD("subscriptions.operators.coreos.com") != null;
-                if (instance.olmAvailable) {
-                    log.info("OLM is available in this cluster");
-                } else {
-                    log.info("OLM is not available in this cluster");
-                }
-            } catch (Exception e) {
-                log.error("Error checking olm availability", e);
-                instance.olmAvailable = false;
-            }
-        }
-        return instance;
-    }
-
     public static void disableVerboseLogging() {
         Kubernetes.getInstance().verboseLog = false;
     }
@@ -247,7 +271,6 @@ public abstract class Kubernetes {
     public MultinodeCluster isClusterMultinode() {
         return MultinodeCluster.isMultinode(client.nodes().list().getItems().size());
     }
-
 
     public String getInfraNamespace() {
         return infraNamespace;
@@ -542,6 +565,22 @@ public abstract class Kubernetes {
 
     public Pod getPod(String name) {
         return client.pods().withName(name).get();
+    }
+
+    public void awaitPodsReady(String namespace, TimeoutBudget budget) throws InterruptedException {
+        List<Pod> unready;
+        do {
+            unready = new ArrayList<>(listPods(namespace));
+            unready.removeIf(p -> TestUtils.isPodReady(p, true));
+
+            if (!unready.isEmpty()) {
+                Thread.sleep(1000L);
+            }
+        } while (!unready.isEmpty() && budget.timeLeft() > 0);
+
+        if (!unready.isEmpty()) {
+            fail(String.format(" %d pod(s) still unready in namespace : %s", unready.size(), namespace));
+        }
     }
 
     public Set<String> listNamespaces() {
@@ -1004,36 +1043,80 @@ public abstract class Kubernetes {
         client.policy().podDisruptionBudget().inNamespace(namespace).withName(name).delete();
     }
 
-    public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
+    public void apply(String namespace, final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, item -> {
+            item.inNamespace(namespace).createOrReplace();
+        }, paths);
+    }
 
-    public abstract void deleteExternalEndpoint(String namespace, String name);
+    public void apply(String namespace, final Path... paths) throws Exception {
+        apply(namespace, inputStream -> inputStream, paths);
+    }
 
-    public abstract String getOlmNamespace();
+    public void delete(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+        loadDirectories(streamManipulator, o -> {
+            o.fromServer().get().forEach(item -> {
+                // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
+                Kubernetes.getInstance().getClient().resource(item).cascading(true).delete();
+            });
+        }, paths);
+    }
 
-    public void awaitPodsReady(String namespace, TimeoutBudget budget) throws InterruptedException {
-        List<Pod> unready;
-        do {
-            unready = new ArrayList<>(listPods(namespace));
-            unready.removeIf(p -> TestUtils.isPodReady(p, true));
-
-            if (!unready.isEmpty()) {
-                Thread.sleep(1000L);
-            }
-        } while (!unready.isEmpty() && budget.timeLeft() > 0);
-
-        if (!unready.isEmpty()) {
-            fail(String.format(" %d pod(s) still unready in namespace : %s", unready.size(), namespace));
+    private void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
+                                       Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+        for (Path path : paths) {
+            loadDirectory(streamManipulator, consumer, path);
         }
     }
 
-    /**
-     * Retrieve host or ip address of Kubernetes node.
-     */
-    public abstract String getHost();
+    private void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
+                                     Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
+
+        final Kubernetes kubeCli = Kubernetes.getInstance();
+        final KubernetesClient client = kubeCli.getClient();
+
+        log.info("Loading resources from: {}", path);
+
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+
+                log.debug("Found: {}", file);
+
+                if (!Files.isRegularFile(file)) {
+                    log.debug("File is not a regular file: {}", file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                if (!file.getFileName().toString().endsWith(".yaml")) {
+                    log.info("Skipping file: does not end with '.yaml': {}", file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                log.info("Processing: {}", file);
+
+                try (InputStream f = Files.newInputStream(file)) {
+
+                    final InputStream in;
+                    if (streamManipulator != null) {
+                        in = streamManipulator.apply(f);
+                    } else {
+                        in = f;
+                    }
+
+                    if (in != null) {
+                        consumer.accept(client.load(in));
+                    }
+                }
+
+                return FileVisitResult.CONTINUE;
+            }
+        });
+
+    }
 
     @FunctionalInterface
-    public static interface AfterInput {
-        public void afterInput(final OutputStream remoteInput) throws IOException;
+    public interface AfterInput {
+        void afterInput(final OutputStream remoteInput) throws IOException;
     }
 
     /**
@@ -1127,9 +1210,4 @@ public abstract class Kubernetes {
         log.info("Output: {}", stdoutString);
         return stdoutString;
     }
-
-    public List<Route> listRoutes(String namespace, Map<String, String> labels) {
-        throw new UnsupportedOperationException();
-    }
-
 }

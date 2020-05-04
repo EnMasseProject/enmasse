@@ -99,6 +99,9 @@ public class SystemtestsKubernetesApps {
 
     private static final Logger log = CustomLogger.getLogger();
 
+    private static final Kubernetes kube = Kubernetes.getInstance();
+    private static final Environment env = Environment.getInstance();
+
     public static final String MESSAGING_CLIENTS = "systemtests-clients";
     public static final String API_PROXY = "api-proxy";
     public static final String SELENIUM_FIREFOX = "selenium-firefox";
@@ -187,40 +190,40 @@ public class SystemtestsKubernetesApps {
 
     public static String getMessagingAppPodName(String namespace) throws Exception {
         TestUtils.waitUntilCondition("Pod is reachable",
-                waitPhase -> Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
+                waitPhase -> kube.listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                         pod.getStatus().getContainerStatuses().get(0).getReady()).count() == 1,
                 new TimeoutBudget(1, TimeUnit.MINUTES));
-        return Kubernetes.getInstance().listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
+        return kube.listPods(namespace).stream().filter(pod -> pod.getMetadata().getName().contains(namespace) &&
                 pod.getStatus().getContainerStatuses().get(0).getReady()).findAny().get().getMetadata().getName();
     }
 
     public static String deployMessagingClientApp() throws Exception {
-        Kubernetes.getInstance().createNamespace(MESSAGING_PROJECT);
-        Kubernetes.getInstance().createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
-        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        kube.createNamespace(MESSAGING_PROJECT);
+        kube.createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
+        TestUtils.waitForExpectedReadyPods(kube, MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
         return getMessagingAppPodName();
     }
 
     public static String deployMessagingClientApp(String namespace) throws Exception {
-        if (!Kubernetes.getInstance().namespaceExists(namespace)) {
+        if (!kube.namespaceExists(namespace)) {
             if (namespace.equals("allowed-namespace")) {
                 Namespace allowedNamespace = new NamespaceBuilder().withNewMetadata()
                         .withName("allowed-namespace").addToLabels("allowed", "true").endMetadata().build();
-                Kubernetes.getInstance().getClient().namespaces().create(allowedNamespace);
+                kube.getClient().namespaces().create(allowedNamespace);
             } else {
-                Kubernetes.getInstance().createNamespace(namespace);
+                kube.createNamespace(namespace);
             }
 
         }
-        Kubernetes.getInstance().createDeploymentFromResource(namespace, getMessagingAppDeploymentResource(namespace));
-        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
+        kube.createDeploymentFromResource(namespace, getMessagingAppDeploymentResource(namespace));
+        TestUtils.waitForExpectedReadyPods(kube, namespace, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
         return getMessagingAppPodName(namespace);
     }
 
     public static void collectMessagingClientAppLogs(Path path) {
         try {
             Files.createDirectories(path);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.MESSAGING_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(kube, path, SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
             collector.collectRouterState("deleteMessagingClientApp");
         } catch (Exception e) {
@@ -229,10 +232,10 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deleteMessagingClientApp() throws Exception {
-        if (Kubernetes.getInstance().deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
-            Kubernetes.getInstance().deleteDeployment(MESSAGING_PROJECT, MESSAGING_CLIENTS);
+        if (kube.deploymentExists(MESSAGING_PROJECT, MESSAGING_CLIENTS)) {
+            kube.deleteDeployment(MESSAGING_PROJECT, MESSAGING_CLIENTS);
         }
-        Kubernetes.getInstance().deleteNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
+        kube.deleteNamespace(SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
     public static void deployOpenshiftCertValidator(String namespace, Kubernetes kubeClient) throws Exception {
@@ -259,7 +262,7 @@ public class SystemtestsKubernetesApps {
         kubeClient.createDeploymentFromResource(namespace,
                 getSeleniumNodeDeploymentResource(SELENIUM_FIREFOX, "selenium/standalone-firefox"));
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(SELENIUM_FIREFOX, 4444));
-        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kube, namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public static void deployChromeSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
@@ -269,7 +272,7 @@ public class SystemtestsKubernetesApps {
         kubeClient.createDeploymentFromResource(namespace,
                 getSeleniumNodeDeploymentResource(SystemtestsKubernetesApps.SELENIUM_CHROME, "selenium/standalone-chrome"));
         kubeClient.createIngressFromResource(namespace, getSystemtestsIngressResource(SELENIUM_CHROME, 4444));
-        TestUtils.waitForExpectedReadyPods(Kubernetes.getInstance(), namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kube, namespace, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
     }
 
     public static void deleteFirefoxSeleniumApp(String namespace, Kubernetes kubeClient) throws Exception {
@@ -303,38 +306,36 @@ public class SystemtestsKubernetesApps {
     }
 
     public static Endpoint deployPostgresDB(String namespace) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.createSecret(namespace, getPostgresSecret());
-        kubeCli.createServiceFromResource(namespace, getSystemtestsServiceResource(POSTGRES_APP, 5432));
-        kubeCli.createPvc(namespace, getPostgresPVC());
-        kubeCli.createConfigmapFromResource(namespace, getPostgresConfigMap());
-        kubeCli.createDeploymentFromResource(namespace, getPostgresDeployment());
-        return kubeCli.getEndpoint(POSTGRES_APP, namespace, "http");
+        kube.createSecret(namespace, getPostgresSecret());
+        kube.createServiceFromResource(namespace, getSystemtestsServiceResource(POSTGRES_APP, 5432));
+        kube.createPvc(namespace, getPostgresPVC());
+        kube.createConfigmapFromResource(namespace, getPostgresConfigMap());
+        kube.createDeploymentFromResource(namespace, getPostgresDeployment());
+        return kube.getEndpoint(POSTGRES_APP, namespace, "http");
     }
 
     public static void deletePostgresDB(String namespace) {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        if (kubeCli.deploymentExists(namespace, POSTGRES_APP)) {
-            kubeCli.deleteService(namespace, POSTGRES_APP);
-            kubeCli.deletePvc(namespace, POSTGRES_APP);
-            kubeCli.deleteConfigmap(namespace, POSTGRES_APP);
-            kubeCli.deleteDeployment(namespace, POSTGRES_APP);
-            kubeCli.deleteSecret(namespace, POSTGRES_APP);
+        if (kube.deploymentExists(namespace, POSTGRES_APP)) {
+            kube.deleteService(namespace, POSTGRES_APP);
+            kube.deletePvc(namespace, POSTGRES_APP);
+            kube.deleteConfigmap(namespace, POSTGRES_APP);
+            kube.deleteDeployment(namespace, POSTGRES_APP);
+            kube.deleteSecret(namespace, POSTGRES_APP);
         }
     }
 
     public static void deployProxyApiApp() throws Exception {
-        Kubernetes.getInstance().createServiceFromResource(Kubernetes.getInstance().getInfraNamespace(), getProxyApiServiceResource());
-        Kubernetes.getInstance().createDeploymentFromResource(Kubernetes.getInstance().getInfraNamespace(), getProxyApiAppDeploymentResource());
+        kube.createServiceFromResource(kube.getInfraNamespace(), getProxyApiServiceResource());
+        kube.createDeploymentFromResource(kube.getInfraNamespace(), getProxyApiAppDeploymentResource());
     }
 
     public static void deleteProxyApiApp() {
-        Kubernetes.getInstance().deleteDeployment(Kubernetes.getInstance().getInfraNamespace(), API_PROXY);
-        Kubernetes.getInstance().deleteService(Kubernetes.getInstance().getInfraNamespace(), API_PROXY);
+        kube.deleteDeployment(kube.getInfraNamespace(), API_PROXY);
+        kube.deleteService(kube.getInfraNamespace(), API_PROXY);
     }
 
     public static String getProxyApiDnsName() {
-        return String.format("%s.%s.svc", SystemtestsKubernetesApps.API_PROXY, Kubernetes.getInstance().getInfraNamespace());
+        return String.format("%s.%s.svc", SystemtestsKubernetesApps.API_PROXY, kube.getInfraNamespace());
     }
 
     private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
@@ -355,18 +356,17 @@ public class SystemtestsKubernetesApps {
             return getInfinispanEndpoint(INFINISPAN_PROJECT);
         }
 
-        Kubernetes.getInstance().createNamespace(INFINISPAN_PROJECT);
+        kube.createNamespace(INFINISPAN_PROJECT);
 
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = kube.getClient();
 
         // apply "common" and "manual" folders
 
         if (Minikube.getInstance().getCluster() instanceof Minikube) {
-            applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
+            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
                     resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
         } else {
-            applyDirectories(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
+            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
                     resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT));
         }
 
@@ -384,7 +384,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
+        return kube.getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
     public static void deleteInfinispanServer() throws Exception {
@@ -394,8 +394,7 @@ public class SystemtestsKubernetesApps {
         }
 
         // delete "common" and "manual" folders
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = kube.getClient();
 
         if (client.apps()
                 .statefulSets()
@@ -414,7 +413,7 @@ public class SystemtestsKubernetesApps {
 
     public static void collectInfinispanServerLogs(Path path) {
         try {
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, SystemtestsKubernetesApps.INFINISPAN_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(kube, path, SystemtestsKubernetesApps.INFINISPAN_PROJECT);
             collector.collectLogsOfPodsInNamespace(SystemtestsKubernetesApps.INFINISPAN_PROJECT);
         } catch (Exception e) {
             log.error("Failed to collect pod logs from namespace : {}", SystemtestsKubernetesApps.INFINISPAN_PROJECT);
@@ -430,12 +429,11 @@ public class SystemtestsKubernetesApps {
             return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
         }
 
-        Kubernetes.getInstance().createNamespace(POSTGRESQL_PROJECT);
+        kube.createNamespace(POSTGRESQL_PROJECT);
 
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = kube.getClient();
 
-        applyDirectories(POSTGRESQL_PROJECT, namespaceReplacer(POSTGRESQL_PROJECT), POSTGRESQL_EXAMPLE_BASE);
+        kube.apply(POSTGRESQL_PROJECT, namespaceReplacer(POSTGRESQL_PROJECT), POSTGRESQL_EXAMPLE_BASE);
 
         // wait for the deployment
 
@@ -501,7 +499,7 @@ public class SystemtestsKubernetesApps {
      * Get the endpoint of the PostgreSQL server for the JDBC device registry.
      */
     private static Endpoint getPostgresqlEndpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
+        return kube.getEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
     }
 
     /**
@@ -513,8 +511,7 @@ public class SystemtestsKubernetesApps {
             return;
         }
 
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = kube.getClient();
 
         if (client.apps()
                 .deployments()
@@ -539,11 +536,11 @@ public class SystemtestsKubernetesApps {
             return getH2Endpoint(H2_PROJECT);
         }
 
-        Kubernetes.getInstance().createNamespace(H2_PROJECT);
+        kube.createNamespace(H2_PROJECT);
 
-        final KubernetesClient client = Kubernetes.getInstance().getClient();
+        final KubernetesClient client = kube.getClient();
 
-        applyDirectories(H2_PROJECT, namespaceReplacer(H2_PROJECT), H2_EXAMPLE_BASE);
+        kube.apply(H2_PROJECT, namespaceReplacer(H2_PROJECT), H2_EXAMPLE_BASE);
 
         // wait for the deployment
 
@@ -571,8 +568,8 @@ public class SystemtestsKubernetesApps {
     }
 
     public static Optional<PodResource<Pod, DoneablePod>> getH2ServerPod() {
-        final var client = Kubernetes.getInstance().getClient();
-        return Kubernetes.getInstance().getClient()
+        final var client = kube.getClient();
+        return kube.getClient()
                 .pods()
                 .inNamespace(H2_PROJECT)
                 .withLabel("app", "h2")
@@ -599,7 +596,7 @@ public class SystemtestsKubernetesApps {
      * Get the endpoint of the H2 server for the JDBC device registry.
      */
     private static Endpoint getH2Endpoint(final String namespace) {
-        return Kubernetes.getInstance().getEndpoint(H2_SERVER, namespace, "h2");
+        return kube.getEndpoint(H2_SERVER, namespace, "h2");
     }
 
     /**
@@ -611,8 +608,7 @@ public class SystemtestsKubernetesApps {
             return;
         }
 
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = kube.getClient();
 
         if (client.apps()
                 .deployments()
@@ -639,10 +635,9 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.createNamespace(namespace);
+        kube.createNamespace(namespace);
 
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
+        kube.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -654,7 +649,7 @@ public class SystemtestsKubernetesApps {
                         .addToVerbs("get")
                         .build())
                 .build());
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
+        kube.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -663,13 +658,13 @@ public class SystemtestsKubernetesApps {
                 .withSubjects(new SubjectBuilder()
                         .withKind("ServiceAccount")
                         .withName("address-space-controller")
-                        .withNamespace(kubeCli.getInfraNamespace())
+                        .withNamespace(kube.getInfraNamespace())
                         .build())
                 .build());
 
-        kubeCli.createSecret(namespace, getBrokerSecret(name, certBundle, user, password));
+        kube.createSecret(namespace, getBrokerSecret(name, certBundle, user, password));
 
-        kubeCli.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password), 3, TimeUnit.MINUTES);
+        kube.createDeploymentFromResource(namespace, getBrokerDeployment(name, user, password), 3, TimeUnit.MINUTES);
 
         ServicePort tlsPort = new ServicePortBuilder()
                 .withName("amqps")
@@ -691,11 +686,11 @@ public class SystemtestsKubernetesApps {
                 tlsPort,
                 mutualTlsPort);
 
-        kubeCli.createServiceFromResource(namespace, service);
+        kube.createServiceFromResource(namespace, service);
 
-        kubeCli.createExternalEndpoint(name, namespace, service, tlsPort);
+        kube.createExternalEndpoint(name, namespace, service, tlsPort);
 
-        kubeCli.getClient()
+        kube.getClient()
                 .apps().deployments()
                 .inNamespace(namespace)
                 .withName(name)
@@ -705,19 +700,18 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deleteAMQBroker(String namespace, String name) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
-        kubeCli.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
-        kubeCli.deleteSecret(namespace, name);
-        kubeCli.deleteService(namespace, name);
-        kubeCli.deleteDeployment(namespace, name);
-        kubeCli.deleteExternalEndpoint(namespace, name);
+        kube.getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
+        kube.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
+        kube.deleteSecret(namespace, name);
+        kube.deleteService(namespace, name);
+        kube.deleteDeployment(namespace, name);
+        kube.deleteExternalEndpoint(namespace, name);
         Thread.sleep(5000);
     }
 
     public static void collectAMQBrokerLogs(Path path, String namespace) {
         try {
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, namespace);
+            GlobalLogCollector collector = new GlobalLogCollector(kube, path, namespace);
             collector.collectLogsOfPodsInNamespace(namespace);
             collector.collectEvents(namespace);
         } catch (Exception e) {
@@ -726,82 +720,13 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void scaleDownDeployment(String namespace, String name) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.setDeploymentReplicas(namespace, name, 0);
-        TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 0, new TimeoutBudget(30, TimeUnit.SECONDS));
+        kube.setDeploymentReplicas(namespace, name, 0);
+        TestUtils.waitForExpectedReadyPods(kube, namespace, 0, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     public static void scaleUpDeployment(String namespace, String name) throws Exception {
-        Kubernetes kubeCli = Kubernetes.getInstance();
-        kubeCli.setDeploymentReplicas(namespace, name, 1);
-        TestUtils.waitForExpectedReadyPods(kubeCli, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
-    }
-
-    public static void applyDirectories(String namespace, final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
-        loadDirectories(streamManipulator, item -> {
-            item.inNamespace(namespace).createOrReplace();
-        }, paths);
-    }
-
-    public static void deleteDirectories(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
-        loadDirectories(streamManipulator, o -> {
-            o.fromServer().get().forEach(item -> {
-                // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
-                Kubernetes.getInstance().getClient().resource(item).cascading(true).delete();
-            });
-        }, paths);
-    }
-
-    public static void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
-            Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
-        for (Path path : paths) {
-            loadDirectory(streamManipulator, consumer, path);
-        }
-    }
-
-    public static void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
-            Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
-
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
-
-        log.info("Loading resources from: {}", path);
-
-        Files.walkFileTree(path, new SimpleFileVisitor<>() {
-            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
-
-                log.debug("Found: {}", file);
-
-                if (!Files.isRegularFile(file)) {
-                    log.debug("File is not a regular file: {}", file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                if (!file.getFileName().toString().endsWith(".yaml")) {
-                    log.info("Skipping file: does not end with '.yaml': {}", file);
-                    return FileVisitResult.CONTINUE;
-                }
-
-                log.info("Processing: {}", file);
-
-                try (InputStream f = Files.newInputStream(file)) {
-
-                    final InputStream in;
-                    if (streamManipulator != null) {
-                        in = streamManipulator.apply(f);
-                    } else {
-                        in = f;
-                    }
-
-                    if (in != null) {
-                        consumer.accept(client.load(in));
-                    }
-                }
-
-                return FileVisitResult.CONTINUE;
-            }
-        });
-
+        kube.setDeploymentReplicas(namespace, name, 1);
+        TestUtils.waitForExpectedReadyPods(kube, namespace, 1, new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     public static void setupScaleTestEnv(Kubernetes kubeClient) {
@@ -838,7 +763,7 @@ public class SystemtestsKubernetesApps {
     private static void collectLogsScaleTestClient(String clientId, Path logsPath, Map<String, String> labels) {
         try {
             Files.createDirectories(logsPath);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), logsPath, SCALE_TEST_CLIENTS_PROJECT);
+            GlobalLogCollector collector = new GlobalLogCollector(kube, logsPath, SCALE_TEST_CLIENTS_PROJECT);
             collector.collectLogsOfPodsByLabels(SCALE_TEST_CLIENTS_PROJECT, null, labels);
         } catch (Exception e) {
             log.error("Failed to collect client {} logs", clientId, e);

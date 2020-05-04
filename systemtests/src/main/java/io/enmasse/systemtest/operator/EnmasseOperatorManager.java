@@ -61,7 +61,7 @@ public class EnmasseOperatorManager {
 
     public void installEnmasseSharedInfraBundle() throws Exception {
         LOGGER.info("***********************************************************");
-        LOGGER.info("                  Enmasse operator shared infra install");
+        LOGGER.info("         Enmasse operator shared infra install");
         LOGGER.info("***********************************************************");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
