@@ -168,20 +168,25 @@ exposing the AMQP SASL endpoint of the Access Control Servcie  The `MessagingInf
 
 ==== Messaging Client
 
-When using the service accounts, the following username must be used:
+When using the service account identity provider, the following username must be used:
 
 * `system:serviceaccount`. (for backward compatibility, `@@serviceaccount@@` will also be accepted)
 
-If more than one IdentityProvider is configured for the tenant, for identity providers that require a
-username, the user must be qualified as follows.
+For all other identity providers, the following rules apply:
+
+If the `MessagingEndpoint` has a default identity provider default, an unqualified username is assumed to
+belong to the default identity provider.
+
+If there is exactly one identity provider available at the endpoint, an unqualified username is assumed to
+belong to that identity provider.
+
+If more than one identity providers are available to the `MessagingEndpoint`, the username *must* be qualified as
+follows.
 
 * `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.
   For the sake of information hiding and bervity, the namespace may be omitted if the `MessagingUser` exists in the namespace
   of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
 * `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be ommited.  
-
-If exactly one identity provider is configured for the tenant, or the getting started use-case applies, the username may be
-passed unqualified.
 
 ==== Qpid Dispatch Router
 
@@ -327,8 +332,12 @@ status:
 
 The `MessagingEndpoint` resource will allow the identityProvider(s) available to a endpoint to be restricted.  This
 restriction is defined using an `identityProviderSelector`.  The identity provider selection is made from *within* those
-already realised at the tenant (i.e. respecting the tenant's identityProviderSelector) and thus includes any locally
+already available at the tenant (i.e. respecting the tenant's identityProviderSelector) and thus includes any locally
 defined IdentityProviders.
+
+The `MessagingEndpoint` resource may specify a `defaultIdentityProvider`.  This must refer to an `IdentityProvider` that is
+available at the `MessagingEndpoint`.  It will be an error for the `defaultIdentityProvider` to refer to identity provider
+outside this set.
 
 The `MessagingEndpoint` resource will also allow expose a configuration option `secureOnlyMechanisms`.  If this not provided
 the system will provide a default `PLAIN`, `OAUTHBEARER`.  If the user wishes to relax a the default (and thus allow those mechansims to be used on a insecure channel, the user can override.
@@ -350,12 +359,16 @@ spec:
       - {key: tier, operator: In, values: [cache]}
       - {key: environment, operator: NotIn, values: [dev]}
    secureOnlyMechanisms: ["MECH1"]
+   defaultIdentityProviderRef:  # maybe would be better as a selector and define the default as the first?
+      name:
+      namepace:
 status:
   identityProviders:
   - name:  myldap
     namespace: infrastuff
     secureOnlyMechanisms: PLAIN, OAUTHBEARER
     subjectPrefix: enamsse.io:myldap:infrastuff:
+    default: boolean
 ```
 
 ==== MessagingUser
