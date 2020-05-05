@@ -19,6 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import io.enmasse.common.model.CustomResources;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.iot.utils.ConfigBase;
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
@@ -82,23 +83,29 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
                     @Override
                     public void onUpdate(final IoTProject oldObj, final IoTProject newObj) {
-                        final String key = key(newObj);
-                        log.info("Modified project: {}", key);
-                        projects.put(key, newObj);
+                        try {
+                            AbstractProjectBasedService.this.onUpdate(newObj);
+                        } catch (Exception e) {
+                            log.warn("Failed to run onUpdate()", e);
+                        }
                     }
 
                     @Override
                     public void onDelete(final IoTProject obj, final boolean deletedFinalStateUnknown) {
-                        final String key = key(obj);
-                        log.info("Removed project: {}", key);
-                        projects.remove(key);
+                        try {
+                            AbstractProjectBasedService.this.onDelete(obj);
+                        } catch (Exception e) {
+                            log.warn("Failed to run onDelete()", e);
+                        }
                     }
 
                     @Override
                     public void onAdd(final IoTProject obj) {
-                        final String key = key(obj);
-                        log.info("Added project: {}", key);
-                        projects.put(key, obj);
+                        try {
+                            AbstractProjectBasedService.this.onAdd(obj);
+                        } catch (Exception e) {
+                            log.warn("Failed to run onAdd()", e);
+                        }
                     }
                 });
 
@@ -115,12 +122,35 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
     /**
      * Lookup a project asynchronously.
+     * <p>
+     * The method will return a copy of the project, which can be freely edited
+     * without modifying the internal copy.
      *
      * @param tenantName The name of the tenant to look up.
      * @return A future reporting the result.
      */
     protected Future<Optional<IoTProject>> getProject(final String tenantName) {
-        return succeededFuture(ofNullable(this.projects.get(tenantName)));
+        return succeededFuture(
+                ofNullable(this.projects.get(tenantName))
+                        .map(project -> new IoTProjectBuilder(project).build()));
+    }
+
+    protected void onAdd(final IoTProject project) {
+        final String key = key(project);
+        log.info("Added project: {}", key);
+        this.projects.put(key, project);
+    }
+
+    protected void onUpdate(final IoTProject project) {
+        final String key = key(project);
+        log.info("Modified project: {}", key);
+        this.projects.put(key, project);
+    }
+
+    protected void onDelete(final IoTProject project) {
+        final String key = key(project);
+        log.info("Removed project: {}", key);
+        this.projects.remove(key);
     }
 
 }

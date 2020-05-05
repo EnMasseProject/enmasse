@@ -291,6 +291,10 @@ public class IoTUtils {
         }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
         log.info("IoTProject {} deleted", projectName);
 
+        // now verify that the address spaces had all been created
+
+        assertEquals(initialAddressSpaces, deletedAddressSpaces);
+
         // get the expected and actual address spaces
 
         var expectedAddressSpaces = projectClient
