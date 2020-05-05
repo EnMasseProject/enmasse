@@ -13,7 +13,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.eclipse.hono.deviceregistry.service.credentials.CredentialKey;
 import org.eclipse.hono.deviceregistry.service.device.DeviceKey;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.tracing.TracingHelper;

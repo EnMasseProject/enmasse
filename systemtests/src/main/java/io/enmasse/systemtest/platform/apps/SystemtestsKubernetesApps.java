@@ -39,7 +39,6 @@ import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
-import io.enmasse.iot.model.v1.Mode;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
@@ -125,8 +124,6 @@ public class SystemtestsKubernetesApps {
     public static final String POSTGRESQL_PROJECT = Environment.getInstance().getPostgresqlProject();
     public static final String POSTGRESQL_SERVER = "postgresql";
     private static final Path POSTGRESQL_EXAMPLE_BASE;
-    private static final Path[] POSTGRESQL_CREATE_FLAT_SQL;
-    private static final Path[] POSTGRESQL_CREATE_TREE_SQL;
     private static final Path[] POSTGRESQL_CREATE_TABLE_SQL;
 
     public static final String H2_PROJECT = Environment.getInstance().getH2Project();
@@ -161,20 +158,9 @@ public class SystemtestsKubernetesApps {
         };
 
         POSTGRESQL_EXAMPLE_BASE = examplesIoT.resolve("postgresql/deploy");
-        var pgDevCon = examplesIoT.resolve("postgresql/create.devcon.sql");
-        var pgJsonBase = examplesIoT.resolve("postgresql/create.sql");
-        POSTGRESQL_CREATE_FLAT_SQL = new Path[] {
-                        pgDevCon,
-                        pgJsonBase
-        };
-        POSTGRESQL_CREATE_TREE_SQL = new Path[] {
-                        pgDevCon,
-                        pgJsonBase,
-                        examplesIoT.resolve("postgresql/create.tree.sql")
-        };
         POSTGRESQL_CREATE_TABLE_SQL = new Path[] {
-                        pgDevCon,
-                        examplesIoT.resolve("postgresql/create.table.sql")
+                        examplesIoT.resolve("postgresql/create.devcon.sql"),
+                        examplesIoT.resolve("postgresql/create.sql")
         };
 
         H2_EXAMPLE_BASE = examplesIoT.resolve("h2/deploy");
@@ -424,7 +410,7 @@ public class SystemtestsKubernetesApps {
     /**
      * Deploy the PostgreSQL server for the JDBC device registry.
      */
-    public static Endpoint deployPostgresqlServer(final Mode mode) throws Exception {
+    public static Endpoint deployPostgresqlServer() throws Exception {
 
         if (Environment.getInstance().isSkipDeployPostgresql()) {
             return getPostgresqlEndpoint(POSTGRESQL_PROJECT);
@@ -464,19 +450,7 @@ public class SystemtestsKubernetesApps {
 
         // deploy SQL schema
 
-        switch (mode) {
-            case JSON_FLAT:
-                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_FLAT_SQL);
-                break;
-            case JSON_TREE:
-                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TREE_SQL);
-                break;
-            case TABLE:
-                deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TABLE_SQL);
-                break;
-            default:
-                throw new IllegalArgumentException(String.format("Unsupported test mode: %s", mode));
-        }
+        deployPostgreSQLSchema(podAccess, POSTGRESQL_CREATE_TABLE_SQL);
 
         // return endpoint
 

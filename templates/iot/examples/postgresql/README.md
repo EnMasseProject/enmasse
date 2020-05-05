@@ -13,18 +13,9 @@
 
 	oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.devcon.sql
 
-### For device registry (flat JSON)
+### For device registry
 
     oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.sql
-
-### For device registry (tree JSON)
-
-    oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.sql
-    oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.tree.sql
-
-### For device registry (table)
-
-    oc -n device-registry-storage rsh deployment/postgresql bash -c "PGPASSWORD=user12 psql -h postgresql device-registry registry" < create.table.sql
 
 ## Enter the PostgreSQL container
 

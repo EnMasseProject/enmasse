@@ -5,7 +5,6 @@
 
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_DEFAULT;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
@@ -31,9 +30,6 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(NON_NULL)
 public class ExternalJdbcRegistryServer {
 
-    @JsonInclude(NON_DEFAULT)
-    private Mode mode = Mode.JSON_TREE;
-
     private ExternalJdbcDevicesService adapter;
     private ExternalJdbcDevicesService management;
 
@@ -47,14 +43,6 @@ public class ExternalJdbcRegistryServer {
 
     public void setExtensions(List<ExtensionImage> extensions) {
         this.extensions = extensions;
-    }
-
-    public Mode getMode() {
-        return mode;
-    }
-
-    public void setMode(Mode mode) {
-        this.mode = mode;
     }
 
     public ExternalJdbcDevicesService getAdapter() {

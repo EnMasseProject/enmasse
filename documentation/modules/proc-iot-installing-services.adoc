@@ -69,8 +69,7 @@ You will need to execute the following SQL files on the database instance
 you created. Depenending on your setup, this may require database admin privileges:
 
 - `install/components/iot/examples/postgresql/create.sql`
-- `install/components/iot/examples/postgresql/create.tree.sql`
-
+- `install/components/iot/examples/postgresql/create.devcon.sql`
 
 You can execute the SQL file using the `psql` command, connected to
 your database. The following shows an example, how to execute `psql`
@@ -80,7 +79,6 @@ in the previous step:
 [options="nowrap",subs="attributes,specialchars"]
 ----
 {cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.sql
-{cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.tree.sql
 {cmdcli} exec -ti deployment/postgresql -- bash -c "PGPASSWORD=user12 psql device-registry registry" < install/components/iot/examples/postgresql/create.devcon.sql
 ----
 --

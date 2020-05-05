@@ -292,8 +292,6 @@ type JdbcRegistryServer struct {
 }
 
 type ExternalJdbcRegistryServer struct {
-	Mode string `json:"mode,omitempty"`
-
 	Management *ExternalJdbcRegistryService `json:"management,omitempty"`
 	Adapter    *ExternalJdbcRegistryService `json:"adapter,omitempty"`
 

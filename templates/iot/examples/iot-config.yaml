@@ -15,7 +15,6 @@ spec:
       jdbc:
         server:
           external:
-            mode: JSON_TREE
             management:
               connection:
                 username: registry
