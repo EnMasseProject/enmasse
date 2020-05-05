@@ -4,3 +4,5 @@
  */
 
 export * from "./CreateDevice";
+export * from "./MetaData";
+export * from "./DeviceInformation";

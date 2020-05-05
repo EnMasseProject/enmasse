@@ -8,12 +8,29 @@ import {
   Wizard,
   WizardFooter,
   WizardContextConsumer,
-  Button
+  Button,
+  SelectOptionObject
 } from "@patternfly/react-core";
-import { DeviceInformation } from "modules/device/components/DeviceInformation";
+import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/device/components/ConnectionTypeStep";
 
-const CreateDevice: React.FunctionComponent<any> = () => {
+export interface IDeviceInfo {
+  onPropertySelect: (e: any, selection: SelectOptionObject) => void;
+  onChangePropertyInput?: (value: string) => Promise<any>;
+  onPropertyClear: () => void;
+  propertySelected?: string;
+  propertyInput?: string;
+  setPropertyInput?: (value: string) => void;
+}
+
+const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
+  onPropertySelect,
+  onChangePropertyInput,
+  onPropertyClear,
+  propertySelected,
+  propertyInput,
+  setPropertyInput
+}) => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(true);
   const [connectionType, setConnectionType] = useState<string>();
   const onToggle = () => {
@@ -40,7 +57,19 @@ const CreateDevice: React.FunctionComponent<any> = () => {
     }
   };
   const steps = [
-    { name: "Device information", component: <DeviceInformation /> },
+    {
+      name: "Device information",
+      component: (
+        <DeviceInformation
+          onPropertySelect={onPropertySelect}
+          onChangePropertyInput={onChangePropertyInput}
+          onPropertyClear={onPropertyClear}
+          propertySelected={propertySelected}
+          propertyInput={propertyInput}
+          setPropertyInput={setPropertyInput}
+        />
+      )
+    },
     {
       name: "Connection Type",
       component: (
