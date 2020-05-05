@@ -222,7 +222,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated | soak | shared-iot | isolated-iot) &amp; !upgrade</groups>
+                <groups>(shared-standard | shared-brokered | isolated | soak | shared-iot | isolated-iot | isolated-shared-infra) &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
