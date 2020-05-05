@@ -5,6 +5,10 @@
 
 package io.enmasse.iot.registry.devcon;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.eclipse.hono.service.deviceconnection.DeviceConnectionService;
 import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.eclipse.hono.util.DeviceConnectionResult;
@@ -13,10 +17,6 @@ import io.opentracing.Span;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public abstract class AbstractDeviceConnectionService implements DeviceConnectionService {
 
