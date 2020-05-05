@@ -26,8 +26,10 @@ export interface IIoTReviewProps {
 }
 
 const styles = StyleSheet.create({
-  left_padding: {
-    paddingLeft: 32
+  left_padding_with_border: {
+    paddingLeft: 32,
+    borderLeft: "0.1em solid",
+    borderLeftColor: "lightgrey"
   },
   bottom_padding: {
     paddingBottom: 16
@@ -38,9 +40,8 @@ const styles = StyleSheet.create({
     border: "1px solid",
     borderColor: "lightgrey"
   },
-  grid_item_border: {
-    borderRight: "0.1em solid",
-    borderRightColor: "lightgrey"
+  expandable: {
+    color: "rgb(0, 102, 204)"
   }
 });
 
@@ -50,6 +51,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   isEnabled
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -61,7 +63,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
         project. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem span={5} className={css(styles.grid_item_border)}>
+        <GridItem span={5}>
           <Grid>
             {name && name.trim() !== "" && (
               <>
@@ -93,55 +95,67 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                 </GridItem>
               </>
             )}
+            <br />
+            <span>
+              Click here to{" "}
+              <a onClick={() => setIsExpanded(!isExpanded)}>
+                {" "}
+                {!isExpanded
+                  ? "show equivalent command"
+                  : "hide the command"}{" "}
+              </a>
+            </span>
           </Grid>
         </GridItem>
-        <GridItem span={7} className={css(styles.left_padding)}>
-          <Title size="lg" className={css(styles.bottom_padding)}>
-            {`Configuration details  `}
-            <Tooltip
-              id="iot-preview-feedback"
-              position={TooltipPosition.top}
-              enableFlip={false}
-              trigger={"manual"}
-              content={<div>Succesfully copied to the clipboard</div>}
-              isVisible={isCopied}
-            >
-              <span>
-                <Tooltip
-                  id="iot-preview-copy-feedback"
-                  position={TooltipPosition.top}
-                  enableFlip={false}
-                  content={
-                    <div>Copy the configuration details to the clipboard</div>
-                  }
-                >
-                  <Button
-                    id="preview-iot-copy-button"
-                    variant={ButtonVariant.link}
-                    aria-label="copy iot configuration"
-                    onClick={() => {
-                      //   navigator.clipboard.writeText(data.addressSpaceCommand);
-                      setIsCopied(true);
-                    }}
-                    onMouseLeave={() => setIsCopied(false)}
+        {isExpanded && (
+          <GridItem span={7} className={css(styles.left_padding_with_border)}>
+            <Title size="lg" className={css(styles.bottom_padding)}>
+              {`Configuration details  `}
+              <Tooltip
+                id="iot-preview-feedback"
+                position={TooltipPosition.top}
+                enableFlip={false}
+                trigger={"manual"}
+                content={<div>Succesfully copied to the clipboard</div>}
+                isVisible={isCopied}
+              >
+                <span>
+                  <Tooltip
+                    id="iot-preview-copy-feedback"
+                    position={TooltipPosition.top}
+                    enableFlip={false}
+                    content={
+                      <div>Copy the configuration details to the clipboard</div>
+                    }
                   >
-                    <OutlinedCopyIcon id="preview-iot-copy-icon" size="md" />
-                  </Button>
-                </Tooltip>
-              </span>
-            </Tooltip>
-          </Title>
-          <AceEditor
-            mode="xml"
-            theme="github"
-            fontSize={14}
-            onChange={() => {}}
-            value={"data"}
-            name="UNIQUE_ID_OF_DIV"
-            editorProps={{ $blockScrolling: true }}
-            className={css(styles.editor)}
-          />
-        </GridItem>
+                    <Button
+                      id="preview-iot-copy-button"
+                      variant={ButtonVariant.link}
+                      aria-label="copy iot configuration"
+                      onClick={() => {
+                        //   navigator.clipboard.writeText(data.addressSpaceCommand);
+                        setIsCopied(true);
+                      }}
+                      onMouseLeave={() => setIsCopied(false)}
+                    >
+                      <OutlinedCopyIcon id="preview-iot-copy-icon" size="md" />
+                    </Button>
+                  </Tooltip>
+                </span>
+              </Tooltip>
+            </Title>
+            <AceEditor
+              mode="xml"
+              theme="github"
+              fontSize={14}
+              onChange={() => {}}
+              value={"data"}
+              name="UNIQUE_ID_OF_DIV"
+              editorProps={{ $blockScrolling: true }}
+              className={css(styles.editor)}
+            />
+          </GridItem>
+        )}
       </Grid>
     </PageSection>
   );
