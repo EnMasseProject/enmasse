@@ -302,7 +302,6 @@ func (r *RouterState) ReadEntities(ctx context.Context, entities []RouterEntity)
 	}
 	if err != nil {
 		log.Printf("[Router %s] ReadEntities error: %+v", r.host, err)
-		return nil, err
 	}
 
 	result := make([]RouterEntity, 0, len(entities))
@@ -357,7 +356,6 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 	}
 	if err != nil {
 		log.Printf("[Router %s] EnsureEntities error: %+v", r.host, err)
-		return err
 	}
 
 	// Serialize completed
@@ -391,7 +389,6 @@ func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) 
 	}
 	if err != nil {
 		log.Printf("[Router %s] DeleteEntities error: %+v", r.host, err)
-		return err
 	}
 
 	// Serialize completed

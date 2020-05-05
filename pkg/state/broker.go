@@ -133,7 +133,6 @@ func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
 	}
 	if err != nil {
 		log.Printf("[Broker %s] EnsureQueues error: %+v", b.Host, err)
-		return err
 	}
 	for queue := range completed {
 		b.queues[queue] = true
@@ -178,7 +177,6 @@ func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
 	}
 	if err != nil {
 		log.Printf("[Broker %s] DeleteQueues error: %+v", b.Host, err)
-		return err
 	}
 	for queue := range completed {
 		delete(b.queues, queue)

@@ -570,17 +570,18 @@ func (i *infraClient) doSync() {
 			if err == nil {
 				i.addresses[key] = address
 			}
+			req.done <- err
 		case *v1beta2.MessagingEndpoint:
 			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
 			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
 			if err == nil {
 				i.endpoints[key] = endpoint
 			}
+			req.done <- err
 		default:
-			log.Printf("unexpected value with type %T", v)
+			req.done <- fmt.Errorf("unknown resource type %T", v)
 		}
 		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
-		req.done <- err
 	}
 
 }
@@ -672,7 +673,7 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 			routerEntities = append(routerEntities, result...)
 			built = append(built, req)
 		default:
-			log.Printf("unexpected value with type %T", v)
+			req.done <- fmt.Errorf("unknown resource type %T", v)
 		}
 
 	}
@@ -893,6 +894,7 @@ func (i *infraClient) doDelete() {
 			if err == nil {
 				delete(i.addresses, key)
 			}
+			req.done <- err
 		case *v1beta2.MessagingEndpoint:
 			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
 			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
@@ -900,10 +902,10 @@ func (i *infraClient) doDelete() {
 				i.freePortsInternal(endpoint)
 				delete(i.endpoints, key)
 			}
+			req.done <- err
 		default:
-			log.Printf("unexpected value with type %T", v)
+			req.done <- fmt.Errorf("unknown resource type %T", v)
 		}
-		req.done <- err
 		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
 	}
 }
