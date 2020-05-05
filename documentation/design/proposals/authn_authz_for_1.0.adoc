@@ -136,23 +136,23 @@ For the Anonymous Provider, the SASL mechanism ANONYMOUS will be used.
 
 ===== Getting Started Use-Case
 
-For the Getting Started use case, there will be an implicit default of the Namespace Identity Provider which will
-apply until the first explicit Identity Provider is created.  It will be as if a `IdentityProvider` resource exists which
-declares the `namespace` type with a selector that matches all namespaces.
+For the Getting Started use case, there will be an implicit default of the Namespace Identity Provider/Service Account
+which will apply until the first explicit Identity Provider is created.  It will be as if a `IdentityProvider` resource
+exists which declares the `namespace` type with a selector that matches all namespaces.
 
 For the Getting Started use case, the Developer will be required to create three objects:
 
-1. MessagingUser with username/password,
-2. MessagingRole granting send/receive to all addresses,
-3. MessagingRoleBinding linking the user to the role.
+1. `MessagingUser` with username/password or `ServiceAccount`
+2. `MessagingRole` granting send/receive to all addresses,
+3. `MessagingRoleBinding` linking the user/sa to the role.
 
-All of these will be a few lines of simple YAML.
+All of these will be expressable in a few lines of simple YAML.
 
-As soons as the System Admin declares the first explict `IdentityProvider` the implicit default no longer applies. This is
+As soon as the System Admin declares the first explict `IdentityProvider` the implicit default no longer applies. This is
 true even if the selector of the `IdentityProvider` does not a namespace.  Conversely removing the last explicit  `IdentityProvider` will return the system to the implict default.
 
-If whilst the system is the implicit default mode, a Tenant creates a local `IdentityProvider` the implicit rule no longer applies
-to that namespace.  Other tenants are unaffected.
+If, whilst the system is the implicit default mode, a Tenant creates a local `IdentityProvider` the implicit rule no
+longer applies to that namespace.  Other tenants are unaffected.
 
 ===== Go AMQP server implementation
 
