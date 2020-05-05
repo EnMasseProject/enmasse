@@ -70,7 +70,7 @@ echo '{"enable":"trace+"}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tt
 echo '{"enable":null}' | {cmdcli} exec qdrouterd-_podname_ --stdin=true --tty=false -- qdmanage update -b 127.0.0.1:7777 --type=log --name=log/SERVER --stdin
 ----
 
-== `StandardInfraConfig` environment variable
+== Enabling the protocol trace using the `StandardInfraConfig` environment variable
 
 .Procedure
 
