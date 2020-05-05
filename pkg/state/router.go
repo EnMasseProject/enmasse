@@ -167,8 +167,10 @@ func (r *RouterState) doRequest(request *amqp.Message) (*amqp.Message, error) {
 }
 
 func isConnectionError(err error) bool {
-	var amqpErr *amqp.Error
-	return errors.Is(err, amqp.ErrConnClosed) || errors.Is(err, amqpcommand.NotConnectedError) || errors.As(err, &amqpErr)
+	return err != nil
+	/*
+		var amqpErr *amqp.Error
+		return errors.Is(err, amqp.ErrConnClosed) || errors.Is(err, amqpcommand.NotConnectedError) || errors.As(err, &amqpErr)*/
 }
 
 func (r *RouterState) createEntity(entity RouterEntityType, name string, data map[string]interface{}) error {
