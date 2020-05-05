@@ -40,7 +40,7 @@ import java.util.function.Supplier;
 
 public class ConsoleWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
     private static final By ADDRESS_LIST_XPATH = By.xpath("//table[@aria-label='Address List']");
     private static final By CONNECTION_LIST_XPATH = By.xpath("//table[@aria-label='connection list']");
     private static final By NOT_FOUND_STATE_XPATH = By.className("pf-c-empty-state");
