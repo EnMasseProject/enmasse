@@ -44,6 +44,7 @@
     <module>iot-tenant-cleaner</module>
     <module>iot-utils</module>
 
+    <module>images/iot-adapters</module>
     <module>images/iot-device-registry</module>
   </modules>
 

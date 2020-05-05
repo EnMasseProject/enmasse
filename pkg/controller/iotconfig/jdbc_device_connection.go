@@ -70,6 +70,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 		}
 
 		container.Args = []string{"/iot-device-registry-jdbc.jar"}
+		container.Command = nil
 
 		// set default resource limits
 

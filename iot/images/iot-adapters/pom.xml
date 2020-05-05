@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.enmasse</groupId>
+    <artifactId>iot</artifactId>
+    <version>0.32-SNAPSHOT</version>
+    <relativePath>../../</relativePath>
+  </parent>
+
+  <artifactId>iot-adapters</artifactId>
+  <packaging>pom</packaging>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-http-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-lorawan-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-mqtt-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
+      <artifactId>iot-sigfox-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <excludeTransitive>true</excludeTransitive>
+          <stripVersion>true</stripVersion>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

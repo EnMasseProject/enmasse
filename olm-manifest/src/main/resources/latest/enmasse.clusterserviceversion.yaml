@@ -463,10 +463,14 @@ spec:
       image: ${IOT_PROXY_CONFIGURATOR_IMAGE}
     - name: iot-auth-service
       image: ${IOT_AUTH_SERVICE_IMAGE}
+    - name: iot-device-connection-infinispan
+      image: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
+    - name: iot-device-connection-jdbc
+      image: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
     - name: iot-device-registry-infinispan
       image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
     - name: iot-device-registry-jdbc
-      image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+      image: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
     - name: iot-http-adapter
       image: ${IOT_HTTP_ADAPTER_IMAGE}
     - name: iot-mqtt-adapter
