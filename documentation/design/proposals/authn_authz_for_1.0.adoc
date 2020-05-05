@@ -67,8 +67,7 @@ The algorithm for processing each authentication event:
 1. SASL-MECHANISMS performative flows the Client.
 1. Client selects a mechanism
 1. SASL-INIT flows from Client to the Server
-1. SASL-CHALLENGE / SASL RESPONSE as necessary
-1. Server calls out to the external identity provider / uses `MessagingUser` / uses `TokenReview` to determine if the authentication is successful.
+1. Server calls out to the external identity provider / uses `MessagingUser` / uses `TokenReview` to determine if the authentication is successful. SASL-CHALLENGE / SASL RESPONSE steps as necessary
 1. SASL-OUTCOME flows to the Client.
 1. Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
 1. AMQP OPEN flows to the Router carrying the authorisation policy.
