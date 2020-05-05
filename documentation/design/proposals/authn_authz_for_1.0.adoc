@@ -10,7 +10,7 @@ toc::[]
 
 ## Overview
 
-1.0 will introduce a new component, an Access Control Server, which will have responsiblity for authentication
+1.0 will introduce a new component, an Access Control Server, which will have responsibility for authentication
 and authorization. This will replace the existing authentication services.
 
 For identity, it will have provision for:
@@ -18,7 +18,7 @@ For identity, it will have provision for:
 * leverage an external identity provider (such as a LDAP/Keycloak/OAuth provider),
 * leverage an external AMQP SASL authentication endpoint (implementing the `authServicePlugin` interface),
 * provide an Namespace Identity Provider (where users are represented by a kubernetes custom resources),
-* utilize client auth (in collabration with the `MessagingEndpoint` and the Qpid Dispatch Router),
+* utilize client auth (in collaboration with the `MessagingEndpoint` and the Qpid Dispatch Router),
 * utilise service account tokens for messaging authentication purposes, and
 * provide an anonymous identity provider (SASL ANONYMOUS)
 
@@ -38,7 +38,7 @@ By default the system will ensure that clear text credentials (passwords or bear
 network paths. In concrete terms, this means the system will not offer SASL PLAIN and OAUTHBEARER when it detects the client
 has connected over an unencrypted network.
 
-For the Getting Started use case, there will be an implict default that applies until the first explict Identity Provider
+For the Getting Started use case, there will be an implicit default that applies until the first explicit Identity Provider
 is created.  The user will need to create some objects in order to be able to authenticate and authorize a messaging
 application but these resource will be simple and short.  The system will meet the Secure by Default software design principle
 even when operating in this mode. 
@@ -67,7 +67,8 @@ The algorithm for processing each authentication event:
 1. SASL-MECHANISMS performative flows the Client.
 1. Client selects a mechanism
 1. SASL-INIT flows from Client to the Server
-1. Server calls out to the external identity provider / uses `MessagingUser` / uses `TokenReview` to determine if the authentication is successful. SASL-CHALLENGE / SASL RESPONSE steps as necessary
+1. Server calls out to the external identity provider / uses `MessagingUser` / uses `TokenReview` to determine if the
+   authentication is successful. SASL-CHALLENGE / SASL RESPONSE steps as necessary
 1. SASL-OUTCOME flows to the Client.
 1. Server uses the `MessagingRole`, and `MessagingRoleBinding` to calculate the `address-authz`.
 1. AMQP OPEN flows to the Router carrying the authorisation policy.
@@ -95,12 +96,13 @@ link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER] for bearer token.
 
 Allows the use of an AMQP SASL authentication endpoint that implements the `authServicePlugin` protocol.  When this identity
 provider is used, the Access Control Server acts a SASL proxy.  It will connect to the external provider and relay the
-the AMQP SASL performatives to/from the client.
+AMQP SASL performatives to/from the client.
 
 The response from the External AMQP SASL server must provides an `authenticated-identity`.  It may also provide
-`groups` and a `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated from the `MessagingRoles` and `MessagingRoleBindings`.
+`groups` and a `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated
+from the `MessagingRoles` and `MessagingRoleBindings`.
 
-The SASL mechanisms offered when this identity provider are in use depend on the mechansims required by the External AMQP SASL server.
+The SASL mechanisms offered when this identity provider are in use depend on the mechanisms required by the External AMQP SASL server.
 
 ====== Namespace Identity Provider
 
@@ -123,18 +125,18 @@ This identity provider will offer SASL mechanism EXTERNAL.
 ====== Service Account Identity Provider
 
 The Access Control Server will perform a `TokenReview` to confirm the token's validity and retrieve the username
-and groups asscoiated with the token.  The identity provider will ensure that the token refer to a service account.   
+and groups associated with the token.  The identity provider will ensure that the token refer to a service account.
 
 This identity provider will offer SASL mechanisms PLAIN, link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER]
 
 ====== Anonymous Identity Provider 
 
-For the Anonymous Provider, the SASL mechnism ANONYMOUS will be used.
+For the Anonymous Provider, the SASL mechanism ANONYMOUS will be used.
 
 ===== Getting Started Use-Case
 
-For the Getting Started use case, there will be an implict default of the Namespace Identity Provider which will
-apply until the first explict Identity Provider is created.  It will be as if a `IdentityProvider` resource exists which
+For the Getting Started use case, there will be an implicit default of the Namespace Identity Provider which will
+apply until the first explicit Identity Provider is created.  It will be as if a `IdentityProvider` resource exists which
 declares the `namespace` type with a selector that matches all namespaces.
 
 For the Getting Started use case, the Developer will be required to create three objects:
@@ -145,10 +147,10 @@ For the Getting Started use case, the Developer will be required to create three
 
 All of these will be a few lines of simple YAML.
 
-As soons as the System Admin declares the first explict `IdentityProvider` the implict default no longer applies. This is
-true even if the selector of the `IdentityProvider` does not a namespace.  Conversely removing the last explict  `IdentityProvider` will return the system to the implict default.
+As soons as the System Admin declares the first explict `IdentityProvider` the implicit default no longer applies. This is
+true even if the selector of the `IdentityProvider` does not a namespace.  Conversely removing the last explicit  `IdentityProvider` will return the system to the implict default.
 
-If whilst the system is the implict default, a Tenant creates a local `IdentityProvider` the implict rule no longer applies
+If whilst the system is the implicit default mode, a Tenant creates a local `IdentityProvider` the implicit rule no longer applies
 to that namespace.  Other tenants are unaffected.
 
 ===== Go AMQP server implementation
@@ -159,7 +161,8 @@ be implemented within the Access Control Server code-base.  It will borrow codec
 
 ==== EnMasse Operator
 
-The EnMasse Operator will act as the controller for `IdentityProvider`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources and be responsible for maintaintence of the status sections.
+The EnMasse Operator will act as the controller for `IdentityProvider`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources
+and be responsible for maintenance of the status sections.
 
 For `MessagingUser` resources it will be responsible for salting passwords. [TODO: bad idea? better to use an external tool/console to salt the password?]
 
@@ -186,7 +189,7 @@ follows.
 * `enamsse.io:messaginguser:<namespace>:<name>` where `namespace` refers to the namespace where the `MessagingUser` exists.
   For the sake of information hiding and bervity, the namespace may be omitted if the `MessagingUser` exists in the namespace
   of the Messaging Tenant i.e. `enamsse.io:messaginguser::<name>`.  
-* `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be ommited.  
+* `enamsse.io:<identity provider name>:<namespace>:<name>` where `namespace` refers to the namespace where the `IdentityProvider` exists.  The namespace cannot be omitted.  
 
 ==== Qpid Dispatch Router
 
@@ -340,7 +343,8 @@ available at the `MessagingEndpoint`.  It will be an error for the `defaultIdent
 outside this set.
 
 The `MessagingEndpoint` resource will also allow expose a configuration option `secureOnlyMechanisms`.  If this not provided
-the system will provide a default `PLAIN`, `OAUTHBEARER`.  If the user wishes to relax a the default (and thus allow those mechansims to be used on a insecure channel, the user can override.
+the system will provide a default `PLAIN`, `OAUTHBEARER`.  If the user wishes to relax the default (and thus allow those mechanisms
+to be used on a insecure channel), the user can override.
 
 The status section of the `MessagingEndpoint` will expose the identity providers that are being used by this endpoint and the 
 `secureOnlyMechanisms` setting.
@@ -420,7 +424,7 @@ spec:
 
 ==== MessagingRoleBinding
 
-The `MessagingRoleBinding` provides the linkage between the a subject (user or group) and the `MessagingRole`.
+The `MessagingRoleBinding` provides the linkage between a subject (user or group) and the `MessagingRole`.
 
 There is no referential integrity enforced between the subjects relating to messaging users or services accounts
 and the `MessagingUser` or `ServiceAccount` themselves.
@@ -437,13 +441,13 @@ For the subject references, the following will be used:
   - `system:serviceaccount`  (refers to all serviceaccounts system wide)
 1. `MessagingUser` - the subject will follow the conventions for service accounts but with shorten form for when refering to this namespace.
   - `enamsse.io:messaginguser:<namespace>:<name>` (refers the named MessagingUser),
-  - `enamsse.io:messaginguser:<namespace>` (refers to all messagingusers in the given namespace)
+  - `enamsse.io:messaginguser:<namespace>` (refers to all MessagingUsers in the given namespace)
   - `enamsse.io:messaginguser::<name>` (refers the named MessagingUser in this namespace),
-  - `enamsse.io:messaginguser::` (refers to all messagingusers in the namespace)
-  - `enamsse.io:messaginguser:` (refers to all messagingusers in all the namespace)
+  - `enamsse.io:messaginguser::` (refers to all MessagingUsers in the namespace)
+  - `enamsse.io:messaginguser:` (refers to all MessagingUsers in all the namespace)
 1. `Subject` - a user or group subject belonging to an External, TLS Client Auth or Anonymous Identity Provider.
   - `enamsse.io:<identity provider name>:<namespace>:<subject>` (refers to subject from the given provider)
-  - `system:unauthenticated` - corresponds to the unauthenticated identity from the the anonymous identity provider.
+  - `system:unauthenticated` - corresponds to the unauthenticated identity from the anonymous identity provider.
 
 ```
 apiVersion: enmasse.io/v1beta2
