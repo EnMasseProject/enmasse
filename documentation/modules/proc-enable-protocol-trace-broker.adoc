@@ -5,17 +5,17 @@
 [id='enable-protocol-trace-broker-{context}']
 = Enabling an AMQP protocol trace for the broker
 
-For diagnostic purposes, it is possible to enable an AMQP protocol trace for a broker.   This can be helpful to
-to troubleshoot problems sending or receiving messages.
+For diagnostic purposes, you can enable an AMQP protocol trace for a broker. This can be helpful
+to troubleshoot problems with sending or receiving messages.
 
-To enable the protocol trace, configuration is be applied to the  `standardinfaconfig` (for standard
+To enable the protocol trace, you apply configuration to the `standardinfraconfig` (for standard
 address spaces) or `brokeredinfraconfig` (for brokered address spaces) that enables the protocol trace for all
-brokers of all the address spaces that use that configuration.  Applying this configuration will cause the
+brokers of all the address spaces that use that configuration. Applying this configuration will cause the
 brokers to restart.
 
-WARNING: The protocol trace is verbose.  Enabling it increases the CPU overhead of the broker(s) and may decrease
+WARNING: Enabling the protocol trace increases the CPU overhead of the broker(s) and may decrease
 messaging performance. It may also increase the disk space requirements associated with any log retention system.
-Therefore it is recommended to enable the protocol trace for as shorter time as possible.
+Therefore, it is recommended that you enable the protocol trace for as short a time as possible.
 
 .Procedure
 
@@ -49,7 +49,7 @@ endif::[]
 {cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
 ----
 
-. Enable the protocol trace for all the brokers of the all the address spaces using that use that `standardinfraconfig`
+. Enable the protocol trace for all the brokers of all the address spaces using that `standardinfraconfig`
 or `brokeredinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]
@@ -57,7 +57,7 @@ or `brokeredinfraconfig`:
 {cmdcli} patch _infraconfigresource_ _infraconfigname_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"broker"}]}}}}}'
 ----
 
-. Display the logs for the Pod which will include the protocol trace:
+. Display the logs for the Pod that will include the protocol trace:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
