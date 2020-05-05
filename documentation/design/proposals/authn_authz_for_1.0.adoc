@@ -85,14 +85,11 @@ Later, support will be added for LDAP SASL.
 
 ====== External Keycloak Provider
 
-Allows the use of an External Keycloak instance to provide an identity and, optionally, group information.  This identity
-provider can accept either a username/password or a bearer token.
+Allows the use of an  External Keycloak instance to provide an identity and, optionally, group information.  This identity
+provider can accept either a username/password or a bearer token.  There would be no requirement for the Keycloak to have custom plugins.
 
-This identity provider will offer SASL mechanism PLAIN and SCRAM-SHA-1, SCRAM-SHA-256, SCRAM-SHA-512 for username/password
-authentication and link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER] for bearer token.
-
-The GoCloak Keycloak implementation has the necessary API to validate tokens (`GetUserInfo`), get groups (`GetUserGroups`),
-and retrieve `CredentialRepresentation` (`GetUsers`) to implement the SCRAM-SHA mechanisms.
+This identity provider will offer SASL mechanism PLAIN for username/password authentication and 
+link:https://tools.ietf.org/html/rfc7628[OAUTHBEARER] for bearer token.
 
 ====== External AMQP SASL Provider
 
