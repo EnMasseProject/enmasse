@@ -38,6 +38,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
   nameOptions,
   namespaceOptions,
   typeSelected,
+  statusSelected,
   selectedNames,
   selectedNamespaces,
   onFilterSelect,
@@ -46,6 +47,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
   onNamespaceSelect,
   onNamespaceClear,
   onTypeSelect,
+  onStatusSelect,
   onDeleteAll,
   onSearch,
   onDelete,
@@ -77,6 +79,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
         nameOptions={nameOptions}
         namespaceOptions={namespaceOptions}
         typeSelected={typeSelected}
+        statusSelected={statusSelected}
         selectedNames={selectedNames}
         selectedNamespaces={selectedNamespaces}
         onFilterSelect={onFilterSelect}
@@ -85,6 +88,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
         onNamespaceSelect={onNamespaceSelect}
         onNamespaceClear={onNamespaceClear}
         onTypeSelect={onTypeSelect}
+        onStatusSelect={onStatusSelect}
         onDeleteAll={onDeleteAll}
         onSearch={onSearch}
         onDelete={onDelete}

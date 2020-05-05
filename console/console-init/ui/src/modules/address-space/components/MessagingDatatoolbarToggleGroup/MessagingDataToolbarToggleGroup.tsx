@@ -21,7 +21,11 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import { DropdownWithToggle, TypeAheadSelect } from "components";
+import {
+  DropdownWithToggle,
+  TypeAheadSelect,
+  IDropdownOption
+} from "components";
 
 export interface IMessagingToolbarToggleGroupProps {
   totalRecords: number;
@@ -33,6 +37,7 @@ export interface IMessagingToolbarToggleGroupProps {
   nameOptions?: any[];
   namespaceOptions?: any[];
   typeSelected?: string | null;
+  statusSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   selectedNamespaces: Array<{ value: string; isExact: boolean }>;
   onFilterSelect: (value: string) => void;
@@ -41,6 +46,7 @@ export interface IMessagingToolbarToggleGroupProps {
   onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
   onNamespaceClear: () => void;
   onTypeSelect: (selection: string) => void;
+  onStatusSelect: (selection: string) => void;
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
@@ -60,6 +66,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   namespaceSelected,
   namespaceInput,
   typeSelected,
+  statusSelected,
   selectedNames,
   selectedNamespaces,
   onFilterSelect,
@@ -68,6 +75,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   onNamespaceSelect,
   onNamespaceClear,
   onTypeSelect,
+  onStatusSelect,
   onSearch,
   onDelete,
   onChangeNameInput,
@@ -78,18 +86,26 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   const filterMenuItems = [
     { key: "name", value: "Name" },
     { key: "namespace", value: "Namespace" },
-    { key: "type", value: "Type" }
+    { key: "type", value: "Type" },
+    { key: "status", value: "Status" }
   ];
   const typeOptions: ISelectOption[] = [
     { key: "standard", value: "Standard", isDisabled: false },
     { key: "brokered", value: "Brokered", isDisabled: false }
+  ];
+  const statusOptions: IDropdownOption[] = [
+    { key: "active", value: "Active", label: "Active" },
+    { key: "configuring", value: "Configuring", label: "Configuring" },
+    { key: "pending", value: "Pending", label: "Pending" },
+    { key: "failed", value: "Failed", label: "Failed" }
   ];
 
   const checkIsFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
       (selectedNamespaces && selectedNamespaces.length > 0) ||
-      (typeSelected && typeSelected.trim() !== "")
+      (typeSelected && typeSelected.trim() !== "") ||
+      (statusSelected && statusSelected.trim() !== "")
     ) {
       return true;
     }
@@ -181,6 +197,26 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
               onSelectItem={onTypeSelect}
               dropdownItems={typeOptions}
               value={typeSelected || "Select Type"}
+            />
+          )}
+        </DataToolbarFilter>
+      </DataToolbarItem>
+      <DataToolbarItem
+        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
+      >
+        <DataToolbarFilter
+          chips={statusSelected ? [statusSelected] : []}
+          deleteChip={onDelete}
+          categoryName="Status"
+        >
+          {filterSelected && filterSelected.toLowerCase() === "status" && (
+            <DropdownWithToggle
+              id={"al-filter-dropdown-status"}
+              dropdownItemId={"al-filter-dropdown-item-status"}
+              position={DropdownPosition.left}
+              onSelectItem={onStatusSelect}
+              dropdownItems={statusOptions}
+              value={statusSelected || "Select Status"}
             />
           )}
         </DataToolbarFilter>

@@ -41,6 +41,7 @@ export interface IAddressSpaceListContainerProps {
   filterNames: string[];
   filterNamespaces: string[];
   filterType: string | null;
+  filterStatus: string | null;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onSelectAddressSpace: (data: IAddressSpace, isSelected: boolean) => void;
@@ -58,6 +59,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   filterNames,
   filterNamespaces,
   filterType,
+  filterStatus,
   sortValue,
   setSortValue,
   onSelectAddressSpace,
@@ -82,6 +84,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
       filterNames,
       filterNamespaces,
       filterType,
+      filterStatus,
       sortBy
     ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }

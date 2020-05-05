@@ -17,7 +17,8 @@ const DELETE_ADDRESS_SPACE = gql`
 const ALL_ADDRESS_SPACES_FILTER = (
   filterNames?: any[],
   filterNameSpaces?: any[],
-  filterType?: string | null
+  filterType?: string | null,
+  filterStatus?: string | null
 ) => {
   let filter = "";
   let filterNamesLength = filterNames && filterNames.length;
@@ -49,6 +50,13 @@ const ALL_ADDRESS_SPACES_FILTER = (
   if (filterType) {
     filter += generateFilterPattern("spec.type", [
       { value: filterType.toLowerCase(), isExact: true }
+    ]);
+  }
+
+  //filter tye
+  if (filterStatus) {
+    filter += generateFilterPattern("status.phase", [
+      { value: filterStatus, isExact: true }
     ]);
   }
   return filter;
@@ -83,12 +91,14 @@ const RETURN_ALL_ADDRESS_SPACES = (
   filterNames?: any[],
   filterNameSpaces?: any[],
   filterType?: string | null,
+  filterStatus?: string | null,
   sortBy?: ISortBy
 ) => {
   let filter = ALL_ADDRESS_SPACES_FILTER(
     filterNames,
     filterNameSpaces,
-    filterType
+    filterType,
+    filterStatus
   );
   let orderBy = ALL_ADDRESS_SPACES_SORT(sortBy);
 

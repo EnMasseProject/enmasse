@@ -35,6 +35,7 @@ export default function AddressSpacePage() {
   const [filterNames, setFilterNames] = useState<string[]>([]);
   const [filterNamespaces, setFilterNamespaces] = useState<string[]>([]);
   const [filterType, setFilterType] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [totalAddressSpaces, setTotalAddressSpaces] = useState<number>(0);
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
@@ -172,6 +173,8 @@ export default function AddressSpacePage() {
             setSelectedNamespaces={setFilterNamespaces}
             typeSelected={filterType}
             setTypeSelected={setFilterType}
+            statusSelected={filterStatus}
+            setStatusSelected={setFilterStatus}
             totalAddressSpaces={totalAddressSpaces}
             sortValue={sortDropDownValue}
             setSortValue={setSortDropdownValue}
@@ -189,6 +192,7 @@ export default function AddressSpacePage() {
         filterNames={filterNames}
         filterNamespaces={filterNamespaces}
         filterType={filterType}
+        filterStatus={filterStatus}
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
         selectedAddressSpaces={selectedAddressSpaces}
