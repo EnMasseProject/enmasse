@@ -497,8 +497,6 @@ The AccessControlServer will expose a Prometheus endpoint will the following met
 1. Do we need an audit log of login/logout/failed login events?
 1. What screens need to exist in the UI?
 
-   about adding a CONNECT permission. 
-
 https://github.com/EnMasseProject/enmasse/issues/4106
 https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/proposals/shared-infrastructure.adoc
 https://qpid.apache.org/releases/qpid-dispatch-master/man/qdrouterd.conf.html#_authserviceplugin
