@@ -51,6 +51,9 @@ const statusToDisplay = (phase: string) => {
     case "failed":
       icon = <ErrorCircleOIcon color="red" />;
       break;
+    case "terminating":
+      icon = <BanIcon color="red" />;
+      break;
     case "":
       icon = <ExclamationCircleIcon color="red" />;
       break;

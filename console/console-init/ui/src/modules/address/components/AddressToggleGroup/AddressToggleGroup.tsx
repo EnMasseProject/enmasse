@@ -79,7 +79,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     { key: "active", value: "Active", isDisabled: false },
     { key: "configuring", value: "Configuring", isDisabled: false },
     { key: "pending", value: "Pending", isDisabled: false },
-    { key: "failed", value: "Failed", isDisabled: false }
+    { key: "failed", value: "Failed", isDisabled: false },
+    { key: "terminating", value: "Terminating", isDisabled: false }
   ];
 
   const checkIsFilterApplied = () => {
