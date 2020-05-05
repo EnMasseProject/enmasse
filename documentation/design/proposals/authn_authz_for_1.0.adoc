@@ -10,7 +10,7 @@ toc::[]
 
 ## Overview
 
-1.0 will introduce a new compoent, an Access Control Server, which will have responsiblity for authentication
+1.0 will introduce a new component, an Access Control Server, which will have responsiblity for authentication
 and authorization. This will replace the existing authentication services.
 
 For identity, it will have provision for:
