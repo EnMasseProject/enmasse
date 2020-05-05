@@ -70,13 +70,22 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    private void installExamplesBundle(String namespace) throws Exception {
-        installExamplePlans(namespace);
-        installExampleRoles(namespace);
-        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
-            installServiceCatalog(namespace);
-        }
-        installExampleAuthServices(namespace);
+    public void installEnmasseOlm(OLMInstallationType installation) throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse OLM install");
+        LOGGER.info("***********************************************************");
+        installOlm(installation);
+        waitUntilOperatorReadyOlm(installation);
+        LOGGER.info("***********************************************************");
+    }
+
+    public void installIoTOperator() {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                Enmasse IoT operator install");
+        LOGGER.info("***********************************************************");
+        LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+        LOGGER.info("***********************************************************");
     }
 
     public void deleteEnmasseBundle() throws Exception {
@@ -86,6 +95,35 @@ public class EnmasseOperatorManager {
         deleteExamplesBundle(kube.getInfraNamespace());
         clean();
         LOGGER.info("***********************************************************");
+    }
+
+    public void deleteEnmasseOlm() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse OLM delete");
+        LOGGER.info("***********************************************************");
+        removeOlm();
+        LOGGER.info("***********************************************************");
+    }
+
+    public void deleteEnmasseAnsible() {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("            Enmasse operator delete by ansible");
+        LOGGER.info("***********************************************************");
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
+        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
+        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
+                "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
+        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
+        LOGGER.info("***********************************************************");
+    }
+
+    private void installExamplesBundle(String namespace) throws Exception {
+        installExamplePlans(namespace);
+        installExampleRoles(namespace);
+        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
+            installServiceCatalog(namespace);
+        }
+        installExampleAuthServices(namespace);
     }
 
     public void deleteExamplesBundle(String namespace) {
@@ -103,23 +141,6 @@ public class EnmasseOperatorManager {
 
     public void installExamplesBundleOlm() throws Exception {
         installExamplesBundle(getNamespaceByOlmInstallationType(Environment.getInstance().olmInstallType()));
-    }
-
-    public void installEnmasseOlm(OLMInstallationType installation) throws Exception {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                  Enmasse OLM install");
-        LOGGER.info("***********************************************************");
-        installOlm(installation);
-        waitUntilOperatorReadyOlm(installation);
-        LOGGER.info("***********************************************************");
-    }
-
-    public void deleteEnmasseOlm() throws Exception {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                  Enmasse OLM delete");
-        LOGGER.info("***********************************************************");
-        removeOlm();
-        LOGGER.info("***********************************************************");
     }
 
     public void installOperators() {
@@ -180,21 +201,6 @@ public class EnmasseOperatorManager {
         KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void installIoTOperator() {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                Enmasse IoT operator install");
-        LOGGER.info("***********************************************************");
-        LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
-        LOGGER.info("***********************************************************");
-
-    }
-
-    public void removeOperators() {
-        LOGGER.info("Delete enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
-    }
-
     public void removeExamplePlans(String namespace) {
         LOGGER.info("Delete enmasse example plans from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
@@ -243,18 +249,6 @@ public class EnmasseOperatorManager {
         LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         KubeCMDClient.runOnCluster("delete", "iotconfigs", "-n", kube.getInfraNamespace());
-    }
-
-    public void deleteEnmasseAnsible() {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("            Enmasse operator delete by ansible");
-        LOGGER.info("***********************************************************");
-        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
-        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
-        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
-                "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
-        assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
-        LOGGER.info("***********************************************************");
     }
 
     public boolean clean() throws Exception {
@@ -330,7 +324,8 @@ public class EnmasseOperatorManager {
 
     public boolean isEnmasseBundleDeployed() {
         return kube.namespaceExists(kube.getInfraNamespace())
-                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1;
+                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1
+                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("address-space-contoller")).count() == 1;
     }
 
     public boolean isEnmasseOlmDeployed() {
