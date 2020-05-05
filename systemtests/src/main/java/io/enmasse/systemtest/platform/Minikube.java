@@ -30,7 +30,15 @@ public class Minikube extends Kubernetes {
     protected Minikube(Environment environment) {
         super(environment, () -> {
             Config config = new ConfigBuilder().build();
-            return new DefaultKubernetesClient(config);
+            OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
+            // Workaround https://github.com/square/okhttp/issues/3146
+            httpClient = httpClient.newBuilder()
+                    .protocols(Collections.singletonList(Protocol.HTTP_1_1))
+                    .connectTimeout(environment.getKubernetesApiConnectTimeout())
+                    .writeTimeout(environment.getKubernetesApiWriteTimeout())
+                    .readTimeout(environment.getKubernetesApiReadTimeout())
+                    .build();
+            return new DefaultKubernetesClient(httpClient, config);
         });
     }
 
