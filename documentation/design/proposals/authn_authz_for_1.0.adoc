@@ -476,6 +476,19 @@ The AccessControlServer will expose a Prometheus endpoint will the following met
 1. `auth_requests_duration_seconds{namespace="", domain="", sasl_outcome="", le=<buckets>}`
 
 
+=== Open Questions
+
+1. SASL ANONYMOUS can optional pass an `email` / `token`. Do we want to use that?
+1. How will existing messaging users be retained when upgrading from EnMasse 0.30 or 0.31?
+1. Should a user who successfully authenticates but has no access to addresses but allowed to connect?  We discussed 
+   a CONNECT permission, but noted that the same effect can be achieved by using the existence of at least one
+   messaging permission.  We also said that if we were to do this, then there needs to be a easy way for a Operator
+   to distinguish a authentication failure from an authorization failure.
+1. Do we need an audit log of login/logout/failed login events?
+1. What screens need to exist in the UI?
+
+   about adding a CONNECT permission. 
+
 https://github.com/EnMasseProject/enmasse/issues/4106
 https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/proposals/shared-infrastructure.adoc
 https://qpid.apache.org/releases/qpid-dispatch-master/man/qdrouterd.conf.html#_authserviceplugin
