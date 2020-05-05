@@ -486,7 +486,7 @@ The AccessControlServer will expose a Prometheus endpoint will the following met
 1. `auth_requests_duration_seconds{namespace="", domain="", sasl_outcome="", le=<buckets>}`
 
 
-=== Open Questions
+== Open Questions
 
 1. SASL ANONYMOUS can optional pass an `email` / `token`. Do we want to use that?
 1. How will existing messaging users be retained when upgrading from EnMasse 0.30 or 0.31?
