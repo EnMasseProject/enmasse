@@ -13,7 +13,6 @@ ways this can be achieved.
 method avoids the need to restart the router.  The setting will be lost the next time the router restarts.
 
 * Alternatively, you can apply configuration to the `standardinfraconfig` that enables the protocol trace for all
-``
 routers of all the address spaces that use that `standardinfraconfig`.  This method will cause all the routers to
 restart.
 
