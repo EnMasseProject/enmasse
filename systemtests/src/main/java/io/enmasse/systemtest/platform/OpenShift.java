@@ -42,7 +42,6 @@ public class OpenShift extends Kubernetes {
             Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
                     .withOauthToken(environment.getApiToken())
                     .build();
-
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
