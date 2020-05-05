@@ -99,10 +99,11 @@ provider is used, the Access Control Server acts a SASL proxy.  It will connect 
 AMQP SASL performatives to/from the client.
 
 The response from the External AMQP SASL server must provides an `authenticated-identity`.  It may also provide
-`groups` and a `address-authz`.  If the external server provides an `address-authz`, it will be ANDed with the `address-authz` calculated
-from the `MessagingRoles` and `MessagingRoleBindings`.
+`groups` and a `address-authz`.  If the external server provides an `address-authz`, the resulting `address-authz`
+will be the union of the calculated `address-authz` (from the `MessagingRoles` and `MessagingRoleBindings`) and the
+`address-authz` preovided by the external service.
 
-The SASL mechanisms offered when this identity provider are in use depend on the mechanisms required by the External AMQP SASL server.
+The SASL mechanisms offered by this identity provider  depend on the mechanisms offered by the External AMQP SASL server.
 
 ====== Namespace Identity Provider
 
