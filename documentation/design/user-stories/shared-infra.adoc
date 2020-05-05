@@ -189,6 +189,7 @@ spec:
   identityProviderSelector:
     matchLabels:
       type: messaging
+
   # Optional: restrict the secureOnlyMechanism
   secureOnlyMechanism: []
 
@@ -217,6 +218,8 @@ spec:
 status:
   phase: Pending | Configuring | Active | Failed | Terminating
   message: "Useful error message"
+
+  type: cluster | nodePort | loadBalancer | ingress | route
 
   # Host set to auto-generated value
   host: messaging.example.com
@@ -608,11 +611,11 @@ spec:
 
 === Specify default endpoints and cert providers to be created for messaging tenants
 
-Default endpoint configuration is specified in the `MessagingPlan` under the `default` field.
+Default endpoint configuration is specified in the `MessagingPlan` under the `endpoint.default` field.
 
 * The controller creates one `MessagingEndpoint` for each entry in the plan list
 * The schema for each entry corresponds to the `spec` object in `MessagingEndpoint` with the following exceptions:
-  * The `host` field is ignored and set to defaults
+  * The `host` field is ignored and set to default.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -621,8 +624,8 @@ metadata:
   name: myplan
   namespace: planspace
 spec:
-  default:
-    endpoints:
+  endpoint:
+    default:
      - route: {}
        protocols:
        - AMQPS
@@ -637,12 +640,14 @@ spec:
 === Restrict which endpoint types and cert providers can be used for messaging tenants
 
 Restricting allowed endpoint types and cert providers allow the service admin to control
-exposure of messaging endpoints in a cluster. The `restrict.endpoints` field is used to restrict
-which endpoint types and which protocols are allowed.
+exposure of messaging endpoints in a cluster. The `.endpoint.allowed` field is used to define
+allowed combinations of endpoint settings.
 
-* `MessagingEndpoint` resources for tenants referencing this plan must exactly match one of the entries.
-* The schema for each entry corresponds to the `spec` object in `MessagingEndpoint` with the following exceptions:
-  * The `host` field is ignored and set to defaults
+* If an empty object is specified, i.e. `route: {}`, it means sub-properties may contain any value allowed by the endpoint spec.
+* Any `MessagingEndpoint` spec field that is set to a non-empty value must contain the same value as in the `spec` of the schema.
+* The `spec` of the `MessagingEndpoint` resources for tenants referencing this plan must match one of the entries in the `endpoint.allowed[*].spec.
+* The `spec` for each entry corresponds to the `spec` object in `MessagingEndpoint`
+* If the `allowed` specs conflicts with the `default`, the `MessagingPlan` status will contain a warning message.
 
 The following example will enforce `route` endpoints to use a specific certificate and require `cluster` endpoints to use unencrypted protocols.
 
@@ -653,26 +658,33 @@ metadata:
   name: myplan
   namespace: planspace
 spec:
-  restrict:
-    endpoints:
-     - route: {}
-       protocols:
-       - AMQPS
-       tls:
-         external:
-           cert:
-             valueFromSecret:
-               name: external-certs
-     - cluster: {}
-        # Define which protocols are supported by the default endpoint
-       protocols:
-       - AMQP
+  endpoint:
+    # Endpoints are required to meet one of the following requirements
+    allowed:
+    - max: 1
+      spec:
+        route: {}
+        protocols:
+        - AMQPS
+        tls:
+          external:
+            cert:
+              valueFromSecret:
+                name: external-certs
+    - max: 2
+      spec:
+        cluster: {}
+        protocols:
+        - AMQP
 ```
 
 
 === Restrict how much memory and storage is consumed per messaging tenant
 
-Create the following `MessagingPlan` to enforce limits:
+Create a `MessagingPlan` with the limits to be applied to tenants.
+
+* `requests` will in the future be used as a parameter when selecting which shared infrastructure a tenant should run on. For instance, if a tenant is requesting initially 512MB of broker memory, and is starting to go beyond that, the operator maybe migrate the tenant to a different shared infrastructure.
+* `limits` are used to ensure that tenants with this plan are not allowed to use more resources than the limit values. If a tenant creates addresses whose address plan limits go beyond the messaging plan limits, it will not be configured.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -701,7 +713,7 @@ spec:
 
 Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
 
-* Multiple address types can be defined in the same plan
+* Plans apply to any address type
 * If resource limit is not set - limit is not specified
 * If resource request is not set - it equals the limit
 * If resource is not set - no limits are specified
@@ -713,7 +725,8 @@ metadata:
   name: plan1
   namespace: planspace
 spec:
-  queue:
+  # Resource limits are applied to any address type that is stored on a broker
+  broker:
     resources:
       requests:
         memory: 5Mi
@@ -721,15 +734,15 @@ spec:
       limits:
         memory: 10Mi
         storage: 30Mi
-  topic:
-    resources:
-      limits:
-        memory: 5Mi
-        storage: 20Mi
 
+  # Per-address type properties
+  queue:
+    expiryQueue: myexp
+    partitions: 3
+
+  # If settings can be overridden by address definition
+  allowOverride: true | false
 ```
-
-NOTE: Allow `MessagingAddressPlan` to cover multiple address types in order to allow more flexible plan management.
 
 === Configure scaling of the routers based on the connection load and number of messaging tenants
 
@@ -738,8 +751,6 @@ NOTE: Allow `MessagingAddressPlan` to cover multiple address types in order to a
 === Configure per-user limits for connections, links, message size
 
 === Migrate tenant configuration and data from 1.5 to 2.0 (with downtime)
-
-
 
 === CRUDLW an Identity provider that allows tenants to utilize of a namespace scoped users for the purpose of messaging authentication
 
@@ -786,9 +797,10 @@ metadata:
   namespace: infraspace
 spec:
   ...
-  namespaceSelector:
-    matchLabels:
-      environment: uat1
+  selector:
+    namespaceSelector:
+      matchLabels:
+        environment: uat1
 ```
 
 === Understand the state of the IdentityProvider
