@@ -76,6 +76,7 @@ const getType = (type: string) => {
       return " Brokered";
   }
 };
+
 const removeForbiddenChars = (input: string) => {
   let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
   escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
@@ -109,6 +110,7 @@ export const getTypeColor = (type: string) => {
   }
   return iconColor;
 };
+
 const dnsSubDomainRfc1123NameRegexp = new RegExp(
   "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
 );
@@ -273,6 +275,7 @@ export {
   findIndexByProperty,
   hasOwnProperty,
   getCombinedString,
+  getOptions,
   getJson,
   getJsonForObject
 };

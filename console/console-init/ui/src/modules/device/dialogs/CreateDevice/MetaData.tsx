@@ -10,22 +10,10 @@ import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
 
 export interface IMetaData {
-  onPropertySelect: (e: any, selection: SelectOptionObject) => void;
   onChangePropertyInput?: (value: string) => Promise<any>;
-  onPropertyClear: () => void;
-  propertySelected?: string;
-  propertyInput?: string;
-  setPropertyInput?: (value: string) => void;
 }
 
-export const MetaData: React.FC<IMetaData> = ({
-  onPropertySelect,
-  onChangePropertyInput,
-  onPropertyClear,
-  propertySelected,
-  propertyInput,
-  setPropertyInput
-}) => {
+export const MetaData: React.FC<IMetaData> = ({ onChangePropertyInput }) => {
   const [formData, setFormData] = useState([{ defaults: {}, ext: {} }]);
 
   const handleAddParentClick = () => {
@@ -38,12 +26,7 @@ export const MetaData: React.FC<IMetaData> = ({
       {formData.map((data, index) => {
         return (
           <MetaDataRow
-            onPropertyClear={onPropertyClear}
-            onPropertySelect={onPropertySelect}
             onChangePropertyInput={onChangePropertyInput}
-            propertyInput={propertyInput}
-            propertySelected={propertySelected}
-            setPropertyInput={setPropertyInput}
             formData={formData}
             setFormData={setFormData}
           />

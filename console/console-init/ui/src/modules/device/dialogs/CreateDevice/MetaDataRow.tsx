@@ -11,30 +11,25 @@ import {
 } from "@patternfly/react-core";
 import { TypeAheadSelect, DropdownWithToggle } from "components";
 import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
+import { ISelectOption } from "utils";
 
 export interface IMetaDataRow {
-  onPropertySelect: (e: any, selection: SelectOptionObject) => void;
   onChangePropertyInput?: (value: string) => Promise<any>;
-  onPropertyClear: () => void;
-  propertySelected?: string;
-  propertyInput?: string;
-  setPropertyInput?: (value: string) => void;
   formData: any;
   setFormData: (formData: any) => void;
 }
 
 export const MetaDataRow: React.FC<IMetaDataRow> = ({
-  onPropertySelect,
   onChangePropertyInput,
-  onPropertyClear,
-  propertySelected,
-  propertyInput,
-  setPropertyInput,
   formData,
   setFormData
 }) => {
   const [currentValue, setCurrentValue] = useState("");
   const [currentKey, setCurrentKey] = useState("");
+  const [propertySelected, setPropertySelected] = useState<string | undefined>(
+    ""
+  );
+  const [propertyInput, setPropertyInput] = useState<string | undefined>("");
 
   const handleAddChildClick = (event: any, parentKey: string) => {
     let element = { defaults: { parentKey: {} }, ext: {} };
@@ -55,15 +50,22 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     setFormData(metadataList);
   };
 
-  const dropdownItems = [
-    <DropdownItem key="link">Link</DropdownItem>,
-    <DropdownItem key="action" component="button">
-      Action
-    </DropdownItem>,
-    <DropdownItem key="disabled link" isDisabled>
-      Disabled Link
-    </DropdownItem>
+  const onPropertySelect = (e: any, selection: SelectOptionObject) => {
+    setPropertySelected(selection.toString());
+    setPropertyInput(undefined);
+  };
+
+  const onPropertyClear = () => {
+    setPropertySelected(undefined);
+    setPropertyInput(undefined);
+  };
+
+  const typeOptions: ISelectOption[] = [
+    { key: "string", label: "String", value: "String" },
+    { key: "number", label: "Number", value: "Number" },
+    { key: "boolean", label: "Boolean", value: "Boolean" }
   ];
+
   return (
     <>
       <Grid gutter="sm">
@@ -91,10 +93,10 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
-            id="cas-dropdown-namespace"
+            id="cd-metadata-dropdown-type"
             position={DropdownPosition.left}
             onSelectItem={() => {}}
-            dropdownItems={dropdownItems}
+            dropdownItems={typeOptions}
             value={"String"}
           />
         </GridItem>
