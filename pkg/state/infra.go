@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -26,8 +27,16 @@ type resourceKey struct {
 	Namespace string
 }
 
+const syncBufferSize int = 100
+const maxBatchSize int = 50
+
 // TODO - Add periodic reset of router and broker state
 // TODO - Unit test of address and endpoint management
+
+type request struct {
+	done     chan error
+	resource runtime.Object
+}
 
 type infraClient struct {
 	// The known routers and brokers. All configuration is synchronized with these. If their connections get reset,
@@ -38,6 +47,16 @@ type infraClient struct {
 
 	// Port allocation map for router ports
 	ports map[int]*string
+
+	// Channel of resources that are awaiting sync
+	syncRequests  chan *request
+	syncerStop    chan bool
+	syncerStopped chan bool
+
+	// Channel of resources that are awaiting deletion
+	deleteRequests chan *request
+	deleterStop    chan bool
+	deleterStopped chan bool
 
 	// Endpoints and addresses known to this client. These provide a consistent view of addresses and endpoints
 	// between infra, endpoint and address controllers that may attempt to modify the state at the same time.
@@ -67,6 +86,12 @@ func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, cloc
 		brokers:            make(map[string]*BrokerState, 0),
 		addresses:          make(map[resourceKey]*v1beta2.MessagingAddress, 0),
 		endpoints:          make(map[resourceKey]*v1beta2.MessagingEndpoint, 0),
+		syncRequests:       make(chan *request, syncBufferSize),
+		syncerStop:         make(chan bool),
+		syncerStopped:      make(chan bool),
+		deleteRequests:     make(chan *request, syncBufferSize),
+		deleterStop:        make(chan bool),
+		deleterStopped:     make(chan bool),
 		clock:              clock,
 		resyncInterval:     1800 * time.Second, // TODO: Make configurable
 		ports:              portmap,
@@ -75,6 +100,34 @@ func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, cloc
 		lock:               &sync.Mutex{},
 	}
 	return client
+}
+
+func (i *infraClient) Start() {
+	go func() {
+		log.Printf("Starting syncer goroutine")
+		for {
+			select {
+			case <-i.syncerStop:
+				i.syncerStopped <- true
+				return
+			default:
+				i.doSync()
+			}
+		}
+	}()
+
+	go func() {
+		log.Printf("Starting deleter goroutine")
+		for {
+			select {
+			case <-i.deleterStop:
+				i.deleterStopped <- true
+				return
+			default:
+				i.doDelete()
+			}
+		}
+	}()
 }
 
 func (i *infraClient) randomResync(now time.Time) time.Time {
@@ -278,27 +331,47 @@ func (i *infraClient) initPorts() {
 
 }
 
+/**
+ * Calling this function will apply existing configuration resources to all routers and brokers.
+ * This is called whenever the routers or brokers change so that they get the correct configuration applied.
+ */
 func (i *infraClient) syncConfiguration(ctx context.Context) error {
 	i.initPorts()
+	routerEntities := make([]RouterEntity, 0)
+	brokerQueues := make(map[string][]string, 0)
+
 	for _, endpoint := range i.endpoints {
 		if endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != "" {
-			addresses := make([]*v1beta2.MessagingAddress, 0, len(i.addresses))
 			for _, address := range i.addresses {
 				if endpoint.Namespace == address.Namespace {
-					addresses = append(addresses, address)
+					resultRouter, err := i.buildRouterAddressEntities(endpoint, address)
+					if err != nil {
+						return err
+					}
+
+					resultBroker, err := i.buildBrokerAddressEntities(endpoint, address)
+					if err != nil {
+						return err
+					}
+					for broker, queues := range resultBroker {
+						if brokerQueues[broker] == nil {
+							brokerQueues[broker] = queues
+						} else {
+							brokerQueues[broker] = append(brokerQueues[broker], queues...)
+						}
+					}
+					routerEntities = append(routerEntities, resultRouter...)
 				}
 			}
-			err := i.syncAddressesInternal(ctx, endpoint, addresses)
+			e, err := i.buildRouterEndpointEntities(endpoint)
 			if err != nil {
 				return err
 			}
-			err = i.syncEndpointInternal(ctx, endpoint)
-			if err != nil {
-				return err
-			}
+			routerEntities = append(routerEntities, e...)
 		}
 	}
-	return nil
+
+	return i.syncEntities(ctx, routerEntities, brokerQueues)
 }
 
 func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress, scheduler Scheduler) error {
@@ -306,7 +379,7 @@ func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress, schedul
 	defer i.lock.Unlock()
 
 	if !i.initialized {
-		return NewNotInitializedError()
+		return NotInitializedError
 	}
 
 	brokers := make([]*BrokerState, 0)
@@ -341,21 +414,52 @@ func (i *infraClient) applyBrokers(ctx context.Context, fn func(broker *BrokerSt
 	return g.Wait()
 }
 
+/**
+ * Return map of endpoints that are in the active state (phase Active) and hostname set.
+ */
+func (i *infraClient) getActiveEndpoints() map[string][]*v1beta2.MessagingEndpoint {
+	activeEndpoints := make(map[string][]*v1beta2.MessagingEndpoint, 0)
+	for _, endpoint := range i.endpoints {
+		if isEndpointActive(endpoint) {
+			if activeEndpoints[endpoint.Namespace] == nil {
+				activeEndpoints[endpoint.Namespace] = make([]*v1beta2.MessagingEndpoint, 0)
+			}
+			activeEndpoints[endpoint.Namespace] = append(activeEndpoints[endpoint.Namespace], endpoint)
+		}
+	}
+	return activeEndpoints
+}
+
+func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
+
+	// Request sync
+	log.Printf("Syncing address %s/%s", address.Namespace, address.Name)
+	req := &request{
+		resource: address,
+		done:     make(chan error, 1),
+	}
+	select {
+	case i.syncRequests <- req:
+		return <-req.done
+	default:
+		close(req.done)
+		return NotSyncedError
+	}
+}
+
 func (i *infraClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	if !i.initialized {
-		return NewNotInitializedError()
+	log.Printf("Syncing endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+	req := &request{
+		resource: endpoint,
+		done:     make(chan error, 1),
 	}
-
-	ctx := context.Background()
-	err := i.syncEndpointInternal(ctx, endpoint)
-	if err != nil {
-		return err
+	select {
+	case i.syncRequests <- req:
+		return <-req.done
+	default:
+		close(req.done)
+		return NotSyncedError
 	}
-	i.endpoints[resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}] = endpoint
-	return nil
 }
 
 func (i *infraClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error {
@@ -363,7 +467,7 @@ func (i *infraClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protoco
 	defer i.lock.Unlock()
 
 	if !i.initialized {
-		return NewNotInitializedError()
+		return NotInitializedError
 	}
 
 	// Allocate ports for all defined protocols
@@ -432,11 +536,160 @@ func (i *infraClient) freePortsInternal(endpoint *v1beta2.MessagingEndpoint) {
 	endpoint.Status.InternalPorts = make([]v1beta2.MessagingEndpointPort, 0)
 }
 
-func (i *infraClient) syncEndpointInternal(ctx context.Context, endpoint *v1beta2.MessagingEndpoint) error {
-	listeners := make([]RouterEntity, 0)
+/**
+ * Synchronize resources from incoming requests.
+ */
+func (i *infraClient) doSync() {
+	toSync := i.collectRequests(i.syncRequests)
+	if len(toSync) == 0 {
+		return
+	}
+	log.Printf("Going to sync %d resources to infra", len(toSync))
+
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	if !i.initialized {
+		for _, req := range toSync {
+			req.done <- NotInitializedError
+		}
+		return
+	}
+
+	builtRequests, routerEntities, brokerQueues := i.buildEntities(toSync)
+
+	log.Printf("Syncing %d router entities", len(routerEntities))
+	ctx := context.Background()
+	err := i.syncEntities(ctx, routerEntities, brokerQueues)
+	for _, req := range builtRequests {
+		var key resourceKey
+		switch v := req.resource.(type) {
+		case *v1beta2.MessagingAddress:
+			address := req.resource.(*v1beta2.MessagingAddress)
+			key = resourceKey{Name: address.Name, Namespace: address.Namespace}
+			if err == nil {
+				i.addresses[key] = address
+			}
+			req.done <- err
+		case *v1beta2.MessagingEndpoint:
+			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
+			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
+			if err == nil {
+				i.endpoints[key] = endpoint
+			}
+			req.done <- err
+		default:
+			req.done <- fmt.Errorf("unknown resource type %T", v)
+		}
+		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
+	}
+
+}
+
+func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity, brokerQueues map[string][]string) error {
+	// Configure brokers first
+	var err error
+	if len(brokerQueues) > 0 {
+		err = i.applyBrokers(ctx, func(broker *BrokerState) error {
+			if len(brokerQueues[broker.Host]) > 0 {
+				return broker.EnsureQueues(ctx, brokerQueues[broker.Host])
+			}
+			return nil
+		})
+	}
+	if err != nil {
+		return err
+	}
+
+	// Configure all routers
+	if len(entities) > 0 {
+		err = i.applyRouters(ctx, func(router *RouterState) error {
+			return router.EnsureEntities(ctx, entities)
+		})
+	}
+	return err
+}
+
+/**
+ * Build entities for all requests. Failed requests will be marked as failed immediately, and the list of successful requests along with entities that should
+ * be created is returned.
+ */
+func (i *infraClient) buildEntities(requests []*request) (built []*request, routerEntities []RouterEntity, brokerQueues map[string][]string) {
+	activeEndpoints := i.getActiveEndpoints()
+	routerEntities = make([]RouterEntity, 0, len(requests))
+	brokerQueues = make(map[string][]string, len(i.brokers))
+	for _, broker := range i.brokers {
+		brokerQueues[broker.Host] = make([]string, 0)
+	}
+
+	built = make([]*request, 0, len(requests))
+	for _, req := range requests {
+		switch v := req.resource.(type) {
+		case *v1beta2.MessagingAddress:
+			address := req.resource.(*v1beta2.MessagingAddress)
+			endpoints := activeEndpoints[address.Namespace]
+			if endpoints == nil {
+				req.done <- NoEndpointsError
+				continue
+			}
+
+			failed := false
+			for _, endpoint := range endpoints {
+				resultRouter, err := i.buildRouterAddressEntities(endpoint, address)
+				if err != nil {
+					req.done <- err
+					failed = true
+					break
+				}
+
+				resultBroker, err := i.buildBrokerAddressEntities(endpoint, address)
+				if err != nil {
+					req.done <- err
+					failed = true
+					break
+				}
+
+				routerEntities = append(routerEntities, resultRouter...)
+				for broker, queues := range resultBroker {
+					if brokerQueues[broker] == nil {
+						brokerQueues[broker] = queues
+					} else {
+						brokerQueues[broker] = append(brokerQueues[broker], queues...)
+					}
+				}
+			}
+
+			if !failed {
+				built = append(built, req)
+			}
+
+		case *v1beta2.MessagingEndpoint:
+			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
+			result, err := i.buildRouterEndpointEntities(endpoint)
+			if err != nil {
+				req.done <- err
+				continue
+			}
+			routerEntities = append(routerEntities, result...)
+			built = append(built, req)
+		default:
+			req.done <- fmt.Errorf("unknown resource type %T", v)
+		}
+
+	}
+
+	return built, routerEntities, brokerQueues
+}
+
+func isEndpointActive(endpoint *v1beta2.MessagingEndpoint) bool {
+	return endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != ""
+}
+
+func (i *infraClient) buildRouterEndpointEntities(endpoint *v1beta2.MessagingEndpoint) ([]RouterEntity, error) {
+	routerEntities := make([]RouterEntity, 0)
 	for _, internalPort := range endpoint.Status.InternalPorts {
 		if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
-			listeners = append(listeners, &RouterListener{
+			routerEntities = append(routerEntities, &RouterListener{
 				Name:               internalPort.Name,
 				Host:               "0.0.0.0",
 				Port:               fmt.Sprintf("%d", internalPort.Port),
@@ -446,12 +699,229 @@ func (i *infraClient) syncEndpointInternal(ctx context.Context, endpoint *v1beta
 			})
 		} else {
 			// TODO
-			return fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
+			return nil, fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
 		}
 	}
+	return routerEntities, nil
+}
 
-	return i.applyRouters(ctx, func(router *RouterState) error {
-		return router.EnsureEntities(ctx, listeners)
+/**
+ * Add router entities that should exist for a given address for a given endpoint.
+ */
+func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndpoint, address *v1beta2.MessagingAddress) ([]RouterEntity, error) {
+	// Skip endpoints that are not active or do not have hosts defined
+	if !isEndpointActive(endpoint) {
+		return nil, fmt.Errorf("inactive endpoint")
+	}
+
+	routerEntities := make([]RouterEntity, 0)
+
+	tenantId := endpoint.Status.Host
+
+	// Build desired state
+	addressName := addressName(tenantId, address)
+	fullAddress := fullAddress(tenantId, address)
+	if address.Spec.Anycast != nil {
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "balanced",
+			Waypoint:     false,
+		})
+	} else if address.Spec.Multicast != nil {
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "multicast",
+			Waypoint:     false,
+		})
+	} else if address.Spec.Queue != nil {
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "balanced",
+			Waypoint:     true,
+		})
+
+		for _, broker := range address.Status.Brokers {
+			brokerState := i.brokers[broker.Host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure address autoLink (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			routerEntities = append(routerEntities, &RouterAutoLink{
+				Name:            autoLinkName(tenantId, address, broker.Host, "in"),
+				Address:         fullAddress,
+				Direction:       "in",
+				Connection:      connectorName(brokerState),
+				ExternalAddress: fullAddress,
+			})
+
+			routerEntities = append(routerEntities, &RouterAutoLink{
+				Name:            autoLinkName(tenantId, address, broker.Host, "out"),
+				Address:         fullAddress,
+				Direction:       "out",
+				Connection:      connectorName(brokerState),
+				ExternalAddress: fullAddress,
+			})
+		}
+	} else if address.Spec.DeadLetter != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'deadLetter'")
+	} else if address.Spec.Topic != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'topic'")
+	} else if address.Spec.Subscription != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'subscription'")
+	}
+	return routerEntities, nil
+}
+
+/**
+ * Add broker queues to be created for a given addresss
+ */
+func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndpoint, address *v1beta2.MessagingAddress) (map[string][]string, error) {
+
+	if !isEndpointActive(endpoint) {
+		return nil, fmt.Errorf("inactive endpoint")
+	}
+
+	brokerQueues := make(map[string][]string, 0)
+	tenantId := endpoint.Status.Host
+
+	// Build desired state
+	fullAddress := fullAddress(tenantId, address)
+	if address.Spec.Queue != nil {
+		for _, broker := range address.Status.Brokers {
+			brokerState := i.brokers[broker.Host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure queue (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			if len(brokerQueues[broker.Host]) == 0 {
+				brokerQueues[broker.Host] = make([]string, 0)
+			}
+			brokerQueues[broker.Host] = append(brokerQueues[broker.Host], fullAddress)
+		}
+	} else if address.Spec.DeadLetter != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'deadLetter'")
+	} else if address.Spec.Topic != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'topic'")
+	} else if address.Spec.Subscription != nil {
+		// TODO
+		return nil, fmt.Errorf("unsupported address type 'subscription'")
+	}
+	return brokerQueues, nil
+}
+
+func (i *infraClient) Shutdown() error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.syncerStop <- true
+	<-i.syncerStopped
+
+	i.deleterStop <- true
+	<-i.deleterStopped
+
+	for _, router := range i.routers {
+		router.Shutdown()
+	}
+
+	for _, broker := range i.brokers {
+		broker.Shutdown()
+	}
+
+	return nil
+}
+
+func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
+	log.Printf("Deleting endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+	req := &request{
+		resource: endpoint,
+		done:     make(chan error, 1),
+	}
+	select {
+	case i.deleteRequests <- req:
+		return <-req.done
+	default:
+		close(req.done)
+		return NotDeletedError
+	}
+}
+
+func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
+	log.Printf("Deleting address %s/%s", address.Namespace, address.Name)
+	req := &request{
+		resource: address,
+		done:     make(chan error, 1),
+	}
+	select {
+	case i.deleteRequests <- req:
+		return <-req.done
+	default:
+		close(req.done)
+		return NotDeletedError
+	}
+}
+func (i *infraClient) doDelete() {
+	toDelete := i.collectRequests(i.deleteRequests)
+	if len(toDelete) == 0 {
+		return
+	}
+	log.Printf("Going to delete %d resources in infra", len(toDelete))
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	if !i.initialized {
+		for _, req := range toDelete {
+			req.done <- NotInitializedError
+		}
+		return
+	}
+
+	builtRequests, routerEntities, brokerQueues := i.buildEntities(toDelete)
+
+	ctx := context.Background()
+	err := i.deleteEntities(ctx, routerEntities, brokerQueues)
+	for _, req := range builtRequests {
+		var key resourceKey
+		switch v := req.resource.(type) {
+		case *v1beta2.MessagingAddress:
+			address := req.resource.(*v1beta2.MessagingAddress)
+			key = resourceKey{Name: address.Name, Namespace: address.Namespace}
+			if err == nil {
+				delete(i.addresses, key)
+			}
+			req.done <- err
+		case *v1beta2.MessagingEndpoint:
+			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
+			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
+			if err == nil {
+				i.freePortsInternal(endpoint)
+				delete(i.endpoints, key)
+			}
+			req.done <- err
+		default:
+			req.done <- fmt.Errorf("unknown resource type %T", v)
+		}
+		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
+	}
+}
+
+func (i *infraClient) deleteEntities(ctx context.Context, routerEntities []RouterEntity, brokerQueues map[string][]string) error {
+	// Delete from routers
+	err := i.applyRouters(ctx, func(router *RouterState) error {
+		return router.DeleteEntities(ctx, routerEntities)
+	})
+	if err != nil {
+		return err
+	}
+
+	// Delete from brokers
+	return i.applyBrokers(ctx, func(brokerState *BrokerState) error {
+		return brokerState.DeleteQueues(ctx, brokerQueues[brokerState.Host])
 	})
 }
 
@@ -464,237 +934,24 @@ func connectorToStatus(host string, connector *RouterConnector) ConnectorStatus 
 	}
 }
 
-func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	if !i.initialized {
-		return NewNotInitializedError()
-	}
-	ctx := context.Background()
-
-	synced := 0
-	for _, endpoint := range i.endpoints {
-		if endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != "" {
-			err := i.syncAddressesInternal(ctx, endpoint, []*v1beta2.MessagingAddress{address})
-			if err != nil {
-				return err
+/**
+ * Collect up to maxBatchSize requests from a channel or until 5 seconds without incoming requests has passed.
+ */
+func (i *infraClient) collectRequests(c chan *request) []*request {
+	timeout := 1 * time.Second
+	requests := make([]*request, 0, maxBatchSize)
+	for {
+		select {
+		case r := <-c:
+			requests = append(requests, r)
+			if len(requests) >= maxBatchSize {
+				return requests
 			}
-			synced++
+		// If we would block and have gathered some requests, then return whatever we have, if we have requests
+		case <-time.After(timeout):
+			return requests
 		}
 	}
-	if synced == 0 {
-		return fmt.Errorf("no active endpoints defined")
-	}
-	i.addresses[resourceKey{Name: address.Name, Namespace: address.Namespace}] = address
-	return nil
-}
-
-func (i *infraClient) syncAddressesInternal(ctx context.Context, endpoint *v1beta2.MessagingEndpoint, addresses []*v1beta2.MessagingAddress) error {
-	// Skip endpoints that are not active or do not have hosts defined
-	if endpoint.Status.Phase != v1beta2.MessagingEndpointActive || endpoint.Status.Host == "" {
-		return nil
-	}
-
-	tenantId := endpoint.Status.Host
-
-	routerEntities := make([]RouterEntity, 0, len(addresses))
-	brokerQueues := make(map[string][]string, len(i.brokers))
-
-	// Build desired state
-	for _, address := range addresses {
-		addressName := addressName(tenantId, address)
-		fullAddress := fullAddress(tenantId, address)
-		if address.Spec.Anycast != nil {
-			routerEntities = append(routerEntities, &RouterAddress{
-				Name:         addressName,
-				Prefix:       fullAddress,
-				Distribution: "balanced",
-				Waypoint:     false,
-			})
-		} else if address.Spec.Multicast != nil {
-			routerEntities = append(routerEntities, &RouterAddress{
-				Name:         addressName,
-				Prefix:       fullAddress,
-				Distribution: "multicast",
-				Waypoint:     false,
-			})
-		} else if address.Spec.Queue != nil {
-			routerEntities = append(routerEntities, &RouterAddress{
-				Name:         addressName,
-				Prefix:       fullAddress,
-				Distribution: "balanced",
-				Waypoint:     true,
-			})
-
-			for _, broker := range address.Status.Brokers {
-				brokerState := i.brokers[broker.Host]
-				if brokerState == nil {
-					return fmt.Errorf("unable to configure address autoLink (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
-				}
-				if len(brokerQueues[broker.Host]) == 0 {
-					brokerQueues[broker.Host] = make([]string, 0)
-				}
-				brokerQueues[broker.Host] = append(brokerQueues[broker.Host], fullAddress)
-				routerEntities = append(routerEntities, &RouterAutoLink{
-					Name:            autoLinkName(tenantId, address, broker.Host, "in"),
-					Address:         fullAddress,
-					Direction:       "in",
-					Connection:      connectorName(brokerState),
-					ExternalAddress: fullAddress,
-				})
-
-				routerEntities = append(routerEntities, &RouterAutoLink{
-					Name:            autoLinkName(tenantId, address, broker.Host, "out"),
-					Address:         fullAddress,
-					Direction:       "out",
-					Connection:      connectorName(brokerState),
-					ExternalAddress: fullAddress,
-				})
-			}
-		} else if address.Spec.Topic != nil {
-			// TODO
-			return fmt.Errorf("unsupported address type 'topic'")
-		} else if address.Spec.Subscription != nil {
-			// TODO
-			return fmt.Errorf("unsupported address type 'subscription'")
-		}
-	}
-
-	// Configure brokers first
-	err := i.applyBrokers(ctx, func(broker *BrokerState) error {
-		if len(brokerQueues[broker.Host]) > 0 {
-			return broker.EnsureQueues(ctx, brokerQueues[broker.Host])
-		}
-		return nil
-	})
-
-	// Configure all routers
-	err = i.applyRouters(ctx, func(router *RouterState) error {
-		return router.EnsureEntities(ctx, routerEntities)
-	})
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (i *infraClient) Shutdown() error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	for _, router := range i.routers {
-		router.Shutdown()
-	}
-
-	for _, broker := range i.brokers {
-		broker.Shutdown()
-	}
-	return nil
-}
-
-func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	if !i.initialized {
-		return NewNotInitializedError()
-	}
-
-	ctx := context.Background()
-	toDelete := make([]RouterEntity, 0)
-	for _, internalPort := range endpoint.Status.InternalPorts {
-		if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
-			toDelete = append(toDelete, &NamedEntity{
-				EntityType: RouterListenerEntity,
-				Name:       internalPort.Name,
-			})
-		} else {
-			// TODO
-			return fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
-		}
-	}
-
-	// TODO: Once router supports multiple endpoints per address, addresses should no
-	// longer be tied to the endpoint.
-	addresses := make([]*v1beta2.MessagingAddress, 0, len(i.addresses))
-	for _, address := range i.addresses {
-		if endpoint.Namespace == address.Namespace {
-			addresses = append(addresses, address)
-		}
-	}
-
-	if endpoint.Status.Host != "" {
-		err := i.deleteAddressesInternal(ctx, endpoint.Status.Host, addresses)
-		if err != nil {
-			return err
-		}
-	}
-
-	err := i.applyRouters(ctx, func(router *RouterState) error {
-		return router.DeleteEntities(ctx, toDelete)
-	})
-	if err != nil {
-		return err
-	}
-	i.freePortsInternal(endpoint)
-
-	delete(i.endpoints, resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace})
-	return nil
-}
-
-func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
-	i.lock.Lock()
-	defer i.lock.Unlock()
-
-	if !i.initialized {
-		return NewNotInitializedError()
-	}
-
-	ctx := context.Background()
-
-	for _, endpoint := range i.endpoints {
-		if endpoint.Status.Host != "" {
-			err := i.deleteAddressesInternal(ctx, endpoint.Status.Host, []*v1beta2.MessagingAddress{address})
-			if err != nil {
-				return err
-			}
-		}
-	}
-	delete(i.addresses, resourceKey{Name: address.Name, Namespace: address.Namespace})
-	return nil
-}
-
-func (i *infraClient) deleteAddressesInternal(ctx context.Context, tenantId string, addresses []*v1beta2.MessagingAddress) error {
-	routerEntities := make([]RouterEntity, 0, len(addresses))
-	brokerQueues := make([]string, 0, len(addresses))
-	for _, address := range addresses {
-		if address.Spec.Anycast != nil || address.Spec.Multicast != nil || address.Spec.Queue != nil {
-			routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAddressEntity, Name: addressName(tenantId, address)})
-		}
-
-		if address.Spec.Queue != nil {
-			brokerQueues = append(brokerQueues, fullAddress(tenantId, address))
-
-			for _, broker := range address.Status.Brokers {
-				routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAutoLinkEntity, Name: autoLinkName(tenantId, address, broker.Host, "in")})
-				routerEntities = append(routerEntities, &NamedEntity{EntityType: RouterAutoLinkEntity, Name: autoLinkName(tenantId, address, broker.Host, "out")})
-			}
-		}
-	}
-
-	// Delete from routers
-	err := i.applyRouters(ctx, func(router *RouterState) error {
-		return router.DeleteEntities(ctx, routerEntities)
-	})
-	if err != nil {
-		return err
-	}
-
-	// Delete from brokers
-	return i.applyBrokers(ctx, func(brokerState *BrokerState) error {
-		return brokerState.DeleteQueues(ctx, brokerQueues)
-	})
 }
 
 func autoLinkName(tenantId string, address *v1beta2.MessagingAddress, host string, direction string) string {

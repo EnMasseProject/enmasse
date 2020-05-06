@@ -64,6 +64,7 @@ func (m *manager) GetClient(i *v1beta2.MessagingInfra) InfraClient {
 	if !exists {
 		client = NewInfra(NewRouterState, NewBrokerState, &systemClock{})
 		m.clients[key] = client
+		client.Start()
 	}
 	return client
 }

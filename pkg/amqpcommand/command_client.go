@@ -38,8 +38,9 @@ type CommandClient struct {
 	commandAddress         string
 	commandResponseAddress string
 
-	lastError error
-	connected int32
+	lastError    error
+	connected    int32
+	restartCount int32
 
 	request chan *commandRequest
 }

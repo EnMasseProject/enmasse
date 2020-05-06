@@ -7,8 +7,10 @@ package messagingaddress
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
@@ -80,8 +82,12 @@ func newReconciler(mgr manager.Manager) *ReconcileMessagingAddress {
 }
 
 func add(mgr manager.Manager, r *ReconcileMessagingAddress) error {
+	maxConcurrentReconciles, err := strconv.Atoi(util.GetEnvOrDefault("MAX_CONCURRENT_ADDRESS_RECONCILES", "64"))
+	if err != nil {
+		return err
+	}
 
-	c, err := controller.New("messagingaddress-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("messagingaddress-controller", mgr, controller.Options{Reconciler: r, MaxConcurrentReconciles: maxConcurrentReconciles})
 	if err != nil {
 		return err
 	}
@@ -265,7 +271,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			scheduled.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if _, ok := err.(*state.NotInitializedError); ok {
+			if errors.Is(err, state.NotInitializedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
@@ -286,7 +292,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if _, ok := err.(*state.NotInitializedError); ok {
+			if errors.Is(err, state.NotInitializedError) || errors.Is(err, state.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 		} else {

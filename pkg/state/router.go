@@ -8,7 +8,7 @@ package state
 import (
 	"context"
 	"encoding/json"
-	"errors"
+	//"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -167,7 +167,8 @@ func (r *RouterState) doRequest(request *amqp.Message) (*amqp.Message, error) {
 }
 
 func isConnectionError(err error) bool {
-	return errors.Is(err, amqp.ErrConnClosed) || errors.Is(err, amqpcommand.NotConnectedError)
+	// TODO: Handle errors that are not strictly connection-related potentially with retries
+	return err != nil
 }
 
 func (r *RouterState) createEntity(entity RouterEntityType, name string, data map[string]interface{}) error {
@@ -191,7 +192,7 @@ func (r *RouterState) createEntity(entity RouterEntityType, name string, data ma
 		return err
 	}
 
-	if code < 200 || code >= 300 {
+	if (code < 200 || code >= 300) && code != 404 {
 		return fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
 	}
 	return nil
@@ -302,7 +303,6 @@ func (r *RouterState) ReadEntities(ctx context.Context, entities []RouterEntity)
 	}
 	if err != nil {
 		log.Printf("[Router %s] ReadEntities error: %+v", r.host, err)
-		return nil, err
 	}
 
 	result := make([]RouterEntity, 0, len(entities))
@@ -357,7 +357,6 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 	}
 	if err != nil {
 		log.Printf("[Router %s] EnsureEntities error: %+v", r.host, err)
-		return err
 	}
 
 	// Serialize completed
@@ -391,7 +390,6 @@ func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) 
 	}
 	if err != nil {
 		log.Printf("[Router %s] DeleteEntities error: %+v", r.host, err)
-		return err
 	}
 
 	// Serialize completed

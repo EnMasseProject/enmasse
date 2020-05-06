@@ -27,6 +27,8 @@ type ClientManager interface {
  * A client for performing changes and querying infrastructure.
  */
 type InfraClient interface {
+	// Start any internal state management processes
+	Start()
 	// Synchronize all resources for infrastructure for the provided routers and brokers
 	SyncAll(routers []string, brokers []string) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
