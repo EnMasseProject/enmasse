@@ -49,11 +49,6 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
     protected Path logPath = null;
     private List<AbstractClient> clients;
 
-    @BeforeAll
-    public void removeme() throws Exception {
-        throw new Exception("pepa");
-    }
-
     @BeforeEach
     public void setUpClientBase(TestInfo info) {
         clients = new ArrayList<>();
