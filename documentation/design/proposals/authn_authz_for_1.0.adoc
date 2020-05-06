@@ -165,7 +165,18 @@ be implemented within the Access Control Server code-base.  It will borrow codec
 The EnMasse Operator will act as the controller for `IdentityProvider`, `MessagingUser`, `MessagingRole`, and `MessagingRoleBinding` resources
 and be responsible for maintenance of the status sections.
 
-For `MessagingUser` resources it will be responsible for salting passwords. [TODO: bad idea? better to use an external tool/console to salt the password?]
+For `MessagingUser` resources it will be responsible for for hashing the passwords.    The secure storage format will be:
+
+```
+$<id>[$<param>=<value>(,<param>=<value>)*][$<salt>[$<hash>]]
+```
+
+as defined by:
+https://github.com/P-H-C/phc-string-format/blob/master/phc-sf-spec.md
+
+TODO: We could consider hashing the password several times. This would allow the identity provider offer many SCRAM 
+mechanisms to the client.
+
 
 The EnMasse operator will watch for `MessagingTenants` resources.  For each it will and define a Kubernetes service
 exposing the AMQP SASL endpoint of the Access Control Servcie  The `MessagingInfra` controller will configure a router listener/authServicePlugin _per endpoint_  with a reference to the correct  AMQP SASL endpoint.
@@ -388,16 +399,12 @@ status:
 ==== MessagingUser
 
 `MessagingUser` exists to supports the internal identity source.  It allows a Tenant Admin to define a user/password that
-may connect for messaging.
-
-The stored password will be the Salted Password defined by  https://tools.ietf.org/html/rfc5802. 
-The controller will detect newly created MessagingUser resource and automatically salt plain text passwords.
+may connect for messaging.  The Tenant may create the resource with a plain password.  In this case, the system will
+automatically hash the password so it is securely stored.
 
 In this first version, there will be no provision for password policies (constitunency rules, aging etc).
 
-`MessagingUser` are created by the Tenant Admin and in their own namespace.  QUESTION: the system's design will
-accomodate `MessagingUsers` to be shared by tenants (perhaps created in shared namespace - do we value this functionality?
-do we inhibit it?).
+`MessagingUser` are created by the Tenant Admin and in their own namespace.  
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -406,7 +413,7 @@ metadata:
   name: myuser
   namespace: mynamespace
 spec:
-  password: {SCRAMSHA256}_saltedpassword_
+  password: 
 ```
 
 ==== ServiceAccount
