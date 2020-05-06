@@ -14,7 +14,14 @@ import {
   TextContent,
   Divider,
   Grid,
-  GridItem
+  GridItem,
+  Button,
+  ButtonVariant,
+  Split,
+  SplitItem,
+  DropdownItem,
+  KebabToggle,
+  Dropdown
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { CalendarAltIcon, PlusCircleIcon } from "@patternfly/react-icons";
@@ -32,7 +39,8 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" }
+  dropdown_toggle_align: { flex: "1" },
+  margin_Left_20: { marginLeft: 20 }
 });
 
 const setInitialFilter = () => {
@@ -59,10 +67,11 @@ const setInitialFilter = () => {
   return filter;
 };
 
-interface ITimeOption {
+export interface ITimeOption {
   time: string;
   form: string;
 }
+
 export interface IDeviceFilter {
   deviceId: string;
   deviceType: string;
@@ -77,10 +86,12 @@ export interface IDeviceFilter {
   };
   filterCriteria: IDeviceFilterCriteria[];
 }
+
 export interface IDeviceFilterProps {
   filter?: IDeviceFilter;
   setFilter?: (filter: IDeviceFilter) => void;
 }
+
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   {
     // filter,
@@ -88,84 +99,103 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   }
 ) => {
   const [filter, setFilter] = useState<IDeviceFilter>(setInitialFilter());
+  const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
+    setInitialFilter()
+  ]);
+  const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
   const typeOptions: ISelectOption[] = [
     {
       key: "direct",
       value: "direct",
-      label: "Directly connected",
-      isDisabled: false
+      label: "Directly connected"
     },
     {
       key: "gateway",
       value: "gateway",
-      label: "Using gateways",
-      isDisabled: false
+      label: "Using gateways"
     }
   ];
   const statusOptions: ISelectOption[] = [
     {
       key: "enabled",
       value: "enabled",
-      label: "Enabled",
-      isDisabled: false
+      label: "Enabled"
     },
     {
       key: "disabled",
       value: "disabled",
-      label: "Disabled",
-      isDisabled: false
+      label: "Disabled"
     }
   ];
   const timeOptions: ISelectOption[] = [
     {
       key: "hr",
       value: "hr",
-      label: "hr",
-      isDisabled: false
+      label: "hr"
     },
     {
       key: "min",
       value: "min",
-      label: "min",
-      isDisabled: false
+      label: "min"
     },
     {
       key: "sec",
       value: "sec",
-      label: "sec",
-      isDisabled: false
+      label: "sec"
     }
   ];
-
-  const setTime = (value: string, isStart: boolean, isFormat: boolean) => {
-    const filterObj = { ...filter };
-    if (isStart) {
-      let timeObj = filter.lastSeen.startTime;
-      if (isFormat) {
-        timeObj = { form: value, time: timeObj.time };
-      } else {
-        timeObj = { form: timeObj.form, time: value };
-      }
-      filterObj.lastSeen.startTime = timeObj;
-    } else {
-      let timeObj = filter.lastSeen.endTime;
-      if (isFormat) {
-        timeObj = { form: value, time: timeObj.time };
-      } else {
-        timeObj = { form: timeObj.form, time: value };
-      }
-      filterObj.lastSeen.endTime = timeObj;
-    }
+  const onClearFilter = () => {
+    setFilter(setInitialFilter());
+    setIsKebabOpen(false);
+  };
+  const onRedoFilter = () => {
+    // redoFilter();
+    const length = lastAppliedFilter.length;
+    const data = JSON.parse(
+      JSON.stringify({ ...lastAppliedFilter[length - 2] })
+    );
+    setFilter(data);
+    const dataList = [...lastAppliedFilter];
+    dataList.splice(length - 2, 1);
+    setLastAppliedFilter(dataList);
+    setIsKebabOpen(false);
+  };
+  const kebabDropdownItems = [
+    <DropdownItem
+      key="redo-last-filter"
+      id="redo-last-filter"
+      isDisabled={lastAppliedFilter.length <= 1}
+      onClick={onRedoFilter}
+    >
+      Redo last filter
+    </DropdownItem>,
+    <DropdownItem
+      key="clear-all-filter"
+      id="clear-all-filter"
+      component="button"
+      onClick={onClearFilter}
+    >
+      Clear all
+    </DropdownItem>
+  ];
+  const setTime = (
+    value: string,
+    propertyName: "startTime" | "endTime",
+    isFormat: boolean
+  ) => {
+    const filterObj = JSON.parse(JSON.stringify(filter));
+    let timeObj = filter.lastSeen[propertyName];
+    isFormat
+      ? (timeObj = { form: value, time: timeObj.time })
+      : (timeObj = { form: timeObj.form, time: value });
+    filterObj.lastSeen[propertyName] = timeObj;
     setFilter(filterObj);
   };
 
   const onChangeDeviceId = (value: string) => {
-    // const deviceId = event.target.value;
     const filterObj = { ...filter };
-    if (value != filterObj.deviceId) {
-      filterObj.deviceId = value;
-      setFilter(filterObj);
-    }
+    filterObj.deviceId = value;
+    setFilter(filterObj);
   };
 
   const onTypeSelect = (value: string) => {
@@ -181,10 +211,10 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   };
 
   const addCriteria = () => {
-    const filterObj = { ...filter };
+    const filterObj = JSON.parse(JSON.stringify(filter));
     const list = filterObj.filterCriteria;
     list.push({
-      operator: operator.eq,
+      operator: operator.EQ,
       parameter: "",
       value: "",
       key: uniqueId()
@@ -203,7 +233,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   };
 
   const updateCriteria = (criteria: IDeviceFilterCriteria) => {
-    const filterObj = { ...filter };
+    const filterObj = JSON.parse(JSON.stringify(filter));
     const list = filterObj.filterCriteria;
     const index = findIndexByProperty(list, "key", criteria.key);
     list[index] = criteria;
@@ -211,16 +241,16 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     setFilter(filterObj);
   };
   const onStartTimeChange = (value: string) => {
-    setTime(value, true, false);
+    setTime(value, "startTime", false);
   };
   const onStartTimeFormatChange = (value: string) => {
-    setTime(value, true, true);
+    setTime(value, "startTime", true);
   };
   const onEndTimeChange = (value: string) => {
-    setTime(value, false, false);
+    setTime(value, "endTime", false);
   };
   const onEndTimeFormatChange = (value: string) => {
-    setTime(value, false, true);
+    setTime(value, "endTime", true);
   };
   const onChangeStartDate = (value: string) => {
     const filterObj = { ...filter };
@@ -231,6 +261,16 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     const filterObj = { ...filter };
     filterObj.addedDate.endDate = value;
     setFilter(filterObj);
+  };
+  const onKebabToggle = () => {
+    setIsKebabOpen(!isKebabOpen);
+  };
+
+  const onRunFilter = () => {
+    const dataList = JSON.parse(JSON.stringify(lastAppliedFilter));
+    const dataObj = JSON.parse(JSON.stringify(filter));
+    dataList.push(dataObj);
+    setLastAppliedFilter(dataList);
   };
   const {
     lastSeen,
@@ -261,7 +301,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
-            onSelectItem={value => onTypeSelect(value)}
+            onSelectItem={onTypeSelect}
             dropdownItems={typeOptions}
             value={deviceType}
             isLabelAndValueNotSame={true}
@@ -274,7 +314,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
-            onSelectItem={value => onStatusSelect(value)}
+            onSelectItem={onStatusSelect}
             dropdownItems={statusOptions}
             value={status}
             isLabelAndValueNotSame={true}
@@ -302,9 +342,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
               dropdownItems={timeOptions}
               dropdownItemIdPrefix="last-seen-start-time-format"
             />
-            <TextContent>
-              <span style={{ fontSize: 24, margin: 20 }}>{" - "}</span>
-            </TextContent>
+            <TextContent>{" - "}</TextContent>
             <TextInput
               className={css(styles.time_input_box)}
               name="last-end-time-number"
@@ -325,7 +363,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
             />
           </InputGroup>
         </FormGroup>
-
         <FormGroup label="Added date" fieldId="filter-device-added-date">
           <InputGroup>
             <InputGroupText component="label" htmlFor="added-date">
@@ -336,7 +373,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
               id="added-start-date"
               type="date"
               aria-label="Added Start Date"
-              value={addedDate.startDate || "2020-01-01"}
+              value={addedDate.startDate}
               onChange={onChangeStartDate}
             />
             <TextInput
@@ -344,7 +381,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
               id="added-end-date"
               type="date"
               aria-label="Added End Date"
-              value={addedDate.endDate || "2018-06-02"}
+              value={addedDate.endDate}
               onChange={onChangeEndDate}
             />
           </InputGroup>
@@ -376,10 +413,42 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
               ))}
             </>
           )}
-          <a style={{ padding: 10 }} onClick={addCriteria}>
-            <PlusCircleIcon /> Add criteria
-          </a>
+          <Button
+            variant="link"
+            icon={<PlusCircleIcon />}
+            onClick={addCriteria}
+          >
+            Add criteria
+          </Button>
         </FormGroup>
+        <Divider />
+        <Split>
+          <SplitItem>
+            <Button
+              className={css(styles.margin_Left_20)}
+              variant={ButtonVariant.secondary}
+              onClick={onRunFilter}
+            >
+              Run Filter
+            </Button>
+          </SplitItem>
+          <SplitItem>&nbsp;</SplitItem>
+          <SplitItem>
+            <Dropdown
+              id="filter-kebab-dropdown"
+              position={DropdownPosition.left}
+              isPlain
+              dropdownItems={kebabDropdownItems}
+              isOpen={isKebabOpen}
+              toggle={
+                <KebabToggle
+                  id="filter-kebab-toggle"
+                  onToggle={onKebabToggle}
+                />
+              }
+            />
+          </SplitItem>
+        </Split>
       </Form>
     </>
   );

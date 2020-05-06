@@ -4,4 +4,3 @@
  */
 
 export * from "./TableFormatter";
-export * from "./utils";
