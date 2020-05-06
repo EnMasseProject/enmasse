@@ -96,6 +96,16 @@ spec:
                       type: object
                   type: object
               type: object
+            namespaceSelector:
+              description: A selector defining which namespaces this infra should
+                serve. Default is all namespaces.
+              properties:
+                matchNames:
+                  description: A list of namespaces this selector should match.
+                  items:
+                    type: string
+                  type: array
+              type: object
             router:
               description: Router configuration options.
               properties:
@@ -126,16 +136,6 @@ spec:
                       - replicas
                       type: object
                   type: object
-              type: object
-            selector:
-              description: A selector defining which namespaces this infra should
-                serve. Default is all namespaces.
-              properties:
-                namespaces:
-                  description: A list of namespaces this selector should serve.
-                  items:
-                    type: string
-                  type: array
               type: object
           type: object
         status:

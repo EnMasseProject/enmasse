@@ -255,16 +255,16 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 
 func findBestMatch(tenant *v1beta2.MessagingTenant, infras []v1beta2.MessagingInfra) *v1beta2.MessagingInfra {
 	var bestMatch *v1beta2.MessagingInfra
-	var bestMatchSelector *v1beta2.Selector
+	var bestMatchSelector *v1beta2.NamespaceSelector
 	for _, infra := range infras {
-		selector := infra.Spec.Selector
+		selector := infra.Spec.NamespaceSelector
 		// If there is a global one without a selector, use it
 		if selector == nil && bestMatch == nil {
 			bestMatch = &infra
 		} else if selector != nil {
 			// If selector is applicable to this tenant
 			matched := false
-			for _, ns := range selector.Namespaces {
+			for _, ns := range selector.MatchNames {
 				if ns == tenant.Namespace {
 					matched = true
 					break
@@ -276,6 +276,7 @@ func findBestMatch(tenant *v1beta2.MessagingTenant, infras []v1beta2.MessagingIn
 				bestMatch = &infra
 				bestMatchSelector = selector
 			}
+
 			// TODO: Support more advanced selection mechanism based on namespace labels
 		}
 	}

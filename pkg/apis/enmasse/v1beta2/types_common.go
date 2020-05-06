@@ -5,14 +5,13 @@
 package v1beta2
 
 import (
-// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type Selector struct {
-	// A list of namespaces this selector should serve.
-	Namespaces []string `json:"namespaces,omitempty"`
-	// A labelselector for selecting namespaces the messaging infrastructure should serve based on their labels.
-	// NamespaceSelector *metav1.LabelSelector `json:"namespaceSelector,omitempty"`
+type NamespaceSelector struct {
+	metav1.LabelSelector
+	// A list of namespaces this selector should match.
+	MatchNames []string `json:"matchNames,omitempty"`
 }
 
 type MessagingInfraReference struct {
