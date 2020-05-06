@@ -25,6 +25,7 @@ import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.function.Executable;
@@ -47,6 +48,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public abstract class ClientTestBase extends TestBase implements ITestBaseShared {
     protected Path logPath = null;
     private List<AbstractClient> clients;
+
+    @BeforeAll
+    public void removeme() throws Exception {
+        throw new Exception("pepa");
+    }
 
     @BeforeEach
     public void setUpClientBase(TestInfo info) {

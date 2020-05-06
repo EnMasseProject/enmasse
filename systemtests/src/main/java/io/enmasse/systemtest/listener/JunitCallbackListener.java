@@ -37,69 +37,63 @@ import org.slf4j.Logger;
 public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
-    private static Environment env = Environment.getInstance();
-    private Kubernetes kubernetes = Kubernetes.getInstance();
-    private TestInfo testInfo = TestInfo.getInstance();
-    private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
-    private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
-    private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
-    private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
-    private EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
-    private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
+    private static final Environment env = Environment.getInstance();
+    private final Kubernetes kubernetes = Kubernetes.getInstance();
+    private final TestInfo testInfo = TestInfo.getInstance();
+    private final IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+    private final SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
+    private final SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
+    private final IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
+    private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
         ResourceManager.getInstance().setClassResources();
         KubeClusterManager.getInstance().setClassConfigurations();
-        try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            handleCallBackError("Callback before all", context, () -> {
-                if (testInfo.isUpgradeTest()) {
-                    if (operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.deleteEnmasseBundle();
-                    }
-                    LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
-                } else if (testInfo.isOLMTest()) {
-                    LOGGER.info("Test is OLM");
-                    if (operatorManager.isEnmasseOlmDeployed()) {
-                        operatorManager.deleteEnmasseOlm();
-                    }
-                    if (operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.deleteEnmasseBundle();
-                    }
-                    operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
-                } else if (env.installType() == EnmasseInstallType.OLM) {
-                    if (!operatorManager.isEnmasseOlmDeployed()) {
-                        operatorManager.installEnmasseOlm();
-                    }
-                    if (!operatorManager.areExamplesApplied()) {
-                        operatorManager.installExamplesBundleOlm();
-                        operatorManager.waitUntilOperatorReadyOlm();
-                    }
-                } else if (testInfo.isTestSharedInfra()) {
-                    if (operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.deleteEnmasseBundle();
-                    } else if (operatorManager.isEnmasseOlmDeployed()) {
-                        operatorManager.deleteEnmasseOlm();
-                    }
-                    operatorManager.installEnmasseSharedInfraBundle();
-                } else {
-                    if (!operatorManager.isEnmasseBundleDeployed()) {
-                        operatorManager.installEnmasseBundle();
-                    }
-                    if (testInfo.isClassIoT()) {
-                        operatorManager.installIoTOperator();
-                    }
+        handleCallBackError("Callback before all", context, () -> {
+            if (testInfo.isUpgradeTest()) {
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.deleteEnmasseBundle();
                 }
-            });
-        } catch (Exception ex) {
-            beforeAllException = ex; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-        }
+                LOGGER.info("Enmasse is not installed because next test is {}", context.getDisplayName());
+            } else if (testInfo.isOLMTest()) {
+                LOGGER.info("Test is OLM");
+                if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.deleteEnmasseBundle();
+                }
+                operatorManager.installEnmasseOlm(testInfo.getOLMInstallationType());
+            } else if (env.installType() == EnmasseInstallType.OLM) {
+                if (!operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.installEnmasseOlm();
+                }
+                if (!operatorManager.areExamplesApplied()) {
+                    operatorManager.installExamplesBundleOlm();
+                    operatorManager.waitUntilOperatorReadyOlm();
+                }
+            } else if (testInfo.isTestSharedInfra()) {
+                if (operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.deleteEnmasseBundle();
+                } else if (operatorManager.isEnmasseOlmDeployed()) {
+                    operatorManager.deleteEnmasseOlm();
+                }
+                operatorManager.installEnmasseSharedInfraBundle();
+            } else {
+                if (!operatorManager.isEnmasseBundleDeployed()) {
+                    operatorManager.installEnmasseBundle();
+                }
+                if (testInfo.isClassIoT()) {
+                    operatorManager.installIoTOperator();
+                }
+            }
+        });
     }
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
-        beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (!env.skipCleanup()) {
                 ResourceManager.getInstance().deleteClassResources();
@@ -129,9 +123,6 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         ResourceManager.getInstance().setMethodResources();
         KubeClusterManager.getInstance().setMethodConfigurations();
         logPodsInInfraNamespace();
-        if (beforeAllException != null) {
-            throw beforeAllException;
-        }
     }
 
     @Override
