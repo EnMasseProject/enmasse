@@ -790,6 +790,7 @@ the number of router replicas based on the parameters `connections` and `message
 
 * If the observed value of these parameters go above the max, the number of router replicas is increased.
 * If the observed value of these parameters go below min, the number of router replicas is decreased.
+* Client connections will need to be terminated at scaling events in order for them to be rebalanced.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -875,6 +876,8 @@ Once the second cluster is configured with tenants and addresses, the next steps
 ** Send messages to each corresponding address and tenant on the 1.x cluster
 * Sanity check migration application output
 * Switch traffic to 1.x cluster
+
+NOTE: This approach will currently only work for queues. For subscriptions, we may need a way to enable producing to a subscription for an admin user for instance.
 
 === CRUDLW an Identity provider that allows tenants to utilize of a namespace scoped users for the purpose of messaging authentication
 
