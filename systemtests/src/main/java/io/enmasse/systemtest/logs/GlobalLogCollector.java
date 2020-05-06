@@ -4,8 +4,15 @@
  */
 package io.enmasse.systemtest.logs;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,15 +27,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -279,20 +279,27 @@ public class GlobalLogCollector {
             }
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
-            List<Pod> pods = kube.listAllPods(infraNamespace);
-            for (Pod p : pods) {
-                try {
-                    List<Container> containers = kube.getContainersFromPod(infraNamespace, p.getMetadata().getName());
-                    for (Container c : containers) {
-                        Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+            List<String> nsList = new ArrayList<>();
+            nsList.add(infraNamespace);
+            nsList.addAll(Arrays.asList(SystemtestsKubernetesApps.ST_NAMESPACES));
+            for (String ns : nsList) {
+                if (kube.namespaceExists(ns)) {
+                    List<Pod> pods = kube.listAllPods(ns);
+                    for (Pod p : pods) {
                         try {
-                            Files.writeString(filePath, kube.getLog(infraNamespace, p.getMetadata().getName(), c.getName()));
-                        } catch (IOException e) {
-                            LOGGER.warn("Cannot write file {}", filePath, e);
+                            List<Container> containers = kube.getContainersFromPod(ns, p.getMetadata().getName());
+                            for (Container c : containers) {
+                                Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+                                try {
+                                    Files.writeString(filePath, kube.getLog(ns, p.getMetadata().getName(), c.getName()));
+                                } catch (IOException e) {
+                                    LOGGER.warn("Cannot write file {}", filePath, e);
+                                }
+                            }
+                        } catch (Exception ex) {
+                            LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
                         }
                     }
-                } catch (Exception ex) {
-                    LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
                 }
             }
 
