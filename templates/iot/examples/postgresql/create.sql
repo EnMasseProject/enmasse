@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS device_credentials (
 
 	data json,
 
-	PRIMARY KEY (tenant_id, device_id),
+	PRIMARY KEY (tenant_id, type, auth_id),
 	FOREIGN KEY (tenant_id, device_id) REFERENCES device_registrations (tenant_id, device_id) ON DELETE CASCADE
 );
 
 -- create index for tenant only lookups
 CREATE INDEX idx_device_registrations_tenant ON device_registrations (tenant_id);
 CREATE INDEX idx_device_credentials_tenant ON device_credentials (tenant_id);
-CREATE INDEX idx_device_credentials_tenant_auth_id ON device_credentials (tenant_id, auth_id);
+CREATE INDEX idx_device_credentials_tenant_and_device ON device_credentials (tenant_id, device_id);
