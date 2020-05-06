@@ -281,6 +281,9 @@ func (r *RouterState) queryEntities(entity RouterEntityType, attributes ...strin
 }
 
 func (r *RouterState) ReadEntities(ctx context.Context, entities []RouterEntity) ([]RouterEntity, error) {
+	if !r.initialized {
+		return nil, NotInitializedError
+	}
 	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan RouterEntity, len(entities))
 	for _, entity := range entities {
@@ -315,6 +318,9 @@ func (r *RouterState) ReadEntities(ctx context.Context, entities []RouterEntity)
 }
 
 func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntity) error {
+	if !r.initialized {
+		return NotInitializedError
+	}
 	toCreate := make([]RouterEntity, 0, len(entities))
 	for _, entity := range entities {
 		typeMap := r.entities[entity.Type()]
@@ -368,6 +374,9 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 }
 
 func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) error {
+	if !r.initialized {
+		return NotInitializedError
+	}
 	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan RouterEntity, len(names))
 	for _, name := range names {
