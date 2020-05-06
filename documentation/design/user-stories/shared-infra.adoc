@@ -498,8 +498,8 @@ metadata:
   name: infra1
   namespace: enmasse-infra
 spec:
-  selector:
-    namespaces:
+  namespaceSelector:
+    matchNames:
     - "ns1"
     - "ns2"
 ```
@@ -513,10 +513,9 @@ metadata:
   name: infra1
   namespace: enmasse-infra
 spec:
-  selector:
-    namespaceSelector:
-      matchLabels:
-        environment: test
+  namespaceSelector:
+    matchLabels:
+      environment: test
 ```
 
 ---
@@ -533,15 +532,14 @@ metadata:
   namespace: planspace
 spec:
   # Selects which namespaces this tenant plans should be available for
-  selector:
+  namespaceSelector:
     # Restrict to specific namespaces
-    namespaces:
+    matchNames:
      - ns1
      - ns2
     # Restrict to namespaces matching labels
-    namespaceSelector:
-      matchLabels:
-        environment: production
+    matchLabels:
+      environment: production
 ```
 
 === Restrict address plans available to addresses
@@ -557,15 +555,14 @@ metadata:
   namespace: planspace
 spec:
   # Selects which namespaces this tenant plans should be available for
-  selector:
+  namespaceSelector:
     # Restrict to specific namespaces
-    namespaces:
+    matchNames:
      - ns1
      - ns2
     # Restrict to namespaces matching labels
-    namespaceSelector:
-      matchLabels:
-        environment: production
+    matchLabels:
+      environment: production
 ```
 
 
@@ -583,10 +580,9 @@ metadata:
   name: myplan
   namespace: planspace
 spec:
-  selector:
-    namespaceSelector:
-      matchLabels:
-        environment: dev
+  namespaceSelector:
+    matchLabels:
+      environment: dev
 ```
 
 === Specify default address plans for messaging tenants
@@ -603,10 +599,9 @@ metadata:
   name: myplan
   namespace: planspace
 spec:
-  selector:
-    namespaceSelector:
-      matchLabels:
-        environment: dev
+  namespaceSelector:
+    matchLabels:
+      environment: dev
 ```
 
 === Specify default endpoints and cert providers to be created for messaging tenants
@@ -640,44 +635,83 @@ spec:
 === Restrict which endpoint types and cert providers can be used for messaging tenants
 
 Restricting allowed endpoint types and cert providers allow the service admin to control
-exposure of messaging endpoints in a cluster. The `.endpoint.allowed` field is used to define
-allowed combinations of endpoint settings.
+exposure of messaging endpoints in a cluster. To do this, the Open Policy Agent (OPA) must be installed on the cluster.
 
-* If an empty object is specified, i.e. `route: {}`, it means sub-properties may contain any value allowed by the endpoint spec.
-* Any `MessagingEndpoint` spec field that is set to a non-empty value must contain the same value as in the `spec` of the schema.
-* The `spec` of the `MessagingEndpoint` resources for tenants referencing this plan must match one of the entries in the `endpoint.allowed[*].spec.
-* The `spec` for each entry corresponds to the `spec` object in `MessagingEndpoint`
-* If the `allowed` specs conflicts with the `default`, the `MessagingPlan` status will contain a warning message.
+To enforce restrictions, policy agent rules must be written for the `MessagingEndpoint` resource.
 
-The following example will enforce `route` endpoints to use a specific certificate and require `cluster` endpoints to use unencrypted protocols.
+NOTE: These examples are not yet tested, but written based on OPA documentation.
+
+Examples:
+
+===== Enforce 'AMQPS' protocol for all endpoints
 
 ```
-apiVersion: enmasse.io/v1beta2
-kind: MessagingPlan
-metadata:
-  name: myplan
-  namespace: planspace
-spec:
-  endpoint:
-    # Endpoints are required to meet one of the following requirements
-    allowed:
-    - max: 1
-      spec:
-        route: {}
-        protocols:
-        - AMQPS
-        tls:
-          external:
-            cert:
-              valueFromSecret:
-                name: external-certs
-    - max: 2
-      spec:
-        cluster: {}
-        protocols:
-        - AMQP
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  protocol := input.request.object.spec.protocols[_]
+  protocol != "AMQPS"
+  msg := sprintf("unsupported protocol '%s'", [protocol])
+}
 ```
 
+===== Enforce `route` endpoint with a shared wildcard certificate
+
+```
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.external.cert.valueFromSecret.name != "messaging-cert"
+  input.request.object.spec.tls.external.cert.valueFromSecret.namespace != "enmasse-infra"
+  msg := "incorrect certificate referenced"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.selfsigned
+  msg := "selfsigned certificate not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.openshift
+  msg := "openshift certificate not allowed"
+}
+```
+
+
+===== Allow all endpoints except nodePort and loadBalancer and disable self-signed certificates for all endpoints
+
+```
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.external.cert.valueFromSecret.name != "messaging-cert"
+  input.request.object.spec.tls.external.cert.valueFromSecret.namespace != "enmasse-infra"
+  msg := "incorrect certificate referenced"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.nodePort
+  msg := "nodePort not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.loadBalancer
+  msg := "loadBalancer not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.selfsigned
+  msg := "selfsigned certificate not allowed"
+}
+```
 
 === Restrict how much memory and storage is consumed per messaging tenant
 
@@ -744,13 +778,96 @@ spec:
   allowOverride: true | false
 ```
 
-=== Configure scaling of the routers based on the connection load and number of messaging tenants
+=== Configure scaling of the routers based on the connection load and throughput
+
+Create/modify the `MessagingInfra` resource to include the `dynamic` strategy for the router. This strategy scales
+the number of router replicas based on the parameters `connections` and `messageThroughputSeconds` per router.
+
+* If the observed value of these parameters go above the max, the number of router replicas is increased.
+* If the observed value of these parameters go below min, the number of router replicas is decreased.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfra
+metadata:
+  name: myinfra
+spec:
+  router:
+    scalingStrategy:
+      dynamic:
+        # Specify the range of replicas this strategy can operate within
+        replicas:
+          min: 2
+          max: 5
+        # Strategy parameters that is used for determining if it should scale up/down
+        parameters:
+          # Number of connections _per router replica_
+          connections:
+            min: 100
+            max: 1000
+          # Number of messages/sec _per router replica_
+          messageThroughputSeconds
+            min: 1000.0
+            max: 15000
+```
 
 === Configure scaling of the brokers based on the queue and topic memory and storage usage
 
+Create/modify the `MessagingInfra` resource to include the `dynamic` strategy for the broker. This strategy scales
+the number of broker instances based on the parameters `addresses` per broker.
+
+* If the observed value of these parameters go above the max, the number of broker instances is increased.
+* If the observed value of these parameters go below min, the number of broker instances is decreased.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfra
+metadata:
+  name: myinfra
+spec:
+  broker:
+    scalingStrategy:
+      dynamic:
+        # Specify the pool range this strategy can operate within
+        poolSize:
+          min: 2
+          max: 5
+        # Strategy parameters that is used for determining if it should scale up/down
+        parameters:
+          # Number of addresses per broker
+          addresses:
+            min: 100
+            max: 1000
+```
+
 === Configure per-user limits for connections, links, message size
 
-=== Migrate tenant configuration and data from 1.5 to 2.0 (with downtime)
+TODO: Needs support in router plugin and auth service
+
+=== Migrate tenant configuration and data from 0.x to 1.0 (with downtime)
+
+Configuration migration:
+
+* StandardInfraConfig/BrokeredInfraConfig -> MessagingInfra: Manual
+* A separate cluster must be used for the 1.0 cluster
+* AddressPlan -> MessagingAddressPlan: Manual
+* AddressSpacePlan -> MessagingPlan: Manual
+* AddressSpace -> MessagingTenant, MessagingConnector and MessagingEndpoint: Script-assisted
+* Address -> MessagingAddress: Script-assisted
+
+Data migration:
+
+Once the second cluster is configured with tenants and addresses, the next steps are:
+
+* Create user on 0.x cluster with access to all address spaces and addresses
+* Create user on 1.0 cluster with access to all tenants and their addresses
+* Stop traffic to 0.x cluster
+* Run migration application with configured users. The application will:
+** Lookup output data from the address space and address configuration conversion scripts
+** Consume messages from each address in each address space on the 0.x cluster
+** Send messages to each corresponding address and tenant on the 1.x cluster
+* Sanity check migration application output
+* Switch traffic to 1.x cluster
 
 === CRUDLW an Identity provider that allows tenants to utilize of a namespace scoped users for the purpose of messaging authentication
 
@@ -797,10 +914,11 @@ metadata:
   namespace: infraspace
 spec:
   ...
-  selector:
-    namespaceSelector:
-      matchLabels:
-        environment: uat1
+  namespaceSelector:
+    matchNames:
+    - ns1
+    matchLabels:
+      environment: uat1
 ```
 
 === Understand the state of the IdentityProvider
