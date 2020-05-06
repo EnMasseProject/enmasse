@@ -1,0 +1,41 @@
+@startuml
+skinparam rectangle<<behavior>> {
+	roundCorner 25
+}
+
+
+package "myapp" <<namespace>> {
+rectangle "myaddr" <<MessagingAddress>> as MA
+rectangle "default" <<MessagingTenant>> as MT
+'#rectangle "myconn" <<MessagingConnector>> as MC
+
+rectangle {
+rectangle "mycluster" <<MessagingEndpoint>> as ME2
+rectangle "myroute" <<MessagingEndpoint>> as ME1
+}
+}
+
+rectangle "prod" <<MessagingInfra>> as MI
+rectangle "plan1" <<MessagingPlan>> as MP
+rectangle "addrplan1" <<MessagingAddressPlan>> as MAP
+
+rectangle  {
+rectangle "corpldap-prod" <<IdentityProvider>> as IP1
+rectangle "serviceaccount" <<IdentityProvider>> as IP2
+}
+
+MT -u-> MI
+MT -> IP2
+MAP <-d- MA
+'#MC <- MA : fwdr ref
+
+IP1 <-d- MT
+MP <-d- MT
+
+ME1 -> IP1
+ME1 -> IP2
+ME2 -> IP2
+
+ME2 -[hidden]- ME1
+IP2 -[hidden]- IP1
+@enduml
