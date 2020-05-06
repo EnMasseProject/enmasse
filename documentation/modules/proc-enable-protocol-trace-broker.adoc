@@ -6,11 +6,11 @@
 = Enabling an AMQP protocol trace for the broker
 
 For diagnostic purposes, you can enable an AMQP protocol trace for a broker. This can be helpful
-to troubleshoot problems with sending or receiving messages.
+when troubleshooting issues with sending or receiving messages.
 
 To enable the protocol trace, you apply configuration to the `standardinfraconfig` (for standard
 address spaces) or `brokeredinfraconfig` (for brokered address spaces) that enables the protocol trace for all
-brokers of all the address spaces that use that configuration. Applying this configuration will cause the
+brokers of all address spaces using that configuration. Applying this configuration will cause the
 brokers to restart.
 
 WARNING: Enabling the protocol trace increases the CPU overhead of the broker(s) and may decrease
@@ -49,7 +49,7 @@ endif::[]
 {cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
 ----
 
-. Enable the protocol trace for all the brokers of all the address spaces using that `standardinfraconfig`
+. Enable the protocol trace for all brokers of all address spaces using that `standardinfraconfig`
 or `brokeredinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]

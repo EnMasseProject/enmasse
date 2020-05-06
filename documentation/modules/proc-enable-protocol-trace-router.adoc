@@ -7,16 +7,14 @@
 
 For diagnostic purposes, you can enable an AMQP protocol trace for a router.   This can be helpful
 when troubleshooting issues related to client connectivity or with sending and receiving messages.  There are two
-ways this can be achieved.
+methods for enabling a protocol trace for the router.
 
 * You can dynamically enable/disable the protocol trace for a single router using a `qdmange` command. This
-method avoids the need to restart the router.  The setting will be lost the next time the router restarts.
+method avoids the need to restart the router. The setting will be lost the next time the router restarts.
 
 * Alternatively, you can apply configuration to the `standardinfraconfig` that enables the protocol trace for all
-routers of all the address spaces that use that `standardinfraconfig`.  This method will cause all the routers to
+routers of all address spaces using that `standardinfraconfig`.  This method will cause all the routers to
 restart.
-
-Both procedures are described next.
 
 WARNING: Enabling the protocol trace increases the CPU overhead of the router(s) and may decrease
 messaging performance. It may also increase the disk space requirements associated with any log retention system.
@@ -103,7 +101,7 @@ endif::[]
 {cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
 ----
 
-. Enable the protocol trace for all the routers of the all the address spaces using that `standardinfraconfig`:
+. Enable the protocol trace for all routers of all address spaces using that `standardinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
