@@ -77,9 +77,9 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
                 .withNamespace(environment.namespace())
                 .endMetadata()
                 .withNewSpec()
-                .editOrNewSelector()
-                .addNewNamespace("app1")
-                .endSelector()
+                .editOrNewNamespaceSelector()
+                .addNewMatchName("app1")
+                .endNamespaceSelector()
                 .endSpec()
                 .build();
 
