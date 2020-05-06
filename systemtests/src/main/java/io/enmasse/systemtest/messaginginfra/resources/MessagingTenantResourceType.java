@@ -54,8 +54,9 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     }
 
     @Override
-    public void delete(MessagingTenant resource) {
+    public void delete(MessagingTenant resource) throws InterruptedException {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
+        waitDeleted(operation, resource);
     }
 
     @Override

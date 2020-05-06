@@ -21,6 +21,25 @@
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_InputValue": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "value": {
+          "type": "string",
+          "description": ""
+        },
+        "valueFromSecret": {
+          "$ref": "#/definitions/kubernetes_core_SecretKeySelector",
+          "existingJavaType": "io.fabric8.kubernetes.api.model.SecretKeySelector"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "InputValue",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddress": {
       "type": "object",
       "description": "",
@@ -311,6 +330,25 @@
         "io.fabric8.kubernetes.api.model.HasMetadata"
       ]
     },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointCertValidity": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "notAfter": {
+          "$ref": "#/definitions/kubernetes_apimachinery_Time",
+          "existingJavaType": "java.lang.String"
+        },
+        "notBefore": {
+          "$ref": "#/definitions/kubernetes_apimachinery_Time",
+          "existingJavaType": "java.lang.String"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingEndpointCertValidity",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointCondition": {
       "type": "object",
       "description": "",
@@ -405,6 +443,15 @@
       "type": "object",
       "description": "",
       "properties": {
+        "annotations": {
+          "type": "object",
+          "description": "",
+          "additionalProperties": {
+            "type": "string",
+            "description": ""
+          },
+          "existingJavaType": "java.util.Map\u003cString,String\u003e"
+        },
         "cluster": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecCluster",
           "javaType": "MessagingEndpointSpecCluster"
@@ -487,6 +534,12 @@
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecRoute": {
       "type": "object",
       "description": "",
+      "properties": {
+        "tlsTermination": {
+          "type": "string",
+          "description": ""
+        }
+      },
       "additionalProperties": true,
       "javaType": "MessagingEndpointSpecRoute",
       "javaInterfaces": [
@@ -497,17 +550,25 @@
       "type": "object",
       "description": "",
       "properties": {
-        "openshift": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsOpenShift",
-          "javaType": "MessagingEndpointSpecTlsOpenShift"
+        "ciphers": {
+          "type": "string",
+          "description": ""
         },
-        "secret": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSecret",
-          "javaType": "MessagingEndpointSpecTlsSecret"
+        "external": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsExternal",
+          "javaType": "MessagingEndpointSpecTlsExternal"
+        },
+        "openshift": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsOpenshift",
+          "javaType": "MessagingEndpointSpecTlsOpenshift"
+        },
+        "protocols": {
+          "type": "string",
+          "description": ""
         },
         "selfsigned": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSelfSigned",
-          "javaType": "MessagingEndpointSpecTlsSelfSigned"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSelfsigned",
+          "javaType": "MessagingEndpointSpecTlsSelfsigned"
         }
       },
       "additionalProperties": true,
@@ -516,29 +577,39 @@
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsOpenShift": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsExternal": {
       "type": "object",
       "description": "",
+      "properties": {
+        "certificate": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_InputValue",
+          "javaType": "InputValue"
+        },
+        "key": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_InputValue",
+          "javaType": "InputValue"
+        }
+      },
       "additionalProperties": true,
-      "javaType": "MessagingEndpointSpecTlsOpenShift",
+      "javaType": "MessagingEndpointSpecTlsExternal",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSecret": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsOpenshift": {
       "type": "object",
       "description": "",
       "additionalProperties": true,
-      "javaType": "MessagingEndpointSpecTlsSecret",
+      "javaType": "MessagingEndpointSpecTlsOpenshift",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSelfSigned": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointSpecTlsSelfsigned": {
       "type": "object",
       "description": "",
       "additionalProperties": true,
-      "javaType": "MessagingEndpointSpecTlsSelfSigned",
+      "javaType": "MessagingEndpointSpecTlsSelfsigned",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -585,10 +656,37 @@
             "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointPort",
             "javaType": "MessagingEndpointPort"
           }
+        },
+        "tls": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointStatusTls",
+          "javaType": "MessagingEndpointStatusTls"
+        },
+        "type": {
+          "type": "string",
+          "description": ""
         }
       },
       "additionalProperties": true,
       "javaType": "MessagingEndpointStatus",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointStatusTls": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "caCertificate": {
+          "type": "string",
+          "description": ""
+        },
+        "certificateValidity": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointCertValidity",
+          "javaType": "MessagingEndpointCertValidity"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingEndpointStatusTls",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -1323,6 +1421,44 @@
       },
       "additionalProperties": true,
       "existingJavaType": "io.fabric8.kubernetes.api.model.TypeMeta",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "kubernetes_core_LocalObjectReference": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "existingJavaType": "io.fabric8.kubernetes.api.model.LocalObjectReference",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "kubernetes_core_SecretKeySelector": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": ""
+        },
+        "name": {
+          "type": "string",
+          "description": ""
+        },
+        "optional": {
+          "type": "boolean",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "existingJavaType": "io.fabric8.kubernetes.api.model.SecretKeySelector",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]

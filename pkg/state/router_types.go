@@ -23,16 +23,18 @@ type RouterState struct {
 type RouterEntityType string
 
 const (
-	RouterAddressEntity   RouterEntityType = "org.apache.qpid.dispatch.router.config.address"
-	RouterListenerEntity  RouterEntityType = "org.apache.qpid.dispatch.listener"
-	RouterConnectorEntity RouterEntityType = "org.apache.qpid.dispatch.connector"
-	RouterAutoLinkEntity  RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
+	RouterAddressEntity    RouterEntityType = "org.apache.qpid.dispatch.router.config.address"
+	RouterListenerEntity   RouterEntityType = "org.apache.qpid.dispatch.listener"
+	RouterConnectorEntity  RouterEntityType = "org.apache.qpid.dispatch.connector"
+	RouterAutoLinkEntity   RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
+	RouterSslProfileEntity RouterEntityType = "org.apache.qpid.dispatch.sslProfile"
 )
 
 type RouterEntity interface {
 	Type() RouterEntityType
 	GetName() string
 	Equals(RouterEntity) bool
+	Order() int
 }
 
 type NamedEntity struct {
@@ -41,15 +43,15 @@ type NamedEntity struct {
 }
 
 type RouterConnector struct {
-	Name               string `json:"name"`
-	Host               string `json:"host"`
-	Port               string `json:"port"`
-	Role               string `json:"role,omitempty"`
-	SslProfile         string `json:"sslProfile,omitempty"`
-	SaslMechanisms     string `json:"saslMechanisms,omitempty"`
-	SaslUsername       string `json:"saslUsername,omitempty"`
-	SaslPassword       string `json:"saslPassword,omitempty"`
-	LinkCapacity       int    `json:"linkCapacity,omitempty"`
+	Name           string `json:"name"`
+	Host           string `json:"host"`
+	Port           string `json:"port"`
+	Role           string `json:"role,omitempty"`
+	SslProfile     string `json:"sslProfile,omitempty"`
+	SaslMechanisms string `json:"saslMechanisms,omitempty"`
+	SaslUsername   string `json:"saslUsername,omitempty"`
+	SaslPassword   string `json:"saslPassword,omitempty"`
+	// LinkCapacity       int    `json:"linkCapacity,omitempty"`
 	IdleTimeoutSeconds int    `json:"idleTimeoutSeconds,omitempty"`
 	VerifyHostname     bool   `json:"verifyHostname,omitempty"`
 	PolicyVhost        string `json:"policyVhost,omitempty"`
@@ -58,16 +60,19 @@ type RouterConnector struct {
 }
 
 type RouterListener struct {
-	Name               string `json:"name"`
-	Host               string `json:"host"`
-	Port               string `json:"port"`
-	Role               string `json:"role,omitempty"`
-	SslProfile         string `json:"sslProfile,omitempty"`
-	SaslMechanisms     string `json:"saslMechanisms,omitempty"`
-	LinkCapacity       int    `json:"linkCapacity,omitempty"`
-	IdleTimeoutSeconds int    `json:"idleTimeoutSeconds,omitempty"`
-	PolicyVhost        string `json:"policyVhost,omitempty"`
-	MultiTenant        bool   `json:"multiTenant,omitempty"`
+	Name           string `json:"name"`
+	Host           string `json:"host"`
+	Port           string `json:"port"`
+	Role           string `json:"role,omitempty"`
+	SslProfile     string `json:"sslProfile,omitempty"`
+	SaslMechanisms string `json:"saslMechanisms,omitempty"`
+	// LinkCapacity                   int    `json:"linkCapacity,omitempty"`
+	IdleTimeoutSeconds             int    `json:"idleTimeoutSeconds,omitempty"`
+	InitialHandshakeTimeoutSeconds int    `json:"initialHandshakeTimeoutSeconds,omitempty"`
+	PolicyVhost                    string `json:"policyVhost,omitempty"`
+	MultiTenant                    bool   `json:"multiTenant,omitempty"`
+	RequireSsl                     bool   `json:"requireSsl,omitempty"`
+	Http                           bool   `json:"http,omitempty"`
 }
 
 type RouterVhost struct {
@@ -92,4 +97,13 @@ type RouterAutoLink struct {
 type RouterLinkRoute struct {
 	Prefix      string `json:"string"`
 	ContainerId string `json:"containerId"`
+}
+
+type RouterSslProfile struct {
+	Name           string `json:"name"`
+	Ciphers        string `json:"ciphers,omitempty"`
+	Protocols      string `json:"protocols,omitempty"`
+	CaCertFile     string `json:"caCertFile,omitempty"`
+	CertFile       string `json:"certFile,omitempty"`
+	PrivateKeyFile string `json:"privateKeyFile,omitempty"`
 }

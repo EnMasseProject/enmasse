@@ -8,6 +8,7 @@ package cert
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	"crypto/sha256"
@@ -46,6 +47,11 @@ type CertController struct {
 	clock              Clock
 }
 
+type CertInfo struct {
+	NotBefore time.Time
+	NotAfter  time.Time
+}
+
 func NewCertController(client client.Client, scheme *runtime.Scheme, caExpirationTime time.Duration, certExpirationTime time.Duration) *CertController {
 	return &CertController{
 		client:             client,
@@ -76,6 +82,21 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 	return err
 }
 
+/*
+ * Reconciles the CA for an instance of a messaging tenant. This function also handles renewal of the CA.
+ */
+func (c *CertController) ReconcileTenantCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, namespace string) error {
+	secretName := GetTenantCaSecretName(namespace)
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
+		return c.applyCaSecret(secret, logger)
+	})
+	return err
+}
+
 func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger) error {
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "", secret.Name)
 
@@ -97,7 +118,7 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
 	if !hasCert {
 		logger.Info("Creating CA certificate")
 		expiryDate := now.Add(c.caExpirationTime)
-		caKey, caCert, err := generateCa(nil, nil, expiryDate)
+		caKey, caCert, err := generateCa(now, nil, nil, expiryDate)
 		if err != nil {
 			return err
 		}
@@ -107,7 +128,7 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
 	} else if shouldRenewCert(now, expiryDate) {
 		logger.Info("Renewing CA certificate")
 		expiryDate := now.Add(c.caExpirationTime)
-		caKey, caCert, err := generateCa(secret.Data["tls.key"], secret.Data["tls.crt"], expiryDate)
+		caKey, caCert, err := generateCa(now, secret.Data["tls.key"], secret.Data["tls.crt"], expiryDate)
 		if err != nil {
 			return err
 		}
@@ -120,10 +141,118 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
 }
 
 /*
+ * Reconciles the internal certificate for a given endpoint in a tenant.
+ * This function also handles renewal of the certificate.
+ */
+func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (*CertInfo, error) {
+
+	caSecretName := fmt.Sprintf("%s-tenant-ca", endpoint.Namespace)
+	caSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: caSecretName},
+	}
+	err := c.client.Get(ctx, types.NamespacedName{Namespace: infra.Namespace, Name: caSecretName}, caSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Secret already exists and shared, so we do not create it
+	secretName := GetTenantSecretName(infra.Name)
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
+	}
+	err = c.client.Get(ctx, types.NamespacedName{Namespace: infra.Namespace, Name: secretName}, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	// Modfy only fields that are specific to this endpoint
+	config := certConfig{
+		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
+		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
+	}
+	originalKey := secret.Data[config.key]
+	originalCrt := secret.Data[config.crt]
+	info, err := c.applyCertSecret(secret, caSecret, config, logger, endpoint.Status.Host, endpoint.Status.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	if !reflect.DeepEqual(originalKey, secret.Data[config.key]) || !reflect.DeepEqual(originalCrt, secret.Data[config.crt]) {
+		err = c.client.Update(ctx, secret)
+		return info, err
+	}
+	return info, nil
+}
+
+/*
+ * Reconciles the internal certificate for a given endpoint in a tenant so that it matches the provided values.
+ */
+func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint, key []byte, value []byte) error {
+	// Secret already exists and shared, so we do not create it
+	secretName := GetTenantSecretName(infra.Name)
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
+	}
+	err := c.client.Get(ctx, types.NamespacedName{Namespace: infra.Namespace, Name: secretName}, secret)
+	if err != nil {
+		return err
+	}
+
+	// Modfy only fields that are specific to this endpoint
+	config := certConfig{
+		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
+		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
+	}
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte, 0)
+	}
+	originalKey := secret.Data[config.key]
+	originalCrt := secret.Data[config.crt]
+
+	secret.Data[config.key] = key
+	secret.Data[config.crt] = value
+
+	if !reflect.DeepEqual(originalKey, secret.Data[config.key]) || !reflect.DeepEqual(originalCrt, secret.Data[config.crt]) {
+		return c.client.Update(ctx, secret)
+	}
+	return nil
+}
+
+/*
+ * Deletes the certificates of a given endpoint from the tenant secret.
+ */
+func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) error {
+	// Secret already exists and shared, so we do not create it
+	secretName := GetTenantSecretName(infra.Name)
+	secret := &corev1.Secret{}
+	err := c.client.Get(ctx, types.NamespacedName{Namespace: infra.Namespace, Name: secretName}, secret)
+	if err != nil {
+		return err
+	}
+
+	// Modfy only fields that are specific to this endpoint
+	config := certConfig{
+		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
+		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
+	}
+	originalKey := secret.Data[config.key]
+	originalCrt := secret.Data[config.crt]
+
+	delete(secret.Data, config.key)
+	delete(secret.Data, config.crt)
+
+	if !reflect.DeepEqual(originalKey, secret.Data[config.key]) || !reflect.DeepEqual(originalCrt, secret.Data[config.crt]) {
+		err = c.client.Update(ctx, secret)
+		return err
+	}
+	return nil
+}
+
+/*
  * Reconciles the internal certificate for a given component in a shared infrastructure.
  * This function also handles renewal of the certificate.
  */
-func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*corev1.Secret, error) {
+func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*CertInfo, error) {
 
 	caSecretName := fmt.Sprintf("%s-ca", infra.Name)
 	caSecret := &corev1.Secret{
@@ -138,20 +267,56 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
+	var certInfo *CertInfo
 	_, err = controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
 		if err := controllerutil.SetControllerReference(set, secret, c.scheme); err != nil {
 			return err
 		}
-		return c.applyCertSecret(secret, caSecret, logger, commonName, dnsNames...)
+		config := certConfig{
+			key:        "tls.key",
+			crt:        "tls.crt",
+			ca:         "ca.crt",
+			keystore:   "keystore.p12",
+			truststore: "truststore.p12",
+		}
+		certInfo, err = c.applyCertSecret(secret, caSecret, config, logger, commonName, dnsNames...)
+		return err
 	})
-	return secret, err
+	return certInfo, err
 }
 
-func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1.Secret, logger logr.Logger, commonName string, dnsNames ...string) error {
+// Get CertInfo for a given PEM cert.
+func GetCertInfo(pemCert []byte) (*CertInfo, error) {
+	cert, err := parsePemCertificate(pemCert)
+	if err != nil {
+		return nil, err
+	}
 
+	return &CertInfo{
+		NotBefore: cert.NotBefore,
+		NotAfter: cert.NotAfter,
+	}, nil
+}
+
+type certConfig struct {
+	ca         string
+	key        string
+	crt        string
+	keystore   string
+	truststore string
+}
+
+func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1.Secret, config certConfig, logger logr.Logger, commonName string, dnsNames ...string) (*CertInfo, error) {
+	if config.key == "" {
+		return nil, fmt.Errorf("key config must be set")
+	}
+
+	if config.crt == "" {
+		return nil, fmt.Errorf("crt config must be set")
+	}
 	caExpiryDate, err := getCertExpiryDate(caSecret.Data["tls.crt"])
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "", secret.Name)
@@ -161,11 +326,11 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 
 	// Get the expiry date of the existing certificate if it exists
 	var expiryDate time.Time
-	_, hasCert := secret.Data["tls.key"]
+	_, hasCert := secret.Data[config.key]
 	if hasCert {
-		expiryDate, err = getCertExpiryDate(secret.Data["tls.crt"])
+		expiryDate, err = getCertExpiryDate(secret.Data[config.crt])
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -180,22 +345,39 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 	logger.Info("Checking cert", "secret", secret.Name, "expiryDate", expiryDate.Format(time.UnixDate), "expectedCaDigest", expectedCaDigest, "actualCaDigest", actualCaDigest)
 
 	now := c.clock.Now()
+	var certInfo *CertInfo
 
 	// Create the initial certificate if this is a new secret to be created
 	if !hasCert {
 		logger.Info("Creating component certificate", "secret", secret.Name)
 		expiryDate := now.Add(c.certExpirationTime)
-		key, cert, keystore, truststore, err := generateCert(nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(now, nil, nil, caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		secret.Data = make(map[string][]byte)
-		secret.Data["tls.key"] = key
-		secret.Data["tls.crt"] = cert
-		secret.Data["ca.crt"] = caSecret.Data["tls.crt"]
-		secret.Data["keystore.p12"] = keystore
-		secret.Data["truststore.p12"] = truststore
+
+		if config.key != "" {
+			secret.Data[config.key] = key
+		}
+		if config.crt != "" {
+			secret.Data[config.crt] = cert
+		}
+		if config.ca != "" {
+			secret.Data[config.ca] = caSecret.Data["tls.crt"]
+		}
+		if config.keystore != "" {
+			secret.Data[config.keystore] = keystore
+		}
+		if config.truststore != "" {
+			secret.Data[config.truststore] = truststore
+		}
+
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
+		certInfo = &CertInfo{
+			NotBefore: now,
+			NotAfter:  expiryDate,
+		}
 
 	} else if shouldRenewCert(now, expiryDate) || expectedCaDigest != actualCaDigest {
 		// If we should renew or if CA has changed, renew this certificate
@@ -209,20 +391,40 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		if expiryDate.After(caExpiryDate) {
 			expiryDate = caExpiryDate
 		}
-		key, cert, keystore, truststore, err := generateCert(secret.Data["tls.key"], secret.Data["tls.crt"], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
+		key, cert, keystore, truststore, err := generateCert(now, secret.Data[config.key], secret.Data[config.crt], caSecret.Data["tls.key"], caSecret.Data["tls.crt"], expiryDate, commonName, dnsNames)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		secret.Data = make(map[string][]byte)
-		secret.Data["tls.key"] = key
-		secret.Data["tls.crt"] = cert
-		secret.Data["ca.crt"] = caSecret.Data["tls.crt"]
-		secret.Data["keystore.p12"] = keystore
-		secret.Data["truststore.p12"] = truststore
+		if config.key != "" {
+			secret.Data[config.key] = key
+		}
+		if config.crt != "" {
+			secret.Data[config.crt] = cert
+		}
+		if config.ca != "" {
+			secret.Data[config.ca] = caSecret.Data["tls.crt"]
+		}
+		if config.keystore != "" {
+			secret.Data[config.keystore] = keystore
+		}
+		if config.truststore != "" {
+			secret.Data[config.truststore] = truststore
+		}
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
+
+		certInfo = &CertInfo{
+			NotBefore: now,
+			NotAfter:  expiryDate,
+		}
+	} else {
+		certInfo, err = GetCertInfo(secret.Data[config.crt])
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return nil
+	return certInfo, nil
 }
 
 // Certs should be renewed 1 hour before expiry
@@ -237,4 +439,12 @@ func getDigest(data []byte) string {
 
 func GetCertSecretName(name string) string {
 	return fmt.Sprintf("%s-cert", name)
+}
+
+func GetTenantCaSecretName(namespace string) string {
+	return fmt.Sprintf("%s-tenant-ca", namespace)
+}
+
+func GetTenantSecretName(infraName string) string {
+	return fmt.Sprintf("%s.tenant-certs", infraName)
 }

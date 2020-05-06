@@ -18,8 +18,10 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import java.time.Duration;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class MessagingAddressResourceType implements ResourceType<MessagingAddress> {
     private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingAddresses(), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
@@ -45,16 +47,9 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
     }
 
     @Override
-    public void delete(MessagingAddress resource) {
+    public void delete(MessagingAddress resource) throws Exception {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-    }
-
-    void waitDeleted() {
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-
-
-        }
+        waitDeleted(operation, resource);
     }
 
     @Override

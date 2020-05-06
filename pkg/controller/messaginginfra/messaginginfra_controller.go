@@ -120,6 +120,15 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 		return err
 	}
 
+	// Watch changes to secrets that we own
+	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
+		IsController: true,
+		OwnerType:    &v1beta2.MessagingInfra{},
+	})
+	if err != nil {
+		return err
+	}
+
 	// Watch pods that map to this infra
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestsFromMapFunc{
 		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {

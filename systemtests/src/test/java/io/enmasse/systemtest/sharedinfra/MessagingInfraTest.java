@@ -159,12 +159,12 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
                 .endSpec()
                 .build();
 
-        infraResourceManager.createResource(anycast, queue, endpoint);
+        infraResourceManager.createResource(endpoint, anycast, queue);
 
         // Make sure endpoints work first
         LOGGER.info("Running initial client check");
-        MessagingEndpointTest.doTestSendReceiveAddress(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName());
-        MessagingEndpointTest.doTestSendReceiveAddress(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName());
+        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
+        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
 
         // Restart router and broker pods
         MessagingInfra infra = infraResourceManager.getDefaultInfra();
@@ -180,8 +180,8 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
 
         LOGGER.info("Re-running client check");
 
-        MessagingEndpointTest.doTestSendReceiveAddress(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName());
-        MessagingEndpointTest.doTestSendReceiveAddress(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName());
+        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
+        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
     }
 
     private void waitForConditionTrue(MessagingInfra infra, String conditionName) throws InterruptedException {

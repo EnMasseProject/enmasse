@@ -7,3 +7,4 @@ package common
 
 const ANNOTATION_INFRA_NAME = "enmasse.io/infra-name"
 const ANNOTATION_INFRA_NAMESPACE = "enmasse.io/infra-namespace"
+const ANNOTATION_CERT_DIGEST = "enmasse.io/tenant-cert-digest"

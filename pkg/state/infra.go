@@ -30,9 +30,7 @@ type resourceKey struct {
 const syncBufferSize int = 100
 const maxBatchSize int = 50
 
-// TODO - Add periodic reset of router and broker state
 // TODO - Unit test of address and endpoint management
-
 type request struct {
 	done     chan error
 	resource runtime.Object
@@ -472,7 +470,7 @@ func (i *infraClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protoco
 
 	// Allocate ports for all defined protocols
 	for _, protocol := range protocols {
-		name := listenerName(endpoint, protocol)
+		name := portName(endpoint, protocol)
 		var found bool
 		for _, internalPort := range endpoint.Status.InternalPorts {
 			if internalPort.Name == name {
@@ -530,10 +528,17 @@ func (i *infraClient) freePortsInternal(endpoint *v1beta2.MessagingEndpoint) {
 		return
 	}
 
+	newPorts := make([]v1beta2.MessagingEndpointPort, 0)
 	for _, port := range endpoint.Status.InternalPorts {
-		i.freePort(port.Port)
+		if port.Protocol != v1beta2.MessagingProtocolAMQPWS && port.Protocol != v1beta2.MessagingProtocolAMQPWSS {
+			i.freePort(port.Port)
+		} else {
+			// TODO: Workaround for https://issues.apache.org/jira/browse/DISPATCH-1646, as HTTP listeners can't be deleted. We will ignore the error and
+			// keep the entity in the local state.
+			newPorts = append(newPorts, port)
+		}
 	}
-	endpoint.Status.InternalPorts = make([]v1beta2.MessagingEndpointPort, 0)
+	endpoint.Status.InternalPorts = newPorts
 }
 
 /**
@@ -686,21 +691,52 @@ func isEndpointActive(endpoint *v1beta2.MessagingEndpoint) bool {
 }
 
 func (i *infraClient) buildRouterEndpointEntities(endpoint *v1beta2.MessagingEndpoint) ([]RouterEntity, error) {
+	// TODO: Make configurable
+	// linkCapacity := 20
+	idleTimeoutSeconds := 16
 	routerEntities := make([]RouterEntity, 0)
+
 	for _, internalPort := range endpoint.Status.InternalPorts {
-		if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
-			routerEntities = append(routerEntities, &RouterListener{
-				Name:               internalPort.Name,
-				Host:               "0.0.0.0",
-				Port:               fmt.Sprintf("%d", internalPort.Port),
-				Role:               "normal",
-				IdleTimeoutSeconds: 16,
-				MultiTenant:        true,
-			})
-		} else {
-			// TODO
-			return nil, fmt.Errorf("%s protocol not yet supported", internalPort.Protocol)
+		var sslProfile *RouterSslProfile
+		if internalPort.Protocol == v1beta2.MessagingProtocolAMQPS || (internalPort.Protocol == v1beta2.MessagingProtocolAMQPWSS && !endpoint.IsEdgeTerminated()) {
+			sslProfile = &RouterSslProfile{
+				Name:           sslProfileName(internalPort.Name),
+				CertFile:       fmt.Sprintf("/etc/enmasse-tenant-certs/%s.%s.crt", endpoint.Namespace, endpoint.Name),
+				PrivateKeyFile: fmt.Sprintf("/etc/enmasse-tenant-certs/%s.%s.key", endpoint.Namespace, endpoint.Name),
+			}
+
+			if endpoint.Spec.Tls != nil {
+				if endpoint.Spec.Tls.Protocols != nil {
+					sslProfile.Protocols = *endpoint.Spec.Tls.Protocols
+				}
+
+				if endpoint.Spec.Tls.Ciphers != nil {
+					sslProfile.Ciphers = *endpoint.Spec.Tls.Ciphers
+				}
+
+			}
+			routerEntities = append(routerEntities, sslProfile)
 		}
+
+		websockets := (internalPort.Protocol == v1beta2.MessagingProtocolAMQPWS || internalPort.Protocol == v1beta2.MessagingProtocolAMQPWSS)
+		listener := &RouterListener{
+			Name:               listenerName(internalPort.Name),
+			Host:               "0.0.0.0",
+			Port:               fmt.Sprintf("%d", internalPort.Port),
+			Role:               "normal",
+			RequireSsl:         false,
+			IdleTimeoutSeconds: idleTimeoutSeconds,
+			// LinkCapacity:       linkCapacity,
+			MultiTenant: true,
+			Http:        websockets,
+		}
+
+		if sslProfile != nil {
+			listener.SslProfile = sslProfile.Name
+			// Do not set require SSL for websockets, due to https://issues.apache.org/jira/browse/DISPATCH-1040
+			listener.RequireSsl = !websockets
+		}
+		routerEntities = append(routerEntities, listener)
 	}
 	return routerEntities, nil
 }
@@ -748,11 +784,12 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 			if brokerState == nil {
 				return nil, fmt.Errorf("unable to configure address autoLink (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
 			}
+			connector := connectorName(brokerState)
 			routerEntities = append(routerEntities, &RouterAutoLink{
 				Name:            autoLinkName(tenantId, address, broker.Host, "in"),
 				Address:         fullAddress,
 				Direction:       "in",
-				Connection:      connectorName(brokerState),
+				Connection:      connector,
 				ExternalAddress: fullAddress,
 			})
 
@@ -760,7 +797,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 				Name:            autoLinkName(tenantId, address, broker.Host, "out"),
 				Address:         fullAddress,
 				Direction:       "out",
-				Connection:      connectorName(brokerState),
+				Connection:      connector,
 				ExternalAddress: fullAddress,
 			})
 		}
@@ -881,7 +918,29 @@ func (i *infraClient) doDelete() {
 		return
 	}
 
-	builtRequests, routerEntities, brokerQueues := i.buildEntities(toDelete)
+	valid := make([]*request, 0, len(toDelete))
+	for _, req := range toDelete {
+		switch req.resource.(type) {
+		case *v1beta2.MessagingEndpoint:
+			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
+			var err error
+			for key, _ := range i.addresses {
+				if endpoint.Namespace == key.Namespace {
+					err = fmt.Errorf("endpoint still in use by addresses")
+					break
+				}
+			}
+			if err != nil {
+				req.done <- err
+				continue
+			}
+			valid = append(valid, req)
+		default:
+			valid = append(valid, req)
+		}
+	}
+
+	builtRequests, routerEntities, brokerQueues := i.buildEntities(valid)
 
 	ctx := context.Background()
 	err := i.deleteEntities(ctx, routerEntities, brokerQueues)
@@ -893,14 +952,17 @@ func (i *infraClient) doDelete() {
 			key = resourceKey{Name: address.Name, Namespace: address.Namespace}
 			if err == nil {
 				delete(i.addresses, key)
+				log.Printf("Deleted address %s/%s", address.Namespace, address.Name)
 			}
 			req.done <- err
 		case *v1beta2.MessagingEndpoint:
 			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
 			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
+
 			if err == nil {
 				i.freePortsInternal(endpoint)
 				delete(i.endpoints, key)
+				log.Printf("Deleted endpoint %s/%s", endpoint.Namespace, endpoint.Name)
 			}
 			req.done <- err
 		default:
@@ -955,11 +1017,11 @@ func (i *infraClient) collectRequests(c chan *request) []*request {
 }
 
 func autoLinkName(tenantId string, address *v1beta2.MessagingAddress, host string, direction string) string {
-	return fmt.Sprintf("%s-%s-%s-%s", tenantId, address.Name, host, direction)
+	return fmt.Sprintf("autoLink-%s-%s-%s-%s", tenantId, address.Name, host, direction)
 }
 
 func addressName(tenantId string, address *v1beta2.MessagingAddress) string {
-	return fmt.Sprintf("%s-%s", tenantId, address.Name)
+	return fmt.Sprintf("address-%s-%s", tenantId, address.Name)
 }
 
 func fullAddress(tenantId string, address *v1beta2.MessagingAddress) string {
@@ -967,9 +1029,17 @@ func fullAddress(tenantId string, address *v1beta2.MessagingAddress) string {
 }
 
 func connectorName(broker *BrokerState) string {
-	return fmt.Sprintf("%s-%d", broker.Host, broker.Port)
+	return fmt.Sprintf("connector-%s-%d", broker.Host, broker.Port)
 }
 
-func listenerName(endpoint *v1beta2.MessagingEndpoint, protocol v1beta2.MessagingEndpointProtocol) string {
+func portName(endpoint *v1beta2.MessagingEndpoint, protocol v1beta2.MessagingEndpointProtocol) string {
 	return fmt.Sprintf("%s-%s-%s", endpoint.Namespace, endpoint.Name, protocol)
+}
+
+func listenerName(portName string) string {
+	return fmt.Sprintf("listener-%s", portName)
+}
+
+func sslProfileName(portName string) string {
+	return fmt.Sprintf("sslProfile-%s", portName)
 }

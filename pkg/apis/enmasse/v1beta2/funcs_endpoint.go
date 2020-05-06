@@ -5,6 +5,7 @@
 package v1beta2
 
 import (
+	routev1 "github.com/openshift/api/route/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,4 +37,9 @@ func (c *MessagingEndpointCondition) SetStatus(status corev1.ConditionStatus, re
 
 	c.Reason = reason
 	c.Message = message
+}
+
+func (e *MessagingEndpoint) IsEdgeTerminated() bool {
+	return e.Spec.Tls == nil &&
+		(e.Spec.Ingress != nil || (e.Spec.Route != nil && (e.Spec.Route.TlsTermination == nil || *e.Spec.Route.TlsTermination == routev1.TLSTerminationEdge)))
 }
