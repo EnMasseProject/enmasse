@@ -12,7 +12,7 @@ public class InfinispanProperties {
 
     public static class CacheNames {
         private static final String DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME = "adapterCredentials";
-        private static final String DEFAULT_DEVICE_CONNECTIONS_CACHE_NAME = "deviceStates";
+        private static final String DEFAULT_DEVICE_CONNECTIONS_CACHE_NAME = "device-connection";
         private static final String DEFAULT_DEVICES_CACHE_NAME = "devices";
 
         private String adapterCredentials = DEFAULT_ADAPTER_CREDENTIALS_CACHE_NAME;
