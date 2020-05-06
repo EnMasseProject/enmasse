@@ -4,8 +4,6 @@
  */
 package io.enmasse.systemtest.operator;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -135,7 +134,14 @@ public class OLMOperatorManager {
                     "--skip-tls-verify=true",
                     "--force");
             var result = Exec.execute(command);
-            assertTrue(result.getRetCode(), "Build image failed");
+            if (!result.getRetCode()) {
+                if (result.getStdErr() != null) {
+                    if (result.getStdErr().replace("\n", "").replace("\r", "").strip().equals("Doing nothing")) {
+                        return; //it went ok
+                    }
+                }
+                Assertions.fail("Image build failed");
+            }
         }
     }
 
