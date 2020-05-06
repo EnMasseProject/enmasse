@@ -229,6 +229,10 @@ status:
     port: 5672
     protocol: AMQP
   tls:
+    startDate: <CERT START DATE>
+    expiryDate: <CERT EXPIRY DATE>
+    openshift:
+      ca.pem: <PEM VALUE>
     selfsigned:
       ca.pem: <PEM VALUE>
   identityProviders:
@@ -341,6 +345,7 @@ spec:
     password:
       valueFromSecret:
         name: client-password
+        key: password
   addresses:
     - name: pat1
       pattern: queue*
