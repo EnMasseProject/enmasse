@@ -280,8 +280,13 @@ spec:
 
   # Allows specifying a selector for namespaces that should get this IdentityProvider by default.
   namespaceSelector:
+    # Restrict to specific namespaces
+    matchNames:
+     - ns1
+     - ns2
+    # Restrict to namespaces matching labels
     matchLabels:
-      type: messaging
+      environment: production
 status:
   phase: Active
   type: ldap | keycloak | external | clientauth | serviceAccount | anonymous
@@ -319,11 +324,13 @@ apiVersion: enmasse.io/v1beta2
 kind: MessagingTennant
 spec:
   identityProviderSelector:
+    # Restrict to specific identity providers
+    matchNames:
+     - ip1
+     - ip2
+    # Restrict to identity providers matching labels
     matchLabels:
-      type: messaging
-    matchExpressions:
-      - {key: tier, operator: In, values: [cache]}
-      - {key: environment, operator: NotIn, values: [dev]}
+      environment: production
 status:
   identityProviders:
   - name:  myldap
@@ -358,11 +365,13 @@ metadata:
   namespace: myapp
 spec:
   identityProviderSelector:
+    # Restrict to specific identity providers
+    matchNames:
+     - ip1
+     - ip2
+    # Restrict to identity providers matching labels
     matchLabels:
-      type: messaging
-    matchExpressions:
-      - {key: tier, operator: In, values: [cache]}
-      - {key: environment, operator: NotIn, values: [dev]}
+      environment: production
    secureOnlyMechanisms: ["MECH1"]
    defaultIdentityProviderRef:  # maybe would be better as a selector and define the default as the first?
       name:
