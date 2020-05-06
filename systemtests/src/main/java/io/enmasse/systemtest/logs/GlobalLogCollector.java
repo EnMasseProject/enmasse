@@ -312,23 +312,32 @@ public class GlobalLogCollector {
                 }
             });
 
-            Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
+            //ns specific logs
+            for (String ns : nsList) {
+                if (kube.namespaceExists(ns)) {
+                    Files.writeString(path.resolve(String.format("describe_pods.%s.txt", ns)), KubeCMDClient.describePods(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("events.%s.txt", ns)), KubeCMDClient.getEvents(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("configmaps.%s.yaml", ns)), KubeCMDClient.getConfigmaps(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("secrets.%s.yaml", ns)), KubeCMDClient.getSecrets(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
+                }
+            }
+
+            //resource specific logs
             Files.writeString(path.resolve("describe_addressspaces.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addressspaces", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_addresses.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addresses", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "messaginguser", "-o", "yaml", "--all-namespaces").getStdOut());
-            Files.writeString(path.resolve(String.format("events.%s.txt", infraNamespace)), KubeCMDClient.getEvents(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
-            Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("secrets.yaml"), KubeCMDClient.getSecrets(infraNamespace).getStdOut());
+
+            //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
-            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
             if (Kubernetes.isOpenShiftCompatible()) {
                 Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
             }
+            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
+            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
 
             if (extraCollectors != null) {
                 for (var c : extraCollectors) {
