@@ -17,11 +17,29 @@ After installing {ProductName} from the OperatorHub using the {KubePlatform} con
 
 After creating the new instances of the custom resources, next:
 
+ifdef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[create an address space]
+endif::SingleBookLink[]
 
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#create-address-space-cli-messaging[create an address space]
+endif::SingleBookLink[]
+
+ifdef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-cli-messaging[create an address]
+endif::SingleBookLink[]
 
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#create-address-cli-messaging[create an address]
+endif::SingleBookLink[]
+
+ifdef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-creating-users-cli-messaging[create a messaging user]
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#proc-creating-users-cli-messaging[create a messaging user]
+endif::SingleBookLink[]
 
 The following procedures use the example data that is provided when using the {KubePlatform} console.
 
@@ -34,4 +52,3 @@ include::../modules/proc-create-address-space-plan-custom-resource-olm-ui.adoc[l
 include::../modules/proc-create-address-plan-custom-resource-olm-ui.adoc[leveloffset=+1]
 
 :context: {parent-context}
-
