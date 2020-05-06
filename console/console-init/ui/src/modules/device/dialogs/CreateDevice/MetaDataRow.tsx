@@ -31,13 +31,12 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   );
   const [propertyInput, setPropertyInput] = useState<string | undefined>("");
 
-  const handleAddChildClick = (event: any, parentKey: string) => {
+  const handleAddChildRow = (event: any, parentKey: string) => {
     let element = { defaults: { parentKey: {} }, ext: {} };
-
     setFormData([...formData, element]);
   };
 
-  const handleMinusClick = (index: any) => {
+  const handleDeleteRow = (index: any) => {
     const metadataList = [...formData];
     metadataList.splice(index, 1);
     setFormData(metadataList);
@@ -72,6 +71,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         <GridItem span={5}>
           <InputGroup>
             <TypeAheadSelect
+              id="cd-metadata-typeahead-parameter"
               ariaLabelTypeAhead={"Select parameter"}
               ariaLabelledBy={"typeahead-parameter-id"}
               onSelect={onPropertySelect}
@@ -84,8 +84,8 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
             />
             <Button
               variant="control"
-              aria-label="popover for input"
-              onClick={e => handleAddChildClick(e, "context")}
+              aria-label="Add child on button click"
+              onClick={e => handleAddChildRow(e, "context")}
             >
               <PlusIcon />
             </Button>
@@ -103,15 +103,17 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         <GridItem span={5}>
           <InputGroup>
             <TextInput
+              id="cd-metadata-text-value"
               value={currentValue}
               type="text"
               onChange={handleInputChange}
               aria-label="text input example"
             />
             <Button
+              id="cd-metadata-button-delete"
               variant="link"
               icon={<MinusCircleIcon />}
-              onClick={handleMinusClick}
+              onClick={handleDeleteRow}
             />
           </InputGroup>
         </GridItem>

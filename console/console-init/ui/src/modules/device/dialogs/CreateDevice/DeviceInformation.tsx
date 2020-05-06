@@ -4,21 +4,16 @@ import {
   FormGroup,
   TextInput,
   Title,
-  Switch,
   Divider,
   Grid,
   GridItem
 } from "@patternfly/react-core";
 import { MetaData } from "./MetaData";
 import { IDeviceInfo } from ".";
+import { SwitchWithToggle } from "components/SwitchWithToggle/SwitchWithToggle";
 
 export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
-  onPropertySelect,
-  onChangePropertyInput,
-  onPropertyClear,
-  propertySelected,
-  propertyInput,
-  setPropertyInput
+  onChangePropertyInput
 }) => {
   const [deviceIdInput, setDeviceIdInput] = useState("");
   const [isChecked, setIsChecked] = useState(true);
@@ -30,25 +25,34 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
     <Grid>
       <GridItem span={8}>
         <Form>
-          <Title headingLevel="h3" size="2xl">
+          <Title id="cd-device-info-title" headingLevel="h3" size="2xl">
             Enter your device information
           </Title>
-          <FormGroup label="Device ID" isRequired fieldId="device-id">
+          <FormGroup
+            id="cd-device-info-device-id"
+            label="Device ID"
+            isRequired
+            fieldId="cd-device-info-device-id"
+          >
             <TextInput
               isRequired
               type="text"
-              id="device-id"
+              id="cd-device-info-text-device-id"
               name="device-id"
               aria-describedby="device-id-helper"
               value={deviceIdInput}
               onChange={handleTextInputChange1}
             />
           </FormGroup>
-          <FormGroup label="Status" fieldId="simple-form-status">
+          <FormGroup
+            id="cd-device-info-form-switch"
+            label="Status"
+            fieldId="cd-device-info-form-switch"
+          >
             <br />
             Enable or disable this device{" "}
-            <Switch
-              id="simple-switch"
+            <SwitchWithToggle
+              id="cd-device-info-switch"
               label="Enabled"
               labelOff="Disabled"
               isChecked={isChecked}
@@ -57,14 +61,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           </FormGroup>
           <Divider />
           Metadata
-          <MetaData
-            onPropertyClear={onPropertyClear}
-            onPropertySelect={onPropertySelect}
-            onChangePropertyInput={onChangePropertyInput}
-            propertySelected={propertySelected}
-            propertyInput={propertyInput}
-            setPropertyInput={setPropertyInput}
-          />
+          <MetaData onChangePropertyInput={onChangePropertyInput} />
         </Form>
       </GridItem>
     </Grid>

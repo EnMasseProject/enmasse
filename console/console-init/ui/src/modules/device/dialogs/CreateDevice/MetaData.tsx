@@ -16,28 +16,28 @@ export interface IMetaData {
 export const MetaData: React.FC<IMetaData> = ({ onChangePropertyInput }) => {
   const [formData, setFormData] = useState([{ defaults: {}, ext: {} }]);
 
-  const handleAddParentClick = () => {
+  const handleAddParentRow = () => {
     setFormData([...formData, { defaults: {}, ext: {} }]);
   };
 
   return (
     <>
       <MetaDataHeader sectionName="Default properties" />
-      {formData.map((data, index) => {
-        return (
-          <MetaDataRow
-            onChangePropertyInput={onChangePropertyInput}
-            formData={formData}
-            setFormData={setFormData}
-          />
-        );
-      })}
+      {formData.map((data, index) => (
+        <MetaDataRow
+          key={index}
+          onChangePropertyInput={onChangePropertyInput}
+          formData={formData}
+          setFormData={setFormData}
+        />
+      ))}
       <Grid>
         <GridItem span={3}>
           <Button
+            id="cd-metadata-buttom-Add-More"
             variant="link"
             icon={<PlusCircleIcon />}
-            onClick={handleAddParentClick}
+            onClick={handleAddParentRow}
           >
             Add More
           </Button>
