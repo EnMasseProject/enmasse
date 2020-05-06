@@ -854,11 +854,13 @@ TODO: Needs support in router plugin and auth service
 Configuration migration:
 
 * StandardInfraConfig/BrokeredInfraConfig -> MessagingInfra: Manual
+* AuthenticationService -> MessagingInfra + IdentityProvider: Manual
 * A separate cluster must be used for the 1.0 cluster
 * AddressPlan -> MessagingAddressPlan: Manual
 * AddressSpacePlan -> MessagingPlan: Manual
 * AddressSpace -> MessagingTenant, MessagingConnector and MessagingEndpoint: Script-assisted
 * Address -> MessagingAddress: Script-assisted
+* MessagingUser -> MessagingUser, MessagingRole, MessagingRoleBinding: Script-assited
 
 Data migration:
 
