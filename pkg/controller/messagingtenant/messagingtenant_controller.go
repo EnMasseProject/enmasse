@@ -114,14 +114,12 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	}
 
 	// Initialize phase and conditions
-	var bound *v1beta2.MessagingTenantCondition
-	var ready *v1beta2.MessagingTenantCondition
 	rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		if tenant.Status.Phase == "" {
 			tenant.Status.Phase = v1beta2.MessagingTenantConfiguring
 		}
-		bound = tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound)
-		ready = tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady)
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound)
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady)
 		return processorResult{}, nil
 	})
 
@@ -202,7 +200,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 				if k8errors.IsNotFound(err) {
 					msg := fmt.Sprintf("Infrastructure %s/%s not found!", tenant.Status.MessagingInfraRef.Namespace, tenant.Status.MessagingInfraRef.Name)
 					tenant.Status.Message = msg
-					bound.SetStatus(corev1.ConditionFalse, "", msg)
+					tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionFalse, "", msg)
 					return processorResult{RequeueAfter: 10 * time.Second}, nil
 				} else {
 					logger.Info("Error reconciling", err)
@@ -218,7 +216,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	// Update infra reference
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		if infra != nil {
-			bound.SetStatus(corev1.ConditionTrue, "", "")
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionTrue, "", "")
 			tenant.Status.MessagingInfraRef = &v1beta2.MessagingInfraReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
@@ -226,7 +224,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 			return processorResult{}, nil
 		} else {
 			msg := "Not yet bound to any infrastructure"
-			bound.SetStatus(corev1.ConditionFalse, "", msg)
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionFalse, "", msg)
 			tenant.Status.Message = msg
 			return processorResult{RequeueAfter: 10 * time.Second}, err
 		}
@@ -240,9 +238,11 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		originalStatus := tenant.Status.DeepCopy()
 		tenant.Status.Phase = v1beta2.MessagingTenantActive
 		tenant.Status.Message = ""
-		ready.SetStatus(corev1.ConditionTrue, "", "")
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, tenant.Status) {
-			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status)
+			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status,
+				"boundTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).LastTransitionTime.UnixNano(),
+				"readyTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).LastTransitionTime.UnixNano())
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
 			err := r.client.Status().Update(ctx, tenant)
