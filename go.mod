@@ -1,6 +1,6 @@
 module github.com/enmasseproject/enmasse
 
-go 1.12
+go 1.13
 
 // Replacements as per https://github.com/operator-framework/operator-sdk/blob/master/doc/migration/version-upgrade-guide.md#modules-3
 // Pinned to kubernetes-1.16.2
