@@ -4,4 +4,3 @@
  */
 
 export * from "./DeviceDetailNavigation";
-export * from "./DeviceDetailHeader";

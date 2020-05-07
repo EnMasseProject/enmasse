@@ -3,12 +3,12 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Nav, NavList, NavItem, NavVariants } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
 import { StyleSheet, css } from "@patternfly/react-styles";
 
-interface INavigationProps {
+export interface INavigationProps {
   activeItem: string;
 }
 
@@ -19,19 +19,24 @@ const styles = StyleSheet.create({
     paddingRight: 10
   }
 });
+export interface INavSelectedItem {
+  groupId: number | string;
+  itemId: number | string;
+  to: string;
+  event: React.FormEvent<HTMLInputElement>;
+}
 
 const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
   activeItem
 }) => {
-  const [active, setActive] = useState();
-  useEffect(() => {
-    setActive(activeItem);
-  }, [activeItem]);
-  const onSelect1 = (result: any) => {
-    setActive(result.itemId);
+  const [active, setActive] = useState(activeItem);
+
+  const onSelect = (result: INavSelectedItem) => {
+    setActive(result.itemId.toString());
   };
+
   return (
-    <Nav onSelect={onSelect1}>
+    <Nav onSelect={onSelect}>
       <NavList variant={NavVariants.tertiary}>
         <NavItem
           key="deviceInfo"
@@ -65,7 +70,7 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
           isActive={active === "connectionInfo"}
         >
           <NavLink
-            id="av-device-connection-info"
+            id="nav-device-connection-info"
             to={`connection-info`}
             className={css(styles.navlink)}
           >
