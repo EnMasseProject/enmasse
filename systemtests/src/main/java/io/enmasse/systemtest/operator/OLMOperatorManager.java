@@ -10,7 +10,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
@@ -33,6 +35,7 @@ public class OLMOperatorManager {
     private Kubernetes kube = Kubernetes.getInstance();
     private String clusterExternalImageRegistry;
     private String clusterInternalImageRegistry;
+    private Map<String, String> cacheImages = new HashMap<>();
     private static OLMOperatorManager instance;
 
     private OLMOperatorManager() {
@@ -59,6 +62,7 @@ public class OLMOperatorManager {
     }
 
     public void install(OLMInstallationType installation, String manifestsImage, String csvName) throws Exception {
+        log.info("Installing using olm from {} and {}", manifestsImage, csvName);
         String namespace = getNamespaceByOlmInstallationType(installation);
 
         if (installation == OLMInstallationType.SPECIFIC) {
@@ -114,6 +118,10 @@ public class OLMOperatorManager {
     }
 
     public void buildPushCustomOperatorRegistry(String namespace, String manifestsImage) throws Exception {
+        if (cacheImages.containsKey(namespace + manifestsImage)) {
+            log.info("Skipping building operator registry image as image for {} , {} already has been built", namespace, manifestsImage);
+            return;
+        }
         String customRegistryImageToPush = clusterExternalImageRegistry+"/"+namespace+"/systemtests-operator-registry:latest";
 
         String olmManifestsImage = manifestsImage.replace(clusterInternalImageRegistry, clusterExternalImageRegistry);
@@ -143,6 +151,7 @@ public class OLMOperatorManager {
                 Assertions.fail("Image build failed");
             }
         }
+        cacheImages.put(namespace + manifestsImage, manifestsImage);
     }
 
     public String getCustomOperatorRegistryInternalImage(String namespace) {

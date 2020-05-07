@@ -812,7 +812,7 @@ public class SystemtestsKubernetesApps {
                 .withName(workspaceConfigMap)
                 .endMetadata();
         for (Path file : buildWorkspaceFiles) {
-            log.info("Adding file {} to build workspace", file.getFileName().toString());
+            log.debug("Adding file {} to build workspace", file.getFileName().toString());
             configmap.addToData(file.getFileName().toString(), Files.readString(file));
         }
         kubeClient.createConfigmapFromResource(CONTAINER_BUILDS_PROJECT, configmap.build());
@@ -918,6 +918,7 @@ public class SystemtestsKubernetesApps {
                 collectContainerBuildLogs(kubeClient);
                 Assertions.fail("Failed to build custom operator registry because of error");
             }
+            log.info("Operator registry image successfully built");
         } catch (InterruptedException e) {
             log.error("Operator registry image build failed because of timeout");
             collectContainerBuildLogs(kubeClient);
