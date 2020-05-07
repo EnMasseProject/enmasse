@@ -160,24 +160,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     setLastAppliedFilter(dataList);
     setIsKebabOpen(false);
   };
-  const kebabDropdownItems = [
-    <DropdownItem
-      key="redo-last-filter"
-      id="redo-last-filter"
-      isDisabled={lastAppliedFilter.length <= 1}
-      onClick={onRedoFilter}
-    >
-      Redo last filter
-    </DropdownItem>,
-    <DropdownItem
-      key="clear-all-filter"
-      id="clear-all-filter"
-      component="button"
-      onClick={onClearFilter}
-    >
-      Clear all
-    </DropdownItem>
-  ];
   const setTime = (
     value: string,
     propertyName: "startTime" | "endTime",
@@ -278,6 +260,25 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     }
     return true;
   };
+
+  const kebabDropdownItems = [
+    <DropdownItem
+      key="redo-last-filter"
+      id="redo-last-filter"
+      isDisabled={lastAppliedFilter.length <= 1}
+      onClick={onRedoFilter}
+    >
+      Redo last filter
+    </DropdownItem>,
+    <DropdownItem
+      key="clear-all-filter"
+      id="clear-all-filter"
+      component="button"
+      onClick={onClearFilter}
+    >
+      Clear all
+    </DropdownItem>
+  ];
   const {
     lastSeen,
     addedDate,
@@ -286,180 +287,199 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     status,
     filterCriteria
   } = filter;
+
+  const DeviceId = () => (
+    <FormGroup label="Device ID" fieldId="filter-device-id">
+      <TextInput
+        isRequired
+        type="text"
+        id="device-filter-text-input-device-id"
+        name="device-id"
+        aria-describedby="Device Id for filter"
+        value={deviceId}
+        onChange={onChangeDeviceId}
+      />
+    </FormGroup>
+  );
+  const DeviceType = () => (
+    <FormGroup label="Device Type" fieldId="filter-device-type">
+      <DropdownWithToggle
+        id={"device-filter-dropdown-device-type"}
+        name="Device Type"
+        className={css(styles.dropdown_align)}
+        toggleClass={css(styles.dropdown_toggle_align)}
+        position={DropdownPosition.left}
+        onSelectItem={onTypeSelect}
+        dropdownItems={typeOptions}
+        value={deviceType}
+        isLabelAndValueNotSame={true}
+      />
+    </FormGroup>
+  );
+  const DeviceStatus = () => (
+    <FormGroup label="Status" fieldId="filter-device-status">
+      <DropdownWithToggle
+        id={"device-filter-dropdown-device-status"}
+        name="Status"
+        className={css(styles.dropdown_align)}
+        toggleClass={css(styles.dropdown_toggle_align)}
+        position={DropdownPosition.left}
+        onSelectItem={onStatusSelect}
+        dropdownItems={statusOptions}
+        value={status}
+        isLabelAndValueNotSame={true}
+      />
+    </FormGroup>
+  );
+  const LastSeen = () => (
+    <FormGroup label="Last seen" fieldId="filter-device-last-seen">
+      <InputGroup>
+        <TextInput
+          className={css(styles.time_input_box)}
+          name="last-start-time-number"
+          id="device-filter-text-input-last-start-time-number"
+          type="number"
+          aria-describedby="Device Id for filter"
+          value={lastSeen.startTime && lastSeen.startTime.time}
+          onChange={onStartTimeChange}
+        />
+        <DropdownWithToggle
+          className={css(styles.dropdown_align)}
+          toggleClass={css(styles.dropdown_toggle_align)}
+          id="device-filter-dropdown-last-seen-start-time-format"
+          position={DropdownPosition.left}
+          onSelectItem={onStartTimeFormatChange}
+          value={lastSeen.startTime ? lastSeen.startTime.form : ""}
+          dropdownItems={timeOptions}
+          dropdownItemIdPrefix="device-filter-dropdown-item-last-seen-start-time-format"
+        />
+        <TextContent>{" - "}</TextContent>
+        <TextInput
+          className={css(styles.time_input_box)}
+          name="last-end-time-number"
+          id="device-filter-text-input-last-end-time-number"
+          type="number"
+          aria-describedby="Device Id for filter"
+          value={lastSeen.endTime && lastSeen.endTime.time}
+          onChange={onEndTimeChange}
+        />
+        <DropdownWithToggle
+          className={css(styles.dropdown_align)}
+          id="device-filter-dropdown-last-seen-end-time-format"
+          position={DropdownPosition.left}
+          onSelectItem={onEndTimeFormatChange}
+          value={lastSeen.endTime ? lastSeen.endTime.form : ""}
+          dropdownItems={timeOptions}
+          dropdownItemIdPrefix="device-filter-dropdown-item-last-seen-end-time-format"
+        />
+      </InputGroup>
+    </FormGroup>
+  );
+  const AddedDate = () => (
+    <FormGroup label="Added date" fieldId="filter-device-added-date">
+      <InputGroup>
+        <InputGroupText component="label" htmlFor="added-date">
+          <CalendarAltIcon />
+        </InputGroupText>
+        <TextInput
+          name="added-start-date"
+          id="device-filter-text-input-added-start-date"
+          type="date"
+          aria-label="Added Start Date"
+          value={addedDate.startDate}
+          onChange={onChangeStartDate}
+        />
+        <TextInput
+          name="added-end-date"
+          id="device-filter-text-input-added-end-date"
+          type="date"
+          aria-label="Added End Date"
+          value={addedDate.endDate}
+          onChange={onChangeEndDate}
+        />
+      </InputGroup>
+    </FormGroup>
+  );
+
+  const FilterActions = () => (
+    <Split>
+      <SplitItem>
+        <Button
+          className={css(styles.margin_Left_20)}
+          id="device-filter-btn-run-filter"
+          variant={ButtonVariant.secondary}
+          onClick={onRunFilter}
+          isDisabled={isEnabledRunFilter()}
+        >
+          Run Filter
+        </Button>
+      </SplitItem>
+      <SplitItem>&nbsp;</SplitItem>
+      <SplitItem>
+        <Dropdown
+          id="filter-kebab-dropdown"
+          position={DropdownPosition.left}
+          isPlain
+          dropdownItems={kebabDropdownItems}
+          isOpen={isKebabOpen}
+          toggle={
+            <KebabToggle id="filter-kebab-toggle" onToggle={onKebabToggle} />
+          }
+        />
+      </SplitItem>
+    </Split>
+  );
+  const FilterCriteria = () => (
+    <FormGroup label="" fieldId="filter-criteria-paramter">
+      {filterCriteria && filterCriteria.length > 0 && (
+        <>
+          <Grid>
+            <GridItem span={5}>
+              <FormGroup label="Parameter" fieldId="filter-criteria-paramter" />
+            </GridItem>
+            <GridItem span={2}>
+              <FormGroup label="" fieldId="filter-criteria-operator" />
+            </GridItem>
+            <GridItem span={5}>
+              <FormGroup label="Value" fieldId="filter-criteria-value" />
+            </GridItem>
+          </Grid>
+          {filterCriteria.map((cr: IDeviceFilterCriteria) => (
+            <DeviceFilterCriteria
+              criteria={cr}
+              deleteCriteria={deleteCriteria}
+              setCriteria={updateCriteria}
+            />
+          ))}
+        </>
+      )}
+      <Button
+        variant="link"
+        id="device-filter-btn-add-criteria"
+        icon={<PlusCircleIcon />}
+        onClick={addCriteria}
+      >
+        Add criteria
+      </Button>
+      <br />
+      {filterCriteria &&
+        filterCriteria.length === 0 &&
+        "To fitler across millions of devices, please add criteria to narrow down"}
+    </FormGroup>
+  );
+
   return (
     <>
       <Form>
-        <FormGroup label="Device ID" fieldId="filter-device-id">
-          <TextInput
-            isRequired
-            type="text"
-            id="device-id-filter-input"
-            name="device-id"
-            aria-describedby="Device Id for filter"
-            value={deviceId}
-            onChange={onChangeDeviceId}
-          />
-        </FormGroup>
-        <FormGroup label="Device Type" fieldId="filter-device-type">
-          <DropdownWithToggle
-            id={"device-type"}
-            name="Device Type"
-            className={css(styles.dropdown_align)}
-            toggleClass={css(styles.dropdown_toggle_align)}
-            position={DropdownPosition.left}
-            onSelectItem={onTypeSelect}
-            dropdownItems={typeOptions}
-            value={deviceType}
-            isLabelAndValueNotSame={true}
-          />
-        </FormGroup>
-        <FormGroup label="Status" fieldId="filter-device-status">
-          <DropdownWithToggle
-            id={"device-status"}
-            name="Status"
-            className={css(styles.dropdown_align)}
-            toggleClass={css(styles.dropdown_toggle_align)}
-            position={DropdownPosition.left}
-            onSelectItem={onStatusSelect}
-            dropdownItems={statusOptions}
-            value={status}
-            isLabelAndValueNotSame={true}
-          />
-        </FormGroup>
-
-        <FormGroup label="Last seen" fieldId="filter-device-last-seen">
-          <InputGroup>
-            <TextInput
-              className={css(styles.time_input_box)}
-              name="last-start-time-number"
-              id="last-start-time-number"
-              type="number"
-              aria-describedby="Device Id for filter"
-              value={lastSeen.startTime && lastSeen.startTime.time}
-              onChange={onStartTimeChange}
-            />
-            <DropdownWithToggle
-              className={css(styles.dropdown_align)}
-              toggleClass={css(styles.dropdown_toggle_align)}
-              id="last-seen-start-time-format"
-              position={DropdownPosition.left}
-              onSelectItem={onStartTimeFormatChange}
-              value={lastSeen.startTime ? lastSeen.startTime.form : ""}
-              dropdownItems={timeOptions}
-              dropdownItemIdPrefix="last-seen-start-time-format"
-            />
-            <TextContent>{" - "}</TextContent>
-            <TextInput
-              className={css(styles.time_input_box)}
-              name="last-end-time-number"
-              id="last-end-time-number"
-              type="number"
-              aria-describedby="Device Id for filter"
-              value={lastSeen.endTime && lastSeen.endTime.time}
-              onChange={onEndTimeChange}
-            />
-            <DropdownWithToggle
-              className={css(styles.dropdown_align)}
-              id="last-seen-end-time-format"
-              position={DropdownPosition.left}
-              onSelectItem={onEndTimeFormatChange}
-              value={lastSeen.endTime ? lastSeen.endTime.form : ""}
-              dropdownItems={timeOptions}
-              dropdownItemIdPrefix="last-seen-end-time-format"
-            />
-          </InputGroup>
-        </FormGroup>
-        <FormGroup label="Added date" fieldId="filter-device-added-date">
-          <InputGroup>
-            <InputGroupText component="label" htmlFor="added-date">
-              <CalendarAltIcon />
-            </InputGroupText>
-            <TextInput
-              name="added-start-date"
-              id="added-start-date"
-              type="date"
-              aria-label="Added Start Date"
-              value={addedDate.startDate}
-              onChange={onChangeStartDate}
-            />
-            <TextInput
-              name="added-end-date"
-              id="added-end-date"
-              type="date"
-              aria-label="Added End Date"
-              value={addedDate.endDate}
-              onChange={onChangeEndDate}
-            />
-          </InputGroup>
-        </FormGroup>
+        <DeviceId />
+        <DeviceType />
+        <DeviceStatus />
+        <LastSeen />
+        <AddedDate />
         <Divider />
-        <FormGroup label="" fieldId="filter-criteria-paramter">
-          {filterCriteria && filterCriteria.length > 0 && (
-            <>
-              <Grid>
-                <GridItem span={5}>
-                  <FormGroup
-                    label="Parameter"
-                    fieldId="filter-criteria-paramter"
-                  />
-                </GridItem>
-                <GridItem span={2}>
-                  <FormGroup label="" fieldId="filter-criteria-operator" />
-                </GridItem>
-                <GridItem span={5}>
-                  <FormGroup label="Value" fieldId="filter-criteria-value" />
-                </GridItem>
-              </Grid>
-              {filterCriteria.map((cr: IDeviceFilterCriteria) => (
-                <DeviceFilterCriteria
-                  criteria={cr}
-                  deleteCriteria={deleteCriteria}
-                  setCriteria={updateCriteria}
-                />
-              ))}
-            </>
-          )}
-          <Button
-            variant="link"
-            icon={<PlusCircleIcon />}
-            onClick={addCriteria}
-          >
-            Add criteria
-          </Button>
-          <br />
-          {filterCriteria &&
-            filterCriteria.length === 0 &&
-            "To fitler across millions of devices, please add criteria to narrow down"}
-        </FormGroup>
+        <FilterCriteria />
         <Divider />
-        <Split>
-          <SplitItem>
-            <Button
-              className={css(styles.margin_Left_20)}
-              variant={ButtonVariant.secondary}
-              onClick={onRunFilter}
-              isDisabled={isEnabledRunFilter()}
-            >
-              Run Filter
-            </Button>
-          </SplitItem>
-          <SplitItem>&nbsp;</SplitItem>
-          <SplitItem>
-            <Dropdown
-              id="filter-kebab-dropdown"
-              position={DropdownPosition.left}
-              isPlain
-              dropdownItems={kebabDropdownItems}
-              isOpen={isKebabOpen}
-              toggle={
-                <KebabToggle
-                  id="filter-kebab-toggle"
-                  onToggle={onKebabToggle}
-                />
-              }
-            />
-          </SplitItem>
-        </Split>
+        <FilterActions />
       </Form>
     </>
   );

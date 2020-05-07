@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React, { useState, ReactElement } from "react";
 import { IDropdownOption, DropdownWithToggle } from "components";
 import {
@@ -53,7 +58,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
     {
       value: "accelerated speed",
       label: "accelerated speed",
-      key: "accelerated speed"
+      key: "accelerated-speed"
     },
     { value: "distance", label: "distance", key: "distance" },
     { value: "humidity", label: "humidity", key: "humidity" },
@@ -99,8 +104,8 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
     setIsExpanded(false);
   };
 
-  const onToggle = () => {
-    setIsExpanded(!isExpanded);
+  const onToggle = (isExpanded: boolean) => {
+    setIsExpanded(isExpanded);
   };
 
   return (
@@ -110,6 +115,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
           <Select
             variant={SelectVariant.typeahead}
             ariaLabelTypeAhead="Select a parameter"
+            id={"device-filter-typeahead-select-parameter" + criteria.key}
             onToggle={onToggle}
             onSelect={onSelect}
             onClear={onClearParameter}
@@ -121,6 +127,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
             {options.map((option, index) => (
               <SelectOption
                 isDisabled={option.isDisabled}
+                id={"device-filter-selec-option-" + option.key}
                 key={index}
                 value={option.value}
               />
@@ -129,9 +136,9 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
-            id={"filter-criteria-operator" + criteria.key}
+            id={"filter-dropdown-criteria-operator-" + criteria.key}
             name="Filter Criteria Operator"
-            onSelectItem={value => onSelectOperator(value)}
+            onSelectItem={onSelectOperator}
             dropdownItems={operatordropdownOptions}
             value={criteria.operator}
             isLabelAndValueNotSame={true}
@@ -141,7 +148,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
           <TextInput
             isRequired
             type="text"
-            id={"filter-criteria-value-input" + criteria.key}
+            id={"filter-text -input-criteria-value-" + criteria.key}
             name="device-id"
             aria-describedby="Filter criteria value input"
             value={criteria.value}
