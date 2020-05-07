@@ -102,7 +102,7 @@ If an IoT project gets created in a namespace which does not have
 a _message tenant_ created, then the IoT project will:
 
 * Get the field `.status.phase` set to `Failed`
-* Provide a helpful message in the field `.status.phaseReason`
+* Provide a helpful message in the field `.status.message`
 * Get the condition `HasMessagingTenant` set to `false`
 
 As soon as the messaging tenant gets created, the project will
@@ -125,7 +125,7 @@ assigned.
 In this case the IoT project will:
 
 * Get the field `.status.phase` set to `Failed`
-* Provide a helpful message in the field `.status.phaseReason`
+* Provide a helpful message in the field `.status.message`
 * Get the condition `HasMessagingInfrastructure` set to `false`
 
 The controller will *not* automatically re-try to bring the IoT project
