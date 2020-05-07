@@ -1,18 +1,82 @@
+:icons: font
 
 = IoT support
 
+[.lead]
 This document describes how IoT is added into the EnMasse system.
+
+NOTE: This is the updated version for EnMasse Core v1.
 
 == Overview
 
-EnMasse IoT support is an additional layer on top of the EnMasse system. It supports IoT
-specific use cases and protocols, like "telemetry ingestion", "command & control", "MQTT", "HTTP", ...
+EnMasse IoT support is an additional layer on top of the
+EnMasse system. It supports IoT specific use cases and
+protocols, like "telemetry ingestion", "command & control",
+"MQTT", "HTTP", …
 
 This is implemented based on the Eclipse Hono project.
 
+== IoT Config CRD
+
+[.lead]
+An "IoT Config" is an IoT infrastructure which can serve multiple IoT tenants (IoTProject).
+
+An IoT Config:
+
+* Is part of the EnMasse infrastructure namespace.
+* Is configured to bind to exactly one _messaging infrastructure_.
+* Has the name `default`.
+* Can currently only exist once in the cluster.
++
+NOTE: The goal is to lift this limitation in a future version and
+allow for multiple IoT infrastructure instances. Each IoT infrastructure
+pointing to exactly one messaging infrastructure.
+* Serves all IoT projects assigned to the IoT infrastructure.
++
+This is an implicit assignment. An IoT project resides in a Kubernetes
+namespace, which is assigned to a messaging tenant, which is assigned
+to a messaging infrastructure.
+
+*Target persona:* IoT service admin
+
+*Proposal:* Change the name from `IoTConfig` to `IoTInfrastructure`
+when we make allow for multiple IoT infrastructures.
+
+=== Hono services
+
+Each IoT infrastructure has a set of Hono services (protocol adapters,
+device registry, …) which will be shared between all IoT projects,
+assigned to this infrastructure.
+
+=== Protocol adapter addressing
+
+The protocol adapters will directly connect to the messaging
+infrastructure, using an (to be defined) internal
+authentication/authorization mechanism.
+
+For this to work, the protocol adapters must be able to prefix
+the address resources with the _vhost_ prefix. The _vhost_ prefix
+is the Kubernetes namespace.
+
+*Example:* Assuming an IoT project `iot1` in the namespace `ns1`.
+The operator would request an address `telemetry/ns1.iot1` in the
+namespace `ns1`. As the protocol adapters would connect to the
+messaging infrastructure, they would prefix the address with the
+namespace and would use the address `ns1/telemetry/ns1.iot1` instead.
+
+IMPORTANT: Currently we are using the QPID dispatch router sidecar to
+split the single AMQP connection coming from Hono protocol adapters
+into multiple connections for the different address spaces. This
+sidecar setup would be removed.
+
+IMPORTANT: This requires an upstream change in Hono, so that we
+have the ability to prefix the addresses in Hono with a custom
+(tenant specific) prefix.
+
 == IoT Project CRD
 
-An "IoT project" is a logical entity which scopes a set of devices into a single, IoT specific, namespace.
+[.lead]
+An "IoT project" is a logical entity, which scopes a set of devices into a single, IoT specific, namespace.
 
 An IoT project:
 
@@ -20,19 +84,65 @@ An IoT project:
 * Has a name which adheres to the requirements of `.metadata.name`
 * Translates into a Hono tenant name by: `<namespace>.<name>`
 * Can be described in a Kubernetes CRD
-* Connects to one EnMasse standard address space
-* Has its own set of addresses ("telemtry/", "event/", ...) inside that address space
+* Connects implicitly to one EnMasse IoT infrastructure (IoTConfig)
+* Manages its own set of addresses ("telemetry/", "event/", ...)
+* Requires a _messaging tenant_ to be created first
 
-IoT project know three modes of operation:
+IMPORTANT: This will remove the three current _downstream strategies_
+and remain with only the _managed_ one. The "external" strategy can
+be achieved by using _EnMasse connectors_.
 
-* **External**: All messaging resources (address space, addresses, users) are provided by the user (external
-                to the IoT project). The configuration of the IoT project contains all necessary information.
-* **Providd**:  to be written
-* **Managed**:  The EnMasse system fully managed the messaging resources.
+*Target persona:* IoT tenant
 
-== Protocol adapters
+=== Missing messaging tenant
 
-The Hono protocol adapters are shared, infrastructure components, which will be re-used by all IoT projects.
-Therefore the messages of each Hono tenant (EnMasse IoT project) will be proxies using the Qpid dispatcher router,
-from the Hono protocol adapters, to the target messaging resources of the IoT project.
+*Aspect:* Getting started
 
+If an IoT project gets created in a namespace which does not have
+a _message tenant_ created, then the IoT project will:
+
+* Get the field `.status.phase` set to `Failed`
+* Provide a helpful message in the field `.status.phaseReason`
+* Get the condition `HasMessagingTenant` set to `false`
+
+As soon as the messaging tenant gets created, the project will
+try to become ready automatically.
+
+The Web UI should alert the user that it is not possible to create
+an IoT project without having a messaging tenant. It _may_ offer to
+create a messaging tenant on the fly.
+
+=== IoT infrastructure assignment ===
+
+As mentioned earlier, each IoT project is implicitly assigned to a
+messaging infrastructure. And each IoT infrastructure is assigned
+to exactly one messaging infrastructure.
+
+This may lead to a situation where an IoT projects gets created,
+pointing to a messaging infrastructure, which has no IoT infrastructure
+assigned.
+
+In this case the IoT project will:
+
+* Get the field `.status.phase` set to `Failed`
+* Provide a helpful message in the field `.status.phaseReason`
+* Get the condition `HasMessagingInfrastructure` set to `false`
+
+The controller will *not* automatically re-try to bring the IoT project
+into a ready state.
+
+IMPORTANT: This scenario is more important in the first version, as we
+currently only support *one* IoT infrastructure. It still is a valid
+scenario once multiple IoT infrastructures are supported.
+
+== Getting started
+
+The minimum steps to get started are:
+
+* Deploy EnMasse
+* Create a messaging infrastructure
+* Create an IoT infrastructure
+  ** Deploy PostgreSQL
+  ** Create a database schema
+* Create a messaging tenant
+* Create an IoT project
