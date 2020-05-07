@@ -58,6 +58,7 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import io.vertx.core.json.JsonObject;
@@ -895,7 +896,7 @@ public class SystemtestsKubernetesApps {
                 .endSpec()
                 .build();
 
-        kubeClient.createPodFromResource(CONTAINER_BUILDS_PROJECT, pod);
+        createPodRetrying(kubeClient, CONTAINER_BUILDS_PROJECT, pod);
 
         Function<Pod, String> containerReasonGetter = p -> {
             return Optional.ofNullable(p)
@@ -925,6 +926,27 @@ public class SystemtestsKubernetesApps {
             Assertions.fail("Failed to build custom operator registry because of timeout");
         }
 
+    }
+
+    private static void createPodRetrying(Kubernetes kubeClient, String namespace, Pod resource) throws Exception {
+        KubernetesClientException error = null;
+        int retries = 3;
+        do {
+            try {
+                kubeClient.createPodFromResource(namespace, resource);
+                error = null;
+            } catch (KubernetesClientException e) {
+                if (e.getMessage().contains("retry after the token is automatically created and added to the service account")) {
+                    error = e;
+                    retries--;
+                } else {
+                    throw e;
+                }
+            }
+        } while (retries > 0);
+        if (error != null) {
+            throw error;
+        }
     }
 
     private static void collectContainerBuildLogs(Kubernetes kubeClient) {
