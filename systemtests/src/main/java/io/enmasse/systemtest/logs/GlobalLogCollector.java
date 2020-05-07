@@ -4,8 +4,15 @@
  */
 package io.enmasse.systemtest.logs;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,15 +27,8 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -279,20 +279,27 @@ public class GlobalLogCollector {
             }
             Kubernetes kube = Kubernetes.getInstance();
             Files.createDirectories(path);
-            List<Pod> pods = kube.listAllPods(infraNamespace);
-            for (Pod p : pods) {
-                try {
-                    List<Container> containers = kube.getContainersFromPod(infraNamespace, p.getMetadata().getName());
-                    for (Container c : containers) {
-                        Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+            List<String> nsList = new ArrayList<>();
+            nsList.add(infraNamespace);
+            nsList.addAll(Arrays.asList(SystemtestsKubernetesApps.ST_NAMESPACES));
+            for (String ns : nsList) {
+                if (kube.namespaceExists(ns)) {
+                    List<Pod> pods = kube.listAllPods(ns);
+                    for (Pod p : pods) {
                         try {
-                            Files.writeString(filePath, kube.getLog(infraNamespace, p.getMetadata().getName(), c.getName()));
-                        } catch (IOException e) {
-                            LOGGER.warn("Cannot write file {}", filePath, e);
+                            List<Container> containers = kube.getContainersFromPod(ns, p.getMetadata().getName());
+                            for (Container c : containers) {
+                                Path filePath = path.resolve(String.format("%s_%s.log", p.getMetadata().getName(), c.getName()));
+                                try {
+                                    Files.writeString(filePath, kube.getLog(ns, p.getMetadata().getName(), c.getName()));
+                                } catch (IOException e) {
+                                    LOGGER.warn("Cannot write file {}", filePath, e);
+                                }
+                            }
+                        } catch (Exception ex) {
+                            LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
                         }
                     }
-                } catch (Exception ex) {
-                    LOGGER.warn("Cannot access logs from pod {} ", p.getMetadata().getName(), ex);
                 }
             }
 
@@ -305,23 +312,32 @@ public class GlobalLogCollector {
                 }
             });
 
-            Files.writeString(path.resolve("describe_pods.txt"), KubeCMDClient.describePods(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
+            //ns specific logs
+            for (String ns : nsList) {
+                if (kube.namespaceExists(ns)) {
+                    Files.writeString(path.resolve(String.format("describe_pods.%s.txt", ns)), KubeCMDClient.describePods(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("events.%s.txt", ns)), KubeCMDClient.getEvents(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("configmaps.%s.yaml", ns)), KubeCMDClient.getConfigmaps(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("secrets.%s.yaml", ns)), KubeCMDClient.getSecrets(ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
+                }
+            }
+
+            //resource specific logs
             Files.writeString(path.resolve("describe_addressspaces.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addressspaces", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_addresses.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addresses", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "messaginguser", "-o", "yaml", "--all-namespaces").getStdOut());
-            Files.writeString(path.resolve(String.format("events.%s.txt", infraNamespace)), KubeCMDClient.getEvents(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
-            Files.writeString(path.resolve("configmaps.yaml"), KubeCMDClient.getConfigmaps(infraNamespace).getStdOut());
-            Files.writeString(path.resolve("secrets.yaml"), KubeCMDClient.getSecrets(infraNamespace).getStdOut());
+
+            //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
-            Files.writeString(path.resolve("pvcs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", Kubernetes.getInstance().getInfraNamespace()).getStdOut());
             Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
             if (Kubernetes.isOpenShiftCompatible()) {
                 Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
             }
+            Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
+            Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
 
             if (extraCollectors != null) {
                 for (var c : extraCollectors) {

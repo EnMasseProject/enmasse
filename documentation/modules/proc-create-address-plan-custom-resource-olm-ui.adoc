@@ -36,10 +36,26 @@ spec:
 
 .Next steps
 
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[Create an address space]
+ifdef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-space-cli-messaging[create an address space]
+endif::SingleBookLink[]
 
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-cli-messaging[Create an address]
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#create-address-space-cli-messaging[create an address space]
+endif::SingleBookLink[]
 
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-creating-users-cli-messaging[Create a messaging user]
+ifdef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#create-address-cli-messaging[create an address]
+endif::SingleBookLink[]
 
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#create-address-cli-messaging[create an address]
+endif::SingleBookLink[]
 
+ifdef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-creating-users-cli-messaging[create a messaging user]
+endif::SingleBookLink[]
+
+ifndef::SingleBookLink[]
+* link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#proc-creating-users-cli-messaging[create a messaging user]
+endif::SingleBookLink[]

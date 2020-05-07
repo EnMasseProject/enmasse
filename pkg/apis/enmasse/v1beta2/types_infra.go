@@ -32,7 +32,7 @@ type MessagingInfra struct {
 
 type MessagingInfraSpec struct {
 	// A selector defining which namespaces this infra should serve. Default is all namespaces.
-	Selector *Selector `json:"selector,omitempty"`
+	NamespaceSelector *NamespaceSelector `json:"namespaceSelector,omitempty"`
 	// Router configuration options.
 	Router MessagingInfraSpecRouter `json:"router,omitempty"`
 	// Broker configuration options.
