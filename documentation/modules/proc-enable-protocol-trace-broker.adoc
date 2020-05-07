@@ -39,14 +39,14 @@ endif::[]
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-{cmdcli} get addressspace -n _namespace_ _addressspacename_ --output 'jsonpath={.spec.plan}{"\n"}'
+{cmdcli} get addressspace -n _namespace_ _address-space-name_ --output 'jsonpath={.spec.plan}{"\n"}'
 ----
 
 . Determine the `standardinfraconfig` or `brokeredinfraconfig` name for the `addressspaceplan` name:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-{cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
+{cmdcli} get addressspaceplan _address-space-plan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
 ----
 
 . Enable the protocol trace for all brokers of all address spaces using that `standardinfraconfig`
@@ -54,7 +54,7 @@ or `brokeredinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} patch _infraconfigresource_ _infraconfigname_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"broker"}]}}}}}'
+{cmdcli} patch _infraconfig-resource_ _infraconfig-name_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"broker"}]}}}}}'
 ----
 
 . Display the logs for the Pod that will include the protocol trace:
@@ -68,5 +68,5 @@ or `brokeredinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} patch _infraconfigresource_ _infraconfigname_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"broker"}]}}}}}'
+{cmdcli} patch _infraconfig-resource_ _infraconfig-name_ --type=merge -p '{"spec":{"broker":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"broker"}]}}}}}'
 ----
