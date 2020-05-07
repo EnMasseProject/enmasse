@@ -5,7 +5,6 @@
 
 import React from "react";
 import {
-  SelectVariant,
   SelectOptionObject,
   DataToolbarToggleGroup,
   DataToolbarGroup,
@@ -21,11 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  TypeAheadSelect,
-  DropdownWithToggle,
-  SelectWithToggle
-} from "components";
+import { TypeAheadSelect, DropdownWithToggle } from "components";
 
 export interface IAddressToggleGroupProps {
   totalRecords: number;
@@ -83,8 +78,10 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
   const statusOptions: ISelectOption[] = [
     { key: "active", value: "Active", isDisabled: false },
     { key: "configuring", value: "Configuring", isDisabled: false },
-    { key: "pending", value: "Pending", isDisabled: false }
+    { key: "pending", value: "Pending", isDisabled: false },
+    { key: "failed", value: "Failed", isDisabled: false }
   ];
+
   const checkIsFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
@@ -95,6 +92,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     }
     return false;
   };
+
   const toggleItems = (
     <>
       <DataToolbarItem
