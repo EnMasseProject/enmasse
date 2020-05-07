@@ -221,9 +221,13 @@ public abstract class ResourceManager {
     public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
         String desiredPodName = authenticationService.getMetadata().getName();
         int expectedMatches = 1;
-        if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.none) && authenticationService.getSpec().getNone().getReplicas() != null) {
+        if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.none) &&
+                authenticationService.getSpec().getNone() != null &&
+                authenticationService.getSpec().getNone().getReplicas() != null) {
             expectedMatches = authenticationService.getSpec().getNone().getReplicas();
-        } else if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) && authenticationService.getSpec().getStandard().getReplicas() != null) {
+        } else if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
+                authenticationService.getSpec().getStandard() != null &&
+                authenticationService.getSpec().getStandard().getReplicas() != null) {
             expectedMatches = authenticationService.getSpec().getStandard().getReplicas();
         }
         int finalExpectedMatches = expectedMatches;
