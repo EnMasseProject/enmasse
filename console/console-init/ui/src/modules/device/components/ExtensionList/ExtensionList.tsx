@@ -48,7 +48,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
   onDeleteExtension,
   credentialId
 }) => {
-  const typeOpions: ISelectOption[] = [
+  const typeOptions: ISelectOption[] = [
     { key: "string", label: "String", value: "String" },
     { key: "number", label: "Number", value: "Number" },
     { key: "boolean", label: "Boolean", value: "Boolean" }
@@ -96,7 +96,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                       dropdown_item_styles.dropdown_toggle_align
                     )}
                     position={DropdownPosition.left}
-                    dropdownItems={typeOpions}
+                    dropdownItems={typeOptions}
                     value={ext["type"] || ""}
                     onSelectItem={(value, event) =>
                       handleInputChangeExtension(credentialId, event, value, id)
