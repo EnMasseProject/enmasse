@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,6 +23,7 @@ type Client interface {
 	Stop()
 	RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error)
 	Request(message *amqp.Message) (*amqp.Message, error)
+	AwaitRunning()
 }
 
 var (
@@ -39,11 +41,13 @@ type CommandClient struct {
 	commandResponseAddress string
 
 	lastError    error
-	connected    int32
 	restartCount int32
+	connected    int32
+	running      sync.WaitGroup
 
 	request chan *commandRequest
 }
+
 
 var _ Client = &CommandClient{}
 
@@ -73,6 +77,7 @@ func (c *CommandClient) Start() {
 	c.stop = make(chan struct{})
 	c.stopped = make(chan struct{})
 	c.lastError = nil
+	c.running.Add(1)
 	go func() {
 		defer close(c.stopped)
 		defer log.Printf("Command Client %s - stopped", c.addr)
@@ -83,6 +88,7 @@ func (c *CommandClient) Start() {
 				return
 			default:
 				err := c.doProcess()
+				c.running.Add(1)
 				atomic.StoreInt32(&c.connected, 0)
 				if err != nil {
 					c.lastError = err
@@ -99,6 +105,11 @@ func (c *CommandClient) Start() {
 		}
 	}()
 }
+
+func (c *CommandClient) AwaitRunning() {
+	c.running.Wait()
+}
+
 
 func (c *CommandClient) drainRequests() bool {
 	for {
@@ -160,7 +171,9 @@ func (c *CommandClient) doProcess() error {
 		}
 		c.lastError = nil
 	}
+
 	atomic.StoreInt32(&c.connected, 1)
+	c.running.Done()
 
 	requests := make(map[string]*commandRequest)
 	for {
@@ -206,6 +219,8 @@ func (c *CommandClient) doProcess() error {
 		}
 	}
 }
+
+
 
 func (c *CommandClient) Stop() {
 	close(c.request)

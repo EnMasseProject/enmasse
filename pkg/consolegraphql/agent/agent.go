@@ -374,6 +374,7 @@ func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser str
 	}
 
 	a.commandClient.Start()
+	a.commandClient.AwaitRunning()
 	return a
 }
 
