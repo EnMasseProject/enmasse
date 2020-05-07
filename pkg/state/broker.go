@@ -102,6 +102,9 @@ func (b *BrokerState) readQueues() (map[string]bool, error) {
 }
 
 func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
+	if !b.initialized {
+		return NotInitializedError
+	}
 	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {
@@ -141,6 +144,9 @@ func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
 }
 
 func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
+	if !b.initialized {
+		return NotInitializedError
+	}
 	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan string, len(queues))
 	for _, queue := range queues {

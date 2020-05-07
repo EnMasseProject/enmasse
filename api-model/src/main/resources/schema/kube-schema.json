@@ -722,13 +722,13 @@
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBroker",
           "javaType": "MessagingInfraSpecBroker"
         },
+        "namespaceSelector": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_NamespaceSelector",
+          "javaType": "NamespaceSelector"
+        },
         "router": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouter",
           "javaType": "MessagingInfraSpecRouter"
-        },
-        "selector": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_Selector",
-          "javaType": "Selector"
         }
       },
       "additionalProperties": true,
@@ -1016,11 +1016,29 @@
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_Selector": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_NamespaceSelector": {
       "type": "object",
       "description": "",
       "properties": {
-        "namespaces": {
+        "matchExpressions": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "$ref": "#/definitions/kubernetes_apimachinery_LabelSelectorRequirement",
+            "existingJavaType": "io.fabric8.kubernetes.api.model.LabelSelectorRequirement"
+          }
+        },
+        "matchLabels": {
+          "type": "object",
+          "description": "",
+          "additionalProperties": {
+            "type": "string",
+            "description": ""
+          },
+          "existingJavaType": "java.util.Map\u003cString,String\u003e"
+        },
+        "matchNames": {
           "type": "array",
           "description": "",
           "javaOmitEmpty": true,
@@ -1031,7 +1049,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "Selector",
+      "javaType": "NamespaceSelector",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -1041,6 +1059,34 @@
       "description": "",
       "additionalProperties": true,
       "existingJavaType": "io.fabric8.kubernetes.api.model.FieldsV1",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "kubernetes_apimachinery_LabelSelectorRequirement": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "key": {
+          "type": "string",
+          "description": ""
+        },
+        "operator": {
+          "type": "string",
+          "description": ""
+        },
+        "values": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
+      "additionalProperties": true,
+      "existingJavaType": "io.fabric8.kubernetes.api.model.LabelSelectorRequirement",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
