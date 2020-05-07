@@ -46,20 +46,20 @@ const styles = StyleSheet.create({
 const setInitialFilter = () => {
   let filter: IDeviceFilter = {
     deviceId: "",
-    deviceType: "gateway",
-    status: "enabled",
+    deviceType: "",
+    status: "",
     filterCriteria: [],
     addedDate: {
       startDate: "",
       endDate: ""
     },
     lastSeen: {
-      endTime: {
+      startTime: {
         form: "hr",
         time: ""
       },
-      startTime: {
-        form: "min",
+      endTime: {
+        form: "hr",
         time: ""
       }
     }
@@ -272,6 +272,12 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     dataList.push(dataObj);
     setLastAppliedFilter(dataList);
   };
+  const isEnabledRunFilter = () => {
+    if (JSON.stringify(filter) != JSON.stringify(setInitialFilter())) {
+      return false;
+    }
+    return true;
+  };
   const {
     lastSeen,
     addedDate,
@@ -420,6 +426,10 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
           >
             Add criteria
           </Button>
+          <br />
+          {filterCriteria &&
+            filterCriteria.length === 0 &&
+            "To fitler across millions of devices, please add criteria to narrow down"}
         </FormGroup>
         <Divider />
         <Split>
@@ -428,6 +438,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
               className={css(styles.margin_Left_20)}
               variant={ButtonVariant.secondary}
               onClick={onRunFilter}
+              isDisabled={isEnabledRunFilter()}
             >
               Run Filter
             </Button>
