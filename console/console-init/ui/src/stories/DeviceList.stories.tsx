@@ -12,8 +12,9 @@ import {
   IDevice,
   getTableCells
 } from "modules/device";
-import { text } from "@storybook/addon-knobs";
+import { text, select } from "@storybook/addon-knobs";
 import { IRowData } from "@patternfly/react-table";
+import { DeviceDetailNavigation } from "modules/device-detail";
 
 export default {
   title: "Device"
@@ -70,3 +71,14 @@ export const deviceTable = () => (
     />
   </MemoryRouter>
 );
+
+export const deviceDetailHeaderNavigation = () => {
+  const options = ["deviceInfo", "liveDataStream", "connectionInfo"];
+  return (
+    <MemoryRouter>
+      <DeviceDetailNavigation
+        activeItem={select("Active Nav Item", options, "deviceInfo")}
+      />
+    </MemoryRouter>
+  );
+};
