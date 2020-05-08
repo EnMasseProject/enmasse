@@ -41,6 +41,8 @@ public class TenantInformation extends TenantHandle {
     @Override
     protected ToStringHelper toStringHelper() {
         return super.toStringHelper()
+                .add("namespace", this.namespace)
+                .add("projectName", this.projectName)
                 .add("tenant", this.tenant);
     }
 

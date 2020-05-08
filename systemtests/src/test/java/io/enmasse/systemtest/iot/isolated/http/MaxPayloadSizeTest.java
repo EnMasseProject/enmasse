@@ -19,7 +19,7 @@ public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
 
     @SuppressWarnings("resource")
     @Override
-    protected Sender sender(Device device) {
+    protected Sender sender(Device device) throws Exception {
         return cleanup(device.createHttpAdapterClient())::send;
     }
 

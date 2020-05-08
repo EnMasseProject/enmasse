@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.iot.model.v1;
@@ -17,30 +17,27 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"
-                )
-        )
+                value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class IoTProjectSpec {
+public class ResourceLimits {
 
-    private DownstreamStrategy downstreamStrategy;
+    private Long maximumConnections;
+    private Long maximumTimeToLiveSeconds;
 
-    private TenantConfiguration configuration;
-
-    public DownstreamStrategy getDownstreamStrategy() {
-        return this.downstreamStrategy;
+    public Long getMaximumConnections() {
+        return maximumConnections;
     }
 
-    public void setDownstreamStrategy(final DownstreamStrategy downstreamStrategy) {
-        this.downstreamStrategy = downstreamStrategy;
+    public void setMaximumConnections(Long maximumConnections) {
+        this.maximumConnections = maximumConnections;
     }
 
-    public TenantConfiguration getConfiguration() {
-        return configuration;
+    public Long getMaximumTimeToLiveSeconds() {
+        return maximumTimeToLiveSeconds;
     }
 
-    public void setConfiguration(final TenantConfiguration configuration) {
-        this.configuration = configuration;
+    public void setMaximumTimeToLiveSeconds(Long maximumTimeToLiveSeconds) {
+        this.maximumTimeToLiveSeconds = maximumTimeToLiveSeconds;
     }
 
 }

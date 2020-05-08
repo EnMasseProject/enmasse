@@ -131,3 +131,12 @@ func init() {
 func GetInfrastructureNamespace() (string, error) {
 	return infraNamespace, infraNamespaceError
 }
+
+// Get the name of th infrastructure namespace, panics if 'NAMESPACE' is unset
+func MustGetInfrastructureNamespace() string {
+	namespace, err := GetInfrastructureNamespace()
+	if err != nil {
+		panic(err)
+	}
+	return namespace
+}

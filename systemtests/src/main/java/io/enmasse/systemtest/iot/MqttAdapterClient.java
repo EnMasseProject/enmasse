@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest.iot;
 
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +22,7 @@ import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingConsumer;
 import io.vertx.core.buffer.Buffer;
 
 public class MqttAdapterClient implements AutoCloseable {
@@ -60,21 +63,41 @@ public class MqttAdapterClient implements AutoCloseable {
         return true;
     }
 
+    public static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final PrivateKey key, final X509Certificate certificate )
+            throws Exception {
+
+        return create(endpoint, deviceId, builder -> {
+            builder.clientCertificate(KeyStoreCreator.from(key,certificate));
+        });
+
+    }
+
     public static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final String deviceAuthId, final String tenantId, final String devicePassword)
             throws Exception {
 
-        var adapterClient = new MqttClientFactory.Builder()
-                        .clientId(deviceId)
-                        .endpoint(endpoint)
-                        .usernameAndPassword(deviceAuthId + "@" + tenantId, devicePassword)
-                        .mqttConnectionOptions(options -> {
-                            options.setAutomaticReconnect(true);
-                            options.setConnectionTimeout(60);
-                            // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
-                            options.setMaxInflight(16 * 1024);
-                            options.setHttpsHostnameVerificationEnabled(false);
-                        })
-                        .createAsync();
+        return create(endpoint, deviceId, builder -> {
+            builder.usernameAndPassword(deviceAuthId + "@" + tenantId, devicePassword);
+        });
+
+    }
+
+    private static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final ThrowingConsumer<MqttClientFactory.Builder> builder)
+            throws Exception {
+
+        var adapterClientBuilder = new MqttClientFactory.Builder()
+                .clientId(deviceId)
+                .endpoint(endpoint)
+                .mqttConnectionOptions(options -> {
+                    options.setAutomaticReconnect(true);
+                    options.setConnectionTimeout(60);
+                    // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
+                    options.setMaxInflight(16 * 1024);
+                    options.setHttpsHostnameVerificationEnabled(false);
+                });
+
+        builder.accept(adapterClientBuilder);
+
+        var adapterClient = adapterClientBuilder.createAsync();
 
         try {
             TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {

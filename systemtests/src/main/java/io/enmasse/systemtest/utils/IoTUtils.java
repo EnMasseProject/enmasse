@@ -293,7 +293,7 @@ public class IoTUtils {
 
         // now verify that the address spaces had all been created
 
-        assertEquals(initialAddressSpaces, deletedAddressSpaces);
+        assertEquals(initialAddressSpaces, deletedAddressSpaces.keySet());
 
         // get the expected and actual address spaces
 

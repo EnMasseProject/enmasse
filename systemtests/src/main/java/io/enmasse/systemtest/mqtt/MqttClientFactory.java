@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
@@ -19,12 +20,16 @@ import java.util.UUID;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -72,6 +77,10 @@ public class MqttClientFactory {
                 Arrays.toString(protocols)));
     }
 
+    private static SSLContext tryGetDefaultSSLContext() throws NoSuchAlgorithmException {
+        return tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
+    }
+
     public IMqttClient create() throws Exception {
         return new Builder().create();
     }
@@ -80,11 +89,12 @@ public class MqttClientFactory {
         return new Builder().createAsync();
     }
 
-    private static <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, MqttConnectOptions options, String clientId) throws Exception {
+    private static <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, MqttConnectOptions options,
+            String clientId) throws Exception {
 
         if (options.getSocketFactory() == null) {
-            SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
-            sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
+            SSLContext sslContext = tryGetDefaultSSLContext();
+            sslContext.init(null, new X509TrustManager[] {new MyX509TrustManager()}, new SecureRandom());
 
             SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), endpoint.getHost());
 
@@ -117,6 +127,8 @@ public class MqttClientFactory {
         private Endpoint endpoint;
         private MqttConnectOptions options = new MqttConnectOptions();
         private String clientId = UUID.randomUUID().toString();
+        private KeyManagerFactory keyManagerFactory;
+        private TrustManagerFactory trustManagerFactory;
 
         public Builder() {
             this.options.setAutomaticReconnect(true);
@@ -132,6 +144,27 @@ public class MqttClientFactory {
             options.setUserName(username);
             options.setPassword(password.toCharArray());
             return this;
+        }
+
+        public Builder clientCertificate(final KeyStore clientCertificateAndKey) throws Exception {
+
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(clientCertificateAndKey, null);
+
+            keyManagerFactory = kmf;
+
+            return this;
+
+        }
+
+        public Builder setTrustAnchors(final KeyStore trustAnchors) throws Exception {
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
+            tmf.init(trustAnchors);
+            this.trustManagerFactory = tmf;
+
+            return this;
+
         }
 
         public Builder endpointFromAddressSpace(final AddressSpace addressSpace) {
@@ -153,13 +186,34 @@ public class MqttClientFactory {
             return this;
         }
 
+        private void setSslContext() throws Exception {
+
+            KeyManager[] kms = null;
+            if (keyManagerFactory != null) {
+                kms = keyManagerFactory.getKeyManagers();
+            }
+
+            TrustManager[] tms = null;
+            if (trustManagerFactory != null) {
+                tms = trustManagerFactory.getTrustManagers();
+            }
+
+            final SSLContext context = tryGetDefaultSSLContext();
+            context.init(kms, tms, null);
+            options.setSocketFactory(context.getSocketFactory());
+
+        }
+
         public IMqttClient create() throws Exception {
-            return MqttClientFactory.create(MqttClient::new, DelegatingMqttClient::new, endpoint,  options, clientId);
+            setSslContext();
+            return MqttClientFactory.create(MqttClient::new, DelegatingMqttClient::new, endpoint, options, clientId);
         }
 
         public IMqttAsyncClient createAsync() throws Exception {
+            setSslContext();
             return MqttClientFactory.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new, endpoint, options, clientId);
         }
+
     }
 
     private static class SNISettingSSLSocketFactory extends SSLSocketFactory {
@@ -168,24 +222,24 @@ public class MqttClientFactory {
         private final List<SNIServerName> sniHostNames;
 
         SNISettingSSLSocketFactory(final SSLSocketFactory socketFactory,
-                                   final String host) {
+                final String host) {
             this.socketFactory = socketFactory;
             this.sniHostNames = Collections.singletonList(new SNIHostName(host));
         }
 
         @Override
         public String[] getDefaultCipherSuites() {
-            return socketFactory.getDefaultCipherSuites();
+            return this.socketFactory.getDefaultCipherSuites();
         }
 
         @Override
         public String[] getSupportedCipherSuites() {
-            return socketFactory.getSupportedCipherSuites();
+            return this.socketFactory.getSupportedCipherSuites();
         }
 
         @Override
         public Socket createSocket(final Socket socket, final String host, final int port, final boolean autoClose) throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(socket, host, port, autoClose));
+            return setHostnameParameter(this.socketFactory.createSocket(socket, host, port, autoClose));
         }
 
         private Socket setHostnameParameter(final Socket newSocket) {
@@ -198,47 +252,45 @@ public class MqttClientFactory {
         @Override
         public Socket createSocket(final Socket socket, final InputStream inputStream, final boolean b)
                 throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(socket, inputStream, b));
+            return setHostnameParameter(this.socketFactory.createSocket(socket, inputStream, b));
         }
 
         @Override
         public Socket createSocket() throws IOException {
-            return setHostnameParameter(socketFactory.createSocket());
+            return setHostnameParameter(this.socketFactory.createSocket());
         }
 
         @Override
         public Socket createSocket(final String s, final int i) throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(s, i));
+            return setHostnameParameter(this.socketFactory.createSocket(s, i));
         }
 
         @Override
         public Socket createSocket(final String s, final int i, final InetAddress inetAddress, final int i1)
                 throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(s, i, inetAddress, i1));
+            return setHostnameParameter(this.socketFactory.createSocket(s, i, inetAddress, i1));
         }
 
         @Override
         public Socket createSocket(final InetAddress inetAddress, final int i) throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(inetAddress, i));
+            return setHostnameParameter(this.socketFactory.createSocket(inetAddress, i));
         }
 
         @Override
         public Socket createSocket(final InetAddress inetAddress,
-                                   final int i,
-                                   final InetAddress inetAddress1,
-                                   final int i1) throws IOException {
-            return setHostnameParameter(socketFactory.createSocket(inetAddress, i, inetAddress1, i1));
+                final int i,
+                final InetAddress inetAddress1,
+                final int i1) throws IOException {
+            return setHostnameParameter(this.socketFactory.createSocket(inetAddress, i, inetAddress1, i1));
         }
     }
 
     private static class MyX509TrustManager implements X509TrustManager {
         @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType) {
-        }
+        public void checkClientTrusted(X509Certificate[] chain, String authType) {}
 
         @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType) {
-        }
+        public void checkServerTrusted(X509Certificate[] chain, String authType) {}
 
         @Override
         public X509Certificate[] getAcceptedIssuers() {

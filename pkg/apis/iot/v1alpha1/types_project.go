@@ -56,6 +56,7 @@ const (
 	ProjectConditionTypeResourcesCreated      ProjectConditionType = "ResourcesCreated"
 	ProjectConditionTypeResourcesReady        ProjectConditionType = "ResourcesReady"
 	ProjectConditionTypeConfigurationAccepted ProjectConditionType = "ConfigurationAccepted"
+	ProjectConditionTypeTrustAnchorsUnique    ProjectConditionType = "TrustAnchorsUnique"
 )
 
 type ProjectCondition struct {
@@ -91,7 +92,9 @@ type TenantConfiguration struct {
 
 	Adapters map[string]AdapterConfiguration `json:"adapters,omitempty"`
 
-	Tracing TracingConfiguration `json:"tracing,omitempty"`
+	ResourceLimits *ResourceLimits `json:"resourceLimits,omitempty"`
+
+	Tracing *TracingConfiguration `json:"tracing,omitempty"`
 
 	Defaults   json.RawMessage `json:"defaults,omitempty"`
 	Extensions json.RawMessage `json:"ext,omitempty"`
@@ -108,6 +111,11 @@ type AdapterConfiguration struct {
 type TracingConfiguration struct {
 	SamplingMode          string            `json:"samplingMode,omitempty"`
 	SamplingModePerAuthId map[string]string `json:"samplingModePerAuthId,omitempty"`
+}
+
+type ResourceLimits struct {
+	MaximumConnections       *uint32 `json:"maximumConnections,omitempty"`
+	MaximumTimeToLiveSeconds *uint32 `json:"maximumTimeToLive,omitempty"`
 }
 
 type TrustAnchor struct {
@@ -192,7 +200,8 @@ type AcceptedConfiguration struct {
 	Adapters []AcceptedAdapterConfiguration `json:"adapters,omitempty"`
 	Tracing  *AcceptedTracingConfiguration  `json:"tracing,omitempty"`
 
-	TrustAnchors []AcceptedTrustAnchor `json:"trusted-ca,omitempty"`
+	ResourceLimits *AcceptedResourceLimits `json:"resource-limits,omitempty"`
+	TrustAnchors   []AcceptedTrustAnchor   `json:"trusted-ca,omitempty"`
 
 	Defaults   json.RawMessage `json:"defaults,omitempty"`
 	Extensions json.RawMessage `json:"ext,omitempty"`
@@ -207,6 +216,11 @@ type AcceptedAdapterConfiguration struct {
 type AcceptedTracingConfiguration struct {
 	SamplingMode          string            `json:"sampling-mode,omitempty"`
 	SamplingModePerAuthId map[string]string `json:"sampling-mode-per-auth-id,omitempty"`
+}
+
+type AcceptedResourceLimits struct {
+	MaximumConnections       int64 `json:"max-connections"`
+	MaximumTimeToLiveSeconds int64 `json:"max-ttl"`
 }
 
 type AcceptedTrustAnchor struct {

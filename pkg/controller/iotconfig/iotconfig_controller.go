@@ -134,10 +134,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 
 	// watch secrets referenced by infrastructure
 
-	s, err := NewSecretHandler(r.client, r.configName)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create secret event handler")
-	}
+	s := NewSecretHandler(r.client, r.configName)
 	if err := c.Watch(&source.Kind{Type: &corev1.Secret{}}, s); err != nil {
 		return err
 	}

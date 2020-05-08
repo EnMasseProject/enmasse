@@ -12,6 +12,7 @@ public enum ProjectConditionType {
     RESOURCES_CREATED("ResourcesCreated"),
     RESOURCES_READY("ResourcesReady"),
     CONFIGURATION_ACCEPTED("ConfigurationAccepted"),
+    TRUST_ANCHORS_UNIQUE("TrustAnchorsUnique"),
     ;
 
     @JsonValue
