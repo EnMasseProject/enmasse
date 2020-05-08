@@ -1,14 +1,14 @@
 // Module included in the following assemblies:
 //
-// assembly-deploying-auth-services.adoc
+// assembly-auth-services.adoc
 
 [id='proc-deploying-standard-auth-service-{context}']
-= Deploying the `standard` authentication service for HA
+= Deploying the `standard` authentication service for high availability (HA)
 
 To implement the `standard` authentication service, you deploy it.
 
 .Prerequisites
-* A PostgreSQL Database.
+* A PostgreSQL database.
 
 .Procedure
 
@@ -20,7 +20,7 @@ ifeval::["{cmdcli}" == "oc"]
 {cmdcli} login -u admin
 ----
 endif::[]
-. Create a `Secret` with the database credentials:
+. Create a secret with the database credentials:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -54,4 +54,3 @@ spec:
 ----
 {cmdcli} create -f standard-authservice.yaml -n _{ProductNamespace}_
 ----
-
