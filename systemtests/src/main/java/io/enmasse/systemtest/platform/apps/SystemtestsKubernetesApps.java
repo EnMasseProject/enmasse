@@ -935,6 +935,7 @@ public class SystemtestsKubernetesApps {
             try {
                 kubeClient.createPodFromResource(namespace, resource);
                 error = null;
+                return;
             } catch (KubernetesClientException e) {
                 if (e.getMessage().contains("retry after the token is automatically created and added to the service account")) {
                     error = e;
