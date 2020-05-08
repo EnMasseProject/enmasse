@@ -159,31 +159,54 @@ const getCombinedString = (a: string, b?: string) => {
   return s;
 };
 
-const getOptions = (object: any) => {
+const getLabelForTypeOfObject = (value: any) => {
+  switch (typeof value) {
+    case "object": {
+      if (Array.isArray(value)) {
+        return "Array";
+      } else {
+        return "Object";
+      }
+    }
+    case "string": {
+      //TODO: add validations for date and time
+      return "String";
+    }
+    case "number":
+      return "Numeric";
+    case "boolean":
+      return "Boolean";
+  }
+};
+
+const getJsonForMetadata = (object: any, type?: string) => {
   const keys = Object.keys(object);
   let data = [];
   for (var i of keys) {
     if (typeof object[i] === "object") {
       if (Array.isArray(object[i])) {
-        const datas: any[] = getOptions(object[i]);
+        const datas: any[] = getJsonForMetadata(object[i], "array");
         data.push({
           key: i,
           value: datas,
-          type: "array"
+          type: "array",
+          typeLabel: getLabelForTypeOfObject(object[i])
         });
       } else {
-        const datas: any[] = getOptions(object[i]);
+        const datas: any[] = getJsonForMetadata(object[i]);
         data.push({
-          key: i,
+          key: type && type === "array" ? "" : i,
           value: datas,
-          type: "object"
+          type: "object",
+          typeLabel: getLabelForTypeOfObject(object[i])
         });
       }
     } else {
       data.push({
-        key: i,
+        key: type && type === "array" ? "" : i,
         value: object[i],
-        type: typeof object[i]
+        type: typeof object[i],
+        typeLabel: getLabelForTypeOfObject(object[i])
       });
     }
   }
@@ -233,37 +256,6 @@ const getJson = (objects: any[]) => {
   return object;
 };
 
-// const json = {
-//   prop_1: [
-//     {
-//       prop_11: {
-//         prop_111: [
-//           { prop_1111: "val_1111" },
-//           { prop_1112: "val_1112" },
-//           {
-//             prop_1111: [
-//               { prop_11111: "val_11111" },
-//               { prop_11112: "val_11112" }
-//             ]
-//           }
-//         ]
-//       }
-//     },
-//     { prop_12: "val_12" }
-//   ],
-//   prop_2: "val_2",
-//   prop_3: "val_3"
-// };
-
-// const jsonString = JSON.stringify(json);
-// const jsonData = JSON.parse(jsonString);
-// console.log("jsonData", jsonData);
-// const options = getOptions(jsonData);
-// console.log(options)
-// const convertedJson = getJson(options);
-// console.log("converted json", convertedJson);
-// console.log("converyted json string");
-
 const compareJsonObject = (object1: any, object2: any) => {
   if (JSON.stringify(object1) === JSON.stringify(object2)) {
     return true;
@@ -283,7 +275,7 @@ export {
   findIndexByProperty,
   hasOwnProperty,
   getCombinedString,
-  getOptions,
+  getJsonForMetadata,
   getJson,
   compareJsonObject
 };
