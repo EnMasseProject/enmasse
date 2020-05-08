@@ -24,14 +24,12 @@ import {
   Dropdown
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { CalendarAltIcon, PlusCircleIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle } from "components";
-import { ISelectOption, uniqueId, findIndexByProperty } from "utils";
-import {
-  IDeviceFilterCriteria,
-  DeviceFilterCriteria,
-  operator
-} from "modules/device";
+import { ISelectOption, compareJsonObject } from "utils";
+import { IDeviceFilterCriteria } from "modules/device";
+import { AddCriteria } from "./AddCriteria";
+import { LastSeenFilterSection } from "./LastSeenFilterSection";
+import { AdddedDateFilterSection } from "./AddedDateFilterSection";
 
 const styles = StyleSheet.create({
   time_input_box: {
@@ -95,7 +93,7 @@ export interface IDeviceFilterProps {
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   {
     // filter,
-    // setFilter
+    // setFilterrere
   }
 ) => {
   const [filter, setFilter] = useState<IDeviceFilter>(setInitialFilter());
@@ -127,23 +125,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       label: "Disabled"
     }
   ];
-  const timeOptions: ISelectOption[] = [
-    {
-      key: "hr",
-      value: "hr",
-      label: "hr"
-    },
-    {
-      key: "min",
-      value: "min",
-      label: "min"
-    },
-    {
-      key: "sec",
-      value: "sec",
-      label: "sec"
-    }
-  ];
   const onClearFilter = () => {
     setFilter(setInitialFilter());
     setIsKebabOpen(false);
@@ -160,20 +141,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     setLastAppliedFilter(dataList);
     setIsKebabOpen(false);
   };
-  const setTime = (
-    value: string,
-    propertyName: "startTime" | "endTime",
-    isFormat: boolean
-  ) => {
-    const filterObj = JSON.parse(JSON.stringify(filter));
-    let timeObj = filter.lastSeen[propertyName];
-    isFormat
-      ? (timeObj = { form: value, time: timeObj.time })
-      : (timeObj = { form: timeObj.form, time: value });
-    filterObj.lastSeen[propertyName] = timeObj;
-    setFilter(filterObj);
-  };
-
   const onChangeDeviceId = (value: string) => {
     const filterObj = { ...filter };
     filterObj.deviceId = value;
@@ -192,58 +159,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     setFilter(filterObj);
   };
 
-  const addCriteria = () => {
-    const filterObj = JSON.parse(JSON.stringify(filter));
-    const list = filterObj.filterCriteria;
-    list.push({
-      operator: operator.EQ,
-      parameter: "",
-      value: "",
-      key: uniqueId()
-    });
-    filterObj.filterCriteria = list;
-    setFilter(filterObj);
-  };
-
-  const deleteCriteria = (criteria: IDeviceFilterCriteria) => {
-    const filterObj = { ...filter };
-    const list = filterObj.filterCriteria;
-    const index = findIndexByProperty(list, "key", criteria.key);
-    list.splice(index, 1);
-    filterObj.filterCriteria = list;
-    setFilter(filterObj);
-  };
-
-  const updateCriteria = (criteria: IDeviceFilterCriteria) => {
-    const filterObj = JSON.parse(JSON.stringify(filter));
-    const list = filterObj.filterCriteria;
-    const index = findIndexByProperty(list, "key", criteria.key);
-    list[index] = criteria;
-    filterObj.filterCriteria = list;
-    setFilter(filterObj);
-  };
-  const onStartTimeChange = (value: string) => {
-    setTime(value, "startTime", false);
-  };
-  const onStartTimeFormatChange = (value: string) => {
-    setTime(value, "startTime", true);
-  };
-  const onEndTimeChange = (value: string) => {
-    setTime(value, "endTime", false);
-  };
-  const onEndTimeFormatChange = (value: string) => {
-    setTime(value, "endTime", true);
-  };
-  const onChangeStartDate = (value: string) => {
-    const filterObj = { ...filter };
-    filterObj.addedDate.startDate = value;
-    setFilter(filterObj);
-  };
-  const onChangeEndDate = (value: string) => {
-    const filterObj = { ...filter };
-    filterObj.addedDate.endDate = value;
-    setFilter(filterObj);
-  };
   const onKebabToggle = () => {
     setIsKebabOpen(!isKebabOpen);
   };
@@ -254,11 +169,9 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     dataList.push(dataObj);
     setLastAppliedFilter(dataList);
   };
+
   const isEnabledRunFilter = () => {
-    if (JSON.stringify(filter) != JSON.stringify(setInitialFilter())) {
-      return false;
-    }
-    return true;
+    return compareJsonObject(Object.assign({}, filter), setInitialFilter());
   };
 
   const kebabDropdownItems = [
@@ -279,127 +192,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       Clear all
     </DropdownItem>
   ];
-  const {
-    lastSeen,
-    addedDate,
-    deviceId,
-    deviceType,
-    status,
-    filterCriteria
-  } = filter;
-
-  const DeviceId = () => (
-    <FormGroup label="Device ID" fieldId="filter-device-id">
-      <TextInput
-        isRequired
-        type="text"
-        id="device-filter-text-input-device-id"
-        name="device-id"
-        aria-describedby="Device Id for filter"
-        value={deviceId}
-        onChange={onChangeDeviceId}
-      />
-    </FormGroup>
-  );
-  const DeviceType = () => (
-    <FormGroup label="Device Type" fieldId="filter-device-type">
-      <DropdownWithToggle
-        id={"device-filter-dropdown-device-type"}
-        name="Device Type"
-        className={css(styles.dropdown_align)}
-        toggleClass={css(styles.dropdown_toggle_align)}
-        position={DropdownPosition.left}
-        onSelectItem={onTypeSelect}
-        dropdownItems={typeOptions}
-        value={deviceType}
-        isLabelAndValueNotSame={true}
-      />
-    </FormGroup>
-  );
-  const DeviceStatus = () => (
-    <FormGroup label="Status" fieldId="filter-device-status">
-      <DropdownWithToggle
-        id={"device-filter-dropdown-device-status"}
-        name="Status"
-        className={css(styles.dropdown_align)}
-        toggleClass={css(styles.dropdown_toggle_align)}
-        position={DropdownPosition.left}
-        onSelectItem={onStatusSelect}
-        dropdownItems={statusOptions}
-        value={status}
-        isLabelAndValueNotSame={true}
-      />
-    </FormGroup>
-  );
-  const LastSeen = () => (
-    <FormGroup label="Last seen" fieldId="filter-device-last-seen">
-      <InputGroup>
-        <TextInput
-          className={css(styles.time_input_box)}
-          name="last-start-time-number"
-          id="device-filter-text-input-last-start-time-number"
-          type="number"
-          aria-describedby="Device Id for filter"
-          value={lastSeen.startTime && lastSeen.startTime.time}
-          onChange={onStartTimeChange}
-        />
-        <DropdownWithToggle
-          className={css(styles.dropdown_align)}
-          toggleClass={css(styles.dropdown_toggle_align)}
-          id="device-filter-dropdown-last-seen-start-time-format"
-          position={DropdownPosition.left}
-          onSelectItem={onStartTimeFormatChange}
-          value={lastSeen.startTime ? lastSeen.startTime.form : ""}
-          dropdownItems={timeOptions}
-          dropdownItemIdPrefix="device-filter-dropdown-item-last-seen-start-time-format"
-        />
-        <TextContent>{" - "}</TextContent>
-        <TextInput
-          className={css(styles.time_input_box)}
-          name="last-end-time-number"
-          id="device-filter-text-input-last-end-time-number"
-          type="number"
-          aria-describedby="Device Id for filter"
-          value={lastSeen.endTime && lastSeen.endTime.time}
-          onChange={onEndTimeChange}
-        />
-        <DropdownWithToggle
-          className={css(styles.dropdown_align)}
-          id="device-filter-dropdown-last-seen-end-time-format"
-          position={DropdownPosition.left}
-          onSelectItem={onEndTimeFormatChange}
-          value={lastSeen.endTime ? lastSeen.endTime.form : ""}
-          dropdownItems={timeOptions}
-          dropdownItemIdPrefix="device-filter-dropdown-item-last-seen-end-time-format"
-        />
-      </InputGroup>
-    </FormGroup>
-  );
-  const AddedDate = () => (
-    <FormGroup label="Added date" fieldId="filter-device-added-date">
-      <InputGroup>
-        <InputGroupText component="label" htmlFor="added-date">
-          <CalendarAltIcon />
-        </InputGroupText>
-        <TextInput
-          name="added-start-date"
-          id="device-filter-text-input-added-start-date"
-          type="date"
-          aria-label="Added Start Date"
-          value={addedDate.startDate}
-          onChange={onChangeStartDate}
-        />
-        <TextInput
-          name="added-end-date"
-          id="device-filter-text-input-added-end-date"
-          type="date"
-          aria-label="Added End Date"
-          value={addedDate.endDate}
-          onChange={onChangeEndDate}
-        />
-      </InputGroup>
-    </FormGroup>
-  );
+  const { deviceId, deviceType, status } = filter;
 
   const FilterActions = () => (
     <Split>
@@ -429,55 +222,57 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       </SplitItem>
     </Split>
   );
-  const FilterCriteria = () => (
-    <FormGroup label="" fieldId="filter-criteria-paramter">
-      {filterCriteria && filterCriteria.length > 0 && (
-        <>
-          <Grid>
-            <GridItem span={5}>
-              <FormGroup label="Parameter" fieldId="filter-criteria-paramter" />
-            </GridItem>
-            <GridItem span={2}>
-              <FormGroup label="" fieldId="filter-criteria-operator" />
-            </GridItem>
-            <GridItem span={5}>
-              <FormGroup label="Value" fieldId="filter-criteria-value" />
-            </GridItem>
-          </Grid>
-          {filterCriteria.map((cr: IDeviceFilterCriteria) => (
-            <DeviceFilterCriteria
-              criteria={cr}
-              deleteCriteria={deleteCriteria}
-              setCriteria={updateCriteria}
-            />
-          ))}
-        </>
-      )}
-      <Button
-        variant="link"
-        id="device-filter-btn-add-criteria"
-        icon={<PlusCircleIcon />}
-        onClick={addCriteria}
-      >
-        Add criteria
-      </Button>
-      <br />
-      {filterCriteria &&
-        filterCriteria.length === 0 &&
-        "To fitler across millions of devices, please add criteria to narrow down"}
-    </FormGroup>
-  );
 
   return (
     <>
       <Form>
-        <DeviceId />
-        <DeviceType />
-        <DeviceStatus />
-        <LastSeen />
-        <AddedDate />
+        <FormGroup label="Device ID" fieldId="filter-device-id">
+          <TextInput
+            isRequired
+            type="text"
+            id="device-filter-text-input-device-id"
+            name="device-id"
+            aria-describedby="Device Id for filter"
+            value={deviceId}
+            onChange={onChangeDeviceId}
+          />
+        </FormGroup>
+        <FormGroup label="Device Type" fieldId="filter-device-type">
+          <DropdownWithToggle
+            id={"device-filter-dropdown-device-type"}
+            name="Device Type"
+            className={css(styles.dropdown_align)}
+            toggleClass={css(styles.dropdown_toggle_align)}
+            position={DropdownPosition.left}
+            onSelectItem={onTypeSelect}
+            dropdownItems={typeOptions}
+            value={deviceType}
+            isLabelAndValueNotSame={true}
+          />
+        </FormGroup>
+        <FormGroup label="Status" fieldId="filter-device-status">
+          <DropdownWithToggle
+            id={"device-filter-dropdown-device-status"}
+            name="Status"
+            className={css(styles.dropdown_align)}
+            toggleClass={css(styles.dropdown_toggle_align)}
+            position={DropdownPosition.left}
+            onSelectItem={onStatusSelect}
+            dropdownItems={statusOptions}
+            value={status}
+            isLabelAndValueNotSame={true}
+          />
+        </FormGroup>
+        <FormGroup label="Last seen" fieldId="filter-device-last-seen">
+          <LastSeenFilterSection filter={filter} setFilter={setFilter} />
+        </FormGroup>
+        <FormGroup label="Added date" fieldId="filter-device-added-date">
+          <AdddedDateFilterSection filter={filter} setFilter={setFilter} />
+        </FormGroup>
         <Divider />
-        <FilterCriteria />
+        <FormGroup label="" fieldId="filter-criteria-paramter">
+          <AddCriteria filter={filter} setFilter={setFilter} />
+        </FormGroup>
         <Divider />
         <FilterActions />
       </Form>

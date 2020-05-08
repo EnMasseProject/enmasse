@@ -262,7 +262,15 @@ const getJson = (objects: any[]) => {
 // console.log(options)
 // const convertedJson = getJson(options);
 // console.log("converted json", convertedJson);
-// console.log("converyted json string"
+// console.log("converyted json string");
+
+const compareJsonObject = (object1: any, object2: any) => {
+  if (JSON.stringify(object1) === JSON.stringify(object2)) {
+    return true;
+  }
+  return false;
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -277,5 +285,5 @@ export {
   getCombinedString,
   getOptions,
   getJson,
-  getJsonForObject
+  compareJsonObject
 };

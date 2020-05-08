@@ -48,35 +48,53 @@ interface IDeviceFilterCriteriaProps {
   deleteCriteria: (criteria: IDeviceFilterCriteria) => void;
   setCriteria: (criteria: IDeviceFilterCriteria) => void;
 }
+const options: ISelectOption[] = [
+  {
+    value: "accelerated speed",
+    label: "accelerated speed",
+    key: "accelerated-speed"
+  },
+  { value: "distance", label: "distance", key: "distance" },
+  { value: "humidity", label: "humidity", key: "humidity" },
+  { value: "item", label: "item", key: "item" },
+  { value: "location", label: "location", key: "location" },
+  { value: "latitude", label: "latitude", key: "latitude" },
+  { value: "temparature", label: "temparature", key: "temparature" },
+  { value: "team", label: "team", key: "team" },
+  { value: "template", label: "template", key: "template" },
+  { value: "tend", label: "tend", key: "tend" }
+];
+
 const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> = ({
   criteria,
   deleteCriteria,
   setCriteria
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const options: ISelectOption[] = [
-    {
-      value: "accelerated speed",
-      label: "accelerated speed",
-      key: "accelerated-speed"
-    },
-    { value: "distance", label: "distance", key: "distance" },
-    { value: "humidity", label: "humidity", key: "humidity" },
-    { value: "item", label: "item", key: "item" },
-    { value: "location", label: "location", key: "location" },
-    { value: "latitude", label: "latitude", key: "latitude" },
-    { value: "temparature", label: "temparature", key: "temparature" },
-    { value: "team", label: "team", key: "team" },
-    { value: "template", label: "template", key: "template" },
-    { value: "tend", label: "tend", key: "tend" }
-  ];
+  const [selectOptions, setSelectOptions] = useState(
+    options.map((option, index) => (
+      <SelectOption
+        isDisabled={option.isDisabled}
+        id={"device-filter-selec-option-" + option.key}
+        key={index}
+        value={option.value}
+      />
+    ))
+  );
   const onChangeParameter = (event: any) => {
     const value = event.target.value;
     const criteriaObj = { ...criteria };
     criteriaObj.parameter = value;
+    let input: any;
+    try {
+      input = new RegExp(value, "i");
+    } catch (err) {}
+    let typeaheadFilteredChildren =
+      value !== ""
+        ? selectOptions.filter(child => input.test(child.props.value))
+        : selectOptions;
     setCriteria(criteriaObj);
-    const optionList: ReactElement[] = [];
-    return optionList;
+    return typeaheadFilteredChildren;
   };
 
   const onChangeValue = (value: string) => {
@@ -124,14 +142,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
             isExpanded={isExpanded}
             ariaLabelledBy={"Select a parameter"}
           >
-            {options.map((option, index) => (
-              <SelectOption
-                isDisabled={option.isDisabled}
-                id={"device-filter-selec-option-" + option.key}
-                key={index}
-                value={option.value}
-              />
-            ))}
+            {selectOptions}
           </Select>
         </GridItem>
         <GridItem span={2}>
