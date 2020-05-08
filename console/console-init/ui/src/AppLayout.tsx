@@ -8,6 +8,7 @@ import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout as Layout } from "use-patternfly";
 import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
+import { CrossNavHeader } from "@rh-uxd/integration-react";
 import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
 import NavToolBar from "components/NavToolBar/NavToolBar";
@@ -52,9 +53,22 @@ const AppLayout: React.FC = () => {
     [history]
   );
 
+  const getCrossNavApps = [
+    { id: "0", name: "3 Scale", rootUrl: "http://localhost:8000" },
+    { id: "1", name: "AMQ Online", rootUrl: "http://localhost:8000" },
+    { id: "2", name: "API Designer", rootUrl: "http://localhost:8000" },
+    { id: "3", name: "Red Hat Fuse Online", rootUrl: "http://localhost:8000" }
+  ];
+
   return (
     <ApolloProvider client={client}>
-      <Layout
+      <CrossNavHeader
+        apps={getCrossNavApps}
+        currentApp={{
+          id: "solution-explorer",
+          name: "Solution Explorer",
+          rootUrl: "localhost:3000"
+        }}
         logoProps={logoProps}
         logo={logo}
         avatar={avatar}
@@ -63,7 +77,7 @@ const AppLayout: React.FC = () => {
         <NetworkStatusAlert />
         <ServerMessageAlert />
         <AppRoutes />
-      </Layout>
+      </CrossNavHeader>
     </ApolloProvider>
   );
 };

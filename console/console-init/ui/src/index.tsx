@@ -6,6 +6,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
+import "@rh-uxd/integration-core/dist/styles/core.css";
 import { HashRouter as Router } from "react-router-dom";
 import { LastLocationProvider } from "react-router-last-location";
 import App from "./App";
