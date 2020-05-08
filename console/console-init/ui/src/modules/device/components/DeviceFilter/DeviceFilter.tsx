@@ -29,7 +29,7 @@ import { ISelectOption, compareJsonObject } from "utils";
 import { IDeviceFilterCriteria } from "modules/device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
-import { AdddedDateFilterSection } from "./AddedDateFilterSection";
+import { DateFilterSection } from "./DateFilterSection";
 
 const styles = StyleSheet.create({
   time_input_box: {
@@ -267,7 +267,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
           <LastSeenFilterSection filter={filter} setFilter={setFilter} />
         </FormGroup>
         <FormGroup label="Added date" fieldId="filter-device-added-date">
-          <AdddedDateFilterSection filter={filter} setFilter={setFilter} />
+          <DateFilterSection filter={filter} setFilter={setFilter} />
         </FormGroup>
         <Divider />
         <FormGroup label="" fieldId="filter-criteria-paramter">

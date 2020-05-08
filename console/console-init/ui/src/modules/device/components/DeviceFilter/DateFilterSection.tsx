@@ -21,11 +21,11 @@ const styles = StyleSheet.create({
   dropdown_toggle_align: { flex: "1" }
 });
 
-interface IAdddedDateFilterSectionProps {
+interface IDateFilterSectionProps {
   filter: IDeviceFilter;
   setFilter: (filter: IDeviceFilter) => void;
 }
-const AdddedDateFilterSection: React.FunctionComponent<IAdddedDateFilterSectionProps> = ({
+const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
   filter,
   setFilter
 }) => {
@@ -65,4 +65,4 @@ const AdddedDateFilterSection: React.FunctionComponent<IAdddedDateFilterSectionP
   );
 };
 
-export { AdddedDateFilterSection };
+export { DateFilterSection };
