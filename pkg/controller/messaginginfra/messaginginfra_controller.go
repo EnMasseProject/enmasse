@@ -38,6 +38,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
+
 	//"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -360,7 +361,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
 		statuses, err := r.clientManager.GetClient(infra).SyncAll(routerHosts, brokerHosts)
 		// Treat as transient error
-		if errors.Is(err, amqpcommand.NotConnectedError) {
+		if errors.Is(err, amqpcommand.RequestTimeoutError) {
 			logger.Info("Error syncing infra", "error", err.Error())
 			infra.Status.Message = err.Error()
 			synchronized.SetStatus(corev1.ConditionFalse, "", err.Error())

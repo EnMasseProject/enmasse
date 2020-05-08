@@ -10,12 +10,14 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
 	"pack.ag/amqp"
+)
+
+var (
+	RequestTimeoutError error = fmt.Errorf("request timed out")
 )
 
 type Client interface {
@@ -23,12 +25,7 @@ type Client interface {
 	Stop()
 	RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error)
 	Request(message *amqp.Message) (*amqp.Message, error)
-	AwaitRunning()
 }
-
-var (
-	NotConnectedError error = fmt.Errorf("not connected")
-)
 
 type CommandClient struct {
 	addr           string
@@ -40,14 +37,10 @@ type CommandClient struct {
 	commandAddress         string
 	commandResponseAddress string
 
-	lastError    error
-	restartCount int32
-	connected    int32
-	running      sync.WaitGroup
+	lastError error
 
 	request chan *commandRequest
 }
-
 
 var _ Client = &CommandClient{}
 
@@ -68,7 +61,6 @@ func NewCommandClient(addr string, commandAddress string, commandResponseAddress
 		commandResponseAddress: commandResponseAddress,
 		connectOptions:         opts,
 		lastError:              nil,
-		connected:              0,
 	}
 }
 
@@ -77,7 +69,6 @@ func (c *CommandClient) Start() {
 	c.stop = make(chan struct{})
 	c.stopped = make(chan struct{})
 	c.lastError = nil
-	c.running.Add(1)
 	go func() {
 		defer close(c.stopped)
 		defer log.Printf("Command Client %s - stopped", c.addr)
@@ -88,8 +79,6 @@ func (c *CommandClient) Start() {
 				return
 			default:
 				err := c.doProcess()
-				c.running.Add(1)
-				atomic.StoreInt32(&c.connected, 0)
 				if err != nil {
 					c.lastError = err
 					backoff := computeBackoff(err)
@@ -105,11 +94,6 @@ func (c *CommandClient) Start() {
 		}
 	}()
 }
-
-func (c *CommandClient) AwaitRunning() {
-	c.running.Wait()
-}
-
 
 func (c *CommandClient) drainRequests() bool {
 	for {
@@ -172,9 +156,6 @@ func (c *CommandClient) doProcess() error {
 		c.lastError = nil
 	}
 
-	atomic.StoreInt32(&c.connected, 1)
-	c.running.Done()
-
 	requests := make(map[string]*commandRequest)
 	for {
 		select {
@@ -220,8 +201,6 @@ func (c *CommandClient) doProcess() error {
 	}
 }
 
-
-
 func (c *CommandClient) Stop() {
 	close(c.request)
 	close(c.stop)
@@ -229,9 +208,6 @@ func (c *CommandClient) Stop() {
 }
 
 func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error) {
-	if atomic.LoadInt32(&c.connected) == 0 {
-		return nil, NotConnectedError
-	}
 	response := make(chan commandResponse, 1)
 	request := &commandRequest{
 		commandMessage: message,
@@ -248,14 +224,11 @@ func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.D
 			return result.responseMessage, nil
 		}
 	case <-time.After(timeout):
-		return nil, fmt.Errorf("timed out waiting for response")
+		return nil, RequestTimeoutError
 	}
 }
 
 func (c *CommandClient) Request(message *amqp.Message) (*amqp.Message, error) {
-	if atomic.LoadInt32(&c.connected) == 0 {
-		return nil, NotConnectedError
-	}
 	response := make(chan commandResponse)
 	request := &commandRequest{
 		commandMessage: message,
