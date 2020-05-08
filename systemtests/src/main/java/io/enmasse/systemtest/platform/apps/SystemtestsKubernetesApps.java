@@ -901,7 +901,10 @@ public class SystemtestsKubernetesApps {
         Function<Pod, String> containerReasonGetter = p -> {
             return Optional.ofNullable(p)
                 .map(c -> c.getStatus())
-                .map(c -> c.getContainerStatuses().get(0).getState())
+                .map(c -> c.getContainerStatuses())
+                .filter(c -> !c.isEmpty())
+                .map(c -> c.get(0))
+                .map(c -> c.getState())
                 .map(c -> c.getTerminated())
                 .map(c -> c.getReason())
                 .orElse("");
