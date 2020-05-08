@@ -11,3 +11,5 @@ export * from "./DeviceListAlert";
 export * from "./DeviceList";
 export * from "./CreateDeviceButton";
 export * from "./EmptyDeviceList";
+export * from "./DeviceFilter";
+export * from "./DeviceFilterCriteria";
