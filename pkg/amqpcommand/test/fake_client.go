@@ -19,6 +19,7 @@ type FakeClient struct {
 	Handler RequestHandler
 }
 
+
 var _ amqpcommand.Client = &FakeClient{}
 
 func NewFakeClient() *FakeClient {
@@ -26,6 +27,9 @@ func NewFakeClient() *FakeClient {
 }
 
 func (c *FakeClient) Start() {
+}
+
+func (c *FakeClient) AwaitRunning() {
 }
 
 func (c *FakeClient) Stop() {
