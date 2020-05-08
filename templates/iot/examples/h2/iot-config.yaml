@@ -19,7 +19,7 @@ spec:
             extensions:
               - container:
                   name: ext-add-h2-driver
-                  image: quay.io/enmasse/h2-extension:1.4.200-1
+                  image: quay.io/enmasse/h2-extension:1.4.200-2
                   imagePullPolicy: Always
                   volumeMounts:
                   - name: extensions

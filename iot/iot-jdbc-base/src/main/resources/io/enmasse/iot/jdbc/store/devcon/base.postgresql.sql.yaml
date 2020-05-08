@@ -1,4 +1,4 @@
-update: |
+updateLastKnownGateway: |
    INSERT INTO %s (
       tenant_id,
       device_id,

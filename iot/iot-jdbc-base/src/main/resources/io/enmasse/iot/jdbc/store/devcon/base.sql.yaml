@@ -1,3 +1,9 @@
+
+#
+# For other databases, this can be provided using extensions
+# An example for H2 is available at: https://github.com/EnMasseProject/h2-iot-container-images
+#
+
 read: |
    SELECT
       last_known_gateway,
@@ -14,24 +20,8 @@ dropTenant: |
    WHERE
       tenant_id=:tenant_id
 
-update: |
-   INSERT INTO %s (
-      tenant_id,
-      device_id,
-      last_known_gateway
-   ) VALUES (
-      :tenant_id,
-      :device_id,
-      :gateway_id
-   )
-
-updateAdapterInstance: |
-   INSERT INTO %s (
-      tenant_id,
-      device_id,
-      adapter_instance_id
-   ) VALUES (
-      :tenant_id,
-      :device_id,
-      :adapter_instance_id
-   )
+# This generic file is explicitly missing the statements for:
+#  * updateLastKnownGateway:
+#  * updateAdapterInstance:
+# As they do require an "upsert" operation, which is different
+# for every database
