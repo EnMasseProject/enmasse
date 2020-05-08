@@ -8,7 +8,8 @@ import {
   CheckCircleIcon,
   InProgressIcon,
   ExclamationCircleIcon,
-  BanIcon
+  BanIcon,
+  ErrorCircleOIcon
 } from "@patternfly/react-icons";
 import { Badge } from "@patternfly/react-core";
 import { getType } from "utils";
@@ -48,7 +49,7 @@ const statusToDisplay = (phase: string) => {
       icon = <ExclamationCircleIcon color="red" />;
       break;
     case "failed":
-      icon = <BanIcon color="red" />;
+      icon = <ErrorCircleOIcon color="red" />;
       break;
     case "":
       icon = <ExclamationCircleIcon color="red" />;
