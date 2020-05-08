@@ -17,6 +17,7 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.junit.Assert.assertThat;
 
+import java.net.HttpURLConnection;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.List;
@@ -94,7 +95,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
 
         // set up new random device
         this.registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), this.deviceId);
-        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password);
+        this.credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), this.deviceId, this.authId, this.password, null, HttpURLConnection.HTTP_NO_CONTENT);
 
         // setup payload
         this.commandPayload = UUID.randomUUID().toString();

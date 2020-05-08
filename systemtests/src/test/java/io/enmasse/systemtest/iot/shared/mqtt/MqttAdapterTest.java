@@ -72,7 +72,7 @@ class MqttAdapterTest extends TestBase implements ITestIoTShared {
             credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         }
         registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
-        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
+        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword, null, HttpURLConnection.HTTP_NO_CONTENT);
 
         this.mqttAdapterClient = MqttAdapterClient.create(mqttAdapterEndpoint, deviceId, deviceAuthId, sharedIoTResourceManager.getTenantId(), devicePassword);
 

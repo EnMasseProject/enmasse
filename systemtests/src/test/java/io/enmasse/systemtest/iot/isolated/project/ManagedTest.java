@@ -12,6 +12,7 @@ import static java.time.Duration.ofSeconds;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
 import static org.junit.Assert.assertThat;
 
+import java.net.HttpURLConnection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
@@ -163,8 +164,8 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         this.registryClient.registerDevice(tenant1, "device1");
         this.registryClient.registerDevice(tenant2, "device1");
-        this.credentialsClient.addPlainPasswordCredentials(tenant1, "device1", "auth1", "password1");
-        this.credentialsClient.addPlainPasswordCredentials(tenant2, "device1", "auth1", "password1");
+        this.credentialsClient.addPlainPasswordCredentials(tenant1, "device1", "auth1", "password1", null, HttpURLConnection.HTTP_NO_CONTENT);
+        this.credentialsClient.addPlainPasswordCredentials(tenant2, "device1", "auth1", "password1", null, HttpURLConnection.HTTP_NO_CONTENT);
 
         // set up client
 

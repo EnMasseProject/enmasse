@@ -1,7 +1,8 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.systemtest.iot;
 
 import java.net.HttpURLConnection;
@@ -22,6 +23,8 @@ import java.util.function.Function;
 import org.eclipse.hono.service.management.credentials.CommonCredential;
 import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.credentials.PasswordSecret;
+import org.eclipse.hono.service.management.credentials.PskCredential;
+import org.eclipse.hono.service.management.credentials.PskSecret;
 
 import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.http.HttpMethod;
@@ -72,11 +75,15 @@ public class CredentialsRegistryClient extends HonoApiClient {
         }
     }
 
-    public void setCredentials(final String tenantId, final String deviceId, final List<CommonCredential> credentials) throws Exception {
+    public void setCredentials(final String tenantId, final String deviceId,  final List<CommonCredential> credentials) throws Exception {
+        setCredentials(tenantId, deviceId, HttpURLConnection.HTTP_NO_CONTENT, credentials);
+    }
+
+    public void setCredentials(final String tenantId, final String deviceId, int expectedStatusCode, final List<CommonCredential> credentials) throws Exception {
         var requestPath = String.format("/%s/%s/%s", CREDENTIALS_PATH, tenantId, deviceId);
         fixInstants(credentials);
         var body = Json.encode(credentials.toArray(CommonCredential[]::new)); // jackson needs an array
-        execute(HttpMethod.PUT, requestPath, body, HttpURLConnection.HTTP_NO_CONTENT, "Error setting credentials to device");
+        execute(HttpMethod.PUT, requestPath, body, expectedStatusCode, "Error setting credentials to device");
     }
 
     public List<CommonCredential> getCredentials(final String tenantId, final String deviceId) throws Exception {
@@ -85,21 +92,32 @@ public class CredentialsRegistryClient extends HonoApiClient {
         return new ArrayList<>(Arrays.asList(Json.decodeValue(result, CommonCredential[].class)));
     }
 
-    public void addCredentials(final String tenantId, final String deviceId, final List<CommonCredential> newCredentials) throws Exception {
+    public void addCredentials(final String tenantId, final String deviceId, int expectedStatusCode, final List<CommonCredential> newCredentials) throws Exception {
         var credentials = getCredentials(tenantId, deviceId);
         credentials.addAll(newCredentials);
-        setCredentials(tenantId, deviceId, credentials);
+        setCredentials(tenantId, deviceId, expectedStatusCode, credentials);
     }
 
     public void updateCredentials(String tenantId, String deviceId, Function<List<CommonCredential>, List<CommonCredential>> manipulator) throws Exception {
         var credentials = manipulator.apply(getCredentials(tenantId, deviceId));
         if (credentials != null) {
-            setCredentials(tenantId, deviceId, credentials);
+            setCredentials(tenantId, deviceId, HttpURLConnection.HTTP_NO_CONTENT, credentials);
         }
     }
 
     public void deleteAllCredentials(final String tenantId, final String deviceId) throws Exception {
-        setCredentials(tenantId, deviceId, Collections.emptyList());
+        setCredentials(tenantId, deviceId, HttpURLConnection.HTTP_NO_CONTENT, Collections.emptyList());
+    }
+
+    static PskSecret createPskSecret(final byte[] key, final Instant notAfter) {
+
+        var secret = new PskSecret();
+
+        secret.setKey(key);
+        secret.setNotAfter(notAfter);
+
+        return secret;
+
     }
 
     static PasswordSecret createPasswordSecret(final String authId, final String password, final Instant notAfter) {
@@ -164,20 +182,30 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     }
 
-    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
-        addPlainPasswordCredentials(tenantId, deviceId, authId, password, null);
+    static PskCredential createPskCredentialsObject(final String authId, final byte[] key, final Instant notAfter) {
+
+        var secret = createPskSecret(key, notAfter);
+
+        // create credentials
+
+        var credentials = new PskCredential();
+        credentials.setAuthId(authId);
+        credentials.setSecrets(Collections.singletonList(secret));
+
+        return credentials;
+
     }
 
-    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password) throws Exception {
-        addCredentials(tenantId, deviceId, authId, password, null);
+    public void addPskCredentials(final String tenantId, final String deviceId, final String authId, final byte[] key, final Instant notAfter, final int expectedStatusCode) throws Exception {
+        addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createPskCredentialsObject(authId, key, notAfter)));
     }
 
-    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
-        addCredentials(tenantId, deviceId, Collections.singletonList(createPlainPasswordCredentialsObject(authId, password, notAfter)));
+    public void addPlainPasswordCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter, final int expectedStatusCode) throws Exception {
+        addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createPlainPasswordCredentialsObject(authId, password, notAfter)));
     }
 
-    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter) throws Exception {
-        addCredentials(tenantId, deviceId, Collections.singletonList(createCredentialsObject(authId, password, notAfter)));
+    public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter, final int expectedStatusCode) throws Exception {
+        addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createCredentialsObject(authId, password, notAfter)));
     }
 
     public void updateCredentials(final String tenantId, final String deviceId, final String authId, final String newPassword, final Instant notAfter) throws Exception {

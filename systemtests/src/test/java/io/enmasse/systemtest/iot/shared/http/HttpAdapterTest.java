@@ -56,7 +56,7 @@ class HttpAdapterTest extends TestBase implements ITestIoTShared {
         registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         registryClient.registerDevice(sharedIoTResourceManager.getTenantId(), deviceId);
-        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword);
+        credentialsClient.addCredentials(sharedIoTResourceManager.getTenantId(), deviceId, deviceAuthId, devicePassword, null, HttpURLConnection.HTTP_NO_CONTENT);
 
         User businessApplicationUser = UserUtils.createUserResource(new UserCredentials(businessApplicationUsername, businessApplicationPassword))
                 .editSpec()

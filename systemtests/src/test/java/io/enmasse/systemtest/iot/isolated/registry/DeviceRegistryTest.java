@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.device.Device;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTProject;
@@ -135,7 +137,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             String authId = "sensor-" + UUID.randomUUID().toString();
             String password = "password1234";
-            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password, null, HttpURLConnection.HTTP_NO_CONTENT);
 
             IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, iotProject);
 
@@ -154,7 +156,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             String authId = "sensor-" + UUID.randomUUID().toString();
             String password = "password1234";
-            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password, null, HttpURLConnection.HTTP_NO_CONTENT);
 
             IoTUtils.checkCredentials(authId, password, false, httpAdapterEndpoint, amqpClient, iotProject);
 
@@ -173,7 +175,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             String authId = "sensor-" + UUID.randomUUID().toString();
             String password = "password1234";
-            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+            credentialsClient.addPlainPasswordCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password, null, HttpURLConnection.HTTP_NO_CONTENT);
 
             List<CommonCredential> credentials = credentialsClient.getCredentials(isolatedIoTManager.getTenantId(), randomDeviceId);
 
@@ -205,7 +207,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
             final String authId = UUID.randomUUID().toString();
             final String password = "password1234";
-            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password);
+            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, password, null, HttpURLConnection.HTTP_NO_CONTENT);
 
             // first test, cache filled
 
@@ -243,7 +245,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
             final Instant notAfter = Instant.now().plus(expiry);
             final String newPassword = "password1234";
 
-            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, newPassword, notAfter);
+            credentialsClient.addCredentials(isolatedIoTManager.getTenantId(), randomDeviceId, authId, newPassword, notAfter, HttpURLConnection.HTTP_NO_CONTENT);
 
             // first check, must succeed
             Thread.sleep(20_000);
@@ -279,7 +281,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
             final Instant notAfter = Instant.now().plus(expiry);
             final String newPassword = "password1234";
 
-            credentialsClient.addCredentials(tenantId, randomDeviceId, authId, newPassword, notAfter);
+            credentialsClient.addCredentials(tenantId, randomDeviceId, authId, newPassword, notAfter, HttpURLConnection.HTTP_NO_CONTENT);
 
             // first check, must succeed
 
@@ -310,6 +312,48 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
         assertEquals(HTTP_CONFLICT, response2.statusCode());
     }
 
+    @Test
+    public void testDeviceWithSameAuthIdOfDifferentTypesSucceeds() throws Exception {
+
+        var tenantId = isolatedIoTManager.getTenantId();
+        var deviceId = UUID.randomUUID().toString();
+
+        // create device
+
+        client.registerDevice(tenantId, deviceId);
+
+        var authId = UUID.randomUUID().toString();
+
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
+            credentialsClient.addPlainPasswordCredentials(tenantId, deviceId, authId, "foo-bar", null, HttpURLConnection.HTTP_NO_CONTENT);
+            credentialsClient.addPskCredentials(tenantId, deviceId, authId, "foo-bar".getBytes(StandardCharsets.UTF_8), null, HttpURLConnection.HTTP_NO_CONTENT);
+        }
+
+    }
+
+    @Test
+    public void testDeviceWithSameAuthIdOfSameTypesFails() throws Exception {
+
+        var tenantId = isolatedIoTManager.getTenantId();
+        var deviceId1 = UUID.randomUUID().toString();
+        var deviceId2 = UUID.randomUUID().toString();
+
+        // create device
+
+        client.registerDevice(tenantId, deviceId1);
+        client.registerDevice(tenantId, deviceId2);
+
+        var authId = UUID.randomUUID().toString();
+
+        try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
+            // must succeed
+            credentialsClient.addPlainPasswordCredentials(tenantId, deviceId1, authId, "foo-bar", null, HttpURLConnection.HTTP_NO_CONTENT);
+            // must fail
+            credentialsClient.addPlainPasswordCredentials(tenantId, deviceId2, authId, "foo-bar", null, HttpURLConnection.HTTP_BAD_REQUEST);
+        }
+
+    }
+
     protected void doRegisterMultipleDevices() throws Exception {
 
         final String tenantId = isolatedIoTManager.getTenantId();
@@ -324,7 +368,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
 
         try (var credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint)) {
             for (final String deviceId : devices) {
-                credentialsClient.addPlainPasswordCredentials(tenantId, deviceId, UUID.randomUUID().toString(), UUID.randomUUID().toString());
+                credentialsClient.addPlainPasswordCredentials(tenantId, deviceId, UUID.randomUUID().toString(), UUID.randomUUID().toString(), null, HttpURLConnection.HTTP_NO_CONTENT);
             }
         }
 

@@ -186,7 +186,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         ctx.setDeviceAuthId(UUID.randomUUID().toString());
         ctx.setDevicePassword(UUID.randomUUID().toString());
         registryClient.registerDevice(tenant, ctx.getDeviceId());
-        credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword());
+        credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword(), null, HttpURLConnection.HTTP_NO_CONTENT);
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         ctx.setHttpAdapterClient(new HttpAdapterClient(httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
         MqttConnectOptions mqttOptions = new MqttConnectOptions();
