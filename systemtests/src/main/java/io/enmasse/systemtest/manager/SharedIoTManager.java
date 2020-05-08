@@ -23,7 +23,6 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -34,7 +33,6 @@ public class SharedIoTManager extends ResourceManager {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static SharedIoTManager instance;
     protected AmqpClientFactory amqpClientFactory = null;
-    protected MqttClientFactory mqttClientFactory = null;
     private IoTProject sharedIoTProject = null;
     private IoTConfig sharedIoTConfig = null;
     private AmqpClient amqpClient;
@@ -61,7 +59,6 @@ public class SharedIoTManager extends ResourceManager {
     @Override
     public void tearDown(ExtensionContext context) throws Exception {
         closeAmqpFactory();
-        closeMqttFactory();
         if (environment.skipCleanup()) {
             LOGGER.info("Skip cleanup is set, no cleanup process");
         } else {
@@ -101,7 +98,6 @@ public class SharedIoTManager extends ResourceManager {
 
     void initFactories(UserCredentials credentials) {
         amqpClientFactory = new AmqpClientFactory(getSharedAddressSpace(), credentials);
-        mqttClientFactory = new MqttClientFactory(getSharedAddressSpace(), credentials);
     }
 
     @Override
@@ -142,16 +138,6 @@ public class SharedIoTManager extends ResourceManager {
         this.amqpClientFactory = amqpClientFactory;
     }
 
-    @Override
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
-    }
-
-    @Override
-    public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
-        this.mqttClientFactory = mqttClientFactory;
-    }
-
     public IoTProject getSharedIoTProject() {
         return sharedIoTProject;
     }
@@ -172,13 +158,6 @@ public class SharedIoTManager extends ResourceManager {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
             amqpClientFactory = null;
-        }
-    }
-
-    public void closeMqttFactory() {
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
-            mqttClientFactory = null;
         }
     }
 }

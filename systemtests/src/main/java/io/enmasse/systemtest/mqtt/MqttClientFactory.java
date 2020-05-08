@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019, EnMasse authors.
+ * Copyright 2016-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -15,10 +15,9 @@ import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 import javax.net.ssl.SNIHostName;
 import javax.net.ssl.SNIServerName;
@@ -49,7 +48,6 @@ import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -59,22 +57,10 @@ public class MqttClientFactory {
 
     private static final Logger log = CustomLogger.getLogger();
 
-    private final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
-    private final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
+    private static final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
+    private static final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";
 
-    private final Set<AutoCloseable> connectedClients = new CopyOnWriteArraySet<>(); // using a copy-on-write set allows to mutate the set while traversing it
-
-    private final AddressSpace defaultAddressSpace;
-    private final String username;
-    private final String password;
-
-    public MqttClientFactory(AddressSpace defaultAddressSpace, UserCredentials credentials) {
-        this.defaultAddressSpace = defaultAddressSpace;
-        this.username = credentials.getUsername();
-        this.password = credentials.getPassword();
-    }
-
-    public SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {
+    public static SSLContext tryGetSSLContext(final String... protocols) throws NoSuchAlgorithmException {
         for (String protocol : protocols) {
             try {
                 return SSLContext.getInstance(protocol);
@@ -86,113 +72,39 @@ public class MqttClientFactory {
                 Arrays.toString(protocols)));
     }
 
-    public Builder build() {
-        return new Builder() {
-            Endpoint endpoint;
-            AddressSpace addressSpace = defaultAddressSpace;
-            MqttConnectOptions mqttConnectOptions;
-            String clientId = UUID.randomUUID().toString();
-
-            @Override
-            public Builder endpoint(Endpoint endpoint) {
-                this.endpoint = endpoint;
-                return this;
-            }
-
-            @Override
-            public Builder addressSpace(AddressSpace addressSpace) {
-                this.addressSpace = addressSpace;
-                return this;
-            }
-
-            @Override
-            public Builder mqttConnectionOptions(MqttConnectOptions mqttConnectOptions) {
-                this.mqttConnectOptions = mqttConnectOptions;
-                return this;
-            }
-
-            @Override
-            public Builder clientId(String clientId) {
-                this.clientId = clientId;
-                return this;
-            }
-
-            @Override
-            public IMqttClient create() throws Exception {
-                if (mqttConnectOptions == null) {
-                    mqttConnectOptions = new MqttConnectOptions();
-                    mqttConnectOptions.setAutomaticReconnect(true);
-                    mqttConnectOptions.setHttpsHostnameVerificationEnabled(false);
-                }
-                return MqttClientFactory.this.create(MqttClient::new, DelegatingMqttClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
-            }
-
-            @Override
-            public IMqttAsyncClient createAsync() throws Exception {
-                return MqttClientFactory.this.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new, endpoint, addressSpace, mqttConnectOptions, clientId);
-            }
-        };
-    }
-
     public IMqttClient create() throws Exception {
-        return build().create();
+        return new Builder().create();
     }
 
     public IMqttAsyncClient createAsycm() throws Exception {
-        return build().createAsync();
+        return new Builder().createAsync();
     }
 
-    private <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, AddressSpace addressSpace, MqttConnectOptions options, String clientId) throws Exception {
-
-        Endpoint mqttEndpoint;
-
-        if (endpoint == null) {
-            mqttEndpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
-            if (mqttEndpoint == null) {
-                String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                mqttEndpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-            }
-        } else {
-            mqttEndpoint = endpoint;
-        }
+    private static <C> C create(ConnectionFactory<? extends C> factory, BiFunction<C, MqttConnectOptions, C> delegator, Endpoint endpoint, MqttConnectOptions options, String clientId) throws Exception {
 
         if (options.getSocketFactory() == null) {
             SSLContext sslContext = tryGetSSLContext("TLSv1.2", "TLSv1.1", "TLS", "TLSv1");
             sslContext.init(null, new X509TrustManager[]{new MyX509TrustManager()}, new SecureRandom());
 
-            SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), mqttEndpoint.getHost());
+            SSLSocketFactory sslSocketFactory = new SNISettingSSLSocketFactory(sslContext.getSocketFactory(), endpoint.getHost());
 
             options.setSocketFactory(sslSocketFactory);
         } else if (options.getSocketFactory() instanceof SSLSocketFactory) {
-            options.setSocketFactory(new SNISettingSSLSocketFactory((SSLSocketFactory) options.getSocketFactory(), mqttEndpoint.getHost()));
+            options.setSocketFactory(new SNISettingSSLSocketFactory((SSLSocketFactory) options.getSocketFactory(), endpoint.getHost()));
         }
 
-        if (!TestUtils.resolvable(mqttEndpoint)) {
-            mqttEndpoint = new Endpoint("localhost", 443);
+        if (!TestUtils.resolvable(endpoint)) {
+            endpoint = new Endpoint("localhost", 443);
         }
 
-        log.info("Using mqtt endpoint {}", mqttEndpoint);
-
-        if (username != null && password != null) {
-            options.setUserName(username);
-            options.setPassword(password.toCharArray());
-        }
+        log.info("Using mqtt endpoint {}", endpoint);
 
         final String uriFormat = options.getSocketFactory() instanceof SSLSocketFactory
                 ? TLS_SERVER_URI_TEMPLATE
                 : SERVER_URI_TEMPLATE;
-        String serverURI = String.format(uriFormat, mqttEndpoint.getHost(), mqttEndpoint.getPort());
+        String serverURI = String.format(uriFormat, endpoint.getHost(), endpoint.getPort());
         return delegator.apply(factory.newInstance(serverURI, clientId, new MemoryPersistence()), options);
-    }
 
-    public void close() {
-        for (AutoCloseable client : connectedClients) {
-            try {
-                client.close();
-            } catch (Exception e) {
-            }
-        }
-        connectedClients.clear();
     }
 
     @FunctionalInterface
@@ -200,20 +112,54 @@ public class MqttClientFactory {
         C newInstance(String serverUri, String clientId, MqttClientPersistence persistence) throws MqttException;
     }
 
+    public static class Builder {
 
-    public interface Builder {
+        private Endpoint endpoint;
+        private MqttConnectOptions options = new MqttConnectOptions();
+        private String clientId = UUID.randomUUID().toString();
 
-        Builder endpoint(Endpoint endpoint);
+        public Builder() {
+            this.options.setAutomaticReconnect(true);
+            this.options.setHttpsHostnameVerificationEnabled(false);
+        }
 
-        Builder addressSpace(AddressSpace addressSpace);
+        public Builder endpoint(final Endpoint endpoint) {
+            this.endpoint = endpoint;
+            return this;
+        }
 
-        Builder mqttConnectionOptions(MqttConnectOptions options);
+        public Builder usernameAndPassword(final String username, final String password) {
+            options.setUserName(username);
+            options.setPassword(password.toCharArray());
+            return this;
+        }
 
-        Builder clientId(String clientId);
+        public Builder endpointFromAddressSpace(final AddressSpace addressSpace) {
+            endpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
+            if (endpoint == null) {
+                String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
+                endpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            }
+            return this;
+        }
 
-        IMqttClient create() throws Exception;
+        public Builder mqttConnectionOptions(final Consumer<MqttConnectOptions> mqttConnectOptions) {
+            mqttConnectOptions.accept(this.options);
+            return this;
+        }
 
-        IMqttAsyncClient createAsync() throws Exception;
+        public Builder clientId(String clientId) {
+            this.clientId = clientId;
+            return this;
+        }
+
+        public IMqttClient create() throws Exception {
+            return MqttClientFactory.create(MqttClient::new, DelegatingMqttClient::new, endpoint,  options, clientId);
+        }
+
+        public IMqttAsyncClient createAsync() throws Exception {
+            return MqttClientFactory.create(MqttAsyncClient::new, DelegatingMqttAsyncClient::new, endpoint, options, clientId);
+        }
     }
 
     private static class SNISettingSSLSocketFactory extends SSLSocketFactory {
@@ -300,7 +246,7 @@ public class MqttClientFactory {
         }
     }
 
-    private class DelegatingMqttAsyncClient implements IMqttAsyncClient, AutoCloseable {
+    private static class DelegatingMqttAsyncClient implements IMqttAsyncClient, AutoCloseable {
 
         private IMqttAsyncClient mqttClient;
         private MqttConnectOptions options;
@@ -308,12 +254,10 @@ public class MqttClientFactory {
         public DelegatingMqttAsyncClient(IMqttAsyncClient mqttClient, MqttConnectOptions options) {
             this.mqttClient = mqttClient;
             this.options = options;
-            connectedClients.add(this);
         }
 
         @Override
         public void close() throws MqttException {
-            connectedClients.remove(this);
             // if we are connected ...
             // otherwise we try to talk the client into closing...
             if (mqttClient.isConnected()) {
@@ -333,7 +277,6 @@ public class MqttClientFactory {
                         throw e;
                 }
             }
-
         }
 
         @Override
@@ -520,14 +463,13 @@ public class MqttClientFactory {
 
     }
 
-    private class DelegatingMqttClient implements IMqttClient, AutoCloseable {
+    private static class DelegatingMqttClient implements IMqttClient, AutoCloseable {
         private final IMqttClient mqttClient;
         private final MqttConnectOptions options;
 
         public DelegatingMqttClient(IMqttClient mqttClient, MqttConnectOptions options) {
             this.mqttClient = mqttClient;
             this.options = options;
-            connectedClients.add(this);
         }
 
         @Override
@@ -717,8 +659,25 @@ public class MqttClientFactory {
 
         @Override
         public void close() throws MqttException {
-            connectedClients.remove(this);
-            this.mqttClient.close();
+            // if we are connected ...
+            // otherwise we try to talk the client into closing...
+            if (mqttClient.isConnected()) {
+                // ... we need to disconnect first, otherwise the close will fail
+                mqttClient.disconnectForcibly(0, 100);
+            }
+            try {
+                mqttClient.close();
+            } catch (MqttException e) {
+                // and it still might fail ... due to its internal state
+                switch (e.getReasonCode()) {
+                    case MqttException.REASON_CODE_CONNECT_IN_PROGRESS:
+                        // if paho thinks it is still "connecting" (vs connected), we can't do anything
+                        log.info("Suppressing MQTT close exception", e);
+                        break;
+                    default:
+                        throw e;
+                }
+            }
         }
     }
 }

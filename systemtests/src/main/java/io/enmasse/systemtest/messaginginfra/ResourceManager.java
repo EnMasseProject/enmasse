@@ -4,9 +4,21 @@
  */
 package io.enmasse.systemtest.messaginginfra;
 
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.time.Duration;
+import java.util.Objects;
+import java.util.Stack;
+import java.util.function.Predicate;
+
+import org.slf4j.Logger;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingTenant;
@@ -22,20 +34,10 @@ import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureRes
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import org.slf4j.Logger;
-
-import java.time.Duration;
-import java.util.Objects;
-import java.util.Stack;
-import java.util.function.Predicate;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Managing resources
@@ -55,7 +57,6 @@ public class ResourceManager {
     private Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
     private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(null, new UserCredentials("dummy", "dummy"));
-    private MqttClientFactory mqttClientFactory = null;
 
     private static ResourceManager instance;
 
@@ -143,12 +144,10 @@ public class ResourceManager {
 
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, environment.getSharedDefaultCredentials());
-        mqttClientFactory = new MqttClientFactory(addressSpace, environment.getSharedDefaultCredentials());
     }
 
     public void initFactories(AddressSpace addressSpace, UserCredentials cred) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, cred);
-        mqttClientFactory = new MqttClientFactory(addressSpace, cred);
     }
 
     public void initFactories(IoTProject project, UserCredentials credentials) {
@@ -164,24 +163,12 @@ public class ResourceManager {
         }
     }
 
-    public void closeMqttFactory() {
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
-            mqttClientFactory = null;
-        }
-    }
-
     public void closeFactories() throws Exception {
         closeAmqpFactory();
-        closeMqttFactory();
     }
 
     public AmqpClientFactory getAmqpClientFactory() {
         return amqpClientFactory;
-    }
-
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
     }
 
     //------------------------------------------------------------------------------------------------

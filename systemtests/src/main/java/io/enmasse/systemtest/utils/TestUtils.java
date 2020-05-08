@@ -722,12 +722,6 @@ public class TestUtils {
                 }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
-
-    @FunctionalInterface
-    public interface ThrowingCallable {
-        void call() throws Exception;
-    }
-
     public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {
         return getLogsPath(extensionContext, "failed_test_logs");
     }

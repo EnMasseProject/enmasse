@@ -19,17 +19,15 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingCallable;
 
 public class IsolatedIoTManager extends ResourceManager {
 
     private Logger LOGGER = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
     protected List<IoTProject> ioTProjects;
     protected List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
@@ -49,7 +47,6 @@ public class IsolatedIoTManager extends ResourceManager {
 
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
     public void initFactories(IoTProject project) {
@@ -143,16 +140,6 @@ public class IsolatedIoTManager extends ResourceManager {
     @Override
     public void setAmqpClientFactory(AmqpClientFactory amqpClientFactory) {
         this.amqpClientFactory = amqpClientFactory;
-    }
-
-    @Override
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
-    }
-
-    @Override
-    public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
-        this.mqttClientFactory = mqttClientFactory;
     }
 
     public void createIoTProject(IoTProject project) throws Exception {

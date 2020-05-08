@@ -63,7 +63,7 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingCallable;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;

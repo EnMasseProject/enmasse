@@ -5,6 +5,18 @@
 
 package io.enmasse.systemtest.manager;
 
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.*;
@@ -14,7 +26,6 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -28,17 +39,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
 
 public abstract class ResourceManager {
     protected static final Environment environment = Environment.getInstance();
@@ -71,10 +71,6 @@ public abstract class ResourceManager {
 
     public abstract void setAmqpClientFactory(AmqpClientFactory amqpClientFactory);
 
-    public abstract MqttClientFactory getMqttClientFactory();
-
-    public abstract void setMqttClientFactory(MqttClientFactory mqttClientFactory);
-
     public AddressSpace getSharedAddressSpace() {
         return null;
     }
@@ -91,12 +87,9 @@ public abstract class ResourceManager {
     // Client factories
     //------------------------------------------------------------------------------------------------
 
-    public void closeClientFactories(AmqpClientFactory amqpClientFactory, MqttClientFactory mqttClientFactory) throws Exception {
+    public void closeClientFactories(AmqpClientFactory amqpClientFactory) throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
-        }
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
         }
     }
 

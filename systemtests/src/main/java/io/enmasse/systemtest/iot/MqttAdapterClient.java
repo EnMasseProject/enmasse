@@ -10,14 +10,12 @@ import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
@@ -65,19 +63,17 @@ public class MqttAdapterClient implements AutoCloseable {
     public static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final String deviceAuthId, final String tenantId, final String devicePassword)
             throws Exception {
 
-        final MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setAutomaticReconnect(true);
-        mqttOptions.setConnectionTimeout(60);
-        // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
-        mqttOptions.setMaxInflight(16 * 1024);
-        mqttOptions.setHttpsHostnameVerificationEnabled(false);
-
-        var adapterClient = new MqttClientFactory(null,
-                new UserCredentials(deviceAuthId + "@" + tenantId, devicePassword))
-                        .build()
+        var adapterClient = new MqttClientFactory.Builder()
                         .clientId(deviceId)
                         .endpoint(endpoint)
-                        .mqttConnectionOptions(mqttOptions)
+                        .usernameAndPassword(deviceAuthId + "@" + tenantId, devicePassword)
+                        .mqttConnectionOptions(options -> {
+                            options.setAutomaticReconnect(true);
+                            options.setConnectionTimeout(60);
+                            // do not reject due to "inflight" messages. Note: this will allocate an array of that size.
+                            options.setMaxInflight(16 * 1024);
+                            options.setHttpsHostnameVerificationEnabled(false);
+                        })
                         .createAsync();
 
         try {
