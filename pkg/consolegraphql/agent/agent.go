@@ -11,13 +11,15 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	"net"
-	"pack.ag/amqp"
 	"sync"
 	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"pack.ag/amqp"
 )
 
 // The agent delegate is the facade to the address space's agent component.  It allows events broadcast by the
@@ -374,7 +376,6 @@ func (aad *amqpAgentDelegate) newAgentDelegate(token string, impersonateUser str
 	}
 
 	a.commandClient.Start()
-	a.commandClient.AwaitRunning()
 	return a
 }
 
