@@ -10,9 +10,12 @@ import {
   DeviceListAlert,
   DeviceList,
   IDevice,
-  getTableCells
+  EmptyDeviceList
 } from "modules/device";
 import { text, select } from "@storybook/addon-knobs";
+
+import { getTableCells } from "modules/device/utils";
+import { action } from "@storybook/addon-actions";
 import { IRowData } from "@patternfly/react-table";
 import { DeviceDetailNavigation } from "modules/device-detail";
 
@@ -82,3 +85,10 @@ export const deviceDetailHeaderNavigation = () => {
     </MemoryRouter>
   );
 };
+
+export const emptyDevice = () => (
+  <EmptyDeviceList
+    handleInputDeviceInfo={action("input device info handler clicked")}
+    handleJSONUpload={action("json upload handler clicked")}
+  />
+);
