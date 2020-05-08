@@ -159,6 +159,26 @@ const getCombinedString = (a: string, b?: string) => {
   return s;
 };
 
+const getLabelForTypeOfObject = (value: any) => {
+  switch (typeof value) {
+    case "object": {
+      if (Array.isArray(value)) {
+        return "Array";
+      } else {
+        return "Object";
+      }
+    }
+    case "string": {
+      //TODO: add validations for date and time
+      return "String";
+    }
+    case "number":
+      return "Numeric";
+    case "boolean":
+      return "Boolean";
+  }
+};
+
 const getJsonForMetadata = (object: any, type?: string) => {
   const keys = Object.keys(object);
   let data = [];
@@ -169,21 +189,24 @@ const getJsonForMetadata = (object: any, type?: string) => {
         data.push({
           key: i,
           value: datas,
-          type: "array"
+          type: "array",
+          typeLabel: getLabelForTypeOfObject(object[i])
         });
       } else {
         const datas: any[] = getJsonForMetadata(object[i]);
         data.push({
           key: type && type === "array" ? "" : i,
           value: datas,
-          type: "object"
+          type: "object",
+          typeLabel: getLabelForTypeOfObject(object[i])
         });
       }
     } else {
       data.push({
         key: type && type === "array" ? "" : i,
         value: object[i],
-        type: typeof object[i]
+        type: typeof object[i],
+        typeLabel: getLabelForTypeOfObject(object[i])
       });
     }
   }
