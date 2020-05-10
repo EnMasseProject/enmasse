@@ -58,7 +58,6 @@ import io.fabric8.kubernetes.api.model.rbac.RoleBindingBuilder;
 import io.fabric8.kubernetes.api.model.rbac.RoleBuilder;
 import io.fabric8.kubernetes.api.model.rbac.SubjectBuilder;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import io.vertx.core.json.JsonObject;
@@ -931,25 +930,25 @@ public class SystemtestsKubernetesApps {
 
     }
 
-    private static void createPodRetrying(Kubernetes kubeClient, String namespace, Pod resource) throws Exception {
-        KubernetesClientException error = null;
+    private static void createPodRetrying(Kubernetes kubeClient, String namespace, Pod resource) {
+        Exception error = null;
         int retries = 3;
         do {
             try {
                 kubeClient.createPodFromResource(namespace, resource);
                 error = null;
                 return;
-            } catch (KubernetesClientException e) {
+            } catch (Exception e) {
                 if (e.getMessage().contains("retry after the token is automatically created and added to the service account")) {
                     error = e;
                     retries--;
                 } else {
-                    throw e;
+                    Assertions.fail(e);
                 }
             }
         } while (retries > 0);
         if (error != null) {
-            throw error;
+            Assertions.fail(error);
         }
     }
 
