@@ -346,6 +346,10 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
 
+            // Investigating sporadic upgrade issue.
+            Files.writeString(path.resolve("deployments.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml").getStdOut());
+            Files.writeString(path.resolve("statefulsets.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml").getStdOut());
+
             if (extraCollectors != null) {
                 for (var c : extraCollectors) {
                     c.run();
