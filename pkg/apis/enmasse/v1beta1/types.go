@@ -112,8 +112,13 @@ type CertificateSpec struct {
 
 type ExposeSpec struct {
 	Type                string `json:"type"`
+
+	RouteHost           string `json:"routeHost"`
 	RouteServicePort    string `json:"routeServicePort"`
 	RouteTlsTermination string `json:"routeTlsTermination"`
+
+	LoadBalancerPorts        []string `json:"loadBalancerPorts"`
+	LoadBalancerSourceRanges []string `json:"loadBalancerPorts"`
 }
 
 type ConnectorSpec struct {

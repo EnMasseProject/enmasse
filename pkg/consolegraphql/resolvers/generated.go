@@ -15,6 +15,7 @@ import (
 	v1beta11 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	v1beta21 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v12 "github.com/openshift/api/user/v1"
 	gqlparser "github.com/vektah/gqlparser/v2"
@@ -51,6 +52,9 @@ type ResolverRoot interface {
 	ConnectionSpec_consoleapi_enmasse_io_v1beta1() ConnectionSpec_consoleapi_enmasse_io_v1beta1Resolver
 	Connection_consoleapi_enmasse_io_v1beta1() Connection_consoleapi_enmasse_io_v1beta1Resolver
 	LinkSpec_consoleapi_enmasse_io_v1beta1() LinkSpec_consoleapi_enmasse_io_v1beta1Resolver
+	MessagingEndpointPort_enmasse_io_v1beta2() MessagingEndpointPort_enmasse_io_v1beta2Resolver
+	MessagingEndpointSpec_enmasse_io_v1beta2() MessagingEndpointSpec_enmasse_io_v1beta2Resolver
+	MessagingEndpointStatus_enmasse_io_v1beta2() MessagingEndpointStatus_enmasse_io_v1beta2Resolver
 	Metric_consoleapi_enmasse_io_v1beta1() Metric_consoleapi_enmasse_io_v1beta1Resolver
 	Mutation() MutationResolver
 	NamespaceStatus_v1() NamespaceStatus_v1Resolver
@@ -248,6 +252,36 @@ type ComplexityRoot struct {
 		Spec       func(childComplexity int) int
 	}
 
+	MessagingEndpointPortEnmasseIoV1beta2 struct {
+		Name     func(childComplexity int) int
+		Port     func(childComplexity int) int
+		Protocol func(childComplexity int) int
+	}
+
+	MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1 struct {
+		MessagingEndpoints func(childComplexity int) int
+		Total              func(childComplexity int) int
+	}
+
+	MessagingEndpointSpecEnmasseIoV1beta2 struct {
+		Protocols func(childComplexity int) int
+	}
+
+	MessagingEndpointStatusEnmasseIoV1beta2 struct {
+		Host          func(childComplexity int) int
+		InternalPorts func(childComplexity int) int
+		Message       func(childComplexity int) int
+		Phase         func(childComplexity int) int
+		Ports         func(childComplexity int) int
+		Type          func(childComplexity int) int
+	}
+
+	MessagingEndpointEnmasseIoV1beta2 struct {
+		ObjectMeta func(childComplexity int) int
+		Spec       func(childComplexity int) int
+		Status     func(childComplexity int) int
+	}
+
 	MetadataConsoleapiEnmasseIoV1beta1 struct {
 		Annotations       func(childComplexity int) int
 		CreationTimestamp func(childComplexity int) int
@@ -310,6 +344,7 @@ type ComplexityRoot struct {
 		AuthenticationServices    func(childComplexity int) int
 		Connections               func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
 		MessagingCertificateChain func(childComplexity int, input v1.ObjectMeta) int
+		MessagingEndpoints        func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
 		Namespaces                func(childComplexity int) int
 		Whoami                    func(childComplexity int) int
 	}
@@ -362,6 +397,16 @@ type LinkSpec_consoleapi_enmasse_io_v1beta1Resolver interface {
 
 	Role(ctx context.Context, obj *consolegraphql.LinkSpec) (LinkRole, error)
 }
+type MessagingEndpointPort_enmasse_io_v1beta2Resolver interface {
+	Protocol(ctx context.Context, obj *v1beta21.MessagingEndpointPort) (MessagingEndpointProtocol, error)
+}
+type MessagingEndpointSpec_enmasse_io_v1beta2Resolver interface {
+	Protocols(ctx context.Context, obj *v1beta21.MessagingEndpointSpec) ([]MessagingEndpointProtocol, error)
+}
+type MessagingEndpointStatus_enmasse_io_v1beta2Resolver interface {
+	Phase(ctx context.Context, obj *v1beta21.MessagingEndpointStatus) (string, error)
+	Type(ctx context.Context, obj *v1beta21.MessagingEndpointStatus) (MessagingEndpointType, error)
+}
 type Metric_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Type(ctx context.Context, obj *consolegraphql.Metric) (MetricType, error)
 
@@ -405,6 +450,7 @@ type QueryResolver interface {
 	MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error)
 	AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error)
 	AddressCommand(ctx context.Context, input v1beta1.Address, addressSpace *string) (string, error)
+	MessagingEndpoints(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1, error)
 }
 
 type executableSchema struct {
@@ -1114,6 +1160,111 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.LinkConsoleapiEnmasseIoV1beta1.Spec(childComplexity), true
 
+	case "MessagingEndpointPort_enmasse_io_v1beta2.name":
+		if e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Name == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Name(childComplexity), true
+
+	case "MessagingEndpointPort_enmasse_io_v1beta2.port":
+		if e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Port == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Port(childComplexity), true
+
+	case "MessagingEndpointPort_enmasse_io_v1beta2.protocol":
+		if e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Protocol == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointPortEnmasseIoV1beta2.Protocol(childComplexity), true
+
+	case "MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1.messagingEndpoints":
+		if e.complexity.MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1.MessagingEndpoints == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1.MessagingEndpoints(childComplexity), true
+
+	case "MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1.total":
+		if e.complexity.MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1.Total == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1.Total(childComplexity), true
+
+	case "MessagingEndpointSpec_enmasse_io_v1beta2.protocols":
+		if e.complexity.MessagingEndpointSpecEnmasseIoV1beta2.Protocols == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointSpecEnmasseIoV1beta2.Protocols(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.host":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Host == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Host(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.internalPorts":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.InternalPorts == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.InternalPorts(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.message":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Message == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Message(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.phase":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Phase == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Phase(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.ports":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Ports == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Ports(childComplexity), true
+
+	case "MessagingEndpointStatus_enmasse_io_v1beta2.type":
+		if e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Type == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointStatusEnmasseIoV1beta2.Type(childComplexity), true
+
+	case "MessagingEndpoint_enmasse_io_v1beta2.metadata":
+		if e.complexity.MessagingEndpointEnmasseIoV1beta2.ObjectMeta == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointEnmasseIoV1beta2.ObjectMeta(childComplexity), true
+
+	case "MessagingEndpoint_enmasse_io_v1beta2.spec":
+		if e.complexity.MessagingEndpointEnmasseIoV1beta2.Spec == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointEnmasseIoV1beta2.Spec(childComplexity), true
+
+	case "MessagingEndpoint_enmasse_io_v1beta2.status":
+		if e.complexity.MessagingEndpointEnmasseIoV1beta2.Status == nil {
+			break
+		}
+
+		return e.complexity.MessagingEndpointEnmasseIoV1beta2.Status(childComplexity), true
+
 	case "Metadata_consoleapi_enmasse_io_v1beta1.annotations":
 		if e.complexity.MetadataConsoleapiEnmasseIoV1beta1.Annotations == nil {
 			break
@@ -1510,6 +1661,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.MessagingCertificateChain(childComplexity, args["input"].(v1.ObjectMeta)), true
 
+	case "Query.messagingEndpoints":
+		if e.complexity.Query.MessagingEndpoints == nil {
+			break
+		}
+
+		args, err := ec.field_Query_messagingEndpoints_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MessagingEndpoints(childComplexity, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string)), true
+
 	case "Query.namespaces":
 		if e.complexity.Query.Namespaces == nil {
 			break
@@ -1661,6 +1824,21 @@ enum Protocol {
   amqps
 }
 
+enum MessagingEndpointType {
+  cluster,
+  nodePort,
+  loadBalancer,
+  route,
+  ingress
+}
+
+enum MessagingEndpointProtocol {
+  amqp,
+  amqps,
+  amqp_ws,
+  amqp_wss,
+}
+
 type Metric_consoleapi_enmasse_io_v1beta1 {
   name: String!
   type: MetricType!
@@ -1722,6 +1900,10 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
   links: [Link_consoleapi_enmasse_io_v1beta1!]!
 }
 
+type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
+  total: Int!
+  messagingEndpoints: [MessagingEndpoint_enmasse_io_v1beta2!]!
+}
 #
 # Mirrors of Kubernetes types.  These follow the names and structure of the underlying
 # Kubernetes object exactly.  We don't need to expose every field, just the ones that
@@ -1745,6 +1927,32 @@ type AddressSpaceSpec_enmasse_io_v1beta1 {
   plan:                   AddressSpacePlan_admin_enmasse_io_v1beta2!
   type:                   AddressSpaceType!
   authenticationService:  AuthenticationService_enmasse_io_v1beta1
+}
+
+type MessagingEndpoint_enmasse_io_v1beta2 {
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
+  spec: MessagingEndpointSpec_enmasse_io_v1beta2!
+  status: MessagingEndpointStatus_enmasse_io_v1beta2
+}
+
+type MessagingEndpointSpec_enmasse_io_v1beta2 {
+  protocols: [MessagingEndpointProtocol!]!
+}
+
+type MessagingEndpointStatus_enmasse_io_v1beta2 {
+  phase: String!
+  type: MessagingEndpointType!
+  message: String
+  host: String
+
+  ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+  internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+}
+
+type MessagingEndpointPort_enmasse_io_v1beta2  {
+  name: String!
+  protocol: MessagingEndpointProtocol!
+  port: Int!
 }
 
 type AuthenticationService_enmasse_io_v1beta1 {
@@ -1946,6 +2154,10 @@ type Query {
 
   "Returns the command-line command, if executed, would create the given address."
   addressCommand(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): String!
+
+  "Returns the messaging endpoints for the given address space"
+  messagingEndpoints(first: Int, offset: Int, filter: String, orderBy: String): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
+
 }
 
 #
@@ -2566,6 +2778,44 @@ func (ec *executionContext) field_Query_messagingCertificateChain_args(ctx conte
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_messagingEndpoints_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *int
+	if tmp, ok := rawArgs["first"]; ok {
+		arg0, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["first"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["filter"]; ok {
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["orderBy"]; ok {
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["orderBy"] = arg3
 	return args, nil
 }
 
@@ -5861,6 +6111,507 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metrics(ctx cont
 	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _MessagingEndpointPort_enmasse_io_v1beta2_name(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointPort) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointPort_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointPort_enmasse_io_v1beta2_protocol(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointPort) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointPort_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MessagingEndpointPort_enmasse_io_v1beta2().Protocol(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(MessagingEndpointProtocol)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocol(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointPort_enmasse_io_v1beta2_port(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointPort) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointPort_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Port, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Total, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1_messagingEndpoints(ctx context.Context, field graphql.CollectedField, obj *MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MessagingEndpoints, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*v1beta21.MessagingEndpoint)
+	fc.Result = res
+	return ec.marshalNMessagingEndpoint_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointSpec_enmasse_io_v1beta2_protocols(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointSpec_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MessagingEndpointSpec_enmasse_io_v1beta2().Protocols(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]MessagingEndpointProtocol)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointProtocol2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocolᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_phase(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MessagingEndpointStatus_enmasse_io_v1beta2().Phase(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_type(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.MessagingEndpointStatus_enmasse_io_v1beta2().Type(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(MessagingEndpointType)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_message(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Message, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_host(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Host, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_ports(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ports, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta21.MessagingEndpointPort)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointPort_enmasse_io_v1beta22ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointPortᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2_internalPorts(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpointStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpointStatus_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InternalPorts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta21.MessagingEndpointPort)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointPort_enmasse_io_v1beta22ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointPortᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpoint_enmasse_io_v1beta2_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpoint) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpoint_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ObjectMeta, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(v1.ObjectMeta)
+	fc.Result = res
+	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpoint_enmasse_io_v1beta2_spec(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpoint) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpoint_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Spec, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(v1beta21.MessagingEndpointSpec)
+	fc.Result = res
+	return ec.marshalNMessagingEndpointSpec_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointSpec(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MessagingEndpoint_enmasse_io_v1beta2_status(ctx context.Context, field graphql.CollectedField, obj *v1beta21.MessagingEndpoint) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MessagingEndpoint_enmasse_io_v1beta2",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Status, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(v1beta21.MessagingEndpointStatus)
+	fc.Result = res
+	return ec.marshalOMessagingEndpointStatus_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointStatus(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7492,6 +8243,44 @@ func (ec *executionContext) _Query_addressCommand(ctx context.Context, field gra
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_messagingEndpoints(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Query",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_messagingEndpoints_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().MessagingEndpoints(rctx, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1)
+	fc.Result = res
+	return ec.marshalOMessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -10187,6 +10976,218 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1(ctx context.Cont
 	return out
 }
 
+var messagingEndpointPort_enmasse_io_v1beta2Implementors = []string{"MessagingEndpointPort_enmasse_io_v1beta2"}
+
+func (ec *executionContext) _MessagingEndpointPort_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta21.MessagingEndpointPort) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messagingEndpointPort_enmasse_io_v1beta2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessagingEndpointPort_enmasse_io_v1beta2")
+		case "name":
+			out.Values[i] = ec._MessagingEndpointPort_enmasse_io_v1beta2_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "protocol":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MessagingEndpointPort_enmasse_io_v1beta2_protocol(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "port":
+			out.Values[i] = ec._MessagingEndpointPort_enmasse_io_v1beta2_port(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1Implementors = []string{"MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1"}
+
+func (ec *executionContext) _MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1")
+		case "total":
+			out.Values[i] = ec._MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "messagingEndpoints":
+			out.Values[i] = ec._MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1_messagingEndpoints(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messagingEndpointSpec_enmasse_io_v1beta2Implementors = []string{"MessagingEndpointSpec_enmasse_io_v1beta2"}
+
+func (ec *executionContext) _MessagingEndpointSpec_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta21.MessagingEndpointSpec) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messagingEndpointSpec_enmasse_io_v1beta2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessagingEndpointSpec_enmasse_io_v1beta2")
+		case "protocols":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MessagingEndpointSpec_enmasse_io_v1beta2_protocols(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messagingEndpointStatus_enmasse_io_v1beta2Implementors = []string{"MessagingEndpointStatus_enmasse_io_v1beta2"}
+
+func (ec *executionContext) _MessagingEndpointStatus_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta21.MessagingEndpointStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messagingEndpointStatus_enmasse_io_v1beta2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessagingEndpointStatus_enmasse_io_v1beta2")
+		case "phase":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MessagingEndpointStatus_enmasse_io_v1beta2_phase(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "type":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._MessagingEndpointStatus_enmasse_io_v1beta2_type(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "message":
+			out.Values[i] = ec._MessagingEndpointStatus_enmasse_io_v1beta2_message(ctx, field, obj)
+		case "host":
+			out.Values[i] = ec._MessagingEndpointStatus_enmasse_io_v1beta2_host(ctx, field, obj)
+		case "ports":
+			out.Values[i] = ec._MessagingEndpointStatus_enmasse_io_v1beta2_ports(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "internalPorts":
+			out.Values[i] = ec._MessagingEndpointStatus_enmasse_io_v1beta2_internalPorts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var messagingEndpoint_enmasse_io_v1beta2Implementors = []string{"MessagingEndpoint_enmasse_io_v1beta2"}
+
+func (ec *executionContext) _MessagingEndpoint_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta21.MessagingEndpoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, messagingEndpoint_enmasse_io_v1beta2Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MessagingEndpoint_enmasse_io_v1beta2")
+		case "metadata":
+			out.Values[i] = ec._MessagingEndpoint_enmasse_io_v1beta2_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "spec":
+			out.Values[i] = ec._MessagingEndpoint_enmasse_io_v1beta2_spec(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "status":
+			out.Values[i] = ec._MessagingEndpoint_enmasse_io_v1beta2_status(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var metadata_consoleapi_enmasse_io_v1beta1Implementors = []string{"Metadata_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *MetadataConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
@@ -10738,6 +11739,17 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
+				return res
+			})
+		case "messagingEndpoints":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_messagingEndpoints(ctx, field)
 				return res
 			})
 		case "__type":
@@ -11909,6 +12921,177 @@ func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚖgithub
 	return ec._Link_consoleapi_enmasse_io_v1beta1(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMessagingEndpointPort_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointPort(ctx context.Context, sel ast.SelectionSet, v v1beta21.MessagingEndpointPort) graphql.Marshaler {
+	return ec._MessagingEndpointPort_enmasse_io_v1beta2(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMessagingEndpointPort_enmasse_io_v1beta22ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointPortᚄ(ctx context.Context, sel ast.SelectionSet, v []v1beta21.MessagingEndpointPort) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMessagingEndpointPort_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointPort(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalNMessagingEndpointProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocol(ctx context.Context, v interface{}) (MessagingEndpointProtocol, error) {
+	var res MessagingEndpointProtocol
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMessagingEndpointProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocol(ctx context.Context, sel ast.SelectionSet, v MessagingEndpointProtocol) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNMessagingEndpointProtocol2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocolᚄ(ctx context.Context, v interface{}) ([]MessagingEndpointProtocol, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]MessagingEndpointProtocol, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNMessagingEndpointProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocol(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNMessagingEndpointProtocol2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocolᚄ(ctx context.Context, sel ast.SelectionSet, v []MessagingEndpointProtocol) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMessagingEndpointProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointProtocol(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNMessagingEndpointSpec_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointSpec(ctx context.Context, sel ast.SelectionSet, v v1beta21.MessagingEndpointSpec) graphql.Marshaler {
+	return ec._MessagingEndpointSpec_enmasse_io_v1beta2(ctx, sel, &v)
+}
+
+func (ec *executionContext) unmarshalNMessagingEndpointType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointType(ctx context.Context, v interface{}) (MessagingEndpointType, error) {
+	var res MessagingEndpointType
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMessagingEndpointType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointType(ctx context.Context, sel ast.SelectionSet, v MessagingEndpointType) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNMessagingEndpoint_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpoint(ctx context.Context, sel ast.SelectionSet, v v1beta21.MessagingEndpoint) graphql.Marshaler {
+	return ec._MessagingEndpoint_enmasse_io_v1beta2(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNMessagingEndpoint_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointᚄ(ctx context.Context, sel ast.SelectionSet, v []*v1beta21.MessagingEndpoint) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMessagingEndpoint_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpoint(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNMessagingEndpoint_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpoint(ctx context.Context, sel ast.SelectionSet, v *v1beta21.MessagingEndpoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._MessagingEndpoint_enmasse_io_v1beta2(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNMetricType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMetricType(ctx context.Context, v interface{}) (MetricType, error) {
 	var res MetricType
 	return res, res.UnmarshalGQL(v)
@@ -12537,6 +13720,21 @@ func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.Sele
 		return graphql.Null
 	}
 	return ec.marshalOInt2int(ctx, sel, *v)
+}
+
+func (ec *executionContext) marshalOMessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
+	return ec._MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalOMessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOMessagingEndpointStatus_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta2ᚐMessagingEndpointStatus(ctx context.Context, sel ast.SelectionSet, v v1beta21.MessagingEndpointStatus) graphql.Marshaler {
+	return ec._MessagingEndpointStatus_enmasse_io_v1beta2(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx context.Context, sel ast.SelectionSet, v []*consolegraphql.Metric) graphql.Marshaler {
