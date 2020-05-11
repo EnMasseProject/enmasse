@@ -5,7 +5,12 @@
 
 import React, { useState } from "react";
 import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
-import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
+import {
+  useBreadcrumb,
+  useA11yRouteChange,
+  Loading,
+  useDocumentTitle
+} from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
@@ -25,6 +30,7 @@ import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 export default function AddressDetailPage() {
+  useDocumentTitle("Address Details");
   const { namespace, name, type, addressname } = useParams();
   const { dispatch } = useStoreContext();
 
