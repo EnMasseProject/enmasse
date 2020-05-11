@@ -148,7 +148,7 @@ public class AddressSpaceController {
         controllerChain.addController(new EndpointController(controllerClient, options.isExposeEndpointsByDefault(), isOpenShift));
         controllerChain.addController(new ExportsController(controllerClient));
         controllerChain.addController(authController);
-        controllerChain.addController(new MetricsReporterController(metrics, options.getVersion()));
+        controllerChain.addController(new MetricsReporterController(metrics, options.getVersion(), kubernetes));
 
         metricsServer = new HTTPServer(8080, metrics);
         metricsServer.start();

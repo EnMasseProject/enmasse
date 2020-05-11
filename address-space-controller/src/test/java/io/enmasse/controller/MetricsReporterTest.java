@@ -7,10 +7,12 @@ package io.enmasse.controller;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.Phase;
+import io.enmasse.controller.common.Kubernetes;
 import io.enmasse.metrics.api.Metric;
 import io.enmasse.metrics.api.MetricSnapshot;
 import io.enmasse.metrics.api.Metrics;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +24,9 @@ public class MetricsReporterTest {
     @Test
     public void testController() throws Exception {
         Metrics metrics = new Metrics();
+        Kubernetes kubernetes = mock(Kubernetes.class);
 
-        MetricsReporterController controller = new MetricsReporterController(metrics, "1.0");
+        MetricsReporterController controller = new MetricsReporterController(metrics, "1.0", kubernetes);
 
         controller.reconcileAll(Arrays.asList(
                 createAddressSpace("s1", true),
@@ -31,7 +34,7 @@ public class MetricsReporterTest {
                 createAddressSpace("s3", false)));
 
         List<Metric> metricList = metrics.getMetrics();
-        assertEquals(14, metricList.size());
+        assertEquals(15, metricList.size());
         MetricSnapshot numReady = createSnapshot("address_space_status_ready", metricList);
         assertNotNull(numReady);
         assertEquals(3, numReady.getValues().size());
