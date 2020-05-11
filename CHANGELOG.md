@@ -13,6 +13,7 @@
 
 ## 0.32.0
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
+* #4504: Bump gqlgen from v0.10.2 => v0.11.3
 
 ## 0.31.2
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
