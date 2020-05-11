@@ -10,42 +10,46 @@ import {
   DropdownToggleCheckbox
 } from "@patternfly/react-core";
 
-export interface IBulkSelectProps {
+export interface IDropdownWithBulkSelectProps {
+  dropdownId: string;
+  dropdownToggleId: string;
+  checkBoxId: string;
+  ariaLabel: string;
   isChecked: boolean;
   isOpen: boolean;
   handleOnToggle: (val: boolean) => void;
   items: React.ReactNode[];
-  selectedCount: number;
   handleOnSelect: () => void;
   handleOnChange: (val: boolean) => void;
 }
 
-export const BulkSelect: React.FunctionComponent<IBulkSelectProps> = ({
+export const DropdownWithBulkSelect: React.FunctionComponent<IDropdownWithBulkSelectProps> = ({
+  dropdownId,
+  ariaLabel,
+  dropdownToggleId,
+  checkBoxId,
   isChecked,
   isOpen,
   items,
-  selectedCount,
   handleOnChange,
   handleOnSelect,
   handleOnToggle
 }) => {
   return (
     <Dropdown
-      id="bulk-select-dropdown"
+      id={dropdownId}
       onSelect={handleOnSelect}
       toggle={
         <DropdownToggle
-          id="bulk-select-dropdown-toggle"
+          id={dropdownToggleId}
           splitButtonItems={[
             <DropdownToggleCheckbox
-              id="bulk-select-checkbox"
+              id={checkBoxId}
               key="bulk-select-checkbox"
-              aria-label="Select all items"
+              aria-label={ariaLabel}
               onChange={handleOnChange}
               isChecked={isChecked}
-            >
-              {selectedCount} selected
-            </DropdownToggleCheckbox>
+            />
           ]}
           onToggle={handleOnToggle}
         />

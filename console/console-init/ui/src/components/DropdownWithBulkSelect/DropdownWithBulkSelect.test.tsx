@@ -5,10 +5,13 @@
 
 import React from "react";
 import { render } from "@testing-library/react";
-import { BulkSelect, IBulkSelectProps } from "./BulkSelect";
+import {
+  DropdownWithBulkSelect,
+  IDropdownWithBulkSelectProps
+} from "./DropdownWithBulkSelect";
 import { DropdownItem } from "@patternfly/react-core";
 
-describe("<BulkDelete />", () => {
+describe("<DropdownWithBulkSelect />", () => {
   const items: React.ReactNode[] = [
     <DropdownItem key="item-1" onClick={jest.fn()}>
       Select none (0 items)
@@ -21,28 +24,23 @@ describe("<BulkDelete />", () => {
     </DropdownItem>
   ];
 
-  const props: IBulkSelectProps = {
+  const props: IDropdownWithBulkSelectProps = {
+    dropdownId: "bulk-select-dropdown",
+    dropdownToggleId: "bulk-select-dropdown",
+    checkBoxId: "bulk-select-checkbox",
+    ariaLabel: "Select multiple items",
     isChecked: false,
     isOpen: false,
     handleOnToggle: jest.fn(),
-    selectedCount: 20,
     items,
     handleOnChange: jest.fn(),
     handleOnSelect: jest.fn()
   };
 
-  it("should render a checkbox dropdown for multiple selection", () => {
-    const { getByText } = render(<BulkSelect {...props} />);
-
-    const checkBoxDisplay = getByText("20 selected");
-
-    expect(checkBoxDisplay).toBeInTheDocument();
-  });
-
   it("should render the dropdown items when opened", () => {
     props["isOpen"] = true;
 
-    const { getByText } = render(<BulkSelect {...props} />);
+    const { getByText } = render(<DropdownWithBulkSelect {...props} />);
 
     const dropDownItem0 = getByText("Select none (0 items)");
     const dropDownItem1 = getByText("Select page items");
