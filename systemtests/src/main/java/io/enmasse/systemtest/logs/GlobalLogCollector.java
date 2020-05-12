@@ -325,6 +325,8 @@ public class GlobalLogCollector {
                     Files.writeString(path.resolve(String.format("configmaps.%s.yaml", ns)), KubeCMDClient.getConfigmaps(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("secrets.%s.yaml", ns)), KubeCMDClient.getSecrets(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("deployments.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("statefulsets.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml", "-n", ns).getStdOut());
                 }
             }
 
@@ -345,10 +347,6 @@ public class GlobalLogCollector {
             }
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());
-
-            // Investigating sporadic upgrade issue.
-            Files.writeString(path.resolve("deployments.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml").getStdOut());
-            Files.writeString(path.resolve("statefulsets.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml").getStdOut());
 
             if (extraCollectors != null) {
                 for (var c : extraCollectors) {
