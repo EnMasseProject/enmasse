@@ -165,7 +165,7 @@ func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.
 		return nil, err
 	}
 
-	// Modfy only fields that are specific to this endpoint
+	// Modify only fields that are specific to this endpoint
 	config := certConfig{
 		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
 		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
@@ -198,7 +198,7 @@ func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, lo
 		return err
 	}
 
-	// Modfy only fields that are specific to this endpoint
+	// Modify only fields that are specific to this endpoint
 	config := certConfig{
 		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
 		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
@@ -230,7 +230,7 @@ func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Log
 		return err
 	}
 
-	// Modfy only fields that are specific to this endpoint
+	// Modify only fields that are specific to this endpoint
 	config := certConfig{
 		key: fmt.Sprintf("%s.%s.key", endpoint.Namespace, endpoint.Name),
 		crt: fmt.Sprintf("%s.%s.crt", endpoint.Namespace, endpoint.Name),
@@ -398,6 +398,8 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		secret.Data = make(map[string][]byte)
 		if config.key != "" {
 			secret.Data[config.key] = key
+		} else {
+			   remove(secret.Data[config.key])
 		}
 		if config.crt != "" {
 			secret.Data[config.crt] = cert
