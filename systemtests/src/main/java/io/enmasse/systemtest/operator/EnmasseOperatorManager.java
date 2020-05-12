@@ -305,7 +305,7 @@ public class EnmasseOperatorManager {
     public boolean isEnmasseBundleDeployed() {
         return kube.namespaceExists(kube.getInfraNamespace())
                 && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("enmasse-operator")).count() == 1
-                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("address-space-contoller")).count() == 1;
+                && kube.listPods(kube.getInfraNamespace()).stream().filter(pod -> pod.getMetadata().getName().contains("address-space-controller")).count() == 1;
     }
 
     public boolean isEnmasseOlmDeployed() {
