@@ -19,8 +19,54 @@ To connect to the messaging service from outside the {KubePlatform} cluster, TLS
 
 The messaging protocols supported depends on the type of address space used. For more information about address space types, see  link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[Address space].
 
-//TODO: Add information about retrieving the CA certificate and using
-//that in the client examples.
+[id='client-getcer-{context}']
+== Retrieving the Self Signed CA Certificate
+
+If you opted for the `selfsigned` certificate provider type in your addressspace endpoint configuration, the generated CA
+that signed the adddressspace server certificate is required to when connecting messaging client application. The
+certificate can be retrieved from the addressspace using the following procedure.
+
+WARNING: The use of selfsigned certificates is not recommended for use in production environments.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a messaging tenant:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u developer
+----
+endif::[]
+
+. Retrieve the CA certificate from the addressspace required
++
+This will give you a file containing the CA certificate, in PEM format.
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get addressspace _addressspace_ -n _namespace_ -o jsonpath='{.status.caCert}{"\n"}' | base64 --decode > ca.crt
+----
+
+. If a PKCS12 or JKS format trust store is required, one can be generated like this:
++
+For PKS:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+keytool -import -trustcacerts -alias root -file ca.crt -storetype pkcs12 -keystore ca.pkcs12 -storepass _password_ -noprompt
+----
+For JKS:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+keytool -import -trustcacerts -alias root -file ca.crt -storetype jks -keystore ca.jsk -storepass _password_ -noprompt
+----
+
+
+
+:context: {parent-context}
+
 
 //TODO: Add information about authentication.
 
