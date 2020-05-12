@@ -39,7 +39,7 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Retrieve the CA certificate from the addressspace required
+. Retrieve the CA certificate from the `AddressSpace'.
 +
 This will give you a file containing the CA certificate, in PEM format.
 +
