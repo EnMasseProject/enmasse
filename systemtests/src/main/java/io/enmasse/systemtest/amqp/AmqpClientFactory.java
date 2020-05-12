@@ -16,6 +16,10 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -106,8 +110,16 @@ public class AmqpClientFactory {
             clientOptions.setSniServerName(messagingEndpoint.getHost());
         }
         log.info("External endpoint: " + clientEndpoint + ", internal: " + messagingEndpoint);
+        probeEndpoint(messagingEndpoint);
 
         return createClient(terminusFactory, clientEndpoint, clientOptions, qos);
+    }
+
+    private void probeEndpoint(Endpoint messagingEndpoint) throws IOException {
+        try (Socket socket = new Socket()) {
+            socket.setSoTimeout(10_000);
+            socket.connect(new InetSocketAddress(messagingEndpoint.getHost(), messagingEndpoint.getPort()));
+        }
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {
