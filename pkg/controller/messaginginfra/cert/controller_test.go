@@ -138,10 +138,10 @@ func TestCertNew(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Check that we can get certificate info
-	info,err  := GetCertInfo(secret.Data["tls.crt"])
+	info, err := GetCertInfo(secret.Data["tls.crt"])
 	assert.Nil(t, err)
 	assert.NotNil(t, info)
-	assert.Equal(t, info.NotBefore.Add(24 * time.Hour), info.NotAfter)
+	assert.Equal(t, info.NotBefore.Add(25*time.Hour), info.NotAfter)
 
 	// Ensure running it again does not change anything
 	key := secret.Data["tls.key"]
