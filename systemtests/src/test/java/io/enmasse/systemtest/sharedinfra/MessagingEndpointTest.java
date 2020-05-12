@@ -25,6 +25,7 @@ import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.Kubernetes;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
@@ -205,7 +206,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     }
 
     @Test
-    @OpenShift
+    @OpenShift(version = OpenShiftVersion.OCP4)
     public void testOpenShiftCert() throws Exception {
         MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
