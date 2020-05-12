@@ -48,7 +48,7 @@ This will give you a file containing the CA certificate, in PEM format.
 {cmdcli} get addressspace _addressspace_ -n _namespace_ -o jsonpath='{.status.caCert}{"\n"}' | base64 --decode > ca.crt
 ----
 
-. If a PKCS12 or JKS format trust store is required, one can be generated like this:
+. If a PKCS12 or JKS format trust store is required, use the following commands to generate one:
 +
 For PKS:
 +
