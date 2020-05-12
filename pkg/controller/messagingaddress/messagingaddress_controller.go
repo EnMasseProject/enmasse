@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"time"
 
+	amqp "github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/state"
@@ -271,7 +272,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			scheduled.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) {
+			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
@@ -292,7 +293,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, state.NotSyncedError) {
+			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) || errors.Is(err, state.NoEndpointsError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 		} else {

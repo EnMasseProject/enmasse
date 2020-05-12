@@ -113,7 +113,14 @@ func TestCertNew(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "cert1"},
 	}
 
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	config := certConfig{
+		key:        "tls.key",
+		crt:        "tls.crt",
+		ca:         "ca.crt",
+		keystore:   "keystore.p12",
+		truststore: "truststore.p12",
+	}
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
 	assert.Contains(t, secret.Data, "tls.key")
@@ -130,12 +137,18 @@ func TestCertNew(t *testing.T) {
 	_, err = pkcs12.DecodeTrustStore(secret.Data["truststore.p12"], "enmasse")
 	assert.Nil(t, err)
 
+	// Check that we can get certificate info
+	info, err := GetCertInfo(secret.Data["tls.crt"])
+	assert.Nil(t, err)
+	assert.NotNil(t, info)
+	assert.Equal(t, info.NotBefore.Add(25*time.Hour), info.NotAfter)
+
 	// Ensure running it again does not change anything
 	key := secret.Data["tls.key"]
 	crt := secret.Data["tls.crt"]
 	p12 := secret.Data["keystore.p12"]
 
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 	assert.Contains(t, secret.Data, "tls.key")
 	assert.Contains(t, secret.Data, "tls.crt")
@@ -161,7 +174,14 @@ func TestCertRenewed(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "cert1"},
 	}
 
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	config := certConfig{
+		key:        "tls.key",
+		crt:        "tls.crt",
+		ca:         "ca.crt",
+		keystore:   "keystore.p12",
+		truststore: "truststore.p12",
+	}
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
 	// Add passing of time to ensure cert is valid
@@ -183,7 +203,7 @@ func TestCertRenewed(t *testing.T) {
 	clock.now = clock.now.Add(12 * time.Hour)
 
 	// Certificate should be renewed
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
 	// Add passing of time to ensure cert is valid
@@ -216,7 +236,14 @@ func TestCertCaRenewed(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Namespace: "test", Name: "cert1"},
 	}
 
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	config := certConfig{
+		key:        "tls.key",
+		crt:        "tls.crt",
+		ca:         "ca.crt",
+		keystore:   "keystore.p12",
+		truststore: "truststore.p12",
+	}
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 	assert.Nil(t, err)
 
 	clock.now = clock.now.Add(24 * time.Hour)
@@ -235,7 +262,7 @@ func TestCertCaRenewed(t *testing.T) {
 	assertCert(t, clock, caSecret.Data["tls.crt"], secret.Data["tls.crt"], "a.example.com", true)
 
 	// Renew our cert
-	err = cc.applyCertSecret(secret, caSecret, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
+	_, err = cc.applyCertSecret(secret, caSecret, config, logrtesting.TestLogger{}, "a", "a.example.com", "b.example.com")
 
 	// Add passing of time to ensure cert is valid
 	clock.now = clock.now.Add(1 * time.Hour)

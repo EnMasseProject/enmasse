@@ -54,8 +54,9 @@ type MessagingTenantCondition struct {
 type MessagingTenantConditionType string
 
 const (
-	MessagingTenantBound MessagingTenantConditionType = "Bound"
-	MessagingTenantReady MessagingTenantConditionType = "Ready"
+	MessagingTenantBound     MessagingTenantConditionType = "Bound"
+	MessagingTenantCaCreated MessagingTenantConditionType = "CaCreated"
+	MessagingTenantReady     MessagingTenantConditionType = "Ready"
 )
 
 type MessagingTenantPhase string

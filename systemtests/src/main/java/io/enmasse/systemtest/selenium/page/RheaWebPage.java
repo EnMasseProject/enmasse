@@ -31,10 +31,20 @@ public class RheaWebPage implements IWebPage {
     }
 
     public void sendReceiveMessages(String server, String address, int count, UserCredentials credentials, AddressSpaceType addressSpaceType) throws Exception {
+        sendReceiveMessages(server, address, count, credentials, addressSpaceType, true);
+    }
+
+    public void sendReceiveMessages(String server, String address, int count, UserCredentials credentials, AddressSpaceType addressSpaceType, boolean ssl) throws Exception {
         openRheaWebPage();
         String wsProtocol = (addressSpaceType == AddressSpaceType.STANDARD) ? "binary" : "amqp";
-        String command = String.format("connect_to_enmasse(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\", ['%s'])",
-                server, address, count, credentials.getUsername(), credentials.getPassword(), wsProtocol);
+        String command;
+        if (ssl) {
+            command = String.format("connect_to_enmasse_tls(\"wss://%s\", \"%s\", \"%s\", \"%s\", \"%s\", ['%s'])",
+                    server, address, count, credentials.getUsername(), credentials.getPassword(), wsProtocol);
+        } else {
+            command = String.format("connect_to_enmasse(\"ws://%s\", \"%s\", \"%s\", \"%s\", \"%s\", ['%s'])",
+                    server, address, count, credentials.getUsername(), credentials.getPassword(), wsProtocol);
+        }
         selenium.executeJavaScript(command);
     }
 

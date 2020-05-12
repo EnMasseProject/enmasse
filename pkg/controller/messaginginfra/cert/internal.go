@@ -31,7 +31,7 @@ func getCertExpiryDate(certBytes []byte) (time.Time, error) {
 	return cert.NotAfter, nil
 }
 
-func generateCa(caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []byte, error) {
+func generateCa(now time.Time, caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []byte, error) {
 	var err error
 	var caPrivateKey *rsa.PrivateKey
 	if caKey == nil {
@@ -65,7 +65,7 @@ func generateCa(caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []by
 			StreetAddress: []string{""},
 			PostalCode:    []string{""},
 		},
-		NotBefore:             time.Now(),
+		NotBefore:             now,
 		NotAfter:              expiryDate,
 		IsCA:                  true,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
@@ -89,7 +89,7 @@ func generateCa(caKey []byte, caCert []byte, expiryDate time.Time) ([]byte, []by
 	return encodedPemKey, encodedPemCert, nil
 }
 
-func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, commonName string, dnsNames []string) ([]byte, []byte, []byte, []byte, error) {
+func generateCert(now time.Time, keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []byte, expiryDate time.Time, commonName string, dnsNames []string) ([]byte, []byte, []byte, []byte, error) {
 	caKey, err := parsePemKey(caKeyPem)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -133,7 +133,7 @@ func generateCert(keyPem []byte, certPem []byte, caKeyPem []byte, caCertPem []by
 			CommonName:    commonName,
 			PostalCode:    []string{""},
 		},
-		NotBefore:             time.Now(),
+		NotBefore:             now,
 		NotAfter:              expiryDate,
 		DNSNames:              dnsNames,
 		IsCA:                  false,

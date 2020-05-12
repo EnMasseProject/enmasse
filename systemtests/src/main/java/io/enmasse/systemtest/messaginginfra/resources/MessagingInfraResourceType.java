@@ -59,10 +59,7 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
     @Override
     public void delete(MessagingInfra resource) throws InterruptedException {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired() && operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).get() != null) {
-            Thread.sleep(1_000);
-        }
+        waitDeleted(operation, resource);
     }
 
     @Override
@@ -71,8 +68,8 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
         TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
         while (!budget.timeoutExpired()) {
             found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            assertNotNull(found);
-            if (found.getStatus() != null &&
+            if (found != null &&
+                    found.getStatus() != null &&
                     "Active".equals(found.getStatus().getPhase())) {
                 break;
             }

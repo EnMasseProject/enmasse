@@ -13,6 +13,10 @@ spec:
     description: The current phase.
     name: Phase
     type: string
+  - JSONPath: .status.type
+    description: The endpoint type.
+    name: Type
+    type: string
   - JSONPath: .status.host
     description: The hostname.
     name: Host
@@ -25,6 +29,11 @@ spec:
   - JSONPath: .spec.protocols
     description: Supported protocols.
     name: Protocols
+    priority: 1
+    type: string
+  - JSONPath: .status.tls.certificateInfo.notAfter
+    description: Certificate expiry.
+    name: CertficateExpiry
     priority: 1
     type: string
   - JSONPath: .metadata.creationTimestamp
@@ -62,6 +71,11 @@ spec:
           type: object
         spec:
           properties:
+            annotations:
+              additionalProperties:
+                type: string
+              description: Annotations to apply to the endpoint objects.
+              type: object
             cluster:
               description: A cluster endpoint creates an endpoint available through
                 a ClusterIP service.
@@ -90,16 +104,82 @@ spec:
             route:
               description: A cluster endpoint creates an endpoint available through
                 an OpenShift route.
+              properties:
+                tlsTermination:
+                  description: 'TLSTerminationType dictates where the secure communication
+                    will stop TODO: Reconsider this type in v2'
+                  type: string
               type: object
             tls:
               description: Tls configuration for this endpoint.
               properties:
+                ciphers:
+                  description: Which TLS ciphers that should be enabled for this endpoint.
+                  type: string
+                external:
+                  description: Uses certificates from a provided secret.
+                  properties:
+                    certificate:
+                      description: The certificate value.
+                      properties:
+                        value:
+                          description: Raw input value
+                          type: string
+                        valueFromSecret:
+                          description: Source for the value stored in a secret
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                    key:
+                      description: The private key of the certificate.
+                      properties:
+                        value:
+                          description: Raw input value
+                          type: string
+                        valueFromSecret:
+                          description: Source for the value stored in a secret
+                          properties:
+                            key:
+                              description: The key of the secret to select from.  Must
+                                be a valid secret key.
+                              type: string
+                            name:
+                              description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                TODO: Add other useful fields. apiVersion, kind, uid?'
+                              type: string
+                            optional:
+                              description: Specify whether the Secret or its key must
+                                be defined
+                              type: boolean
+                          required:
+                          - key
+                          type: object
+                      type: object
+                  required:
+                  - certificate
+                  - key
+                  type: object
                 openshift:
                   description: Creates cluster-internal certificates on OpenShift.
                   type: object
-                secret:
-                  description: Uses certificates from a provided secret.
-                  type: object
+                protocols:
+                  description: Which TLS protocols that should be enabled for this
+                    endpoint.
+                  type: string
                 selfsigned:
                   description: Create self-signed certificates.
                   type: object
@@ -110,6 +190,7 @@ spec:
         status:
           properties:
             conditions:
+              description: Conditions and their status for the endpoint.
               items:
                 properties:
                   lastTransitionTime:
@@ -129,6 +210,7 @@ spec:
                 type: object
               type: array
             host:
+              description: The hostname used to connect to this endpoint.
               type: string
             internalPorts:
               items:
@@ -142,10 +224,13 @@ spec:
                 type: object
               type: array
             message:
+              description: Status messages for the endpoint.
               type: string
             phase:
+              description: The current phase of the endpoint.
               type: string
             ports:
+              description: The ports that can be used for this endpoint.
               items:
                 properties:
                   name:
@@ -156,6 +241,26 @@ spec:
                     type: string
                 type: object
               type: array
+            tls:
+              description: TLS status for this endpoint.
+              properties:
+                caCertificate:
+                  description: CA certificate if provided by certificate type.
+                  type: string
+                certificateValidity:
+                  description: Certificate info.
+                  properties:
+                    notAfter:
+                      format: date-time
+                      type: string
+                    notBefore:
+                      format: date-time
+                      type: string
+                  type: object
+              type: object
+            type:
+              description: The endpoint type.
+              type: string
           type: object
       type: object
   version: v1beta2

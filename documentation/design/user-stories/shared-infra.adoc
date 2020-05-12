@@ -182,8 +182,11 @@ spec:
     openshift: {}
     # External allows providing certificate externally. CN/SANs are validated against host
     external:
-      cert: # Reuse structure from address space connector spec
+      certificate: # Reuse structure from address space connector spec
       key: # Reuse structure from address space connector spec
+
+  # Optional: Allow configuring annotations specific to ingress controller implementations
+  annotations: {}
 
   # Optional: restricts the identity providers available at this endpoint.
   identityProviderSelector:
@@ -200,20 +203,15 @@ spec:
   nodePort: {}
 
   # LoadBalancer type creates an external load balancer for this endpoint.
-  loadBalancer:
-    # Allow setting annotations on the service object that are specific to LoadBalancer implementations.
-    annotations:
-      aws-specific-annotation: value
+  loadBalancer: {}
 
   # Ingress type creates an Ingress resource
-  ingress:
-    # Optional: Allow configuring annotations specific to ingress controller implementations
-    annotations: {}
+  ingress: {}
 
   # Route type maps to OpenShift Route resource
   route:
-    # Allows controlling the TLS termination of this route. Only supported for AMQP-WSS protocol.
-    tlsTermination: passthrough | reencrypt
+    # Allows controlling the TLS termination of this route. Reencrypt and edge is only supported for AMQP-WSS protocol.
+    tlsTermination: passthrough | reencrypt | edge
 
 status:
   phase: Pending | Configuring | Active | Failed | Terminating
@@ -229,12 +227,10 @@ status:
     port: 5672
     protocol: AMQP
   tls:
-    startDate: <CERT START DATE>
-    expiryDate: <CERT EXPIRY DATE>
-    openshift:
-      ca.pem: <PEM VALUE>
-    selfsigned:
-      ca.pem: <PEM VALUE>
+    certificateValidity:
+     notBefore: <CERT START DATE>
+     notAfter: <CERT EXPIRY DATE>
+    caCertificate: <PEM VALUE>
   identityProviders:
   - name:  myldap
     namespace: infrastuff
