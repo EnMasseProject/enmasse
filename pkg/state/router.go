@@ -625,7 +625,7 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 		case float64:
 			converted[k] = int(v.(float64))
 		default:
-			log.Printf("Key %s has value type %T", k, vt)
+			//			log.Printf("Key %s has value type %T", k, vt)
 			converted[k] = v
 		}
 	}
