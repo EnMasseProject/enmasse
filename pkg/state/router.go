@@ -620,7 +620,7 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 	converted := make(map[string]interface{}, len(data))
 
 	for k, v := range data {
-		switch vt := v.(type) {
+		switch v.(type) {
 		// Conversion is needed as router does not accept float, nor does it use it in any entities so conversion should be safe.
 		case float64:
 			converted[k] = int(v.(float64))
