@@ -65,8 +65,8 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
         TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
         while (!budget.timeoutExpired()) {
             found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            assertNotNull(found);
-            if (found.getStatus() != null &&
+            if (found != null &&
+                    found.getStatus() != null &&
                     "Active".equals(found.getStatus().getPhase())) {
                 break;
             }
