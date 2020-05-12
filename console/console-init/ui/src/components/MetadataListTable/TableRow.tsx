@@ -14,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import classNames from "classnames";
 import { StyleSheet } from "@patternfly/react-styles";
+import { uniqueId } from "utils";
 
 const styles = StyleSheet.create({
   data_list_cell: {
@@ -49,19 +50,20 @@ export enum DataType {
 }
 
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
-  const [expanded, setExpanded] = useState<string[]>([]);
+  const [expandedList, setExpandedList] = useState<string[]>([]);
 
   const toggle = (event: any) => {
-    const expandedId = event.target.id;
-    const index = expanded && expanded.indexOf(expandedId);
-    const newExpanded =
+    const expandedRowId = event.target.id;
+    const index =
+      expandedList && expandedRowId && expandedList.indexOf(expandedRowId);
+    const newExpandedList =
       index >= 0
         ? [
-            ...expanded.slice(0, index),
-            ...expanded.slice(index + 1, expanded.length)
+            ...expandedList.slice(0, index),
+            ...expandedList.slice(index + 1, expandedList.length)
           ]
-        : [...expanded, expandedId];
-    setExpanded(newExpanded);
+        : [...expandedList, expandedRowId];
+    setExpandedList(newExpandedList);
   };
 
   const shouldDisplayDataListToggle = (
@@ -77,7 +79,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
     return false;
   };
 
-  const { key, type, value } = rowData || {};
+  const { key, type, value, typeLabel } = rowData || {};
 
   const cssClassKey = classNames({
     [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
@@ -94,25 +96,29 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
   return (
     <>
       <DataListItem
+        id={"data-list-item-" + key}
         aria-labelledby={key + " data list item"}
-        isExpanded={shouldDisplayDataListToggle(type) && expanded.includes(key)}
+        isExpanded={
+          shouldDisplayDataListToggle(type) && expandedList.includes(key)
+        }
       >
         <DataListItemRow>
           {shouldDisplayDataListToggle(type) && (
             <DataListToggle
               onClick={toggle}
-              isExpanded={expanded.includes(key)}
+              isExpanded={expandedList.includes(key)}
               id={key}
               aria-controls={key + " data list toggle"}
             />
           )}
           <DataListItemCells
+            id={key}
             dataListCells={[
               <DataListCell key="key-content">
                 <div className={cssClassKey}>{key}</div>
               </DataListCell>,
               <DataListCell key="type-content">
-                <div className={cssClassType}>{type}</div>
+                <div className={cssClassType}>{typeLabel}</div>
               </DataListCell>,
               <DataListCell key="value-content">
                 <div className={cssClassValue}>
@@ -129,9 +135,9 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
             <DataListContent
               aria-label={key + " data list content"}
               id={key}
-              isHidden={!expanded.includes(key)}
+              isHidden={!expandedList.includes(key)}
               noPadding
-              key={key}
+              key={"data-list-content-" + uniqueId()}
             >
               <TableRow rowData={data} />
             </DataListContent>
