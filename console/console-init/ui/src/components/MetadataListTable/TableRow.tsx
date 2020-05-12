@@ -17,9 +17,6 @@ import { StyleSheet } from "@patternfly/react-styles";
 import { uniqueId } from "utils";
 
 const styles = StyleSheet.create({
-  data_list_cell: {
-    marginRight: 0
-  },
   key_cell_toogle: {
     marginLeft: -25
   },
