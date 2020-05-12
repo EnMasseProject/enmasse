@@ -11,26 +11,28 @@ import {
   CardBody,
   CardHeader,
   Title,
-  Button
+  Button,
+  Text,
+  TextVariants
 } from "@patternfly/react-core";
 
-interface DeviceInfo {
+interface IDeviceInfo {
   id: string;
   name: string;
 }
 
-export interface DeviceInfoGatewaysProps {
-  deviceList?: DeviceInfo[];
+export interface IDeviceInfoGatewaysProps {
+  deviceList?: IDeviceInfo[];
 }
 
-export const DeviceInfoGateways: React.FC<DeviceInfoGatewaysProps> = ({
+export const DeviceInfoGateways: React.FC<IDeviceInfoGatewaysProps> = ({
   deviceList
 }) => {
   const DeviceNotFound = () => (
-    <div>
+    <Text component={TextVariants.p}>
       There is no gateways for this device. This device is connected to the
       cloud directly.
-    </div>
+    </Text>
   );
 
   return (
@@ -43,7 +45,7 @@ export const DeviceInfoGateways: React.FC<DeviceInfoGatewaysProps> = ({
       <CardBody>
         <Grid>
           {deviceList &&
-            deviceList.map((device: DeviceInfo) => {
+            deviceList.map((device: IDeviceInfo) => {
               const { name, id } = device;
               return (
                 <GridItem span={2} key={id}>
