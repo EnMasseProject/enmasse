@@ -40,7 +40,7 @@ type MessagingEndpointSpec struct {
 	Tls *MessagingEndpointSpecTls `json:"tls,omitempty"`
 
 	// Annotations to apply to the endpoint objects.
-	Annotations map[string]string `json:"annotations,omitempty" protobuf:"bytes,12,rep,name=annotations"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
 	// Protocols that should be supported by this endpoint.
 	Protocols []MessagingEndpointProtocol `json:"protocols"`
@@ -95,7 +95,7 @@ type InputValue struct {
 	Value string `json:"value,omitempty"`
 
 	// Source for the value stored in a secret
-	ValueFromSecret *corev1.SecretKeySelector `json:"valueFromSecret,omitempty" protobuf:"bytes,4,opt,name=valueFromsecret"`
+	ValueFromSecret *corev1.SecretKeySelector `json:"valueFromSecret,omitempty"
 }
 
 type MessagingEndpointProtocol string
@@ -114,7 +114,7 @@ type MessagingEndpointSpecIngress struct {
 }
 
 type MessagingEndpointSpecRoute struct {
-	TlsTermination *routev1.TLSTerminationType `json:"tlsTermination,omitempty" protobuf:"bytes,1,opt,name=tlsTermination,casttype=TLSTerminationType"`
+	TlsTermination *routev1.TLSTerminationType `json:"tlsTermination,omitempty"
 }
 
 type MessagingEndpointSpecNodePort struct {
