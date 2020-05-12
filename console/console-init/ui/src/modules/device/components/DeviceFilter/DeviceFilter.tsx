@@ -25,7 +25,7 @@ import {
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithToggle } from "components";
-import { ISelectOption, compareJsonObject } from "utils";
+import { ISelectOption, compareJsonObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
@@ -37,15 +37,14 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" },
-  margin_Left_20: { marginLeft: 20 }
+  dropdown_toggle_align: { flex: "1" }
 });
 
-const setInitialFilter = () => {
+const getInitialFilter = () => {
   let filter: IDeviceFilter = {
     deviceId: "",
-    deviceType: "",
-    status: "",
+    deviceType: "allTypes",
+    status: "allStatus",
     filterCriteria: [],
     addedDate: {
       startDate: "",
@@ -96,11 +95,12 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     // setFilterrere
   }
 ) => {
-  const [filter, setFilter] = useState<IDeviceFilter>(setInitialFilter());
+  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
-    setInitialFilter()
+    getInitialFilter()
   ]);
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
+  const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
   const typeOptions: ISelectOption[] = [
     {
       key: "direct",
@@ -111,6 +111,11 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       key: "gateway",
       value: "gateway",
       label: "Using gateways"
+    },
+    {
+      key: "allTypes",
+      value: "allTypes",
+      label: "All types"
     }
   ];
   const statusOptions: ISelectOption[] = [
@@ -123,21 +128,25 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       key: "disabled",
       value: "disabled",
       label: "Disabled"
+    },
+    {
+      key: "allStatus",
+      value: "allStatus",
+      label: "All status"
     }
   ];
   const onClearFilter = () => {
-    setFilter(setInitialFilter());
+    setFilter(getInitialFilter());
     setIsKebabOpen(false);
   };
   const onRedoFilter = () => {
     // redoFilter();
     const length = lastAppliedFilter.length;
-    const data = JSON.parse(
-      JSON.stringify({ ...lastAppliedFilter[length - 2] })
-    );
+    const data = createDeepCopy({ ...lastAppliedFilter[length - 2] });
     setFilter(data);
     const dataList = [...lastAppliedFilter];
     dataList.splice(length - 2, 1);
+    setIsRedoEnabled(false);
     setLastAppliedFilter(dataList);
     setIsKebabOpen(false);
   };
@@ -164,21 +173,22 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   };
 
   const onRunFilter = () => {
-    const dataList = JSON.parse(JSON.stringify(lastAppliedFilter));
-    const dataObj = JSON.parse(JSON.stringify(filter));
+    const dataList = createDeepCopy(lastAppliedFilter);
+    const dataObj = createDeepCopy(filter);
     dataList.push(dataObj);
+    setIsRedoEnabled(true);
     setLastAppliedFilter(dataList);
   };
 
   const isEnabledRunFilter = () => {
-    return compareJsonObject(Object.assign({}, filter), setInitialFilter());
+    return compareJsonObject(Object.assign({}, filter), getInitialFilter());
   };
 
   const kebabDropdownItems = [
     <DropdownItem
       key="redo-last-filter"
       id="redo-last-filter"
-      isDisabled={lastAppliedFilter.length <= 1}
+      isDisabled={!isRedoEnabled}
       onClick={onRedoFilter}
     >
       Redo last filter
@@ -187,6 +197,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
       key="clear-all-filter"
       id="clear-all-filter"
       component="button"
+      isDisabled={isEnabledRunFilter()}
       onClick={onClearFilter}
     >
       Clear all
@@ -198,7 +209,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     <Split>
       <SplitItem>
         <Button
-          className={css(styles.margin_Left_20)}
           id="device-filter-btn-run-filter"
           variant={ButtonVariant.secondary}
           onClick={onRunFilter}
