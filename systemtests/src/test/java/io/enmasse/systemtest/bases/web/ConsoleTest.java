@@ -776,10 +776,10 @@ public abstract class ConsoleTest extends TestBase {
 
         TestUtils.waitUntilCondition(() -> consolePage.getAddressItems().size() == addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
 
-        consolePage.addFilter(FilterType.STATUS, "Failed");
+        consolePage.addFilter(FilterType.STATUS, "Pending");
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(badAddresses.size(), items.size(),
-                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Failed"));
+                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Pending"));
 
         consolePage.addFilter(FilterType.STATUS, "Active");
         items = consolePage.getAddressItems();
