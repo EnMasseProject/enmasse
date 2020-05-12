@@ -361,18 +361,32 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 
 		if config.key != "" {
 			secret.Data[config.key] = key
+		} else {
+			delete(secret.Data, config.key)
 		}
+
 		if config.crt != "" {
 			secret.Data[config.crt] = cert
+		} else {
+			delete(secret.Data, config.crt)
 		}
+
 		if config.ca != "" {
 			secret.Data[config.ca] = caSecret.Data["tls.crt"]
+		} else {
+			delete(secret.Data, config.ca)
 		}
+
 		if config.keystore != "" {
 			secret.Data[config.keystore] = keystore
+		} else {
+			delete(secret.Data, config.keystore)
 		}
+
 		if config.truststore != "" {
 			secret.Data[config.truststore] = truststore
+		} else {
+			delete(secret.Data, config.truststore)
 		}
 
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
@@ -398,23 +412,37 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 			return nil, err
 		}
 		secret.Data = make(map[string][]byte)
+
 		if config.key != "" {
 			secret.Data[config.key] = key
 		} else {
 			delete(secret.Data, config.key)
 		}
+
 		if config.crt != "" {
 			secret.Data[config.crt] = cert
+		} else {
+			delete(secret.Data, config.crt)
 		}
+
 		if config.ca != "" {
 			secret.Data[config.ca] = caSecret.Data["tls.crt"]
+		} else {
+			delete(secret.Data, config.ca)
 		}
+
 		if config.keystore != "" {
 			secret.Data[config.keystore] = keystore
+		} else {
+			delete(secret.Data, config.keystore)
 		}
+
 		if config.truststore != "" {
 			secret.Data[config.truststore] = truststore
+		} else {
+			delete(secret.Data, config.truststore)
 		}
+
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
 
 		certInfo = &CertInfo{
