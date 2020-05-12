@@ -241,7 +241,7 @@ func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Log
 	delete(secret.Data, config.key)
 	delete(secret.Data, config.crt)
 
-	if !reflect.DeepEqual(originalKey, secret.Data[config.key]) || !reflect.DeepEqual(originalCrt, secret.Data[config.crt]) {
+	if len(originalKey) > 0 || len(originalCrt) > 0 {
 		err = c.client.Update(ctx, secret)
 		return err
 	}
@@ -294,7 +294,7 @@ func GetCertInfo(pemCert []byte) (*CertInfo, error) {
 
 	return &CertInfo{
 		NotBefore: cert.NotBefore,
-		NotAfter: cert.NotAfter,
+		NotAfter:  cert.NotAfter,
 	}, nil
 }
 
