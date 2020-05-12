@@ -325,6 +325,8 @@ public class GlobalLogCollector {
                     Files.writeString(path.resolve(String.format("configmaps.%s.yaml", ns)), KubeCMDClient.getConfigmaps(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("secrets.%s.yaml", ns)), KubeCMDClient.getSecrets(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("deployments.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("statefulsets.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml", "-n", ns).getStdOut());
                 }
             }
 

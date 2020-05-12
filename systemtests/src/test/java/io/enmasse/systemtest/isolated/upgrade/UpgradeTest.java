@@ -19,6 +19,7 @@ import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
@@ -51,7 +52,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -170,7 +173,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             }
             if (olmType == OLMInstallationType.DEFAULT && (version.equals("0.31.0") || version.equals("1.4.0"))) {
                 //versions with known fsgroup issue
-                log.warn("Skipping OLM test for version {}, because know issue without fix");
+                log.warn("Skipping OLM test for version {}, because of known issue without fix", version);
                 return;
             }
             installEnmasseOLM(Paths.get(templates), version);
@@ -183,6 +186,20 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         if (authServiceName != null) {
             ensurePersistentAuthService(authServiceName);
         }
+
+        kubernetes.listDeployments(Collections.emptyMap()).stream().filter(d -> "api-server".equals(d.getMetadata().getName())).findFirst().ifPresent(d -> {
+            // Workaround - on earlier versions of EnMasse we occasionally see the first apiserver calls that involve keycloak fail.
+            // Give the pre-upgrade system chance to stabilize.
+            TestUtils.waitUntilConditionOrFail(() -> {
+                try {
+                    kubernetes.getUserClient().inAnyNamespace().list();
+                    return true;
+                } catch (Exception e) {
+                    log.error("Failed to list users whilst awaiting apiserver/keycloak stability", e);
+                    return false;
+                }
+            }, Duration.ofMinutes(2), Duration.ofSeconds(10), () -> "apiserver/keycloak failed to become stable");
+        });
 
         createAddressSpaceCMD(infraNamespace, "brokered", "brokered", "brokered-single-broker", authServiceName, getApiVersion(version));
         Thread.sleep(30_000);
@@ -272,7 +289,8 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         log.info("Creating addressspace {} in namespace {}", name, namespace);
         Path scriptPath = Paths.get(System.getProperty("user.dir"), "scripts", "create_address_space.sh");
         List<String> cmd = Arrays.asList("/bin/bash", "-c", scriptPath.toString() + " " + namespace + " " + name + " " + type + " " + plan + " " + authService + " " + apiVersion);
-        assertTrue(Exec.execute(cmd, 10_000, true).getRetCode(), "AddressSpace not created");
+        ExecutionResultData execute = Exec.execute(cmd, 10_000, true);
+        assertTrue(execute.getRetCode(), String.format("AddressSpace not created, stdout :%s stderr: %s", execute.getStdOut(), execute.getStdErr()));
     }
 
     private void createUserCMD(String namespace, String userName, String password, String addressSpace, String apiVersion) {
