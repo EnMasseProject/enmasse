@@ -28,7 +28,7 @@ const (
 	maxOrder                     = 2
 )
 
-func NewRouterState(host string, port int32) *RouterState {
+func NewRouterState(host Host, port int32) *RouterState {
 	state := &RouterState{
 		host:        host,
 		port:        port,
@@ -40,7 +40,7 @@ func NewRouterState(host string, port int32) *RouterState {
 			RouterAutoLinkEntity:   make(map[string]RouterEntity, 0),
 			RouterSslProfileEntity: make(map[string]RouterEntity, 0),
 		},
-		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host, port),
+		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host.Ip, port),
 			routerCommandAddress,
 			routerCommandResponseAddress,
 			amqp.ConnConnectTimeout(10*time.Second),
@@ -63,7 +63,6 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 	for _, t := range entityTypes {
 		list, err := r.readEntities(t)
 		if err != nil {
-			log.Printf("[Router %s] Error during initialization: %+v", r.host, err)
 			return err
 		}
 		r.entities[t] = list
@@ -397,7 +396,7 @@ func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) 
 			log.Printf("[Router %s] Deleting entity %s %s", r.host, n.Type(), n.GetName())
 			err := r.deleteEntity(n.Type(), n.GetName())
 			if err != nil {
-				// TODO: Workaround for ENTMQIC-XXX as HTTP listeners can't be deleted. We will ignore the error and
+				// TODO: Workaround for https://issues.apache.org/jira/browse/DISPATCH-1646, as HTTP listeners can't be deleted. We will ignore the error and
 				// keep the entity in the local state.
 				if strings.Contains(err.Error(), "HTTP listeners cannot be deleted") {
 					return nil

@@ -7,6 +7,7 @@ package router
 
 import (
 	"encoding/json"
+
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
@@ -43,6 +44,7 @@ func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
 				// Listener for inter-router traffic. Should not be used by other services.
 				"listener",
 				map[string]interface{}{
+					"name":             "interrouter",
 					"host":             "0.0.0.0",
 					"port":             55672,
 					"requireSsl":       true,
@@ -56,6 +58,7 @@ func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
 				// Listener for internal management commands.
 				"listener",
 				map[string]interface{}{
+					"name":             "operator-management",
 					"host":             "0.0.0.0",
 					"port":             55671,
 					"requireSsl":       true,
@@ -68,6 +71,7 @@ func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
 				// Localhost listener for admin access
 				"listener",
 				map[string]interface{}{
+					"name":             "local-management",
 					"host":             "0.0.0.0",
 					"port":             7777,
 					"authenticatePeer": false,
@@ -77,6 +81,7 @@ func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
 				// Localhost listener for liveness probe and metrics
 				"listener",
 				map[string]interface{}{
+					"name":             "liveness",
 					"host":             "127.0.0.1",
 					"port":             7778,
 					"authenticatePeer": false,

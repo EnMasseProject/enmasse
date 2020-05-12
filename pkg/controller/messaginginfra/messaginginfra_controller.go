@@ -259,6 +259,27 @@ func (infraPodPredicate) Update(e event.UpdateEvent) bool {
 	return true
 }
 
+func (infraPodPredicate) Delete(e event.DeleteEvent) bool {
+	if e.Meta == nil {
+		log.Error(nil, "DeleteEvent has no metadata", "event", e)
+		return false
+	}
+
+	if e.Meta.GetAnnotations() == nil {
+		return false
+	}
+	annotations := e.Meta.GetAnnotations()
+
+	if _, exists := annotations[common.ANNOTATION_INFRA_NAME]; !exists {
+		return false
+	}
+
+	if _, exists := annotations[common.ANNOTATION_INFRA_NAMESPACE]; !exists {
+		return false
+	}
+	return true
+}
+
 func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
@@ -332,7 +353,8 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile Routers
-	var routerHosts []string
+	var runningRouters []state.Host
+	var routerHosts []state.Host
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
 		hosts, err := r.routerController.ReconcileRouters(ctx, logger, infra)
 		if err != nil {
@@ -340,8 +362,23 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			routersCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{}, err
 		}
-		routersCreated.SetStatus(corev1.ConditionTrue, "", "")
+
+		runningRouters = make([]state.Host, 0)
+		for _, host := range hosts {
+			if host.Ip != "" {
+				runningRouters = append(runningRouters, host)
+			}
+		}
+
 		routerHosts = hosts
+		if len(runningRouters) < len(routerHosts) {
+			msg := fmt.Sprintf("%d/%d router pods running", len(runningRouters), len(routerHosts))
+			infra.Status.Message = msg
+			routersCreated.SetStatus(corev1.ConditionFalse, "", msg)
+			return processorResult{}, nil
+		}
+
+		routersCreated.SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
@@ -349,7 +386,8 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile Brokers
-	var brokerHosts []string
+	var runningBrokers []state.Host
+	var brokerHosts []state.Host
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
 		hosts, err := r.brokerController.ReconcileBrokers(ctx, logger, infra)
 		if err != nil {
@@ -357,8 +395,21 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			brokersCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{}, err
 		}
-		brokersCreated.SetStatus(corev1.ConditionTrue, "", "")
+
+		for _, host := range hosts {
+			if host.Ip != "" {
+				runningBrokers = append(runningBrokers, host)
+			}
+		}
+
 		brokerHosts = hosts
+		if len(runningBrokers) < len(brokerHosts) {
+			msg := fmt.Sprintf("%d/%d broker pods running", len(runningBrokers), len(brokerHosts))
+			infra.Status.Message = msg
+			brokersCreated.SetStatus(corev1.ConditionFalse, "", msg)
+			return processorResult{}, nil
+		}
+		brokersCreated.SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
@@ -368,11 +419,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// Sync all configuration
 	var connectorStatuses []state.ConnectorStatus
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
-		statuses, err := r.clientManager.GetClient(infra).SyncAll(routerHosts, brokerHosts)
+		statuses, err := r.clientManager.GetClient(infra).SyncAll(runningRouters, runningBrokers)
 		// Treat as transient error
 		if errors.Is(err, amqpcommand.RequestTimeoutError) {
 			logger.Info("Error syncing infra", "error", err.Error())
-			infra.Status.Message = err.Error()
+			// Note: status message is not set to avoid too verbose error messages
 			synchronized.SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{RequeueAfter: 10 * time.Second}, nil
 		}
@@ -388,8 +439,26 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		return result.Result(), err
 	}
 
+	// If not all brokers and routers are not fully running, break here until they are
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+		if len(runningBrokers) < len(brokerHosts) || len(runningRouters) < len(routerHosts) {
+			return processorResult{RequeueAfter: 5 * time.Second}, nil
+		}
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
 	// Check status
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+		expectedConnectors := len(runningRouters) * len(runningBrokers)
+		if len(connectorStatuses) != expectedConnectors {
+			msg := fmt.Sprintf("components not fully connected %d/%d connectors configured", len(connectorStatuses), expectedConnectors)
+			infra.Status.Message = msg
+			brokersConnected.SetStatus(corev1.ConditionFalse, "", msg)
+			return processorResult{RequeueAfter: 10 * time.Second}, nil
+		}
 		for _, connectorStatus := range connectorStatuses {
 			if !connectorStatus.Connected {
 				msg := fmt.Sprintf("connection between %s and %s not ready: %s", connectorStatus.Router, connectorStatus.Broker, connectorStatus.Message)

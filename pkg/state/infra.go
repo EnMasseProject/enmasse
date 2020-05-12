@@ -19,8 +19,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type routerStateFunc = func(host string, port int32) *RouterState
-type brokerStateFunc = func(host string, port int32) *BrokerState
+type routerStateFunc = func(host Host, port int32) *RouterState
+type brokerStateFunc = func(host Host, port int32) *BrokerState
 
 type resourceKey struct {
 	Name      string
@@ -39,8 +39,9 @@ type request struct {
 type infraClient struct {
 	// The known routers and brokers. All configuration is synchronized with these. If their connections get reset,
 	// state is re-synced. If new routers and brokers are created, their configuration will be synced as well.
-	routers     map[string]*RouterState
-	brokers     map[string]*BrokerState
+	routers     map[Host]*RouterState
+	brokers     map[Host]*BrokerState
+	hostMap     map[string]Host
 	initialized bool
 
 	// Port allocation map for router ports
@@ -80,8 +81,9 @@ func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, cloc
 		portmap[i] = nil
 	}
 	client := &infraClient{
-		routers:            make(map[string]*RouterState, 0),
-		brokers:            make(map[string]*BrokerState, 0),
+		routers:            make(map[Host]*RouterState, 0),
+		brokers:            make(map[Host]*BrokerState, 0),
+		hostMap:            make(map[string]Host, 0),
 		addresses:          make(map[resourceKey]*v1beta2.MessagingAddress, 0),
 		endpoints:          make(map[resourceKey]*v1beta2.MessagingEndpoint, 0),
 		syncRequests:       make(chan *request, syncBufferSize),
@@ -149,61 +151,69 @@ func (i *infraClient) checkResync() {
 	}
 }
 
-func (i *infraClient) updateRouters(hosts []string) {
-	toAdd := make(map[string]bool, 0)
+func (i *infraClient) updateRouters(hosts []Host) {
+	toAdd := make(map[string]Host, 0)
 	for _, host := range hosts {
-		toAdd[host] = true
+		toAdd[host.Hostname] = host
 	}
 
-	toRemove := make(map[string]bool, 0)
+	toRemove := make(map[string]Host, 0)
 
 	for host, _ := range i.routers {
-		found := toAdd[host]
+		entry, found := toAdd[host.Hostname]
 
 		// Should not longer exist, so shut down clients
 		if !found {
-			toRemove[host] = true
+			toRemove[host.Hostname] = host
+		} else if entry.Ip != host.Ip {
+			// Ip has changed, we need to delete and create
+			toRemove[host.Hostname] = host
 		} else {
 			// We already have a state for it
-			delete(toAdd, host)
+			delete(toAdd, host.Hostname)
 		}
 	}
 
 	// Shutdown and remove unknown hosts
-	for host, _ := range toRemove {
+	for hostname, host := range toRemove {
 		i.routers[host].Shutdown()
+		delete(i.hostMap, hostname)
 		delete(i.routers, host)
 	}
 
 	// Create states for new hosts
-	for host, _ := range toAdd {
+	for hostname, host := range toAdd {
 		routerState := i.routerStateFactory(host, 7777)
 		i.routers[host] = routerState
+		i.hostMap[hostname] = host
 	}
 }
 
-func (i *infraClient) updateBrokers(ctx context.Context, hosts []string) error {
-	toAdd := make(map[string]bool, 0)
+func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
+	toAdd := make(map[string]Host, 0)
 	for _, host := range hosts {
-		toAdd[host] = true
+		toAdd[host.Hostname] = host
 	}
 
-	toRemove := make(map[string]bool, 0)
+	toRemove := make(map[string]Host, 0)
 
 	for host, _ := range i.brokers {
-		found := toAdd[host]
+		entry, found := toAdd[host.Hostname]
 
 		// Should not longer exist, so shut down clients
 		if !found {
-			toRemove[host] = true
+			toRemove[host.Hostname] = host
+		} else if entry.Ip != host.Ip {
+			// Ip has changed, we need to delete and create
+			toRemove[host.Hostname] = host
 		} else {
 			// We already have a state for it so remove it
-			delete(toAdd, host)
+			delete(toAdd, host.Hostname)
 		}
 	}
 
 	// Shutdown and remove unknown hosts
-	for host, _ := range toRemove {
+	for hostname, host := range toRemove {
 		err := i.applyRouters(ctx, func(router *RouterState) error {
 			return router.DeleteEntities(ctx, []RouterEntity{&NamedEntity{EntityType: RouterConnectorEntity, Name: connectorName(i.brokers[host])}})
 		})
@@ -212,13 +222,15 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []string) error {
 		}
 		i.brokers[host].Shutdown()
 
+		delete(i.hostMap, hostname)
 		delete(i.brokers, host)
 	}
 
 	// Create states for new hosts
-	for host, _ := range toAdd {
+	for hostname, host := range toAdd {
 		brokerState := i.brokerStateFactory(host, 5671)
 		i.brokers[host] = brokerState
+		i.hostMap[hostname] = host
 	}
 	return nil
 }
@@ -240,7 +252,8 @@ func (i *infraClient) initialize(ctx context.Context) error {
 	})
 }
 
-func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorStatus, error) {
+func (i *infraClient) SyncAll(routers []Host, brokers []Host) ([]ConnectorStatus, error) {
+	log.Printf("Syncing with routers: %+v, and brokers: %+v", routers, brokers)
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -273,7 +286,7 @@ func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorSt
 	for _, broker := range i.brokers {
 		connectors = append(connectors, &RouterConnector{
 			Name:               connectorName(broker),
-			Host:               broker.Host,
+			Host:               broker.Host.Hostname,
 			Port:               fmt.Sprintf("%d", broker.Port),
 			Role:               "route-container",
 			SslProfile:         "infra_tls",
@@ -301,7 +314,7 @@ func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorSt
 		}
 
 		for _, c := range readConnectors {
-			connectorStatuses <- connectorToStatus(router.host, c.(*RouterConnector))
+			connectorStatuses <- connectorToStatus(router.host.Hostname, c.(*RouterConnector))
 		}
 		return nil
 	})
@@ -315,6 +328,45 @@ func (i *infraClient) SyncAll(routers []string, brokers []string) ([]ConnectorSt
 	for status := range connectorStatuses {
 		allConnectors = append(allConnectors, status)
 	}
+
+	// Once everything is synced - create the broker probe entities and router listeners for the readiness probe.
+	readinessQueue := &QueueConfiguration{
+		Name:               "readiness",
+		Address:            "readiness",
+		MaxConsumers:       1,
+		Durable:            false,
+		AutoCreateAddress:  true,
+		RoutingType:        RoutingTypeAnycast,
+		PurgeOnNoConsumers: false,
+	}
+	err = i.applyBrokers(ctx, func(b *BrokerState) error {
+		broker := b
+		return broker.EnsureConfiguredQueue(ctx, readinessQueue)
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	readinessListener := &RouterListener{
+		Name:               "readiness",
+		Role:               "normal",
+		Host:               "127.0.0.1",
+		Port:               "7779",
+		IdleTimeoutSeconds: 16,
+		AuthenticatePeer:   false,
+		Http:               true,
+		Metrics:            true,
+		Healthz:            true,
+		Websockets:         false,
+	}
+	err = i.applyRouters(ctx, func(r *RouterState) error {
+		router := r
+		return router.EnsureEntities(ctx, []RouterEntity{readinessListener})
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	log.Printf("State synchronization complete with %d routers and %d brokers", len(i.routers), len(i.brokers))
 	i.initialized = true
 	return allConnectors, nil
@@ -336,7 +388,7 @@ func (i *infraClient) initPorts() {
 func (i *infraClient) syncConfiguration(ctx context.Context) error {
 	i.initPorts()
 	routerEntities := make([]RouterEntity, 0)
-	brokerQueues := make(map[string][]string, 0)
+	brokerQueues := make(map[Host][]string, 0)
 
 	for _, endpoint := range i.endpoints {
 		if endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != "" {
@@ -591,7 +643,7 @@ func (i *infraClient) doSync() {
 
 }
 
-func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity, brokerQueues map[string][]string) error {
+func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity, brokerQueues map[Host][]string) error {
 	// Configure brokers first
 	var err error
 	if len(brokerQueues) > 0 {
@@ -619,10 +671,10 @@ func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity,
  * Build entities for all requests. Failed requests will be marked as failed immediately, and the list of successful requests along with entities that should
  * be created is returned.
  */
-func (i *infraClient) buildEntities(requests []*request) (built []*request, routerEntities []RouterEntity, brokerQueues map[string][]string) {
+func (i *infraClient) buildEntities(requests []*request) (built []*request, routerEntities []RouterEntity, brokerQueues map[Host][]string) {
 	activeEndpoints := i.getActiveEndpoints()
 	routerEntities = make([]RouterEntity, 0, len(requests))
-	brokerQueues = make(map[string][]string, len(i.brokers))
+	brokerQueues = make(map[Host][]string, len(i.brokers))
 	for _, broker := range i.brokers {
 		brokerQueues[broker.Host] = make([]string, 0)
 	}
@@ -725,8 +777,9 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1beta2.MessagingEnd
 			Port:               fmt.Sprintf("%d", internalPort.Port),
 			Role:               "normal",
 			RequireSsl:         false,
+			AuthenticatePeer:   false, // TODO: Auth service
 			IdleTimeoutSeconds: idleTimeoutSeconds,
-			// LinkCapacity:       linkCapacity,
+			// LinkCapacity:       TODO: Make configurable?
 			MultiTenant: true,
 			Websockets:  websockets,
 			Http:        websockets,
@@ -783,7 +836,8 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 		})
 
 		for _, broker := range address.Status.Brokers {
-			brokerState := i.brokers[broker.Host]
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
 			if brokerState == nil {
 				return nil, fmt.Errorf("unable to configure address autoLink (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
 			}
@@ -820,27 +874,28 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 /**
  * Add broker queues to be created for a given addresss
  */
-func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndpoint, address *v1beta2.MessagingAddress) (map[string][]string, error) {
+func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndpoint, address *v1beta2.MessagingAddress) (map[Host][]string, error) {
 
 	if !isEndpointActive(endpoint) {
 		return nil, fmt.Errorf("inactive endpoint")
 	}
 
-	brokerQueues := make(map[string][]string, 0)
+	brokerQueues := make(map[Host][]string, 0)
 	tenantId := endpoint.Status.Host
 
 	// Build desired state
 	fullAddress := fullAddress(tenantId, address)
 	if address.Spec.Queue != nil {
 		for _, broker := range address.Status.Brokers {
-			brokerState := i.brokers[broker.Host]
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
 			if brokerState == nil {
 				return nil, fmt.Errorf("unable to configure queue (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
 			}
-			if len(brokerQueues[broker.Host]) == 0 {
-				brokerQueues[broker.Host] = make([]string, 0)
+			if len(brokerQueues[host]) == 0 {
+				brokerQueues[host] = make([]string, 0)
 			}
-			brokerQueues[broker.Host] = append(brokerQueues[broker.Host], fullAddress)
+			brokerQueues[host] = append(brokerQueues[host], fullAddress)
 		}
 	} else if address.Spec.DeadLetter != nil {
 		// TODO
@@ -975,7 +1030,7 @@ func (i *infraClient) doDelete() {
 	}
 }
 
-func (i *infraClient) deleteEntities(ctx context.Context, routerEntities []RouterEntity, brokerQueues map[string][]string) error {
+func (i *infraClient) deleteEntities(ctx context.Context, routerEntities []RouterEntity, brokerQueues map[Host][]string) error {
 	// Delete from routers
 	err := i.applyRouters(ctx, func(router *RouterState) error {
 		return router.DeleteEntities(ctx, routerEntities)
@@ -1032,7 +1087,7 @@ func fullAddress(tenantId string, address *v1beta2.MessagingAddress) string {
 }
 
 func connectorName(broker *BrokerState) string {
-	return fmt.Sprintf("connector-%s-%d", broker.Host, broker.Port)
+	return fmt.Sprintf("connector-%s-%d", broker.Host.Hostname, broker.Port)
 }
 
 func portName(endpoint *v1beta2.MessagingEndpoint, protocol v1beta2.MessagingEndpointProtocol) string {

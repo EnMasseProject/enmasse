@@ -12,7 +12,7 @@ import (
 )
 
 type RouterState struct {
-	host          string
+	host          Host
 	port          int32
 	initialized   bool
 	nextResync    time.Time
@@ -74,12 +74,14 @@ type RouterListener struct {
 	IdleTimeoutSeconds             int    `json:"idleTimeoutSeconds,omitempty"`
 	InitialHandshakeTimeoutSeconds int    `json:"initialHandshakeTimeoutSeconds,omitempty"`
 	PolicyVhost                    string `json:"policyVhost,omitempty"`
+	AuthenticatePeer               bool   `json:"authenticatePeer"`
 	MultiTenant                    bool   `json:"multiTenant"`
 	RequireSsl                     bool   `json:"requireSsl"`
 	Http                           bool   `json:"http"`
 	Metrics                        bool   `json:"metrics"`
 	Healthz                        bool   `json:"healthz"`
 	Websockets                     bool   `json:"websockets"`
+	HttpRootDir                    string `json:"httpRootDir,omitempty"`
 }
 
 type RouterVhost struct {

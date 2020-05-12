@@ -18,6 +18,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -49,7 +50,7 @@ func NewRouterController(client client.Client, scheme *runtime.Scheme, certContr
 /*
  * Reconciles the router instances for an instance of shared infrastructure.
  */
-func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]string, error) {
+func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]state.Host, error) {
 
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
@@ -168,6 +169,35 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 					ContainerPort: 7777,
 					Name:          "management",
 				},
+				{
+					ContainerPort: 7778,
+					Name:          "liveness",
+				},
+				{
+					ContainerPort: 7779,
+					Name:          "readiness",
+				},
+			}
+
+			container.LivenessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path:   "/healthz",
+						Scheme: corev1.URISchemeHTTP,
+						Port:   intstr.FromString("liveness"),
+					},
+				},
+				InitialDelaySeconds: 30,
+			}
+
+			container.ReadinessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path:   "/healthz",
+						Scheme: corev1.URISchemeHTTP,
+						Port:   intstr.FromString("readiness"),
+					},
+				},
 			}
 
 			for i := 40000; i < 40100; i++ {
@@ -235,6 +265,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	if err != nil {
 		return nil, err
 	}
+
 	for _, pod := range pods.Items {
 		if pod.Annotations[common.ANNOTATION_CERT_DIGEST] != routerCertSha {
 			logger.Info("Patching pod with updated cert digest", "pod", pod.Name, "oldsha256", pod.Annotations[common.ANNOTATION_CERT_DIGEST], "sha256", routerCertSha)
@@ -247,11 +278,24 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 	}
 
-	// Update discoverable routers
-	allHosts := make([]string, 0)
-	for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
-		allHosts = append(allHosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+	// Update expected routers
+	expectedPods := int(*statefulset.Spec.Replicas)
+	allHosts := make([]state.Host, 0)
+	for i := 0; i < expectedPods; i++ {
+		podIp := ""
+		expectedHost := fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace)
+		for _, pod := range pods.Items {
+			if pod.Status.Phase == corev1.PodRunning && pod.Status.PodIP != "" {
+				host := fmt.Sprintf("%s.%s.%s.svc", pod.Name, statefulset.Name, statefulset.Namespace)
+				if host == expectedHost {
+					podIp = pod.Status.PodIP
+					break
+				}
+			}
+		}
+		allHosts = append(allHosts, state.Host{Hostname: expectedHost, Ip: podIp})
 	}
+
 	return allHosts, nil
 }
 

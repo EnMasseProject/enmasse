@@ -175,6 +175,8 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         // Give operator some time to detect restart and re-sync its state
         Thread.sleep(60_000);
 
+        waitForConditionTrue(infra, "RoutersCreated");
+        waitForConditionTrue(infra, "BrokersCreated");
         waitForConditionTrue(infra, "Synchronized");
         waitForConditionTrue(infra, "Ready");
 
