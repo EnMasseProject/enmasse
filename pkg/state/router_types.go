@@ -37,42 +37,49 @@ type RouterEntity interface {
 	Order() int
 }
 
+type RouterEntityGroup struct {
+	Entities []RouterEntity
+}
+
 type NamedEntity struct {
 	EntityType RouterEntityType
 	Name       string
 }
 
 type RouterConnector struct {
-	Name           string `json:"name"`
-	Host           string `json:"host"`
-	Port           string `json:"port"`
-	Role           string `json:"role,omitempty"`
-	SslProfile     string `json:"sslProfile,omitempty"`
-	SaslMechanisms string `json:"saslMechanisms,omitempty"`
-	SaslUsername   string `json:"saslUsername,omitempty"`
-	SaslPassword   string `json:"saslPassword,omitempty"`
-	// LinkCapacity       int    `json:"linkCapacity,omitempty"`
+	Name               string `json:"name"`
+	Host               string `json:"host"`
+	Port               string `json:"port"`
+	Role               string `json:"role,omitempty"`
+	SslProfile         string `json:"sslProfile,omitempty"`
+	SaslMechanisms     string `json:"saslMechanisms,omitempty"`
+	SaslUsername       string `json:"saslUsername,omitempty"`
+	SaslPassword       string `json:"saslPassword,omitempty"`
+	LinkCapacity       int    `json:"linkCapacity,omitempty"`
 	IdleTimeoutSeconds int    `json:"idleTimeoutSeconds,omitempty"`
-	VerifyHostname     bool   `json:"verifyHostname,omitempty"`
+	VerifyHostname     bool   `json:"verifyHostname"`
 	PolicyVhost        string `json:"policyVhost,omitempty"`
 	ConnectionStatus   string `json:"connectionStatus,omitempty"`
 	ConnectionMsg      string `json:"connectionMsg,omitempty"`
 }
 
 type RouterListener struct {
-	Name           string `json:"name"`
-	Host           string `json:"host"`
-	Port           string `json:"port"`
-	Role           string `json:"role,omitempty"`
-	SslProfile     string `json:"sslProfile,omitempty"`
-	SaslMechanisms string `json:"saslMechanisms,omitempty"`
-	// LinkCapacity                   int    `json:"linkCapacity,omitempty"`
+	Name                           string `json:"name"`
+	Host                           string `json:"host"`
+	Port                           string `json:"port"`
+	Role                           string `json:"role,omitempty"`
+	SslProfile                     string `json:"sslProfile,omitempty"`
+	SaslMechanisms                 string `json:"saslMechanisms,omitempty"`
+	LinkCapacity                   int    `json:"linkCapacity,omitempty"`
 	IdleTimeoutSeconds             int    `json:"idleTimeoutSeconds,omitempty"`
 	InitialHandshakeTimeoutSeconds int    `json:"initialHandshakeTimeoutSeconds,omitempty"`
 	PolicyVhost                    string `json:"policyVhost,omitempty"`
-	MultiTenant                    bool   `json:"multiTenant,omitempty"`
-	RequireSsl                     bool   `json:"requireSsl,omitempty"`
-	Http                           bool   `json:"http,omitempty"`
+	MultiTenant                    bool   `json:"multiTenant"`
+	RequireSsl                     bool   `json:"requireSsl"`
+	Http                           bool   `json:"http"`
+	Metrics                        bool   `json:"metrics"`
+	Healthz                        bool   `json:"healthz"`
+	Websockets                     bool   `json:"websockets"`
 }
 
 type RouterVhost struct {

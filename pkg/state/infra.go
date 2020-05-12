@@ -728,7 +728,10 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1beta2.MessagingEnd
 			IdleTimeoutSeconds: idleTimeoutSeconds,
 			// LinkCapacity:       linkCapacity,
 			MultiTenant: true,
+			Websockets:  websockets,
 			Http:        websockets,
+			Healthz:     false,
+			Metrics:     false,
 		}
 
 		if sslProfile != nil {

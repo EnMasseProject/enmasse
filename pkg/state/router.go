@@ -353,7 +353,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 					return err
 				}
 				g.Go(func() error {
-					log.Printf("[Router %s] Creating entity %s %s: %+v", r.host, e.Type(), e.GetName(), e)
+					log.Printf("[Router %s] Creating entity %s %s: %+v", r.host, e.Type(), e.GetName(), value)
 					err := r.createEntity(t, e.GetName(), value)
 					if err != nil {
 						return err
@@ -616,5 +616,19 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	return f.(map[string]interface{}), nil
+	data := f.(map[string]interface{})
+	converted := make(map[string]interface{}, len(data))
+
+	for k, v := range data {
+		switch vt := v.(type) {
+		// Conversion is needed as router does not accept float, nor does it use it in any entities so conversion should be safe.
+		case float64:
+			converted[k] = int(v.(float64))
+		default:
+			log.Printf("Key %s has value type %T", k, vt)
+			converted[k] = v
+		}
+	}
+
+	return converted, nil
 }
