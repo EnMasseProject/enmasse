@@ -134,16 +134,18 @@ public class OLMOperatorManager {
                     "--force");
             var result = Exec.execute(command);
             if (!result.getRetCode()) {
-                if (result.getStdErr() != null) {
-                    if (result.getStdErr().replace("\n", "").replace("\r", "").strip().equals("Doing nothing")) {
-                        log.info("Ignoring command error, as image building should have succeeded");
-                        return; //it went ok
-                    }
+                if (saysDoingNothing(result.getStdErr()) || saysDoingNothing(result.getStdOut())) {
+                    log.info("Ignoring command error, as image building should have succeeded");
+                    return; //it went ok
                 }
                 log.error("Throwing error, image building failed");
                 throw new IllegalStateException("Image build failed");
             }
         }
+    }
+
+    private boolean saysDoingNothing(String text) {
+        return text != null && text.replace("\n", "").replace("\r", "").strip().equals("Doing nothing");
     }
 
     public String getCustomOperatorRegistryInternalImage(String namespace) {
