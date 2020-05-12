@@ -54,7 +54,6 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	github.com/vektah/gqlparser v1.2.0
 	github.com/vektah/gqlparser/v2 v2.0.1
 	go.uber.org/multierr v1.1.0
 	go.uber.org/zap v1.10.0
