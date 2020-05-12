@@ -51,6 +51,7 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.api.model.Route;
@@ -1269,15 +1270,17 @@ public abstract class ConsoleTest extends TestBase {
                     String.format("--patch={\"spec\":{\"defaultCertificate\": {\"name\": \"%s\"}}}", customIngressSecretName)), true);
             assertThat("failed to patch ingress", patchIngress.getRetCode(), is(true));
 
-
             awaitCertChange(ca, oauth.get(), console.get(), oauthRoute.get());
 
-            System.out.println(cluster.getCert());
-            System.out.println(cluster.getKey());
-
             doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
-
+            SeleniumProvider.getInstance().tearDownDrivers();
+            SeleniumProvider.getInstance().setupDriver(this.getClass().getSimpleName().toLowerCase().contains("chrome") ? TestUtils.getChromeDriver() : TestUtils.getFirefoxDriver());
         } finally {
+            Optional<ConfigMap> bundle = kubernetes.listConfigMaps(Map.of("app", "enmasse")).stream().filter(cm -> "console-trusted-ca-bundle".equals(cm.getMetadata().getName())).findFirst();
+            bundle.ifPresent(cm -> log.info("console-trusted-ca-bundle resource version before rollback : {}", cm.getMetadata().getResourceVersion()));
+
+            console = kubernetes.listDeployments(consoleDeploymentLabels).stream().findFirst();
+            assertThat(console.isPresent(), is(true));
 
             Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "proxy/cluster",
                     "--type=merge",
@@ -1294,6 +1297,14 @@ public abstract class ConsoleTest extends TestBase {
 
             awaitCertChange(originalOauthCert, oauth.get(), console.get(), oauthRoute.get());
 
+            TestUtils.waitUntilCondition("Ensuring console functional after certificate rollback", waitPhase -> {
+                try {
+                    doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }, new TimeoutBudget(5, TimeUnit.MINUTES));
         }
     }
 
@@ -1310,6 +1321,9 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     private void verifyCertChange(CertPair ca, Deployment oauthDeployment, Deployment consoleDeployment, Route oauthRoute) throws Exception {
+        Optional<ConfigMap> bundle = kubernetes.listConfigMaps(Map.of("app", "enmasse")).stream().filter(cm -> "console-trusted-ca-bundle".equals(cm.getMetadata().getName())).findFirst();
+        bundle.ifPresent(cm -> log.info("console-trusted-ca-bundle resource version : {}", cm.getMetadata().getResourceVersion()));
+
         log.info("Awaiting openshift oauth to be ready again");
         TestUtils.waitForChangedResourceVersion(new TimeoutBudget(1, TimeUnit.MINUTES), oauthDeployment.getMetadata().getResourceVersion(),
                 () -> {
