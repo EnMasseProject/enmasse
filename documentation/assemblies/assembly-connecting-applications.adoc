@@ -26,7 +26,7 @@ If you opted for the `selfsigned` certificate provider type in your addressspace
 that signed the adddressspace server certificate is required to when connecting messaging client application. The
 certificate can be retrieved from the addressspace using the following procedure.
 
-WARNING: The use of selfsigned certificates is not recommended for use in production environments.
+WARNING: Using a self-signed certificate in production environments is not recommended.
 
 .Procedure
 
