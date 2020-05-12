@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -137,10 +136,12 @@ public class OLMOperatorManager {
             if (!result.getRetCode()) {
                 if (result.getStdErr() != null) {
                     if (result.getStdErr().replace("\n", "").replace("\r", "").strip().equals("Doing nothing")) {
+                        log.info("Ignoring command error, as image building should have succeeded");
                         return; //it went ok
                     }
                 }
-                Assertions.fail("Image build failed");
+                log.error("Throwing error, image building failed");
+                throw new IllegalStateException("Image build failed");
             }
         }
     }
