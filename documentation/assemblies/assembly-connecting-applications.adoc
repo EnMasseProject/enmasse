@@ -22,7 +22,7 @@ The messaging protocols supported depends on the type of address space used. For
 [id='client-getcer-{context}']
 == Retrieving the self-signed CA certificate
 
-If you opted for the `selfsigned` certificate provider type in your addressspace endpoint configuration, the generated CA
+If you opted for the `selfsigned` certificate provider type in your `AddressSpace` endpoint configuration, the generated CA
 that signed the adddressspace server certificate is required to when connecting messaging client application. The
 certificate can be retrieved from the addressspace using the following procedure.
 
