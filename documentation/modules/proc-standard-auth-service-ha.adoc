@@ -24,7 +24,7 @@ endif::[]
 +
 [source,yaml,options="nowrap"]
 ----
-{cmdcli} create secret generic db-creds -n _{ProductNamespace} --from-literal=database-user=_admin_ --from-literal=database-user=_securepassword_
+{cmdcli} create secret generic db-creds -n _{ProductNamespace} --from-literal=database-user=_admin_ --from-literal=database-password=_securepassword_
 ----
 
 . Create an `AuthenticationService` definition:
