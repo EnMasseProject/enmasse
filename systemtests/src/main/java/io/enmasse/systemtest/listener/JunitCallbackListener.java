@@ -37,14 +37,14 @@ import org.slf4j.Logger;
 public class JunitCallbackListener implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
     private static final Logger LOGGER = CustomLogger.getLogger();
-    private static Environment env = Environment.getInstance();
-    private Kubernetes kubernetes = Kubernetes.getInstance();
-    private TestInfo testInfo = TestInfo.getInstance();
-    private IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
-    private SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
-    private SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
-    private IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
-    private EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
+    private static final Environment env = Environment.getInstance();
+    private final Kubernetes kubernetes = Kubernetes.getInstance();
+    private final TestInfo testInfo = TestInfo.getInstance();
+    private final IsolatedResourcesManager isolatedResourcesManager = IsolatedResourcesManager.getInstance();
+    private final SharedResourceManager sharedResourcesManager = SharedResourceManager.getInstance();
+    private final SharedIoTManager sharedIoTManager = SharedIoTManager.getInstance();
+    private final IsolatedIoTManager isolatedIoTManager = IsolatedIoTManager.getInstance();
+    private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
     private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     @Override
