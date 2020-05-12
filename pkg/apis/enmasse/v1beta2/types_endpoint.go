@@ -114,7 +114,7 @@ type MessagingEndpointSpecIngress struct {
 }
 
 type MessagingEndpointSpecRoute struct {
-	TlsTermination *routev1.TLSTerminationType `json:"tlsTermination,omitempty"
+	TlsTermination *routev1.TLSTerminationType `json:"tlsTermination,omitempty"`
 }
 
 type MessagingEndpointSpecNodePort struct {
