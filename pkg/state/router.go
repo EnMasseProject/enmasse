@@ -123,7 +123,7 @@ func getStatusCode(response *amqp.Message) (int32, error) {
 	code := response.ApplicationProperties["statusCode"]
 	switch v := code.(type) {
 	case int32:
-		return code.(int32), nil
+		return v, nil
 	default:
 		log.Printf("Response: %+v", response)
 		return 0, fmt.Errorf("unexpected value with type %T", v)
@@ -229,7 +229,7 @@ func (r *RouterState) readEntity(entityType RouterEntityType, name string) (Rout
 
 	switch v := response.Value.(type) {
 	case map[string]interface{}:
-		return entityType.Decode(response.Value.(map[string]interface{}))
+		return entityType.Decode(v)
 	default:
 		log.Printf("Response: %+v", response)
 		return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -277,7 +277,7 @@ func (r *RouterState) queryEntities(entity RouterEntityType, attributes ...strin
 
 	switch v := response.Value.(type) {
 	case map[string]interface{}:
-		return response.Value.(map[string]interface{}), nil
+		return v, nil
 	default:
 		log.Printf("Response: %+v", response)
 		return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -620,13 +620,13 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 	converted := make(map[string]interface{}, len(data))
 
 	for k, v := range data {
-		switch v.(type) {
+		switch vt := v.(type) {
 		// Conversion is needed as router does not accept float, nor does it use it in any entities so conversion should be safe.
 		case float64:
-			converted[k] = int(v.(float64))
+			converted[k] = int(vt)
 		default:
 			//			log.Printf("Key %s has value type %T", k, vt)
-			converted[k] = v
+			converted[k] = vt
 		}
 	}
 
