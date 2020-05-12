@@ -95,7 +95,7 @@ type InputValue struct {
 	Value string `json:"value,omitempty"`
 
 	// Source for the value stored in a secret
-	ValueFromSecret *corev1.SecretKeySelector `json:"valueFromSecret,omitempty"
+	ValueFromSecret *corev1.SecretKeySelector `json:"valueFromSecret,omitempty"`
 }
 
 type MessagingEndpointProtocol string
