@@ -401,7 +401,7 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		if config.key != "" {
 			secret.Data[config.key] = key
 		} else {
-			   remove(secret.Data[config.key])
+			delete(secret.Data, config.key)
 		}
 		if config.crt != "" {
 			secret.Data[config.crt] = cert
