@@ -5,7 +5,7 @@
 [id='proc-deploying-standard-auth-service-{context}']
 = Deploying the `standard` authentication service for high availability (HA)
 
-To implement the `standard` authentication service, you deploy it.
+For production deployment, the authentication services should be setup for high availability in order to reduce downtime during {KubePlatform} updates or in the event of a node failure. To implement the `standard` authentication service in HA mode, you deploy it using a PostgreSQL database as the backend.
 
 .Prerequisites
 * A PostgreSQL database.
