@@ -399,7 +399,22 @@ const (
 type ConfigConditionType string
 
 const (
-	ConfigConditionTypeReady ConfigConditionType = "Ready"
+	ConfigConditionTypeReady    ConfigConditionType = "Ready"
+	ConfigConditionTypeDegraded ConfigConditionType = "Degraded"
+
+	ConfigConditionTypeReconciled ConfigConditionType = "Reconciled"
+
+	ConfigConditionTypeCommandMeshReady                     ConfigConditionType = "CommandMeshReady"
+	ConfigConditionTypeAuthServiceReady                     ConfigConditionType = "AuthServiceReady"
+	ConfigConditionTypeTenantServiceReady                   ConfigConditionType = "TenantServiceReady"
+	ConfigConditionTypeDeviceConnectionServiceReady         ConfigConditionType = "DeviceConnectionServiceReady"
+	ConfigConditionTypeDeviceRegistryAdapterServiceReady    ConfigConditionType = "DeviceRegistryAdapterServiceReady"
+	ConfigConditionTypeDeviceRegistryManagementServiceReady ConfigConditionType = "DeviceRegistryManagementServiceReady"
+
+	ConfigConditionTypeHttpAdapterReady    ConfigConditionType = "HttpAdapterReady"
+	ConfigConditionTypeLorawanAdapterReady ConfigConditionType = "LorawanAdapterReady"
+	ConfigConditionTypeMqttAdapterReady    ConfigConditionType = "MqttAdapterReady"
+	ConfigConditionTypeSigfoxAdapterReady  ConfigConditionType = "SigfoxAdapterReady"
 )
 
 type ConfigCondition struct {

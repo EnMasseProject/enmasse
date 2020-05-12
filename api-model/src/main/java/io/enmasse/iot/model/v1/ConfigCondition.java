@@ -20,6 +20,6 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ConfigCondition extends CommonCondition<ProjectConditionType> {
+public class ConfigCondition extends CommonCondition<ConfigConditionType> {
 
 }

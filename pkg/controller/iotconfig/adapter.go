@@ -35,37 +35,42 @@ import (
 const imageNameRouter = "router"
 
 type adapter struct {
-	Name      string
-	EnvPrefix string
+	Name           string
+	ReadyCondition iotv1alpha1.ConfigConditionType
+	EnvPrefix      string
 
 	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig
 }
 
 var adapters = []adapter{
 	{
-		Name:      "mqtt",
-		EnvPrefix: "HONO_MQTT_",
+		Name:           "mqtt",
+		ReadyCondition: iotv1alpha1.ConfigConditionTypeMqttAdapterReady,
+		EnvPrefix:      "HONO_MQTT_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.MqttAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
-		Name:      "http",
-		EnvPrefix: "HONO_HTTP_",
+		Name:           "http",
+		ReadyCondition: iotv1alpha1.ConfigConditionTypeHttpAdapterReady,
+		EnvPrefix:      "HONO_HTTP_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.HttpAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
-		Name:      "lorawan",
-		EnvPrefix: "HONO_LORAWAN_",
+		Name:           "lorawan",
+		ReadyCondition: iotv1alpha1.ConfigConditionTypeLorawanAdapterReady,
+		EnvPrefix:      "HONO_LORAWAN_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.CommonAdapterConfig
 		},
 	},
 	{
-		Name:      "sigfox",
-		EnvPrefix: "HONO_SIGFOX_",
+		Name:           "sigfox",
+		ReadyCondition: iotv1alpha1.ConfigConditionTypeSigfoxAdapterReady,
+		EnvPrefix:      "HONO_SIGFOX_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.CommonAdapterConfig
 		},
