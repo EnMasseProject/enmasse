@@ -10,7 +10,7 @@ export const DeviceInfoCredentials: React.FC<{}> = () => {
   return (
     <Card>
       <CardHeader>
-        <Title id="divice-info-header-title" headingLevel="h1" size="2xl">
+        <Title id="device-info-header-title" headingLevel="h1" size="2xl">
           Credentials
         </Title>
       </CardHeader>
