@@ -9,11 +9,15 @@ import { SwitchProps, Switch } from "@patternfly/react-core";
 const SwitchWithToggle: React.FunctionComponent<SwitchProps> = ({
   id,
   label,
+  onChange,
   labelOff
 }) => {
   const [isChecked, setIsChecked] = useState<boolean>(false);
-  const onToggle = () => {
-    setIsChecked(!isChecked);
+  const handleOnChange = (checked: boolean, event: any) => {
+    if (onChange) {
+      onChange(checked, event);
+    }
+    setIsChecked(checked);
   };
   return (
     <Switch
@@ -21,7 +25,7 @@ const SwitchWithToggle: React.FunctionComponent<SwitchProps> = ({
       label={label}
       labelOff={labelOff}
       isChecked={isChecked}
-      onChange={onToggle}
+      onChange={handleOnChange}
     />
   );
 };
