@@ -54,11 +54,11 @@ public abstract class AuthorizationTestBase extends TestBase implements ITestBas
         queue = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz-queue"))
+                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "authz_queue"))
                 .endMetadata()
                 .withNewSpec()
                 .withType("queue")
-                .withAddress("authz-queue")
+                .withAddress("authz_queue")
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
