@@ -14,3 +14,4 @@ export * from "./EmptyDeviceList";
 export * from "./DeviceFilter";
 export * from "./DeviceFilterCriteria";
 export * from "./DeviceListToolbar";
+export * from "./DeviceListFooterToolbar";
