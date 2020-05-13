@@ -14,7 +14,6 @@ get_endpoint() {
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 TARGET_DIR=${1-/apps}
-OAUTH2_CA_TRUST_FILE=${OAUTH2_CA_TRUST_FILE:-${TARGET_DIR}/ca-trust/certs.crt}
 
 SSO_COOKIE_SECRET=$(python3 -c \
 'import os,base64; \
@@ -52,18 +51,6 @@ do
       -e "s,\${OAUTH2_SCOPE},${OAUTH2_SCOPE},g" \
       -i ${c}
 done
-
-
-echo Aggregating OAuth/OIDC provider trust into "${OAUTH2_CA_TRUST_FILE}"
-mkdir -p "$(dirname "${OAUTH2_CA_TRUST_FILE}")"
-touch "${OAUTH2_CA_TRUST_FILE}"
-while IFS=: read -r -d: dir; do
-  if [[ "${dir}" && -d "${dir}" ]];
-  then
-    echo Aggregating trust from: "${dir}"
-    find "${dir}" -type f -name "*.crt" -exec cat {} \; >> "${OAUTH2_CA_TRUST_FILE}"
-  fi
-done <<< "${OAUTH2_CA_TRUST_PATH}:"
 
 echo "window.env = {" > ${TARGET_DIR}/www/env.js
 echo "  OPENSHIFT_AVAILABLE:${OPENSHIFT_AVAILABLE}," >> ${TARGET_DIR}/www/env.js
