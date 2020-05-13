@@ -4,19 +4,23 @@
  */
 
 import React from "react";
+import { useHistory } from "react-router-dom";
+import ApolloClient from "apollo-boost";
 import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout as Layout } from "use-patternfly";
-import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
-import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
-import NavToolBar from "components/NavToolBar/NavToolBar";
+import {
+  NavToolBar,
+  ServerMessageAlert,
+  NetworkStatusAlert,
+  RootModal
+} from "components";
 import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
-import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
-import { useErrorContext } from "./context-state-reducer";
+import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
 
 let history: any, dispactAction: any, states: any;
@@ -42,18 +46,19 @@ const logo = <Brand src={brandImg} alt="Console Logo" />;
 
 const AppLayout: React.FC = () => {
   history = useHistory();
-  const { dispatch, state } = useErrorContext();
+  const { dispatch, state } = useStoreContext();
   states = state;
   dispactAction = dispatch;
   const logoProps = React.useMemo(
     () => ({
       onClick: () => history.push("/")
     }),
-    [history]
+    []
   );
 
   return (
     <ApolloProvider client={client}>
+      <RootModal />
       <Layout
         logoProps={logoProps}
         logo={logo}

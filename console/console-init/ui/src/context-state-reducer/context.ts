@@ -4,22 +4,24 @@
  */
 
 import { createContext, useReducer, useContext, useMemo } from "react";
-import { initialState } from "./initialState";
-import { reducer } from "./reducer";
+import { initialState, IInitialState } from "./initialState";
 
-const ErrorContext = createContext<any>(initialState);
-const ErrorProvider = ErrorContext.Provider;
+const StoreContext = createContext<any>(initialState);
+const StoreProvider = StoreContext.Provider;
 
-const useErrorReducer = () => {
-  const [state, dispatch] = useReducer(reducer, initialState);
+const useStore = (rootReducer: any, initialState?: IInitialState) => {
+  const initialStates =
+    initialState || rootReducer(undefined, { type: undefined });
+  const [state, dispatch] = useReducer(rootReducer, initialStates);
+
   const contextValue = useMemo(() => {
     return { state, dispatch };
   }, [state, dispatch]);
   return [contextValue];
 };
 
-const useErrorContext = () => {
-  return useContext(ErrorContext);
+const useStoreContext = () => {
+  return useContext(StoreContext);
 };
 
-export { ErrorProvider, ErrorContext, useErrorReducer, useErrorContext };
+export { StoreProvider, StoreContext, useStore, useStoreContext };

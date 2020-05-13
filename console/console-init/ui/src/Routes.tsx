@@ -3,26 +3,18 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import * as React from "react";
+import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
 const getAddressSpaceListPage = () =>
-  import("pages/AddressSpaceList/AddressSpaceListWithFilterAndPaginationPage");
+  import("modules/address-space/AddressSpacePage");
 const getAddressSpaceDetail = () =>
-  import("pages/AddressSpaceDetail/AddressSpaceDetailPage");
-const getAddressDetail = () => import("pages/AddressDetail/AddressDetailPage");
+  import("modules/address-space/AddressSpaceDetailPage");
+const getAddressDetail = () =>
+  import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
-  import("pages/ConnectionDetail/ConnectionDetailPage");
-
-const getConnectionsList = () =>
-  import(
-    "pages/AddressSpaceDetail/ConnectionList/ConnectionListWithFilterAndPaginationPage"
-  );
-const getAddressesList = () =>
-  import(
-    "pages/AddressSpaceDetail/AddressList/AddressesListWithFilterAndPaginationPage"
-  );
+  import("modules/connection-detail/ConnectionDetailPage");
 
 export const AppRoutes = () => (
   <SwitchWith404>
@@ -45,22 +37,6 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/connections/:connectionname"
       getComponent={getConnectionDetail}
-      exact={true}
-    />
-  </SwitchWith404>
-);
-
-export const AddressSpaceRoutes = () => (
-  <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
-    <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/addresses/"
-      getComponent={getAddressesList}
-      exact={true}
-    />
-    <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/connections/"
-      getComponent={getConnectionsList}
       exact={true}
     />
   </SwitchWith404>

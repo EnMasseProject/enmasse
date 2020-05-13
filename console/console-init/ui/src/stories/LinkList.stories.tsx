@@ -5,10 +5,10 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { LinkList, ILink } from "../components/ConnectionDetail/LinkList";
-import { text, number, select } from "@storybook/addon-knobs";
-import { action } from "@storybook/addon-actions";
-import { ConnectionLinksFilter } from "pages/ConnectionDetail/ConnectionLinksFilter";
+import {
+  ConnectionLinksList,
+  ILink
+} from "modules/connection-detail/components/ConnectionLinksList/ConnectionLinksList";
 
 export default {
   title: "Connection Details"
@@ -58,7 +58,7 @@ const rows: ILink[] = [
 
 export const linkList = () => (
   <MemoryRouter>
-    <LinkList rows={rows} />
+    <ConnectionLinksList rows={rows} />
   </MemoryRouter>
 );
 

@@ -669,7 +669,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.createAddress(destination, false);
-        Thread.sleep(5_000);
+        Thread.sleep(5000);
         assertThat("Console failed, expected PENDING or READY state",
                 consolePage.getAddressItem(destination).getStatus(),
                 either(is(AddressStatus.PENDING)).or(is(AddressStatus.READY)));
@@ -724,20 +724,20 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddressesAndWait(addresses.toArray(new Address[0]));
 
         String subText = "queue";
-        consolePage.addFilter(FilterType.ADDRESS, subText);
+        consolePage.addFilter(FilterType.NAME, subText);
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "topic";
-        consolePage.addFilter(FilterType.ADDRESS, subText);
+        consolePage.addFilter(FilterType.NAME, subText);
         items = consolePage.getAddressItems();
         assertEquals(addressCount, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount));
 
 
-        consolePage.removeAddressFilter(FilterType.ADDRESS, "queue");
+        consolePage.removeAddressFilter(FilterType.NAME, "queue");
         items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
@@ -777,10 +777,10 @@ public abstract class ConsoleTest extends TestBase {
 
         TestUtils.waitUntilCondition(() -> consolePage.getAddressItems().size() == addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
 
-        consolePage.addFilter(FilterType.STATUS, "Failed");
+        consolePage.addFilter(FilterType.STATUS, "Pending");
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(badAddresses.size(), items.size(),
-                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Failed"));
+                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Pending"));
 
         consolePage.addFilter(FilterType.STATUS, "Active");
         items = consolePage.getAddressItems();
@@ -924,9 +924,9 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.createAddresses(addresses.toArray(new Address[0]));
-        consolePage.sortAddresses(SortType.ADDRESS, true);
+        consolePage.sortAddresses(SortType.NAME, true);
         assertSorted("Console failed, items are not sorted by name asc", consolePage.getAddressItems());
-        consolePage.sortAddresses(SortType.ADDRESS, false);
+        consolePage.sortAddresses(SortType.NAME, false);
         assertSorted("Console failed, items are not sorted by name desc", consolePage.getAddressItems(), true);
     }
 
@@ -1178,7 +1178,7 @@ public abstract class ConsoleTest extends TestBase {
 
     }
 
-    protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
+    protected void  doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace, SortType.CONTAINER_ID,
                 this::attachClients,
                 c -> c.getContainerId() != null,
