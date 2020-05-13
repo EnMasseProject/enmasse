@@ -82,6 +82,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateAddrSpaceWithCustomAuthService() throws Exception {
         doTestCreateAddrSpaceWithCustomAuthService();
     }
@@ -109,6 +110,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testEditAddressSpace() throws Exception {
         doEditAddressSpace();
     }
