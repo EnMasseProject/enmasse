@@ -31,3 +31,4 @@ export * from "./JsonViewEditor";
 export * from "./ToggleIcon";
 export * from "./NoResultFound";
 export * from "./DropdownWithBulkSelect";
+export * from "./SwitchWithToggle";
