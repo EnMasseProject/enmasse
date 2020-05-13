@@ -17,8 +17,8 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	v12 "github.com/openshift/api/user/v1"
-	"github.com/vektah/gqlparser"
-	"github.com/vektah/gqlparser/ast"
+	gqlparser "github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 	v11 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -352,7 +352,6 @@ type ConnectionSpec_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Protocol(ctx context.Context, obj *consolegraphql.ConnectionSpec) (Protocol, error)
 
 	Properties(ctx context.Context, obj *consolegraphql.ConnectionSpec) ([]*KeyValue, error)
-	Principal(ctx context.Context, obj *consolegraphql.ConnectionSpec) (string, error)
 }
 type Connection_consoleapi_enmasse_io_v1beta1Resolver interface {
 	Links(ctx context.Context, obj *consolegraphql.Connection, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error)
@@ -1543,46 +1542,48 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	return 0, false
 }
 
-func (e *executableSchema) Query(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
-	ec := executionContext{graphql.GetRequestContext(ctx), e}
+func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
+	rc := graphql.GetOperationContext(ctx)
+	ec := executionContext{rc, e}
+	first := true
 
-	buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
-		data := ec._Query(ctx, op.SelectionSet)
-		var buf bytes.Buffer
-		data.MarshalGQL(&buf)
-		return buf.Bytes()
-	})
+	switch rc.Operation.Operation {
+	case ast.Query:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			data := ec._Query(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
 
-	return &graphql.Response{
-		Data:       buf,
-		Errors:     ec.Errors,
-		Extensions: ec.Extensions,
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+	case ast.Mutation:
+		return func(ctx context.Context) *graphql.Response {
+			if !first {
+				return nil
+			}
+			first = false
+			data := ec._Mutation(ctx, rc.Operation.SelectionSet)
+			var buf bytes.Buffer
+			data.MarshalGQL(&buf)
+
+			return &graphql.Response{
+				Data: buf.Bytes(),
+			}
+		}
+
+	default:
+		return graphql.OneShot(graphql.ErrorResponse(ctx, "unsupported GraphQL operation"))
 	}
-}
-
-func (e *executableSchema) Mutation(ctx context.Context, op *ast.OperationDefinition) *graphql.Response {
-	ec := executionContext{graphql.GetRequestContext(ctx), e}
-
-	buf := ec.RequestMiddleware(ctx, func(ctx context.Context) []byte {
-		data := ec._Mutation(ctx, op.SelectionSet)
-		var buf bytes.Buffer
-		data.MarshalGQL(&buf)
-		return buf.Bytes()
-	})
-
-	return &graphql.Response{
-		Data:       buf,
-		Errors:     ec.Errors,
-		Extensions: ec.Extensions,
-	}
-}
-
-func (e *executableSchema) Subscription(ctx context.Context, op *ast.OperationDefinition) func() *graphql.Response {
-	return graphql.OneShot(graphql.ErrorResponse(ctx, "subscriptions are not supported"))
 }
 
 type executionContext struct {
-	*graphql.RequestContext
+	*graphql.OperationContext
 	*executableSchema
 }
 
@@ -1600,7 +1601,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 	return introspection.WrapTypeFromDef(parsedSchema, parsedSchema.Types[name]), nil
 }
 
-var parsedSchema = gqlparser.MustLoadSchema(
+var sources = []*ast.Source{
 	&ast.Source{Name: "console/console-server/src/main/resources/schema.graphql", Input: `#
 # Copyright 2019, EnMasse authors.
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
@@ -1984,8 +1985,9 @@ type Mutation {
   closeConnection(input: ObjectMeta_v1_Input!): Boolean
 }
 
-`},
-)
+`, BuiltIn: false},
+}
+var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // endregion ************************** generated!.gotpl **************************
 
@@ -2574,22 +2576,20 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // region    **************************** field.gotpl *****************************
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_addressType(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressPlanSpec_admin_enmasse_io_v1beta2().AddressType(rctx, obj)
@@ -2599,34 +2599,31 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_addressTyp
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_displayName(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayName, nil
@@ -2636,34 +2633,31 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_displayNam
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_longDescription(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LongDescription, nil
@@ -2673,34 +2667,31 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_longDescri
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_shortDescription(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
@@ -2710,34 +2701,31 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_shortDescr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_displayOrder(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayOrder, nil
@@ -2747,34 +2735,31 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2_displayOrd
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressPlanStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -2784,34 +2769,31 @@ func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1_name(ctx conte
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1_partitions(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressPlanStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlanStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Partitions, nil
@@ -2821,34 +2803,31 @@ func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1_partitions(ctx
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlan) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlan_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -2858,34 +2837,31 @@ func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_metadata(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_spec(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressPlan) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressPlan_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -2895,34 +2871,31 @@ func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2_spec(ctx conte
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta2.AddressPlanSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressPlanSpec_admin_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Total, nil
@@ -2932,34 +2905,31 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_to
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_addresses(ctx context.Context, field graphql.CollectedField, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Addresses, nil
@@ -2969,34 +2939,31 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1_ad
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.AddressHolder)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_addressPlans(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpacePlanSpec_admin_enmasse_io_v1beta2().AddressPlans(rctx, obj)
@@ -3006,34 +2973,31 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_addre
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta2.AddressPlan)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_addressSpaceType(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpacePlanSpec_admin_enmasse_io_v1beta2().AddressSpaceType(rctx, obj)
@@ -3046,28 +3010,25 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_addre
 		return graphql.Null
 	}
 	res := resTmp.(*AddressSpaceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressSpaceType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_displayName(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayName, nil
@@ -3077,34 +3038,31 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_displ
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_longDescription(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LongDescription, nil
@@ -3114,34 +3072,31 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_longD
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_shortDescription(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
@@ -3151,34 +3106,31 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_short
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_displayOrder(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlanSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlanSpec_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayOrder, nil
@@ -3188,34 +3140,31 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2_displ
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlan) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlan_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -3225,34 +3174,31 @@ func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_metadata(
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_spec(ctx context.Context, field graphql.CollectedField, obj *v1beta2.AddressSpacePlan) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpacePlan_admin_enmasse_io_v1beta2",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -3262,34 +3208,31 @@ func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2_spec(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta2.AddressSpacePlanSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpacePlanSpec_admin_enmasse_io_v1beta22githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlanSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Total, nil
@@ -3299,34 +3242,31 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1_addressSpaces(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AddressSpaces, nil
@@ -3336,34 +3276,31 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.AddressSpaceHolder)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolderᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_authenticationServices(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSchemaSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AuthenticationServices, nil
@@ -3376,28 +3313,25 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_authentic
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_description(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSchemaSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
@@ -3410,28 +3344,25 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_descripti
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSchema_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -3441,34 +3372,31 @@ func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_metadata(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSchema_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -3478,34 +3406,31 @@ func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_spec(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta1.AddressSpaceSchemaSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceSchemaSpec_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_plan(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpaceSpec_enmasse_io_v1beta1().Plan(rctx, obj)
@@ -3515,34 +3440,31 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_plan(ctx contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1beta2.AddressSpacePlan)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_type(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpaceSpec_enmasse_io_v1beta1().Type(rctx, obj)
@@ -3552,34 +3474,31 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_type(ctx contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressSpaceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_authenticationService(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AuthenticationService, nil
@@ -3592,28 +3511,25 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1_authenticationS
 		return graphql.Null
 	}
 	res := resTmp.(*v1beta1.AuthenticationService)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAuthenticationService_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAuthenticationService(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_isReady(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsReady, nil
@@ -3623,34 +3539,31 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_isReady(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_messages(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Messages, nil
@@ -3663,28 +3576,25 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_messages(ctx 
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_phase(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Phase, nil
@@ -3694,34 +3604,31 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1_phase(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_addressSpaceType(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AddressSpaceType, nil
@@ -3731,34 +3638,31 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressSpaceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_displayName(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayName, nil
@@ -3768,34 +3672,31 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_longDescription(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LongDescription, nil
@@ -3805,34 +3706,31 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_shortDescription(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
@@ -3842,34 +3740,31 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_displayOrder(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayOrder, nil
@@ -3879,34 +3774,31 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceType_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -3916,34 +3808,31 @@ func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_meta
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpaceType_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -3953,34 +3842,31 @@ func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1_spec
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*AddressTypeSpecConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeSpecConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -3990,34 +3876,31 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_metadata
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -4027,34 +3910,31 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_spec(ctx
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta1.AddressSpaceSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceSpec_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_status(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Status, nil
@@ -4067,35 +3947,32 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_status(c
 		return graphql.Null
 	}
 	res := resTmp.(v1beta1.AddressSpaceStatus)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressSpaceStatus_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_connections(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_AddressSpace_consoleapi_enmasse_io_v1beta1_connections_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(rctx, obj, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -4105,41 +3982,38 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_connecti
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*ConnectionQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNConnectionQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐConnectionQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_addresses(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_AddressSpace_consoleapi_enmasse_io_v1beta1_addresses_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(rctx, obj, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -4149,34 +4023,31 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_addresse
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*AddressQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_metrics(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressSpaceHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpace_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Metrics, nil
@@ -4189,28 +4060,25 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1_metrics(
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Metric)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_address(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Address, nil
@@ -4220,34 +4088,31 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_address(ctx context.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_addressSpace(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AddressSpace, nil
@@ -4257,34 +4122,31 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_addressSpace(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_type(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpec_enmasse_io_v1beta1().Type(rctx, obj)
@@ -4294,34 +4156,31 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_type(ctx context.Con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_plan(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AddressSpec_enmasse_io_v1beta1().Plan(rctx, obj)
@@ -4331,34 +4190,31 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_plan(ctx context.Con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1beta2.AddressPlan)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlan(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_topic(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressSpec_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Topic, nil
@@ -4371,28 +4227,25 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1_topic(ctx context.Co
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_isReady(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsReady, nil
@@ -4402,34 +4255,31 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_isReady(ctx contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_messages(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Messages, nil
@@ -4442,28 +4292,25 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_messages(ctx conte
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_phase(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Phase, nil
@@ -4473,34 +4320,31 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_phase(ctx context.
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_planStatus(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressStatus_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.PlanStatus, nil
@@ -4513,28 +4357,25 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1_planStatus(ctx con
 		return graphql.Null
 	}
 	res := resTmp.(*v1beta1.AddressPlanStatus)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressPlanStatus_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressPlanStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_addressType(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AddressType, nil
@@ -4544,34 +4385,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_addre
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_addressSpaceType(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.AddressSpaceType, nil
@@ -4581,34 +4419,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_addre
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AddressSpaceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_displayName(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayName, nil
@@ -4618,34 +4453,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_displ
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_longDescription(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.LongDescription, nil
@@ -4655,34 +4487,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_longD
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_shortDescription(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ShortDescription, nil
@@ -4692,34 +4521,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_short
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_displayOrder(ctx context.Context, field graphql.CollectedField, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressTypeSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DisplayOrder, nil
@@ -4729,34 +4555,31 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1_displ
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *AddressTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressType_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -4766,34 +4589,31 @@ func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_metadata(
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *AddressTypeConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AddressType_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -4803,34 +4623,31 @@ func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1_spec(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*AddressTypeSpecConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeSpecConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Address_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -4840,34 +4657,31 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_metadata(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Address_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -4877,34 +4691,31 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_spec(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta1.AddressSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpec_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_status(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Address_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Status, nil
@@ -4917,35 +4728,32 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_status(ctx co
 		return graphql.Null
 	}
 	res := resTmp.(v1beta1.AddressStatus)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressStatus_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_links(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Address_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Address_consoleapi_enmasse_io_v1beta1_links_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Address_consoleapi_enmasse_io_v1beta1().Links(rctx, obj, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -4955,34 +4763,31 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_links(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*LinkQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNLinkQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_metrics(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.AddressHolder) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Address_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Metrics, nil
@@ -4995,28 +4800,25 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1_metrics(ctx c
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Metric)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationServiceSpec_admin_enmasse_io_v1beta1_type(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationServiceSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationServiceSpec_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.AuthenticationServiceSpec_admin_enmasse_io_v1beta1().Type(rctx, obj)
@@ -5026,34 +4828,31 @@ func (ec *executionContext) _AuthenticationServiceSpec_admin_enmasse_io_v1beta1_
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(AuthenticationServiceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAuthenticationServiceType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAuthenticationServiceType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta1_host(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationServiceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationServiceStatus_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Host, nil
@@ -5063,34 +4862,31 @@ func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta1_port(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationServiceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationServiceStatus_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Port, nil
@@ -5100,34 +4896,31 @@ func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationService) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationService_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -5137,34 +4930,31 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_meta
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationService) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationService_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -5174,34 +4964,31 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_spec
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta11.AuthenticationServiceSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAuthenticationServiceSpec_admin_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_status(ctx context.Context, field graphql.CollectedField, obj *v1beta11.AuthenticationService) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationService_admin_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Status, nil
@@ -5211,34 +4998,31 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1_stat
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1beta11.AuthenticationServiceStatus)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAuthenticationServiceStatus_admin_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AuthenticationService) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "AuthenticationService_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -5248,34 +5032,31 @@ func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1_name(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Total, nil
@@ -5285,34 +5066,31 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1_connections(ctx context.Context, field graphql.CollectedField, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Connections, nil
@@ -5322,34 +5100,31 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Connection)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnectionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_addressSpace(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1beta1().AddressSpace(rctx, obj)
@@ -5359,34 +5134,31 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_addres
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*consolegraphql.AddressSpaceHolder)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolder(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_hostname(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Hostname, nil
@@ -5396,34 +5168,31 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_hostna
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_containerId(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ContainerId, nil
@@ -5433,34 +5202,31 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_contai
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_protocol(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1beta1().Protocol(rctx, obj)
@@ -5470,34 +5236,31 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_protoc
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(Protocol)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐProtocol(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_encrypted(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Encrypted, nil
@@ -5507,34 +5270,31 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_encryp
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_properties(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1beta1().Properties(rctx, obj)
@@ -5544,71 +5304,65 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_proper
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*KeyValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1_principal(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1beta1().Principal(rctx, obj)
+		return obj.Principal, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Connection_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -5618,34 +5372,31 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metadata(c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Connection_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -5655,34 +5406,31 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_spec(ctx c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(consolegraphql.ConnectionSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNConnectionSpec_consoleapi_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnectionSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metrics(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Connection_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Metrics, nil
@@ -5692,41 +5440,38 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_metrics(ct
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Metric)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_links(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Connection) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Connection_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Connection_consoleapi_enmasse_io_v1beta1_links_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Connection_consoleapi_enmasse_io_v1beta1().Links(rctx, obj, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -5736,34 +5481,31 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_links(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*LinkQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNLinkQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _KeyValue_key(ctx context.Context, field graphql.CollectedField, obj *KeyValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "KeyValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Key, nil
@@ -5773,34 +5515,31 @@ func (ec *executionContext) _KeyValue_key(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _KeyValue_value(ctx context.Context, field graphql.CollectedField, obj *KeyValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "KeyValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Value, nil
@@ -5810,34 +5549,31 @@ func (ec *executionContext) _KeyValue_value(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_total(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "LinkQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Total, nil
@@ -5847,34 +5583,31 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_total
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(int)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_links(ctx context.Context, field graphql.CollectedField, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "LinkQueryResult_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Links, nil
@@ -5884,34 +5617,31 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1_links
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Link)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLinkᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_connection(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.LinkSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "LinkSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.LinkSpec_consoleapi_enmasse_io_v1beta1().Connection(rctx, obj)
@@ -5921,34 +5651,31 @@ func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_connection(c
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*consolegraphql.Connection)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNConnection_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnection(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_address(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.LinkSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "LinkSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Address, nil
@@ -5958,34 +5685,31 @@ func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_address(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_role(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.LinkSpec) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "LinkSpec_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.LinkSpec_consoleapi_enmasse_io_v1beta1().Role(rctx, obj)
@@ -5995,34 +5719,31 @@ func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1_role(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(LinkRole)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNLinkRole2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkRole(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Link) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Link_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -6032,34 +5753,31 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metadata(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_spec(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Link) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Link_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Spec, nil
@@ -6069,34 +5787,31 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_spec(ctx context
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(consolegraphql.LinkSpec)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNLinkSpec_consoleapi_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLinkSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metrics(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Link) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Link_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Metrics, nil
@@ -6106,34 +5821,31 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1_metrics(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*consolegraphql.Metric)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetricᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Annotations, nil
@@ -6143,34 +5855,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_annotations(
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*KeyValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -6180,34 +5889,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_name(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_namespace(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Namespace, nil
@@ -6217,34 +5923,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_namespace(ct
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_resourceVersion(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ResourceVersion, nil
@@ -6254,34 +5957,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_resourceVers
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTimestamp(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.CreationTimestamp, nil
@@ -6291,34 +5991,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_creationTime
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx context.Context, field graphql.CollectedField, obj *MetadataConsoleapiEnmasseIoV1beta1) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metadata_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.UID, nil
@@ -6328,34 +6025,31 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1_uid(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metric) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -6365,34 +6059,31 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_name(ctx conte
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_type(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metric) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Type(rctx, obj)
@@ -6402,34 +6093,31 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_type(ctx conte
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(MetricType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNMetricType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMetricType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_value(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metric) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Value, nil
@@ -6439,34 +6127,31 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_value(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(float64)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNFloat2float64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_units(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.Metric) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Metric_consoleapi_enmasse_io_v1beta1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Metric_consoleapi_enmasse_io_v1beta1().Units(rctx, obj)
@@ -6476,41 +6161,38 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1_units(ctx cont
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createAddressSpace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_createAddressSpace_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateAddressSpace(rctx, args["input"].(v1beta1.AddressSpace))
@@ -6520,41 +6202,38 @@ func (ec *executionContext) _Mutation_createAddressSpace(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_patchAddressSpace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_patchAddressSpace_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().PatchAddressSpace(rctx, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string))
@@ -6567,35 +6246,32 @@ func (ec *executionContext) _Mutation_patchAddressSpace(ctx context.Context, fie
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteAddressSpace(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_deleteAddressSpace_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteAddressSpace(rctx, args["input"].(v1.ObjectMeta))
@@ -6608,35 +6284,32 @@ func (ec *executionContext) _Mutation_deleteAddressSpace(ctx context.Context, fi
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_createAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v1beta1.Address), args["addressSpace"].(*string))
@@ -6646,41 +6319,38 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_patchAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().PatchAddress(rctx, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string))
@@ -6693,35 +6363,32 @@ func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field gr
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_deleteAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteAddress(rctx, args["input"].(v1.ObjectMeta))
@@ -6734,35 +6401,32 @@ func (ec *executionContext) _Mutation_deleteAddress(ctx context.Context, field g
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_purgeAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_purgeAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().PurgeAddress(rctx, args["input"].(v1.ObjectMeta))
@@ -6775,35 +6439,32 @@ func (ec *executionContext) _Mutation_purgeAddress(ctx context.Context, field gr
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Mutation",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Mutation_closeConnection_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CloseConnection(rctx, args["input"].(v1.ObjectMeta))
@@ -6816,28 +6477,25 @@ func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field
 		return graphql.Null
 	}
 	res := resTmp.(*bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _NamespaceStatus_v1_phase(ctx context.Context, field graphql.CollectedField, obj *v11.NamespaceStatus) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "NamespaceStatus_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.NamespaceStatus_v1().Phase(rctx, obj)
@@ -6847,34 +6505,31 @@ func (ec *executionContext) _NamespaceStatus_v1_phase(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Namespace_v1_metadata(ctx context.Context, field graphql.CollectedField, obj *v11.Namespace) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Namespace_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -6884,34 +6539,31 @@ func (ec *executionContext) _Namespace_v1_metadata(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Namespace_v1_status(ctx context.Context, field graphql.CollectedField, obj *v11.Namespace) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Namespace_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Status, nil
@@ -6921,34 +6573,31 @@ func (ec *executionContext) _Namespace_v1_status(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v11.NamespaceStatus)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNNamespaceStatus_v12k8sᚗioᚋapiᚋcoreᚋv1ᚐNamespaceStatus(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_annotations(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ObjectMeta_v1().Annotations(rctx, obj)
@@ -6958,34 +6607,31 @@ func (ec *executionContext) _ObjectMeta_v1_annotations(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*KeyValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_name(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -6995,34 +6641,31 @@ func (ec *executionContext) _ObjectMeta_v1_name(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_namespace(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Namespace, nil
@@ -7032,34 +6675,31 @@ func (ec *executionContext) _ObjectMeta_v1_namespace(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_resourceVersion(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ResourceVersion, nil
@@ -7069,34 +6709,31 @@ func (ec *executionContext) _ObjectMeta_v1_resourceVersion(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_creationTimestamp(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ObjectMeta_v1().CreationTimestamp(rctx, obj)
@@ -7106,34 +6743,31 @@ func (ec *executionContext) _ObjectMeta_v1_creationTimestamp(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ObjectMeta_v1_uid(ctx context.Context, field graphql.CollectedField, obj *v1.ObjectMeta) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "ObjectMeta_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.ObjectMeta_v1().UID(rctx, obj)
@@ -7143,34 +6777,31 @@ func (ec *executionContext) _ObjectMeta_v1_uid(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaceTypes(rctx)
@@ -7180,34 +6811,31 @@ func (ec *executionContext) _Query_addressSpaceTypes(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]AddressSpaceType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceTypes_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaceTypesV2(rctx)
@@ -7217,34 +6845,31 @@ func (ec *executionContext) _Query_addressSpaceTypes_v2(ctx context.Context, fie
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*AddressSpaceTypeConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressTypes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressTypes(rctx)
@@ -7254,41 +6879,38 @@ func (ec *executionContext) _Query_addressTypes(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]AddressType)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressType2ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressTypes_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressTypes_v2_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressTypesV2(rctx, args["addressSpaceType"].(*AddressSpaceType))
@@ -7298,41 +6920,38 @@ func (ec *executionContext) _Query_addressTypes_v2(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*AddressTypeConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpacePlans(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressSpacePlans_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpacePlans(rctx, args["addressSpaceType"].(*AddressSpaceType))
@@ -7342,41 +6961,38 @@ func (ec *executionContext) _Query_addressSpacePlans(ctx context.Context, field 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta2.AddressSpacePlan)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressPlans(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressPlans_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressPlans(rctx, args["addressSpacePlan"].(*string), args["addressType"].(*AddressType))
@@ -7386,34 +7002,31 @@ func (ec *executionContext) _Query_addressPlans(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta2.AddressPlan)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlanᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_authenticationServices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AuthenticationServices(rctx)
@@ -7423,34 +7036,31 @@ func (ec *executionContext) _Query_authenticationServices(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta11.AuthenticationService)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationServiceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceSchema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaceSchema(rctx)
@@ -7460,41 +7070,38 @@ func (ec *executionContext) _Query_addressSpaceSchema(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta1.AddressSpaceSchema)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceSchema_v2(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressSpaceSchema_v2_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaceSchemaV2(rctx, args["addressSpaceType"].(*AddressSpaceType))
@@ -7504,34 +7111,31 @@ func (ec *executionContext) _Query_addressSpaceSchema_v2(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v1beta1.AddressSpaceSchema)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchemaᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_whoami(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Whoami(rctx)
@@ -7541,34 +7145,31 @@ func (ec *executionContext) _Query_whoami(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*v12.User)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNUser_v12ᚖgithubᚗcomᚋopenshiftᚋapiᚋuserᚋv1ᚐUser(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_namespaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Namespaces(rctx)
@@ -7578,41 +7179,38 @@ func (ec *executionContext) _Query_namespaces(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]*v11.Namespace)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespaceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressSpaces_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaces(rctx, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -7625,35 +7223,32 @@ func (ec *executionContext) _Query_addressSpaces(ctx context.Context, field grap
 		return graphql.Null
 	}
 	res := resTmp.(*AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressSpaceQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addresses_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Addresses(rctx, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -7666,35 +7261,32 @@ func (ec *executionContext) _Query_addresses(ctx context.Context, field graphql.
 		return graphql.Null
 	}
 	res := resTmp.(*AddressQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOAddressQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_connections(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_connections_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().Connections(rctx, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string))
@@ -7707,35 +7299,32 @@ func (ec *executionContext) _Query_connections(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	res := resTmp.(*ConnectionQueryResultConsoleapiEnmasseIoV1beta1)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOConnectionQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐConnectionQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_messagingCertificateChain(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_messagingCertificateChain_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().MessagingCertificateChain(rctx, args["input"].(v1.ObjectMeta))
@@ -7745,41 +7334,38 @@ func (ec *executionContext) _Query_messagingCertificateChain(ctx context.Context
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressSpaceCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressSpaceCommand_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressSpaceCommand(rctx, args["input"].(v1beta1.AddressSpace))
@@ -7789,41 +7375,38 @@ func (ec *executionContext) _Query_addressSpaceCommand(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_addressCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query_addressCommand_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Query().AddressCommand(rctx, args["input"].(v1beta1.Address), args["addressSpace"].(*string))
@@ -7833,41 +7416,38 @@ func (ec *executionContext) _Query_addressCommand(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field_Query___type_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.introspectType(args["name"].(string))
@@ -7880,28 +7460,25 @@ func (ec *executionContext) _Query___type(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "Query",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.introspectSchema()
@@ -7914,28 +7491,25 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Schema)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_metadata(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "User_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.ObjectMeta, nil
@@ -7945,34 +7519,31 @@ func (ec *executionContext) _User_v1_metadata(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(v1.ObjectMeta)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_identities(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "User_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Identities, nil
@@ -7982,34 +7553,31 @@ func (ec *executionContext) _User_v1_identities(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_groups(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "User_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Groups, nil
@@ -8019,34 +7587,31 @@ func (ec *executionContext) _User_v1_groups(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _User_v1_fullName(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "User_v1",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.FullName, nil
@@ -8056,34 +7621,31 @@ func (ec *executionContext) _User_v1_fullName(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Directive",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -8093,34 +7655,31 @@ func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Directive",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
@@ -8133,28 +7692,25 @@ func (ec *executionContext) ___Directive_description(ctx context.Context, field 
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_locations(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Directive",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Locations, nil
@@ -8164,34 +7720,31 @@ func (ec *executionContext) ___Directive_locations(ctx context.Context, field gr
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__DirectiveLocation2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Directive",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Args, nil
@@ -8201,34 +7754,31 @@ func (ec *executionContext) ___Directive_args(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.InputValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__EnumValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -8238,34 +7788,31 @@ func (ec *executionContext) ___EnumValue_name(ctx context.Context, field graphql
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__EnumValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
@@ -8278,28 +7825,25 @@ func (ec *executionContext) ___EnumValue_description(ctx context.Context, field 
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__EnumValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsDeprecated(), nil
@@ -8309,34 +7853,31 @@ func (ec *executionContext) ___EnumValue_isDeprecated(ctx context.Context, field
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.EnumValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__EnumValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DeprecationReason(), nil
@@ -8349,28 +7890,25 @@ func (ec *executionContext) ___EnumValue_deprecationReason(ctx context.Context, 
 		return graphql.Null
 	}
 	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -8380,34 +7918,31 @@ func (ec *executionContext) ___Field_name(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
@@ -8420,28 +7955,25 @@ func (ec *executionContext) ___Field_description(ctx context.Context, field grap
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Args, nil
@@ -8451,34 +7983,31 @@ func (ec *executionContext) ___Field_args(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.InputValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Type, nil
@@ -8488,34 +8017,31 @@ func (ec *executionContext) ___Field_type(ctx context.Context, field graphql.Col
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.IsDeprecated(), nil
@@ -8525,34 +8051,31 @@ func (ec *executionContext) ___Field_isDeprecated(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(bool)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, field graphql.CollectedField, obj *introspection.Field) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Field",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DeprecationReason(), nil
@@ -8565,28 +8088,25 @@ func (ec *executionContext) ___Field_deprecationReason(ctx context.Context, fiel
 		return graphql.Null
 	}
 	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__InputValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name, nil
@@ -8596,34 +8116,31 @@ func (ec *executionContext) ___InputValue_name(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___InputValue_description(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__InputValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description, nil
@@ -8636,28 +8153,25 @@ func (ec *executionContext) ___InputValue_description(ctx context.Context, field
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__InputValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Type, nil
@@ -8667,34 +8181,31 @@ func (ec *executionContext) ___InputValue_type(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, field graphql.CollectedField, obj *introspection.InputValue) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__InputValue",
 		Field:    field,
 		Args:     nil,
 		IsMethod: false,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.DefaultValue, nil
@@ -8707,28 +8218,25 @@ func (ec *executionContext) ___InputValue_defaultValue(ctx context.Context, fiel
 		return graphql.Null
 	}
 	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Schema",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Types(), nil
@@ -8738,34 +8246,31 @@ func (ec *executionContext) ___Schema_types(ctx context.Context, field graphql.C
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Schema",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.QueryType(), nil
@@ -8775,34 +8280,31 @@ func (ec *executionContext) ___Schema_queryType(ctx context.Context, field graph
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Schema",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.MutationType(), nil
@@ -8815,28 +8317,25 @@ func (ec *executionContext) ___Schema_mutationType(ctx context.Context, field gr
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Schema",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.SubscriptionType(), nil
@@ -8849,28 +8348,25 @@ func (ec *executionContext) ___Schema_subscriptionType(ctx context.Context, fiel
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Schema_directives(ctx context.Context, field graphql.CollectedField, obj *introspection.Schema) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Schema",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Directives(), nil
@@ -8880,34 +8376,31 @@ func (ec *executionContext) ___Schema_directives(ctx context.Context, field grap
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.Directive)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Kind(), nil
@@ -8917,34 +8410,31 @@ func (ec *executionContext) ___Type_kind(ctx context.Context, field graphql.Coll
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !ec.HasError(rctx) {
+		if !graphql.HasFieldError(ctx, fc) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalN__TypeKind2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Name(), nil
@@ -8957,28 +8447,25 @@ func (ec *executionContext) ___Type_name(ctx context.Context, field graphql.Coll
 		return graphql.Null
 	}
 	res := resTmp.(*string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_description(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Description(), nil
@@ -8991,35 +8478,32 @@ func (ec *executionContext) ___Type_description(ctx context.Context, field graph
 		return graphql.Null
 	}
 	res := resTmp.(string)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field___Type_fields_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Fields(args["includeDeprecated"].(bool)), nil
@@ -9032,28 +8516,25 @@ func (ec *executionContext) ___Type_fields(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.Field)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.Interfaces(), nil
@@ -9066,28 +8547,25 @@ func (ec *executionContext) ___Type_interfaces(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.PossibleTypes(), nil
@@ -9100,35 +8578,32 @@ func (ec *executionContext) ___Type_possibleTypes(ctx context.Context, field gra
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
 	args, err := ec.field___Type_enumValues_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
-	rctx.Args = args
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.EnumValues(args["includeDeprecated"].(bool)), nil
@@ -9141,28 +8616,25 @@ func (ec *executionContext) ___Type_enumValues(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.EnumValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.InputFields(), nil
@@ -9175,28 +8647,25 @@ func (ec *executionContext) ___Type_inputFields(ctx context.Context, field graph
 		return graphql.Null
 	}
 	res := resTmp.([]introspection.InputValue)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.CollectedField, obj *introspection.Type) (ret graphql.Marshaler) {
-	ctx = ec.Tracer.StartFieldExecution(ctx, field)
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
 			ret = graphql.Null
 		}
-		ec.Tracer.EndFieldExecution(ctx)
 	}()
-	rctx := &graphql.ResolverContext{
+	fc := &graphql.FieldContext{
 		Object:   "__Type",
 		Field:    field,
 		Args:     nil,
 		IsMethod: true,
 	}
-	ctx = graphql.WithResolverContext(ctx, rctx)
-	ctx = ec.Tracer.StartFieldResolverExecution(ctx, rctx)
+
+	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return obj.OfType(), nil
@@ -9209,8 +8678,7 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 		return graphql.Null
 	}
 	res := resTmp.(*introspection.Type)
-	rctx.Result = res
-	ctx = ec.Tracer.StartFieldChildExecution(ctx)
+	fc.Result = res
 	return ec.marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, field.Selections, res)
 }
 
@@ -9397,7 +8865,7 @@ func (ec *executionContext) unmarshalInputObjectMeta_v1_Input(ctx context.Contex
 var addressPlanSpec_admin_enmasse_io_v1beta2Implementors = []string{"AddressPlanSpec_admin_enmasse_io_v1beta2"}
 
 func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta2.AddressPlanSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressPlanSpec_admin_enmasse_io_v1beta2Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressPlanSpec_admin_enmasse_io_v1beta2Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9453,7 +8921,7 @@ func (ec *executionContext) _AddressPlanSpec_admin_enmasse_io_v1beta2(ctx contex
 var addressPlanStatus_enmasse_io_v1beta1Implementors = []string{"AddressPlanStatus_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressPlanStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressPlanStatus_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressPlanStatus_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9485,7 +8953,7 @@ func (ec *executionContext) _AddressPlanStatus_enmasse_io_v1beta1(ctx context.Co
 var addressPlan_admin_enmasse_io_v1beta2Implementors = []string{"AddressPlan_admin_enmasse_io_v1beta2"}
 
 func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta2.AddressPlan) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressPlan_admin_enmasse_io_v1beta2Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressPlan_admin_enmasse_io_v1beta2Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9517,7 +8985,7 @@ func (ec *executionContext) _AddressPlan_admin_enmasse_io_v1beta2(ctx context.Co
 var addressQueryResult_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressQueryResult_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9549,7 +9017,7 @@ func (ec *executionContext) _AddressQueryResult_consoleapi_enmasse_io_v1beta1(ct
 var addressSpacePlanSpec_admin_enmasse_io_v1beta2Implementors = []string{"AddressSpacePlanSpec_admin_enmasse_io_v1beta2"}
 
 func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta2.AddressSpacePlanSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpacePlanSpec_admin_enmasse_io_v1beta2Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpacePlanSpec_admin_enmasse_io_v1beta2Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9616,7 +9084,7 @@ func (ec *executionContext) _AddressSpacePlanSpec_admin_enmasse_io_v1beta2(ctx c
 var addressSpacePlan_admin_enmasse_io_v1beta2Implementors = []string{"AddressSpacePlan_admin_enmasse_io_v1beta2"}
 
 func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2(ctx context.Context, sel ast.SelectionSet, obj *v1beta2.AddressSpacePlan) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpacePlan_admin_enmasse_io_v1beta2Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpacePlan_admin_enmasse_io_v1beta2Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9648,7 +9116,7 @@ func (ec *executionContext) _AddressSpacePlan_admin_enmasse_io_v1beta2(ctx conte
 var addressSpaceQueryResult_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9680,7 +9148,7 @@ func (ec *executionContext) _AddressSpaceQueryResult_consoleapi_enmasse_io_v1bet
 var addressSpaceSchemaSpec_enmasse_io_v1beta1Implementors = []string{"AddressSpaceSchemaSpec_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressSpaceSchemaSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceSchemaSpec_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceSchemaSpec_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9706,7 +9174,7 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1(ctx conte
 var addressSpaceSchema_enmasse_io_v1beta1Implementors = []string{"AddressSpaceSchema_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressSpaceSchema) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceSchema_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceSchema_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9738,7 +9206,7 @@ func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1(ctx context.C
 var addressSpaceSpec_enmasse_io_v1beta1Implementors = []string{"AddressSpaceSpec_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressSpaceSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceSpec_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceSpec_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9790,7 +9258,7 @@ func (ec *executionContext) _AddressSpaceSpec_enmasse_io_v1beta1(ctx context.Con
 var addressSpaceStatus_enmasse_io_v1beta1Implementors = []string{"AddressSpaceStatus_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressSpaceStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceStatus_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceStatus_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9824,7 +9292,7 @@ func (ec *executionContext) _AddressSpaceStatus_enmasse_io_v1beta1(ctx context.C
 var addressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9871,7 +9339,7 @@ func (ec *executionContext) _AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1(
 var addressSpaceType_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressSpaceType_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpaceType_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpaceType_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9903,7 +9371,7 @@ func (ec *executionContext) _AddressSpaceType_consoleapi_enmasse_io_v1beta1(ctx 
 var addressSpace_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressSpace_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.AddressSpaceHolder) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpace_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpace_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -9967,7 +9435,7 @@ func (ec *executionContext) _AddressSpace_consoleapi_enmasse_io_v1beta1(ctx cont
 var addressSpec_enmasse_io_v1beta1Implementors = []string{"AddressSpec_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressSpec_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressSpec_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10029,7 +9497,7 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1beta1(ctx context.Context,
 var addressStatus_enmasse_io_v1beta1Implementors = []string{"AddressStatus_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AddressStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressStatus_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressStatus_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10065,7 +9533,7 @@ func (ec *executionContext) _AddressStatus_enmasse_io_v1beta1(ctx context.Contex
 var addressTypeSpec_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressTypeSpec_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressTypeSpecConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressTypeSpec_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressTypeSpec_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10117,7 +9585,7 @@ func (ec *executionContext) _AddressTypeSpec_consoleapi_enmasse_io_v1beta1(ctx c
 var addressType_consoleapi_enmasse_io_v1beta1Implementors = []string{"AddressType_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *AddressTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, addressType_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, addressType_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10149,7 +9617,7 @@ func (ec *executionContext) _AddressType_consoleapi_enmasse_io_v1beta1(ctx conte
 var address_consoleapi_enmasse_io_v1beta1Implementors = []string{"Address_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.AddressHolder) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, address_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, address_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10199,7 +9667,7 @@ func (ec *executionContext) _Address_consoleapi_enmasse_io_v1beta1(ctx context.C
 var authenticationServiceSpec_admin_enmasse_io_v1beta1Implementors = []string{"AuthenticationServiceSpec_admin_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AuthenticationServiceSpec_admin_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta11.AuthenticationServiceSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, authenticationServiceSpec_admin_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, authenticationServiceSpec_admin_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10235,7 +9703,7 @@ func (ec *executionContext) _AuthenticationServiceSpec_admin_enmasse_io_v1beta1(
 var authenticationServiceStatus_admin_enmasse_io_v1beta1Implementors = []string{"AuthenticationServiceStatus_admin_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta11.AuthenticationServiceStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, authenticationServiceStatus_admin_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, authenticationServiceStatus_admin_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10267,7 +9735,7 @@ func (ec *executionContext) _AuthenticationServiceStatus_admin_enmasse_io_v1beta
 var authenticationService_admin_enmasse_io_v1beta1Implementors = []string{"AuthenticationService_admin_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta11.AuthenticationService) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, authenticationService_admin_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, authenticationService_admin_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10304,7 +9772,7 @@ func (ec *executionContext) _AuthenticationService_admin_enmasse_io_v1beta1(ctx 
 var authenticationService_enmasse_io_v1beta1Implementors = []string{"AuthenticationService_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.AuthenticationService) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, authenticationService_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, authenticationService_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10331,7 +9799,7 @@ func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1(ctx contex
 var connectionQueryResult_consoleapi_enmasse_io_v1beta1Implementors = []string{"ConnectionQueryResult_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, connectionQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, connectionQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10363,7 +9831,7 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
 var connectionSpec_consoleapi_enmasse_io_v1beta1Implementors = []string{"ConnectionSpec_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.ConnectionSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, connectionSpec_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, connectionSpec_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10429,19 +9897,10 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1(ctx co
 				return res
 			})
 		case "principal":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ConnectionSpec_consoleapi_enmasse_io_v1beta1_principal(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ConnectionSpec_consoleapi_enmasse_io_v1beta1_principal(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10456,7 +9915,7 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1beta1(ctx co
 var connection_consoleapi_enmasse_io_v1beta1Implementors = []string{"Connection_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.Connection) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, connection_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, connection_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10507,7 +9966,7 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1(ctx contex
 var keyValueImplementors = []string{"KeyValue"}
 
 func (ec *executionContext) _KeyValue(ctx context.Context, sel ast.SelectionSet, obj *KeyValue) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, keyValueImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, keyValueImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10539,7 +9998,7 @@ func (ec *executionContext) _KeyValue(ctx context.Context, sel ast.SelectionSet,
 var linkQueryResult_consoleapi_enmasse_io_v1beta1Implementors = []string{"LinkQueryResult_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *LinkQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, linkQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, linkQueryResult_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10571,7 +10030,7 @@ func (ec *executionContext) _LinkQueryResult_consoleapi_enmasse_io_v1beta1(ctx c
 var linkSpec_consoleapi_enmasse_io_v1beta1Implementors = []string{"LinkSpec_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.LinkSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, linkSpec_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, linkSpec_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10626,7 +10085,7 @@ func (ec *executionContext) _LinkSpec_consoleapi_enmasse_io_v1beta1(ctx context.
 var link_consoleapi_enmasse_io_v1beta1Implementors = []string{"Link_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.Link) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, link_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, link_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10663,7 +10122,7 @@ func (ec *executionContext) _Link_consoleapi_enmasse_io_v1beta1(ctx context.Cont
 var metadata_consoleapi_enmasse_io_v1beta1Implementors = []string{"Metadata_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *MetadataConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, metadata_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, metadata_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10715,7 +10174,7 @@ func (ec *executionContext) _Metadata_consoleapi_enmasse_io_v1beta1(ctx context.
 var metric_consoleapi_enmasse_io_v1beta1Implementors = []string{"Metric_consoleapi_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *consolegraphql.Metric) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, metric_consoleapi_enmasse_io_v1beta1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, metric_consoleapi_enmasse_io_v1beta1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10775,9 +10234,9 @@ func (ec *executionContext) _Metric_consoleapi_enmasse_io_v1beta1(ctx context.Co
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, mutationImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, mutationImplementors)
 
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
 		Object: "Mutation",
 	})
 
@@ -10823,7 +10282,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 var namespaceStatus_v1Implementors = []string{"NamespaceStatus_v1"}
 
 func (ec *executionContext) _NamespaceStatus_v1(ctx context.Context, sel ast.SelectionSet, obj *v11.NamespaceStatus) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, namespaceStatus_v1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, namespaceStatus_v1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10859,7 +10318,7 @@ func (ec *executionContext) _NamespaceStatus_v1(ctx context.Context, sel ast.Sel
 var namespace_v1Implementors = []string{"Namespace_v1"}
 
 func (ec *executionContext) _Namespace_v1(ctx context.Context, sel ast.SelectionSet, obj *v11.Namespace) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, namespace_v1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, namespace_v1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10891,7 +10350,7 @@ func (ec *executionContext) _Namespace_v1(ctx context.Context, sel ast.Selection
 var objectMeta_v1Implementors = []string{"ObjectMeta_v1"}
 
 func (ec *executionContext) _ObjectMeta_v1(ctx context.Context, sel ast.SelectionSet, obj *v1.ObjectMeta) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, objectMeta_v1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, objectMeta_v1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -10970,9 +10429,9 @@ func (ec *executionContext) _ObjectMeta_v1(ctx context.Context, sel ast.Selectio
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, queryImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, queryImplementors)
 
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{
 		Object: "Query",
 	})
 
@@ -11229,7 +10688,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 var user_v1Implementors = []string{"User_v1"}
 
 func (ec *executionContext) _User_v1(ctx context.Context, sel ast.SelectionSet, obj *v12.User) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, user_v1Implementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, user_v1Implementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11271,7 +10730,7 @@ func (ec *executionContext) _User_v1(ctx context.Context, sel ast.SelectionSet, 
 var __DirectiveImplementors = []string{"__Directive"}
 
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __DirectiveImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __DirectiveImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11310,7 +10769,7 @@ func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionS
 var __EnumValueImplementors = []string{"__EnumValue"}
 
 func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionSet, obj *introspection.EnumValue) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __EnumValueImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __EnumValueImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11346,7 +10805,7 @@ func (ec *executionContext) ___EnumValue(ctx context.Context, sel ast.SelectionS
 var __FieldImplementors = []string{"__Field"}
 
 func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, obj *introspection.Field) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __FieldImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __FieldImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11392,7 +10851,7 @@ func (ec *executionContext) ___Field(ctx context.Context, sel ast.SelectionSet, 
 var __InputValueImplementors = []string{"__InputValue"}
 
 func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.SelectionSet, obj *introspection.InputValue) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __InputValueImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __InputValueImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11428,7 +10887,7 @@ func (ec *executionContext) ___InputValue(ctx context.Context, sel ast.Selection
 var __SchemaImplementors = []string{"__Schema"}
 
 func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet, obj *introspection.Schema) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __SchemaImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __SchemaImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11469,7 +10928,7 @@ func (ec *executionContext) ___Schema(ctx context.Context, sel ast.SelectionSet,
 var __TypeImplementors = []string{"__Type"}
 
 func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, obj *introspection.Type) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.RequestContext, sel, __TypeImplementors)
+	fields := graphql.CollectFields(ec.OperationContext, sel, __TypeImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
@@ -11530,11 +10989,11 @@ func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖg
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11560,7 +11019,7 @@ func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22ᚕᚖg
 
 func (ec *executionContext) marshalNAddressPlan_admin_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressPlan(ctx context.Context, sel ast.SelectionSet, v *v1beta2.AddressPlan) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11574,7 +11033,7 @@ func (ec *executionContext) marshalNAddressQueryResult_consoleapi_enmasse_io_v1b
 
 func (ec *executionContext) marshalNAddressQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *AddressQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11599,11 +11058,11 @@ func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22�
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11629,7 +11088,7 @@ func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22�
 
 func (ec *executionContext) marshalNAddressSpacePlan_admin_enmasse_io_v1beta22ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta2ᚐAddressSpacePlan(ctx context.Context, sel ast.SelectionSet, v *v1beta2.AddressSpacePlan) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11654,11 +11113,11 @@ func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖ
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11684,7 +11143,7 @@ func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚕᚖ
 
 func (ec *executionContext) marshalNAddressSpaceSchema_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐAddressSpaceSchema(ctx context.Context, sel ast.SelectionSet, v *v1beta1.AddressSpaceSchema) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11734,11 +11193,11 @@ func (ec *executionContext) marshalNAddressSpaceType2ᚕgithubᚗcomᚋenmassepr
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11775,11 +11234,11 @@ func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1bet
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11805,7 +11264,7 @@ func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1bet
 
 func (ec *executionContext) marshalNAddressSpaceType_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressSpaceTypeConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *AddressSpaceTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11826,11 +11285,11 @@ func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12�
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11856,7 +11315,7 @@ func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12�
 
 func (ec *executionContext) marshalNAddressSpace_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressSpaceHolder(ctx context.Context, sel ast.SelectionSet, v *consolegraphql.AddressSpaceHolder) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11910,11 +11369,11 @@ func (ec *executionContext) marshalNAddressType2ᚕgithubᚗcomᚋenmasseproject
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11944,7 +11403,7 @@ func (ec *executionContext) marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta
 
 func (ec *executionContext) marshalNAddressTypeSpec_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeSpecConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *AddressTypeSpecConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -11965,11 +11424,11 @@ func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12�
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -11995,7 +11454,7 @@ func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12�
 
 func (ec *executionContext) marshalNAddressType_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressTypeConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *AddressTypeConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12016,11 +11475,11 @@ func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖ
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12046,7 +11505,7 @@ func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12ᚕᚖ
 
 func (ec *executionContext) marshalNAddress_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐAddressHolder(ctx context.Context, sel ast.SelectionSet, v *consolegraphql.AddressHolder) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12088,11 +11547,11 @@ func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1bet
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12118,7 +11577,7 @@ func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1bet
 
 func (ec *executionContext) marshalNAuthenticationService_admin_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋadminᚋv1beta1ᚐAuthenticationService(ctx context.Context, sel ast.SelectionSet, v *v1beta11.AuthenticationService) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12133,7 +11592,7 @@ func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interf
 func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.SelectionSet, v bool) graphql.Marshaler {
 	res := graphql.MarshalBoolean(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12146,7 +11605,7 @@ func (ec *executionContext) marshalNConnectionQueryResult_consoleapi_enmasse_io_
 
 func (ec *executionContext) marshalNConnectionQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐConnectionQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *ConnectionQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12171,11 +11630,11 @@ func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕ
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12201,7 +11660,7 @@ func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚕ
 
 func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnection(ctx context.Context, sel ast.SelectionSet, v *consolegraphql.Connection) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12216,7 +11675,7 @@ func (ec *executionContext) unmarshalNFloat2float64(ctx context.Context, v inter
 func (ec *executionContext) marshalNFloat2float64(ctx context.Context, sel ast.SelectionSet, v float64) graphql.Marshaler {
 	res := graphql.MarshalFloat(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12230,7 +11689,7 @@ func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface
 func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalID(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12244,7 +11703,7 @@ func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}
 func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.SelectionSet, v int) graphql.Marshaler {
 	res := graphql.MarshalInt(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12264,11 +11723,11 @@ func (ec *executionContext) marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseproject
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12294,7 +11753,7 @@ func (ec *executionContext) marshalNKeyValue2ᚕᚖgithubᚗcomᚋenmasseproject
 
 func (ec *executionContext) marshalNKeyValue2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐKeyValue(ctx context.Context, sel ast.SelectionSet, v *KeyValue) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12308,7 +11767,7 @@ func (ec *executionContext) marshalNLinkQueryResult_consoleapi_enmasse_io_v1beta
 
 func (ec *executionContext) marshalNLinkQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkQueryResultConsoleapiEnmasseIoV1beta1(ctx context.Context, sel ast.SelectionSet, v *LinkQueryResultConsoleapiEnmasseIoV1beta1) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12342,11 +11801,11 @@ func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgit
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12372,7 +11831,7 @@ func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚕᚖgit
 
 func (ec *executionContext) marshalNLink_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐLink(ctx context.Context, sel ast.SelectionSet, v *consolegraphql.Link) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12402,11 +11861,11 @@ func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖg
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12432,7 +11891,7 @@ func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12ᚕᚖg
 
 func (ec *executionContext) marshalNMetric_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMetric(ctx context.Context, sel ast.SelectionSet, v *consolegraphql.Metric) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12457,11 +11916,11 @@ func (ec *executionContext) marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12487,7 +11946,7 @@ func (ec *executionContext) marshalNNamespace_v12ᚕᚖk8sᚗioᚋapiᚋcoreᚋv
 
 func (ec *executionContext) marshalNNamespace_v12ᚖk8sᚗioᚋapiᚋcoreᚋv1ᚐNamespace(ctx context.Context, sel ast.SelectionSet, v *v11.Namespace) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12501,7 +11960,7 @@ func (ec *executionContext) marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkg�
 
 func (ec *executionContext) marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, sel ast.SelectionSet, v *v1.ObjectMeta) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12529,7 +11988,7 @@ func (ec *executionContext) unmarshalNString2string(ctx context.Context, v inter
 func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12571,7 +12030,7 @@ func (ec *executionContext) marshalNUser_v12githubᚗcomᚋopenshiftᚋapiᚋuse
 
 func (ec *executionContext) marshalNUser_v12ᚖgithubᚗcomᚋopenshiftᚋapiᚋuserᚋv1ᚐUser(ctx context.Context, sel ast.SelectionSet, v *v12.User) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12592,11 +12051,11 @@ func (ec *executionContext) marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgq
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12627,7 +12086,7 @@ func (ec *executionContext) unmarshalN__DirectiveLocation2string(ctx context.Con
 func (ec *executionContext) marshalN__DirectiveLocation2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12663,11 +12122,11 @@ func (ec *executionContext) marshalN__DirectiveLocation2ᚕstringᚄ(ctx context
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12712,11 +12171,11 @@ func (ec *executionContext) marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12753,11 +12212,11 @@ func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -12783,7 +12242,7 @@ func (ec *executionContext) marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 
 func (ec *executionContext) marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, sel ast.SelectionSet, v *introspection.Type) graphql.Marshaler {
 	if v == nil {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
@@ -12798,7 +12257,7 @@ func (ec *executionContext) unmarshalN__TypeKind2string(ctx context.Context, v i
 func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	res := graphql.MarshalString(v)
 	if res == graphql.Null {
-		if !ec.HasError(graphql.GetResolverContext(ctx)) {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 	}
@@ -12994,11 +12453,11 @@ func (ec *executionContext) marshalOMetric_consoleapi_enmasse_io_v1beta12ᚕᚖg
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -13093,11 +12552,11 @@ func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgq
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -13133,11 +12592,11 @@ func (ec *executionContext) marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgen
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -13173,11 +12632,11 @@ func (ec *executionContext) marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋg
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
@@ -13228,11 +12687,11 @@ func (ec *executionContext) marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgen�
 	}
 	for i := range v {
 		i := i
-		rctx := &graphql.ResolverContext{
+		fc := &graphql.FieldContext{
 			Index:  &i,
 			Result: &v[i],
 		}
-		ctx := graphql.WithResolverContext(ctx, rctx)
+		ctx := graphql.WithFieldContext(ctx, fc)
 		f := func(i int) {
 			defer func() {
 				if r := recover(); r != nil {
