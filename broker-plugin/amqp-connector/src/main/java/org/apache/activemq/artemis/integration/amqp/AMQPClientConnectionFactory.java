@@ -22,10 +22,11 @@ import org.apache.activemq.artemis.protocol.amqp.broker.ActiveMQProtonRemotingCo
 import org.apache.activemq.artemis.protocol.amqp.broker.ProtonProtocolManager;
 import org.apache.activemq.artemis.protocol.amqp.proton.AMQPConnectionContext;
 import org.apache.activemq.artemis.protocol.amqp.proton.AMQPConstants;
-import org.apache.activemq.artemis.protocol.amqp.proton.handler.EventHandler;
 import org.apache.activemq.artemis.protocol.amqp.sasl.ClientSASLFactory;
 import org.apache.activemq.artemis.spi.core.remoting.Connection;
 import org.apache.qpid.proton.amqp.Symbol;
+import org.apache.qpid.proton.engine.Link;
+import org.jboss.logging.Logger;
 
 import java.util.Map;
 import java.util.Optional;
@@ -36,11 +37,13 @@ import java.util.concurrent.Executor;
  */
 public class AMQPClientConnectionFactory {
 
+   private static final String PRESERVE_INITIATED_LINKS_SOURCE_TARGET_INFO_ENV_VAR = "PRESERVE_INITIATED_LINKS_SOURCE_TARGET_INFO";
    private final ActiveMQServer server;
    private final String containerId;
    private final Map<Symbol, Object> connectionProperties;
    private final int idleTimeout;
    private final boolean useCoreSubscriptionNaming;
+   private final boolean preserveInitiatedLinksSourceTargetInfo;
 
    public AMQPClientConnectionFactory(ActiveMQServer server, String containerId, Map<Symbol, Object> connectionProperties, int idleTimeout) {
       this.server = server;
@@ -48,15 +51,31 @@ public class AMQPClientConnectionFactory {
       this.connectionProperties = connectionProperties;
       this.idleTimeout = idleTimeout;
       this.useCoreSubscriptionNaming = false;
+
+      String preserve = System.getenv(PRESERVE_INITIATED_LINKS_SOURCE_TARGET_INFO_ENV_VAR) == null ? "true" : System.getenv(PRESERVE_INITIATED_LINKS_SOURCE_TARGET_INFO_ENV_VAR);
+      preserveInitiatedLinksSourceTargetInfo = Boolean.parseBoolean(preserve);
+
+      if (preserveInitiatedLinksSourceTargetInfo) {
+         ActiveMQAMQPLogger.LOGGER.info("Preserving the source/target info of initiated links");
+      }
+
    }
 
-   public ActiveMQProtonRemotingConnection createConnection(ProtonProtocolManager protocolManager, Connection connection, Optional<EventHandler> eventHandler, ClientSASLFactory clientSASLFactory) {
+   public ActiveMQProtonRemotingConnection createConnection(ProtonProtocolManager protocolManager, Connection connection, Optional<LinkInitiator> linkInitiator, ClientSASLFactory clientSASLFactory) {
       AMQPConnectionCallback connectionCallback = new AMQPConnectionCallback(protocolManager, connection, server.getExecutorFactory().getExecutor(), server);
 
       Executor executor = server.getExecutorFactory().getExecutor();
 
-      AMQPConnectionContext amqpConnection = new AMQPConnectionContext(protocolManager, connectionCallback, containerId, idleTimeout, protocolManager.getMaxFrameSize(), AMQPConstants.Connection.DEFAULT_CHANNEL_MAX, useCoreSubscriptionNaming, server.getScheduledPool(), false, clientSASLFactory, connectionProperties);
-      eventHandler.ifPresent(amqpConnection::addEventHandler);
+      AMQPConnectionContext amqpConnection = new AMQPConnectionContext(protocolManager, connectionCallback, containerId, idleTimeout, protocolManager.getMaxFrameSize(), AMQPConstants.Connection.DEFAULT_CHANNEL_MAX, useCoreSubscriptionNaming, server.getScheduledPool(), false, clientSASLFactory, connectionProperties) {
+         @Override
+         public void onRemoteOpen(Link link) throws Exception {
+            if (preserveInitiatedLinksSourceTargetInfo) {
+               linkInitiator.ifPresent(initiator -> initiator.preserveInitiatedSourceTargetInfo(link));
+            }
+            super.onRemoteOpen(link);
+         }
+      };
+      linkInitiator.ifPresent(amqpConnection::addEventHandler);
 
       ActiveMQProtonRemotingConnection delegate = new ActiveMQProtonRemotingConnection(protocolManager, amqpConnection, connection, executor);
       delegate.addFailureListener(connectionCallback);

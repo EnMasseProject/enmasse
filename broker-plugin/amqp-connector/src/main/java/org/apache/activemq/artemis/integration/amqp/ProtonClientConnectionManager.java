@@ -41,18 +41,18 @@ public class ProtonClientConnectionManager implements BaseConnectionLifeCycleLis
    private final Map<Object, ActiveMQProtonRemotingConnection> connectionMap = new ConcurrentHashMap<>();
    private static final Logger log = Logger.getLogger(ProtonClientConnectionManager.class);
    private final AMQPClientConnectionFactory connectionFactory;
-   private final Optional<EventHandler> eventHandler;
+   private final Optional<LinkInitiator> linkInitiator;
    private final ClientSASLFactory clientSASLFactory;
 
-   public ProtonClientConnectionManager(AMQPClientConnectionFactory connectionFactory, Optional<EventHandler> eventHandler, ClientSASLFactory clientSASLFactory) {
+   public ProtonClientConnectionManager(AMQPClientConnectionFactory connectionFactory, Optional<LinkInitiator> linkInitiator, ClientSASLFactory clientSASLFactory) {
       this.connectionFactory = connectionFactory;
-      this.eventHandler = eventHandler;
+      this.linkInitiator = linkInitiator;
       this.clientSASLFactory = clientSASLFactory;
    }
 
    @Override
    public void connectionCreated(ActiveMQComponent component, Connection connection, ProtonProtocolManager protocolManager) {
-      ActiveMQProtonRemotingConnection amqpConnection = connectionFactory.createConnection(protocolManager, connection, eventHandler, clientSASLFactory);
+      ActiveMQProtonRemotingConnection amqpConnection = connectionFactory.createConnection(protocolManager, connection, linkInitiator, clientSASLFactory);
       connectionMap.put(connection.getID(), amqpConnection);
       amqpConnection.open();
 
