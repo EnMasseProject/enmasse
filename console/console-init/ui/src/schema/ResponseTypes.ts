@@ -101,6 +101,7 @@ export interface IAddressDetailResponse {
       };
       spec: {
         address: string;
+        type: string;
         topic: string | null;
         plan: {
           spec: {
