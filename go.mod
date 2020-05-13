@@ -33,7 +33,7 @@ replace (
 )
 
 require (
-	github.com/99designs/gqlgen v0.10.2
+	github.com/99designs/gqlgen v0.11.3
 	github.com/Nerzal/gocloak/v3 v3.7.0
 	github.com/alexedwards/scs/v2 v2.2.0
 	github.com/coreos/prometheus-operator v0.34.0
@@ -54,7 +54,7 @@ require (
 	github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da // indirect
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.4.0
-	github.com/vektah/gqlparser v1.2.0
+	github.com/vektah/gqlparser/v2 v2.0.1
 	go.uber.org/multierr v1.1.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e

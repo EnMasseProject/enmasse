@@ -67,10 +67,10 @@ func buildResolverContext(namespace string) context.Context {
 			Namespace: namespace,
 		},
 	}
-	ctx := graphql.WithResolverContext(context.TODO(), &graphql.ResolverContext{
+	ctx := graphql.WithFieldContext(context.TODO(), &graphql.FieldContext{
 		Result: &link,
 	})
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{})
-	ctx = graphql.WithResolverContext(ctx, &graphql.ResolverContext{})
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{})
+	ctx = graphql.WithFieldContext(ctx, &graphql.FieldContext{})
 	return ctx
 }

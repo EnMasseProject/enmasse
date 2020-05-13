@@ -33,5 +33,4 @@ echo Generating Console resource watchers
 go generate pkg/consolegraphql/watchers/resource_watcher.go
 
 echo Generating Console GraphQL
-GO111MODULE=on go run -mod=vendor hack/gqlgen.go -c console/console-server/src/main/resources/gqlgen.yml
-
+go run hack/gqlgen.go --config console/console-server/src/main/resources/gqlgen.yml
