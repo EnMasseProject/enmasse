@@ -5,7 +5,6 @@
 package io.enmasse.systemtest.selenium;
 
 
-import com.paulhammant.ngwebdriver.NgWebDriver;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.selenium.resources.WebItem;
@@ -46,7 +45,6 @@ public class SeleniumProvider {
     private static SeleniumProvider instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private WebDriver driver;
-    private NgWebDriver angularDriver;
     private WebDriverWait driverWait;
     private Map<Date, File> browserScreenshots = new HashMap<>();
 
@@ -108,7 +106,6 @@ public class SeleniumProvider {
         this.driver = driver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(new Dimension(1366, 768));
-        angularDriver = new NgWebDriver((JavascriptExecutor) driver);
         driverWait = new WebDriverWait(driver, 10);
         browserScreenshots.clear();
     }
@@ -124,7 +121,6 @@ public class SeleniumProvider {
             }
             log.info("Driver is closed");
             driver = null;
-            angularDriver = null;
             driverWait = null;
             browserScreenshots.clear();
         }
@@ -148,10 +144,6 @@ public class SeleniumProvider {
 
     public WebDriver getDriver() {
         return this.driver;
-    }
-
-    public NgWebDriver getAngularDriver() {
-        return this.angularDriver;
     }
 
     public WebDriverWait getDriverWait() {
@@ -187,7 +179,6 @@ public class SeleniumProvider {
         assertNotNull(script, "Selenium provider failed, script to execute is null");
         log.info("Execute script: " + (textToLog == null ? script : textToLog));
         ((JavascriptExecutor) driver).executeScript(script, arguments);
-        angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
 
@@ -197,14 +188,12 @@ public class SeleniumProvider {
         logCheckboxValue(element);
         log.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
         element.click();
-        angularDriver.waitForAngularRequestsToFinish();
         takeScreenShot();
     }
 
     public void clearInput(WebElement element) {
         element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
         element.sendKeys(Keys.BACK_SPACE);
-        angularDriver.waitForAngularRequestsToFinish();
         log.info("Cleared input");
     }
 
@@ -214,7 +203,6 @@ public class SeleniumProvider {
         assertNotNull(element, "Selenium provider failed, element is null");
         clearInput(element);
         element.sendKeys(text);
-        angularDriver.waitForAngularRequestsToFinish();
         log.info("Filled input with text: " + text);
         takeScreenShot();
     }
@@ -223,7 +211,6 @@ public class SeleniumProvider {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");
         element.sendKeys(Keys.RETURN);
-        angularDriver.waitForAngularRequestsToFinish();
         log.info("Enter pressed");
         takeScreenShot();
     }
@@ -232,7 +219,6 @@ public class SeleniumProvider {
         takeScreenShot();
         log.info("Web page is going to be refreshed");
         driver.navigate().refresh();
-        angularDriver.waitForAngularRequestsToFinish();
         log.info("Web page successfully refreshed");
         takeScreenShot();
     }

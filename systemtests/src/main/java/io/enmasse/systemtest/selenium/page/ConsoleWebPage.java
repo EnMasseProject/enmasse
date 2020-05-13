@@ -485,7 +485,6 @@ public class ConsoleWebPage implements IWebPage {
         log.info("Opening global console on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
-            selenium.getAngularDriver().waitForAngularRequestsToFinish();
             selenium.takeScreenShot();
             try {
                 logout();
@@ -495,7 +494,6 @@ public class ConsoleWebPage implements IWebPage {
             if (!login())
                 throw new IllegalAccessException(loginPage.getAlertMessage());
         }
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
             throw new IllegalStateException("Openshift console not loaded");
         }

@@ -88,7 +88,6 @@ public class OpenshiftLoginWebPage implements IWebPage {
         } else {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.presenceOfElementLocated(By.id("inputPassword")));
         }
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         selenium.takeScreenShot();
         if (Kubernetes.getInstance().getOcpVersion() == OpenShiftVersion.OCP4) {
             selenium.clickOnItem(getHtpasswdButton(), "Htpasswd log in page");
