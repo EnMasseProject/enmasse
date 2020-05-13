@@ -24,7 +24,7 @@ The messaging protocols supported depends on the type of address space used. For
 
 If you opted for the `selfsigned` certificate provider type in your `AddressSpace` endpoint configuration, the generated CA
 that signed the `AddressSpace` server certificate is required when connecting to the messaging client application. The
-certificate can be retrieved from the addressspace using the following procedure.
+certificate can be retrieved from the `AddressSpace' using the following procedure.
 
 WARNING: Using a self-signed certificate in production environments is not recommended.
 
