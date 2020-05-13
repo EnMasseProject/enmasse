@@ -457,7 +457,7 @@ public abstract class AbstractClient {
             }
             args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
             args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
-            if (args.getValues(ClientArgument.CONN_AUTH_MECHANISM).isEmpty()) {
+            if (args.getValues(ClientArgument.CONN_AUTH_MECHANISM) == null) {
                 args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");
             }
         }
