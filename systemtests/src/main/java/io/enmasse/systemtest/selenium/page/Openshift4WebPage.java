@@ -157,7 +157,6 @@ public class Openshift4WebPage implements IWebPage {
         log.info("Opening openshift web page on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
-            selenium.getAngularDriver().waitForAngularRequestsToFinish();
             selenium.takeScreenShot();
             try {
                 logout();
@@ -167,7 +166,6 @@ public class Openshift4WebPage implements IWebPage {
             if (!login())
                 throw new IllegalAccessException(loginPage.getAlertMessage());
         }
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
             throw new IllegalStateException("Openshift console not loaded");
         }
