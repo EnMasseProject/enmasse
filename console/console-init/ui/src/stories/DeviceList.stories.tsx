@@ -22,7 +22,7 @@ import { DeviceDetailNavigation } from "modules/device-detail";
 import { DropdownItem } from "@patternfly/react-core";
 
 export default {
-  title: "Device"
+  title: "Device List Table"
 };
 
 const rows: IDevice[] = [
