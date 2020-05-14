@@ -16,6 +16,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -43,82 +44,56 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     private static final int TIMEOUT_QUERY_RESULT_MINUTES = 3;
     private static final String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     private static final String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
-    private static final String ENABLE_MONITORING = "ENABLE_MONITORING";
     private static Logger log = CustomLogger.getLogger();
-    private Path templatesDir = Paths.get(environment.getTemplatesPath());
     private PrometheusApiClient prometheusApiClient;
 
     @BeforeEach
     void installMonitoring() throws Exception {
-        setEnmasseOperatorEnableMonitoring(false);
-        KubeCMDClient.createNamespace(environment.getMonitoringNamespace());
-        KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-operator"));
-        waitForMonitoringResources();
-        KubeCMDClient.applyFromFile(environment.getMonitoringNamespace(), Paths.get(templatesDir.toString(), "install", "components", "monitoring-deployment"));
-        Thread.sleep(30_000);
-        TestUtils.waitForExpectedReadyPods(kubernetes, environment.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
-
-        Kubernetes.getInstance().getClient().namespaces()
-                .withName(kubernetes.getInfraNamespace())
-                .edit()
-                .editMetadata()
-                .addToLabels("monitoring-key", "middleware")
-                .endMetadata()
-                .done();
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-
+        EnmasseOperatorManager.getInstance().installMonitoringOperator();
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         this.prometheusApiClient = new PrometheusApiClient(prometheusEndpoint);
-
-        Thread.sleep(300_000);
-        setEnmasseOperatorEnableMonitoring(true);
         waitUntilPrometheusReady();
-
     }
 
-    private void setEnmasseOperatorEnableMonitoring(boolean enable) {
-        List<EnvVar> envVars = Kubernetes.getInstance().getClient().apps()
-                .deployments()
-                .inNamespace(kubernetes.getInfraNamespace())
-                .withName("enmasse-operator")
-                .get().getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
-        List<EnvVar> updatedEnvVars = envVars
-                .stream()
-                .map(envVarObj -> {
-                    if (ENABLE_MONITORING.equals(envVarObj.getName())) {
-                        envVarObj.setValue(Boolean.toString(enable));
-                    }
-                    return envVarObj;
-                })
-                .collect(Collectors.toList());
+    @AfterEach
+    void uninstallMonitoring() throws Exception {
+        EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
+    }
 
-        Kubernetes.getInstance().getClient().apps()
-                .deployments()
-                .inNamespace(kubernetes.getInfraNamespace())
-                .withName("enmasse-operator")
-                .edit()
-                .editSpec()
-                .editTemplate()
-                .editSpec()
-                .editFirstContainer()
-                .withEnv(updatedEnvVars)
-                .endContainer()
+    @Test
+    @OpenShift
+    void testAddressSpaceRules() throws Exception {
+        Instant startTs = Instant.now();
+        String testNamespace = "monitoring-test";
+        kubernetes.createNamespace(testNamespace);
+        String addressSpaceName = "monitoring-address-space";
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName(addressSpaceName)
+                .withNamespace(testNamespace)
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
                 .endSpec()
-                .endTemplate()
-                .endSpec()
-                .done();
+                .build();
+        resourcesManager.createAddressSpace(addressSpace);
+
+        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, "1");
+
+        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
+
+        //tests address spaces ready goes from 0 to 1
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range));
+
+        //tests address spaces not ready goes from 1 to 0
+        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, range -> Ordering.natural().reverse().isOrdered(range));
     }
 
-    private void waitForMonitoringResources() throws Exception {
-        log.info("Waiting for monitoring resources to be installed");
-        TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
-            String permissions = KubeCMDClient.checkPermission("create", "prometheus", environment.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
-            return permissions.trim().equals("yes");
-        }, new TimeoutBudget(3, TimeUnit.MINUTES));
-
-    }
-
-    private void waitUntilPrometheusReady() throws Exception {
+    private void waitUntilPrometheusReady() {
         TestUtils.waitUntilCondition("Prometheus ready", phase -> {
             try {
                 JsonObject rules = prometheusApiClient.getRules();
@@ -145,67 +120,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
 
-    }
-
-    @AfterEach
-    void uninstallMonitoring(ExtensionContext context) {
-        if (context.getExecutionException().isPresent()) { //test failed
-            Path path = TestUtils.getFailedTestLogsPath(context);
-            GlobalLogCollector collector = new GlobalLogCollector(Kubernetes.getInstance(), path, environment.getMonitoringNamespace());
-            collector.collectLogsOfPodsInNamespace(environment.getMonitoringNamespace());
-            collector.collectEvents(environment.getMonitoringNamespace());
-        }
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-        KubeCMDClient.switchProject(environment.getMonitoringNamespace());
-        deleteMonitoringInfra();
-        KubeCMDClient.deleteNamespace(environment.getMonitoringNamespace());
-        KubeCMDClient.switchProject(kubernetes.getInfraNamespace());
-    }
-
-    private void deleteMonitoringInfra() {
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(environment.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
-    }
-
-    @Test
-    @OpenShift
-    void testAddressSpaceRules() throws Exception {
-        Instant startTs = Instant.now();
-        String testNamespace = "monitoring-test";
-        KubeCMDClient.createNamespace(testNamespace);
-        String addressSpaceName = "monitoring-address-space";
-        AddressSpace addressSpace = new AddressSpaceBuilder()
-                .withNewMetadata()
-                .withName(addressSpaceName)
-                .withNamespace(testNamespace)
-                .endMetadata()
-                .withNewSpec()
-                .withType(AddressSpaceType.STANDARD.toString())
-                .withPlan(AddressSpacePlans.STANDARD_SMALL)
-                .withNewAuthenticationService()
-                .withName("standard-authservice")
-                .endAuthenticationService()
-                .endSpec()
-                .build();
-        resourcesManager.createAddressSpace(addressSpace);
-
-        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, "1");
-
-        validateAddressSpaceQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
-
-        //tests address spaces ready goes from 0 to 1
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range));
-
-        //tests address spaces not ready goes from 1 to 0
-        validateAddressSpaceRangeQueryWaiting(ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, range -> Ordering.natural().reverse().isOrdered(range));
     }
 
     private void validateAddressSpaceQueryWaiting(String query, String expectedValue) throws Exception {

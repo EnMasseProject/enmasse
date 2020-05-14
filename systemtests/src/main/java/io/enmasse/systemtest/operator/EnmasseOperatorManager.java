@@ -17,6 +17,7 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -28,16 +29,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnmasseOperatorManager {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
-    private Kubernetes kube = Kubernetes.getInstance();
-    private String productName;
+    private static final Logger LOGGER = CustomLogger.getLogger();
+    private final Kubernetes kube = Kubernetes.getInstance();
+    private final Environment env = Environment.getInstance();
+    private final String productName;
     private static EnmasseOperatorManager instance;
-    private OLMOperatorManager olm;
+    private final OLMOperatorManager olm;
 
     private EnmasseOperatorManager() {
         productName = Environment.getInstance().getProductName();
@@ -94,6 +97,22 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
+    public void installMonitoringOperator() throws InterruptedException {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                Enmasse enmasse monitoring");
+        LOGGER.info("***********************************************************");
+        setEnmasseOperatorEnableMonitoring(false);
+        kube.createNamespace(env.getMonitoringNamespace());
+        KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
+        waitForMonitoringResources();
+        KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-deployment"));
+        TestUtils.waitForExpectedReadyPods(kube, env.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
+        enableMonitoringForNamespace();
+        setEnmasseOperatorEnableMonitoring(true);
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
+        LOGGER.info("***********************************************************");
+    }
+
     public void deleteEnmasseBundle() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse operator delete");
@@ -120,6 +139,24 @@ public class EnmasseOperatorManager {
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
+        LOGGER.info("***********************************************************");
+    }
+
+    public void deleteMonitoringOperator() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("            Enmasse monitoring delete");
+        LOGGER.info("***********************************************************");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
+        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
+        kube.deleteNamespace(env.getMonitoringNamespace());
         LOGGER.info("***********************************************************");
     }
 
@@ -183,6 +220,48 @@ public class EnmasseOperatorManager {
     public void removeExamplePlans(String namespace) {
         LOGGER.info("Delete enmasse example plans from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+    }
+
+    private void enableMonitoringForNamespace() {
+        Kubernetes.getInstance().getClient().namespaces()
+                .withName(kube.getInfraNamespace())
+                .edit()
+                .editMetadata()
+                .addToLabels("monitoring-key", "middleware")
+                .endMetadata()
+                .done();
+    }
+
+    private void setEnmasseOperatorEnableMonitoring(boolean enable) {
+        List<EnvVar> envVars = Kubernetes.getInstance().getClient().apps()
+                .deployments()
+                .inNamespace(kube.getInfraNamespace())
+                .withName("enmasse-operator")
+                .get().getSpec().getTemplate().getSpec().getContainers().get(0).getEnv();
+        List<EnvVar> updatedEnvVars = envVars
+                .stream()
+                .peek(envVarObj -> {
+                    if ("ENABLE_MONITORING".equals(envVarObj.getName())) {
+                        envVarObj.setValue(Boolean.toString(enable));
+                    }
+                })
+                .collect(Collectors.toList());
+
+        Kubernetes.getInstance().getClient().apps()
+                .deployments()
+                .inNamespace(kube.getInfraNamespace())
+                .withName("enmasse-operator")
+                .edit()
+                .editSpec()
+                .editTemplate()
+                .editSpec()
+                .editFirstContainer()
+                .withEnv(updatedEnvVars)
+                .endContainer()
+                .endSpec()
+                .endTemplate()
+                .endSpec()
+                .done();
     }
 
     public boolean removeOlm() throws Exception {
@@ -275,6 +354,14 @@ public class EnmasseOperatorManager {
             LOGGER.info("Generating templates.");
             Exec.execute(Arrays.asList("make", "-C", "..", "templates"));
         }
+    }
+
+    private void waitForMonitoringResources() {
+        LOGGER.info("Waiting for monitoring resources to be installed");
+        TestUtils.waitUntilCondition("Monitoring resources installed", phase -> {
+            String permissions = KubeCMDClient.checkPermission("create", "prometheus", env.getMonitoringNamespace(), "application-monitoring-operator").getStdOut();
+            return permissions.trim().equals("yes");
+        }, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
     private void awaitConsoleReadiness(String namespace) throws Exception {
