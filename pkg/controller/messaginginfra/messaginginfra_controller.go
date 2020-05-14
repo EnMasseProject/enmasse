@@ -445,7 +445,6 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// If not all brokers and routers are not fully running, break here until they are
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
 		if len(runningBrokers) < len(brokerHosts) || len(runningRouters) < len(routerHosts) {
-			logger.Info("Not yet ready to proceed with status check")
 			return processorResult{RequeueAfter: 5 * time.Second}, nil
 		}
 		return processorResult{}, nil
@@ -466,13 +465,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		for _, connectorStatus := range connectorStatuses {
 			if !connectorStatus.Connected {
 				msg := fmt.Sprintf("connection between %s and %s not ready: %s", connectorStatus.Router, connectorStatus.Broker, connectorStatus.Message)
-				logger.Info("Connector not connected", "status", connectorStatus)
 				infra.Status.Message = msg
 				brokersConnected.SetStatus(corev1.ConditionFalse, "", msg)
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 		}
-		logger.Info("Status check done")
 		brokersConnected.SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
