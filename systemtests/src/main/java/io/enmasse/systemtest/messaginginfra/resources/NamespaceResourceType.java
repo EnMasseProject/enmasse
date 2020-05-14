@@ -14,6 +14,11 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
         return "Namespace";
     }
 
+    @Override
+    public Namespace get(String namespace, String name) {
+        return Kubernetes.getInstance().getClient().namespaces().withName(name).get();
+    }
+
     public static Namespace getDefault() {
         return new NamespaceBuilder().withNewMetadata().withName("enmasse-app").endMetadata().build();
     }
@@ -29,6 +34,7 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
     }
 
     @Override
-    public void waitReady(Namespace resource) {
+    public boolean isReady(Namespace resource) {
+        return resource != null;
     }
 }

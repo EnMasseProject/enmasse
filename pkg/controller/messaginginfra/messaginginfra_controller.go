@@ -363,10 +363,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			return processorResult{}, err
 		}
 
-		runningRouters = make([]state.Host, 0)
+		infra.Status.Routers = make([]v1beta2.MessagingInfraStatusRouter, 0, len(hosts))
 		for _, host := range hosts {
 			if host.Ip != "" {
 				runningRouters = append(runningRouters, host)
+				infra.Status.Routers = append(infra.Status.Routers, v1beta2.MessagingInfraStatusRouter{Host: host.Hostname})
 			}
 		}
 		logger.Info("Retrieved router hosts", "hosts", hosts, "running", runningRouters)
@@ -397,9 +398,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			return processorResult{}, err
 		}
 
+		infra.Status.Brokers = make([]v1beta2.MessagingInfraStatusBroker, 0, len(hosts))
 		for _, host := range hosts {
 			if host.Ip != "" {
 				runningBrokers = append(runningBrokers, host)
+				infra.Status.Brokers = append(infra.Status.Brokers, v1beta2.MessagingInfraStatusBroker{Host: host.Hostname})
 			}
 		}
 

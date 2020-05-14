@@ -10,18 +10,11 @@ import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointCondition;
 import io.enmasse.api.model.MessagingEndpointList;
-import io.enmasse.api.model.MessagingEndpointStatus;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
-import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MessagingEndpointResourceType implements ResourceType<MessagingEndpoint> {
     private static final MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
@@ -29,6 +22,11 @@ public class MessagingEndpointResourceType implements ResourceType<MessagingEndp
     @Override
     public String getKind() {
         return "MessagingEndpoint";
+    }
+
+    @Override
+    public MessagingEndpoint get(String namespace, String name) {
+        return operation.inNamespace(name).withName(name).get();
     }
 
     public static MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> getOperation() {
@@ -49,38 +47,13 @@ public class MessagingEndpointResourceType implements ResourceType<MessagingEndp
     @Override
     public void delete(MessagingEndpoint resource) throws InterruptedException {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-        waitDeleted(operation, resource);
     }
 
     @Override
-    public void waitReady(MessagingEndpoint infra) {
-        MessagingEndpoint found = null;
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-            found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            if (found != null &&
-                    found.getStatus() != null &&
-                    "Active".equals(found.getStatus().getPhase())) {
-                break;
-            }
-        }
-        assertNotNull(found);
-        assertNotNull(found.getStatus());
-        assertEquals("Active", found.getStatus().getPhase(), printStatus(found.getStatus()));
-        infra.setMetadata(found.getMetadata());
-        infra.setSpec(found.getSpec());
-        infra.setStatus(found.getStatus());
-    }
-
-    private static String printStatus(MessagingEndpointStatus status) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{phase=").append(status.getPhase())
-                .append(",message=").append(status.getMessage())
-                .append(",conditions=").append(status.getConditions().stream()
-                    .map(condition -> String.format("{type=%s,status=%s,message=%s}", condition.getType(), condition.getStatus(), condition.getMessage()))
-                    .collect(Collectors.joining()))
-                .append("}");
-        return sb.toString();
+    public boolean isReady(MessagingEndpoint endpoint) {
+        return endpoint != null &&
+                endpoint.getStatus() != null &&
+                "Active".equals(endpoint.getStatus().getPhase());
     }
 
     public static MessagingEndpointCondition getCondition(List<MessagingEndpointCondition> conditions, String type) {

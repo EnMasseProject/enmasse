@@ -30,6 +30,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(TestTag.ISOLATED_SHARED_INFRA)
 public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedInfra {
@@ -82,11 +83,19 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
                 .endBroker()
                 .endSpec()
                 .build();
+
         infraResourceManager.createResource(infra);
 
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 2));
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 3));
+
+        waitForConditionTrue(infra, "RoutersCreated");
+        waitForConditionTrue(infra, "BrokersCreated");
         waitForConditionTrue(infra, "BrokersConnected");
-        TestUtils.waitForNReplicas(3, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
-        TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(2)));
+
+        // Ensure that we can find the pods as the above conditions are true
+        assertEquals(3, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
+        assertEquals(2, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
 
         // Scale down
         infra = new MessagingInfraBuilder(infra)
@@ -109,7 +118,14 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
                 .build();
         infraResourceManager.createResource(infra);
 
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 2));
+
+        waitForConditionTrue(infra, "RoutersCreated");
+        waitForConditionTrue(infra, "BrokersCreated");
         waitForConditionTrue(infra, "BrokersConnected");
+
+        // Conditions are not set to false when scaling down, so we must wait for replicas
         TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
         TestUtils.waitForNReplicas(1, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
     }
@@ -187,23 +203,13 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
     }
 
     private void waitForConditionTrue(MessagingInfra infra, String conditionName) throws InterruptedException {
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-            if (infra.getStatus() != null) {
-                MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
-                if (condition != null && "True".equals(condition.getStatus())) {
-                    break;
-                }
-            }
-            Thread.sleep(1000);
-            infra = MessagingInfraResourceType.getOperation().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            assertNotNull(infra);
-        }
-        infra = MessagingInfraResourceType.getOperation().inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-        assertNotNull(infra);
-        assertNotNull(infra.getStatus());
-        MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
-        assertNotNull(condition);
-        assertEquals("True", condition.getStatus());
+        waitForCondition(infra, conditionName, "True");
+    }
+
+    private void waitForCondition(MessagingInfra infra, String conditionName, String expectedValue) throws InterruptedException {
+        assertTrue(infraResourceManager.waitResourceCondition(infra, messagingInfra -> {
+            MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
+            return condition != null && expectedValue.equals(condition.getStatus());
+        }));
     }
 }

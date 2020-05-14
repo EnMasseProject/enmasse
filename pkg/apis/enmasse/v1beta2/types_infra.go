@@ -77,9 +77,19 @@ type MessagingInfraSpecBrokerScalingStrategyStatic struct {
 
 type MessagingInfraStatus struct {
 	// +kubebuilder:printcolumn
-	Phase      MessagingInfraPhase       `json:"phase,omitempty"`
-	Message    string                    `json:"message,omitempty"`
-	Conditions []MessagingInfraCondition `json:"conditions,omitempty"`
+	Phase      MessagingInfraPhase          `json:"phase,omitempty"`
+	Message    string                       `json:"message,omitempty"`
+	Conditions []MessagingInfraCondition    `json:"conditions,omitempty"`
+	Routers    []MessagingInfraStatusRouter `json:"routers,omitempty"`
+	Brokers    []MessagingInfraStatusBroker `json:"brokers,omitempty"`
+}
+
+type MessagingInfraStatusRouter struct {
+	Host string `json:"host"`
+}
+
+type MessagingInfraStatusBroker struct {
+	Host string `json:"host"`
 }
 
 type MessagingInfraCondition struct {

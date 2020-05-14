@@ -40,11 +40,9 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.jboss.resteasy.util.Base64;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
@@ -514,7 +512,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    private void createEndpointAndAddress(MessagingEndpoint endpoint, String addressName) {
+    private void createEndpointAndAddress(MessagingEndpoint endpoint, String addressName) throws InterruptedException {
         MessagingAddress address = new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withNamespace(endpoint.getMetadata().getNamespace())

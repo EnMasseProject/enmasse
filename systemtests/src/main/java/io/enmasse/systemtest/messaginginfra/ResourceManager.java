@@ -21,11 +21,17 @@ import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.Stack;
+import java.util.function.Predicate;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Managing resources
@@ -187,12 +193,12 @@ public class ResourceManager {
     };
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(T... resources) {
+    public final <T extends HasMetadata> void createResource(T... resources) throws InterruptedException {
         createResource(true, resources);
     }
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
+    public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) throws InterruptedException {
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -218,7 +224,16 @@ public class ResourceManager {
         }
 
         if (waitReady) {
-            waitResourceReady(resources);
+            for (T resource : resources) {
+                ResourceType<T> type = findResourceType(resource);
+                if (type == null) {
+                    LOGGER.warn("Can't find resource in list, please create it manually");
+                    continue;
+                }
+
+                assertTrue(waitResourceCondition(resource, type::isReady),
+                        String.format("Timed out waiting for %s %s in namespace %s to be ready", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
+            }
         }
     }
 
@@ -235,20 +250,29 @@ public class ResourceManager {
                         resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             }
             type.delete(resource);
+            assertTrue(waitResourceCondition(resource, t -> type.get(t.getMetadata().getNamespace(), t.getMetadata().getName()) == null),
+                    String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
             cleanDefault(resource);
         }
     }
 
-    @SafeVarargs
-    public final <T extends HasMetadata> void waitResourceReady(T... resources) {
-        for (T resource : resources) {
-            ResourceType<T> type = findResourceType(resource);
-            if (type == null) {
-                LOGGER.warn("Can't find resource in list, please create it manually");
-                continue;
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition) throws InterruptedException {
+        return waitResourceCondition(resource, condition, TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+    }
+
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition, TimeoutBudget timeout) throws InterruptedException {
+        ResourceType<T> type = findResourceType(resource);
+        assertNotNull(type);
+
+        while (!timeout.timeoutExpired()) {
+            T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+            if (condition.test(res)) {
+                return true;
             }
-            type.waitReady(resource);
+            Thread.sleep(1000);
         }
+        T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+        return condition.test(res);
     }
 
     @SuppressWarnings(value = "unchecked")

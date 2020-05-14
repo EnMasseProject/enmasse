@@ -941,6 +941,15 @@
       "type": "object",
       "description": "",
       "properties": {
+        "brokers": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusBroker",
+            "javaType": "MessagingInfraStatusBroker"
+          }
+        },
         "conditions": {
           "type": "array",
           "description": "",
@@ -957,10 +966,49 @@
         "phase": {
           "type": "string",
           "description": ""
+        },
+        "routers": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusRouter",
+            "javaType": "MessagingInfraStatusRouter"
+          }
         }
       },
       "additionalProperties": true,
       "javaType": "MessagingInfraStatus",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusBroker": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingInfraStatusBroker",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusRouter": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "host": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingInfraStatusRouter",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]

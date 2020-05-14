@@ -12,15 +12,10 @@ import io.enmasse.api.model.MessagingInfraCondition;
 import io.enmasse.api.model.MessagingInfraList;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
-import java.time.Duration;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MessagingInfraResourceType implements ResourceType<MessagingInfra> {
     private static final MixedOperation<MessagingInfra, MessagingInfraList, DoneableMessagingInfra, Resource<MessagingInfra, DoneableMessagingInfra>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingInfras(), MessagingInfra.class, MessagingInfraList.class, DoneableMessagingInfra.class);
@@ -28,6 +23,11 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
     @Override
     public String getKind() {
         return "MessagingInfra";
+    }
+
+    @Override
+    public MessagingInfra get(String namespace, String name) {
+        return operation.inNamespace(name).withName(name).get();
     }
 
     public static MessagingInfra getDefault() {
@@ -57,29 +57,15 @@ public class MessagingInfraResourceType implements ResourceType<MessagingInfra> 
     }
 
     @Override
-    public void delete(MessagingInfra resource) throws InterruptedException {
+    public void delete(MessagingInfra resource) {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
-        waitDeleted(operation, resource);
     }
 
     @Override
-    public void waitReady(MessagingInfra infra) {
-        MessagingInfra found = null;
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-            found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            if (found != null &&
-                    found.getStatus() != null &&
-                    "Active".equals(found.getStatus().getPhase())) {
-                break;
-            }
-        }
-        assertNotNull(found);
-        assertNotNull(found.getStatus());
-        assertEquals("Active", found.getStatus().getPhase());
-        infra.setMetadata(found.getMetadata());
-        infra.setSpec(found.getSpec());
-        infra.setStatus(found.getStatus());
+    public boolean isReady(MessagingInfra infra) {
+        return infra != null &&
+                infra.getStatus() != null &&
+                "Active".equals(infra.getStatus().getPhase());
     }
 
     public static MessagingInfraCondition getCondition(List<MessagingInfraCondition> conditions, String type) {
