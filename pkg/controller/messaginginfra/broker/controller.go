@@ -174,14 +174,14 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
 			install.ApplyEnvSimple(container, "CERT_DIR", "/etc/enmasse-certs")
 			install.ApplyEnvSimple(container, "AMQ_NAME", "data")
-			install.ApplyEnvSimple(container, "HOME", "/run/artemis")
+			install.ApplyEnvSimple(container, "HOME", "/var/run/artemis")
 
 			// TODO:
 			install.ApplyEnvSimple(container, "ADDRESS_SPACE_TYPE", "shared")
 			install.ApplyEnvSimple(container, "GLOBAL_MAX_SIZE", "-1")
 			install.ApplyEnvSimple(container, "ADDRESS_FULL_POLICY", "FAIL")
 
-			install.ApplyVolumeMountSimple(container, "data", "/run/artemis", false)
+			install.ApplyVolumeMountSimple(container, "data", "/var/run/artemis", false)
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 			return nil
@@ -200,7 +200,7 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
 			install.ApplyEnvSimple(container, "CERT_DIR", "/etc/enmasse-certs")
 			install.ApplyEnvSimple(container, "AMQ_NAME", "data")
-			install.ApplyEnvSimple(container, "HOME", "/run/artemis")
+			install.ApplyEnvSimple(container, "HOME", "/var/run/artemis")
 			container.Command = []string{"/opt/apache-artemis/custom/bin/launch-broker.sh"}
 
 			// TODO: Make these configurable in MessagingInfra
@@ -210,7 +210,7 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 
 			install.ApplyEnvSimple(container, "PROBE_ADDRESS", "readiness")
 
-			install.ApplyVolumeMountSimple(container, "data", "/run/artemis", false)
+			install.ApplyVolumeMountSimple(container, "data", "/var/run/artemis", false)
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 
