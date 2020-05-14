@@ -222,6 +222,8 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			}
 
 			container.LivenessProbe = &corev1.Probe{
+				PeriodSeconds:  20,
+				TimeoutSeconds: 5,
 				Handler: corev1.Handler{
 					Exec: &corev1.ExecAction{
 						Command: []string{
@@ -235,6 +237,8 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			}
 
 			container.ReadinessProbe = &corev1.Probe{
+				PeriodSeconds:  20,
+				TimeoutSeconds: 10,
 				Handler: corev1.Handler{
 					Exec: &corev1.ExecAction{
 						Command: []string{
