@@ -122,6 +122,8 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 		for _, pod := range brokerPods.Items {
 			if pod.Status.Phase == corev1.PodRunning && pod.Status.PodIP != "" {
 				logger.Info("Found broker pod", "ip", pod.Status.PodIP)
+				// Rather than re-constructing the DNS name of the pod, check that it is a prefix of any expected full hostname
+				// (which includes pod name, statefulset name and namespace), as this is guaranteed to match only one host.
 				if strings.HasPrefix(expectedHost, pod.Name) {
 					podIp = pod.Status.PodIP
 					break
