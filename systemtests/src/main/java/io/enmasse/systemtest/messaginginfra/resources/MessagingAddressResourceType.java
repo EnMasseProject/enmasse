@@ -55,6 +55,13 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
                 "Active".equals(address.getStatus().getPhase());
     }
 
+    @Override
+    public void refreshResource(MessagingAddress existing, MessagingAddress newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
+    }
+
     public static MessagingAddressCondition getCondition(List<MessagingAddressCondition> conditions, String type) {
         for (MessagingAddressCondition condition : conditions) {
             if (type.equals(condition.getType())) {

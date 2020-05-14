@@ -37,4 +37,11 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
     public boolean isReady(Namespace resource) {
         return resource != null;
     }
+
+    @Override
+    public void refreshResource(Namespace existing, Namespace newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
+    }
 }

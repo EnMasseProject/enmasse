@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MessagingTenantTest extends TestBase implements ITestIsolatedSharedInfra {
 
     @Test
-    public void testMultipleMessagingTenants() throws InterruptedException {
+    public void testMultipleMessagingTenants() {
         MessagingInfra infra = new MessagingInfraBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
@@ -70,7 +70,7 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
     }
 
     @Test
-    public void testSelectors() throws InterruptedException {
+    public void testSelectors() {
         MessagingInfra infra = new MessagingInfraBuilder()
                 .withNewMetadata()
                 .withName("default-infra")

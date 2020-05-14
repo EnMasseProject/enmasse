@@ -512,7 +512,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
                 String.format("Expected %d received messages", expectedMsgCount));
     }
 
-    private void createEndpointAndAddress(MessagingEndpoint endpoint, String addressName) throws InterruptedException {
+    private void createEndpointAndAddress(MessagingEndpoint endpoint, String addressName) {
         MessagingAddress address = new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withNamespace(endpoint.getMetadata().getNamespace())

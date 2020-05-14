@@ -26,7 +26,7 @@ public class MessagingEndpointResourceType implements ResourceType<MessagingEndp
 
     @Override
     public MessagingEndpoint get(String namespace, String name) {
-        return operation.inNamespace(name).withName(name).get();
+        return operation.inNamespace(namespace).withName(name).get();
     }
 
     public static MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> getOperation() {
@@ -54,6 +54,13 @@ public class MessagingEndpointResourceType implements ResourceType<MessagingEndp
         return endpoint != null &&
                 endpoint.getStatus() != null &&
                 "Active".equals(endpoint.getStatus().getPhase());
+    }
+
+    @Override
+    public void refreshResource(MessagingEndpoint existing, MessagingEndpoint newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
     }
 
     public static MessagingEndpointCondition getCondition(List<MessagingEndpointCondition> conditions, String type) {

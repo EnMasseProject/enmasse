@@ -26,7 +26,7 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
 
     @Override
     public MessagingTenant get(String namespace, String name) {
-        return operation.inNamespace(name).withName(name).get();
+        return operation.inNamespace(namespace).withName(name).get();
     }
 
     public static MessagingTenant getDefault() {
@@ -63,6 +63,13 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
         return infra != null &&
                 infra.getStatus() != null &&
                 "Active".equals(infra.getStatus().getPhase());
+    }
+
+    @Override
+    public void refreshResource(MessagingTenant existing, MessagingTenant newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
     }
 
     public static MessagingTenantCondition getCondition(List<MessagingTenantCondition> conditions, String type) {

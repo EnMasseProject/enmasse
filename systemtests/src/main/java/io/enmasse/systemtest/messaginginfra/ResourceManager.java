@@ -27,6 +27,7 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Predicate;
 
@@ -193,12 +194,12 @@ public class ResourceManager {
     };
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(T... resources) throws InterruptedException {
+    public final <T extends HasMetadata> void createResource(T... resources) {
         createResource(true, resources);
     }
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) throws InterruptedException {
+    public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -233,6 +234,9 @@ public class ResourceManager {
 
                 assertTrue(waitResourceCondition(resource, type::isReady),
                         String.format("Timed out waiting for %s %s in namespace %s to be ready", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
+
+                T updated = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+                type.refreshResource(resource, updated);
             }
         }
     }
@@ -250,17 +254,21 @@ public class ResourceManager {
                         resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             }
             type.delete(resource);
-            assertTrue(waitResourceCondition(resource, t -> type.get(t.getMetadata().getNamespace(), t.getMetadata().getName()) == null),
+            assertTrue(waitResourceCondition(resource, Objects::isNull),
                     String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
             cleanDefault(resource);
         }
     }
 
-    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition) throws InterruptedException {
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition) {
         return waitResourceCondition(resource, condition, TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
     }
 
-    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition, TimeoutBudget timeout) throws InterruptedException {
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition, TimeoutBudget timeout) {
+        assertNotNull(resource);
+        assertNotNull(resource.getMetadata());
+        assertNotNull(resource.getMetadata().getName());
+        assertNotNull(resource.getMetadata().getNamespace());
         ResourceType<T> type = findResourceType(resource);
         assertNotNull(type);
 
@@ -269,7 +277,12 @@ public class ResourceManager {
             if (condition.test(res)) {
                 return true;
             }
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
         }
         T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
         return condition.test(res);
