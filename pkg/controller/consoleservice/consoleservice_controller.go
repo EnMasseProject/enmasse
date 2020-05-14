@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"sort"
 	"strconv"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -707,10 +708,11 @@ func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, conso
 		return reconcile.Result{}, err
 	}
 
-	caBundleHash, err := install.ComputeConfigMapHash(*caBundle)
-	if err != nil {
-		return reconcile.Result{}, err
+	caBundleKeys := make([]string, 0)
+	for key, _ := range caBundle.Data {
+		caBundleKeys = append(caBundleKeys, key)
 	}
+	sort.Strings(caBundleKeys)
 
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
@@ -720,13 +722,7 @@ func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, conso
 			return err
 		}
 
-		if deployment.Spec.Template.Annotations == nil {
-			deployment.Spec.Template.Annotations = make(map[string]string)
-		}
-		// Triggers a restart whenever the ca bundle changes
-		deployment.Spec.Template.Annotations["enmasse.io/ca-bundle-hash"] = caBundleHash
-
-		return applyDeployment(consoleservice, deployment)
+		return applyDeployment(consoleservice, deployment, caBundleKeys)
 	})
 
 	if err != nil {
@@ -736,7 +732,7 @@ func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, conso
 	return reconcile.Result{}, nil
 }
 
-func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.Deployment) error {
+func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.Deployment, caBundleKeys []string) error {
 
 	install.ApplyDeploymentDefaults(deployment, "consoleservice", consoleservice.Name)
 
@@ -746,9 +742,6 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 	install.ApplyEmptyDirVolume(deployment, "apps")
 	install.ApplySecretVolume(deployment, "console-tls", consoleservice.Spec.CertificateSecret.Name)
-
-	openshiftCaTrustFile := "/apps/ca-trust/certs.crt"
-	openshiftCaTrustDir := "/apps/ca-trust"
 
 	if err := install.ApplyInitContainerWithError(deployment, "console-init", func(container *corev1.Container) error {
 		if err := install.ApplyContainerImage(container, "console-init", nil); err != nil {
@@ -797,19 +790,6 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 		}
 
 		install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
-
-		install.ApplyEnvSimple(container, "OAUTH2_CA_TRUST_FILE", openshiftCaTrustFile)
-		install.ApplyEnv(container, "OAUTH2_CA_TRUST_PATH", func(envvar *corev1.EnvVar) {
-			caTrustDirs := "/var/run/secrets/kubernetes.io/serviceaccount/"
-			if (util.IsOpenshift()) {
-				caTrustDirs += 	":" + "/etc/pki/ca-trust/"
-			}
-			envvar.Value = caTrustDirs
-		})
-
-		if (util.IsOpenshift()) {
-			install.ApplyVolumeMountSimple(container, "trusted-ca-bundle", "/etc/pki/ca-trust/", true)
-		}
 		return nil
 	}); err != nil {
 		return err
@@ -823,8 +803,15 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			}
 			container.Args = []string{
 				"-config=/apps/cfg/oauth-proxy-openshift.cfg",
-				fmt.Sprintf("-openshift-ca=%s", openshiftCaTrustFile)}
+				"-openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+			}
+
+			for _, key := range caBundleKeys {
+				container.Args = append(container.Args, fmt.Sprintf("-openshift-ca=/etc/pki/ca-trust/%s", key))
+			}
 			applyOauthProxyContainer(container, consoleservice, "/oauth/healthz")
+
+			install.ApplyVolumeMountSimple(container, "trusted-ca-bundle", "/etc/pki/ca-trust/", true)
 			return nil
 		}); err != nil {
 			return err
@@ -842,8 +829,9 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 			applyOauthProxyContainer(container, consoleservice, "/ping")
 
+			// https://github.com/golang/go/issues/35325 SSL_CERT_DIR does not accept a path (yet)
 			install.ApplyEnv(container, "SSL_CERT_DIR", func(envvar *corev1.EnvVar) {
-				envvar.Value = openshiftCaTrustDir
+				envvar.Value = "/var/run/secrets/kubernetes.io/serviceaccount/"
 			})
 
 			return nil
