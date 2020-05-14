@@ -8,6 +8,7 @@ include::common/attributes.adoc[]
 :imagesdir: ../openshift/images
 :cmdcli: oc
 :KubePlatform: OpenShift
+:KubePlatformCredentials: OpenShift
 :OperatorMarketplaceNamespace: openshift-marketplace
 
 = Documentation for {ProductName} on OpenShift
@@ -51,4 +52,3 @@ include::common/restapi-reference.adoc[leveloffset=+2]
 
 // Revision information
 //include::common/revision-info.adoc[]
-
