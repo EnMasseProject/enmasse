@@ -910,6 +910,14 @@ public class SystemtestsKubernetesApps {
         };
 
         try {
+            TestUtils.waitUntilCondition("Pod is created", waitPhase -> {
+                try {
+                    return Kubernetes.getInstance().listPods(CONTAINER_BUILDS_PROJECT)
+                            .stream().filter(p -> p.getMetadata().getName().contains(pod.getMetadata().getName())).findFirst().isPresent();
+                } catch (Exception ex) {
+                    return false;
+                }
+            }, new TimeoutBudget(15, TimeUnit.SECONDS));
             kubeClient.waitPodUntilCondition(pod, p -> {
                 String reason = containerReasonGetter.apply(p);
                 return reason.equals("Completed") || reason.equals("Error");
