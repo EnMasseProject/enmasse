@@ -14,8 +14,7 @@ import {
   TableProps,
   IRowData
 } from "@patternfly/react-table";
-import { css } from "@patternfly/react-styles";
-import { StyleForTable } from "modules/address-space";
+import { css, StyleSheet } from "@patternfly/react-styles";
 
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy" | "onSelect"> {
@@ -32,6 +31,12 @@ export interface IDevice {
   lastUpdated: string;
   creationTimeStamp: string;
 }
+
+export const StyleForFooteredTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto"
+  }
+});
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   rows,
@@ -50,7 +55,10 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   ];
 
   return (
-    <div className={css(StyleForTable.scroll_overflow)} id="device-liat-table">
+    <div
+      className={css(StyleForFooteredTable.scroll_overflow)}
+      id="device-list-table"
+    >
       <Table
         variant={TableVariant.compact}
         canSelectAll={false}
