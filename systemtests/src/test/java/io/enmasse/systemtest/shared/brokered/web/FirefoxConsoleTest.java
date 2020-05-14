@@ -16,14 +16,17 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
 class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
@@ -40,6 +43,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
@@ -66,6 +70,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
 
     @Test
     @ExternalClients
+    @Tag(ACCEPTANCE)
     void testPurgeAddress() throws Exception {
         doTestPurgeMessages(getSharedAddressSpace());
     }
@@ -174,6 +179,7 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     @OpenShift(version = OpenShiftVersion.OCP4)
     void testOpenShiftWithCustomCert() throws Exception {
         doTestOpenShiftWithCustomCert();

@@ -15,14 +15,17 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SeleniumFirefox
 public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStandard {
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteQueue() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(),
                 new AddressBuilder()
@@ -51,6 +54,7 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteTopic() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(),
                 new AddressBuilder()
@@ -78,8 +82,9 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteDurableSubscription() throws Exception {
-     doTestCreateDeleteAddress(getSharedAddressSpace(),
+        doTestCreateDeleteAddress(getSharedAddressSpace(),
                 new AddressBuilder()
                         .withNewMetadata()
                         .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
@@ -106,6 +111,7 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteAnycast() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
@@ -121,6 +127,7 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testCreateDeleteMulticast() throws Exception {
         doTestCreateDeleteAddress(getSharedAddressSpace(), new AddressBuilder()
                 .withNewMetadata()
@@ -200,6 +207,7 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     @ExternalClients
+    @Tag(ACCEPTANCE)
     void testPurgeAddress() throws Exception {
         doTestPurgeMessages(getSharedAddressSpace());
     }
@@ -207,16 +215,16 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     @Test
     void testEditAddress() throws Exception {
         doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
-                .withNewMetadata()
-                .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
-                .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
-                .endMetadata()
-                .withNewSpec()
-                .withType("queue")
-                .withAddress("test-queue-edit")
-                .withPlan(getDefaultPlan(AddressType.QUEUE))
-                .endSpec()
-                .build(),
+                        .withNewMetadata()
+                        .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "test-queue-edit"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType("queue")
+                        .withAddress("test-queue-edit")
+                        .withPlan(getDefaultPlan(AddressType.QUEUE))
+                        .endSpec()
+                        .build(),
                 DestinationPlan.STANDARD_XLARGE_QUEUE);
     }
 
