@@ -69,7 +69,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
 
     @Test
     @OpenShift(type = ClusterType.CRC)
-    public void testNodePortEndpointRC() throws Exception {
+    public void testNodePortEndpointCRC() throws Exception {
         testNodePortEndpoint();
     }
 
