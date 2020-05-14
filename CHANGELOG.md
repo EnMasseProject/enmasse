@@ -1,6 +1,8 @@
 
 ## 1.0.0
 
+## 0.32.0
+
 * #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections
 * #4076: Avoid memory leak if connected router is disconnected
 * #4117: Add support for configuring console to use impersonation
@@ -10,8 +12,7 @@
 * #4315: [IoT] Add the ability to configure TLS options
 * #4314: [IoT] Add alerts for infrastructure and projects
 * #4438: Address space connector - offer SASL ANONYMOUS if it cannot offer PLAIN or EXTERNAL.
-
-## 0.32.0
+* #4232: Allow configuring standard authentication service in HA mode
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
 * #4504: Bump gqlgen from v0.10.2 => v0.11.3
 

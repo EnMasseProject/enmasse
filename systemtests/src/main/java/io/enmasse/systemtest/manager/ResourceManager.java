@@ -7,11 +7,7 @@ package io.enmasse.systemtest.manager;
 
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
@@ -224,17 +220,28 @@ public abstract class ResourceManager {
 
     public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
         String desiredPodName = authenticationService.getMetadata().getName();
+        int expectedMatches = 1;
+        if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.none) &&
+                authenticationService.getSpec().getNone() != null &&
+                authenticationService.getSpec().getNone().getReplicas() != null) {
+            expectedMatches = authenticationService.getSpec().getNone().getReplicas();
+        } else if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
+                authenticationService.getSpec().getStandard() != null &&
+                authenticationService.getSpec().getStandard().getReplicas() != null) {
+            expectedMatches = authenticationService.getSpec().getStandard().getReplicas();
+        }
+        int finalExpectedMatches = expectedMatches;
         TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
                     List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance(), authenticationService.getMetadata().getNamespace());
                     long matching = pods.stream().filter(pod ->
                             pod.getMetadata().getName().contains(desiredPodName)).count();
-                    if (matching != 1) {
+                    if (matching != finalExpectedMatches) {
                         List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
                         LOGGER.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
                                 desiredPodName, matching, podNames);
                     }
 
-                    return matching == 1;
+                    return matching == finalExpectedMatches;
                 },
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
