@@ -222,8 +222,6 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			}
 
 			container.LivenessProbe = &corev1.Probe{
-				PeriodSeconds:  20,
-				TimeoutSeconds: 5,
 				Handler: corev1.Handler{
 					Exec: &corev1.ExecAction{
 						Command: []string{
@@ -237,17 +235,16 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			}
 
 			container.ReadinessProbe = &corev1.Probe{
-				PeriodSeconds:  40,
-				TimeoutSeconds: 20,
 				Handler: corev1.Handler{
 					Exec: &corev1.ExecAction{
 						Command: []string{
 							"sh",
 							"-c",
-							"$ARTEMIS_HOME/custom/bin/readinessprobe.sh",
+							"$ARTEMIS_HOME/custom/bin/probe.sh",
 						},
 					},
 				},
+				InitialDelaySeconds: 20,
 			}
 
 			return nil
