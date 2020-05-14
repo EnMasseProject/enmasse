@@ -189,7 +189,10 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         LOGGER.info("Waiting for pods to come back up");
 
         // Give operator some time to detect restart and re-sync its state
-        Thread.sleep(60_000);
+        Thread.sleep(120_000);
+
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
+        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 1));
 
         waitForConditionTrue(infra, "RoutersCreated");
         waitForConditionTrue(infra, "BrokersCreated");

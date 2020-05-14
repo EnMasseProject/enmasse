@@ -244,7 +244,7 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 						},
 					},
 				},
-				InitialDelaySeconds: 20,
+				InitialDelaySeconds: 30,
 			}
 
 			return nil

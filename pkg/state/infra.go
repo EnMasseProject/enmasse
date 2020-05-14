@@ -176,6 +176,7 @@ func (i *infraClient) updateRouters(hosts []Host) {
 
 	// Shutdown and remove unknown hosts
 	for hostname, host := range toRemove {
+		log.Printf("Removing router %+v", host)
 		i.routers[host].Shutdown()
 		delete(i.hostMap, hostname)
 		delete(i.routers, host)
@@ -183,6 +184,7 @@ func (i *infraClient) updateRouters(hosts []Host) {
 
 	// Create states for new hosts
 	for hostname, host := range toAdd {
+		log.Printf("Adding router %+v", host)
 		routerState := i.routerStateFactory(host, 7777)
 		i.routers[host] = routerState
 		i.hostMap[hostname] = host
@@ -214,11 +216,17 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
 
 	// Shutdown and remove unknown hosts
 	for hostname, host := range toRemove {
-		err := i.applyRouters(ctx, func(router *RouterState) error {
-			return router.DeleteEntities(ctx, []RouterEntity{&NamedEntity{EntityType: RouterConnectorEntity, Name: connectorName(i.brokers[host])}})
-		})
-		if err != nil {
-			return err
+		log.Printf("Removing broker %+v", host)
+		_, foundAdded := toAdd[hostname]
+		// If it was found, it means the ip changed, but the host remains stable so there is no need to delete the connector.
+		if !foundAdded {
+			err := i.applyRouters(ctx, func(r *RouterState) error {
+				router := r
+				return router.DeleteEntities(ctx, []RouterEntity{&NamedEntity{EntityType: RouterConnectorEntity, Name: connectorName(i.brokers[host])}})
+			})
+			if err != nil {
+				return err
+			}
 		}
 		i.brokers[host].Shutdown()
 
@@ -228,6 +236,7 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
 
 	// Create states for new hosts
 	for hostname, host := range toAdd {
+		log.Printf("Adding broker %+v", host)
 		brokerState := i.brokerStateFactory(host, 5671)
 		i.brokers[host] = brokerState
 		i.hostMap[hostname] = host
