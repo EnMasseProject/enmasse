@@ -268,7 +268,6 @@ public class ResourceManager {
         assertNotNull(resource);
         assertNotNull(resource.getMetadata());
         assertNotNull(resource.getMetadata().getName());
-        assertNotNull(resource.getMetadata().getNamespace());
         ResourceType<T> type = findResourceType(resource);
         assertNotNull(type);
 
