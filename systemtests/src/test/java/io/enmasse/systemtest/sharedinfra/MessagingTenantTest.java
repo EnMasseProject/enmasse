@@ -16,8 +16,6 @@ import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceTyp
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Objects;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -100,9 +98,12 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
         infraResourceManager.createResource(infra, t1);
         infraResourceManager.createResource(false, t2);
 
-        assertTrue(infraResourceManager.waitResourceCondition(t2, messagingTenant -> messagingTenant != null &&
-                MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound") != null &&
-                Objects.requireNonNull(MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound")).getStatus().equals("False")));
+        assertTrue(infraResourceManager.waitResourceCondition(t2, messagingTenant ->
+                messagingTenant != null &&
+                        messagingTenant.getStatus() != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound") != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus() != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus().equals("False")));
     }
 
 
