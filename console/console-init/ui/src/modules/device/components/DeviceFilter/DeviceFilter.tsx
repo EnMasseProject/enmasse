@@ -9,12 +9,7 @@ import {
   FormGroup,
   TextInput,
   DropdownPosition,
-  InputGroup,
-  InputGroupText,
-  TextContent,
   Divider,
-  Grid,
-  GridItem,
   Button,
   ButtonVariant,
   Split,
@@ -25,11 +20,16 @@ import {
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithToggle } from "components";
-import { ISelectOption, compareJsonObject } from "utils";
+import { compareJsonObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
 import { DateFilterSection } from "./DateFilterSection";
+import {
+  deviceTypeOptions,
+  deviceStatusOptions,
+  getInitialFilter
+} from "modules/device/utils";
 
 const styles = StyleSheet.create({
   time_input_box: {
@@ -37,33 +37,8 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" },
-  margin_Left_20: { marginLeft: 20 }
+  dropdown_toggle_align: { flex: "1" }
 });
-
-const setInitialFilter = () => {
-  let filter: IDeviceFilter = {
-    deviceId: "",
-    deviceType: "",
-    status: "",
-    filterCriteria: [],
-    addedDate: {
-      startDate: "",
-      endDate: ""
-    },
-    lastSeen: {
-      startTime: {
-        form: "hr",
-        time: ""
-      },
-      endTime: {
-        form: "hr",
-        time: ""
-      }
-    }
-  };
-  return filter;
-};
 
 export interface ITimeOption {
   time: string;
@@ -88,57 +63,35 @@ export interface IDeviceFilter {
 export interface IDeviceFilterProps {
   filter?: IDeviceFilter;
   setFilter?: (filter: IDeviceFilter) => void;
+  runFilter?: (filter: IDeviceFilter) => void;
 }
 
-const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
-  {
-    // filter,
-    // setFilterrere
-  }
-) => {
-  const [filter, setFilter] = useState<IDeviceFilter>(setInitialFilter());
+const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
+  // filter,
+  // setFilter,
+  runFilter
+}) => {
+  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
-    setInitialFilter()
+    getInitialFilter()
   ]);
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
-  const typeOptions: ISelectOption[] = [
-    {
-      key: "direct",
-      value: "direct",
-      label: "Directly connected"
-    },
-    {
-      key: "gateway",
-      value: "gateway",
-      label: "Using gateways"
-    }
-  ];
-  const statusOptions: ISelectOption[] = [
-    {
-      key: "enabled",
-      value: "enabled",
-      label: "Enabled"
-    },
-    {
-      key: "disabled",
-      value: "disabled",
-      label: "Disabled"
-    }
-  ];
+  const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
   const onClearFilter = () => {
-    setFilter(setInitialFilter());
+    setFilter(getInitialFilter());
     setIsKebabOpen(false);
   };
   const onRedoFilter = () => {
     // redoFilter();
-    const length = lastAppliedFilter.length;
-    const data = JSON.parse(
-      JSON.stringify({ ...lastAppliedFilter[length - 2] })
-    );
-    setFilter(data);
-    const dataList = [...lastAppliedFilter];
-    dataList.splice(length - 2, 1);
-    setLastAppliedFilter(dataList);
+    const lastFilterLength = lastAppliedFilter.length;
+    const lastFilter = createDeepCopy({
+      ...lastAppliedFilter[lastFilterLength - 2]
+    });
+    setFilter(lastFilter);
+    const filterList = [...lastAppliedFilter];
+    filterList.splice(lastFilterLength - 2, 1);
+    setIsRedoEnabled(false);
+    setLastAppliedFilter(filterList);
     setIsKebabOpen(false);
   };
   const onChangeDeviceId = (value: string) => {
@@ -164,29 +117,32 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
   };
 
   const onRunFilter = () => {
-    const dataList = JSON.parse(JSON.stringify(lastAppliedFilter));
-    const dataObj = JSON.parse(JSON.stringify(filter));
-    dataList.push(dataObj);
-    setLastAppliedFilter(dataList);
+    const lastFilter = createDeepCopy(lastAppliedFilter);
+    const filterCopy = createDeepCopy(filter);
+    lastFilter.push(filterCopy);
+    setIsRedoEnabled(true);
+    setLastAppliedFilter(lastFilter);
+    runFilter && runFilter(filter);
   };
 
   const isEnabledRunFilter = () => {
-    return compareJsonObject(Object.assign({}, filter), setInitialFilter());
+    return compareJsonObject(Object.assign({}, filter), getInitialFilter());
   };
 
   const kebabDropdownItems = [
     <DropdownItem
       key="redo-last-filter"
-      id="redo-last-filter"
-      isDisabled={lastAppliedFilter.length <= 1}
+      id="dropdown-item-redo-last-filter"
+      isDisabled={!isRedoEnabled}
       onClick={onRedoFilter}
     >
       Redo last filter
     </DropdownItem>,
     <DropdownItem
       key="clear-all-filter"
-      id="clear-all-filter"
+      id="dropdown-item-clear-all-filter"
       component="button"
+      isDisabled={isEnabledRunFilter()}
       onClick={onClearFilter}
     >
       Clear all
@@ -198,7 +154,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
     <Split>
       <SplitItem>
         <Button
-          className={css(styles.margin_Left_20)}
           id="device-filter-btn-run-filter"
           variant={ButtonVariant.secondary}
           onClick={onRunFilter}
@@ -245,7 +200,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
             toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
             onSelectItem={onTypeSelect}
-            dropdownItems={typeOptions}
+            dropdownItems={deviceTypeOptions}
             value={deviceType}
             isLabelAndValueNotSame={true}
           />
@@ -258,7 +213,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = (
             toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
             onSelectItem={onStatusSelect}
-            dropdownItems={statusOptions}
+            dropdownItems={deviceStatusOptions}
             value={status}
             isLabelAndValueNotSame={true}
           />

@@ -8,7 +8,13 @@ import { MemoryRouter } from "react-router";
 import { DeviceFilter } from "modules/device";
 import { text } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { Grid, GridItem } from "@patternfly/react-core";
+import {
+  Grid,
+  GridItem,
+  Page,
+  PageSectionVariants,
+  PageSection
+} from "@patternfly/react-core";
 
 export default {
   title: "Device List"
@@ -17,11 +23,15 @@ export default {
 export const deviceFilter = () => {
   return (
     <MemoryRouter>
-      <Grid>
-        <GridItem span={3}>
-          <DeviceFilter />
-        </GridItem>
-      </Grid>
+      <Page>
+        <PageSection variant={PageSectionVariants.light}>
+          <Grid>
+            <GridItem span={3}>
+              <DeviceFilter />
+            </GridItem>
+          </Grid>
+        </PageSection>
+      </Page>
     </MemoryRouter>
   );
 };
