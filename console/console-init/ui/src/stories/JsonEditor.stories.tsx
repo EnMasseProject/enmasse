@@ -1,6 +1,6 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { JsonViewEditor } from "components";
+import { JsonEditor } from "components";
 import { boolean } from "@storybook/addon-knobs";
 import { Page } from "@patternfly/react-core";
 
@@ -20,7 +20,7 @@ export const JsonEditorView = () => {
   return (
     <MemoryRouter>
       <Page>
-        <JsonViewEditor
+        <JsonEditor
           readOnly={boolean("readOnly", true)}
           value={JSON.stringify(jsonData)}
           style={style}

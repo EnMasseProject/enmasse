@@ -13,7 +13,7 @@ import {
   Button
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import { JsonViewEditor, useWindowDimensions } from "components";
+import { JsonEditor, useWindowDimensions } from "components";
 import {
   AddJsonUsingTemplate,
   connectedViaGatewayDeviceTemplate,
@@ -135,7 +135,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
           style={{ minWidth: (width * 2) / 3 }}
         >
           <div className={css(styles.box_align_style)}>
-            <JsonViewEditor
+            <JsonEditor
               value={json}
               readOnly={false}
               name={"editor-add-device"}

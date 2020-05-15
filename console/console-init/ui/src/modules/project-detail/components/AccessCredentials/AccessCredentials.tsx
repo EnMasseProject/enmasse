@@ -18,7 +18,7 @@ import {
   Switch
 } from "@patternfly/react-core";
 import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
-import { InputText, JsonViewEditor } from "components";
+import { InputText, JsonEditor } from "components";
 import { IInfoTypePlan } from "modules/project-detail/components/GeneralInfo";
 import { getCombinedString } from "utils";
 
@@ -297,7 +297,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       </CardHeader>
       {isHidden ? (
         <CardBody>
-          <JsonViewEditor readOnly={true} value={JSON.stringify(data)} />
+          <JsonEditor readOnly={true} value={JSON.stringify(data)} />
         </CardBody>
       ) : (
         <CardBody>

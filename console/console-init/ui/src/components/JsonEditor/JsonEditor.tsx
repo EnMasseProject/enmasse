@@ -8,19 +8,20 @@ import { Editor } from "components";
 import {
   PageSection,
   PageSectionVariants,
-  Button,
   Tooltip,
   TooltipPosition,
-  ButtonVariant
+  Flex,
+  FlexItem,
+  FlexModifiers
 } from "@patternfly/react-core";
 import { CopyIcon } from "@patternfly/react-icons";
 import { IAceEditorProps } from "react-ace";
 
-interface IJsonViewEditorProps extends IAceEditorProps {
+interface IJsonEditorProps extends IAceEditorProps {
   setDetail?: (detail: string) => void;
 }
 
-const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
+const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   value,
   readOnly,
   style,
@@ -35,38 +36,36 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
   const [isCopied, setIsCopied] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Tooltip
-        id="tooltip-feedback-for-success-copy"
-        position={TooltipPosition.bottom}
-        enableFlip={false}
-        trigger={"manual"}
-        content={<div>Successfully copied to the clipboard</div>}
-        isVisible={isCopied}
-      >
-        <span>
+      <Flex>
+        <FlexItem breakpointMods={[{ modifier: FlexModifiers["align-right"] }]}>
           <Tooltip
-            id="tooltip-with-copy-info"
+            id="tooltip-feedback-for-success-copy"
             position={TooltipPosition.bottom}
             enableFlip={false}
-            content={<div>Copy data to the clipboard</div>}
+            trigger={"manual"}
+            content={<div>Successfully copied to the clipboard</div>}
+            isVisible={isCopied}
           >
-            <Button
-              id="button-copy-data"
-              variant={ButtonVariant.link}
-              aria-label="copy json detail"
-              onClick={() => {
-                navigator.clipboard.writeText(value ? value.trim() : "");
-                setIsCopied(true);
-              }}
-              onMouseLeave={() => {
-                setIsCopied(false);
-              }}
-            >
-              <CopyIcon id="copy-to-clipboard" size="md" /> Copy to clipboard
-            </Button>
+            <span>
+              <Tooltip
+                id="tooltip-with-copy-info"
+                position={TooltipPosition.bottom}
+                enableFlip={false}
+                content={<div>Copy data to the clipboard</div>}
+              >
+                <CopyIcon
+                  id="copy-to-clipboard"
+                  size="md"
+                  onClick={() => {
+                    navigator.clipboard.writeText(value ? value.trim() : "");
+                    setIsCopied(true);
+                  }}
+                />
+              </Tooltip>
+            </span>
           </Tooltip>
-        </span>
-      </Tooltip>
+        </FlexItem>
+      </Flex>
       <br />
       <Editor
         mode="json"
@@ -82,4 +81,4 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
   );
 };
 
-export { JsonViewEditor };
+export { JsonEditor };
