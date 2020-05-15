@@ -22,9 +22,9 @@ ifeval::["{cmdcli}" == "oc"]
 endif::[]
 . Create a secret with the database credentials:
 +
-[source,yaml,options="nowrap"]
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} create secret generic db-creds -n _{ProductNamespace} --from-literal=database-user=_admin_ --from-literal=database-password=_securepassword_
+{cmdcli} create secret generic db-creds -n _{ProductNamespace}_ --from-literal=database-user=_admin_ --from-literal=database-password=_secure-password_
 ----
 
 . Create an `AuthenticationService` definition:
@@ -50,7 +50,7 @@ spec:
 
 . Deploy the authentication service:
 +
-[options="nowrap",subs="attributes"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
 {cmdcli} create -f standard-authservice.yaml -n _{ProductNamespace}_
 ----
