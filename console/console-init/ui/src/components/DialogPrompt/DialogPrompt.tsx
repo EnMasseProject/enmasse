@@ -10,7 +10,7 @@ import { WarningTriangleIcon } from "@patternfly/react-icons";
 
 export enum ICON {
   "WARNING" = "warning",
-  "DELETE" = "delete"
+  "DANGER" = "danger"
 }
 
 const getIcon = (icon?: string) => {

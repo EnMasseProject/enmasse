@@ -170,7 +170,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       </CardHeader>
       {isHidden ? (
         <CardBody>
-          <JsonViewEditor readOnly={true} detailInJson={data} />
+          <JsonViewEditor readOnly={true} value={JSON.stringify(data)} />
         </CardBody>
       ) : (
         <CardBody>

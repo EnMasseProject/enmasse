@@ -22,7 +22,7 @@ export const JsonEditorView = () => {
       <Page>
         <JsonViewEditor
           readOnly={boolean("readOnly", true)}
-          detailInJson={jsonData}
+          value={JSON.stringify(jsonData)}
           style={style}
         />
       </Page>

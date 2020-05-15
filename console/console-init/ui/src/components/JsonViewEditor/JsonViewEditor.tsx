@@ -14,24 +14,29 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { CopyIcon } from "@patternfly/react-icons";
+import { IAceEditorProps } from "react-ace";
 
-interface IJsonViewEditorProps {
-  detailInJson?: any;
-  readOnly: boolean;
-  style?: React.CSSProperties;
+interface IJsonViewEditorProps extends IAceEditorProps {
+  setDetail?: (detail: string) => void;
 }
 
 const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
-  detailInJson,
+  value,
   readOnly,
-  style
+  style,
+  name,
+  height,
+  width,
+  setDetail
 }) => {
-  const value = detailInJson && JSON.stringify(detailInJson, undefined, 2);
+  const onChange = (value: string) => {
+    setDetail && setDetail(value.trim());
+  };
   const [isCopied, setIsCopied] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Tooltip
-        id="tooltip-feedback-for-succes-copy"
+        id="tooltip-feedback-for-success-copy"
         position={TooltipPosition.bottom}
         enableFlip={false}
         trigger={"manual"}
@@ -48,9 +53,9 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
             <Button
               id="button-copy-data"
               variant={ButtonVariant.link}
-              aria-label="copy configuration"
+              aria-label="copy json detail"
               onClick={() => {
-                navigator.clipboard.writeText(value);
+                navigator.clipboard.writeText(value ? value.trim() : "");
                 setIsCopied(true);
               }}
               onMouseLeave={() => {
@@ -66,9 +71,12 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
       <Editor
         mode="json"
         readOnly={readOnly}
+        onChange={onChange}
         value={value}
         style={style}
-        // className={className}
+        name={name}
+        height={height}
+        width={width}
       />
     </PageSection>
   );
