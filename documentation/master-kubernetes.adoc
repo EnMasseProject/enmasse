@@ -8,6 +8,7 @@ include::common/attributes.adoc[]
 :imagesdir: ../kubernetes/images
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
+:KubePlatformCredentials: OIDC
 :OperatorMarketplaceNamespace: marketplace
 
 = Documentation for {ProductName} on Kubernetes
@@ -51,4 +52,3 @@ include::common/restapi-reference.adoc[leveloffset=+2]
 
 // Revision information
 //include::common/revision-info.adoc[]
-

@@ -29,7 +29,7 @@ endif::[]
 .Procedure
 . In a web browser, navigate to `https://_console-host-name_` where `_console-host-name_` is the {ConsoleName} host name.
 
-. Log in with your OpenShift user credentials. The {ConsoleName} opens.
+. Log in with your {KubePlatformCredentials} user credentials. The {ConsoleName} opens and lists all the address spaces that you can administer. For information on creating an address space, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-console-messaging[Creating an address space using the {ConsoleName}].
 
 ifdef::Asciidoctor[]
 image::console-screenshot.png[{ConsoleName}]
