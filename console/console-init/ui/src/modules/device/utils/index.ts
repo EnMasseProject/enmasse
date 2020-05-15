@@ -4,3 +4,4 @@
  */
 
 export * from "./TableFormatter";
+export * from "./constant";
