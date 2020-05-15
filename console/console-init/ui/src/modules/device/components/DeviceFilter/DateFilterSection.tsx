@@ -1,25 +1,7 @@
 import React from "react";
-import {
-  TextInput,
-  InputGroup,
-  TextContent,
-  DropdownPosition,
-  InputGroupText
-} from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
-import { IDeviceFilter } from "./DeviceFilter";
-import { DropdownWithToggle } from "components";
-import { ISelectOption } from "utils";
+import { TextInput, InputGroup, InputGroupText } from "@patternfly/react-core";
 import { CalendarAltIcon } from "@patternfly/react-icons";
-
-const styles = StyleSheet.create({
-  time_input_box: {
-    padding: 20,
-    marginRight: 10
-  },
-  dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" }
-});
+import { IDeviceFilter } from "./DeviceFilter";
 
 interface IDateFilterSectionProps {
   filter: IDeviceFilter;
