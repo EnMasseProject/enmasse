@@ -46,9 +46,9 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
             content={<div>Copy data to the clipboard</div>}
           >
             <Button
-              id="preview-addr-copy-configuration-button"
+              id="button-copy-data"
               variant={ButtonVariant.link}
-              aria-label="copy-configuration"
+              aria-label="copy configuration"
               onClick={() => {
                 navigator.clipboard.writeText(value);
                 setIsCopied(true);
@@ -57,8 +57,7 @@ const JsonViewEditor: React.FunctionComponent<IJsonViewEditorProps> = ({
                 setIsCopied(false);
               }}
             >
-              <CopyIcon id="preview-addr-copy-btn" size="md" /> Copy to
-              clipboard
+              <CopyIcon id="copy-to-clipboard" size="md" /> Copy to clipboard
             </Button>
           </Tooltip>
         </span>
