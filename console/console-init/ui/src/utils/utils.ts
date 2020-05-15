@@ -256,6 +256,10 @@ const getJson = (objects: any[]) => {
   return object;
 };
 
+const createDeepCopy = (object: any) => {
+  return JSON.parse(JSON.stringify(object));
+};
+
 const compareJsonObject = (object1: any, object2: any) => {
   if (JSON.stringify(object1) === JSON.stringify(object2)) {
     return true;
@@ -277,5 +281,6 @@ export {
   getCombinedString,
   getJsonForMetadata,
   getJson,
+  createDeepCopy,
   compareJsonObject
 };
