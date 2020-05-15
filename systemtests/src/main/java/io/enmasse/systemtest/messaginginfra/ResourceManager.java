@@ -278,7 +278,6 @@ public class ResourceManager {
         while (!timeout.timeoutExpired()) {
             T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
             if (condition.test(res)) {
-                LOGGER.info("Resource after waiting for condition: {}", resourceToString(res));
                 return true;
             }
             try {
@@ -289,7 +288,10 @@ public class ResourceManager {
             }
         }
         T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
-        LOGGER.info("Resource after waiting for condition: {}", resourceToString(res));
+        boolean pass = condition.test(res);
+        if (!pass) {
+            LOGGER.info("Resource failed condition check: {}", resourceToString(res));
+        }
         return condition.test(res);
     }
 
