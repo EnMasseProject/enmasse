@@ -291,7 +291,7 @@ public class ResourceManager {
         if (!pass) {
             LOGGER.info("Resource failed condition check: {}", resourceToString(res));
         }
-        return condition.test(res);
+        return pass;
     }
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
