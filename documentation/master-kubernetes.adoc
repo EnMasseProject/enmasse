@@ -11,6 +11,8 @@ include::common/attributes.adoc[]
 :KubePlatformCredentials: OIDC
 :OperatorMarketplaceNamespace: marketplace
 
+:KubePlatformRbacURL: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+
 = Documentation for {ProductName} on Kubernetes
 
 Welcome to the {ProductName} documentation, where you can find information to help you learn about
