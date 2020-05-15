@@ -47,7 +47,33 @@ export enum DataType {
 }
 
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
-  const [expandedList, setExpandedList] = useState<string[]>([]);
+  const { key, type, value, typeLabel } = rowData || {};
+  const [expandedList, setExpandedList] = useState<string[]>([key]);
+
+  const shouldDisplayDataListToggle = (
+    type: DataType.ARRAY | DataType.OBJECT
+  ) => {
+    /**
+     * check parent data type is Array or Object.
+     * Toggle will add for parent node only
+     */
+    if (type === DataType.OBJECT || type === DataType.ARRAY) {
+      return true;
+    }
+    return false;
+  };
+
+  const cssClassKey = classNames({
+    [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
+    [styles.key_cell]: !shouldDisplayDataListToggle(type)
+  });
+
+  const cssClassType = classNames({
+    [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
+    [styles.type_cell]: !shouldDisplayDataListToggle(type)
+  });
+
+  const cssClassValue = classNames([styles.value_cell]);
 
   const toggle = (event: any) => {
     const expandedRowId = event.target.id;
@@ -63,33 +89,6 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
     setExpandedList(newExpandedList);
   };
 
-  const shouldDisplayDataListToggle = (
-    type: DataType.ARRAY | DataType.OBJECT
-  ) => {
-    /**
-     * check parent data type is Array or Object.
-     * Toggle will add for parent node only
-     */
-    if (type === DataType.OBJECT || type === DataType.ARRAY) {
-      return true;
-    }
-    return false;
-  };
-
-  const { key, type, value, typeLabel } = rowData || {};
-
-  const cssClassKey = classNames({
-    [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
-    [styles.key_cell]: !shouldDisplayDataListToggle(type)
-  });
-
-  const cssClassType = classNames({
-    [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
-    [styles.type_cell]: !shouldDisplayDataListToggle(type)
-  });
-
-  const cssClassValue = classNames([styles.value_cell]);
-
   return (
     <>
       <DataListItem
@@ -102,14 +101,15 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
         <DataListItemRow>
           {shouldDisplayDataListToggle(type) && (
             <DataListToggle
-              onClick={toggle}
-              isExpanded={expandedList.includes(key)}
               id={key}
+              rowid={key}
+              onClick={toggle}
+              isExpanded={!expandedList.includes(key)}
               aria-controls={key + " data list toggle"}
             />
           )}
           <DataListItemCells
-            id={key}
+            id={key + "-" + uniqueId()}
             dataListCells={[
               <DataListCell key="key-content">
                 <div className={cssClassKey}>{key}</div>
@@ -128,13 +128,13 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
           ></DataListItemCells>
         </DataListItemRow>
         {Array.isArray(value) &&
-          value.map((data: any) => (
+          value.map((data: any, index: number) => (
             <DataListContent
               aria-label={key + " data list content"}
-              id={key}
+              id={key + "-" + index}
               isHidden={!expandedList.includes(key)}
               noPadding
-              key={"data-list-content-" + uniqueId()}
+              key={"data-list-content-" + index}
             >
               <TableRow rowData={data} />
             </DataListContent>

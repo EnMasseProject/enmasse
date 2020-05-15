@@ -14,6 +14,7 @@ import {
   Title
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
+import { getJsonForMetadata } from "utils";
 import { TableRow } from "./TableRow";
 
 const styles = StyleSheet.create({
@@ -32,7 +33,7 @@ interface IHeaderProps {
 
 export interface IMetadataListTablePorps {
   id: string;
-  dataList: any;
+  dataList: Array<{ headers: string[]; data: any }>;
   ["aria-label"]: string;
   ["aria-labelledby-header"]: string;
 }
@@ -78,10 +79,12 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
       {dataList &&
         dataList.map((list: any) => {
           const { headers, data } = list;
+          const metadataOptions = getJsonForMetadata(data);
           return (
             <>
               <TableHeader headers={headers} aria-labelledby={ariaLabelledby} />
-              {data && data.map((row: any) => <TableRow rowData={row} />)}
+              {metadataOptions &&
+                metadataOptions.map((row: any) => <TableRow rowData={row} />)}
             </>
           );
         })}

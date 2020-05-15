@@ -15,7 +15,8 @@ import {
 import { StyleSheet } from "@patternfly/react-styles";
 import {
   DeviceInfoGateways,
-  DeviceInfoCredentials,
+  CredentialsView,
+  ICredentialsViewProps,
   DeviceInfoMetadata
 } from "modules/device-detail/components";
 import { SwitchWithToggle } from "components";
@@ -26,7 +27,8 @@ const styles = StyleSheet.create({
   }
 });
 
-export interface IDeviceInfoProps {
+export interface IDeviceInfoProps
+  extends Pick<ICredentialsViewProps, "credentials"> {
   id: string;
   deviceList?: any;
   metadataList?: any;
@@ -35,7 +37,8 @@ export interface IDeviceInfoProps {
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
-  metadataList
+  metadataList,
+  credentials
 }) => {
   return (
     <Page id={id}>
@@ -54,7 +57,10 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
           <GridItem span={5} className={styles.gateways_align}>
             <DeviceInfoGateways deviceList={deviceList} />
             <br />
-            <DeviceInfoCredentials />
+            <CredentialsView
+              id={"credentials-view"}
+              credentials={credentials}
+            />
           </GridItem>
           <GridItem span={7}>
             <DeviceInfoMetadata

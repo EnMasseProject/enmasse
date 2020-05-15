@@ -5,7 +5,6 @@
 
 import React from "react";
 import { DeviceInfo } from "modules/device-detail/components";
-import { getJsonForMetadata } from "utils";
 
 export default {
   title: "Device Info view"
@@ -88,21 +87,75 @@ const ext = {
 //     k8:[{a:{a1:"v1",a2:"v2"}},{b:{b1:"w1",b2:'w2'}}]
 //   };
 
+const credentials = [
+  {
+    type: "hashed_password",
+    "auth-id": "user-1",
+    enabled: false,
+    secrets: [
+      {
+        "not-after": "2020-10-01T10:00:00Z",
+        "pwd-hash": "bjb232138d",
+        "pwd-function": "sha-512",
+        salt: "213h"
+      },
+      {
+        "not-before": "2020-10-01T10:00:00Z",
+        "pwd-hash": "adfhk327823",
+        "pwd-function": "bcrypt"
+      }
+    ]
+  },
+  {
+    type: "hashed_password",
+    "auth-id": "alternate-user-1",
+    enabled: true,
+    secrets: [
+      {
+        "pwd-function": "bcrypt"
+      }
+    ]
+  },
+  {
+    type: "psk",
+    "auth-id": "user-1",
+    secrets: [
+      {
+        key: "123knsd8=",
+        comment: "was just for testing"
+      }
+    ]
+  },
+  {
+    type: "x-509",
+    "auth-id": "other-id-1",
+    enabled: false,
+    secrets: [],
+    ext: {
+      "para-1": "value-1",
+      "para-2": "value-2",
+      "para-3": "value-3",
+      "para-4": "value-4"
+    }
+  }
+];
+
 const dataList = [
   {
     headers: ["Message info parameter", "Type", "Value"],
-    data: getJsonForMetadata(defaults)
+    data: defaults
   },
   {
     headers: ["Basic info parameter", "Type", "Value"],
-    data: getJsonForMetadata(ext)
+    data: ext
   }
 ];
 
 export const DeviceInfoView = () => (
   <DeviceInfo
+    id={"divice-info"}
     metadataList={dataList}
     deviceList={deviceList}
-    id={"divice-info"}
+    credentials={credentials}
   />
 );
