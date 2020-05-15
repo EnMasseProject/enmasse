@@ -18,6 +18,7 @@ import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
+import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -26,7 +27,9 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -52,14 +55,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
 
         infraResourceManager.createResource(infra);
 
-        MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), "Ready");
-        assertNotNull(condition);
-        assertEquals("True", condition.getStatus());
-
-        waitForConditionTrue(infra, "Ready");
-        waitForConditionTrue(infra, "BrokersCreated");
-        waitForConditionTrue(infra, "RoutersCreated");
-        waitForConditionTrue(infra, "BrokersConnected");
+        waitForConditionsTrue(infra);
 
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
@@ -89,9 +85,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 2));
         assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 3));
 
-        waitForConditionTrue(infra, "RoutersCreated");
-        waitForConditionTrue(infra, "BrokersCreated");
-        waitForConditionTrue(infra, "BrokersConnected");
+        waitForConditionsTrue(infra);
 
         // Ensure that we can find the pods as the above conditions are true
         assertEquals(3, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
@@ -121,9 +115,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
         assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 2));
 
-        waitForConditionTrue(infra, "RoutersCreated");
-        waitForConditionTrue(infra, "BrokersCreated");
-        waitForConditionTrue(infra, "BrokersConnected");
+        waitForConditionsTrue(infra);
 
         // Conditions are not set to false when scaling down, so we must wait for replicas
         TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
@@ -183,33 +175,27 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
 
         // Restart router and broker pods
-        MessagingInfra infra = infraResourceManager.getDefaultInfra();
-        kubernetes.deletePod(infra.getMetadata().getNamespace(), Collections.singletonMap("infra", infra.getMetadata().getName()));
+        MessagingInfra defaultInfra = infraResourceManager.getDefaultInfra();
+        kubernetes.deletePod(defaultInfra.getMetadata().getNamespace(), Collections.singletonMap("infra", defaultInfra.getMetadata().getName()));
 
-        LOGGER.info("Waiting for pods to come back up");
+        Thread.sleep(60_000);
 
-        // Give operator some time to detect restart and re-sync its state
-        Thread.sleep(120_000);
-
-        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
-        assertTrue(infraResourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 1));
-
-        waitForConditionTrue(infra, "RoutersCreated");
-        waitForConditionTrue(infra, "BrokersCreated");
-        waitForConditionTrue(infra, "Synchronized");
-        waitForConditionTrue(infra, "Ready");
-
-        LOGGER.info("Re-running client check");
+        // Wait for the operator state to be green again.
+        assertTrue(infraResourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
+        assertTrue(infraResourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 1));
+        waitForConditionsTrue(defaultInfra);
 
         MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
         MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
     }
 
-    private void waitForConditionTrue(MessagingInfra infra, String conditionName) throws InterruptedException {
-        waitForCondition(infra, conditionName, "True");
+    private void waitForConditionsTrue(MessagingInfra infra) {
+        for (String condition : List.of("CaCreated", "RoutersCreated", "BrokersCreated", "BrokersConnected", "Ready")) {
+            waitForCondition(infra, condition, "True");
+        }
     }
 
-    private void waitForCondition(MessagingInfra infra, String conditionName, String expectedValue) throws InterruptedException {
+    private void waitForCondition(MessagingInfra infra, String conditionName, String expectedValue) {
         assertTrue(infraResourceManager.waitResourceCondition(infra, messagingInfra -> {
             MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(messagingInfra.getStatus().getConditions(), conditionName);
             return condition != null && expectedValue.equals(condition.getStatus());

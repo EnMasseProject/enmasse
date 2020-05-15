@@ -295,7 +295,7 @@ public class ResourceManager {
     }
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-    private <T extends HasMetadata> String resourceToString(T resource) {
+    public static <T extends HasMetadata> String resourceToString(T resource) {
         if (resource == null) {
             return "null";
         }
