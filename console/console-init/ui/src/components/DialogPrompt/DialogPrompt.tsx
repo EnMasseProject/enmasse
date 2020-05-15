@@ -4,8 +4,33 @@
  */
 
 import React from "react";
-import { Modal, Button } from "@patternfly/react-core";
+import { Modal, Button, Title } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
+import { WarningTriangleIcon } from "@patternfly/react-icons";
+
+export enum ICON {
+  "WARNING" = "warning",
+  "DELETE" = "delete"
+}
+
+const getIcon = (icon?: string) => {
+  if (icon && icon.trim() != "")
+    return (
+      <>
+        <WarningTriangleIcon color={"var(--pf-global--palette--orange-200)"} />
+        &nbsp;
+      </>
+    );
+};
+
+const getConfirmButtonVariant = (confirmLabel?: string) => {
+  switch (confirmLabel && confirmLabel.toLowerCase()) {
+    case "delete":
+      return "danger";
+    default:
+      return "primary";
+  }
+};
 
 export const DialogPrompt: React.FunctionComponent<{}> = () => {
   const { state, dispatch } = useStoreContext();
@@ -17,7 +42,9 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
     selectedItems,
     option,
     detail,
-    header
+    header,
+    confirmButtonLabel,
+    iconType
   } = modalProps;
   let nameString = "";
 
@@ -43,12 +70,17 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
     <Modal
       id="Dialogue-prompt-modal"
       isSmall={true}
-      title={header}
+      title={""}
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
-        <Button key={option} variant="primary" onClick={onConfirmDialog}>
-          Confirm
+        <Button
+          key={option}
+          variant={getConfirmButtonVariant(confirmButtonLabel)}
+          onClick={onConfirmDialog}
+        >
+          {/* Confirm */}
+          {confirmButtonLabel || "Confirm"}
         </Button>,
         <Button key="cancel" variant="link" onClick={onCloseDialog}>
           Cancel
@@ -56,6 +88,11 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
       ]}
       isFooterLeftAligned={true}
     >
+      <Title headingLevel="h1" size="2xl">
+        {getIcon(iconType)}
+        {header}
+      </Title>
+      <br />
       <b>{nameString}</b>
       <br />
       {detail}
