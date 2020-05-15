@@ -47,7 +47,7 @@ spec:
     listKind: MessagingEndpointList
     plural: messagingendpoints
     shortNames:
-    - msgep
+    - msge
     - msgendpoint
     - msgendpoints
     singular: messagingendpoint

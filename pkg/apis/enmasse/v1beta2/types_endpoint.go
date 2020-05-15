@@ -19,7 +19,7 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:shortName=msgep;msgendpoint;msgendpoints,categories=enmasse
+// +kubebuilder:resource:shortName=msge;msgendpoint;msgendpoints,categories=enmasse
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase."
 // +kubebuilder:printcolumn:name="Type",type="string",JSONPath=".status.type",description="The endpoint type."
