@@ -211,7 +211,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
 
     private void waitForCondition(MessagingInfra infra, String conditionName, String expectedValue) throws InterruptedException {
         assertTrue(infraResourceManager.waitResourceCondition(infra, messagingInfra -> {
-            MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(infra.getStatus().getConditions(), conditionName);
+            MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(messagingInfra.getStatus().getConditions(), conditionName);
             return condition != null && expectedValue.equals(condition.getStatus());
         }));
     }
