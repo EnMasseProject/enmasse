@@ -20,6 +20,10 @@ var (
 	RequestTimeoutError error = fmt.Errorf("request timed out")
 )
 
+const (
+	maxConcurrentRequests = 10
+)
+
 type Client interface {
 	Start()
 	Stop()
@@ -65,7 +69,7 @@ func NewCommandClient(addr string, commandAddress string, commandResponseAddress
 }
 
 func (c *CommandClient) Start() {
-	c.request = make(chan *commandRequest)
+	c.request = make(chan *commandRequest, maxConcurrentRequests)
 	c.stop = make(chan struct{})
 	c.stopped = make(chan struct{})
 	c.lastError = nil
@@ -73,12 +77,13 @@ func (c *CommandClient) Start() {
 		defer close(c.stopped)
 		defer log.Printf("Command Client %s - stopped", c.addr)
 
+		var err error
 		for {
 			select {
 			case <-c.stop:
 				return
 			default:
-				err := c.doProcess()
+				// If we encountered an error, backoff before trying again
 				if err != nil {
 					c.lastError = err
 					backoff := computeBackoff(err)
@@ -86,10 +91,8 @@ func (c *CommandClient) Start() {
 					if backoff > 0 {
 						time.Sleep(backoff)
 					}
-				} else {
-					// Shutdown
-					return
 				}
+				err = c.doProcess()
 			}
 		}
 	}()

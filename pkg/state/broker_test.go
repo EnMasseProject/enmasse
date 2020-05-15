@@ -20,7 +20,7 @@ func TestInitializeBroker(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &BrokerState{
-		Host:          "",
+		Host:          Host{},
 		Port:          0,
 		initialized:   false,
 		commandClient: client,

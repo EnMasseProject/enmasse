@@ -22,13 +22,13 @@ import (
 const brokerCommandAddress = "activemq.management"
 const brokerCommandResponseAddress = "activemq.management_broker_command_response"
 
-func NewBrokerState(host string, port int32) *BrokerState {
+func NewBrokerState(host Host, port int32) *BrokerState {
 	state := &BrokerState{
 		Host:        host,
 		Port:        port,
 		initialized: false,
 		queues:      make(map[string]bool),
-		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host, 5672),
+		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host.Ip, 5672),
 			brokerCommandAddress,
 			brokerCommandResponseAddress,
 			amqp.ConnSASLPlain("admin", "admin"),
@@ -101,6 +101,50 @@ func (b *BrokerState) readQueues() (map[string]bool, error) {
 	}
 }
 
+func (b *BrokerState) EnsureConfiguredQueue(ctx context.Context, queue *QueueConfiguration) error {
+	if !b.initialized {
+		return NotInitializedError
+	}
+
+	if _, ok := b.queues[queue.Name]; !ok {
+		err := b.createQueue(queue)
+		if isConnectionError(err) {
+			b.Reset()
+		}
+		if err != nil {
+			log.Printf("[Broker %s] EnsureConfiguredQueue error: %+v", b.Host, err)
+			return err
+		}
+		b.queues[queue.Name] = true
+	}
+	return nil
+}
+
+func (b *BrokerState) createQueue(queue *QueueConfiguration) error {
+	config, err := json.Marshal(queue)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[Broker %s] creating queue json: '%s'", b.Host, string(config))
+
+	message, err := newManagementMessage("broker", "createQueue", "", queue.Name, queue.RoutingType, queue.Address, nil, queue.Durable, queue.MaxConsumers, queue.PurgeOnNoConsumers, queue.AutoCreateAddress)
+	// TODO: Artemis 2.12.0 newManagementMessage("broker", "createQueue", "", string(config))
+	if err != nil {
+		return err
+	}
+	log.Printf("Creating queue %s on %s: %+v", queue.Name, b.Host, message)
+	response, err := b.doRequest(message)
+	if err != nil {
+		return err
+	}
+	if !success(response) {
+		return fmt.Errorf("error creating queue %s: %+v", queue.Name, response.Value)
+	}
+	log.Printf("Queue %s created successfully on %s", queue.Name, b.Host)
+	return nil
+}
+
 func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
 	if !b.initialized {
 		return NotInitializedError
@@ -111,19 +155,20 @@ func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
 		q := queue
 		if _, ok := b.queues[q]; !ok {
 			g.Go(func() error {
-				message, err := newManagementMessage("broker", "createQueue", "", q, "ANYCAST", q, nil, true, -1, false, true)
+				config := &QueueConfiguration{
+					Name:               q,
+					Address:            q,
+					RoutingType:        RoutingTypeAnycast,
+					MaxConsumers:       -1,
+					Durable:            true,
+					PurgeOnNoConsumers: false,
+					AutoCreateAddress:  true,
+				}
+				err := b.createQueue(config)
 				if err != nil {
 					return err
 				}
-				log.Printf("Creating queue %s on %s", q, b.Host)
-				response, err := b.doRequest(message)
-				if err != nil {
-					return err
-				}
-				if !success(response) {
-					return fmt.Errorf("error creating queue %s: %+v", q, response.Value)
-				}
-				log.Printf("Queue %s created successfully on %s\n", q, b.Host)
+
 				completed <- q
 				return nil
 			})
@@ -169,7 +214,7 @@ func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
 					return fmt.Errorf("error deleting queue %s: %+v", q, response.Value)
 				}
 
-				log.Printf("Queue %s destroyed successfully on %s\n", q, b.Host)
+				log.Printf("Queue %s destroyed successfully on %s", q, b.Host)
 				completed <- q
 				return nil
 			})

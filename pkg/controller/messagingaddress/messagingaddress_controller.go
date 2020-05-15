@@ -114,7 +114,7 @@ func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brok
 		broker := brokers[0]
 		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
 			State: v1beta2.MessagingAddressBrokerScheduled,
-			Host:  broker.Host,
+			Host:  broker.Host.Hostname,
 		})
 	} else {
 		return fmt.Errorf("no available broker")

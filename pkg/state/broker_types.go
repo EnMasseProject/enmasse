@@ -12,7 +12,7 @@ import (
 )
 
 type BrokerState struct {
-	Host          string
+	Host          Host
 	Port          int32
 	initialized   bool
 	nextResync    time.Time
@@ -20,7 +20,19 @@ type BrokerState struct {
 	queues        map[string]bool
 }
 
-type BrokerQueue struct {
-	Name    string
-	Address string
+type QueueConfiguration struct {
+	Name               string      `json:"name"`
+	Address            string      `json:"address"`
+	RoutingType        RoutingType `json:"routing-type"`
+	MaxConsumers       int         `json:"max-consumers"`
+	Durable            bool        `json:"durable"`
+	AutoCreateAddress  bool        `json:"auto-create-address"`
+	PurgeOnNoConsumers bool        `json:"purge-on-no-consumers"`
 }
+
+type RoutingType string
+
+const (
+	RoutingTypeAnycast   RoutingType = "ANYCAST"
+	RoutingTypeMulticast RoutingType = "MULTICAST"
+)

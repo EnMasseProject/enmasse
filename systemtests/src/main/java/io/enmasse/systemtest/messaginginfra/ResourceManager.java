@@ -4,6 +4,9 @@
  */
 package io.enmasse.systemtest.messaginginfra;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.model.MessagingInfra;
 import io.enmasse.api.model.MessagingTenant;
@@ -21,11 +24,18 @@ import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.slf4j.Logger;
 
+import java.time.Duration;
+import java.util.Objects;
 import java.util.Stack;
+import java.util.function.Predicate;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Managing resources
@@ -218,7 +228,19 @@ public class ResourceManager {
         }
 
         if (waitReady) {
-            waitResourceReady(resources);
+            for (T resource : resources) {
+                ResourceType<T> type = findResourceType(resource);
+                if (type == null) {
+                    LOGGER.warn("Can't find resource in list, please create it manually");
+                    continue;
+                }
+
+                assertTrue(waitResourceCondition(resource, type::isReady),
+                        String.format("Timed out waiting for %s %s in namespace %s to be ready", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
+
+                T updated = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+                type.refreshResource(resource, updated);
+            }
         }
     }
 
@@ -235,19 +257,53 @@ public class ResourceManager {
                         resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             }
             type.delete(resource);
+            assertTrue(waitResourceCondition(resource, Objects::isNull),
+                    String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
             cleanDefault(resource);
         }
     }
 
-    @SafeVarargs
-    public final <T extends HasMetadata> void waitResourceReady(T... resources) {
-        for (T resource : resources) {
-            ResourceType<T> type = findResourceType(resource);
-            if (type == null) {
-                LOGGER.warn("Can't find resource in list, please create it manually");
-                continue;
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition) {
+        return waitResourceCondition(resource, condition, TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+    }
+
+    public final <T extends HasMetadata> boolean waitResourceCondition(T resource, Predicate<T> condition, TimeoutBudget timeout) {
+        assertNotNull(resource);
+        assertNotNull(resource.getMetadata());
+        assertNotNull(resource.getMetadata().getName());
+        ResourceType<T> type = findResourceType(resource);
+        assertNotNull(type);
+
+        while (!timeout.timeoutExpired()) {
+            T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+            if (condition.test(res)) {
+                return true;
             }
-            type.waitReady(resource);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+        T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+        boolean pass = condition.test(res);
+        if (!pass) {
+            LOGGER.info("Resource failed condition check: {}", resourceToString(res));
+        }
+        return pass;
+    }
+
+    private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    public static <T extends HasMetadata> String resourceToString(T resource) {
+        if (resource == null) {
+            return "null";
+        }
+        try {
+            return mapper.writeValueAsString(resource);
+        } catch (JsonProcessingException e) {
+            LOGGER.info("Failed converting resource to YAML: {}", e.getMessage());
+            return "unknown";
         }
     }
 
