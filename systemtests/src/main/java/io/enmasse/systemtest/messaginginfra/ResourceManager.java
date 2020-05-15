@@ -4,6 +4,9 @@
  */
 package io.enmasse.systemtest.messaginginfra;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.model.MessagingInfra;
 import io.enmasse.api.model.MessagingTenant;
@@ -24,6 +27,7 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -274,6 +278,7 @@ public class ResourceManager {
         while (!timeout.timeoutExpired()) {
             T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
             if (condition.test(res)) {
+                LOGGER.info("Resource after waiting for condition: {}", resourceToString(res));
                 return true;
             }
             try {
@@ -284,7 +289,21 @@ public class ResourceManager {
             }
         }
         T res = type.get(resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+        LOGGER.info("Resource after waiting for condition: {}", resourceToString(res));
         return condition.test(res);
+    }
+
+    private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    private <T extends HasMetadata> String resourceToString(T resource) {
+        if (resource == null) {
+            return "null";
+        }
+        try {
+            return mapper.writeValueAsString(resource);
+        } catch (JsonProcessingException e) {
+            LOGGER.info("Failed converting resource to YAML: {}", e.getMessage());
+            return "unknown";
+        }
     }
 
     @SuppressWarnings(value = "unchecked")
