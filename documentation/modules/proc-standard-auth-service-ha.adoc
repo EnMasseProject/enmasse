@@ -2,7 +2,7 @@
 //
 // assembly-auth-services.adoc
 
-[id='proc-deploying-standard-auth-service-{context}']
+[id='proc-deploying-standard-auth-service-ha-{context}']
 = Deploying the `standard` authentication service for high availability (HA)
 
 For production deployment, the authentication services should be setup for high availability in order to reduce downtime during {KubePlatform} updates or in the event of a node failure. To implement the `standard` authentication service in HA mode, you deploy it using a PostgreSQL database as the backend.
