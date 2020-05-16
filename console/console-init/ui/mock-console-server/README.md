@@ -559,14 +559,14 @@ args:
 }
 ```
 
-# Purging address
+# Purging addresses
 
-To purge an address (i.e clear it of its messages), call `purgeAddress` passing the ObjectMeta
-object associated with the address to purge.
+To purge addresses (i.e clear them of their messages), call `purgeAddresses` passing an array of 0the ObjectMeta
+objects corresponding to the addresses to purge.
 
 ```
-mutation purge_addr($a:ObjectMeta_v1_Input!) {
-  purgeAddress(input:$a)
+mutation purge_addresses($addrs:[ObjectMeta_v1_Input!]!) {
+  purgeAddresses(input:$addrs)
 }
 ```
 
@@ -574,7 +574,7 @@ args:
 
 ```
 {
-  "a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
+  "addrs": [{"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }]
 }
 ```
 

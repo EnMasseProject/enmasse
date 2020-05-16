@@ -1270,6 +1270,12 @@ const resolvers = {
       purgeAddress(args.input);
       return true;
     },
+    purgeAddresses: (parent, args) => {
+      args.input.forEach( i => {
+        purgeAddress(i);
+      });
+      return true;
+    },
     closeConnection: (parent, args) => {
       closeConnection(args.input);
       return true;

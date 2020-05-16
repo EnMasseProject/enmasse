@@ -203,68 +203,81 @@ func (r *mutationResolver) DeleteAddress(ctx context.Context, input metav1.Objec
 }
 
 func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
+	return r.PurgeAddresses(ctx, []*metav1.ObjectMeta{&input})
+}
+
+func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.ObjectMeta) (*bool, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	f := false
 	t := true
-	addressToks, e := tokenizeAddress(input.Name)
-	if e != nil {
-		return &f, e
+
+	purgeCommands := make([]func() error, 0)
+
+	for _, input := range inputs {
+		addressToks, e := tokenizeAddress(input.Name)
+		if e != nil {
+			return &f, e
+		}
+
+		addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", input.Namespace, addressToks[0]), nil)
+		if e != nil {
+			return nil, e
+		}
+
+		if len(addressSpaces) == 0 {
+			return &f, fmt.Errorf("address space: '%s' not found ", addressToks[0])
+		}
+
+		as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
+
+		if as.ObjectMeta.Annotations == nil {
+			return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
+		}
+		infraUid := as.ObjectMeta.Annotations[infraUuidAnnotation]
+		if infraUid == "" {
+			return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
+		}
+
+		addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", input.Namespace, input.Name), nil)
+		if e != nil {
+			return nil, e
+		}
+
+		if len(addresses) == 0 {
+			return &f, fmt.Errorf("address: '%s' not found ", input.Name)
+		}
+
+		address := addresses[0].(*consolegraphql.AddressHolder).Address
+		switch address.Spec.Type {
+		case "subscription":
+		case "queue":
+		default:
+			return &f, fmt.Errorf("address: '%s' cannot be purged, it is not of a supported type '%s'", address.Name, address.Spec.Type)
+		}
+
+		collector := r.GetCollector(infraUid)
+		if collector == nil {
+			return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
+		}
+		token := requestState.UserAccessToken
+
+		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
+		if e != nil {
+			return nil, e
+		}
+
+		purgeCommands = append(purgeCommands, func() error {
+			return commandDelegate.PurgeAddress(*input)
+		})
 	}
 
-	addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", input.Namespace, addressToks[0]), nil)
-	if e != nil {
-		return nil, e
+	for _, c := range purgeCommands {
+		e := c()
+		if e != nil {
+			return &f, e
+		}
 	}
-
-	if len(addressSpaces) == 0 {
-		return &f, fmt.Errorf("address space: '%s' not found ", addressToks[0])
-	}
-
-	as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
-
-	if as.ObjectMeta.Annotations == nil {
-		return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
-	}
-	infraUid := as.ObjectMeta.Annotations[infraUuidAnnotation]
-	if infraUid == "" {
-		return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
-	}
-
-	addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", input.Namespace, input.Name), nil)
-	if e != nil {
-		return nil, e
-	}
-
-	if len(addresses) == 0 {
-		return &f, fmt.Errorf("address: '%s' not found ", input.Name)
-	}
-
-	address := addresses[0].(*consolegraphql.AddressHolder).Address
-	switch address.Spec.Type {
-	case "subscription":
-	case "queue":
-	default:
-		return &f, fmt.Errorf("address: '%s' cannot be purged, it is not of a supported type '%s'", address.Name, address.Spec.Type)
-	}
-
-	collector := r.GetCollector(infraUid)
-	if collector == nil {
-		return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
-	}
-
-	token := requestState.UserAccessToken
-
-	commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
-	if e != nil {
-		return nil, e
-	}
-
-	e = commandDelegate.PurgeAddress(input)
-	if e != nil {
-		return nil, e
-	}
-
 	return &t, nil
 }
 

@@ -14,6 +14,7 @@
 ## 0.32.0
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
 * #4504: Bump gqlgen from v0.10.2 => v0.11.3
+* #4546: Refactor GraphQL purgeAddress to permit multiple target addresses
 
 ## 0.31.2
 * #4098: Added alert for high broker address memory usage
