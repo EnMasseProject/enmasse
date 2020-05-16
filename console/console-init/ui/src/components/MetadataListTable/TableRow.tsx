@@ -15,6 +15,7 @@ import {
 import classNames from "classnames";
 import { StyleSheet } from "@patternfly/react-styles";
 import { uniqueId } from "utils";
+import { DataType } from "constant";
 
 const styles = StyleSheet.create({
   key_cell_toogle: {
@@ -37,14 +38,16 @@ const styles = StyleSheet.create({
   }
 });
 
-export type ITableRowProps = {
-  rowData: any;
-};
-
-export enum DataType {
-  ARRAY = "array",
-  OBJECT = "object"
+interface IRowData {
+  key: string;
+  type: any;
+  value: string;
+  typeLabel?: string;
 }
+
+export type ITableRowProps = {
+  rowData: IRowData;
+};
 
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
   const { key, type, value, typeLabel } = rowData || {};
@@ -92,7 +95,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
   return (
     <>
       <DataListItem
-        id={"data-list-item-" + key}
+        id={"table-row-data-list-item-" + key}
         aria-labelledby={key + " data list item"}
         isExpanded={
           shouldDisplayDataListToggle(type) && expandedList.includes(key)
