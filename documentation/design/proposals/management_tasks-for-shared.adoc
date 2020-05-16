@@ -30,16 +30,16 @@ Introduce a new CRD `ManagementTask`.  A `ManagementTask` executes a management 
 tenant namespace within EnMasse.  It would be rather similar to
 https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion/[Jobs] from Kubernetes.
 
-* The Tenant Admin would create an instance of the resource in order to cause the task to occur.  The contents of the
-  resource describe the jobs and its parameters.
-* The EnMasse Operator actions the tasks - initiating requests to Brokers or Routers as necessary.  This might invoke
+1. The Tenant Admin would create an instance of the resource in order to cause the task to occur.  The contents of the
+   resource describe the jobs and its parameters.
+1. The EnMasse Operator actions the tasks - initiating requests to Brokers or Routers as necessary.  This might invoke
   the invocation of Router/Broker management functions (close connection, clear queue etc), or might involve putting down
   router wiring to implement a move message task.
-* The EnMasse Operator periodically updates the task with progress of the task thus allowing the Tenant Admin to monitor
-  the task for completion.  The availablility of progress information depends on the type of task.
-* The Tenant Admin may delete a ManagementTask, this would be a signal to the Operator to cancel the task (if possible).
-* The Operator would mark the ManagementTask as compete. A `ttlSecondsAfterFinished` parameter would allow the Operator to 
-  clean up the ManagementTasks automatically.
+1. The EnMasse Operator periodically updates the task with progress of the task thus allowing the Tenant Admin to monitor
+   the task for completion.  The availablility of progress information depends on the type of task.
+1. The Tenant Admin may delete a ManagementTask, this would be a signal to the Operator to cancel the task (if possible).
+1. The Operator would mark the ManagementTask as compete. A `ttlSecondsAfterFinished` parameter would allow the Operator to 
+   clean up the ManagementTasks automatically.
 
 The tenant admin would be able to CRUDWL `ManagementTask` from the CLI using `kubectl`/`oc` tooling (usual RBAC permissions
 apply), or later an EnMasse API.
