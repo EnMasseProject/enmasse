@@ -38,15 +38,15 @@ https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion
 1. The EnMasse Operator periodically updates the task with progress of the task thus allowing the Tenant Admin to monitor
    the task for completion.  The availablility of progress information depends on the type of task.
 1. The Tenant Admin may delete a ManagementTask, this would be a signal to the Operator to cancel the task (if possible).
-1. The Operator would mark the ManagementTask as compete. A `ttlSecondsAfterFinished` parameter would allow the Operator to 
-   clean up the ManagementTasks automatically.
+1. The Operator would mark the ManagementTask as compete. A `ttlSecondsAfterFinished` parameter (defined at `MessagingInfra`
+   level) would allow the Operator to clean up the ManagementTasks automatically.
 
 The tenant admin would be able to CRUDWL `ManagementTask` from the CLI using `kubectl`/`oc` tooling (usual RBAC permissions
-apply), or later an EnMasse API.
+apply), or later an EnMasse CLI tool might abstract way some details.
 
 From the Console. functions such as purge queue/subscription would, behind the button cause an instance of this object to
 be created.  There would be an area of the UI which lists running/recently finsihed tasks.  From this page, you'd be able
-to cancel the task too.
+to cancel running tasks too.
 
 === CRD sketch
 
