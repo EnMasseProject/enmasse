@@ -17,7 +17,7 @@ The current design has number of drawbacks:
    and HTTP proxies).  If the management request takes too long the response channel is lost meaning the user has no
    mechanism to monitor the request's completion.  Purging a deep queue or moving a significant number of messages
    is likely to breach timeouts. 
-1. The deisgn has no mechnaism to monitor the progress of a request
+1. The deisgn has no mechnaism to monitor the progress of a request or even know if it is still running.
 1. The deisgn has no mechnaism to cancel a management request.
 1. The Console UI uses modals UI elements to initiate the request and blocks awaiting the response. The user is unable
    to continue to interact with the app whilst the request is in progress.
