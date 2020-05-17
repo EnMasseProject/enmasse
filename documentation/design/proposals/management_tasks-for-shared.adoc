@@ -17,7 +17,8 @@ The current design has number of drawbacks:
    and HTTP proxies).  If the management request takes too long the response channel is lost meaning the user has no
    mechanism to monitor the request's completion.  Purging a deep queue or moving a significant number of messages
    is likely to breach timeouts. 
-1. The deisgn has no mechnaism to monitor the progress of a request or even know if it is still running.
+1. The deisgn has no mechnaism to monitor the progress of a request or even know if it is still running. If the Tenant
+   Admin role is shared amongst many people, the actions of one admin is hidden from another.
 1. The deisgn has no mechnaism to cancel a management request.
 1. The Console UI uses modals UI elements to initiate the request and blocks awaiting the response. The user is unable
    to continue to interact with the app whilst the request is in progress.
@@ -42,7 +43,7 @@ https://kubernetes.io/docs/concepts/workloads/controllers/jobs-run-to-completion
    level) would allow the Operator to clean up the ManagementTasks automatically.
 
 The tenant admin would be able to CRUDWL `ManagementTask` from the CLI using `kubectl`/`oc` tooling (usual RBAC permissions
-apply), or later an EnMasse CLI tool might abstract way some details.
+apply), or later an EnMasse CLI tool might abstract away some details.
 
 From the Console. functions such as purge queue/subscription would, behind the button cause an instance of this object to
 be created.  There would be an area of the UI which lists running/recently finsihed tasks.  From this page, you'd be able
