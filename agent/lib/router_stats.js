@@ -290,6 +290,8 @@ function get_normal_connections (results) {
                 senders: [],
                 receivers: [],
                 creationTimestamp:  Math.floor(Date.now() / 1000) - c.uptimeSeconds,
+
+                close: c.close
             };
         });
     });
@@ -325,7 +327,15 @@ function aggregate_delivery_count(link_details) {
 
 RouterStats.prototype._retrieve = function () {
     return this.update_routers().then(function (routers) {
-        return Promise.all(routers.map(function (router) { return router.get_connections(); })).then(function (connection_results) {
+        return Promise.all(routers.map(function (router) {
+            return router.get_connections().then((routerConns) => {
+                routerConns.forEach((c) => {
+                    c.close = () =>  {return router.update_connection({identity: c.identity}, {adminStatus : 'deleted'})};
+                });
+                return Promise.resolve(routerConns);
+            }).catch((e) => {
+                return Promise.reject(e);
+            });})).then(function (connection_results) {
             var connections = get_normal_connections(connection_results);
             return Promise.all(routers.map(function (router) { return router.get_links(); })).then(function (results) {
                 var address_stats = {};

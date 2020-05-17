@@ -114,11 +114,20 @@ type AgentAddressLink struct {
 }
 
 func FromAgentConnectionBody(agentConnectionMap map[string]interface{}) (*AgentConnection, error) {
-	if props, exists := agentConnectionMap["properties"]; exists {
-		if p, ok := props.(map[interface{}]interface{}); ok && len(p) == 0 {
-			delete(agentConnectionMap, "properties")
+	for k, v := range agentConnectionMap {
+		if vv, ok := v.(map[interface{}]interface{}); ok && len(vv) == 0 {
+			delete(agentConnectionMap, k)
 		}
 	}
+
+	//if props, exists := agentConnectionMap["properties"]; exists {
+	//	if p, ok := props.(map[interface{}]interface{}); ok && len(p) == 0 {
+	//		delete(agentConnectionMap, "properties")
+	//	}
+	//}
+	//if _, exists := agentConnectionMap["close"]; exists {
+	//	delete(agentConnectionMap, "close")
+	//}
 	bytes, e := json.Marshal(agentConnectionMap)
 	if e != nil {
 		return nil, e

@@ -32,8 +32,7 @@ const agentData = "agent_data";
 const agentCmd = "agent_command";
 const agentCmdResponse = "agent_command_response";
 
-function ConsoleServer (address_ctrl, env, openshift) {
-    this.address_ctrl = address_ctrl;
+function ConsoleServer(env, openshift) {
     this.addresses = new AddressList();
     this.metrics = new Metrics(env.ADDRESS_SPACE_NAMESPACE, env.ADDRESS_SPACE);
     this.connections = new Registry();
@@ -174,6 +173,28 @@ function ConsoleServer (address_ctrl, env, openshift) {
                     sendResponse(responseSender, context.message, false, "could not find address with name : " + name);
                 }
             }
+        } else if (context.message.subject === 'close_connection') {
+            accept();
+            var connectionUid = context.message.body.connectionUid;
+            log.info('[%s] closing connection %s', user, connectionUid);
+            var closePromise = null;
+            self.connections.first((c) => {
+                try {
+                    closePromise = c.close() || Promise.resolve();
+                } catch (e) {
+                    closePromise = Promise.reject(e);
+                }
+            }, c => c.uuid === connectionUid);
+            if (!closePromise) {
+                closePromise = Promise.reject("failed to find connection with uuid " + connectionUid);
+            }
+            closePromise.then(() => {
+                log.info("[%s] closed connection %s", user, connectionUid);
+                sendResponse(responseSender, context.message, true);
+            }).catch((e) =>{
+                log.warn("[%s] failed to close connection %s", user, connectionUid, e);
+                sendResponse(responseSender, context.message, false, e);
+            });
         } else {
             reject('ignoring message: ' + context.message);
         }
@@ -339,18 +360,6 @@ ConsoleServer.prototype.subscribe = function (name, sender) {
     this.connections.for_each(function (conn) {
         buffered_sender.send({subject:'connection', body:conn});
     }, this.authz.connection_filter(sender.connection));
-    //TODO: poll for changes in address_types
-    var self = this;
-    this.address_ctrl.get_address_types().then(function (address_types) {
-        var props = {};
-        props.address_space_type = process.env.ADDRESS_SPACE_TYPE || 'standard';
-        props.disable_admin = !self.authz.is_admin(sender.connection);
-        props.user = self.authz.get_user(sender.connection);
-
-        buffered_sender.send({subject:'address_types', application_properties:props, body:address_types});
-    }).catch(function (error) {
-        log.error('failed to get address types from address controller: %s', error);
-    });
 };
 
 ConsoleServer.prototype.unsubscribe = function (name) {

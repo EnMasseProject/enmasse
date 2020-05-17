@@ -1276,8 +1276,10 @@ const resolvers = {
       });
       return true;
     },
-    closeConnection: (parent, args) => {
-      closeConnection(args.input);
+    closeConnections: (parent, args) => {
+      args.input.forEach((c) => {
+        closeConnection(c);
+      });
       return true;
     },
   },

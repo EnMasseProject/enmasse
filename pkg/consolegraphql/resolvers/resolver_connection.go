@@ -163,6 +163,80 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 	}, nil
 }
 
-func (r *mutationResolver) CloseConnection(ctx context.Context, input v1.ObjectMeta) (*bool, error) {
-	panic("implement me")
+func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error) {
+
+	requestState := server.GetRequestStateFromContext(ctx)
+	viewFilter := requestState.AccessController.ViewFilter()
+
+	f := false
+	t := true
+
+	connFilter := func(obj interface{}) (bool, bool, error) {
+		con, ok := obj.(*consolegraphql.Connection)
+		if !ok {
+			return false, false, fmt.Errorf("unexpected type: %T", obj)
+		}
+
+		for i, c := range input {
+			if con.Namespace == c.Namespace && con.Name == c.Name {
+				input = append(input[:i], input[i+1:]...)
+				return true, len(input) > 0, nil
+			}
+		}
+
+		return false, len(input) > 0, nil
+	}
+
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex,"Connection/", cache.And(viewFilter, connFilter))
+	if e != nil {
+		return nil, e
+	}
+
+	// Connections are ephemeral - the absence of one should not prevent the closure of the others.
+	for _, notFound := range input {
+		graphql.AddErrorf(ctx, "connection: '%s' not found in namespace '%s'", notFound.Name, notFound.Namespace)
+	}
+
+
+	for _, obj := range objects {
+		con, ok := obj.(*consolegraphql.Connection)
+		if !ok {
+			return &f, fmt.Errorf("unexpected type: %T", obj)
+		}
+
+		addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", con.Namespace, con.Spec.AddressSpace), nil)
+		if e != nil {
+			return nil, e
+		}
+
+		if len(addressSpaces) == 0 {
+			return &f, fmt.Errorf("address space: '%s' not found ", con.Spec.AddressSpace)
+		}
+
+		as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
+
+		if as.ObjectMeta.Annotations == nil || as.ObjectMeta.Annotations[infraUuidAnnotation] == "" {
+			return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
+		}
+		infraUid := as.ObjectMeta.Annotations[infraUuidAnnotation]
+
+		collector := r.GetCollector(infraUid)
+		if collector == nil {
+			return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
+		}
+
+		token := requestState.UserAccessToken
+
+		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
+		if e != nil {
+			return nil, e
+		}
+
+		e = commandDelegate.CloseConnection(con.ObjectMeta)
+		if e != nil {
+			graphql.AddErrorf(ctx, "connection: '%s' in namespace '%s' could not be closed : %+v", con.Name, con.Namespace, e)
+		}
+
+	}
+	return &t, nil
 }

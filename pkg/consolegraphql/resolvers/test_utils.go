@@ -9,6 +9,7 @@ package resolvers
 import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -23,8 +24,10 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 	return nil
 }
 
-func createAddressSpace(addressspace, namespace string) *consolegraphql.AddressSpaceHolder {
-	return &consolegraphql.AddressSpaceHolder{
+type addressSpaceHolderOption func(*consolegraphql.AddressSpaceHolder)
+
+func createAddressSpace(addressspace, namespace string, addressSpaceHolderOptions ...addressSpaceHolderOption) *consolegraphql.AddressSpaceHolder {
+	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "AddressSpace",
@@ -35,6 +38,21 @@ func createAddressSpace(addressspace, namespace string) *consolegraphql.AddressS
 				UID:       types.UID(uuid.New().String()),
 			},
 		},
+	}
+
+	for _, holderOptions := range addressSpaceHolderOptions {
+		holderOptions(ash)
+	}
+	return ash
+}
+
+func withAddressSpaceAnnotation(name, value string) addressSpaceHolderOption {
+	return func(ash *consolegraphql.AddressSpaceHolder) {
+
+		if ash.Annotations == nil {
+			ash.Annotations = make(map[string]string)
+		}
+		ash.Annotations[name] = value
 	}
 }
 
@@ -107,4 +125,56 @@ func createAddress(namespace, name string, addressHolderOptions ...addressHolder
 		holderOptions(ah)
 	}
 	return ah
+}
+
+type mockCollector struct {
+	delegates map[string]agent.CommandDelegate
+}
+
+type mockCommandDelegate struct {
+	purgeCount int
+	closeCount int
+}
+
+func (mcd *mockCommandDelegate) PurgeAddress(_ metav1.ObjectMeta) error {
+	mcd.purgeCount++
+	return nil
+}
+
+func (mcd *mockCommandDelegate) CloseConnection(_ metav1.ObjectMeta) error {
+	mcd.closeCount++
+	return nil
+}
+
+func (mcd *mockCommandDelegate) Shutdown() {
+	panic("unused")
+}
+
+func (mc *mockCollector) CommandDelegate(bearerToken string, impersonateUser string) (agent.CommandDelegate, error) {
+	if delegate, present := mc.delegates[bearerToken]; present {
+		return delegate, nil
+	} else {
+		mc.delegates[bearerToken] = &mockCommandDelegate{}
+		return mc.delegates[bearerToken], nil
+	}
+}
+
+func (mc *mockCollector) Collect(handler agent.EventHandler) error {
+	panic("unused")
+}
+
+func (mc *mockCollector) Shutdown() {
+}
+
+var collectors = make(map[string]agent.Delegate, 0)
+
+func getCollector(infraUuid string) agent.Delegate {
+	if collector, present := collectors[infraUuid]; present {
+		return collector
+	} else {
+		collectors[infraUuid] = &mockCollector{
+			delegates: make(map[string]agent.CommandDelegate, 0),
+		}
+		return collectors[infraUuid]
+	}
 }

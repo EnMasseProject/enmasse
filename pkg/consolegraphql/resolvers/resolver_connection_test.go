@@ -8,6 +8,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -31,7 +32,9 @@ func newTestConnectionResolver(t *testing.T) (*Resolver, context.Context) {
 		AccessController: accesscontroller.NewAllowAllAccessController(),
 	}
 
-	ctx := server.ContextWithRequestState(requestState, context.TODO())
+	ctx := graphql.WithResponseContext(server.ContextWithRequestState(requestState, context.TODO()),
+		                               graphql.DefaultErrorPresenter,
+		                               graphql.DefaultRecover)
 
 	return &resolver, ctx
 }
@@ -355,6 +358,64 @@ func TestQueryConnectionLinkMetric(t *testing.T) {
 	assert.Equal(t, float64(100), value, "Unexpected backlog metric value")
 
 }
+
+func TestCloseConnections(t *testing.T) {
+	r, ctx := newTestConnectionResolver(t)
+	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+
+	r.GetCollector = getCollector
+
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+
+	con1 := createConnection("host:1234", namespace, addressspace)
+	con2 := createConnection("host:1233", namespace, addressspace)
+
+	infraUuid := "abcd1234"
+	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
+
+	err := r.Cache.Add(as, con1, con2)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().CloseConnections(ctx, []*metav1.ObjectMeta{&con1.ObjectMeta, &con2.ObjectMeta})
+	assert.NoError(t, err)
+
+	collector := r.GetCollector(infraUuid)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
+	assert.NoError(t, err)
+
+	assert.Equal(t, 2, delegate.(*mockCommandDelegate).closeCount)
+}
+
+func TestCloseConnectionsOneConnectionNotFound(t *testing.T) {
+	r, ctx := newTestConnectionResolver(t)
+	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+
+	r.GetCollector = getCollector
+
+	namespace := "mynamespace"
+	addressspace := "myaddressspace"
+
+	con := createConnection("host:1234", namespace, addressspace)
+	notFoundCon := createConnection("host:1233", namespace, addressspace)
+
+	infraUuid := "abcd1235"
+	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
+
+	err := r.Cache.Add(as, con)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().CloseConnections(ctx, []*metav1.ObjectMeta{&con.ObjectMeta, &notFoundCon.ObjectMeta})
+	assert.NoError(t, err)
+
+	collector := r.GetCollector(infraUuid)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, delegate.(*mockCommandDelegate).closeCount)
+}
+
+
 
 func createConnectionLink(namespace string, addressspace string, con string, role string, metrics ...*consolegraphql.Metric) *consolegraphql.Link {
 	linkuid := uuid.New().String()
