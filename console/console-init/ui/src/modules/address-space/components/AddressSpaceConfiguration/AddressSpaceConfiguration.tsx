@@ -11,7 +11,8 @@ import {
   FormGroup,
   TextInput,
   DropdownPosition,
-  Radio
+  Radio,
+  Switch
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithToggle, IDropdownOption } from "components";
@@ -52,6 +53,8 @@ export interface IAddressSpaceConfigurationProps {
   planOptions: IPlanOption[];
   authenticationService: string;
   authenticationServiceOptions: IAuthenticationServiceOptions[];
+  customizeEndpoint?: boolean;
+  hanldeCustomEndpointChange: (value: boolean) => void;
 }
 
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
@@ -71,7 +74,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   onAuthenticationServiceSelect,
   authenticationService,
   authenticationServiceOptions,
-  isStandardChecked
+  isStandardChecked,
+  customizeEndpoint,
+  hanldeCustomEndpointChange
 }) => {
   const getHelperText = () => {
     return name.trim() !== "" && !isNameValid ? (
@@ -173,6 +178,15 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 dropdownItems={authenticationServiceOptions}
                 isDisabled={type.trim() === ""}
                 value={authenticationService}
+              />
+            </FormGroup>
+
+            <FormGroup fieldId="customize-endpoint">
+              <br />
+              <Switch
+                label={"Customize Endpoint"}
+                isChecked={customizeEndpoint}
+                onChange={hanldeCustomEndpointChange}
               />
             </FormGroup>
           </Form>

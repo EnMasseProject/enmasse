@@ -8,34 +8,29 @@ import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { AddressSpaceReview } from "modules/address-space/components";
+import { IMessagingProject } from "./CreateMessagingProject";
 
-export interface IReviewProps {
-  name?: string;
-  type?: string;
-  plan?: string;
-  namespace: string;
-  authenticationService: string;
+interface IMessagingProjectReviewProps {
+  projectDetail: IMessagingProject;
 }
 
-export const Review: React.FunctionComponent<IReviewProps> = ({
-  name,
-  type,
-  plan,
-  namespace,
-  authenticationService
+export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectReviewProps> = ({
+  projectDetail
 }) => {
+  const { name, namespace, type, plan, authService } =
+    projectDetail && projectDetail;
   const { data, loading } = useQuery(ADDRESS_SPACE_COMMAND_REVIEW_DETAIL, {
     variables: {
       as: {
         metadata: {
-          name: name,
-          namespace: namespace
+          name: name && name,
+          namespace: namespace && namespace
         },
         spec: {
           plan: plan ? plan.toLowerCase() : "",
           type: type ? type.toLowerCase() : "",
           authenticationService: {
-            name: authenticationService
+            name: authService
           }
         }
       }
@@ -49,8 +44,8 @@ export const Review: React.FunctionComponent<IReviewProps> = ({
       name={name}
       plan={plan}
       type={type}
-      namespace={namespace}
-      authenticationService={authenticationService}
+      namespace={namespace || ""}
+      authenticationService={authService || ""}
       data={data}
     />
   );

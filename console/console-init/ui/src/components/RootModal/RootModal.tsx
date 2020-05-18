@@ -8,12 +8,12 @@ import { useStoreContext, MODAL_TYPES } from "context-state-reducer";
 import { DialogPrompt } from "components/DialogPrompt";
 import {
   EditAddressSpaceContainer,
-  CreateAddressSpace
+  CreateMessagingProject
 } from "modules/address-space/dialogs";
 import { EditAddress, CreateAddress } from "modules/address/dialogs";
 
 const MODAL_COMPONENTS: any = {
-  [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,
+  [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateMessagingProject,
   [MODAL_TYPES.EDIT_ADDRESS_SPACE]: EditAddressSpaceContainer,
   [MODAL_TYPES.CREATE_ADDRESS]: CreateAddress,
   [MODAL_TYPES.EDIT_ADDRESS]: EditAddress,

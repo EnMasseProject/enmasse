@@ -46,6 +46,19 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
             Connections
           </NavLink>
         </NavItem>
+        <NavItem
+          key="endpoints"
+          itemId="endpoints"
+          isActive={active === "endpoints"}
+        >
+          <NavLink
+            id="ad-space-nav-endpoints"
+            to={`endpoints`}
+            style={{ color: "black" }}
+          >
+            Endpoints
+          </NavLink>
+        </NavItem>
       </NavList>
     </Nav>
   );
