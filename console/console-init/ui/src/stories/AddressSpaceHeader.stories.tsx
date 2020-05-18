@@ -22,7 +22,7 @@ export const addressSpaceHeader = () => (
       name={text("Name of Address Space", "jBoss")}
       namespace={text("Name space of Address Space", "deveops_jbosstest1")}
       type={text("type of Address Space", "Brokered")}
-      createdOn={text("Number of days before it is created", "2 days ago")}
+      createdOn={text("Time of creation", "2020-04-20T15:08:32.489Z")}
       onDownload={action("On download clicked")}
       onDelete={action("on delete clicked")}
       onEdit={action("on Edit clicked")}
