@@ -7,7 +7,7 @@ ARG maven_version
 ARG commit
 ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
 
-ADD ./build/broker-plugin-${maven_version}-dist.tar.gz /
+ADD ./plugin/target/plugin-${maven_version}-dist.tar.gz /
 
 RUN chgrp -R 0 /opt/broker-plugin && \
     chmod -R g=u /opt/broker-plugin

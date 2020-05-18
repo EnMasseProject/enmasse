@@ -12,12 +12,13 @@ import (
 )
 
 type BrokerState struct {
-	Host          Host
-	Port          int32
-	initialized   bool
-	nextResync    time.Time
-	commandClient amqpcommand.Client
-	queues        map[string]bool
+	Host           Host
+	Port           int32
+	initialized    bool
+	nextResync     time.Time
+	commandClient  amqpcommand.Client
+	queues         map[string]bool
+	reconnectCount int64
 }
 
 type QueueConfiguration struct {

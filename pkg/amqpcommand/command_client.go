@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,6 +28,7 @@ const (
 type Client interface {
 	Start()
 	Stop()
+	ReconnectCount() int64
 	RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error)
 	Request(message *amqp.Message) (*amqp.Message, error)
 }
@@ -41,7 +43,8 @@ type CommandClient struct {
 	commandAddress         string
 	commandResponseAddress string
 
-	lastError error
+	lastError      error
+	reconnectCount int64
 
 	request chan *commandRequest
 }
@@ -72,6 +75,7 @@ func (c *CommandClient) Start() {
 	c.request = make(chan *commandRequest, maxConcurrentRequests)
 	c.stop = make(chan struct{})
 	c.stopped = make(chan struct{})
+	c.reconnectCount = 0
 	c.lastError = nil
 	go func() {
 		defer close(c.stopped)
@@ -85,6 +89,7 @@ func (c *CommandClient) Start() {
 			default:
 				// If we encountered an error, backoff before trying again
 				if err != nil {
+					atomic.AddInt64(&c.reconnectCount, 1)
 					c.lastError = err
 					backoff := computeBackoff(err)
 					log.Printf("Command Client %s - restarting - backoff %s(s), %v", c.addr, backoff, err)
@@ -208,6 +213,10 @@ func (c *CommandClient) Stop() {
 	close(c.request)
 	close(c.stop)
 	<-c.stopped
+}
+
+func (c *CommandClient) ReconnectCount() int64 {
+	return atomic.LoadInt64(&c.reconnectCount)
 }
 
 func (c *CommandClient) RequestWithTimeout(message *amqp.Message, timeout time.Duration) (*amqp.Message, error) {

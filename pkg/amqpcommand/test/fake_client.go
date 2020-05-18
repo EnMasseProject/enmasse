@@ -19,7 +19,6 @@ type FakeClient struct {
 	Handler RequestHandler
 }
 
-
 var _ amqpcommand.Client = &FakeClient{}
 
 func NewFakeClient() *FakeClient {
@@ -47,6 +46,10 @@ func (c *FakeClient) Request(message *amqp.Message) (*amqp.Message, error) {
 		return c.Handler(message)
 	}
 	return nil, nil
+}
+
+func (c *FakeClient) ReconnectCount() int64 {
+	return 0
 }
 
 func (c *FakeClient) Connected() bool {

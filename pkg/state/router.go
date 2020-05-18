@@ -47,10 +47,15 @@ func NewRouterState(host Host, port int32) *RouterState {
 			amqp.ConnProperty("product", "controller-manager")),
 	}
 	state.commandClient.Start()
+	state.reconnectCount = state.commandClient.ReconnectCount()
 	return state
 }
 
 func (r *RouterState) Initialize(nextResync time.Time) error {
+	if r.reconnectCount != r.commandClient.ReconnectCount() {
+		r.initialized = false
+	}
+
 	if r.initialized {
 		return nil
 	}

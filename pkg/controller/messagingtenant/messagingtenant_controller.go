@@ -270,6 +270,8 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, tenant.Status) {
 			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status,
+				"originalBoundTransition", originalStatus.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).LastTransitionTime.UnixNano(),
+				"originalReadyTransition", originalStatus.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).LastTransitionTime.UnixNano(),
 				"boundTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).LastTransitionTime.UnixNano(),
 				"readyTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).LastTransitionTime.UnixNano())
 			// If there was an error and the status has changed, perform an update so that

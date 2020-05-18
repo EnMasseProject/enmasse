@@ -12,12 +12,13 @@ import (
 )
 
 type RouterState struct {
-	host          Host
-	port          int32
-	initialized   bool
-	nextResync    time.Time
-	commandClient amqpcommand.Client
-	entities      map[RouterEntityType]map[string]RouterEntity
+	host           Host
+	port           int32
+	initialized    bool
+	nextResync     time.Time
+	reconnectCount int64
+	commandClient  amqpcommand.Client
+	entities       map[RouterEntityType]map[string]RouterEntity
 }
 
 type RouterEntityType string
