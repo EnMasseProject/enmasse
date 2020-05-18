@@ -37,7 +37,7 @@ interface IAddDeviceWithJsonProps {}
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () => {
   const { dispatch } = useStoreContext();
   const width = useWindowDimensions().width;
-  const [json, setJson] = useState<string>();
+  const [deviceDetail, setDeviceDetail] = useState<string>();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
   );
@@ -45,11 +45,11 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
     boolean
   >(false);
 
-  const setJsonHandler = (value?: string) => {
+  const setDeviceInfoInDetail = (value?: string) => {
     if (showJsonValidationError) {
       setShowJsonValidationError(false);
     }
-    setJson(value);
+    setDeviceDetail(value);
   };
 
   const onLeaveModal = () => {
@@ -59,7 +59,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
   const onCancel = () => {
     let isJsonPresent: boolean = false;
     try {
-      const data = json && JSON.parse(json);
+      const data = deviceDetail && JSON.parse(deviceDetail);
       if (data && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
         if (!compareJsonObject(data, directlyConnectedDeviceTemplate)) {
           isJsonPresent = true;
@@ -70,7 +70,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
         }
       }
     } catch {
-      if (json) isJsonPresent = true;
+      if (deviceDetail) isJsonPresent = true;
     }
     if (isJsonPresent) {
       dispatch({
@@ -89,15 +89,15 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
 
   const isJsonValid = () => {
     try {
-      if (!json || json.trim() === "") {
-        if (json != "") {
-          setJsonHandler(undefined);
+      if (!deviceDetail || deviceDetail.trim() === "") {
+        if (deviceDetail !== "") {
+          setDeviceInfoInDetail(undefined);
         }
         return true;
       }
-      const data = JSON.parse(json.trim());
+      const data = JSON.parse(deviceDetail.trim());
       if (data) {
-        setJsonHandler(getFormattedJsonString(data));
+        setDeviceInfoInDetail(getFormattedJsonString(data));
         return true;
       }
     } catch {
@@ -136,10 +136,10 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
         >
           <div className={css(styles.box_align_style)}>
             <JsonEditor
-              value={json}
+              value={deviceDetail}
               readOnly={false}
               name={"editor-add-device"}
-              setDetail={setJsonHandler}
+              setDetail={setDeviceInfoInDetail}
               style={{
                 minWidth: (width * 3) / 5,
                 maxWidth: (width * 3) / 5,
@@ -152,7 +152,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
           <div className={css(styles.box_align_style)}>
             <PageSection variant={PageSectionVariants.light}>
               <AddJsonUsingTemplate
-                setDetail={setJsonHandler}
+                setDetail={setDeviceInfoInDetail}
                 selectedTemplate={selectedTemplate}
                 setSelectedTemplate={setSelectedTemplate}
               />

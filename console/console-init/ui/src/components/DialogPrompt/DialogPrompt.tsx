@@ -8,13 +8,13 @@ import { Modal, Button, Title } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { WarningTriangleIcon } from "@patternfly/react-icons";
 
-export enum ICON {
+export enum IconType {
   "WARNING" = "warning",
   "DANGER" = "danger"
 }
 
 const getIcon = (icon?: string) => {
-  if (icon && icon.trim() != "")
+  if (icon && icon.trim() !== "")
     return (
       <>
         <WarningTriangleIcon color={"var(--pf-global--palette--orange-200)"} />
