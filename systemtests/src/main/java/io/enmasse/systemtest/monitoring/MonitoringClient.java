@@ -114,14 +114,22 @@ public class MonitoringClient {
     }
 
     private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Predicate<JsonObject> resultValidator) {
+        JsonObject data = getResults(queryResult, metricName);
+        if (data != null) {
+            return resultValidator.test(data);
+        }
+        return false;
+    }
+
+    private JsonObject getResults(JsonObject queryResult, String metricName) {
         JsonObject data = queryResult.getJsonObject("data", new JsonObject());
         for (Object result : data.getJsonArray("result", new JsonArray())) {
             JsonObject jsonResult = (JsonObject) result;
             if (jsonResult.getJsonObject("metric", new JsonObject()).getString("__name__", "").equals(metricName)) {
-                return resultValidator.test(jsonResult);
+                return jsonResult;
             }
         }
-        return false;
+        return null;
     }
 
     private JsonObject getRule(String name) throws Exception {
