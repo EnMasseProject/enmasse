@@ -156,7 +156,7 @@ const dataList = [
 export const DeviceInfoView = () => (
   <Router>
     <DeviceInfo
-      id={"divice-info"}
+      id={"device-info"}
       metadataList={dataList}
       deviceList={deviceList}
       credentials={credentials}

@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   }
 });
 
-interface IRowOptions {
+export interface IRowOption {
   key: string;
   type: any;
   value: string;
@@ -46,7 +46,7 @@ interface IRowOptions {
 }
 
 export type ITableRowProps = {
-  rowData: IRowOptions;
+  rowData: IRowOption;
 };
 
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
@@ -131,7 +131,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
           ></DataListItemCells>
         </DataListItemRow>
         {Array.isArray(value) &&
-          value.map((data: any, index: number) => (
+          value.map((row: IRowOption, index: number) => (
             <DataListContent
               aria-label={key + " data list content"}
               id={key + "-" + index}
@@ -139,7 +139,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
               noPadding
               key={"data-list-content-" + index}
             >
-              <TableRow rowData={data} />
+              <TableRow rowData={row} />
             </DataListContent>
           ))}
       </DataListItem>

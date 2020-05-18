@@ -17,6 +17,16 @@ import { css } from "@patternfly/react-styles";
 import { DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
 import { dropdown_item_styles } from "modules/device";
+import { StyleSheet } from "@patternfly/react-styles";
+
+const styles = StyleSheet.create({
+  type_margin: {
+    marginLeft: 10
+  },
+  delete_button_margin: {
+    marginTop: 32
+  }
+});
 
 export interface IExtension {
   id: string;
@@ -48,6 +58,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
   onDeleteExtension,
   credentialId
 }) => {
+  const componentName = "extension-list";
   const typeOptions: ISelectOption[] = [
     { key: "string", label: "String", value: "String" },
     { key: "number", label: "Number", value: "Number" },
@@ -65,7 +76,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
 
   return (
     <>
-      <Grid id={"ext-list"}>
+      <Grid id={componentName}>
         <GridItem span={12}>Ext</GridItem>
         {extensions &&
           extensions.map(ext => {
@@ -73,9 +84,12 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
             return (
               <Grid key={id}>
                 <GridItem span={4}>
-                  <FormGroup fieldId={"parameter" + id} label="Parameter">
+                  <FormGroup
+                    fieldId={componentName + "-parameter-" + id}
+                    label="Parameter"
+                  >
                     <TextInput
-                      id={"parameter" + id}
+                      id={componentName + "-parameter-" + id}
                       name="parameter"
                       onChange={(value, event) =>
                         handleInputChangeExtension(
@@ -90,12 +104,12 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={3}>
                   <FormGroup
-                    fieldId={"type" + id}
+                    fieldId={componentName + "-type-" + id}
                     label="Type"
-                    style={{ marginLeft: "10px" }}
+                    className={styles.type_margin}
                   >
                     <DropdownWithToggle
-                      id={"type" + id}
+                      id={componentName + "-type-" + id}
                       name="type"
                       className={css(dropdown_item_styles.dropdown_align)}
                       toggleClass={css(
@@ -116,9 +130,12 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   </FormGroup>
                 </GridItem>
                 <GridItem span={4}>
-                  <FormGroup fieldId={"value" + id} label="Value">
+                  <FormGroup
+                    fieldId={componentName + "-value-" + id}
+                    label="Value"
+                  >
                     <TextInput
-                      id={"value" + id}
+                      id={componentName + "-value-" + id}
                       name="value"
                       onChange={(value, event) =>
                         handleInputChangeExtension(
@@ -133,7 +150,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={1}>
                   <Button
-                    style={{ marginTop: "32px" }}
+                    className={styles.delete_button_margin}
                     variant="link"
                     type="button"
                     icon={<MinusCircleIcon />}

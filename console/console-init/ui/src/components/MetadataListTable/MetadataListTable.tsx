@@ -31,9 +31,14 @@ interface IHeaderProps {
   ["aria-labelledby"]: string;
 }
 
+interface IDataList {
+  headers: string[];
+  data: any;
+}
+
 export interface IMetadataListTablePorps {
   id: string;
-  dataList: Array<{ headers: string[]; data: any }>;
+  dataList: IDataList[];
   ["aria-label"]: string;
   ["aria-labelledby-header"]: string;
 }
@@ -77,7 +82,7 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
   return (
     <DataList aria-label={ariaLabel} id={id}>
       {dataList &&
-        dataList.map((list: any) => {
+        dataList.map((list: IDataList) => {
           const { headers, data } = list;
           const metadataOptions = getJsonForMetadata(data);
           return (
