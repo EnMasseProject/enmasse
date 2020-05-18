@@ -6,7 +6,8 @@
 import React from "react";
 import { Alert, AlertProps } from "@patternfly/react-core";
 
-export interface IDeviceListAlertProps extends Pick<AlertProps, "variant"> {
+export interface IDeviceListAlertProps
+  extends Pick<AlertProps, "variant" | "isInline" | "id"> {
   visible: boolean;
   title: string;
   description: string;
@@ -14,6 +15,8 @@ export interface IDeviceListAlertProps extends Pick<AlertProps, "variant"> {
 
 export const DeviceListAlert: React.FunctionComponent<IDeviceListAlertProps> = ({
   visible,
+  isInline,
+  id,
   variant,
   title,
   description
@@ -21,7 +24,7 @@ export const DeviceListAlert: React.FunctionComponent<IDeviceListAlertProps> = (
   return (
     <React.Fragment>
       {visible && (
-        <Alert variant={variant} title={title}>
+        <Alert variant={variant} title={title} id={id} isInline={isInline}>
           {description}
         </Alert>
       )}

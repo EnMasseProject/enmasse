@@ -26,7 +26,7 @@ export * from "./Editor";
 export * from "./FormAndJson";
 export * from "./InputText";
 export * from "./ProjectHeaderCard";
-export * from "./JsonViewEditor";
+export * from "./JsonEditor";
 export * from "./ToggleIcon";
 export * from "./NoResultFound";
 export * from "./DropdownWithBulkSelect";

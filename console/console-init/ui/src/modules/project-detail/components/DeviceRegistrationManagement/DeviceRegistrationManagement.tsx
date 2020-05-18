@@ -15,7 +15,7 @@ import {
   TextVariants,
   Switch
 } from "@patternfly/react-core";
-import { InputText, JsonViewEditor } from "components";
+import { InputText, JsonEditor } from "components";
 import { IAdapterConfig } from "modules/project-detail/components";
 import { StyleSheet, css } from "@patternfly/react-styles";
 
@@ -170,7 +170,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       </CardHeader>
       {isHidden ? (
         <CardBody>
-          <JsonViewEditor readOnly={true} detailInJson={data} />
+          <JsonEditor readOnly={true} value={JSON.stringify(data)} />
         </CardBody>
       ) : (
         <CardBody>
