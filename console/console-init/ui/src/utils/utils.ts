@@ -267,6 +267,9 @@ const compareJsonObject = (object1: any, object2: any) => {
   return false;
 };
 
+const getFormattedJsonString = (json: any) => {
+  return JSON.stringify(json, undefined, 2);
+};
 export {
   getSelectOptionList,
   compareObject,
@@ -282,5 +285,6 @@ export {
   getJsonForMetadata,
   getJson,
   createDeepCopy,
-  compareJsonObject
+  compareJsonObject,
+  getFormattedJsonString
 };

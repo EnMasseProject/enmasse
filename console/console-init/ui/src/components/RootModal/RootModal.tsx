@@ -19,7 +19,8 @@ const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.EDIT_ADDRESS]: EditAddress,
   [MODAL_TYPES.DELETE_ADDRESS_SPACE]: DialogPrompt,
   [MODAL_TYPES.DELETE_ADDRESS]: DialogPrompt,
-  [MODAL_TYPES.PURGE_ADDRESS]: DialogPrompt
+  [MODAL_TYPES.PURGE_ADDRESS]: DialogPrompt,
+  [MODAL_TYPES.LEAVE_CREATE_DEVICE]: DialogPrompt
 };
 
 export const RootModal: React.FC<{}> = () => {
