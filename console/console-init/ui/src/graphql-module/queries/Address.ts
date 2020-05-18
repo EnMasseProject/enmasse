@@ -15,8 +15,8 @@ const DELETE_ADDRESS = gql`
 `;
 
 const PURGE_ADDRESS = gql`
-  mutation purge_addr($a: ObjectMeta_v1_Input!) {
-    purgeAddress(input: $a)
+  mutation purge_addresses($addrs: [ObjectMeta_v1_Input!]!) {
+    purgeAddresses(input: $addrs)
   }
 `;
 

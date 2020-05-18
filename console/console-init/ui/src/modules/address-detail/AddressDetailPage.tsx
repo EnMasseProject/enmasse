@@ -153,10 +153,12 @@ export default function AddressDetailPage() {
 
   const purgeAddress = (data: any) => {
     const variables = {
-      a: {
-        name: data.name,
-        namespace: data.namespace
-      }
+      addrs: [
+        {
+          name: data.name,
+          namespace: data.namespace
+        }
+      ]
     };
     setPurgeAddressQueryVariables(variables);
   };

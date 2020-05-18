@@ -38,6 +38,7 @@ import { compareObject } from "utils";
 import { TablePagination } from "components/TablePagination";
 import { AddressTypes } from "constant";
 import { AddressToolbarContainer } from "modules/address/containers";
+import { useMutationQuery } from "hooks";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -90,10 +91,10 @@ export default function AddressPage() {
     refetchQueries,
     awaitRefetchQueries: true
   });
-  const [setPurgeAddressQueryVariables] = useMutation(PURGE_ADDRESS, {
-    refetchQueries,
-    awaitRefetchQueries: true
-  });
+  const [setPurgeAddressQueryVariables] = useMutationQuery(
+    PURGE_ADDRESS,
+    refetchQueries
+  );
 
   const { addressSpaces } = data || {
     addressSpaces: { addressSpaces: [] }
@@ -139,37 +140,6 @@ export default function AddressPage() {
     }
   };
 
-  const purgeAddress = async (
-    address: any,
-    filteredAddresses: any,
-    index: number
-  ) => {
-    try {
-      const variables = {
-        a: {
-          name: address.name,
-          namespace: address.namespace
-        }
-      };
-      await setPurgeAddressQueryVariables({ variables });
-    } catch (error) {
-      purgeAddressErrors.push(error);
-    }
-    /**
-     * dispatch action to set server errors after completion all queries
-     */
-    if (
-      filteredAddresses &&
-      filteredAddresses.length === index + 1 &&
-      purgeAddressErrors.length > 0
-    ) {
-      dispatch({
-        type: types.SET_SERVER_ERROR,
-        payload: { errors: purgeAddressErrors }
-      });
-    }
-  };
-
   const onDeleteAll = () => {
     dispatch({
       type: types.SHOW_MODAL,
@@ -211,12 +181,25 @@ export default function AddressPage() {
   const onConfirmPurgeAll = async () => {
     const filteredAddresses = getFilteredAddressesByType(selectedAddresses);
     if (filteredAddresses && filteredAddresses.length > 0) {
-      const data = filteredAddresses;
-      await Promise.all(
-        data.map((address, index) =>
-          purgeAddress(address, filteredAddresses, index)
-        )
-      );
+      // const data = filteredAddresses;
+      let variables: any[] = [];
+      filteredAddresses.map((address: IAddress) => {
+        variables.push({
+          name: address.name,
+          namespace: address.namespace
+        });
+      });
+      if (variables.length > 0) {
+        const queryVariable = {
+          addrs: variables
+        };
+        await setPurgeAddressQueryVariables(queryVariable);
+      }
+      // await Promise.all(
+      //   data.map((address, index) =>
+      //     purgeAddress(address, filteredAddresses, index)
+      //   )
+      // );
       setSelectedAddresses([]);
     }
   };
