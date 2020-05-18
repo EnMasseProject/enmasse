@@ -113,8 +113,8 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
 }) => {
   const CredentialsNotFound = () => (
     <Text component={TextVariants.p}>
-      There are no device for this device. This device is connected to the other
-      devices as gateways.
+      There are no credentials for this device. This device is connected to the
+      other devices as gateways.
     </Text>
   );
 
