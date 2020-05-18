@@ -7,13 +7,12 @@ import React, { useState } from "react";
 import {
   PageSection,
   PageSectionVariants,
-  Flex,
-  FlexItem,
-  FlexModifiers,
-  Button
+  Button,
+  Grid,
+  GridItem
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import { JsonEditor, useWindowDimensions } from "components";
+import { JsonEditor } from "components";
 import {
   AddJsonUsingTemplate,
   connectedViaGatewayDeviceTemplate,
@@ -29,14 +28,15 @@ const styles = StyleSheet.create({
     minHeight: "40em",
     maxHeight: "40em",
     border: "1px solid",
-    borderColor: "grey"
+    borderColor: "grey",
+    padding: 20,
+    marginRight: 20
   }
 });
 interface IAddDeviceWithJsonProps {}
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () => {
   const { dispatch } = useStoreContext();
-  const width = useWindowDimensions().width;
   const [deviceDetail, setDeviceDetail] = useState<string>();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
@@ -129,37 +129,28 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
       />
 
       <br />
-      <Flex>
-        <FlexItem
-          breakpointMods={[{ modifier: FlexModifiers["spacer-3xl"] }]}
-          style={{ minWidth: (width * 2) / 3 }}
-        >
-          <div className={css(styles.box_align_style)}>
-            <JsonEditor
-              value={deviceDetail}
-              readOnly={false}
-              name={"editor-add-device"}
+      <Grid>
+        <GridItem span={9} className={css(styles.box_align_style)}>
+          <JsonEditor
+            value={deviceDetail}
+            readOnly={false}
+            name={"editor-add-device"}
+            setDetail={setDeviceInfoInDetail}
+            style={{
+              minHeight: "39em"
+            }}
+          />
+        </GridItem>
+        <GridItem span={3} className={css(styles.box_align_style)}>
+          <PageSection variant={PageSectionVariants.light}>
+            <AddJsonUsingTemplate
               setDetail={setDeviceInfoInDetail}
-              style={{
-                minWidth: (width * 3) / 5,
-                maxWidth: (width * 3) / 5,
-                minHeight: "39em"
-              }}
+              selectedTemplate={selectedTemplate}
+              setSelectedTemplate={setSelectedTemplate}
             />
-          </div>
-        </FlexItem>
-        <FlexItem style={{ minWidth: width / 5 }}>
-          <div className={css(styles.box_align_style)}>
-            <PageSection variant={PageSectionVariants.light}>
-              <AddJsonUsingTemplate
-                setDetail={setDeviceInfoInDetail}
-                selectedTemplate={selectedTemplate}
-                setSelectedTemplate={setSelectedTemplate}
-              />
-            </PageSection>
-          </div>
-        </FlexItem>
-      </Flex>
+          </PageSection>
+        </GridItem>
+      </Grid>
       <br />
 
       <Button variant="primary" onClick={onFinish}>

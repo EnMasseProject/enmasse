@@ -6,8 +6,6 @@
 import React, { useState } from "react";
 import { Editor } from "components";
 import {
-  PageSection,
-  PageSectionVariants,
   Tooltip,
   TooltipPosition,
   Flex,
@@ -19,6 +17,7 @@ import { IAceEditorProps } from "react-ace";
 
 interface IJsonEditorProps extends IAceEditorProps {
   setDetail?: (detail: string) => void;
+  tooltipKey?: string;
 }
 
 const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
@@ -28,19 +27,20 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   name,
   height,
   width,
-  setDetail
+  setDetail,
+  tooltipKey = ""
 }) => {
   const onChange = (value: string) => {
     setDetail && setDetail(value.trim());
   };
   const [isCopied, setIsCopied] = useState<boolean>(false);
   return (
-    <PageSection variant={PageSectionVariants.light}>
+    <>
       <Flex>
         <FlexItem breakpointMods={[{ modifier: FlexModifiers["align-right"] }]}>
           <Tooltip
-            id="tooltip-feedback-for-success-copy"
-            position={TooltipPosition.bottom}
+            id={`tooltip-feedback-for-success-copy-${tooltipKey}`}
+            position={TooltipPosition.left}
             enableFlip={false}
             trigger={"manual"}
             content={<div>Successfully copied to the clipboard</div>}
@@ -48,13 +48,13 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
           >
             <span>
               <Tooltip
-                id="tooltip-with-copy-info"
-                position={TooltipPosition.bottom}
+                id={`tooltip-with-copy-info-${tooltipKey}`}
+                position={TooltipPosition.left}
                 enableFlip={false}
                 content={<div>Copy data to the clipboard</div>}
               >
                 <CopyIcon
-                  id="copy-to-clipboard"
+                  id={`copy-to-clipboard-${tooltipKey}`}
                   size="md"
                   onClick={() => {
                     navigator.clipboard.writeText(value ? value.trim() : "");
@@ -75,9 +75,9 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
         style={style}
         name={name}
         height={height}
-        width={width}
+        width={width || "auto"}
       />
-    </PageSection>
+    </>
   );
 };
 
