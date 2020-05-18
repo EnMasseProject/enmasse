@@ -162,6 +162,28 @@ func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *Config
 	return &config.Conditions[len(config.Conditions)-1]
 }
 
+func (config *IoTConfigStatus) RemoveCondition(t ConfigConditionType) {
+
+	for i := len(config.Conditions) - 1; i >= 0; i-- {
+		c := config.Conditions[i]
+		if c.Type == t {
+			config.Conditions = append(
+				config.Conditions[:i],
+				config.Conditions[i+1:]...,
+			)
+		}
+	}
+
+}
+
+func (c *CommonCondition) SetStatusAsBoolean(status bool, reason string, message string) {
+	if status {
+		c.SetStatus(corev1.ConditionTrue, reason, message)
+	} else {
+		c.SetStatus(corev1.ConditionFalse, reason, message)
+	}
+}
+
 func (c *CommonCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
 
 	if c.Status != status {
@@ -181,6 +203,10 @@ func (c *CommonCondition) IsOk() bool {
 // Sets the status to "True". "Reason" and "Message" to empty.
 func (c *CommonCondition) SetStatusOk() {
 	c.SetStatus(corev1.ConditionTrue, "", "")
+}
+
+func (c *CommonCondition) SetStatusError(reason string, message string) {
+	c.SetStatus(corev1.ConditionFalse, reason, message)
 }
 
 // Call SetStatusOk() when "ok" is true. Otherwise calls SetStatus() with the provided

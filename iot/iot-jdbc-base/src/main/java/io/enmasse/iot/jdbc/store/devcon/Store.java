@@ -9,12 +9,10 @@ import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
 import org.eclipse.hono.tracing.TracingHelper;
-import org.eclipse.hono.util.DeviceConnectionConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +26,6 @@ import io.opentracing.Span;
 import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonArray;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.sql.SQLClient;
 import io.vertx.ext.sql.UpdateResult;
 
@@ -43,9 +39,9 @@ public class Store extends AbstractStore {
     private final Tracer tracer;
 
     private final Statement readStatement;
-    private final Statement updateStatement;
     private final Statement dropTenantStatement;
 
+    private final Statement updateLastKnownGatewayStatement;
     private final Statement updateAdapterInstanceStatement;
 
     public static StatementConfiguration defaultStatementConfiguration(final String jdbcUrl, final Optional<String> tableName) throws IOException {
@@ -72,14 +68,14 @@ public class Store extends AbstractStore {
                         "tenant_id",
                         "device_id");
 
-        this.updateStatement = cfg.getRequiredStatment("update")
+        this.dropTenantStatement = cfg.getRequiredStatment("dropTenant")
+                .validateParameters("tenant_id");
+
+        this.updateLastKnownGatewayStatement = cfg.getRequiredStatment("updateLastKnownGateway")
                 .validateParameters(
                         "tenant_id",
                         "device_id",
                         "gateway_id");
-
-        this.dropTenantStatement = cfg.getRequiredStatment("dropTenant")
-                .validateParameters("tenant_id");
 
         this.updateAdapterInstanceStatement = cfg.getRequiredStatment("updateAdapterInstance")
                 .validateParameters(
@@ -137,7 +133,7 @@ public class Store extends AbstractStore {
                 .withTag("gateway_id", gatewayId)
                 .start();
 
-        var expanded = this.updateStatement.expand(params -> {
+        var expanded = this.updateLastKnownGatewayStatement.expand(params -> {
             params.put("tenant_id", key.getTenantId());
             params.put("device_id", key.getDeviceId());
             params.put("gateway_id", gatewayId);
