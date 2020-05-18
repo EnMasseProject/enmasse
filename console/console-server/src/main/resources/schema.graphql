@@ -47,8 +47,8 @@ enum MessagingEndpointType {
   cluster,
   nodePort,
   loadBalancer,
-  Route,
-  Ingress
+  route,
+  ingress
 }
 
 enum MessagingEndpointProtocol {
@@ -161,8 +161,8 @@ type MessagingEndpointSpec_enmasse_io_v1beta2 {
 type MessagingEndpointStatus_enmasse_io_v1beta2 {
   phase: String!
   type: MessagingEndpointType!
-  message: String!
-  host: String!
+  message: String
+  host: String
 
   ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
   internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
