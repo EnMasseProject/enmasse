@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import AceEditor, { IAceEditorProps } from "react-ace";
 
 const Editor: React.FunctionComponent<IAceEditorProps> = ({
@@ -6,7 +6,10 @@ const Editor: React.FunctionComponent<IAceEditorProps> = ({
   readOnly,
   mode,
   style,
+  theme = "github",
   name,
+  fontSize = 14,
+  width = "auto",
   onChange,
   enableBasicAutocompletion,
   enableLiveAutocompletion
@@ -14,8 +17,9 @@ const Editor: React.FunctionComponent<IAceEditorProps> = ({
   return (
     <AceEditor
       mode={mode}
-      theme="github"
-      fontSize={14}
+      theme={theme}
+      width={width}
+      fontSize={fontSize}
       readOnly={readOnly}
       onChange={onChange}
       value={value}

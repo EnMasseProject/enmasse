@@ -35,6 +35,11 @@ enum AddressTypes {
   SUBSCRIPTION = "subscription"
 }
 
+enum TemplateType {
+  DIRECTLY_CONNECTED = "directly-connected",
+  VIA_GATEWAY = "via-gateway"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -46,5 +51,6 @@ export {
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
   TypeAheadMessage,
   ErrorCodes,
-  AddressTypes
+  AddressTypes,
+  TemplateType
 };
