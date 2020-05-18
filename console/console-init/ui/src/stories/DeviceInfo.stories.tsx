@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import { HashRouter as Router } from "react-router-dom";
 import { DeviceInfo } from "modules/device-detail/components";
 
 export default {
@@ -11,15 +12,16 @@ export default {
 };
 
 const deviceList = [
-  { id: "device-1", name: "device-1" },
-  { id: "device-2", name: "device-2" },
-  { id: "device-2", name: "device-3" },
-  { id: "device-1", name: "device-4" },
-  { id: "device-1", name: "device-5" },
-  { id: "device-2", name: "device-6" },
-  { id: "device-1", name: "device-7" },
-  { id: "device-2", name: "device-8" },
-  { id: "device-1", name: "device-9" }
+  "device-1",
+  "device-2",
+  "device-3",
+  "device-4",
+  "device-5",
+  "device-6",
+  "device-7",
+  "device-8",
+  "device-9",
+  "device-10"
 ];
 
 const defaults = {
@@ -152,10 +154,12 @@ const dataList = [
 ];
 
 export const DeviceInfoView = () => (
-  <DeviceInfo
-    id={"divice-info"}
-    metadataList={dataList}
-    deviceList={deviceList}
-    credentials={credentials}
-  />
+  <Router>
+    <DeviceInfo
+      id={"divice-info"}
+      metadataList={dataList}
+      deviceList={deviceList}
+      credentials={credentials}
+    />
+  </Router>
 );

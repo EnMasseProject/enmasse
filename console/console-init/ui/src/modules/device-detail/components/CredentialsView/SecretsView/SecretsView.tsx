@@ -7,7 +7,7 @@ import React from "react";
 import { Title, Grid, GridItem, Button } from "@patternfly/react-core";
 import { EditAltIcon } from "@patternfly/react-icons";
 import classNames from "classnames";
-import { getLabelByKey, uniqueId } from "utils";
+import { getLabelByKey } from "utils";
 import { ISecret } from "modules/device/components";
 import { StyleSheet } from "@patternfly/react-styles";
 
@@ -33,7 +33,7 @@ export interface ISecretsViewProps {
   heading: string;
 }
 
-const SecretRow: React.FC<{ secret: any }> = ({ secret }) => {
+const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
   const renderGridItemValue = (value: string, key: string) => {
     if (key === "pwd-hash") {
       return (
@@ -62,7 +62,7 @@ const SecretRow: React.FC<{ secret: any }> = ({ secret }) => {
   return (
     <>
       {secretsKeys.map((key: string) => {
-        const value = secret && secret[key];
+        const value = secret && (secret as any)[key];
         return (
           <>
             <Grid key={"secrets-view-" + key}>

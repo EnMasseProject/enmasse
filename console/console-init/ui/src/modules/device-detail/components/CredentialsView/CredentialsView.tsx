@@ -11,7 +11,9 @@ import {
   Card,
   CardBody,
   CardHeader,
-  Divider
+  Divider,
+  Text,
+  TextVariants
 } from "@patternfly/react-core";
 import { getLabelByKey } from "utils";
 import { SwitchWithToggle } from "components";
@@ -109,6 +111,13 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   id,
   credentials
 }) => {
+  const CredentialsNotFound = () => (
+    <Text component={TextVariants.p}>
+      There are no device for this device. This device is connected to the other
+      devices as gateways.
+    </Text>
+  );
+
   return (
     <Card id={id}>
       <CardHeader>
@@ -129,6 +138,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
               </>
             );
           })}
+        {!(credentials && credentials.length > 0) && <CredentialsNotFound />}
       </CardBody>
     </Card>
   );

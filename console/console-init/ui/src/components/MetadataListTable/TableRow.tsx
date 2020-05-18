@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
   }
 });
 
-interface IRowData {
+interface IRowOptions {
   key: string;
   type: any;
   value: string;
@@ -46,7 +46,7 @@ interface IRowData {
 }
 
 export type ITableRowProps = {
-  rowData: IRowData;
+  rowData: IRowOptions;
 };
 
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
