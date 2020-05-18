@@ -4,17 +4,17 @@
  */
 
 import React from "react";
-import { storiesOf } from "@storybook/react";
-import { withKnobs } from "@storybook/addon-knobs";
 import {
   IAddressSpace,
   AddressSpaceList
 } from "modules/address-space/components/AddressSpaceList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
+import { getTableColumns, getTableCells } from "modules/address-space/utils";
 
-const stories = storiesOf("Address Space List", module);
-stories.addDecorator(withKnobs);
+export default {
+  title: "AddressSpaceList"
+};
 
 const rows: IAddressSpace[] = [
   {
@@ -67,15 +67,13 @@ const rows: IAddressSpace[] = [
   }
 ];
 
-stories.add("Address Space List", () => (
+export const addressSpaceTable = () => (
   <MemoryRouter>
-    {/* <AddressSpaceList
-      onSelectAddressSpace={action("select addressSpace")}
-      onSelectAllAddressSpace={action("SelectAllAddressSpaces")}
-      rows={rows}
-      onEdit={action("onEdit")}
-      onDelete={action("onDelete")}
-      onDownload={action("download Certificate")}
-    /> */}
+    <AddressSpaceList
+      onSort={action("handle sorting of column")}
+      onSelect={action("handle selecting a row")}
+      rows={rows.map(row => getTableCells(row))}
+      cells={getTableColumns}
+    />
   </MemoryRouter>
-));
+);
