@@ -21,7 +21,7 @@ import {
   ConnectionsToggleGroup,
   IConnectionsToggleGroupProps
 } from "modules/connection/components";
-import { IConnection } from "../ConnectionList";
+import { IConnection } from "modules/connection";
 
 export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   sortValue?: ISortBy;
@@ -80,10 +80,9 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   ];
 
   const onKebabSelect = async (event: any) => {
-    if (event.target.value) {
-      if (event.target.value === "closeAll") {
-        await onCloseAll();
-      }
+    const value = event.target.value;
+    if (value && value === "closeAll") {
+      await onCloseAll();
     }
   };
 
@@ -121,8 +120,8 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
       </DataToolbarItem>
       <DataToolbarItem>
         <DropdownWithKebabToggle
-          id="al-select-kebab-overflow-dropdown-"
-          toggleId="al-filter-overflow-kebab"
+          id="cl-select-kebab-overflow-dropdown-"
+          toggleId="cl-filter-overflow-kebab"
           onSelect={onKebabSelect}
           dropdownItems={dropdownItems}
           isPlain

@@ -133,7 +133,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
   };
 
   const onCloseAllConnection = async (connection: IConnection) => {
-    const onCloseConnection = () => {
+    const onCloseConnection = async () => {
       if (connection) {
         const variables = {
           cons: [
@@ -143,9 +143,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
             }
           ]
         };
-        if (variables) {
-          setCloseConnectionQueryVariables(variables);
-        }
+        await setCloseConnectionQueryVariables(variables);
       }
     };
     dispatch({

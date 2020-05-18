@@ -1,10 +1,15 @@
-import { IConnection } from "../components";
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
+import { IConnection } from "modules/connection";
 
 const getFilteredConnectionNames = (connections: IConnection[]) => {
   return connections && connections.map(connection => connection.name);
 };
 
-const getHeaderTextForCloseAll = (connections: any[]) => {
+const getHeaderTextForCloseAll = (connections: IConnection[]) => {
   return connections && connections.length > 1
     ? "Close thses Connections ?"
     : "Close this Connection ?";
