@@ -59,13 +59,13 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
   const onCancel = () => {
     let isJsonPresent: boolean = false;
     try {
-      const data = deviceDetail && JSON.parse(deviceDetail);
-      if (data && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
-        if (!compareJsonObject(data, directlyConnectedDeviceTemplate)) {
+      const detail = deviceDetail && JSON.parse(deviceDetail);
+      if (detail && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
+        if (!compareJsonObject(detail, directlyConnectedDeviceTemplate)) {
           isJsonPresent = true;
         }
       } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
-        if (!compareJsonObject(data, connectedViaGatewayDeviceTemplate)) {
+        if (!compareJsonObject(detail, connectedViaGatewayDeviceTemplate)) {
           isJsonPresent = true;
         }
       }
@@ -95,9 +95,9 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
         }
         return true;
       }
-      const data = JSON.parse(deviceDetail.trim());
-      if (data) {
-        setDeviceInfoInDetail(getFormattedJsonString(data));
+      const detail = JSON.parse(deviceDetail.trim());
+      if (detail) {
+        setDeviceInfoInDetail(getFormattedJsonString(detail));
         return true;
       }
     } catch {

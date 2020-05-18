@@ -63,8 +63,8 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
   };
   const onReaderLoad = (event: any) => {
     try {
-      const data = JSON.parse(event.target.result);
-      setDetail(getFormattedJsonString(data));
+      const detail = JSON.parse(event.target.result);
+      setDetail(getFormattedJsonString(detail));
     } catch {
       //TODO: Error handling for invalid json
       console.log("Invalid Json");

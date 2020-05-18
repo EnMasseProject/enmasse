@@ -8,7 +8,7 @@ import { Modal, Button, Title } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { WarningTriangleIcon } from "@patternfly/react-icons";
 
-export enum IconType {
+export enum IconVariant {
   "WARNING" = "warning",
   "DANGER" = "danger"
 }
