@@ -52,7 +52,6 @@ const iotServiceCaConfigMapName = "iot-service-ca"
 const DeviceConnectionTypeAnnotation = iotPrefix + "/deviceConnection.type"
 
 const RegistryTypeAnnotation = iotPrefix + "/registry.type"
-const RegistryJdbcModeAnnotation = iotPrefix + "/registry.jdbc.mode"
 
 var log = logf.Log.WithName("controller_iotconfig")
 
@@ -219,9 +218,6 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processQdrProxyConfig(ctx, config, qdrProxyConfigCtx)
-	})
-	rc.ProcessSimple(func() error {
-		return r.processCollector(ctx, config)
 	})
 	rc.ProcessSimple(func() error {
 		return r.processInterServiceCAConfigMap(ctx, config)

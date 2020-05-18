@@ -106,7 +106,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls-internal", true)
 		install.ApplyVolumeMountSimple(container, "tls-endpoint", "/etc/tls-external", true)
-		install.DropVolumeMount(container, "registry")
 
 		// apply container options
 
@@ -144,7 +143,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	// volumes
 
 	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceRegistry+"-config")
-	install.DropVolume(&deployment.Spec.Template.Spec, "registry")
 
 	// inter service secrets
 
