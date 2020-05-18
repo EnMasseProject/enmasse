@@ -8,19 +8,27 @@ import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  DataToolbarContentProps
+  DataToolbarContentProps,
+  DropdownItem
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { SortForMobileView, useWindowDimensions } from "components";
+import {
+  SortForMobileView,
+  useWindowDimensions,
+  DropdownWithKebabToggle
+} from "components";
 import {
   ConnectionsToggleGroup,
   IConnectionsToggleGroupProps
 } from "modules/connection/components";
+import { IConnection } from "../ConnectionList";
 
 export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
+  selectedConnections: IConnection[];
+  onCloseAll: () => void;
 }
 const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   DataToolbarContentProps> = ({
@@ -45,7 +53,9 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   onChangeHostNameInput,
   onChangeContainerInput,
   setHostNameInput,
-  setHostContainerInput
+  setHostContainerInput,
+  selectedConnections,
+  onCloseAll
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
@@ -57,6 +67,26 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
     { key: "sender", value: "Senders", index: 5 },
     { key: "receiver", value: "Receivers", index: 6 }
   ];
+  const dropdownItems = [
+    <DropdownItem
+      id="cl-filter-dropdown-item-closeAll"
+      key="close-all"
+      value="closeAll"
+      component="button"
+      isDisabled={selectedConnections.length <= 0}
+    >
+      Close Selected
+    </DropdownItem>
+  ];
+
+  const onKebabSelect = async (event: any) => {
+    if (event.target.value) {
+      if (event.target.value === "closeAll") {
+        await onCloseAll();
+      }
+    }
+  };
+
   const toolbarItems = (
     <>
       <ConnectionsToggleGroup
@@ -88,6 +118,15 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
             setSortValue={setSortValue}
           />
         )}
+      </DataToolbarItem>
+      <DataToolbarItem>
+        <DropdownWithKebabToggle
+          id="al-select-kebab-overflow-dropdown-"
+          toggleId="al-filter-overflow-kebab"
+          onSelect={onKebabSelect}
+          dropdownItems={dropdownItems}
+          isPlain
+        />
       </DataToolbarItem>
     </>
   );

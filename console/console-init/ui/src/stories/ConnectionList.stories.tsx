@@ -10,6 +10,7 @@ import {
   IConnection
 } from "modules/connection/components/ConnectionList/ConnectionList";
 import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
+import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Connection"
@@ -59,7 +60,12 @@ const rows: IConnection[] = [
 
 export const connectionList = () => (
   <MemoryRouter>
-    <ConnectionList rows={rows} />
+    <ConnectionList
+      rows={rows}
+      onCloseConnection={action("onCloseConnection")}
+      onSelectAllConnection={action("select all connection")}
+      onSelectConnection={action("select connection")}
+    />
   </MemoryRouter>
 );
 

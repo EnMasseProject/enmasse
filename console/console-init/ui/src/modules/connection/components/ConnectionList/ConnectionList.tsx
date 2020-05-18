@@ -12,7 +12,8 @@ import {
   TableBody,
   IRowData,
   sortable,
-  ISortBy
+  ISortBy,
+  IExtraData
 } from "@patternfly/react-table";
 import { FormatDistance } from "use-patternfly";
 import { css } from "@patternfly/react-styles";
@@ -25,6 +26,12 @@ interface IConnectionListProps {
   addressSpaceType?: string;
   sortBy?: ISortBy;
   onSort?: (_event: any, index: number, direction: string) => void;
+  onCloseConnection: (data: IConnection) => void;
+  onSelectConnection: (connection: IConnection, isSelected: boolean) => void;
+  onSelectAllConnection: (
+    connections: IConnection[],
+    isSelected: boolean
+  ) => void;
 }
 export interface IConnection {
   hostname: string;
@@ -38,18 +45,23 @@ export interface IConnection {
   status: "creating" | "deleting" | "running";
   name: string;
   creationTimestamp: string;
+  selected?: boolean;
 }
 
 export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   rows,
   addressSpaceType,
   sortBy,
-  onSort
+  onSort,
+  onCloseConnection,
+  onSelectConnection,
+  onSelectAllConnection
 }) => {
   const { width } = useWindowDimensions();
 
   const toTableCells = (row: IConnection) => {
     const tableRow: IRowData = {
+      selected: row.selected,
       cells: [
         {
           title: <Link to={`connections/${row.name}`}>{row.hostname}</Link>
@@ -126,6 +138,41 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
       transforms: [sortable]
     }
   ];
+  const actionResolver = (rowData: IRowData) => {
+    const originalData = rowData.originalData as IConnection;
+    return [
+      {
+        id: "close-connection",
+        title: "Close",
+        onClick: () => onCloseConnection(originalData)
+      }
+    ];
+  };
+
+  const onSelect = (
+    event: React.MouseEvent,
+    isSelected: boolean,
+    rowIndex: number,
+    rowData: IRowData,
+    extraData: IExtraData
+  ) => {
+    let rows;
+    if (rowIndex === -1) {
+      rows = tableRows.map(row => {
+        const data = row;
+        data.selected = isSelected;
+        return data;
+      });
+      onSelectAllConnection(
+        rows.map(row => row.originalData),
+        isSelected
+      );
+    } else {
+      rows = [...tableRows];
+      rows[rowIndex].selected = isSelected;
+      onSelectConnection(rows[rowIndex].originalData, isSelected);
+    }
+  };
 
   return (
     <div className={css(StyleForTable.scroll_overflow)}>
@@ -133,9 +180,11 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
         variant={TableVariant.compact}
         cells={tableColumns}
         rows={tableRows}
+        actionResolver={actionResolver}
         aria-label="connection list"
         sortBy={sortBy}
         onSort={onSort}
+        onSelect={onSelect}
       >
         <TableHeader id="connectionlist-table-header" />
         <TableBody />
