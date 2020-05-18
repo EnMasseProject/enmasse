@@ -16,9 +16,6 @@ curl -sL https://deb.nodesource.com/setup_13.x
 sudo -E bash -
 sudo apt-get install nodejs
 
-echo "Install golang"
-sudo apt-get install golang-1.13
-
 echo "Install asciidoctor"
 gem install asciidoctor
 
