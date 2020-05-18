@@ -101,14 +101,14 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse enmasse monitoring");
         LOGGER.info("***********************************************************");
-        setEnmasseOperatorEnableMonitoring(false);
+        enableOperatorMetrics(false);
         kube.createNamespace(env.getMonitoringNamespace());
         KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
         KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-deployment"));
         TestUtils.waitForExpectedReadyPods(kube, env.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
         enableMonitoringForNamespace();
-        setEnmasseOperatorEnableMonitoring(true);
+        enableOperatorMetrics(true);
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
         LOGGER.info("***********************************************************");
     }
@@ -232,7 +232,8 @@ public class EnmasseOperatorManager {
                 .done();
     }
 
-    private void setEnmasseOperatorEnableMonitoring(boolean enable) {
+    private void enableOperatorMetrics(boolean enable) {
+        LOGGER.info("Enabling operator metrics");
         List<EnvVar> envVars = Kubernetes.getInstance().getClient().apps()
                 .deployments()
                 .inNamespace(kube.getInfraNamespace())
