@@ -205,7 +205,6 @@ http://localhost:` + port + `/graphql
 	})
 
 	if *developmentMode {
-		manager.BeginWatching() // TODO remove me
 		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gqlServer, sessionManager, config.BearerToken))
 	} else {
 		queryServer.Handle(queryEndpoint, server.AuthHandler(gqlServer, sessionManager, impersonationConfig))
