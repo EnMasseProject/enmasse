@@ -376,7 +376,9 @@ type Mutation {
   createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   deleteAddress(input: ObjectMeta_v1_Input!): Boolean
-  purgeAddress(input: ObjectMeta_v1_Input!): Boolean
+  purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "purges address(es)"
+  purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
   closeConnection(input: ObjectMeta_v1_Input!): Boolean
 }

@@ -83,6 +83,12 @@ func withAddress(address string) addressHolderOption {
 	}
 }
 
+func withAddressType(t string) addressHolderOption {
+	return func(ah *consolegraphql.AddressHolder) {
+		ah.Spec.Type = t
+	}
+}
+
 func createAddress(namespace, name string, addressHolderOptions ...addressHolderOption) *consolegraphql.AddressHolder {
 	ah := &consolegraphql.AddressHolder{
 		Address: v1beta1.Address{

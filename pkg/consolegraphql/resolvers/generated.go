@@ -273,6 +273,7 @@ type ComplexityRoot struct {
 		PatchAddress       func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
 		PatchAddressSpace  func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
 		PurgeAddress       func(childComplexity int, input v1.ObjectMeta) int
+		PurgeAddresses     func(childComplexity int, input []*v1.ObjectMeta) int
 	}
 
 	NamespaceStatusV1 struct {
@@ -374,6 +375,7 @@ type MutationResolver interface {
 	PatchAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	PurgeAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
+	PurgeAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	CloseConnection(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 }
 type NamespaceStatus_v1Resolver interface {
@@ -1278,6 +1280,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PurgeAddress(childComplexity, args["input"].(v1.ObjectMeta)), true
 
+	case "Mutation.purgeAddresses":
+		if e.complexity.Mutation.PurgeAddresses == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_purgeAddresses_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.PurgeAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
+
 	case "NamespaceStatus_v1.phase":
 		if e.complexity.NamespaceStatusV1.Phase == nil {
 			break
@@ -1980,7 +1994,9 @@ type Mutation {
   createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   deleteAddress(input: ObjectMeta_v1_Input!): Boolean
-  purgeAddress(input: ObjectMeta_v1_Input!): Boolean
+  purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "purges one or more addresses"
+  purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
   closeConnection(input: ObjectMeta_v1_Input!): Boolean
 }
@@ -2289,6 +2305,20 @@ func (ec *executionContext) field_Mutation_purgeAddress_args(ctx context.Context
 	var arg0 v1.ObjectMeta
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_purgeAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*v1.ObjectMeta
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6443,6 +6473,44 @@ func (ec *executionContext) _Mutation_purgeAddress(ctx context.Context, field gr
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_purgeAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_purgeAddresses_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().PurgeAddresses(rctx, args["input"].([]*v1.ObjectMeta))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10266,6 +10334,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_deleteAddress(ctx, field)
 		case "purgeAddress":
 			out.Values[i] = ec._Mutation_purgeAddress(ctx, field)
+		case "purgeAddresses":
+			out.Values[i] = ec._Mutation_purgeAddresses(ctx, field)
 		case "closeConnection":
 			out.Values[i] = ec._Mutation_closeConnection(ctx, field)
 		default:
@@ -11970,6 +12040,34 @@ func (ec *executionContext) marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋp
 
 func (ec *executionContext) unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, v interface{}) (v1.ObjectMeta, error) {
 	return ec.unmarshalInputObjectMeta_v1_Input(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx context.Context, v interface{}) ([]*v1.ObjectMeta, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*v1.ObjectMeta, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNObjectMeta_v1_Input2ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNObjectMeta_v1_Input2ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx context.Context, v interface{}) (*v1.ObjectMeta, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, v)
+	return &res, err
 }
 
 func (ec *executionContext) unmarshalNProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐProtocol(ctx context.Context, v interface{}) (Protocol, error) {

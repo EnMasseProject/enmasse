@@ -483,8 +483,7 @@ func TestPurgeQueue(t *testing.T) {
 		"enmasse.io/infra-uuid": infraUuid,
 	}
 
-	addr := createAddress(namespace, addressspace+".myaddr")
-	addr.Spec.Type = "queue"
+	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
 
 	err := r.Cache.Add(as, addr)
 	assert.NoError(t, err)
@@ -497,7 +496,36 @@ func TestPurgeQueue(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, delegate.(*mockCommandDelegate).purgeCount)
+}
 
+func TestPurgeQueues(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+
+	r.GetCollector = getCollector
+
+	namespace := "mynamespace"
+	addressspace := "myaddrspace"
+	infraUuid := "abcd1235"
+	as := createAddressSpace(addressspace, namespace)
+	as.Annotations = map[string]string{
+		"enmasse.io/infra-uuid": infraUuid,
+	}
+
+	addr1 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
+	addr2 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
+
+	err := r.Cache.Add(as, addr1, addr2)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().PurgeAddresses(ctx, []*metav1.ObjectMeta{&addr1.ObjectMeta, &addr2.ObjectMeta})
+	assert.NoError(t, err)
+
+	collector := r.GetCollector(infraUuid)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
+	assert.NoError(t, err)
+
+	assert.Equal(t, 2, delegate.(*mockCommandDelegate).purgeCount)
 }
 
 func TestPurgeUnsupportedAddressType(t *testing.T) {
@@ -513,8 +541,7 @@ func TestPurgeUnsupportedAddressType(t *testing.T) {
 		"enmasse.io/infra-uuid": infraUuid,
 	}
 
-	addr := createAddress(namespace, addressspace+".myaddr")
-	addr.Spec.Type = "anycast"
+	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("anycast"))
 
 	err := r.Cache.Add(as, addr)
 	assert.NoError(t, err)
