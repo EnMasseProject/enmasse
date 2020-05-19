@@ -28,15 +28,20 @@ const nameHttpAdapter = "iot-http-adapter"
 
 func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
-	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
+	change := qdrProxyConfigCtx.Clone()
 
 	adapter := findAdapter("http")
 	enabled := adapter.IsEnabled(config)
 
 	rc.ProcessSimple(func() error {
+		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, !enabled, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileHttpAdapterConfigMap(config, adapter, configMap, change)
+		})
+	})
+	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameHttpAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileHttpAdapterDeployment(config, deployment, configCtx)
+			return r.reconcileHttpAdapterDeployment(config, deployment, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -46,22 +51,19 @@ func (r *ReconcileIoTConfig) processHttpAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameHttpAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameHttpAdapter))
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameHttpAdapter+"-config", config, !enabled, r.reconcileHttpAdapterConfigMap)
-	})
-	rc.ProcessSimple(func() error {
 		return r.processAdapterRoute(ctx, config, adapter, r.reconcileHttpAdapterRoute, r.reconcileHttpAdapterServiceExternal)
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.HttpAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, change)
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "http-adapter")
@@ -116,7 +118,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterDeployment(config *iotv1alpha1.
 
 		// apply container options
 
-		applyContainerConfig(container, adapter.Containers.Adapter)
+		applyContainerConfig(container, adapter.Containers.Adapter.ContainerConfig)
 
 		// return
 
@@ -194,7 +196,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterService(config *iotv1alpha1.IoT
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(config *iotv1alpha1.IoTConfig, a adapter, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -202,9 +204,7 @@ func (r *ReconcileIoTConfig) reconcileHttpAdapterConfigMap(_ *iotv1alpha1.IoTCon
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = a.RenderLoggingConfig(config, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -234,6 +234,8 @@ hono:
     port: 5671
     trustStoreFormat: PEM
 `
+
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
 
 	return nil
 }

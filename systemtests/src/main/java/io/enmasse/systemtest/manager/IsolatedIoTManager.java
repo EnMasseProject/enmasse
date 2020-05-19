@@ -60,11 +60,11 @@ public class IsolatedIoTManager extends ResourceManager {
         kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
     }
 
-    private static Exception cleanup(ThrowingCallable callable, Exception e) {
+    private static Throwable cleanup(ThrowingCallable callable, Throwable e) {
         try {
             callable.call();
             return e;
-        } catch (Exception e1) {
+        } catch (Throwable e1) {
             if (e == null) {
                 return e1;
             } else {
@@ -85,12 +85,15 @@ public class IsolatedIoTManager extends ResourceManager {
 
             // the next lines, using cleanup(...) prevent that the failure of
             // one cleanup step prevents the next step from being executed.
+            // Also we must handle Throwables here, since some parts of the code
+            // call 'assert*', which throws a 'AssertionFailedError', which is
+            // is an 'Error' rather than an 'Exception'.
 
-            Exception e = null;
+            Throwable e = null;
             e = cleanup(() -> tearDownProjects(), e);
             e = cleanup(() -> tearDownConfigs(), e);
             if (context.getExecutionException().isPresent()) {
-                Path path = TestUtils.getFailedTestLogsPath(context);
+                final Path path = TestUtils.getFailedTestLogsPath(context);
                 e = cleanup(() -> SystemtestsKubernetesApps.collectInfinispanServerLogs(path), e);
             }
             e = cleanup(() -> SystemtestsKubernetesApps.deleteInfinispanServer(), e);
@@ -98,8 +101,12 @@ public class IsolatedIoTManager extends ResourceManager {
             e = cleanup(() -> SystemtestsKubernetesApps.deleteH2Server(), e);
 
             if (e != null) {
-                LOGGER.error("Error tearing down IoT test: {}", e.getMessage());
-                throw e;
+                LOGGER.error("Error tearing down IoT test: {}", e);
+                if (e instanceof Exception) {
+                    throw (Exception) e;
+                } else {
+                    throw new Exception(e);
+                }
             }
 
         }

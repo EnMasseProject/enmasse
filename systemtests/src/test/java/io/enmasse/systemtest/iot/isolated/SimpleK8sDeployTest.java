@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.iot.model.v1.CommonAdapterContainersBuilder;
 import io.enmasse.iot.model.v1.ContainerConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.JavaContainerConfigBuilder;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
@@ -59,12 +60,14 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
         var r1 = new ContainerConfigBuilder()
                 .withNewResources().addToLimits("memory", new Quantity("64Mi")).endResources()
                 .build();
-        var r2 = new ContainerConfigBuilder()
+        var j2 = new JavaContainerConfigBuilder()
+                .withNewContainerConfig()
                 .withNewResources().addToLimits("memory", new Quantity("256Mi")).endResources()
+                .endContainerConfig()
                 .build();
 
         var commonContainers = new CommonAdapterContainersBuilder()
-                .withNewAdapterLike(r2).endAdapter()
+                .withNewAdapterLike(j2).endAdapter()
                 .withNewProxyLike(r1).endProxy()
                 .withNewProxyConfiguratorLike(r1).endProxyConfigurator()
                 .build();
@@ -98,11 +101,11 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .withNewServices()
 
                 .withNewAuthentication()
-                .withNewContainerLike(r2).endContainer()
+                .withNewContainerLike(j2).endContainer()
                 .endAuthentication()
 
                 .withNewTenant()
-                .withNewContainerLike(r2).endContainer()
+                .withNewContainerLike(j2).endContainer()
                 .endTenant()
 
                 .withDeviceConnection(DefaultDeviceRegistry.newPostgresBasedConnection(jdbcEndpoint))
@@ -111,7 +114,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .editDeviceConnection()
                 .editJdbc()
                 .editOrNewCommonServiceConfig()
-                .withNewContainerLike(r2).endContainer()
+                .withNewContainerLike(j2).endContainer()
                 .endCommonServiceConfig()
                 .endJdbc()
                 .endDeviceConnection()
@@ -122,7 +125,7 @@ class SimpleK8sDeployTest extends TestBase implements ITestIoTIsolated {
                 .editExternal()
                 .editManagement()
                 .editOrNewCommonConfig()
-                .withNewContainerLike(r2).endContainer()
+                .withNewContainerLike(j2).endContainer()
                 .endCommonConfig()
                 .endManagement()
                 .endExternal()

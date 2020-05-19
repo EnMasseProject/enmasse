@@ -33,6 +33,7 @@ public class IoTConfigSpec {
     private MeshConfig mesh;
     private JavaContainerDefaults java;
     private TlsOptions tls;
+    private LoggingConfig logging;
 
     public Boolean getEnableDefaultRoutes() {
         return enableDefaultRoutes;
@@ -88,5 +89,12 @@ public class IoTConfigSpec {
     }
     public MeshConfig getMesh() {
         return mesh;
+    }
+
+    public void setLogging(LoggingConfig logging) {
+        this.logging = logging;
+    }
+    public LoggingConfig getLogging() {
+        return logging;
     }
 }
