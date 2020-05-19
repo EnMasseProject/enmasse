@@ -58,7 +58,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
   onDeleteExtension,
   credentialId
 }) => {
-  const prefixId = "di-el";
+  const prefixId = "el";
   const typeOptions: ISelectOption[] = [
     { key: "string", label: "String", value: "String" },
     { key: "number", label: "Number", value: "Number" },
@@ -76,7 +76,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
 
   return (
     <>
-      <Grid id={prefixId}>
+      <Grid id={prefixId + "-list-grid"}>
         <GridItem span={12}>Ext</GridItem>
         {extensions &&
           extensions.map(ext => {
