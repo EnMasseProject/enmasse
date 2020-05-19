@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.2.5
   creationTimestamp: null
-  name: messaginginfras.enmasse.io
+  name: messaginginfrastructures.enmasse.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
@@ -25,14 +25,15 @@ spec:
   names:
     categories:
     - enmasse
-    kind: MessagingInfra
-    listKind: MessagingInfraList
-    plural: messaginginfras
+    kind: MessagingInfrastructure
+    listKind: MessagingInfrastructureList
+    plural: messaginginfrastructures
     shortNames:
     - msgi
     - msginfra
     - msginfras
-    singular: messaginginfra
+    - messaginginfras
+    singular: messaginginfrastructure
   scope: Namespaced
   subresources:
     status: {}
@@ -179,6 +180,15 @@ spec:
           type: object
         status:
           properties:
+            brokers:
+              items:
+                properties:
+                  host:
+                    type: string
+                required:
+                - host
+                type: object
+              type: array
             conditions:
               items:
                 properties:
@@ -202,6 +212,15 @@ spec:
               type: string
             phase:
               type: string
+            routers:
+              items:
+                properties:
+                  host:
+                    type: string
+                required:
+                - host
+                type: object
+              type: array
           type: object
       type: object
   version: v1beta2

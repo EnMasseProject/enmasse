@@ -106,7 +106,7 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1beta2.MessagingInfra{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1beta2.MessagingInfrastructure{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -114,7 +114,7 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 	// Watch changes to statefulsets for underlying routers and brokers
 	err = c.Watch(&source.Kind{Type: &appsv1.StatefulSet{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1beta2.MessagingInfra{},
+		OwnerType:    &v1beta2.MessagingInfrastructure{},
 	})
 	if err != nil {
 		return err
@@ -123,7 +123,7 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 	// Watch changes to secrets that we own
 	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1beta2.MessagingInfra{},
+		OwnerType:    &v1beta2.MessagingInfrastructure{},
 	})
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	logger.Info("Reconciling MessagingInfra")
 
-	found := &v1beta2.MessagingInfra{}
+	found := &v1beta2.MessagingInfrastructure{}
 	err := r.reader.Get(ctx, request.NamespacedName, found)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
@@ -312,25 +312,25 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		status: found.Status.DeepCopy(),
 	}
 
-	var ready *v1beta2.MessagingInfraCondition
-	var caCreated *v1beta2.MessagingInfraCondition
-	var brokersCreated *v1beta2.MessagingInfraCondition
-	var routersCreated *v1beta2.MessagingInfraCondition
-	var brokersConnected *v1beta2.MessagingInfraCondition
-	var synchronized *v1beta2.MessagingInfraCondition
+	var ready *v1beta2.MessagingInfrastructureCondition
+	var caCreated *v1beta2.MessagingInfrastructureCondition
+	var brokersCreated *v1beta2.MessagingInfrastructureCondition
+	var routersCreated *v1beta2.MessagingInfrastructureCondition
+	var brokersConnected *v1beta2.MessagingInfrastructureCondition
+	var synchronized *v1beta2.MessagingInfrastructureCondition
 
 	// Initialize status
-	result, err := rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
-		if infra.Status.Phase == "" || infra.Status.Phase == v1beta2.MessagingInfraPending {
-			infra.Status.Phase = v1beta2.MessagingInfraConfiguring
+	result, err := rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
+		if infra.Status.Phase == "" || infra.Status.Phase == v1beta2.MessagingInfrastructurePending {
+			infra.Status.Phase = v1beta2.MessagingInfrastructureConfiguring
 		}
 
-		ready = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraReady)
-		caCreated = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraCaCreated)
-		brokersCreated = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersCreated)
-		routersCreated = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraRoutersCreated)
-		brokersConnected = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraBrokersConnected)
-		synchronized = infra.Status.GetMessagingInfraCondition(v1beta2.MessagingInfraSynchronized)
+		ready = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureReady)
+		caCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureCaCreated)
+		brokersCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureBrokersCreated)
+		routersCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureRoutersCreated)
+		brokersConnected = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureBrokersConnected)
+		synchronized = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureSynchronized)
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
@@ -338,7 +338,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile CA
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		err := r.certController.ReconcileCa(ctx, logger, infra)
 		if err != nil {
 			infra.Status.Message = err.Error()
@@ -355,7 +355,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// Reconcile Routers
 	var runningRouters []state.Host
 	var routerHosts []state.Host
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		hosts, err := r.routerController.ReconcileRouters(ctx, logger, infra)
 		if err != nil {
 			infra.Status.Message = err.Error()
@@ -363,11 +363,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			return processorResult{}, err
 		}
 
-		infra.Status.Routers = make([]v1beta2.MessagingInfraStatusRouter, 0, len(hosts))
+		infra.Status.Routers = make([]v1beta2.MessagingInfrastructureStatusRouter, 0, len(hosts))
 		for _, host := range hosts {
 			if host.Ip != "" {
 				runningRouters = append(runningRouters, host)
-				infra.Status.Routers = append(infra.Status.Routers, v1beta2.MessagingInfraStatusRouter{Host: host.Hostname})
+				infra.Status.Routers = append(infra.Status.Routers, v1beta2.MessagingInfrastructureStatusRouter{Host: host.Hostname})
 			}
 		}
 		logger.Info("Retrieved router hosts", "hosts", hosts, "running", runningRouters)
@@ -390,7 +390,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// Reconcile Brokers
 	var runningBrokers []state.Host
 	var brokerHosts []state.Host
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		hosts, err := r.brokerController.ReconcileBrokers(ctx, logger, infra)
 		if err != nil {
 			infra.Status.Message = err.Error()
@@ -398,11 +398,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			return processorResult{}, err
 		}
 
-		infra.Status.Brokers = make([]v1beta2.MessagingInfraStatusBroker, 0, len(hosts))
+		infra.Status.Brokers = make([]v1beta2.MessagingInfrastructureStatusBroker, 0, len(hosts))
 		for _, host := range hosts {
 			if host.Ip != "" {
 				runningBrokers = append(runningBrokers, host)
-				infra.Status.Brokers = append(infra.Status.Brokers, v1beta2.MessagingInfraStatusBroker{Host: host.Hostname})
+				infra.Status.Brokers = append(infra.Status.Brokers, v1beta2.MessagingInfrastructureStatusBroker{Host: host.Hostname})
 			}
 		}
 
@@ -424,7 +424,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	// Sync all configuration
 	var connectorStatuses []state.ConnectorStatus
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		statuses, err := r.clientManager.GetClient(infra).SyncAll(runningRouters, runningBrokers)
 		// Treat as transient error
 		if errors.Is(err, amqpcommand.RequestTimeoutError) {
@@ -446,7 +446,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// If not all brokers and routers are not fully running, break here until they are
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		if len(runningBrokers) < len(brokerHosts) || len(runningRouters) < len(routerHosts) {
 			return processorResult{RequeueAfter: 5 * time.Second}, nil
 		}
@@ -457,7 +457,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Check status
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		expectedConnectors := len(runningRouters) * len(runningBrokers)
 		if len(connectorStatuses) != expectedConnectors {
 			msg := fmt.Sprintf("components not fully connected %d/%d connectors configured", len(connectorStatuses), expectedConnectors)
@@ -481,9 +481,9 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Update main condition
-	result, err = rc.Process(func(infra *v1beta2.MessagingInfra) (processorResult, error) {
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		originalStatus := infra.Status.DeepCopy()
-		infra.Status.Phase = v1beta2.MessagingInfraActive
+		infra.Status.Phase = v1beta2.MessagingInfrastructureActive
 		infra.Status.Message = ""
 		ready.SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, infra.Status) {
@@ -507,10 +507,10 @@ type finalizerResult struct {
 	Return  bool
 }
 
-func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) (finalizerResult, error) {
+func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) (finalizerResult, error) {
 	// Handle finalizing an deletion state first
-	if infra.DeletionTimestamp != nil && infra.Status.Phase != v1beta2.MessagingInfraTerminating {
-		infra.Status.Phase = v1beta2.MessagingInfraTerminating
+	if infra.DeletionTimestamp != nil && infra.Status.Phase != v1beta2.MessagingInfrastructureTerminating {
+		infra.Status.Phase = v1beta2.MessagingInfrastructureTerminating
 		err := r.client.Status().Update(ctx, infra)
 		return finalizerResult{Requeue: true}, err
 	}
@@ -520,7 +520,7 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 		finalizer.Finalizer{
 			Name: FINALIZER_NAME,
 			Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
-				infra, ok := c.Object.(*v1beta2.MessagingInfra)
+				infra, ok := c.Object.(*v1beta2.MessagingInfrastructure)
 				if !ok {
 					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingInfra")
 				}
@@ -532,7 +532,7 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 					return reconcile.Result{}, err
 				}
 				for _, tenant := range tenants.Items {
-					if tenant.Status.MessagingInfraRef != nil && tenant.Status.MessagingInfraRef.Name == infra.Name && tenant.Status.MessagingInfraRef.Namespace == infra.Namespace {
+					if tenant.Status.MessagingInfrastructureRef != nil && tenant.Status.MessagingInfrastructureRef.Name == infra.Name && tenant.Status.MessagingInfrastructureRef.Namespace == infra.Namespace {
 						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingInfra %s/%s: in use by MessagingTenant %s/%s", infra.Namespace, infra.Name, tenant.Namespace, tenant.Name)
 					}
 				}
@@ -562,8 +562,8 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 type resourceContext struct {
 	ctx    context.Context
 	client client.Client
-	status *v1beta2.MessagingInfraStatus
-	infra  *v1beta2.MessagingInfra
+	status *v1beta2.MessagingInfrastructureStatus
+	infra  *v1beta2.MessagingInfrastructure
 }
 
 type processorResult struct {
@@ -572,7 +572,7 @@ type processorResult struct {
 	Return       bool
 }
 
-func (r *resourceContext) Process(processor func(infra *v1beta2.MessagingInfra) (processorResult, error)) (processorResult, error) {
+func (r *resourceContext) Process(processor func(infra *v1beta2.MessagingInfrastructure) (processorResult, error)) (processorResult, error) {
 	result, err := processor(r.infra)
 	if !reflect.DeepEqual(r.status, r.infra.Status) {
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {
@@ -603,7 +603,7 @@ func (r *processorResult) Result() reconcile.Result {
 }
 
 // Find the MessagingInfra servicing a given namespace
-func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1beta2.MessagingInfra, error) {
+func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1beta2.MessagingInfrastructure, error) {
 	// Retrieve the MessagingTenant for this namespace
 	tenant := &v1beta2.MessagingTenant{}
 	err := c.Get(ctx, types.NamespacedName{Name: messagingtenant.TENANT_RESOURCE_NAME, Namespace: namespace}, tenant)
@@ -614,13 +614,13 @@ func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1bet
 		return nil, err
 	}
 
-	if tenant.Status.MessagingInfraRef == nil {
+	if tenant.Status.MessagingInfrastructureRef == nil {
 		return nil, utilerrors.NewNotBoundError(namespace)
 	}
 
 	// Retrieve the MessagingInfra for this MessagingTenant
-	infra := &v1beta2.MessagingInfra{}
-	err = c.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfraRef.Name, Namespace: tenant.Status.MessagingInfraRef.Namespace}, infra)
+	infra := &v1beta2.MessagingInfrastructure{}
+	err = c.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
 	if err != nil {
 		return nil, err
 	}

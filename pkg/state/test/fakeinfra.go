@@ -29,7 +29,7 @@ func NewFakeManager() *FakeManager {
 	}
 }
 
-func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfra) state.InfraClient {
+func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfrastructure) state.InfraClient {
 	client, exists := m.Clients[infra.Name]
 	if !exists {
 		client = &FakeClient{
@@ -41,7 +41,7 @@ func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfra) state.InfraClient
 	return client
 }
 
-func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
+func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error {
 	delete(m.Clients, infra.Name)
 	return nil
 }

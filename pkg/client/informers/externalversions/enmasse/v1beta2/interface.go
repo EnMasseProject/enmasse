@@ -17,8 +17,8 @@ type Interface interface {
 	MessagingAddresses() MessagingAddressInformer
 	// MessagingEndpoints returns a MessagingEndpointInformer.
 	MessagingEndpoints() MessagingEndpointInformer
-	// MessagingInfras returns a MessagingInfraInformer.
-	MessagingInfras() MessagingInfraInformer
+	// MessagingInfrastructures returns a MessagingInfrastructureInformer.
+	MessagingInfrastructures() MessagingInfrastructureInformer
 	// MessagingTenants returns a MessagingTenantInformer.
 	MessagingTenants() MessagingTenantInformer
 }
@@ -44,9 +44,9 @@ func (v *version) MessagingEndpoints() MessagingEndpointInformer {
 	return &messagingEndpointInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MessagingInfras returns a MessagingInfraInformer.
-func (v *version) MessagingInfras() MessagingInfraInformer {
-	return &messagingInfraInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MessagingInfrastructures returns a MessagingInfrastructureInformer.
+func (v *version) MessagingInfrastructures() MessagingInfrastructureInformer {
+	return &messagingInfrastructureInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MessagingTenants returns a MessagingTenantInformer.

@@ -9,7 +9,7 @@ import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfra;
+import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.bases.TestBase;
@@ -38,7 +38,7 @@ public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedS
      * Simple performance test to be able to track create and delete performance of addresses.
      */
     @Test
-    @DefaultMessagingInfra
+    @DefaultMessagingInfrastructure
     @DefaultMessagingTenant
     public void testCreateDelete() throws Exception {
         MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();

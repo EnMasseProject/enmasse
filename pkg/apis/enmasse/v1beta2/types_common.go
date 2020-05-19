@@ -22,7 +22,7 @@ type NamespaceSelector struct {
 	MatchNames []string `json:"matchNames,omitempty"`
 }
 
-type MessagingInfraReference struct {
+type MessagingInfrastructureReference struct {
 	// Name of referenced MessagingInfra.
 	Name string `json:"name"`
 	// Namespace of referenced MessagingInfra.

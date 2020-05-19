@@ -29,7 +29,7 @@ import (
 
 func setup(t *testing.T) *BrokerController {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfra{})
+	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfrastructure{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
 	return NewBrokerController(cl, s, certController)
@@ -38,12 +38,12 @@ func setup(t *testing.T) *BrokerController {
 func TestReconcileBrokerPool(t *testing.T) {
 	bc := setup(t)
 
-	infra := v1beta2.MessagingInfra{
+	infra := v1beta2.MessagingInfrastructure{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
-		Spec: v1beta2.MessagingInfraSpec{
-			Broker: v1beta2.MessagingInfraSpecBroker{
-				ScalingStrategy: &v1beta2.MessagingInfraSpecBrokerScalingStrategy{
-					Static: &v1beta2.MessagingInfraSpecBrokerScalingStrategyStatic{
+		Spec: v1beta2.MessagingInfrastructureSpec{
+			Broker: v1beta2.MessagingInfrastructureSpecBroker{
+				ScalingStrategy: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy{
+					Static: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
 						PoolSize: 2,
 					},
 				},

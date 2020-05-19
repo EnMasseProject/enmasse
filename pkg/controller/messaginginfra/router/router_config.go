@@ -15,7 +15,7 @@ type routerConfig struct {
 	entities [][]interface{}
 }
 
-func generateConfig(router *v1beta2.MessagingInfraSpecRouter) routerConfig {
+func generateConfig(router *v1beta2.MessagingInfrastructureSpecRouter) routerConfig {
 	return routerConfig{
 		entities: [][]interface{}{
 			[]interface{}{

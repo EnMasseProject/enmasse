@@ -17,10 +17,10 @@ import (
 type ClientManager interface {
 	// Retrieve a client handle for communicating with messaging infrastructure. Client is thread
 	// safe and shared with multiple threads.
-	GetClient(infra *v1beta2.MessagingInfra) InfraClient
+	GetClient(infra *v1beta2.MessagingInfrastructure) InfraClient
 
 	// Remove client from manager. This will take care to call client.Shutdown() to cleanup client resources.
-	DeleteClient(infra *v1beta2.MessagingInfra) error
+	DeleteClient(infra *v1beta2.MessagingInfrastructure) error
 }
 
 /**

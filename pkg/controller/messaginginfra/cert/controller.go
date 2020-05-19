@@ -67,7 +67,7 @@ const ANNOTATION_CA_DIGEST = "enmasse.io/ca-digest"
 /*
  * Reconciles the CA for an instance of shared infrastructure. This function also handles renewal of the CA.
  */
-func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) error {
+func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) error {
 	secretName := fmt.Sprintf("%s-ca", infra.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
@@ -85,7 +85,7 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 /*
  * Reconciles the CA for an instance of a messaging tenant. This function also handles renewal of the CA.
  */
-func (c *CertController) ReconcileTenantCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, namespace string) error {
+func (c *CertController) ReconcileTenantCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, namespace string) error {
 	secretName := GetTenantCaSecretName(namespace)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
@@ -145,7 +145,7 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
  * Reconciles the internal certificate for a given endpoint in a tenant.
  * This function also handles renewal of the certificate.
  */
-func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (*CertInfo, error) {
+func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (*CertInfo, error) {
 
 	caSecretName := fmt.Sprintf("%s-tenant-ca", endpoint.Namespace)
 	caSecret := &corev1.Secret{
@@ -188,7 +188,7 @@ func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.
 /*
  * Reconciles the internal certificate for a given endpoint in a tenant so that it matches the provided values.
  */
-func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint, key []byte, value []byte) error {
+func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint, key []byte, value []byte) error {
 	// Secret already exists and shared, so we do not create it
 	secretName := GetTenantSecretName(infra.Name)
 	secret := &corev1.Secret{
@@ -222,7 +222,7 @@ func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, lo
 /*
  * Deletes the certificates of a given endpoint from the tenant secret.
  */
-func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) error {
+func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) error {
 	// Secret already exists and shared, so we do not create it
 	secretName := GetTenantSecretName(infra.Name)
 	secret := &corev1.Secret{}
@@ -253,7 +253,7 @@ func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Log
  * Reconciles the internal certificate for a given component in a shared infrastructure.
  * This function also handles renewal of the certificate.
  */
-func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*CertInfo, error) {
+func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*CertInfo, error) {
 
 	caSecretName := fmt.Sprintf("%s-ca", infra.Name)
 	caSecret := &corev1.Secret{
