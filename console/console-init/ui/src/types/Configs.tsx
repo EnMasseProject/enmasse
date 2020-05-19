@@ -10,3 +10,4 @@ export const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
 export const forbiddenBackslashRegexp = new RegExp(/\\/g);
 export const forbiddenSingleQuoteRegexp = new RegExp(/'/g);
 export const forbiddenDoubleQuoteRegexp = new RegExp(/"/g);
+export const deviceIDRegExp = new RegExp(/^[A-Z][A-Z0-9._(){}#@-]+$/i);
