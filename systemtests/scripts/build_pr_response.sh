@@ -5,6 +5,7 @@ TEST_CASE=${2}
 TEST_PROFILE=${3}
 BUILD_ID=${4:-0}
 OCP_VERSION=${5:-3}
+JOB_STATUS=${6}
 
 JSON_FILE_RESULTS=results.json
 
@@ -39,7 +40,7 @@ fi
 SUMMARY="**TEST_PROFILE**: ${TEST_PROFILE}\n**TEST_CASE:** ${TEST_CASE}\n**TOTAL:** ${TEST_COUNT}\n**PASS:** $((TEST_COUNT - TEST_ALL_FAILED_COUNT - TEST_SKIPPED_COUNT))\n**FAIL:** ${TEST_ALL_FAILED_COUNT}\n**SKIP:** ${TEST_SKIPPED_COUNT}\n**BUILD_NUMBER:** ${BUILD_ID}\n**BUILD_ENV:** ${BUILD_ENV}\n"
 
 FAILED_TESTS=$(find "${RESULTS_PATH}" -name 'TEST*.xml' -type f -print0 | xargs -0 sed -n "s#\(<testcase.*time=\"[0-9]*,\{0,1\}[0-9]\{1,3\}\..*[^\/]>\)#\1#p" | awk -F '"' '{print "\\n- " $2 " in "  $4}')
-echo ${FAILED_TESTS}
+echo "${FAILED_TESTS}"
 echo "Creating body ..."
 
 
@@ -52,7 +53,7 @@ if [[ "${TEST_COUNT}" == 0 ]]
 then
   BODY="{\"body\":\":heavy_exclamation_mark: **Build Failed** :heavy_exclamation_mark:\"}"
 else
-  if [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]]
+  if [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]] && [[ "${JOB_STATUS}" != "FAILURE" ]] && [[ "${JOB_STATUS}" != "ABORTED" ]]
   then
     BODY="{\"body\":\"### :heavy_check_mark: Test Summary :heavy_check_mark:\n${SUMMARY}${FAILED_TEST_BODY}\"}"
   else
