@@ -246,7 +246,7 @@ pipeline {
             script {
                 dir('enmasse') {
                     enmasse.postAction(env.ARTIFACTS_DIR)
-                    sh "sudo ./systemtests/scripts/build_pr_response.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}' '${env.BUILD_NUMBER}' ${env.OC_VERSION}"
+                    sh "sudo ./systemtests/scripts/build_pr_response.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}' '${env.BUILD_NUMBER}' ${env.OC_VERSION} ${currentBuild.result}"
                     enmasse.postGithubPrComment("results.json")
                 }
             }
