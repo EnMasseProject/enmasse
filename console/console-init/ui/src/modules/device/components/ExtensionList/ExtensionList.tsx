@@ -17,6 +17,16 @@ import { css } from "@patternfly/react-styles";
 import { DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
 import { dropdown_item_styles } from "modules/device";
+import { StyleSheet } from "@patternfly/react-styles";
+
+const styles = StyleSheet.create({
+  type_margin: {
+    marginLeft: 10
+  },
+  delete_button_margin: {
+    marginTop: 32
+  }
+});
 
 export interface IExtension {
   id: string;
@@ -48,6 +58,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
   onDeleteExtension,
   credentialId
 }) => {
+  const prefixId = "el";
   const typeOptions: ISelectOption[] = [
     { key: "string", label: "String", value: "String" },
     { key: "number", label: "Number", value: "Number" },
@@ -60,76 +71,94 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
     value: string,
     id: string
   ) => {
-    handleInputChange(credentialId, event, value, id, "extensions");
+    handleInputChange(credentialId, event, value, id, "ext");
   };
 
   return (
     <>
-      {extensions &&
-        extensions.map(ext => {
-          const { id } = ext;
-          return (
-            <Grid key={id}>
-              <GridItem span={12}>Ext</GridItem>
-              <GridItem span={4}>
-                <FormGroup fieldId={"parameter" + id} label="Parameter">
-                  <TextInput
-                    id={"parameter" + id}
-                    name="parameter"
-                    onChange={(value, event) =>
-                      handleInputChangeExtension(credentialId, event, value, id)
-                    }
+      <Grid id={prefixId + "-list-grid"}>
+        <GridItem span={12}>Ext</GridItem>
+        {extensions &&
+          extensions.map(ext => {
+            const { id } = ext;
+            return (
+              <Grid key={id}>
+                <GridItem span={4}>
+                  <FormGroup
+                    fieldId={prefixId + "-parameter-" + id}
+                    label="Parameter"
+                  >
+                    <TextInput
+                      id={prefixId + "-parameter-" + id}
+                      name="parameter"
+                      onChange={(value, event) =>
+                        handleInputChangeExtension(
+                          credentialId,
+                          event,
+                          value,
+                          id
+                        )
+                      }
+                    />
+                  </FormGroup>
+                </GridItem>
+                <GridItem span={3}>
+                  <FormGroup
+                    fieldId={prefixId + "-type-" + id}
+                    label="Type"
+                    className={styles.type_margin}
+                  >
+                    <DropdownWithToggle
+                      id={prefixId + "-type-" + id}
+                      name="type"
+                      className={css(dropdown_item_styles.dropdown_align)}
+                      toggleClass={css(
+                        dropdown_item_styles.dropdown_toggle_align
+                      )}
+                      position={DropdownPosition.left}
+                      dropdownItems={typeOptions}
+                      value={ext["type"] || ""}
+                      onSelectItem={(value, event) =>
+                        handleInputChangeExtension(
+                          credentialId,
+                          event,
+                          value,
+                          id
+                        )
+                      }
+                    />
+                  </FormGroup>
+                </GridItem>
+                <GridItem span={4}>
+                  <FormGroup fieldId={prefixId + "-value-" + id} label="Value">
+                    <TextInput
+                      id={prefixId + "-value-" + id}
+                      name="value"
+                      onChange={(value, event) =>
+                        handleInputChangeExtension(
+                          credentialId,
+                          event,
+                          value,
+                          id
+                        )
+                      }
+                    />
+                  </FormGroup>
+                </GridItem>
+                <GridItem span={1}>
+                  <Button
+                    className={styles.delete_button_margin}
+                    variant="link"
+                    type="button"
+                    icon={<MinusCircleIcon />}
+                    onClick={() => onDeleteExtension(credentialId, "ext", id)}
                   />
-                </FormGroup>
-              </GridItem>
-              <GridItem span={3}>
-                <FormGroup
-                  fieldId={"type" + id}
-                  label="Type"
-                  style={{ marginLeft: "10px" }}
-                >
-                  <DropdownWithToggle
-                    id={"type" + id}
-                    name="type"
-                    className={css(dropdown_item_styles.dropdown_align)}
-                    toggleClass={css(
-                      dropdown_item_styles.dropdown_toggle_align
-                    )}
-                    position={DropdownPosition.left}
-                    dropdownItems={typeOptions}
-                    value={ext["type"] || ""}
-                    onSelectItem={(value, event) =>
-                      handleInputChangeExtension(credentialId, event, value, id)
-                    }
-                  />
-                </FormGroup>
-              </GridItem>
-              <GridItem span={4}>
-                <FormGroup fieldId={"value" + id} label="Value">
-                  <TextInput
-                    id={"value" + id}
-                    name="value"
-                    onChange={(value, event) =>
-                      handleInputChangeExtension(credentialId, event, value, id)
-                    }
-                  />
-                </FormGroup>
-              </GridItem>
-              <GridItem span={1}>
-                <Button
-                  style={{ marginTop: "32px" }}
-                  variant="link"
-                  type="button"
-                  icon={<MinusCircleIcon />}
-                  onClick={() =>
-                    onDeleteExtension(credentialId, "extensions", id)
-                  }
-                />
-              </GridItem>
-              <br />
-            </Grid>
-          );
-        })}
+                </GridItem>
+                <br />
+              </Grid>
+            );
+          })}
+      </Grid>
     </>
   );
 };
