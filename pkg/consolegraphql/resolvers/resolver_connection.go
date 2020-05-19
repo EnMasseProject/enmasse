@@ -187,7 +187,7 @@ func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.Obj
 		return false, len(input) > 0, nil
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex,"Connection/", cache.And(viewFilter, connFilter))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", cache.And(viewFilter, connFilter))
 	if e != nil {
 		return nil, e
 	}
@@ -196,7 +196,6 @@ func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.Obj
 	for _, notFound := range input {
 		graphql.AddErrorf(ctx, "connection: '%s' not found in namespace '%s'", notFound.Name, notFound.Namespace)
 	}
-
 
 	for _, obj := range objects {
 		con, ok := obj.(*consolegraphql.Connection)

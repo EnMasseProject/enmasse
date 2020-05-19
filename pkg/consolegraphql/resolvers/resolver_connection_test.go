@@ -33,8 +33,8 @@ func newTestConnectionResolver(t *testing.T) (*Resolver, context.Context) {
 	}
 
 	ctx := graphql.WithResponseContext(server.ContextWithRequestState(requestState, context.TODO()),
-		                               graphql.DefaultErrorPresenter,
-		                               graphql.DefaultRecover)
+		graphql.DefaultErrorPresenter,
+		graphql.DefaultRecover)
 
 	return &resolver, ctx
 }
@@ -414,8 +414,6 @@ func TestCloseConnectionsOneConnectionNotFound(t *testing.T) {
 
 	assert.Equal(t, 1, delegate.(*mockCommandDelegate).closeCount)
 }
-
-
 
 func createConnectionLink(namespace string, addressspace string, con string, role string, metrics ...*consolegraphql.Metric) *consolegraphql.Link {
 	linkuid := uuid.New().String()
