@@ -7,4 +7,6 @@ package io.enmasse.systemtest.monitoring;
 public interface MonitoringQueries {
     String ENMASSE_ADDRESS_SPACES_NOT_READY = "enmasse_address_space_status_not_ready";
     String ENMASSE_ADDRESS_SPACES_READY = "enmasse_address_space_status_ready";
+    String ENMASSE_ADDRESS_READY_TOTAL = "enmasse_addresses_ready_total";
+    String ENMASSE_ADDRESS_NOT_READY_TOTAL = "enmasse_addresses_not_ready_total";
 }

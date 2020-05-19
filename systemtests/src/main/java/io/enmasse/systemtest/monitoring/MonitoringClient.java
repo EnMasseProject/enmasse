@@ -121,6 +121,14 @@ public class MonitoringClient {
         return false;
     }
 
+    private String getMetric(JsonObject queryResult, String metricName, String metricKey) {
+        JsonObject data = getResults(queryResult, metricName);
+        if (data != null) {
+            return data.getJsonObject("metric", new JsonObject()).getString(metricKey, "");
+        }
+        return null;
+    }
+
     private JsonObject getResults(JsonObject queryResult, String metricName) {
         JsonObject data = queryResult.getJsonObject("data", new JsonObject());
         for (Object result : data.getJsonArray("result", new JsonArray())) {
