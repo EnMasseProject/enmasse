@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Page,
   PageSection,
@@ -15,10 +15,11 @@ import {
 import { StyleSheet } from "@patternfly/react-styles";
 import {
   DeviceInfoGateways,
-  DeviceInfoCredentials,
+  CredentialsView,
+  ICredentialsViewProps,
   DeviceInfoMetadata
 } from "modules/device-detail/components";
-import { SwitchWithToggle } from "components";
+import { SwitchWithToggle, JsonEditor } from "components";
 
 const styles = StyleSheet.create({
   gateways_align: {
@@ -26,7 +27,8 @@ const styles = StyleSheet.create({
   }
 });
 
-export interface IDeviceInfoProps {
+export interface IDeviceInfoProps
+  extends Pick<ICredentialsViewProps, "credentials"> {
   id: string;
   deviceList?: any;
   metadataList?: any;
@@ -35,8 +37,18 @@ export interface IDeviceInfoProps {
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
-  metadataList
+  metadataList,
+  credentials
 }) => {
+  const jsonViewData = {
+    credentials
+  };
+  const [isHidden, setIsHidden] = useState<boolean>(false);
+
+  const onToggle = (isEnabled: boolean) => {
+    setIsHidden(isEnabled);
+  };
+
   return (
     <Page id={id}>
       <PageSection>
@@ -46,23 +58,35 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
             <SwitchWithToggle
               id={"divice-info-view-json"}
               label={"View in JSON"}
+              onChange={onToggle}
             />
           </SplitItem>
         </Split>
         <br />
-        <Grid>
-          <GridItem span={5} className={styles.gateways_align}>
-            <DeviceInfoGateways deviceList={deviceList} />
-            <br />
-            <DeviceInfoCredentials />
-          </GridItem>
-          <GridItem span={7}>
-            <DeviceInfoMetadata
-              dataList={metadataList}
-              id={"divice-info-metadata"}
-            />
-          </GridItem>
-        </Grid>
+        {isHidden ? (
+          <JsonEditor
+            readOnly={true}
+            value={jsonViewData && JSON.stringify(jsonViewData, undefined, 2)}
+            maxLines={45}
+          />
+        ) : (
+          <Grid>
+            <GridItem span={5} className={styles.gateways_align}>
+              <DeviceInfoGateways deviceList={deviceList} />
+              <br />
+              <CredentialsView
+                id={"credentials-view"}
+                credentials={credentials}
+              />
+            </GridItem>
+            <GridItem span={7}>
+              <DeviceInfoMetadata
+                dataList={metadataList}
+                id={"divice-info-metadata"}
+              />
+            </GridItem>
+          </Grid>
+        )}
       </PageSection>
     </Page>
   );

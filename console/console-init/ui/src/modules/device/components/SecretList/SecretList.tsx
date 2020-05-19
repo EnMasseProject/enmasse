@@ -38,6 +38,7 @@ export interface ISecret {
   "not-after"?: string;
   comment?: string;
   key?: string;
+  "pwd-plain"?: string;
 }
 
 export interface ISecretListProps {

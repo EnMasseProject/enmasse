@@ -15,6 +15,7 @@ import {
 import classNames from "classnames";
 import { StyleSheet } from "@patternfly/react-styles";
 import { uniqueId } from "utils";
+import { DataType } from "constant";
 
 const styles = StyleSheet.create({
   key_cell_toogle: {
@@ -37,17 +38,45 @@ const styles = StyleSheet.create({
   }
 });
 
-export type ITableRowProps = {
-  rowData: any;
-};
-
-export enum DataType {
-  ARRAY = "array",
-  OBJECT = "object"
+export interface IRowOption {
+  key: string;
+  type: any;
+  value: string;
+  typeLabel?: string;
 }
 
+export type ITableRowProps = {
+  rowData: IRowOption;
+};
+
 export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
-  const [expandedList, setExpandedList] = useState<string[]>([]);
+  const { key, type, value, typeLabel } = rowData || {};
+  const [expandedList, setExpandedList] = useState<string[]>([key]);
+
+  const shouldDisplayDataListToggle = (
+    type: DataType.ARRAY | DataType.OBJECT
+  ) => {
+    /**
+     * check parent data type is Array or Object.
+     * Toggle will add for parent node only
+     */
+    if (type === DataType.OBJECT || type === DataType.ARRAY) {
+      return true;
+    }
+    return false;
+  };
+
+  const cssClassKey = classNames({
+    [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
+    [styles.key_cell]: !shouldDisplayDataListToggle(type)
+  });
+
+  const cssClassType = classNames({
+    [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
+    [styles.type_cell]: !shouldDisplayDataListToggle(type)
+  });
+
+  const cssClassValue = classNames([styles.value_cell]);
 
   const toggle = (event: any) => {
     const expandedRowId = event.target.id;
@@ -63,37 +92,10 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
     setExpandedList(newExpandedList);
   };
 
-  const shouldDisplayDataListToggle = (
-    type: DataType.ARRAY | DataType.OBJECT
-  ) => {
-    /**
-     * check parent data type is Array or Object.
-     * Toggle will add for parent node only
-     */
-    if (type === DataType.OBJECT || type === DataType.ARRAY) {
-      return true;
-    }
-    return false;
-  };
-
-  const { key, type, value, typeLabel } = rowData || {};
-
-  const cssClassKey = classNames({
-    [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
-    [styles.key_cell]: !shouldDisplayDataListToggle(type)
-  });
-
-  const cssClassType = classNames({
-    [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
-    [styles.type_cell]: !shouldDisplayDataListToggle(type)
-  });
-
-  const cssClassValue = classNames([styles.value_cell]);
-
   return (
     <>
       <DataListItem
-        id={"data-list-item-" + key}
+        id={"table-row-data-list-item-" + key}
         aria-labelledby={key + " data list item"}
         isExpanded={
           shouldDisplayDataListToggle(type) && expandedList.includes(key)
@@ -102,14 +104,15 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
         <DataListItemRow>
           {shouldDisplayDataListToggle(type) && (
             <DataListToggle
-              onClick={toggle}
-              isExpanded={expandedList.includes(key)}
               id={key}
+              rowid={key}
+              onClick={toggle}
+              isExpanded={!expandedList.includes(key)}
               aria-controls={key + " data list toggle"}
             />
           )}
           <DataListItemCells
-            id={key}
+            id={key + "-" + uniqueId()}
             dataListCells={[
               <DataListCell key="key-content">
                 <div className={cssClassKey}>{key}</div>
@@ -128,15 +131,15 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
           ></DataListItemCells>
         </DataListItemRow>
         {Array.isArray(value) &&
-          value.map((data: any) => (
+          value.map((row: IRowOption, index: number) => (
             <DataListContent
               aria-label={key + " data list content"}
-              id={key}
+              id={key + "-" + index}
               isHidden={!expandedList.includes(key)}
               noPadding
-              key={"data-list-content-" + uniqueId()}
+              key={"data-list-content-" + index}
             >
-              <TableRow rowData={data} />
+              <TableRow rowData={row} />
             </DataListContent>
           ))}
       </DataListItem>

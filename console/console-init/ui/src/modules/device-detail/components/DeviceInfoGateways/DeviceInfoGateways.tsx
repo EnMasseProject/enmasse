@@ -15,14 +15,10 @@ import {
   Text,
   TextVariants
 } from "@patternfly/react-core";
-
-interface IDeviceInfo {
-  id: string;
-  name: string;
-}
+import { Link } from "react-router-dom";
 
 export interface IDeviceInfoGatewaysProps {
-  deviceList?: IDeviceInfo[];
+  deviceList?: string[];
 }
 
 export const DeviceInfoGateways: React.FC<IDeviceInfoGatewaysProps> = ({
@@ -30,7 +26,7 @@ export const DeviceInfoGateways: React.FC<IDeviceInfoGatewaysProps> = ({
 }) => {
   const DeviceNotFound = () => (
     <Text component={TextVariants.p}>
-      There is no gateways for this device. This device is connected to the
+      There are no gateways for this device. This device is connected to the
       cloud directly.
     </Text>
   );
@@ -45,13 +41,11 @@ export const DeviceInfoGateways: React.FC<IDeviceInfoGatewaysProps> = ({
       <CardBody>
         <Grid>
           {deviceList &&
-            deviceList.map((device: IDeviceInfo) => {
-              const { name, id } = device;
+            deviceList.map((device: string) => {
               return (
-                <GridItem span={2} key={id}>
-                  <Button variant="link" isInline>
-                    {name}
-                  </Button>
+                <GridItem span={2} key={device}>
+                  {/**  TODO:add link redirect url*/}
+                  <Link to={"/"}>{device}</Link>
                 </GridItem>
               );
             })}

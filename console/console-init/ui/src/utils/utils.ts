@@ -270,6 +270,26 @@ const compareJsonObject = (object1: any, object2: any) => {
 const getFormattedJsonString = (json: any) => {
   return JSON.stringify(json, undefined, 2);
 };
+
+const getLabelByKey = (key: string) => {
+  const keyLabels: any = {
+    "auth-id": "Auth ID",
+    type: "Credential type",
+    "not-after": "Not after",
+    "not-before": "Not before",
+    "pwd-hash": "Password",
+    hashed_password: "Password",
+    psk: "PSK",
+    "x-509": "X-509 certificate"
+  };
+
+  if (key in keyLabels) {
+    return keyLabels[key];
+  }
+
+  return key;
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -286,5 +306,6 @@ export {
   getJson,
   createDeepCopy,
   compareJsonObject,
-  getFormattedJsonString
+  getFormattedJsonString,
+  getLabelByKey
 };
