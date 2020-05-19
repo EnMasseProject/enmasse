@@ -626,6 +626,12 @@ Artemis.prototype.listConnectionsWithSessions = function () {
     });
 }
 
+Artemis.prototype.closeConnection = function (connection_id) {
+    return this._request('broker', 'closeConnectionWithID', [connection_id]).then(function (result) {
+        return JSON.parse(result);
+    });
+}
+
 Artemis.prototype.listConsumers = function () {
     return this._request('broker', 'listAllConsumersAsJSON', []).then(function (result) {
         return JSON.parse(result);

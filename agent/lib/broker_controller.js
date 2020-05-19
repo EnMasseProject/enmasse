@@ -89,6 +89,10 @@ BrokerController.prototype.sync_addresses = function (addresses) {
     return this.serial_sync();
 };
 
+BrokerController.prototype.close_connection = function (connection) {
+    return this.broker.closeConnection(connection.id);
+};
+
 function total() {
     var result = 0;
     for (var i in arguments) {
@@ -154,7 +158,7 @@ function transform_address_stats(address) {
     return address.type === 'queue' ? transform_queue_stats(address) : transform_topic_stats(address);
 }
 
-function transform_connection_stats(raw) {
+BrokerController.prototype.transform_connection_stats = function(raw) {
     var addressSpace = process.env.ADDRESS_SPACE;
     var addressSpaceNamespace = process.env.ADDRESS_SPACE_NAMESPACE;
     var addressSpaceType = process.env.ADDRESS_SPACE_TYPE;
@@ -172,7 +176,9 @@ function transform_connection_stats(raw) {
         creationTimestamp: raw.creationTime ? Math.floor(raw.creationTime / 1000) : 0,
         user: raw.sessions.length ? raw.sessions[0].principal : '',
         senders: [],
-        receivers: []
+        receivers: [],
+
+        close: () => {return this.broker.closeConnection(raw.connectionID)}
     };
 }
 
@@ -254,7 +260,7 @@ BrokerController.prototype.retrieve_stats = function () {
                 for (var name in results[0].index) {
                     address_stats[name] = transform_address_stats(results[0].index[name]);
                 }
-                var connection_stats = index_by(results[1].map(transform_connection_stats).filter(is_not_internal), 'id');
+                var connection_stats = index_by(results[1].map(self.transform_connection_stats, self).filter(is_not_internal), 'id');
                 var senders = results[2].map(transform_producer_stats);
                 var receivers = results[3].map(transform_consumer_stats);
                 receivers.forEach(function (r) {

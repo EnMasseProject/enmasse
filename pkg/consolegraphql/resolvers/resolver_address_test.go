@@ -12,7 +12,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
-	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/google/uuid"
@@ -423,52 +422,6 @@ metadata:
 	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
 }
 
-type mockCollector struct {
-	delegates map[string]agent.CommandDelegate
-}
-
-type mockCommandDelegate struct {
-	purgeCount int
-}
-
-func (mcd *mockCommandDelegate) PurgeAddress(address metav1.ObjectMeta) error {
-	mcd.purgeCount++
-	return nil
-}
-
-func (mcd *mockCommandDelegate) Shutdown() {
-	panic("unused")
-}
-
-func (mc *mockCollector) CommandDelegate(bearerToken string, impersonateUser string) (agent.CommandDelegate, error) {
-	if delegate, present := mc.delegates[bearerToken]; present {
-		return delegate, nil
-	} else {
-		mc.delegates[bearerToken] = &mockCommandDelegate{}
-		return mc.delegates[bearerToken], nil
-	}
-}
-
-func (mc *mockCollector) Collect(handler agent.EventHandler) error {
-	panic("unused")
-}
-
-func (mc *mockCollector) Shutdown() {
-}
-
-var collectors = make(map[string]agent.Delegate, 0)
-
-func getCollector(infraUuid string) agent.Delegate {
-	if collector, present := collectors[infraUuid]; present {
-		return collector
-	} else {
-		collectors[infraUuid] = &mockCollector{
-			delegates: make(map[string]agent.CommandDelegate, 0),
-		}
-		return collectors[infraUuid]
-	}
-}
-
 func TestPurgeQueue(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
@@ -478,10 +431,7 @@ func TestPurgeQueue(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
 	infraUuid := "abcd1234"
-	as := createAddressSpace(addressspace, namespace)
-	as.Annotations = map[string]string{
-		"enmasse.io/infra-uuid": infraUuid,
-	}
+	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
 	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
 
@@ -536,10 +486,7 @@ func TestPurgeUnsupportedAddressType(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
 	infraUuid := "abcd1234"
-	as := createAddressSpace(addressspace, namespace)
-	as.Annotations = map[string]string{
-		"enmasse.io/infra-uuid": infraUuid,
-	}
+	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
 	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("anycast"))
 

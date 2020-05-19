@@ -376,7 +376,7 @@ const typeDefs = gql`
         "purges address(es)"
         purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
-        closeConnection(input: ObjectMeta_v1_Input!): Boolean
+        closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
     }
 `;
 

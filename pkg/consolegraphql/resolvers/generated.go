@@ -265,7 +265,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CloseConnection    func(childComplexity int, input v1.ObjectMeta) int
+		CloseConnections   func(childComplexity int, input []*v1.ObjectMeta) int
 		CreateAddress      func(childComplexity int, input v1beta1.Address, addressSpace *string) int
 		CreateAddressSpace func(childComplexity int, input v1beta1.AddressSpace) int
 		DeleteAddress      func(childComplexity int, input v1.ObjectMeta) int
@@ -376,7 +376,7 @@ type MutationResolver interface {
 	DeleteAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	PurgeAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	PurgeAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
-	CloseConnection(ctx context.Context, input v1.ObjectMeta) (*bool, error)
+	CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 }
 type NamespaceStatus_v1Resolver interface {
 	Phase(ctx context.Context, obj *v11.NamespaceStatus) (string, error)
@@ -1184,17 +1184,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MetricConsoleapiEnmasseIoV1beta1.Value(childComplexity), true
 
-	case "Mutation.closeConnection":
-		if e.complexity.Mutation.CloseConnection == nil {
+	case "Mutation.closeConnections":
+		if e.complexity.Mutation.CloseConnections == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_closeConnection_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_closeConnections_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CloseConnection(childComplexity, args["input"].(v1.ObjectMeta)), true
+		return e.complexity.Mutation.CloseConnections(childComplexity, args["input"].([]*v1.ObjectMeta)), true
 
 	case "Mutation.createAddress":
 		if e.complexity.Mutation.CreateAddress == nil {
@@ -1995,10 +1995,10 @@ type Mutation {
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   deleteAddress(input: ObjectMeta_v1_Input!): Boolean
   purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
-  "purges one or more addresses"
+  "purges address(es)"
   purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
-  closeConnection(input: ObjectMeta_v1_Input!): Boolean
+  closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
 }
 
 `, BuiltIn: false},
@@ -2161,12 +2161,12 @@ func (ec *executionContext) field_Connection_consoleapi_enmasse_io_v1beta1_links
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_closeConnection_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_closeConnections_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 v1.ObjectMeta
+	var arg0 []*v1.ObjectMeta
 	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
+		arg0, err = ec.unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -6511,7 +6511,7 @@ func (ec *executionContext) _Mutation_purgeAddresses(ctx context.Context, field 
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_closeConnections(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -6527,7 +6527,7 @@ func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_closeConnection_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_closeConnections_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -6535,7 +6535,7 @@ func (ec *executionContext) _Mutation_closeConnection(ctx context.Context, field
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CloseConnection(rctx, args["input"].(v1.ObjectMeta))
+		return ec.resolvers.Mutation().CloseConnections(rctx, args["input"].([]*v1.ObjectMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -10336,8 +10336,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_purgeAddress(ctx, field)
 		case "purgeAddresses":
 			out.Values[i] = ec._Mutation_purgeAddresses(ctx, field)
-		case "closeConnection":
-			out.Values[i] = ec._Mutation_closeConnection(ctx, field)
+		case "closeConnections":
+			out.Values[i] = ec._Mutation_closeConnections(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

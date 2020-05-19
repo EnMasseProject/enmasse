@@ -33,6 +33,7 @@ type Delegate interface {
 
 type CommandDelegate interface {
 	PurgeAddress(address v1.ObjectMeta) error
+	CloseConnection(address v1.ObjectMeta) error
 	Shutdown()
 }
 
@@ -404,6 +405,33 @@ func (ad *amqpAgentCommandDelegate) PurgeAddress(address v1.ObjectMeta) error {
 		}
 	}
 	return fmt.Errorf("failed to purge address %s : command %+v failed for unknown reason", address.Name, request)
+}
+
+func (ad *amqpAgentCommandDelegate) CloseConnection(connection v1.ObjectMeta) error {
+	request := &amqp.Message{
+		Properties: &amqp.MessageProperties{
+			Subject: "close_connection",
+		},
+		Value: map[interface{}]interface{}{
+			"connectionUid": string(connection.UID),
+		},
+	}
+
+	response, err := ad.commandClient.Request(request)
+	if err != nil {
+		return fmt.Errorf("failed to close connection %s : %s", connection.UID, err)
+	}
+
+	if outcome, present := response.ApplicationProperties["outcome"]; present {
+		if oc, ok := outcome.(bool); ok && oc {
+			return nil
+		} else {
+			if e, present := response.ApplicationProperties["error"]; present && e != nil {
+				return fmt.Errorf("failed to close connection %s : %s", connection.UID, e)
+			}
+		}
+	}
+	return fmt.Errorf("failed to close connection %s : command %+v failed for unknown reason", connection.UID, request)
 }
 
 func (ad *amqpAgentCommandDelegate) LastUsed() time.Time {

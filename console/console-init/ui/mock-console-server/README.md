@@ -584,8 +584,8 @@ To close a connection, call `closeConnection` passing the ObjectMeta
 object associated with the connection to close.
 
 ```
-mutation close_conn($c:ObjectMeta_v1_Input!) {
-  closeConnection(input:$c)
+mutation close_connections($cons:[ObjectMeta_v1_Input!]!) {
+  closeConnections(input:$cons)
 }
 ```
 
@@ -593,7 +593,7 @@ args:
 
 ```
 {
-  "c": {"name": "cassini:55596", "namespace": "app1_ns" }
+  "cons": [{"name": "cassini:55596", "namespace": "app1_ns" }]
 }
 ```
 

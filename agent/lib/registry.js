@@ -109,6 +109,14 @@ Registry.prototype.for_each = function (action, filter) {
             action(this.objects[key]);
         }
     }
-}
+};
+
+Registry.prototype.first = function (action, filter) {
+    for (var key in this.objects) {
+        if (filter === undefined || filter(this.objects[key])) {
+            action(this.objects[key]);
+        }
+    }
+};
 
 module.exports = Registry;
