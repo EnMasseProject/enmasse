@@ -744,7 +744,7 @@ spec:
 
 Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
 
-* Plans apply to any address type
+* Plans apply to any address type but settings are defined for each type
 * If resource limit is not set - limit is not specified
 * If resource request is not set - it equals the limit
 * If resource is not set - no limits are specified
@@ -756,19 +756,25 @@ metadata:
   name: plan1
   namespace: planspace
 spec:
-  # Resource limits are applied to any address type that is stored on a broker
-  resources:
-    requests:
-      memory: 5Mi
-      storage: 20Mi
-    limits:
-      memory: 10Mi
-      storage: 30Mi
-
   # Per-address type properties
   queue:
+    resources:
+      requests:
+        queueSizeMemory: 5Mi
+        queueSizeStorage: 20Mi
+      limits:
+        # Amount of memory queues with this plan can use on the broker
+        queueSizeMemory: 10Mi
+        # Amount of storage queues with this plan can use on the broker
+        queueSizeStorage: 30Mi
     expiryQueue: myexp
     partitions: 3
+  topic:
+    maxConsumers: 2
+    resources:
+      limits:
+        # Total memory usage for all subscriptions to this topic
+        topicSizeMemory: 50Mi
 ```
 
 === Configure scaling of the routers based on the connection load and throughput
