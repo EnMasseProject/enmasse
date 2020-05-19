@@ -6,3 +6,4 @@
 export * from "./utils";
 export * from "./AddressSpaceFormatter";
 export * from "./TableFormatter";
+export * from "./constant";

@@ -18,6 +18,10 @@ import {
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "@patternfly/react-styles";
+import {
+  tlsCertificateOptions,
+  endpointProtocolOptions
+} from "modules/address-space/utils";
 
 export interface IAddressSpaceReviewProps {
   name?: string;
@@ -28,26 +32,84 @@ export interface IAddressSpaceReviewProps {
   data: {
     addressSpaceCommand: string;
   };
+  protocols?: Array<String>;
+  customizeEndpoint: boolean;
+  addRoutes: boolean;
+  tlsCertificate?: string;
 }
 
-const Style = StyleSheet.create({
+const style = StyleSheet.create({
   left_padding: {
     paddingLeft: 32
   },
   bottom_padding: {
     paddingBottom: 16
+  },
+  left_margin_gridItem: {
+    marginBottom: 16,
+    marginLeft: 10,
+    marginRight: 5
+  },
+  preview_info_gridItem: {
+    marginBottom: 16,
+    marginRight: 5
   }
 });
+interface IReviewGridProps {
+  labelText: string;
+  value?: string;
+  valueId: string;
+  addLeftMargin?: boolean;
+}
 
+const ReviewGridItem: React.FunctionComponent<IReviewGridProps> = ({
+  labelText,
+  valueId,
+  value,
+  addLeftMargin = false
+}) => {
+  const className = addLeftMargin
+    ? css(style.preview_info_gridItem)
+    : css(style.left_margin_gridItem);
+  return (
+    <>
+      {value && value.trim() !== "" && (
+        <>
+          <GridItem span={5} className={className}>
+            {labelText}
+          </GridItem>
+          <GridItem id={valueId} span={7}>
+            {value.trim()}
+          </GridItem>
+        </>
+      )}
+    </>
+  );
+};
 export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   name,
   type,
   plan,
   namespace,
   authenticationService,
-  data
+  data,
+  protocols,
+  customizeEndpoint,
+  addRoutes,
+  tlsCertificate
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const certificate =
+    tlsCertificate &&
+    tlsCertificateOptions.find(cert => cert.value === tlsCertificate);
+  let protocolOptions = [];
+  if (protocols) {
+    for (const protocol of protocols) {
+      protocolOptions.push(
+        endpointProtocolOptions.find(option => option.value === protocol)
+      );
+    }
+  }
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -67,60 +129,99 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
           }}
         >
           <Grid>
-            {name && name.trim() !== "" && (
+            <ReviewGridItem
+              valueId="preview-addr-name"
+              value={name}
+              labelText="Instance name"
+            />
+            <ReviewGridItem
+              valueId="preview-addr-namespace"
+              value={namespace}
+              labelText="Namespace"
+            />
+            <ReviewGridItem
+              valueId="preview-addr-type"
+              value={type}
+              labelText="Type"
+            />
+            <ReviewGridItem
+              valueId="preview-addr-plan"
+              value={plan}
+              labelText="Plan"
+            />
+            <ReviewGridItem
+              valueId="preview-addr-authenticationService"
+              value={authenticationService}
+              labelText="Authentication Service"
+            />
+            <br />
+            <br />
+            {customizeEndpoint && (
               <>
-                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Instance name
+                <GridItem
+                  span={12}
+                  className={css(style.preview_info_gridItem)}
+                >
+                  Endpoint customization
                 </GridItem>
-                <GridItem id="preview-addr-name" span={7}>
-                  {name}
-                </GridItem>
-              </>
-            )}
-            {namespace && namespace.trim() !== "" && (
-              <>
-                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Namespace
-                </GridItem>
-                <GridItem id="preview-addr-name" span={7}>
-                  {namespace}
-                </GridItem>
-              </>
-            )}
-            {type && type.trim() !== "" && (
-              <>
-                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Type
-                </GridItem>
-                <GridItem id="preview-addr-type" span={7}>
-                  {type}
-                </GridItem>
-              </>
-            )}
-            {plan && plan.trim() !== "" && (
-              <>
-                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Plan
-                </GridItem>
-                <GridItem id="preview-addr-plan" span={7}>
-                  {plan}
-                </GridItem>
-              </>
-            )}
-            {authenticationService && authenticationService.trim() !== "" && (
-              <>
-                <GridItem span={5} style={{ marginBottom: 16, marginRight: 5 }}>
-                  Authentication Service
-                </GridItem>
-                <GridItem id="preview-addr-plan" span={7}>
-                  {authenticationService}
-                </GridItem>
+                {protocolOptions.length > 0 && (
+                  <>
+                    <GridItem
+                      span={5}
+                      className={css(style.left_margin_gridItem)}
+                    >
+                      Protocols
+                    </GridItem>
+                    <GridItem
+                      span={7}
+                      className={css(style.preview_info_gridItem)}
+                    >
+                      {protocolOptions &&
+                        protocolOptions.map(protocol => (
+                          <>
+                            {protocol?.label}
+                            <br />
+                          </>
+                        ))}
+                    </GridItem>
+                  </>
+                )}
+                {certificate && (
+                  <>
+                    <GridItem
+                      span={5}
+                      className={css(style.left_margin_gridItem)}
+                    >
+                      TLS Certificates
+                    </GridItem>
+                    <GridItem
+                      span={7}
+                      className={css(style.preview_info_gridItem)}
+                    >
+                      {certificate.label}
+                    </GridItem>
+                  </>
+                )}
+                <>
+                  <GridItem
+                    span={5}
+                    className={css(style.left_margin_gridItem)}
+                  >
+                    Create Routes
+                  </GridItem>
+                  <GridItem
+                    span={7}
+                    className={css(style.preview_info_gridItem)}
+                  >
+                    {addRoutes ? "True" : "False"}
+                  </GridItem>
+                </>
               </>
             )}
           </Grid>
         </GridItem>
-        <GridItem span={7} className={css(Style.left_padding)}>
-          <Title size={"lg"} className={css(Style.bottom_padding)}>
+        <GridItem span={7} className={css(style.left_padding)}>
+          <Title size={"lg"} className={css(style.bottom_padding)}>
             {`Configuration details  `}
             <Tooltip
               id="preview-as-feedback-tooltip"
@@ -160,13 +261,12 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
           <AceEditor
             mode="xml"
             theme="github"
+            width="auto"
             fontSize={14}
-            onChange={() => {}}
             value={data.addressSpaceCommand}
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
             style={{
-              width: 700,
               border: "1px solid",
               borderColor: "lightgrey"
             }}

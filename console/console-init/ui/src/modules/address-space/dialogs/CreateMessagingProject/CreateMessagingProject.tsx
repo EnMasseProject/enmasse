@@ -4,17 +4,19 @@
  */
 
 import React, { useState } from "react";
+import { Wizard } from "@patternfly/react-core";
 import { MessagingProjectConfiguration } from "./MessagingProjectConfiguration";
-
 import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE } from "graphql-module";
 import { MessagingProjectReview } from "./MessagingProjectReview";
-import { Wizard } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
-import { isMessgaingProjectValid } from "modules/address-space/utils";
-import { ConfiguringEndpoint } from "./ConfiguringEndpoint";
+import {
+  isMessgaingProjectValid,
+  isMessgaingProjectConfigurationValid
+} from "modules/address-space/utils";
 import { ConfiguringCertificates } from "./ConfiguringCertificates";
 import { ConfiguringRoutes } from "./ConfiguringRoutes";
+import { EndpointConfiguration } from "modules/address-space/components";
 
 export interface IMessagingProject {
   namespace: string;
@@ -24,6 +26,14 @@ export interface IMessagingProject {
   authService?: string;
   customizeEndpoint: boolean;
   isNameValid: boolean;
+  certValue?: string;
+  addCertificate: boolean;
+  tlsCertificate?: string;
+  protocols?: Array<string>;
+  privateKey?: string;
+  hostname?: string;
+  tlsTermination?: string;
+  addRoutes: boolean;
 }
 
 interface ICreateMessagingProjectProps {}
@@ -33,28 +43,18 @@ const initialMessageProject: IMessagingProject = {
   namespace: "",
   type: "",
   isNameValid: true,
-  customizeEndpoint: false
+  addCertificate: false,
+  customizeEndpoint: false,
+  addRoutes: false
 };
 
-interface IWizardSteps {
-  showCustomize: boolean;
-  showCertificate: boolean;
-  showRoutes: boolean;
-}
 const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectProps> = () => {
   const [messagingProject, setMessagingProject] = useState<IMessagingProject>(
     initialMessageProject
   );
-  const [stepStatus, setStepStatus] = useState<IWizardSteps>({
-    showCertificate: false,
-    showCustomize: false,
-    showRoutes: true
-  });
-
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose } = modalProps || {};
-
   const resetFormState = () => {
     setMessagingProject(initialMessageProject);
   };
@@ -101,92 +101,72 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
     }
   };
 
-  const getInitialStep = () => {
-    const step = {
-      name: "Configuration",
-      component: (
-        <MessagingProjectConfiguration
-          projectDetail={messagingProject}
-          setProjectDetail={setMessagingProject}
-          setShowConfigurationStep={() => {
-            setStepStatus({ ...stepStatus, showCustomize: true });
-          }}
-        />
-      ),
-      enableNext: isMessgaingProjectValid(messagingProject)
-    };
-    return step;
+  const messagingConfigurationStep = {
+    name: "Configuration",
+    component: (
+      <MessagingProjectConfiguration
+        projectDetail={messagingProject}
+        setProjectDetail={setMessagingProject}
+      />
+    ),
+    enableNext: isMessgaingProjectConfigurationValid(messagingProject)
   };
-  const getConfigurationStep = () => {
-    const getConfiguringStep = () => {
-      const step = {
-        name: "Configuring",
-        component: (
-          <ConfiguringEndpoint
-            projectDetail={messagingProject}
-            setProjectDetail={setMessagingProject}
-          />
-        ),
-        enableNext: isMessgaingProjectValid(messagingProject)
-      };
-      return step;
-    };
-    const getCertificatesStep = () => {
-      const step = {
-        name: "Certificates",
-        component: (
-          <ConfiguringCertificates
-            projectDetail={messagingProject}
-            setProjectDetail={setMessagingProject}
-          />
-        ),
-        enableNext: isMessgaingProjectValid(messagingProject)
-      };
-      return step;
-    };
-    const getRoutesStep = () => {
-      const step = {
-        name: "Routes",
-        component: (
-          <ConfiguringRoutes
-            projectDetail={messagingProject}
-            setProjectDetail={setMessagingProject}
-          />
-        ),
-        enableNext: isMessgaingProjectValid(messagingProject)
-      };
-      return step;
-    };
-
-    const step = {
-      name: "Endpoint customization",
-      steps: [
-        ...[getConfiguringStep()],
-        ...(stepStatus.showCertificate ? [getCertificatesStep()] : []),
-        ...(stepStatus.showRoutes ? [getRoutesStep()] : [])
-      ],
-      enableNext: isMessgaingProjectValid(messagingProject),
-      canJumpTo: isMessgaingProjectValid(messagingProject)
-    };
-    return step;
+  const endpointConfiguringStep = {
+    name: "Configuring",
+    component: (
+      <EndpointConfiguration
+        setProjectDetail={setMessagingProject}
+        projectDetail={messagingProject}
+      />
+    ),
+    enableNext: isMessgaingProjectValid(messagingProject)
+  };
+  const endpointCertificatesStep = {
+    name: "Certificates",
+    component: (
+      <ConfiguringCertificates
+        projectDetail={messagingProject}
+        setProjectDetail={setMessagingProject}
+      />
+    ),
+    enableNext: isMessgaingProjectValid(messagingProject)
+  };
+  const endpointRoutesStep = {
+    name: "Routes",
+    component: (
+      <ConfiguringRoutes
+        projectDetail={messagingProject}
+        setProjectDetail={setMessagingProject}
+      />
+    ),
+    enableNext: isMessgaingProjectValid(messagingProject)
   };
 
-  const getReviewStep = () => {
-    const step = {
-      name: "Review",
-      component: <MessagingProjectReview projectDetail={messagingProject} />,
-      enableNext: isMessgaingProjectValid(messagingProject),
-      canJumpTo: isMessgaingProjectValid(messagingProject),
-      nextButtonText: "Finish"
-    };
-    return step;
+  const endpointCustomizationStep = {
+    name: "Endpoint customization",
+    steps: [
+      ...[endpointConfiguringStep],
+      ...(messagingProject.addCertificate ? [endpointCertificatesStep] : []),
+      ...(messagingProject.addRoutes ? [endpointRoutesStep] : [])
+    ],
+    enableNext: isMessgaingProjectValid(messagingProject),
+    canJumpTo: isMessgaingProjectValid(messagingProject)
+  };
+
+  const messagingReviewStep = {
+    name: "Review",
+    component: <MessagingProjectReview projectDetail={messagingProject} />,
+    enableNext: isMessgaingProjectValid(messagingProject),
+    canJumpTo: isMessgaingProjectValid(messagingProject),
+    nextButtonText: "Finish"
   };
 
   const steps = [
-    getInitialStep(),
-    ...(stepStatus.showCustomize ? [getConfigurationStep()] : []),
-    ...[getReviewStep()]
+    messagingConfigurationStep,
+    ...(messagingProject.customizeEndpoint ? [endpointCustomizationStep] : []),
+    ...[messagingReviewStep]
   ];
+  console.log(messagingProject);
 
   return (
     <Wizard

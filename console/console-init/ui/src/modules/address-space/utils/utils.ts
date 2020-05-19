@@ -23,7 +23,9 @@ const getHeaderForDeleteDialog = (selectedItems: any[]) => {
   return header;
 };
 
-const isMessgaingProjectValid = (messagingProject: IMessagingProject) => {
+const isMessgaingProjectConfigurationValid = (
+  messagingProject: IMessagingProject
+) => {
   if (messagingProject) {
     const { name, namespace, type, plan, authService } = messagingProject;
     if (
@@ -43,8 +45,26 @@ const isMessgaingProjectValid = (messagingProject: IMessagingProject) => {
     return false;
   }
 };
+const isMessgaingProjectValid = (messagingProject: IMessagingProject) => {
+  if (isMessgaingProjectConfigurationValid(messagingProject)) {
+    if (messagingProject.customizeEndpoint) {
+      if (
+        messagingProject.protocols &&
+        messagingProject.protocols.length > 0 &&
+        messagingProject.tlsCertificate &&
+        messagingProject.tlsCertificate.trim() !== ""
+      ) {
+        return true;
+      }
+    } else {
+      return true;
+    }
+  }
+  return false;
+};
 export {
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
-  isMessgaingProjectValid
+  isMessgaingProjectValid,
+  isMessgaingProjectConfigurationValid
 };

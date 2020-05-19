@@ -4,7 +4,6 @@
  */
 
 import React from "react";
-import { MemoryRouter } from "react-router-dom";
 import { IEndPoint } from "modules/endpoints/EndpointPage";
 import { PageSection, PageSectionVariants } from "@patternfly/react-core";
 import { EndPointList } from "modules/endpoints/components";
@@ -16,40 +15,38 @@ export default {
 const endpoints: IEndPoint[] = [
   {
     name: "messaging-service",
-    type: "Cluster",
+    type: "cluster",
     host: "message-queue.space.enmasse-infra",
     ports: [
-      { portNumber: 5671, protocol: "AMQPS" },
-      { portNumber: 5672, protocol: "AMQP" },
-      { portNumber: 443, protocol: "AMQP-WSS" }
+      { port: 5671, protocol: "amqps", name: "" },
+      { port: 5672, protocol: "amqp_ws", name: "" },
+      { port: 443, protocol: "amqp_wss", name: "" }
     ]
   },
   {
     name: "messaging",
-    type: "Route",
+    type: "route",
     host: "message-queue.space.enmasse-infra",
     ports: [
-      { portNumber: 5671, protocol: "AMQPS" },
-      { portNumber: 5672, protocol: "AMQP" },
-      { portNumber: 443, protocol: "AMQP-WSS" }
+      { port: 5671, protocol: "amqps", name: "" },
+      { port: 5672, protocol: "amqp_ws", name: "" },
+      { port: 443, protocol: "amqp_wss", name: "" }
     ]
   },
   {
     name: "messaging-wss",
-    type: "Route",
+    type: "route",
     host: "message-queue.space.enmasse-infra",
     ports: [
-      { portNumber: 5671, protocol: "AMQPS" },
-      { portNumber: 5672, protocol: "AMQP" },
-      { portNumber: 443, protocol: "AMQP-WSS" }
+      { port: 5671, protocol: "amqps", name: "" },
+      { port: 5672, protocol: "amqp_ws", name: "" },
+      { port: 443, protocol: "amqp_wss", name: "" }
     ]
   }
 ];
 
 export const endpointsList = () => (
-  <MemoryRouter>
-    <PageSection variant={PageSectionVariants.light}>
-      <EndPointList endpoints={endpoints} />
-    </PageSection>
-  </MemoryRouter>
+  <PageSection variant={PageSectionVariants.light}>
+    <EndPointList endpoints={endpoints} />
+  </PageSection>
 );

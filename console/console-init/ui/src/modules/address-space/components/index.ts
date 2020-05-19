@@ -12,3 +12,5 @@ export * from "./MessagingToolbar";
 export * from "./AddressSpaceHeader";
 export * from "./AddressSpaceNavigation";
 export * from "./MessagingDatatoolbarToggleGroup";
+export * from "./EndpointCertificateConfiguration";
+export * from "./EndpointConfiguraion";

@@ -7,56 +7,79 @@ import React from "react";
 import {
   Table,
   TableHeader,
-  TableVariant,
   TableBody,
-  IRowData
+  IRowData,
+  ISortBy
 } from "@patternfly/react-table";
-import { StyleForTable } from "modules/address-space";
-import { css } from "@patternfly/react-styles";
 import { IEndPoint } from "modules/endpoints/EndpointPage";
+import { EmptyEndpoints } from "../EmptyEndpoints";
 
 interface IEndPointListProps {
   endpoints: IEndPoint[];
+  sortBy?: ISortBy;
 }
+
 const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
-  endpoints
+  endpoints,
+  sortBy
 }) => {
-  const tableColumns = ["Name", "Type", "Host", "Ports", ""];
+  const tableColumns = [
+    { title: "Name", id: "th-name", key: "th-name" },
+    { title: "Type", id: "th-type", key: "th-type" },
+    { title: "Host", id: "th-host", key: "th-host" },
+    { title: "Ports", id: "th-ports", key: "th-ports" },
+    { title: "", id: "th-ports-number", key: "th-ports-number" }
+  ];
   const toTableCells = (row: IEndPoint) => {
+    const { name, type, host, ports } = row;
     const tableRow: IRowData = {
       cells: [
-        row.name,
-        row.type,
-        row.host,
+        { title: name, id: `row-name-${name}`, key: `row-name-${name}` },
+        { title: type, id: `row-type-${type}`, key: `row-type-${type}` },
+        { title: host, id: `row-host-${host}`, key: `row-host-${host}` },
         {
-          title: row.ports.map(port => (
-            <>
-              {port.protocol}
+          title: ports.map((port, index) => (
+            <div key={`${port.name}-${index}`}>
+              {port.name?.toString()?.toUpperCase()}
               <br />
-            </>
-          ))
+            </div>
+          )),
+          id: `row-ports-name-${ports[0].name}`,
+          key: `row-ports-name-${ports[0].name}`
         },
 
         {
-          title: row.ports.map(port => (
-            <>
-              {port.portNumber}
+          title: ports.map((port, index) => (
+            <div key={`${port.port}-${index}`}>
+              {port.port}
               <br />
-            </>
-          ))
+            </div>
+          )),
+          id: `row-ports-port-${ports[0].port}`,
+          key: `row-ports-port-${ports[0].port}`
         }
-      ]
+      ],
+      key: `table-row-${name}`
     };
     return tableRow;
   };
   const tableRows = endpoints.map(toTableCells);
   return (
-    <div className={css(StyleForTable.scroll_overflow)}>
-      <Table cells={tableColumns} rows={tableRows} aria-label="Endpoint List">
-        <TableHeader id="endpoint-list-table-bodheader" />
-        <TableBody />
-      </Table>
-    </div>
+    <>
+      {endpoints && endpoints.length > 0 ? (
+        <Table
+          cells={tableColumns}
+          rows={tableRows}
+          aria-label="Endpoint List"
+          sortBy={sortBy}
+        >
+          <TableHeader id="endpoint-list-table-bodheader" />
+          <TableBody />
+        </Table>
+      ) : (
+        <EmptyEndpoints />
+      )}
+    </>
   );
 };
 

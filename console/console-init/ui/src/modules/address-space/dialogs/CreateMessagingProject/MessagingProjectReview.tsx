@@ -17,14 +17,23 @@ interface IMessagingProjectReviewProps {
 export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectReviewProps> = ({
   projectDetail
 }) => {
-  const { name, namespace, type, plan, authService } =
-    projectDetail && projectDetail;
+  const {
+    name,
+    namespace,
+    type,
+    plan,
+    authService,
+    protocols,
+    customizeEndpoint,
+    addRoutes,
+    tlsCertificate
+  } = projectDetail || {};
   const { data, loading } = useQuery(ADDRESS_SPACE_COMMAND_REVIEW_DETAIL, {
     variables: {
       as: {
         metadata: {
-          name: name && name,
-          namespace: namespace && namespace
+          name: name,
+          namespace: namespace
         },
         spec: {
           plan: plan ? plan.toLowerCase() : "",
@@ -47,6 +56,10 @@ export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectRe
       namespace={namespace || ""}
       authenticationService={authService || ""}
       data={data}
+      protocols={protocols}
+      customizeEndpoint={customizeEndpoint}
+      addRoutes={addRoutes}
+      tlsCertificate={tlsCertificate}
     />
   );
 };

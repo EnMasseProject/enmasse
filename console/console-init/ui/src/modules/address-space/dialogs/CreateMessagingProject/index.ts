@@ -6,6 +6,5 @@
 export * from "./CreateMessagingProject";
 export * from "./MessagingProjectConfiguration";
 export * from "./MessagingProjectReview";
-export * from "./ConfiguringEndpoint";
 export * from "./ConfiguringCertificates";
 export * from "./ConfiguringRoutes";

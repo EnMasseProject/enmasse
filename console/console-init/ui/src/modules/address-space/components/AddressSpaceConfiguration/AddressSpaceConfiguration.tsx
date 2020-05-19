@@ -54,7 +54,7 @@ export interface IAddressSpaceConfigurationProps {
   authenticationService: string;
   authenticationServiceOptions: IAuthenticationServiceOptions[];
   customizeEndpoint?: boolean;
-  hanldeCustomEndpointChange: (value: boolean) => void;
+  handleCustomEndpointChange: (value: boolean) => void;
 }
 
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
@@ -76,7 +76,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   authenticationServiceOptions,
   isStandardChecked,
   customizeEndpoint,
-  hanldeCustomEndpointChange
+  handleCustomEndpointChange
 }) => {
   const getHelperText = () => {
     return name.trim() !== "" && !isNameValid ? (
@@ -184,9 +184,10 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             <FormGroup fieldId="customize-endpoint">
               <br />
               <Switch
+                id="asc-switch-customize-endpoint"
                 label={"Customize Endpoint"}
                 isChecked={customizeEndpoint}
-                onChange={hanldeCustomEndpointChange}
+                onChange={handleCustomEndpointChange}
               />
             </FormGroup>
           </Form>

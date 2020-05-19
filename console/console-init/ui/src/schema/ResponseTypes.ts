@@ -358,3 +358,48 @@ export interface IAddressSpaceDetailResponse {
     }>;
   };
 }
+
+export enum MessagingEndpointProtocol {
+  amqp,
+  amqps,
+  amqp_ws,
+  amqp_wss
+}
+
+export enum MessagingEndpointType {
+  cluster,
+  nodePort,
+  loadBalancer,
+  route,
+  ingress
+}
+
+export interface IEndpointProtocol {
+  name: string;
+  protocol: string;
+  port: number;
+}
+export interface IEndpointResponse {
+  metadata: {
+    name: string;
+    namespace: string;
+    creationTimestamp: string;
+  };
+  spec: {
+    protocols: Array<string>;
+  };
+  status: {
+    phase: string;
+    type: string;
+    message: string;
+    host: string;
+    ports: IEndpointProtocol[];
+    internalPorts: IEndpointProtocol[];
+  };
+}
+export interface IEndpointListResponse {
+  total: number;
+  messagingEndpoints: {
+    messagingEndpoints: IEndpointResponse[];
+  };
+}
