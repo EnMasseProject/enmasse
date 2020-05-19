@@ -20,7 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { PlusCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithToggle, ToggleIcon } from "components";
+import { DropdownWithToggle, SwitchWithToggle } from "components";
 import {
   SecretList,
   ExtensionList,
@@ -40,7 +40,7 @@ export interface ICredential {
   "auth-id"?: string;
   type?: string;
   secrets: ISecret[];
-  extensions?: IExtension[];
+  ext?: IExtension[];
   enabled?: boolean;
   isExpandedAdvancedSetting?: boolean;
 }
@@ -81,9 +81,15 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
   ) => {
     const index = findIndexByProperty(credentials, "id", id);
     const secrets = (index >= 0 && credentials[index]["secrets"]) || [];
-    const extensions = (index >= 0 && credentials[index]["extensions"]) || [];
+    const extensions = (index >= 0 && credentials[index]["ext"]) || [];
     const isEnabledStatus =
       (index >= 0 && credentials[index]["enabled"]) || false;
+
+    const onChangeStatus = (id: string, event: any, checked: boolean) => {
+      event.target.name = "enabled";
+      handleInputChange(id, event, checked);
+    };
+
     return (
       <>
         <SecretList
@@ -119,7 +125,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                 className={credentialList_styles.addMoreExt}
                 type="button"
                 icon={<PlusCircleIcon />}
-                onClick={() => addMoreItem(id, "extensions")}
+                onClick={() => addMoreItem(id, "ext")}
               >
                 Add more Ext Key/Value
               </Button>
@@ -135,13 +141,13 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               after created.
             </GridItem>
             <GridItem span={2}>
-              <ToggleIcon
-                name="enabled"
-                isEnabled={isEnabledStatus}
-                enabledTitle="Enabled"
-                disabledTitle="Disabled"
-                onToggle={(isEnabled, event) =>
-                  handleInputChange(id, event, isEnabled)
+              <SwitchWithToggle
+                id={"credential-list-status-" + id}
+                label={"Enabled"}
+                labelOff={"Disabled"}
+                isChecked={isEnabledStatus}
+                onChange={(checked, event) =>
+                  onChangeStatus(id, event, checked)
                 }
               />
             </GridItem>

@@ -40,6 +40,11 @@ enum TemplateType {
   VIA_GATEWAY = "via-gateway"
 }
 
+enum DataType {
+  ARRAY = "array",
+  OBJECT = "object"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -52,5 +57,6 @@ export {
   TypeAheadMessage,
   ErrorCodes,
   AddressTypes,
-  TemplateType
+  TemplateType,
+  DataType
 };
