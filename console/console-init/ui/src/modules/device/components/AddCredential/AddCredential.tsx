@@ -30,7 +30,7 @@ export const AddCredential: React.FC<{}> = () => {
       "auth-id": "",
       type: "",
       secrets: [{}],
-      extensions: [getExtensionsFieldsInitialState()],
+      ext: [getExtensionsFieldsInitialState()],
       enabled: true,
       isExpandedAdvancedSetting: false
     };
@@ -77,7 +77,7 @@ export const AddCredential: React.FC<{}> = () => {
     let initialState = {};
     if (property === "secrets") {
       initialState = getSecretsFieldsInitialState();
-    } else if (property === "extensions") {
+    } else if (property === "ext") {
       initialState = getExtensionsFieldsInitialState();
     } else if (property === "credentials") {
       initialState = getCredentialsFieldsInitialState();

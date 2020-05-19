@@ -10,9 +10,11 @@ const SwitchWithToggle: React.FunctionComponent<SwitchProps> = ({
   id,
   label,
   onChange,
-  labelOff
+  labelOff,
+  isChecked: checked = false,
+  isDisabled
 }) => {
-  const [isChecked, setIsChecked] = useState<boolean>(false);
+  const [isChecked, setIsChecked] = useState<boolean>(checked);
   const handleOnChange = (checked: boolean, event: any) => {
     if (onChange) {
       onChange(checked, event);
@@ -26,6 +28,7 @@ const SwitchWithToggle: React.FunctionComponent<SwitchProps> = ({
       labelOff={labelOff}
       isChecked={isChecked}
       onChange={handleOnChange}
+      isDisabled={isDisabled}
     />
   );
 };
