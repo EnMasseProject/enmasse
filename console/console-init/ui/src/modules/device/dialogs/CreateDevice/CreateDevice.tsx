@@ -13,6 +13,7 @@ import {
 } from "@patternfly/react-core";
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/device/components/ConnectionTypeStep";
+import { AddGateway } from "./AddGateway";
 
 export interface IDeviceInfo {
   onPropertySelect: (e: any, selection: SelectOptionObject) => void;
@@ -33,14 +34,32 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
 }) => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(true);
   const [connectionType, setConnectionType] = useState<string>();
+  const [addedGateways, setAddedGateways] = useState<string[]>([]);
   const onToggle = () => {
     setIsWizardOpen(!isWizardOpen);
     resetForm();
   };
   const resetForm = () => {};
+  const appendGateway = (id: string) => {
+    /* TODO: Verify the device ID with server */
+    setAddedGateways([...addedGateways, id]);
+  };
+
+  const removeGateway = (id: string) => {
+    const idIndex = addedGateways.indexOf(id);
+    addedGateways.splice(idIndex, 1);
+    setAddedGateways([...addedGateways]);
+  };
+
   const addGateway = {
     name: "Add gateways",
-    component: <p>Add gateway</p>
+    component: (
+      <AddGateway
+        addedGateways={addedGateways}
+        removeGateway={removeGateway}
+        appendGateway={appendGateway}
+      />
+    )
   };
   const addCredentials = {
     name: "Add credentials",
