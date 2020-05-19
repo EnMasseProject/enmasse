@@ -82,11 +82,10 @@ const AppLayout: React.FC = () => {
         logo={logo}
         avatar={avatar}
         toolbar={<NavToolBar />}
-      >
-        <NetworkStatusAlert />
-        <ServerMessageAlert />
-        <AppRoutes />
-      </CrossNavHeader>
+      />
+      <NetworkStatusAlert />
+      <ServerMessageAlert />
+      <AppRoutes />
     </ApolloProvider>
   );
 };
