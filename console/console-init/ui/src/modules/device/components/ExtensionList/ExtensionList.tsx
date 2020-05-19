@@ -58,7 +58,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
   onDeleteExtension,
   credentialId
 }) => {
-  const componentName = "extension-list";
+  const prefixId = "di-el";
   const typeOptions: ISelectOption[] = [
     { key: "string", label: "String", value: "String" },
     { key: "number", label: "Number", value: "Number" },
@@ -76,7 +76,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
 
   return (
     <>
-      <Grid id={componentName}>
+      <Grid id={prefixId}>
         <GridItem span={12}>Ext</GridItem>
         {extensions &&
           extensions.map(ext => {
@@ -85,11 +85,11 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
               <Grid key={id}>
                 <GridItem span={4}>
                   <FormGroup
-                    fieldId={componentName + "-parameter-" + id}
+                    fieldId={prefixId + "-parameter-" + id}
                     label="Parameter"
                   >
                     <TextInput
-                      id={componentName + "-parameter-" + id}
+                      id={prefixId + "-parameter-" + id}
                       name="parameter"
                       onChange={(value, event) =>
                         handleInputChangeExtension(
@@ -104,12 +104,12 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={3}>
                   <FormGroup
-                    fieldId={componentName + "-type-" + id}
+                    fieldId={prefixId + "-type-" + id}
                     label="Type"
                     className={styles.type_margin}
                   >
                     <DropdownWithToggle
-                      id={componentName + "-type-" + id}
+                      id={prefixId + "-type-" + id}
                       name="type"
                       className={css(dropdown_item_styles.dropdown_align)}
                       toggleClass={css(
@@ -130,12 +130,9 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   </FormGroup>
                 </GridItem>
                 <GridItem span={4}>
-                  <FormGroup
-                    fieldId={componentName + "-value-" + id}
-                    label="Value"
-                  >
+                  <FormGroup fieldId={prefixId + "-value-" + id} label="Value">
                     <TextInput
-                      id={componentName + "-value-" + id}
+                      id={prefixId + "-value-" + id}
                       name="value"
                       onChange={(value, event) =>
                         handleInputChangeExtension(

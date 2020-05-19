@@ -19,7 +19,7 @@ import {
   ICredentialsViewProps,
   DeviceInfoMetadata
 } from "modules/device-detail/components";
-import { SwitchWithToggle, JsonViewEditor } from "components";
+import { SwitchWithToggle, JsonEditor } from "components";
 
 const styles = StyleSheet.create({
   gateways_align: {
@@ -64,9 +64,9 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         </Split>
         <br />
         {isHidden ? (
-          <JsonViewEditor
+          <JsonEditor
             readOnly={true}
-            detailInJson={jsonViewData}
+            value={jsonViewData && JSON.stringify(jsonViewData, undefined, 2)}
             maxLines={45}
           />
         ) : (
