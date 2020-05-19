@@ -16,7 +16,6 @@ const getHeaderTextForCloseAll = (connections: IConnection[]) => {
 };
 const getDetailTextForCloseAll = (connections: IConnection[]) => {
   let detail = "";
-
   if (connections && connections.length > 1) {
     detail = `Are you sure you want to close all of these connections: ${connections.map(
       connection => " " + connection.hostname

@@ -436,8 +436,8 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
 };
 
 const CLOSE_CONNECTION = gql`
-  mutation close_connection($cons: ObjectMeta_v1_Input!) {
-    closeConnection(input: $cons)
+  mutation close_connection($cons: [ObjectMeta_v1_Input!]!) {
+    closeConnections(input: $cons)
   }
 `;
 export {
