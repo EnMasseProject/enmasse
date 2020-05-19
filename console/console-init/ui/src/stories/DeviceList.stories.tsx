@@ -78,6 +78,7 @@ export const deviceAlert = () => (
     <DeviceListAlert
       visible={true}
       variant={"info"}
+      isInline={true}
       title={text("Alert title", "Run filter to view your devices")}
       description={text(
         "Alert description",

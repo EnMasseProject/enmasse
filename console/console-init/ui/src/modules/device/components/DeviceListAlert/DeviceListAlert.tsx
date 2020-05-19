@@ -22,12 +22,12 @@ export const DeviceListAlert: React.FunctionComponent<IDeviceListAlertProps> = (
   description
 }) => {
   return (
-    <React.Fragment>
+    <>
       {visible && (
         <Alert variant={variant} title={title} id={id} isInline={isInline}>
           {description}
         </Alert>
       )}
-    </React.Fragment>
+    </>
   );
 };
