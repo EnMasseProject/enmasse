@@ -12,7 +12,9 @@ const Editor: React.FunctionComponent<IAceEditorProps> = ({
   width = "auto",
   onChange,
   enableBasicAutocompletion,
-  enableLiveAutocompletion
+  enableLiveAutocompletion,
+  className,
+  height
 }) => {
   return (
     <AceEditor
@@ -26,7 +28,9 @@ const Editor: React.FunctionComponent<IAceEditorProps> = ({
       name={name}
       enableBasicAutocompletion={enableBasicAutocompletion}
       enableLiveAutocompletion={enableLiveAutocompletion}
-      style={style}
+      style={style}  
+      height={height}
+      className={className}     
     />
   );
 };
