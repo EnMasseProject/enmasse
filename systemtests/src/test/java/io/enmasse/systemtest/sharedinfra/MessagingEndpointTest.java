@@ -16,7 +16,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfra;
+import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
@@ -56,7 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(ISOLATED_SHARED_INFRA)
-@DefaultMessagingInfra
+@DefaultMessagingInfrastructure
 @DefaultMessagingTenant
 @ExternalClients
 public class MessagingEndpointTest extends TestBase implements ITestIsolatedSharedInfra {

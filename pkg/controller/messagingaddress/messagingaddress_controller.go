@@ -231,7 +231,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result.Result(), err
 	}
 
-	var infra *v1beta2.MessagingInfra
+	var infra *v1beta2.MessagingInfrastructure
 	// Retrieve the MessagingInfra for this MessagingAddress
 	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
 		i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)

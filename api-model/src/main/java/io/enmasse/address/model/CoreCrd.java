@@ -29,7 +29,7 @@ public class CoreCrd {
         ADDRESS_CRD = CustomResources.createCustomResource(GROUP, VERSION, Address.KIND);
         ADDRESS_SPACE_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpace.KIND);
         ADDRESS_SPACE_SCHEMA_CRD = CustomResources.createCustomResource(GROUP, VERSION, AddressSpaceSchema.KIND, "Cluster");
-        MESSAGING_INFRA_CRD = CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingInfra");
+        MESSAGING_INFRA_CRD = CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingInfrastructure");
         MESSAGING_TENANT_CRD = CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingTenant");
         MESSAGING_ADDRESS_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingAddress");
         MESSAGING_ENDPOINT_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingEndpoint");
@@ -45,8 +45,8 @@ public class CoreCrd {
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchema.KIND, AddressSpaceSchema.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, AddressSpaceSchemaList.KIND, AddressSpaceSchemaList.class);
 
-        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfra", MessagingInfra.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfraList", MessagingInfraList.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfrastructure", MessagingInfrastructure.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingInfrastructureList", MessagingInfrastructureList.class);
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingTenant", MessagingTenant.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingTenantList", MessagingTenantList.class);

@@ -8,18 +8,17 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
-import io.enmasse.api.model.MessagingInfra;
-import io.enmasse.api.model.MessagingInfraBuilder;
-import io.enmasse.api.model.MessagingInfraCondition;
+import io.enmasse.api.model.MessagingInfrastructure;
+import io.enmasse.api.model.MessagingInfrastructureBuilder;
+import io.enmasse.api.model.MessagingInfrastructureCondition;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfra;
+import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
-import io.enmasse.systemtest.messaginginfra.ResourceManager;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
@@ -29,14 +28,13 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(TestTag.ISOLATED_SHARED_INFRA)
-public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedInfra {
+public class MessagingInfrastructureTest extends TestBase implements ITestIsolatedSharedInfra {
 
     /**
      * Test that infrastructure static scaling strategy can be changed and that change is reflected
@@ -44,7 +42,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
      */
     @Test
     public void testInfraStaticScalingStrategy() throws Exception {
-        MessagingInfra infra = new MessagingInfraBuilder()
+        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
                 .withNamespace(environment.namespace())
@@ -61,7 +59,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
 
         // Scale up
-        infra = new MessagingInfraBuilder(infra)
+        infra = new MessagingInfrastructureBuilder(infra)
                 .editOrNewSpec()
                 .editOrNewRouter()
                 .editOrNewScalingStrategy()
@@ -92,7 +90,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         assertEquals(2, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
 
         // Scale down
-        infra = new MessagingInfraBuilder(infra)
+        infra = new MessagingInfrastructureBuilder(infra)
                 .editOrNewSpec()
                 .editOrNewRouter()
                 .editOrNewScalingStrategy()
@@ -128,7 +126,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
      */
     @Test
     @ExternalClients
-    @DefaultMessagingInfra
+    @DefaultMessagingInfrastructure
     @DefaultMessagingTenant
     public void testInfraRestart() throws Exception {
         MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
@@ -175,7 +173,7 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
 
         // Restart router and broker pods
-        MessagingInfra defaultInfra = infraResourceManager.getDefaultInfra();
+        MessagingInfrastructure defaultInfra = infraResourceManager.getDefaultInfra();
         kubernetes.deletePod(defaultInfra.getMetadata().getNamespace(), Collections.singletonMap("infra", defaultInfra.getMetadata().getName()));
 
         Thread.sleep(60_000);
@@ -189,15 +187,15 @@ public class MessagingInfraTest extends TestBase implements ITestIsolatedSharedI
         MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
     }
 
-    private void waitForConditionsTrue(MessagingInfra infra) {
+    private void waitForConditionsTrue(MessagingInfrastructure infra) {
         for (String condition : List.of("CaCreated", "RoutersCreated", "BrokersCreated", "BrokersConnected", "Ready")) {
             waitForCondition(infra, condition, "True");
         }
     }
 
-    private void waitForCondition(MessagingInfra infra, String conditionName, String expectedValue) {
+    private void waitForCondition(MessagingInfrastructure infra, String conditionName, String expectedValue) {
         assertTrue(infraResourceManager.waitResourceCondition(infra, messagingInfra -> {
-            MessagingInfraCondition condition = MessagingInfraResourceType.getCondition(messagingInfra.getStatus().getConditions(), conditionName);
+            MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(messagingInfra.getStatus().getConditions(), conditionName);
             return condition != null && expectedValue.equals(condition.getStatus());
         }));
     }

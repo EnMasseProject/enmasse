@@ -177,7 +177,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Retrieve the MessagingInfra for this MessagingEndpoint
-	var infra *v1beta2.MessagingInfra
+	var infra *v1beta2.MessagingInfrastructure
 	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
 		i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
@@ -400,7 +400,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 }
 
 // Reconcile the service and external resources for a given endpoint.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
 	// Reconcile service
 	serviceName := getServiceName(endpoint)
 	service := &corev1.Service{
@@ -550,7 +550,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Contex
 }
 
 // Reconcile the external endpoints of a service (Route or Ingress)
-func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
 	serviceName := getServiceName(endpoint)
 	service := &corev1.Service{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: infra.Namespace}, service)
@@ -689,7 +689,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Conte
 }
 
 // Reconcile the TLS configuration of an endpoint. Ensure that certificates get provisioned and setup based on the configuration.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
 	// Ensure TLS configuration is specified if we require it
 	if endpoint.Spec.Tls == nil {
 		needTls := false
@@ -843,7 +843,7 @@ func (r *ReconcileMessagingEndpoint) getInputValue(ctx context.Context, logger l
 }
 
 // Update the ports of endpoint (its status section) based on that has been created.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
 	endpoint.Status.Ports = make([]v1beta2.MessagingEndpointPort, 0)
 	if endpoint.Spec.NodePort != nil || endpoint.Spec.Cluster != nil || endpoint.Spec.LoadBalancer != nil {
 		serviceName := getServiceName(endpoint)

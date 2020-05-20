@@ -8,7 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.api.model.MessagingInfra;
+import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
@@ -18,7 +18,7 @@ import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
@@ -49,7 +49,7 @@ public class ResourceManager {
     private static Stack<ThrowableRunner> methodResources = new Stack<>();
     private static Stack<ThrowableRunner> pointerResources = classResources;
 
-    private MessagingInfra defaultInfra;
+    private MessagingInfrastructure defaultInfra;
     private MessagingTenant defaultTenant;
 
     private Kubernetes kubeClient = Kubernetes.getInstance();
@@ -121,7 +121,7 @@ public class ResourceManager {
     //------------------------------------------------------------------------------------------------
     // Pointers to default resources
     //------------------------------------------------------------------------------------------------
-    public MessagingInfra getDefaultInfra() {
+    public MessagingInfrastructure getDefaultInfra() {
         return defaultInfra;
     }
 
@@ -129,7 +129,7 @@ public class ResourceManager {
         return defaultTenant;
     }
 
-    public void setDefaultInfra(MessagingInfra infra) {
+    public void setDefaultInfra(MessagingInfrastructure infra) {
         defaultInfra = infra;
     }
 
@@ -189,7 +189,7 @@ public class ResourceManager {
     //------------------------------------------------------------------------------------------------
 
     private final ResourceType<?>[] resourceTypes = new ResourceType[]{
-            new MessagingInfraResourceType(),
+            new MessagingInfrastructureResourceType(),
             new MessagingTenantResourceType(),
             new MessagingAddressResourceType(),
             new MessagingEndpointResourceType(),

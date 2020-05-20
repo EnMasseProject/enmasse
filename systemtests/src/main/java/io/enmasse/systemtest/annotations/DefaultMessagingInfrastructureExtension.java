@@ -4,15 +4,15 @@
  */
 package io.enmasse.systemtest.annotations;
 
-import io.enmasse.api.model.MessagingInfra;
+import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingInfraResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class DefaultMessagingInfraExtension implements BeforeTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
+public class DefaultMessagingInfrastructureExtension implements BeforeTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;
 
     @Override
@@ -29,7 +29,7 @@ public class DefaultMessagingInfraExtension implements BeforeTestExecutionCallba
     }
 
     private void createDefaultInfra() {
-        MessagingInfra infra = MessagingInfraResourceType.getDefault();
+        MessagingInfrastructure infra = MessagingInfrastructureResourceType.getDefault();
         ResourceManager.getInstance().createResource(infra);
         ResourceManager.getInstance().setDefaultInfra(infra);
     }

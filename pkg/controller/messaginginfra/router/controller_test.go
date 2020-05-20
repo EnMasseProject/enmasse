@@ -31,7 +31,7 @@ import (
 
 func setup(t *testing.T) *RouterController {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfra{})
+	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfrastructure{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
 	return NewRouterController(cl, s, certController)
@@ -40,12 +40,12 @@ func setup(t *testing.T) *RouterController {
 func TestReconcileRouterReplicas(t *testing.T) {
 	rc := setup(t)
 
-	infra := v1beta2.MessagingInfra{
+	infra := v1beta2.MessagingInfrastructure{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
-		Spec: v1beta2.MessagingInfraSpec{
-			Router: v1beta2.MessagingInfraSpecRouter{
-				ScalingStrategy: &v1beta2.MessagingInfraSpecRouterScalingStrategy{
-					Static: &v1beta2.MessagingInfraSpecRouterScalingStrategyStatic{
+		Spec: v1beta2.MessagingInfrastructureSpec{
+			Router: v1beta2.MessagingInfrastructureSpecRouter{
+				ScalingStrategy: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategy{
+					Static: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategyStatic{
 						Replicas: 2,
 					},
 				},

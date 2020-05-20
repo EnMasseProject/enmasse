@@ -691,7 +691,7 @@
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfra": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructure": {
       "type": "object",
       "description": "",
       "properties": {
@@ -704,7 +704,7 @@
         "kind": {
           "type": "string",
           "description": "",
-          "default": "MessagingInfra",
+          "default": "MessagingInfrastructure",
           "required": true
         },
         "metadata": {
@@ -712,21 +712,21 @@
           "existingJavaType": "io.fabric8.kubernetes.api.model.ObjectMeta"
         },
         "spec": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpec",
-          "javaType": "MessagingInfraSpec"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpec",
+          "javaType": "MessagingInfrastructureSpec"
         },
         "status": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatus",
-          "javaType": "MessagingInfraStatus"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatus",
+          "javaType": "MessagingInfrastructureStatus"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfra",
+      "javaType": "MessagingInfrastructure",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.HasMetadata"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraCondition": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureCondition": {
       "type": "object",
       "description": "",
       "properties": {
@@ -752,12 +752,12 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraCondition",
+      "javaType": "MessagingInfrastructureCondition",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraList": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureList": {
       "type": "object",
       "description": "",
       "properties": {
@@ -771,14 +771,14 @@
           "type": "array",
           "description": "",
           "items": {
-            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfra",
-            "javaType": "MessagingInfra"
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructure",
+            "javaType": "MessagingInfrastructure"
           }
         },
         "kind": {
           "type": "string",
           "description": "",
-          "default": "MessagingInfraList",
+          "default": "MessagingInfrastructureList",
           "required": true
         },
         "metadata": {
@@ -787,13 +787,13 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraList",
+      "javaType": "MessagingInfrastructureList",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource",
-        "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingInfra\u003e"
+        "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingInfrastructure\u003e"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraReference": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureReference": {
       "type": "object",
       "description": "",
       "properties": {
@@ -807,35 +807,35 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraReference",
+      "javaType": "MessagingInfrastructureReference",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpec": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpec": {
       "type": "object",
       "description": "",
       "properties": {
         "broker": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBroker",
-          "javaType": "MessagingInfraSpecBroker"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBroker",
+          "javaType": "MessagingInfrastructureSpecBroker"
         },
         "namespaceSelector": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_NamespaceSelector",
           "javaType": "NamespaceSelector"
         },
         "router": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouter",
-          "javaType": "MessagingInfraSpecRouter"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouter",
+          "javaType": "MessagingInfrastructureSpecRouter"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpec",
+      "javaType": "MessagingInfrastructureSpec",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBroker": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBroker": {
       "type": "object",
       "description": "",
       "properties": {
@@ -848,32 +848,32 @@
           "javaType": "ImageOverride"
         },
         "scalingStrategy": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBrokerScalingStrategy",
-          "javaType": "MessagingInfraSpecBrokerScalingStrategy"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBrokerScalingStrategy",
+          "javaType": "MessagingInfrastructureSpecBrokerScalingStrategy"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecBroker",
+      "javaType": "MessagingInfrastructureSpecBroker",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBrokerScalingStrategy": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBrokerScalingStrategy": {
       "type": "object",
       "description": "",
       "properties": {
         "static": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBrokerScalingStrategyStatic",
-          "javaType": "MessagingInfraSpecBrokerScalingStrategyStatic"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBrokerScalingStrategyStatic",
+          "javaType": "MessagingInfrastructureSpecBrokerScalingStrategyStatic"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecBrokerScalingStrategy",
+      "javaType": "MessagingInfrastructureSpecBrokerScalingStrategy",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecBrokerScalingStrategyStatic": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecBrokerScalingStrategyStatic": {
       "type": "object",
       "description": "",
       "properties": {
@@ -883,12 +883,12 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecBrokerScalingStrategyStatic",
+      "javaType": "MessagingInfrastructureSpecBrokerScalingStrategyStatic",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouter": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouter": {
       "type": "object",
       "description": "",
       "properties": {
@@ -897,32 +897,32 @@
           "javaType": "ImageOverride"
         },
         "scalingStrategy": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouterScalingStrategy",
-          "javaType": "MessagingInfraSpecRouterScalingStrategy"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouterScalingStrategy",
+          "javaType": "MessagingInfrastructureSpecRouterScalingStrategy"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecRouter",
+      "javaType": "MessagingInfrastructureSpecRouter",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouterScalingStrategy": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouterScalingStrategy": {
       "type": "object",
       "description": "",
       "properties": {
         "static": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouterScalingStrategyStatic",
-          "javaType": "MessagingInfraSpecRouterScalingStrategyStatic"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouterScalingStrategyStatic",
+          "javaType": "MessagingInfrastructureSpecRouterScalingStrategyStatic"
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecRouterScalingStrategy",
+      "javaType": "MessagingInfrastructureSpecRouterScalingStrategy",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraSpecRouterScalingStrategyStatic": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureSpecRouterScalingStrategyStatic": {
       "type": "object",
       "description": "",
       "properties": {
@@ -932,12 +932,12 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraSpecRouterScalingStrategyStatic",
+      "javaType": "MessagingInfrastructureSpecRouterScalingStrategyStatic",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatus": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatus": {
       "type": "object",
       "description": "",
       "properties": {
@@ -946,8 +946,8 @@
           "description": "",
           "javaOmitEmpty": true,
           "items": {
-            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusBroker",
-            "javaType": "MessagingInfraStatusBroker"
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatusBroker",
+            "javaType": "MessagingInfrastructureStatusBroker"
           }
         },
         "conditions": {
@@ -955,8 +955,8 @@
           "description": "",
           "javaOmitEmpty": true,
           "items": {
-            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraCondition",
-            "javaType": "MessagingInfraCondition"
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureCondition",
+            "javaType": "MessagingInfrastructureCondition"
           }
         },
         "message": {
@@ -972,18 +972,18 @@
           "description": "",
           "javaOmitEmpty": true,
           "items": {
-            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusRouter",
-            "javaType": "MessagingInfraStatusRouter"
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatusRouter",
+            "javaType": "MessagingInfrastructureStatusRouter"
           }
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraStatus",
+      "javaType": "MessagingInfrastructureStatus",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusBroker": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatusBroker": {
       "type": "object",
       "description": "",
       "properties": {
@@ -993,12 +993,12 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraStatusBroker",
+      "javaType": "MessagingInfrastructureStatusBroker",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraStatusRouter": {
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureStatusRouter": {
       "type": "object",
       "description": "",
       "properties": {
@@ -1008,7 +1008,7 @@
         }
       },
       "additionalProperties": true,
-      "javaType": "MessagingInfraStatusRouter",
+      "javaType": "MessagingInfrastructureStatusRouter",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -1119,9 +1119,9 @@
       "type": "object",
       "description": "",
       "properties": {
-        "messagingInfraRef": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraReference",
-          "javaType": "MessagingInfraReference"
+        "messagingInfrastructureRef": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureReference",
+          "javaType": "MessagingInfrastructureReference"
         }
       },
       "additionalProperties": true,
@@ -1147,9 +1147,9 @@
           "type": "string",
           "description": ""
         },
-        "messagingInfraRef": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraReference",
-          "javaType": "MessagingInfraReference"
+        "messagingInfrastructureRef": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureReference",
+          "javaType": "MessagingInfrastructureReference"
         },
         "phase": {
           "type": "string",
@@ -1531,12 +1531,12 @@
       "javaType": "MessagingEndpointList"
     },
     "MessagingInfra": {
-      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfra",
-      "javaType": "MessagingInfra"
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructure",
+      "javaType": "MessagingInfrastructure"
     },
     "MessagingInfraList": {
-      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfraList",
-      "javaType": "MessagingInfraList"
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureList",
+      "javaType": "MessagingInfrastructureList"
     },
     "MessagingTenant": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingTenant",

@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.sharedinfra;
 
-import io.enmasse.api.model.MessagingInfra;
-import io.enmasse.api.model.MessagingInfraBuilder;
+import io.enmasse.api.model.MessagingInfrastructure;
+import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
@@ -25,7 +25,7 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
 
     @Test
     public void testMultipleMessagingTenants() {
-        MessagingInfra infra = new MessagingInfraBuilder()
+        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
                 .withNamespace(environment.namespace())
@@ -55,21 +55,21 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
         MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(t1.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t1.getStatus().getMessagingInfraRef().getName());
-        assertEquals(environment.namespace(), t1.getStatus().getMessagingInfraRef().getNamespace());
+        assertEquals("default-infra", t1.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(environment.namespace(), t1.getStatus().getMessagingInfrastructureRef().getNamespace());
 
         t2 = MessagingTenantResourceType.getOperation().inNamespace(t2.getMetadata().getNamespace()).withName(t2.getMetadata().getName()).get();
         assertNotNull(t2);
         condition = MessagingTenantResourceType.getCondition(t2.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t2.getStatus().getMessagingInfraRef().getName());
-        assertEquals(environment.namespace(), t2.getStatus().getMessagingInfraRef().getNamespace());
+        assertEquals("default-infra", t2.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(environment.namespace(), t2.getStatus().getMessagingInfrastructureRef().getNamespace());
     }
 
     @Test
     public void testSelectors() {
-        MessagingInfra infra = new MessagingInfraBuilder()
+        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
                 .withNamespace(environment.namespace())
