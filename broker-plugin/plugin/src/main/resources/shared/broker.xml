@@ -92,6 +92,9 @@ under the License.
             <!-- we need this otherwise ./artemis data imp wouldn't work -->
             <permission type="manage" roles="manage"/>
          </security-setting>
+         <security-setting match="readiness">
+            <permission type="consume" roles="readiness"/>
+         </security-setting>
       </security-settings>
 
       <address-settings>

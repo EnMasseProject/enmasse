@@ -36,6 +36,7 @@ function configure_shared() {
     cp $CONFIG_TEMPLATES/shared/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     cp $CONFIG_TEMPLATES/shared/login.config /tmp/login.config
     cp $CONFIG_TEMPLATES/shared/artemis-roles.properties $BROKER_CONF_DIR/artemis-roles.properties
+    cp $CONFIG_TEMPLATES/shared/artemis-users.properties $BROKER_CONF_DIR/artemis-users.properties
     cp $CONFIG_TEMPLATES/shared/cert-roles.properties $BROKER_CONF_DIR/cert-roles.properties
     cp $CONFIG_TEMPLATES/shared/cert-users.properties /tmp/cert-users.properties
     export HAWTIO_ROLE=manage

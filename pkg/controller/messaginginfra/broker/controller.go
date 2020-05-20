@@ -211,8 +211,9 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyEnvSimple(container, "ADDRESS_FULL_POLICY", "FAIL")
 
 			install.ApplyEnvSimple(container, "PROBE_ADDRESS", "readiness")
-			install.ApplyEnvSimple(container, "PROBE_USERNAME", "admin")
-			install.ApplyEnvSimple(container, "PROBE_PASSWORD", "admin")
+			install.ApplyEnvSimple(container, "PROBE_USERNAME", "probe")
+			install.ApplyEnvSimple(container, "PROBE_PASSWORD", "probe")
+			install.ApplyEnvSimple(container, "PROBE_TIMEOUT", "2s")
 
 			install.ApplyVolumeMountSimple(container, "data", "/var/run/artemis", false)
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
@@ -248,6 +249,7 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 						},
 					},
 				},
+				TimeoutSeconds:      3,
 				InitialDelaySeconds: 30,
 			}
 
