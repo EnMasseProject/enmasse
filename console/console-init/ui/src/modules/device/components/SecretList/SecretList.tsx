@@ -9,14 +9,12 @@ import {
   GridItem,
   FormGroup,
   TextInput,
-  DropdownPosition,
   TextArea,
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithToggle } from "components";
-import { hasOwnProperty, ISelectOption } from "utils";
+import { hasOwnProperty } from "utils";
 
 export const dropdown_item_styles = StyleSheet.create({
   format_item: { whiteSpace: "normal", textAlign: "justify" },
@@ -24,16 +22,14 @@ export const dropdown_item_styles = StyleSheet.create({
   dropdown_toggle_align: { flex: "1" }
 });
 
-export const secrets_styles = StyleSheet.create({
+const styles = StyleSheet.create({
   delete_secret: { float: "right" },
-  not_before: { marginRight: "10px" }
+  not_before: { marginRight: 10 }
 });
 
 export interface ISecret {
   id?: string;
   "pwd-hash"?: string;
-  "pwd-function"?: string;
-  salt?: string;
   "not-before"?: string;
   "not-after"?: string;
   comment?: string;
@@ -66,11 +62,6 @@ export const SecretList: React.FC<ISecretListProps> = ({
   credentialId,
   isExpandedAdvancedSetting
 }) => {
-  const pwdFunctionOptions: ISelectOption[] = [
-    { key: "function", label: "function name", value: "function name" },
-    { key: "x-509-certificate", label: "X-509 Certificate", value: "X-509" }
-  ];
-
   const handleInputChangeSecrets = (
     id: string,
     evt: any,
@@ -87,30 +78,16 @@ export const SecretList: React.FC<ISecretListProps> = ({
   ) => {
     const isRequired = index === 0 ? true : false;
     return (
-      <GridItem span={12}>
-        {index > 0 && (
-          <GridItem span={12}>
-            <Button
-              className={secrets_styles.delete_secret}
-              variant="link"
-              type="button"
-              icon={<MinusCircleIcon />}
-              onClick={() => onDeleteSecrets(credentialId, "secrets", id)}
-            >
-              Delete Secrets
-              <br />
-            </Button>
-          </GridItem>
-        )}
+      <>
         {hasOwnProperty(secret, "pwd-hash") && (
           <GridItem span={12}>
             <FormGroup
-              fieldId={"pwd-hash" + id}
+              fieldId={"sc-pwd-hash-textinput-" + id}
               label="Password"
               isRequired={isRequired}
             >
               <TextInput
-                id={"pwd-hash" + id}
+                id={"sc-pwd-hash-textinput-" + id}
                 isRequired={isRequired}
                 type="password"
                 name="pwd-hash"
@@ -119,13 +96,18 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 }
               />
             </FormGroup>
+            <br />
           </GridItem>
         )}
         {hasOwnProperty(secret, "key") && (
           <GridItem span={12}>
-            <FormGroup fieldId={"key" + id} label="Key" isRequired={isRequired}>
+            <FormGroup
+              fieldId={"sc-key-textinput-" + id}
+              label="Key"
+              isRequired={isRequired}
+            >
               <TextInput
-                id={"key" + id}
+                id={"sc-key-textinput-" + id}
                 isRequired={isRequired}
                 type="text"
                 name="key"
@@ -136,56 +118,22 @@ export const SecretList: React.FC<ISecretListProps> = ({
             </FormGroup>
           </GridItem>
         )}
-        <br />
-      </GridItem>
+      </>
     );
   };
 
   const advancedSecretsSetting = (secret: ISecret, id: string) => {
     return (
       <>
-        {hasOwnProperty(secret, "pwd-function") && (
-          <GridItem span={6}>
-            <FormGroup fieldId={"pwd-function" + id} label="Hash-function">
-              <DropdownWithToggle
-                id={"pwd-function-" + id}
-                name="pwd-function"
-                className={css(dropdown_item_styles.dropdown_align)}
-                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                position={DropdownPosition.left}
-                onSelectItem={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
-                dropdownItems={pwdFunctionOptions}
-                value={secret["pwd-function"] || ""}
-              />
-            </FormGroup>
-          </GridItem>
-        )}
-        {hasOwnProperty(secret, "salt") && (
-          <GridItem span={6}>
-            <FormGroup fieldId={"salt" + id} label="Salt">
-              <TextInput
-                id={"salt" + id}
-                type="text"
-                name="salt"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
-              />
-            </FormGroup>
-            <br />
-          </GridItem>
-        )}
         {hasOwnProperty(secret, "not-before") && (
           <GridItem span={6}>
             <FormGroup
-              fieldId={"not-before" + id}
-              label="Time before"
-              className={secrets_styles.not_before}
+              fieldId={"sc-not-before-textinput-" + id}
+              label="Not before"
+              className={css(styles.not_before)}
             >
               <TextInput
-                id={"not-before" + id}
+                id={"sc-not-before-textinput-" + id}
                 type="datetime-local"
                 name="not-before"
                 placeholder="YYYY-MM-DD 00:00"
@@ -198,9 +146,9 @@ export const SecretList: React.FC<ISecretListProps> = ({
         )}
         {hasOwnProperty(secret, "not-after") && (
           <GridItem span={6}>
-            <FormGroup fieldId={"not-after" + id} label="Time after">
+            <FormGroup fieldId={"not-after" + id} label="Not after">
               <TextInput
-                id={"not-after" + id}
+                id={"sc-not-after-textinput-" + id}
                 type="datetime-local"
                 name="not-after"
                 placeholder="YYYY-MM-DD 00:00"
@@ -209,20 +157,33 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 }
               />
             </FormGroup>
-            <br />
           </GridItem>
         )}
         {hasOwnProperty(secret, "comment") && (
           <GridItem span={12}>
-            <FormGroup fieldId={"comment" + id} label="Comment">
+            <br />
+            <FormGroup fieldId={"sc-comment-textinput-" + id} label="Comment">
               <TextArea
-                id={"comment" + id}
+                id={"sc-comment-textinput-" + id}
                 name="comment"
                 onChange={(value, event) =>
                   handleInputChangeSecrets(credentialId, event, value, id)
                 }
               />
             </FormGroup>
+          </GridItem>
+        )}
+        {secrets.length > 1 && (
+          <GridItem span={12}>
+            <Button
+              className={css(styles.delete_secret)}
+              variant="link"
+              type="button"
+              icon={<MinusCircleIcon />}
+              onClick={() => onDeleteSecrets(credentialId, "secrets", id)}
+            >
+              Delete Secret
+            </Button>
           </GridItem>
         )}
       </>
