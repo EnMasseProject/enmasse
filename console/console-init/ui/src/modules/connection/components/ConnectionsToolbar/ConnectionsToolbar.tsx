@@ -59,13 +59,14 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
-    { key: "hostname", value: "Hostname", index: 0 },
-    { key: "containerId", value: "Container ID", index: 1 },
-    { key: "protocol", value: "Protocol", index: 2 },
-    { key: "messageIn", value: "Message In", index: 3 },
-    { key: "messageOut", value: "Message Out", index: 4 },
-    { key: "sender", value: "Senders", index: 5 },
-    { key: "receiver", value: "Receivers", index: 6 }
+    { key: "hostname", value: "Hostname", index: 1 },
+    { key: "containerId", value: "Container ID", index: 2 },
+    { key: "timeCreated", value: "Time created", index: 3 },
+    { key: "protocol", value: "Protocol", index: 4 },
+    { key: "messageIn", value: "Message In", index: 5 },
+    { key: "messageOut", value: "Message Out", index: 6 },
+    { key: "sender", value: "Senders", index: 7 },
+    { key: "receiver", value: "Receivers", index: 8 }
   ];
   const dropdownItems = [
     <DropdownItem

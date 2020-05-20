@@ -45,28 +45,28 @@ const ALL_CONECTION_LIST_SORT = (sortBy?: ISortBy) => {
   let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
-      case 0:
+      case 1:
         orderBy = "`$.spec.hostname` ";
         break;
-      case 1:
+      case 2:
         orderBy = "`$.spec.containerId` ";
         break;
-      case 2:
+      case 3:
         orderBy = "`$.spec.protocol` ";
         break;
-      case 3:
+      case 4:
         orderBy = "`$.metadata.creationTimestamp` ";
         break;
-      case 4:
+      case 5:
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
-      case 5:
+      case 6:
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
-      case 6:
+      case 7:
         orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
         break;
-      case 7:
+      case 8:
         orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
