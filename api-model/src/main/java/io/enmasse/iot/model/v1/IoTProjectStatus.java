@@ -30,7 +30,7 @@ public class IoTProjectStatus {
     private ExternalDownstreamStrategy downstreamEndpoint;
     private List<ProjectCondition> conditions;
     private String phase;
-    private String phaseReason;
+    private String message;
     private AcceptedStatus accepted;
     private ManagedStatus managed;
 
@@ -66,12 +66,12 @@ public class IoTProjectStatus {
         return phase;
     }
 
-    public void setPhaseReason(String phaseReason) {
-        this.phaseReason = phaseReason;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
-    public String getPhaseReason() {
-        return phaseReason;
+    public String getMessage() {
+        return message;
     }
 
     public void setAccepted(AcceptedStatus accepted) {

@@ -27,8 +27,8 @@ type IoTProjectSpec struct {
 }
 
 type IoTProjectStatus struct {
-	Phase       ProjectPhaseType `json:"phase"`
-	PhaseReason string           `json:"phaseReason,omitempty"`
+	Phase   ProjectPhaseType `json:"phase"`
+	Message string           `json:"message,omitempty"`
 
 	TenantName         string                 `json:"tenantName"`
 	DownstreamEndpoint *ConnectionInformation `json:"downstreamEndpoint,omitempty"`
