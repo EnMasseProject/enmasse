@@ -1530,11 +1530,11 @@
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpointList",
       "javaType": "MessagingEndpointList"
     },
-    "MessagingInfra": {
+    "MessagingInfrastructure": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructure",
       "javaType": "MessagingInfrastructure"
     },
-    "MessagingInfraList": {
+    "MessagingInfrastructureList": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureList",
       "javaType": "MessagingInfrastructureList"
     },
