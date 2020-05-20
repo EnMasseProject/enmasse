@@ -144,10 +144,12 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
   const onPurge = async (address: IAddress) => {
     if (address) {
       const variables = {
-        a: {
-          name: address.name,
-          namespace: address.namespace
-        }
+        addrs: [
+          {
+            name: address.name,
+            namespace: address.namespace
+          }
+        ]
       };
       setPurgeAddressQueryVariables(variables);
     }
