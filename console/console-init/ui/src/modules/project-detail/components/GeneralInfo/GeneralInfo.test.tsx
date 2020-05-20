@@ -6,30 +6,23 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { GeneralInfo, IInfoTypePlan } from "./GeneralInfo";
-import { kFormatter } from "utils";
+import { GeneralInfo } from "./GeneralInfo";
 
 describe("<GeneralInfo />", () => {
   it("should renders a general info", () => {
-    const eventAddressName: IInfoTypePlan = {
-      type: "qpid-jms:sender"
-    };
-    const telemetryAddressName: IInfoTypePlan = {
-      type: "qpid-jms:sender"
-    };
-    const commandAddressName: IInfoTypePlan = {
-      type: "qpid-jms:sender",
-      plan: "Reciever-156458"
-    };
+    const eventAddressName: Array<string> = ["qpid-jms:sender"];
+    const telemetryAddressName: Array<string> = ["qpid-jms:sender"];
+    const commandAddressName: Array<string> = ["qpid-jms:sender"];
     const props = {
       addressSpace: "devops_iot",
-      eventAddressName: eventAddressName,
-      telemetryAddressName: telemetryAddressName,
-      commandAddressName: commandAddressName,
+      eventAddresses: eventAddressName,
+      telemetryAddresses: telemetryAddressName,
+      commandAddresses: commandAddressName,
       maxConnection: 50000,
       dataVolume: 50000,
       startDate: "",
-      endDate: ""
+      endDate: "",
+      namespace: "namespace"
     };
     const { getByText } = render(
       <MemoryRouter>

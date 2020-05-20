@@ -149,12 +149,10 @@ const hasOwnProperty = (obj: Object, property: string) => {
   }
 };
 
-const getCombinedString = (a: string, b?: string) => {
-  let s: string = "";
-  s += a;
-  if (b !== undefined) {
-    s += ", ";
-    s += b;
+const getCombinedString = (list: Array<string>) => {
+  let s: string = list[0];
+  for (let i = 1; i < list.length; i++) {
+    s += `i, ${list[i]}`;
   }
   return s;
 };
