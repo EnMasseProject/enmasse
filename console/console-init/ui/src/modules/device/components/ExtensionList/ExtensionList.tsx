@@ -77,7 +77,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
     <>
       <Grid id={"el-list-grid"}>
         <GridItem span={12}>
-          <DividerWithHeading heading={"Ext"} />
+          <DividerWithHeading title={"Ext"} />
           <br />
         </GridItem>
         {extensions &&

@@ -14,15 +14,15 @@ const styles = StyleSheet.create({
 });
 
 export interface IDividerWithHeading {
-  heading: string;
+  title: string;
 }
 
 export const DividerWithHeading: React.FC<IDividerWithHeading> = ({
-  heading
+  title
 }) => {
   return (
     <div className={styles.container}>
-      {heading}
+      {title}
       <Divider className={styles.divider_align} />
     </div>
   );

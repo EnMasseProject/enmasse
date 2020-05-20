@@ -98,6 +98,14 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
       handleInputChange(id, event, checked);
     };
 
+    const addMoreSecret = () => {
+      addMoreItem(id, "secrets");
+    };
+
+    const addMoreExtension = () => {
+      addMoreItem(id, "ext");
+    };
+
     return (
       <>
         <SecretList
@@ -115,7 +123,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                   variant="link"
                   type="button"
                   icon={<PlusCircleIcon />}
-                  onClick={() => addMoreItem(id, "secrets")}
+                  onClick={addMoreSecret}
                 >
                   Add more secret
                 </Button>
@@ -134,13 +142,13 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                 className={styles.addMoreExt}
                 type="button"
                 icon={<PlusCircleIcon />}
-                onClick={() => addMoreItem(id, "ext")}
+                onClick={addMoreExtension}
               >
                 Add more Ext Key/Value
               </Button>
             </GridItem>
             <GridItem span={12}>
-              <DividerWithHeading heading={"Status"} />
+              <DividerWithHeading title={"Status"} />
               <br />
             </GridItem>
             <GridItem span={10}>
@@ -171,6 +179,10 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
       return false;
     }
     return true;
+  };
+
+  const addMoreCredential = () => {
+    addMoreItem();
   };
 
   return (
@@ -210,7 +222,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         label="Auth ID"
                       >
                         <TextInput
-                          id={"cl-auth-id-textinput" + id}
+                          id={"cl-auth-id-textinput-" + id}
                           type="text"
                           name="auth-id"
                           isRequired
@@ -241,7 +253,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                       {shouldSecretsHeadingVisible(
                         type,
                         isExpandedAdvancedSetting
-                      ) && <DividerWithHeading heading={"Secrets"} />}
+                      ) && <DividerWithHeading title={"Secrets"} />}
                       {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
                       <Expandable
                         toggleText={
@@ -270,7 +282,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                 variant="link"
                 type="button"
                 icon={<PlusCircleIcon />}
-                onClick={() => addMoreItem()}
+                onClick={addMoreCredential}
               >
                 Add more credentials
               </Button>
