@@ -6,7 +6,7 @@
 import { IConnection } from "modules/connection";
 
 const getFilteredConnectionNames = (connections: IConnection[]) => {
-  return connections && connections.map(connection => connection.name);
+  return connections && connections.map(connection => connection.hostname);
 };
 
 const getHeaderTextForCloseAll = (connections: IConnection[]) => {
