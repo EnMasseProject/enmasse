@@ -1,6 +1,9 @@
 import { ISelectOption } from "utils";
 import { IDeviceFilter } from "../components";
 
+/**
+ * dropdown options
+ */
 const deviceTypeOptions: ISelectOption[] = [
   {
     key: "direct",
@@ -36,6 +39,12 @@ const deviceStatusOptions: ISelectOption[] = [
   }
 ];
 
+const credentialTypeOptions: ISelectOption[] = [
+  { key: "hashed_password", label: "Password", value: "hashed_password" },
+  { key: "x509", label: "X-509 Certificate", value: "x509" },
+  { key: "psk", label: "PSK", value: "psk" }
+];
+
 const getInitialFilter = () => {
   let filter: IDeviceFilter = {
     deviceId: "",
@@ -60,4 +69,17 @@ const getInitialFilter = () => {
   return filter;
 };
 
-export { deviceTypeOptions, deviceStatusOptions, getInitialFilter };
+/**
+ * key value constants
+ */
+const HIDE_ADVANCE_SETTING = "Hide advance setting";
+const SHOW_ADVANCE_SETTING = "Show advanced setting";
+
+export {
+  deviceTypeOptions,
+  deviceStatusOptions,
+  getInitialFilter,
+  HIDE_ADVANCE_SETTING,
+  SHOW_ADVANCE_SETTING,
+  credentialTypeOptions
+};

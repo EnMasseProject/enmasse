@@ -18,21 +18,35 @@ import {
   CardActions,
   Expandable
 } from "@patternfly/react-core";
-import { PlusCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
+import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithToggle, SwitchWithToggle } from "components";
+import {
+  DropdownWithToggle,
+  SwitchWithToggle,
+  DividerWithHeading
+} from "components";
 import {
   SecretList,
   ExtensionList,
   ISecret,
-  IExtension,
-  dropdown_item_styles
+  IExtension
 } from "modules/device/components";
-import { findIndexByProperty, ISelectOption } from "utils";
+import { findIndexByProperty } from "utils";
+import {
+  credentialTypeOptions,
+  SHOW_ADVANCE_SETTING,
+  HIDE_ADVANCE_SETTING
+} from "modules/device/utils";
 
-export const credentialList_styles = StyleSheet.create({
+const styles = StyleSheet.create({
   addMoreScrets: { marginLeft: "-15px", marginBottom: "20px" },
-  addMoreExt: { marginLeft: "-15px" }
+  addMoreExt: { marginLeft: "-15px" },
+  format_item: { whiteSpace: "normal", textAlign: "justify" },
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: "1" },
+  crd_section: {
+    marginTop: "var(--pf-global--spacer--xl)"
+  }
 });
 
 export interface ICredential {
@@ -50,7 +64,7 @@ export interface ICredentialListProps {
   handleInputChange: (
     id: string,
     event: any,
-    value: any,
+    value: string | boolean,
     childObjId?: string,
     property?: string
   ) => void;
@@ -68,12 +82,6 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
   onSelectType,
   onDeleteItem
 }) => {
-  const typeOptions: ISelectOption[] = [
-    { key: "hashed_password", label: "Password", value: "hashed_password" },
-    { key: "x509", label: "X-509 Certificate", value: "x509" },
-    { key: "psk", label: "PSK", value: "psk" }
-  ];
-
   const showAdvancedSetting = (
     id: string,
     isExpandedAdvancedSetting: boolean,
@@ -101,7 +109,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
         />
         {isExpandedAdvancedSetting && (
           <Grid>
-            <GridItem span={12} className={credentialList_styles.addMoreScrets}>
+            <GridItem span={12} className={styles.addMoreScrets}>
               {selectedType && (
                 <Button
                   variant="link"
@@ -109,7 +117,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                   icon={<PlusCircleIcon />}
                   onClick={() => addMoreItem(id, "secrets")}
                 >
-                  Add more secrets
+                  Add more secret
                 </Button>
               )}
             </GridItem>
@@ -120,9 +128,10 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               onDeleteExtension={onDeleteItem}
             />
             <GridItem span={12}>
+              <br />
               <Button
                 variant="link"
-                className={credentialList_styles.addMoreExt}
+                className={styles.addMoreExt}
                 type="button"
                 icon={<PlusCircleIcon />}
                 onClick={() => addMoreItem(id, "ext")}
@@ -131,18 +140,15 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               </Button>
             </GridItem>
             <GridItem span={12}>
-              <br />
-              Status
-              <br />
+              <DividerWithHeading heading={"Status"} />
               <br />
             </GridItem>
             <GridItem span={10}>
-              Enable or disable this credential set. It can also be modified
-              after created.
+              Enable or disable this credential set.
             </GridItem>
             <GridItem span={2}>
               <SwitchWithToggle
-                id={"credential-list-status-" + id}
+                id={"cl-status-switch-" + id}
                 label={"Enabled"}
                 labelOff={"Disabled"}
                 isChecked={isEnabledStatus}
@@ -157,6 +163,16 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
     );
   };
 
+  const shouldSecretsHeadingVisible = (
+    type: string,
+    isExpandedAdvancedSetting: boolean
+  ) => {
+    if (type === "x509" && !isExpandedAdvancedSetting) {
+      return false;
+    }
+    return true;
+  };
+
   return (
     <>
       {credentials &&
@@ -166,30 +182,35 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
             isExpandedAdvancedSetting = false,
             type = ""
           } = credential;
-          const isSecretsHeadingVisible = type === "x509" ? false : true;
           return (
             <Grid key={id}>
               <GridItem span={6}>
                 <Card>
                   <CardHead>
                     <CardActions>
-                      <Button
-                        variant="link"
-                        type="button"
-                        onClick={() => onDeleteItem(id)}
-                        icon={<ErrorCircleOIcon />}
-                      />
+                      {credentials.length > 1 && (
+                        <Button
+                          variant="link"
+                          type="button"
+                          onClick={() => onDeleteItem(id)}
+                          icon={
+                            <TimesIcon
+                              color={"var(--pf-c-button--m-plain--Color)"}
+                            />
+                          }
+                        />
+                      )}
                     </CardActions>
                   </CardHead>
                   <CardBody>
                     <Form>
                       <FormGroup
-                        fieldId={"auth-id" + id}
+                        fieldId={"cl-auth-id-textinput-" + id}
                         isRequired
                         label="Auth ID"
                       >
                         <TextInput
-                          id={"auth-id" + id}
+                          id={"cl-auth-id-textinput" + id}
                           type="text"
                           name="auth-id"
                           isRequired
@@ -199,33 +220,34 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         />
                       </FormGroup>
                       <FormGroup
-                        fieldId={"type" + id}
+                        fieldId={"cl-type-dropdown-" + id}
                         isRequired
                         label="Credential type"
                       >
                         <DropdownWithToggle
-                          id={"type" + id}
+                          id={"cl-type-dropdown-" + id}
                           name="type"
-                          className={css(dropdown_item_styles.dropdown_align)}
-                          toggleClass={css(
-                            dropdown_item_styles.dropdown_toggle_align
-                          )}
+                          className={css(styles.dropdown_align)}
+                          toggleClass={css(styles.dropdown_toggle_align)}
                           position={DropdownPosition.left}
                           onSelectItem={(value, event) =>
                             onSelectType(id, event, value)
                           }
-                          dropdownItems={typeOptions}
+                          dropdownItems={credentialTypeOptions}
                           value={type}
                           isLabelAndValueNotSame={true}
                         />
                       </FormGroup>
-                      {isSecretsHeadingVisible && <div>Secrets</div>}
+                      {shouldSecretsHeadingVisible(
+                        type,
+                        isExpandedAdvancedSetting
+                      ) && <DividerWithHeading heading={"Secrets"} />}
                       {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
                       <Expandable
                         toggleText={
                           isExpandedAdvancedSetting
-                            ? "Hide advance setting"
-                            : "Show advanced setting"
+                            ? HIDE_ADVANCE_SETTING
+                            : SHOW_ADVANCE_SETTING
                         }
                         onToggle={() => onToggleAdvancedSetting(id)}
                         isExpanded={isExpandedAdvancedSetting}
