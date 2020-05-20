@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     String testNamespace = "monitoring-test";
@@ -67,9 +69,9 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1");
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1");
 
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
 
         //tests address spaces ready goes from 0 to 1
         monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range));
@@ -96,6 +98,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
+        UserCredentials user = new UserCredentials("david", "password");
+        resourcesManager.createOrUpdateUser(addressSpace, user);
 
         Address topic = new AddressBuilder()
                 .withNewMetadata()
@@ -123,9 +127,17 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(topic, queue);
 
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2");
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2");
 
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0");
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0");
+
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "0",
+                Collections.singletonMap("address", queue.getSpec().getAddress()));
+
+        getClientUtils().sendDurableMessages(resourcesManager, addressSpace, user, 10, queue);
+
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
+                Collections.singletonMap("address", queue.getSpec().getAddress()));
     }
 
 }

@@ -15,10 +15,13 @@ import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
 
 public class MonitoringClient {
     private static final Logger LOGGER = CustomLogger.getLogger();
@@ -28,10 +31,14 @@ public class MonitoringClient {
         this.client = new PrometheusApiClient(endpoint);
     }
 
-    public void validateRangeQueryAndWait(String query, String expectedValue) {
+    public void validateQueryAndWait(String query, String expectedValue) {
+        validateQueryAndWait(query, expectedValue, Collections.emptyMap());
+    }
+
+    public void validateQueryAndWait(String query, String expectedValue, Map<String, String> labels) {
         TestUtils.waitUntilCondition(query, phase -> {
             try {
-                validateQuery(query, expectedValue);
+                validateQuery(query, expectedValue, labels);
                 return true;
             } catch (Exception e) {
                 if (phase == WaitPhase.LAST_TRY) {
@@ -57,29 +64,31 @@ public class MonitoringClient {
     }
 
     public void validateQuery(String query, String expectedValue) throws Exception {
+        validateQuery(query, expectedValue, Collections.emptyMap());
+    }
+
+    public void validateQuery(String query, String expectedValue, Map<String, String> labels) throws Exception {
         JsonObject queryResult = client.doQuery(query);
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, query, jsonResult -> {
+        boolean validateResult = metricQueryResultValidation(queryResult, query, labels, jsonResult -> {
             JsonArray valueArray = jsonResult.getJsonArray("value", new JsonArray());
             return valueArray.size() == 2 && valueArray.getString(1).equals(expectedValue);
         });
-        if (validateResult) {
-            return;
+        if (!validateResult) {
+            throw new Exception("Unexpected query result " + queryResult.encodePrettily());
         }
-        throw new Exception("Unexpected query result " + queryResult.encodePrettily());
     }
 
     public void validateRangeQuery(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
         JsonObject queryResult = client.doRangeQuery(query, String.valueOf(start.getEpochSecond()), String.valueOf(Instant.now().getEpochSecond()));
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, jsonResult -> {
+        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), jsonResult -> {
             JsonArray valuesArray = jsonResult.getJsonArray("values", new JsonArray());
             return rangeValidator.test(valuesArray.stream().map(obj -> (JsonArray) obj).map(array -> array.getString(1)).collect(Collectors.toList()));
         });
-        if (validateResult) {
-            return;
+        if (!validateResult) {
+            throw new Exception("Unexpected query result " + queryResult.encodePrettily());
         }
-        throw new Exception("Unexpected query result " + queryResult.encodePrettily());
     }
 
     public void waitUntilPrometheusReady() {
@@ -113,28 +122,29 @@ public class MonitoringClient {
         }
     }
 
-    private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Predicate<JsonObject> resultValidator) {
-        JsonObject data = getResults(queryResult, metricName);
+    private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Map<String, String> labels, Predicate<JsonObject> resultValidator) {
+        JsonObject data = getResults(queryResult, metricName, labels);
         if (data != null) {
             return resultValidator.test(data);
         }
         return false;
     }
 
-    private String getMetric(JsonObject queryResult, String metricName, String metricKey) {
-        JsonObject data = getResults(queryResult, metricName);
-        if (data != null) {
-            return data.getJsonObject("metric", new JsonObject()).getString(metricKey, "");
-        }
-        return null;
-    }
-
-    private JsonObject getResults(JsonObject queryResult, String metricName) {
+    private JsonObject getResults(JsonObject queryResult, String metricName, Map<String, String> labels) {
         JsonObject data = queryResult.getJsonObject("data", new JsonObject());
         for (Object result : data.getJsonArray("result", new JsonArray())) {
             JsonObject jsonResult = (JsonObject) result;
             if (jsonResult.getJsonObject("metric", new JsonObject()).getString("__name__", "").equals(metricName)) {
-                return jsonResult;
+                boolean match = true;
+                for (Map.Entry<String, String> label : labels.entrySet()) {
+                    if (!jsonResult.getJsonObject("metric", new JsonObject()).getString(label.getKey(), "").equals(label.getValue())) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    return jsonResult;
+                }
             }
         }
         return null;
