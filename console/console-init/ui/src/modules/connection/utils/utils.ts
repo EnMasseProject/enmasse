@@ -11,7 +11,7 @@ const getFilteredConnectionNames = (connections: IConnection[]) => {
 
 const getHeaderTextForCloseAll = (connections: IConnection[]) => {
   return connections && connections.length > 1
-    ? "Close thses Connections ?"
+    ? "Close these Connections ?"
     : "Close this Connection ?";
 };
 const getDetailTextForCloseAll = (connections: IConnection[]) => {
