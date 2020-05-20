@@ -24,7 +24,7 @@ func AddToManager(m manager.Manager) error {
 }
 
 func CheckUpgrade(m manager.Manager) error {
-	if util.IsModuleEnabled("UPGRADER") && !util.IsModuleEnabled("MESSAGING_INFRA") {
+	if util.IsModuleEnabled("UPGRADER") && !util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
 		upgrader, err := upgrader.New(m)
 		if err != nil {
 			return err

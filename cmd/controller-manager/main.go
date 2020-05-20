@@ -172,17 +172,17 @@ func main() {
 		},
 	}
 
-	if util.IsModuleEnabled("MESSAGING_INFRA") {
+	if util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
 				Version: "v1beta2",
-				Kind:    "MessagingInfra",
+				Kind:    "MessagingInfrastructure",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
 				Version: "v1beta2",
-				Kind:    "MessagingInfraList",
+				Kind:    "MessagingInfrastructureList",
 			},
 		)
 	}
