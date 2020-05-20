@@ -28,8 +28,8 @@ export const AddCredential: React.FC<{}> = () => {
     const initialState: ICredential = {
       id: uniqueId(),
       "auth-id": "",
-      type: "",
-      secrets: [{}],
+      type: "hashed_password",
+      secrets: [{ "pwd-hash": "" }],
       ext: [getExtensionsFieldsInitialState()],
       enabled: true,
       isExpandedAdvancedSetting: false
@@ -40,7 +40,7 @@ export const AddCredential: React.FC<{}> = () => {
   const [credentials, setCredentials] = useState([
     getCredentialsFieldsInitialState()
   ]);
-  const [type, setType] = useState();
+  const [type, setType] = useState<string>("hashed_password");
   const [activeCredentialFormId, setActiveCredentialFormId] = useState();
 
   const getSecretsFieldsInitialState = () => {
@@ -49,8 +49,6 @@ export const AddCredential: React.FC<{}> = () => {
       case "hashed_password":
         initialState = {
           "pwd-hash": "",
-          "pwd-function": "",
-          salt: "",
           "not-before": "",
           "not-after": "",
           comment: ""
@@ -87,11 +85,9 @@ export const AddCredential: React.FC<{}> = () => {
 
   const setSecretsInitialFormState = () => {
     const newCredentials = [...credentials];
-    const index = findIndexByProperty(
-      credentials,
-      "id",
-      activeCredentialFormId
-    );
+    const activeFormId =
+      activeCredentialFormId || newCredentials[newCredentials.length - 1].id;
+    const index = findIndexByProperty(credentials, "id", activeFormId);
     if (index >= 0) {
       const initialState = getFormInitialStateByProperty("secrets");
       newCredentials[index]["secrets"] = [{ id: uniqueId(), ...initialState }];
@@ -110,7 +106,7 @@ export const AddCredential: React.FC<{}> = () => {
   };
 
   const addMoreItem = (id?: string, property?: string) => {
-    let newCredentials: any[];
+    let newCredentials: ICredential[];
     /**
      * add more items for child fields i.e. secrets and extensions
      */
@@ -119,8 +115,8 @@ export const AddCredential: React.FC<{}> = () => {
       const index: number = findIndexByProperty(credentials, "id", id);
       if (index >= 0) {
         const initialState = getFormInitialStateByProperty(property);
-        const secrets = newCredentials[index][property];
-        newCredentials[index][property] = [
+        const secrets = (newCredentials[index] as any)[property];
+        (newCredentials[index] as any)[property] = [
           ...secrets,
           { id: uniqueId(), ...initialState }
         ];
@@ -136,15 +132,16 @@ export const AddCredential: React.FC<{}> = () => {
   };
 
   const onDeleteItem = (id: string, property?: string, childObjId?: string) => {
-    let newCredentials: any[] = [...credentials];
+    let newCredentials: ICredential[] = [...credentials];
     const index: number = findIndexByProperty(credentials, "id", id);
     /**
      * delete items for child fields i.e. secrets and extensions
      */
     if (id && property && childObjId && index >= 0) {
-      const items = newCredentials[index][property];
+      const items = (newCredentials[index] as any)[property];
       const itemIndex = findIndexByProperty(items, "id", childObjId);
-      itemIndex >= 0 && newCredentials[index][property].splice(itemIndex, 1);
+      itemIndex >= 0 &&
+        (newCredentials[index] as any)[property].splice(itemIndex, 1);
     } else if (id && index >= 0) {
       /**
        * delete credentilas
@@ -157,28 +154,30 @@ export const AddCredential: React.FC<{}> = () => {
   const handleInputChange = (
     id: string,
     evt: any,
-    value: string,
+    value: string | boolean,
     childObjId?: string,
     property?: string
   ) => {
     const elementName: string = evt.target.name;
-    const newCredentials: any[] = [...credentials];
+    const newCredentials: ICredential[] = [...credentials];
     const index: number = findIndexByProperty(newCredentials, "id", id);
     /**
      * save child object's fields value i.e. screts and extensions
      */
     if (index >= 0 && elementName) {
       if (childObjId && property) {
-        const items = newCredentials[index][property];
+        const items = (newCredentials[index] as any)[property];
         const itemIndex = findIndexByProperty(items, "id", childObjId);
         if (itemIndex >= 0) {
-          newCredentials[index][property][itemIndex][elementName] = value;
+          (newCredentials[index] as any)[property][itemIndex][
+            elementName
+          ] = value;
         }
       } else {
         /**
          * save crentials (parent object) fields value
          */
-        newCredentials[index][elementName] = value;
+        (newCredentials[index] as any)[elementName] = value;
       }
       setCredentials(newCredentials);
     }
