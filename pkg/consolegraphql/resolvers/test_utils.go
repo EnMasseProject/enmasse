@@ -132,17 +132,17 @@ type mockCollector struct {
 }
 
 type mockCommandDelegate struct {
-	purgeCount int
-	closeCount int
+	purged []metav1.ObjectMeta
+	closed []metav1.ObjectMeta
 }
 
-func (mcd *mockCommandDelegate) PurgeAddress(_ metav1.ObjectMeta) error {
-	mcd.purgeCount++
+func (mcd *mockCommandDelegate) PurgeAddress(a metav1.ObjectMeta) error {
+	mcd.purged = append(mcd.purged, a)
 	return nil
 }
 
-func (mcd *mockCommandDelegate) CloseConnection(_ metav1.ObjectMeta) error {
-	mcd.closeCount++
+func (mcd *mockCommandDelegate) CloseConnection(c metav1.ObjectMeta) error {
+	mcd.closed = append(mcd.closed, c)
 	return nil
 }
 

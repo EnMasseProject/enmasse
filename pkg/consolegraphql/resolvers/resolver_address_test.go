@@ -445,7 +445,7 @@ func TestPurgeQueue(t *testing.T) {
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, delegate.(*mockCommandDelegate).purgeCount)
+	assert.ElementsMatch(t, []metav1.ObjectMeta{addr.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
 }
 
 func TestPurgeQueues(t *testing.T) {
@@ -475,7 +475,7 @@ func TestPurgeQueues(t *testing.T) {
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 2, delegate.(*mockCommandDelegate).purgeCount)
+	assert.ElementsMatch(t, []metav1.ObjectMeta{addr1.ObjectMeta, addr2.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
 }
 
 func TestPurgeUnsupportedAddressType(t *testing.T) {
