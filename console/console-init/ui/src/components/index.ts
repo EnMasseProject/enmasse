@@ -33,3 +33,4 @@ export * from "./NoResultFound";
 export * from "./DropdownWithBulkSelect";
 export * from "./SwitchWithToggle";
 export * from "./MetadataListTable";
+export * from "./DividerWithHeading";
