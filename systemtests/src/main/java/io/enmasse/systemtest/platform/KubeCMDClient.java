@@ -210,7 +210,7 @@ public class KubeCMDClient {
 
     public static ExecutionResultData checkPermission(String operation, String kind, String namespace, String serviceaccount) {
         List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
-        return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, false);
     }
 
     public static void loginUser(String apiToken) {
