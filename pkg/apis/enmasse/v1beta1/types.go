@@ -118,7 +118,7 @@ type ExposeSpec struct {
 	RouteTlsTermination string `json:"routeTlsTermination"`
 
 	LoadBalancerPorts        []string `json:"loadBalancerPorts"`
-	LoadBalancerSourceRanges []string `json:"loadBalancerPorts"`
+	LoadBalancerSourceRanges []string `json:"LoadBalancerSourceRanges"`
 }
 
 type ConnectorSpec struct {
