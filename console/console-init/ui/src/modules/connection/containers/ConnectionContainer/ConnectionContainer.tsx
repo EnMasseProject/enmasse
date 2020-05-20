@@ -14,7 +14,8 @@ import {
 import {
   IConnection,
   ConnectionList,
-  EmptyConnection
+  EmptyConnection,
+  ConnectionStatus
 } from "modules/connection/components";
 import { getFilteredValue, compareObject } from "utils";
 import { IConnectionListResponse } from "schema/ResponseTypes";
@@ -109,7 +110,7 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
         ),
         senders: getFilteredValue(connection.metrics, "enmasse_senders"),
         receivers: getFilteredValue(connection.metrics, "enmasse_receivers"),
-        status: "running",
+        status: ConnectionStatus.RUNNING,
         name: connection.metadata.name,
         creationTimestamp: connection.metadata.creationTimestamp,
         selected:
@@ -123,7 +124,6 @@ export const ConnectionContainer: React.FunctionComponent<IConnectionProps> = ({
             )
           ).length === 1
       }));
-    // console.log("list", connectionList[0].selected);
     return connectionList;
   };
 

@@ -7,7 +7,8 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import {
   ConnectionList,
-  IConnection
+  IConnection,
+  ConnectionStatus
 } from "modules/connection/components/ConnectionList/ConnectionList";
 import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
 import { action } from "@storybook/addon-actions";
@@ -26,7 +27,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno2",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   },
@@ -39,7 +40,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno3",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   },
@@ -52,7 +53,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno4",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   }

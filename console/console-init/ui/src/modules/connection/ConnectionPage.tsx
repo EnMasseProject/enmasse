@@ -97,18 +97,18 @@ export default function ConnectionPage() {
   };
 
   const onCloseAll = () => {
-    let variable: any = [];
+    let queryConnectionVariable: Array<{
+      name: string;
+      namespace: string;
+    }> = [];
     selectedConnections.map((connection: IConnection) =>
-      variable.push({
+      queryConnectionVariable.push({
         name: connection.name,
         namespace: namespace
       })
     );
-    const variables = {
-      cons: variable
-    };
-    if (variables) {
-      setCloseConnectionQueryVariables(variables);
+    if (queryConnectionVariable.length > 0) {
+      setCloseConnectionQueryVariables({ cons: queryConnectionVariable });
     }
     setSelectedConnections([]);
   };

@@ -33,6 +33,11 @@ interface IConnectionListProps {
     isSelected: boolean
   ) => void;
 }
+export enum ConnectionStatus {
+  CREATING = "creating",
+  DELETING = "deleting",
+  RUNNING = "running"
+}
 export interface IConnection {
   hostname: string;
   containerId: string;
@@ -42,7 +47,7 @@ export interface IConnection {
   messageOut: number | string;
   senders: number | string;
   receivers: number | string;
-  status: "creating" | "deleting" | "running";
+  status: ConnectionStatus;
   name: string;
   creationTimestamp: string;
   selected?: boolean;
@@ -59,37 +64,48 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
 }) => {
   const { width } = useWindowDimensions();
 
-  const toTableCells = (row: IConnection) => {
+  const toTableCells = (connection: IConnection) => {
+    const {
+      selected,
+      name,
+      hostname,
+      containerId,
+      protocol,
+      encrypted,
+      creationTimestamp,
+      messageIn,
+      messageOut,
+      senders,
+      receivers
+    } = connection || {};
     const tableRow: IRowData = {
-      selected: row.selected,
+      selected: selected,
       cells: [
         {
-          title: <Link to={`connections/${row.name}`}>{row.hostname}</Link>
+          title: <Link to={`connections/${name}`}>{hostname}</Link>
         },
-        row.containerId,
+        containerId,
         {
           title: (
             <ConnectionProtocolFormat
-              protocol={row.protocol}
-              encrypted={row.encrypted}
+              protocol={protocol}
+              encrypted={encrypted}
             />
           )
         },
         {
           title: (
             <>
-              <FormatDistance date={row.creationTimestamp} /> ago
+              <FormatDistance date={creationTimestamp} /> ago
             </>
           )
         },
-        row.messageIn,
-        !addressSpaceType || addressSpaceType === "brokered"
-          ? ""
-          : row.messageOut,
-        row.senders,
-        row.receivers
+        messageIn,
+        !addressSpaceType || addressSpaceType === "brokered" ? "" : messageOut,
+        senders,
+        receivers
       ],
-      originalData: row
+      originalData: connection
     };
     return tableRow;
   };
@@ -159,9 +175,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
     let rows;
     if (rowIndex === -1) {
       rows = tableRows.map(row => {
-        const data = row;
-        data.selected = isSelected;
-        return data;
+        const rowCopy = row;
+        rowCopy.selected = isSelected;
+        return rowCopy;
       });
       onSelectAllConnection(
         rows.map(row => row.originalData),
