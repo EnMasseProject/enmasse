@@ -97,14 +97,11 @@ const credentials = [
     secrets: [
       {
         "not-after": "2020-10-01T10:00:00Z",
-        "pwd-hash": "bjb232138d",
-        "pwd-function": "sha-512",
-        salt: "213h"
+        "pwd-hash": "bjb232138d"
       },
       {
         "not-before": "2020-10-01T10:00:00Z",
-        "pwd-hash": "adfhk327823",
-        "pwd-function": "bcrypt"
+        "pwd-hash": "adfhk327823"
       }
     ]
   },
@@ -114,7 +111,7 @@ const credentials = [
     enabled: true,
     secrets: [
       {
-        "pwd-function": "bcrypt"
+        comment: "was just for testing"
       }
     ]
   },
