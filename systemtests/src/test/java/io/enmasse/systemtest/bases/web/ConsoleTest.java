@@ -856,6 +856,45 @@ public abstract class ConsoleTest extends TestBase {
         assertThat(client.getMessages().size(), is(0));
     }
 
+    protected void doTestConnectionClose(AddressSpace addressSpace) throws Exception {
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue1")
+                .withPlan(addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString()) ? DestinationPlan.BROKERED_QUEUE : DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+
+        resourcesManager.setAddresses(queue);
+
+        ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientReceiver())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withCredentials(defaultCredentials)
+                .withCount(1)
+                .withReconnect(false)
+                .withTimeout(180);
+
+        client.withAddress(queue).runAsync(false);
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openConnectionList(addressSpace);
+
+        selenium.waitUntilPropertyPresent(60, 1, () -> consolePage.getConnectionItems().size());
+
+        Optional<ConnectionWebItem> connRow = consolePage.getConnectionItems().stream().findFirst();
+        assertThat("Connection item not found", connRow.isPresent(), is(true));
+
+        consolePage.closeSelectedConnection(connRow.get());
+
+        selenium.waitUntilPropertyPresent(60, 0, () -> consolePage.getConnectionItems().size());
+    }
+
     protected void doTestEditAddress(AddressSpace addressSpace, Address address, String plan) throws Exception {
         resourcesManager.setAddresses(address);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);

@@ -5,9 +5,11 @@
 package io.enmasse.systemtest.selenium.resources;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 
 public class ConnectionWebItem extends WebItem implements Comparable<ConnectionWebItem> {
+    private WebElement checkBox;
     private String host;
     private WebElement hostRoute;
     private String containerId;
@@ -20,13 +22,19 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
 
     public ConnectionWebItem(WebElement item) {
         this.webItem = item;
+        this.checkBox = webItem.findElement(By.xpath("./td[@data-key='0']")).findElement(By.tagName("input"));
         this.host = parseName(webItem.findElement(By.xpath("./td[@data-label='Hostname']")));
         this.hostRoute = webItem.findElement(By.xpath("./td[@data-label='Hostname']"));
         this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
         this.protocol = webItem.findElement(By.xpath("./td[@data-label='Protocol']")).getText().split(" ")[0];
         this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
-        this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
-        this.messagesOut = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-6']")).getText());
+        this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='Message In']")).getText());
+
+        // messagesOut won't be present for brokered address spaces.
+        By messsageOutXpath = By.xpath("./td[@data-label='Message Out']");
+        if (!webItem.findElements(messsageOutXpath).isEmpty()) {
+            this.messagesOut = defaultDouble(webItem.findElement(messsageOutXpath).getText());
+        }
         this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
         this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
     }
@@ -64,6 +72,10 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
     }
 
     public WebElement getHostRoute() { return hostRoute; }
+
+    public WebElement getCheckBox() {
+        return checkBox;
+    }
 
     private String parseName(WebElement elem) {
         try {

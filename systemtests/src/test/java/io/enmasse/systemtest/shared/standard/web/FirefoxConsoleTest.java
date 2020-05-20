@@ -213,6 +213,13 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
     }
 
     @Test
+    @ExternalClients
+    @Tag(ACCEPTANCE)
+    void testConnectionClose() throws Exception {
+        doTestConnectionClose(getSharedAddressSpace());
+    }
+
+    @Test
     void testEditAddress() throws Exception {
         doTestEditAddress(getSharedAddressSpace(), new AddressBuilder()
                         .withNewMetadata()

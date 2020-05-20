@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -134,6 +135,10 @@ public class ConsoleWebPage implements IWebPage {
         return getContentElem().findElement(By.id("al-filter-overflow-kebab"));
     }
 
+    private WebElement getConnectionTableDropDown() {
+        return getContentElem().findElement(By.id("cl-filter-overflow-kebab"));
+    }
+
     private WebElement getAddressSpacesDeleteAllButton() {
         return getAddressSpacesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
     }
@@ -144,6 +149,10 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getAddressesPurgeAllButton() {
         return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Purge Selected')]"));
+    }
+
+    private WebElement getConnectionsCloseAllButton() {
+        return getConnectionTableDropDown().findElement(By.xpath("//button[contains(text(), 'Close Selected')]"));
     }
 
     private WebElement getAddressesDeleteConfirmButton() {
@@ -233,7 +242,7 @@ public class ConsoleWebPage implements IWebPage {
             try {
                 return getter.get();
             } catch (StaleElementReferenceException e) {
-                log.info("StaleElementReferenceException during getConnectionItems() - retriying");
+                log.info("StaleElementReferenceException during getConnectionItems() - retrying");
             }
             try {
                 Thread.sleep(1000);
@@ -825,6 +834,16 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getConfirmButton());
     }
 
+    public void closeSelectedConnection(ConnectionWebItem... connectionWebItems) {
+        Arrays.stream(connectionWebItems).forEach(c -> {
+            selenium.clickOnItem(c.getCheckBox(), "Select connection");
+
+        });
+        selenium.clickOnItem(getConnectionTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getConnectionsCloseAllButton());
+        selenium.clickOnItem(getConfirmButton());
+    }
+
     public void changeAddressPlan(Address address, String plan) throws Exception {
         AddressWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
         selenium.clickOnItem(item.getActionDropDown(), "Action drop down");
@@ -910,10 +929,8 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isAddressSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-4");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-5");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case STORED_MESSAGES:
             case ADDRESS:
             case SENDERS:
@@ -927,10 +944,8 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-5");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-6");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case HOSTNAME:
             case CONTAINER_ID:
             case PROTOCOL:

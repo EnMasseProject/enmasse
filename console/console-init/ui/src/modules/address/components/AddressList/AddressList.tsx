@@ -205,7 +205,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ) : (
           "Message In/sec"
         ),
-      transforms: [sortable]
+      transforms: [sortable],
+      dataLabel: "Message In"
     },
     {
       title:
@@ -218,7 +219,8 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         ) : (
           "Message Out/sec"
         ),
-      transforms: [sortable]
+      transforms: [sortable],
+      dataLabel: "Message Out"
     },
     { title: "Stored Messages", transforms: [sortable] },
     { title: "Senders", transforms: [sortable] },

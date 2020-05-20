@@ -128,7 +128,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
         ) : (
           "Message In/sec"
         ),
-      transforms: [sortable]
+      transforms: [sortable],
+      dataLabel: "Message In"
     },
     !addressSpaceType || addressSpaceType === "brokered"
       ? ""
@@ -143,7 +144,8 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
             ) : (
               "Message Out/sec"
             ),
-          transforms: [sortable]
+          transforms: [sortable],
+          dataLabel: "Message Out"
         },
     {
       title: "Senders",
