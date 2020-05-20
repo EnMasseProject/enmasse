@@ -25,8 +25,8 @@ public class ConnectionWebItem extends WebItem implements Comparable<ConnectionW
         this.containerId = webItem.findElement(By.xpath("./td[@data-label='Container ID']")).getText();
         this.protocol = webItem.findElement(By.xpath("./td[@data-label='Protocol']")).getText().split(" ")[0];
         this.timeCreated = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
-        this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-4']")).getText());
-        this.messagesOut = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
+        this.messagesIn = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
+        this.messagesOut = defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-6']")).getText());
         this.senders = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
         this.receivers = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Receivers']")).getText());
     }
