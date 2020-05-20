@@ -4,7 +4,7 @@ include ../Makefile.go.mk
 build_deps: build/operatorImageMap.yaml
 
 run: build/operatorImageMap.yaml 
-	CONTROLLER_DISABLE_ALL=true CONTROLLER_ENABLE_MESSAGING_INFRA=true OPERATOR_NAME=enmasse-operator NAMESPACE=enmasse-infra ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
+	CONTROLLER_DISABLE_ALL=true CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE=true OPERATOR_NAME=enmasse-operator NAMESPACE=enmasse-infra ENMASSE_IMAGE_MAP_FILE=./build/operatorImageMap.yaml ./build/controller-manager
 
 build/operatorImageMap.yaml:
 	mkdir -p build

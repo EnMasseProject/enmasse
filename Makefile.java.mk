@@ -31,6 +31,9 @@ clean_java:
 	mvn clean $(MAVEN_ARGS)
 	rm -rf build target
 else
+build: build_deps
+	:
+
 clean_java:
 	rm -rf build target
 endif
