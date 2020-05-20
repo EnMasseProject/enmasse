@@ -80,8 +80,8 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   ];
 
   const onKebabSelect = async (event: any) => {
-    const value = event.target.value;
-    if (value && value === "closeAll") {
+    const kebabOptionValue = event.target.value;
+    if (kebabOptionValue && kebabOptionValue === "closeAll") {
       await onCloseAll();
     }
   };
