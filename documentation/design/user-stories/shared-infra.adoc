@@ -748,6 +748,7 @@ Create the following `MessagingAddressPlan` to enforce limits for multiple addre
 * If resource limit is not set - limit is not specified
 * If resource request is not set - it equals the limit
 * If resource is not set - no limits are specified
+* When configuring an address, the operator will look at the sum of limits for all addresses and check that the new address does not cause it to go above the limits set in the MessagingPlan. If it does, then status section would be updated with QuotaExceeded error.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -763,7 +764,8 @@ spec:
         queueSizeMemory: 5Mi
         queueSizeStorage: 20Mi
       limits:
-        # Amount of memory queues with this plan can use on the broker
+        # Amount of memory queues with this plan can use on the broker. This translates to the max-size-bytes
+        # address setting in the broker.
         queueSizeMemory: 10Mi
         # Amount of storage queues with this plan can use on the broker
         queueSizeStorage: 30Mi
