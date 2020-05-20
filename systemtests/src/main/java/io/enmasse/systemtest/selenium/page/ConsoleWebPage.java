@@ -928,9 +928,9 @@ public class ConsoleWebPage implements IWebPage {
     private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
             case MESSAGES_IN:
-                return dataLabel.equals("column-4");
-            case MESSAGES_OUT:
                 return dataLabel.equals("column-5");
+            case MESSAGES_OUT:
+                return dataLabel.equals("column-6");
             case HOSTNAME:
             case CONTAINER_ID:
             case PROTOCOL:
