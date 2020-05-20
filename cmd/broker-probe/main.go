@@ -40,9 +40,26 @@ func main() {
 		log.Fatal(err, "Error parsing duration")
 	}
 
-	client, err := amqp.Dial("amqp://127.0.0.1:5672", amqp.ConnSASLPlain(username, password), amqp.ConnConnectTimeout(probeTimeout), amqp.ConnProperty("product", "broker-probe"))
+	done := make(chan error)
+	go func() {
+		done <- runProbe("amqp://127.0.0.1:5672", probeAddress, username, password, probeTimeout)
+	}()
+
+	select {
+	case <-time.After(probeTimeout):
+		os.Exit(1)
+	case err := <-done:
+		if err != nil {
+			os.Exit(1)
+		}
+	}
+}
+
+func runProbe(url, probeAddress, username, password string, probeTimeout time.Duration) error {
+	client, err := amqp.Dial(url, amqp.ConnSASLPlain(username, password), amqp.ConnConnectTimeout(probeTimeout), amqp.ConnProperty("product", "broker-probe"))
 	if err != nil {
-		log.Fatal(err, "Error dialing broker")
+		log.Println(err, "Error dialing broker")
+		return err
 	}
 	log.Println("Connected, creating session")
 
@@ -52,15 +69,18 @@ func main() {
 
 	session, err := client.NewSession()
 	if err != nil {
-		log.Fatal(err, "Error creating session")
+		log.Println(err, "Error creating session")
+		return err
 	}
 
 	log.Println("Session created")
 
 	_, err = session.NewReceiver(amqp.LinkAddress(probeAddress))
 	if err != nil {
-		log.Fatal(err, "Error attaching link")
+		log.Println(err, "Error attaching link")
+		return err
 	}
 
 	log.Println("Link created")
+	return nil
 }
