@@ -150,11 +150,11 @@ const hasOwnProperty = (obj: Object, property: string) => {
 };
 
 const getCombinedString = (list: Array<string>) => {
-  let s: string = list[0];
-  for (let i = 1; i < list.length; i++) {
-    s += `i, ${list[i]}`;
+  let combinedString: string = list[0];
+  for (let index = 1; index < list.length; index++) {
+    combinedString += `, ${list[index]}`;
   }
-  return s;
+  return combinedString;
 };
 
 const getLabelForTypeOfObject = (value: any) => {
@@ -179,36 +179,36 @@ const getLabelForTypeOfObject = (value: any) => {
 
 const getJsonForMetadata = (object: any, type?: string) => {
   const keys = Object.keys(object);
-  let data = [];
-  for (var i of keys) {
-    if (typeof object[i] === "object") {
-      if (Array.isArray(object[i])) {
-        const datas: any[] = getJsonForMetadata(object[i], "array");
-        data.push({
-          key: i,
+  let metadataArray = [];
+  for (var key of keys) {
+    if (typeof object[key] === "object") {
+      if (Array.isArray(object[key])) {
+        const datas: any[] = getJsonForMetadata(object[key], "array");
+        metadataArray.push({
+          key: key,
           value: datas,
           type: "array",
-          typeLabel: getLabelForTypeOfObject(object[i])
+          typeLabel: getLabelForTypeOfObject(object[key])
         });
       } else {
-        const datas: any[] = getJsonForMetadata(object[i]);
-        data.push({
-          key: type && type === "array" ? "" : i,
+        const datas: any[] = getJsonForMetadata(object[key]);
+        metadataArray.push({
+          key: type && type === "array" ? "" : key,
           value: datas,
           type: "object",
-          typeLabel: getLabelForTypeOfObject(object[i])
+          typeLabel: getLabelForTypeOfObject(object[key])
         });
       }
     } else {
-      data.push({
-        key: type && type === "array" ? "" : i,
-        value: object[i],
-        type: typeof object[i],
-        typeLabel: getLabelForTypeOfObject(object[i])
+      metadataArray.push({
+        key: type && type === "array" ? "" : key,
+        value: object[key],
+        type: typeof object[key],
+        typeLabel: getLabelForTypeOfObject(object[key])
       });
     }
   }
-  return data;
+  return metadataArray;
 };
 
 const getJsonForObject = (object: any) => {
@@ -216,16 +216,16 @@ const getJsonForObject = (object: any) => {
   switch (object.type) {
     case "array":
       let res: any[] = [];
-      for (let i of object.value) {
-        const data = getJson(i);
-        res.push(data[i.key]);
+      for (let objectValue of object.value) {
+        const data = getJson(objectValue);
+        res.push(data[objectValue.key]);
       }
       obj[object.key] = res;
       break;
     case "object":
       let objs: any = {};
-      for (let i of object.value) {
-        const data = getJsonForObject(i);
+      for (let objectValue of object.value) {
+        const data = getJsonForObject(objectValue);
         const key = Object.keys(data)[0];
         const value = data[key];
         objs[key] = value;
@@ -247,8 +247,8 @@ const getJson = (objects: any[]) => {
     options = objects;
   }
   let object: any = {};
-  for (let i of options) {
-    const data = getJsonForObject(i);
+  for (let option of options) {
+    const data = getJsonForObject(option);
     object = Object.assign(object, data);
   }
   return object;

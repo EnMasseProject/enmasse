@@ -164,8 +164,8 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
           <SplitItem>
             <SwitchWithToggle
               id="device-registration-management-switch"
-              label="View JSON fromat"
-              labelOff="View JSON fromat"
+              label="View JSON format"
+              labelOff="View JSON format"
               isChecked={isHidden}
               onChange={onToggle}
             />

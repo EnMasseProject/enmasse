@@ -72,7 +72,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     />
   );
 
-  const data = {
+  const accessCredentailJsonData = {
     access_credentials: {
       tenantId: tenantId,
       messaging: messaging,
@@ -304,7 +304,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
         <CardBody>
           <JsonEditor
             readOnly={true}
-            value={JSON.stringify(data, undefined, 2)}
+            value={JSON.stringify(accessCredentailJsonData, undefined, 2)}
           />
         </CardBody>
       ) : (
