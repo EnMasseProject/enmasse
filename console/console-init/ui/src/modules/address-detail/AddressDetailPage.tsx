@@ -142,17 +142,19 @@ export default function AddressDetailPage() {
 
   const onDelete = async () => {
     const data = addressDetail.metadata;
-    const variables = {
-      a: {
-        name: data.name,
-        namespace: data.namespace
-      }
+    const queryVariables = {
+      a: [
+        {
+          name: data.name,
+          namespace: data.namespace
+        }
+      ]
     };
-    await setDeleteAddressQueryVariables(variables);
+    await setDeleteAddressQueryVariables(queryVariables);
   };
 
   const purgeAddress = (data: any) => {
-    const variables = {
+    const queryVariables = {
       addrs: [
         {
           name: data.name,
@@ -160,7 +162,7 @@ export default function AddressDetailPage() {
         }
       ]
     };
-    setPurgeAddressQueryVariables(variables);
+    setPurgeAddressQueryVariables(queryVariables);
   };
 
   const onChangeEdit = () => {

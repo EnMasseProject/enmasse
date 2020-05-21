@@ -9,8 +9,8 @@ import { removeForbiddenChars } from "utils";
 import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS_SPACE = gql`
-  mutation delete_as($a: ObjectMeta_v1_Input!) {
-    deleteAddressSpace(input: $a)
+  mutation delete_as($as: [ObjectMeta_v1_Input!]!) {
+    deleteAddressSpaces(input: $a)
   }
 `;
 

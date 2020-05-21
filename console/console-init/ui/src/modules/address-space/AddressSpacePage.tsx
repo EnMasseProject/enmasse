@@ -25,6 +25,7 @@ import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
+import { useMutationQuery } from "hooks";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
@@ -46,43 +47,10 @@ export default function AddressSpacePage() {
   >([]);
 
   const refetchQueries: string[] = ["all_address_spaces"];
-  const [setDeleteAddressSpaceQueryVariables] = useMutation(
+  const [setDeleteAddressSpaceQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
-    {
-      refetchQueries,
-      awaitRefetchQueries: true
-    }
+    refetchQueries
   );
-
-  const deleteAddressSpace = async (
-    addressSpace: IAddressSpace,
-    index: number
-  ) => {
-    try {
-      const variables = {
-        a: {
-          name: addressSpace.name,
-          namespace: addressSpace.nameSpace
-        }
-      };
-      await setDeleteAddressSpaceQueryVariables({ variables });
-    } catch (error) {
-      deleteAddressSpaceErrors.push(error);
-    }
-    /**
-     * dispatch action to set server errors after completion all queries
-     */
-    if (
-      selectedAddressSpaces &&
-      selectedAddressSpaces.length === index + 1 &&
-      deleteAddressSpaceErrors.length > 0
-    ) {
-      dispatch({
-        type: types.SET_SERVER_ERROR,
-        payload: { errors: deleteAddressSpaceErrors }
-      });
-    }
-  };
 
   const onDeleteAll = () => {
     dispatch({
@@ -100,12 +68,19 @@ export default function AddressSpacePage() {
 
   const onConfirmDeleteAll = async () => {
     if (selectedAddressSpaces && selectedAddressSpaces.length > 0) {
-      const data = selectedAddressSpaces;
-      await Promise.all(
-        data.map((addressSpace, index) =>
-          deleteAddressSpace(addressSpace, index)
-        )
+      let queryVariables: Array<{ name: string; namespace: string }> = [];
+      selectedAddressSpaces.map((addressSpace: IAddressSpace) =>
+        queryVariables.push({
+          name: addressSpace.name,
+          namespace: addressSpace.nameSpace
+        })
       );
+      if (queryVariables.length > 0) {
+        const queryVariable = {
+          as: queryVariables
+        };
+        await setDeleteAddressSpaceQueryVariables(queryVariable);
+      }
       setSelectedAddressSpaces([]);
     }
   };

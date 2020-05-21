@@ -182,13 +182,15 @@ export const AddressListContainer: React.FunctionComponent<IAddressListPageProps
 
   const onDelete = async (address: IAddress) => {
     if (address) {
-      const variables = {
-        a: {
-          name: address.name,
-          namespace: address.namespace
-        }
+      const queryVariables = {
+        a: [
+          {
+            name: address.name,
+            namespace: address.namespace
+          }
+        ]
       };
-      setDeleteAddressQueryVariablse(variables);
+      setDeleteAddressQueryVariablse(queryVariables);
     }
   };
 
