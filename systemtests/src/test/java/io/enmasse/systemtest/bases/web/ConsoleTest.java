@@ -133,7 +133,11 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
-        consolePage.awaitGoneAwayPage();
+        try {
+            consolePage.awaitGoneAwayPage();
+        } finally {
+            resourcesManager.deleteAddressSpace(addressSpace);
+        }
     }
 
     protected void doTestGoneAwayPageAfterAddressDeletion() throws Exception {
