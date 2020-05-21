@@ -1255,6 +1255,12 @@ const resolvers = {
       deleteAddressSpace(args.input);
       return true;
     },
+    deleteAddressSpaces: (parent, args) => {
+      args.input.forEach( i => {
+        deleteAddressSpace(i);
+      });
+      return true;
+    },
     createAddress: (parent, args) => {
       return createAddress(init(args.input), args.addressSpace);
     },
@@ -1264,6 +1270,12 @@ const resolvers = {
     },
     deleteAddress: (parent, args) => {
       deleteAddress(args.input);
+      return true;
+    },
+    deleteAddresses: (parent, args) => {
+      args.input.forEach( i => {
+        deleteAddress(i);
+      });
       return true;
     },
     purgeAddress: (parent, args) => {

@@ -452,14 +452,14 @@ args:
 }
 ```
 
-## Delete address space
+## Delete address spaces
 
-To delete an address space, call `deleteAddressSpace` passing the ObjectMeta
-object associated with the address to delete.
+To delete address spaces, call `deleteAddressSpaces` passing the ObjectMeta
+objects associated with the address space(s) to delete.
 
 ```
-mutation delete_as($a:ObjectMeta_v1_Input!) {
-  deleteAddressSpace(input:$a)
+mutation delete_as($as:[ObjectMeta_v1_Input!]!) {
+  deleteAddressSpaces(input:$as)
 }
 ```
 
@@ -467,7 +467,7 @@ args:
 
 ```
 {
-  "a": {"name": "jupiter_as1", "namespace": "app1_ns" }
+  "as": [{"name": "jupiter_as1", "namespace": "app1_ns" }]
 }
 ```
 
@@ -540,14 +540,14 @@ args:
 }
 ```
 
-# Delete address
+# Delete addresses
 
-To delete an address, call `deleteAddress` passing the ObjectMeta
-object associated with the address to delete.
+To delete address(es), call `deleteAddresses` passing the ObjectMeta
+objects associated with the address(es) to delete.
 
 ```
-mutation delete_addr($a:ObjectMeta_v1_Input!) {
-  deleteAddress(input:$a)
+mutation delete_addr($a:[ObjectMeta_v1_Input!]!) {
+  deleteAddresses(input:$a)
 }
 ```
 
@@ -555,7 +555,7 @@ args:
 
 ```
 {
-  "a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
+  "a": [{"name": "jupiter_as1.io", "namespace": "app1_ns" }]
 }
 ```
 

@@ -195,11 +195,22 @@ func (r *mutationResolver) PatchAddress(ctx context.Context, input metav1.Object
 }
 
 func (r *mutationResolver) DeleteAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
+	return r.DeleteAddresses(ctx, []*metav1.ObjectMeta{&input})
+}
+
+func (r *mutationResolver) DeleteAddresses(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
-	e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Delete(input.Name, &metav1.DeleteOptions{})
-	b := e == nil
-	return &b, e
+	f := false
+	t := true
+
+	for _, a := range input {
+		e := requestState.EnmasseV1beta1Client.Addresses(a.Namespace).Delete(a.Name, &metav1.DeleteOptions{})
+		if e != nil {
+			return &f, e
+		}
+	}
+	return &t, nil
 }
 
 func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {

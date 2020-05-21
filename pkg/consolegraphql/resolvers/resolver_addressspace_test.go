@@ -10,12 +10,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
@@ -23,11 +24,14 @@ func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
+	clientset := fake.NewSimpleClientset(&v1beta1.Address{})
+
 	resolver := Resolver{}
 	resolver.Cache = objectCache
 
 	requestState := &server.RequestState{
-		AccessController: accesscontroller.NewAllowAllAccessController(),
+		AccessController:     accesscontroller.NewAllowAllAccessController(),
+		EnmasseV1beta1Client: clientset.EnmasseV1beta1(),
 	}
 
 	ctx := server.ContextWithRequestState(requestState, context.TODO())
@@ -128,7 +132,7 @@ func TestQueryAddressSpaceConnections(t *testing.T) {
 
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
@@ -150,7 +154,7 @@ func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
 
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
@@ -175,7 +179,7 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
@@ -201,7 +205,7 @@ func TestMessagingCertificateChain(t *testing.T) {
 	err := r.Cache.Add(as1)
 	assert.NoError(t, err)
 
-	input := v1.ObjectMeta{
+	input := metav1.ObjectMeta{
 		Name:      addressspace,
 		Namespace: namespace,
 	}
@@ -221,7 +225,7 @@ func TestQueryAddressSpaceAddress(t *testing.T) {
 
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
@@ -243,7 +247,7 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 
 	ash := &consolegraphql.AddressSpaceHolder{
 		AddressSpace: v1beta1.AddressSpace{
-			ObjectMeta: v1.ObjectMeta{
+			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
@@ -283,4 +287,24 @@ spec:
   type: queue`
 	assert.Contains(t, obj, expectedMetaData, "Expect name and namespace to be set")
 	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
+}
+
+func TestDeleteAddressSpaces(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	namespace := "mynamespace"
+	as1 := createAddressSpace("myaddressspace1", namespace)
+	as2 := createAddressSpace("myaddressspace2", namespace)
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(namespace)
+	_, err := addrClient.Create(&as1.AddressSpace)
+	assert.NoError(t, err)
+	_, err = addrClient.Create(&as2.AddressSpace)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &as2.ObjectMeta})
+	assert.NoError(t, err)
+
+	list, err := addrClient.List(metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list.Items))
 }

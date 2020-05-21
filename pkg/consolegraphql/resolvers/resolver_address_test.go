@@ -556,6 +556,26 @@ func TestPatchAddress(t *testing.T) {
 	assert.Equal(t, "standard-medium", retrieved.Spec.Plan, "unexpected address plan")
 }
 
+func TestDeleteAddresses(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addr1 := createAddress(namespace, "myaddrspace.myaddr1")
+	addr2 := createAddress(namespace, "myaddrspace.myaddr2")
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(namespace)
+	_, err := addrClient.Create(&addr1.Address)
+	assert.NoError(t, err)
+	_, err = addrClient.Create(&addr2.Address)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().DeleteAddresses(ctx, []*metav1.ObjectMeta{&addr1.ObjectMeta, &addr2.ObjectMeta})
+	assert.NoError(t, err)
+
+	list, err := addrClient.List(metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list.Items))
+}
+
 func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
