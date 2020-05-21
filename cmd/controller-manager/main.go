@@ -9,8 +9,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/monitoring"
+	"strings"
 	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/monitoring"
 
 	"os"
 	"runtime"
@@ -339,11 +341,22 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 // serveCRMetrics gets the Operator/CustomResource GVKs and generates metrics based on those types.
 // It serves those metrics on "http://metricsHost:operatorMetricsPort".
 func serveCRMetrics(cfg *rest.Config) error {
-	// Below function returns filtered operator/CustomResource specific GVKs.
-	// For more control override the below GVK list with your own custom logic.
-	filteredGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassescheme.AddToScheme)
+	// Below function returns all GVKs for EnMasse.
+	allGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassescheme.AddToScheme)
 	if err != nil {
 		return err
+	}
+
+	filteredGVK := make([]schema.GroupVersionKind, 0)
+	for _, gvk := range allGVK {
+		if (!util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") && strings.HasPrefix(gvk.Kind, "MessagingInfrastructure")) ||
+			(!util.IsModuleEnabled("MESSAGING_TENANT") && strings.HasPrefix(gvk.Kind, "MessagingTenant")) ||
+			(!util.IsModuleEnabled("MESSAGING_ENDPOINT") && strings.HasPrefix(gvk.Kind, "MessagingEndpoint")) ||
+			(!util.IsModuleEnabled("MESSAGING_ADDRESS") && strings.HasPrefix(gvk.Kind, "MessagingAddress")) {
+			log.Info("Skipping adding metric because module is not enabled", "gkv", gvk)
+		} else {
+			filteredGVK = append(filteredGVK, gvk)
+		}
 	}
 
 	// Get the namespace the operator is currently deployed in.
