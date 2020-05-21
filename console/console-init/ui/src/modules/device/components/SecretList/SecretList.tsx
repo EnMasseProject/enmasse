@@ -71,12 +71,17 @@ export const SecretList: React.FC<ISecretListProps> = ({
     handleInputChange(id, evt, value, secretId, "secrets");
   };
 
-  const defaultSecretsSetting = (
-    secret: ISecret,
-    id: string,
-    index: number
-  ) => {
+  const DefaultSecretsSetting: React.FC<{
+    secret: ISecret;
+    id: string;
+    index: number;
+  }> = ({ secret, id, index }) => {
     const isRequired = index === 0 ? true : false;
+
+    const handleInputChangeSecret = (value: string, event: any) => {
+      handleInputChangeSecrets(credentialId, event, value, id);
+    };
+
     return (
       <>
         {hasOwnProperty(secret, "pwd-hash") && (
@@ -91,9 +96,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 isRequired={isRequired}
                 type="password"
                 name="pwd-hash"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
+                onChange={handleInputChangeSecret}
               />
             </FormGroup>
             <br />
@@ -111,9 +114,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 isRequired={isRequired}
                 type="text"
                 name="key"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
+                onChange={handleInputChangeSecret}
               />
             </FormGroup>
           </GridItem>
@@ -122,7 +123,18 @@ export const SecretList: React.FC<ISecretListProps> = ({
     );
   };
 
-  const advancedSecretsSetting = (secret: ISecret, id: string) => {
+  const AdvancedSecretsSetting: React.FC<{
+    secret: ISecret;
+    id: string;
+  }> = ({ secret, id }) => {
+    const handleDeleteSecret = () => {
+      onDeleteSecrets(credentialId, "secrets", id);
+    };
+
+    const handleInputChangeSecret = (value: string, event: any) => {
+      handleInputChangeSecrets(credentialId, event, value, id);
+    };
+
     return (
       <>
         {hasOwnProperty(secret, "not-before") && (
@@ -137,9 +149,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 type="datetime-local"
                 name="not-before"
                 placeholder="YYYY-MM-DD 00:00"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
+                onChange={handleInputChangeSecret}
               />
             </FormGroup>
           </GridItem>
@@ -152,9 +162,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
                 type="datetime-local"
                 name="not-after"
                 placeholder="YYYY-MM-DD 00:00"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
+                onChange={handleInputChangeSecret}
               />
             </FormGroup>
           </GridItem>
@@ -166,9 +174,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
               <TextArea
                 id={"sc-comment-textinput-" + id}
                 name="comment"
-                onChange={(value, event) =>
-                  handleInputChangeSecrets(credentialId, event, value, id)
-                }
+                onChange={handleInputChangeSecret}
               />
             </FormGroup>
           </GridItem>
@@ -180,7 +186,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
               variant="link"
               type="button"
               icon={<MinusCircleIcon />}
-              onClick={() => onDeleteSecrets(credentialId, "secrets", id)}
+              onClick={handleDeleteSecret}
             >
               Delete Secret
             </Button>
@@ -197,8 +203,10 @@ export const SecretList: React.FC<ISecretListProps> = ({
           const { id = "" } = secret;
           return (
             <Grid key={id}>
-              {defaultSecretsSetting(secret, id, index)}
-              {isExpandedAdvancedSetting && advancedSecretsSetting(secret, id)}
+              {<DefaultSecretsSetting secret={secret} id={id} index={index} />}
+              {isExpandedAdvancedSetting && (
+                <AdvancedSecretsSetting secret={secret} id={id} />
+              )}
             </Grid>
           );
         })}

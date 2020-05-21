@@ -86,7 +86,7 @@ export const AddCredential: React.FC<{}> = () => {
   const setSecretsInitialFormState = () => {
     const newCredentials = [...credentials];
     const activeFormId =
-      activeCredentialFormId || newCredentials[newCredentials.length - 1].id;
+      activeCredentialFormId || newCredentials[newCredentials.length - 1]?.id;
     const index = findIndexByProperty(credentials, "id", activeFormId);
     if (index >= 0) {
       const initialState = getFormInitialStateByProperty("secrets");
