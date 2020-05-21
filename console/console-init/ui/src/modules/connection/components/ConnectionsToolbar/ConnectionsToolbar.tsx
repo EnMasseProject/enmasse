@@ -8,19 +8,27 @@ import {
   DataToolbarItem,
   DataToolbar,
   DataToolbarContent,
-  DataToolbarContentProps
+  DataToolbarContentProps,
+  DropdownItem
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { SortForMobileView, useWindowDimensions } from "components";
+import {
+  SortForMobileView,
+  useWindowDimensions,
+  DropdownWithKebabToggle
+} from "components";
 import {
   ConnectionsToggleGroup,
   IConnectionsToggleGroupProps
 } from "modules/connection/components";
+import { IConnection } from "modules/connection";
 
 export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   onClearAllFilters: () => void;
+  selectedConnections: IConnection[];
+  onCloseAll: () => void;
 }
 const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   DataToolbarContentProps> = ({
@@ -45,18 +53,40 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
   onChangeHostNameInput,
   onChangeContainerInput,
   setHostNameInput,
-  setHostContainerInput
+  setHostContainerInput,
+  selectedConnections,
+  onCloseAll
 }) => {
   const { width } = useWindowDimensions();
   const sortMenuItems = [
-    { key: "hostname", value: "Hostname", index: 0 },
-    { key: "containerId", value: "Container ID", index: 1 },
-    { key: "protocol", value: "Protocol", index: 2 },
-    { key: "messageIn", value: "Message In", index: 3 },
-    { key: "messageOut", value: "Message Out", index: 4 },
-    { key: "sender", value: "Senders", index: 5 },
-    { key: "receiver", value: "Receivers", index: 6 }
+    { key: "hostname", value: "Hostname", index: 1 },
+    { key: "containerId", value: "Container ID", index: 2 },
+    { key: "timeCreated", value: "Time created", index: 3 },
+    { key: "protocol", value: "Protocol", index: 4 },
+    { key: "messageIn", value: "Message In", index: 5 },
+    { key: "messageOut", value: "Message Out", index: 6 },
+    { key: "sender", value: "Senders", index: 7 },
+    { key: "receiver", value: "Receivers", index: 8 }
   ];
+  const dropdownItems = [
+    <DropdownItem
+      id="cl-filter-dropdown-item-closeAll"
+      key="close-all"
+      value="closeAll"
+      component="button"
+      isDisabled={selectedConnections.length <= 0}
+    >
+      Close Selected
+    </DropdownItem>
+  ];
+
+  const onKebabSelect = async (event: any) => {
+    const kebabOptionValue = event.target.value;
+    if (kebabOptionValue && kebabOptionValue === "closeAll") {
+      await onCloseAll();
+    }
+  };
+
   const toolbarItems = (
     <>
       <ConnectionsToggleGroup
@@ -88,6 +118,15 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
             setSortValue={setSortValue}
           />
         )}
+      </DataToolbarItem>
+      <DataToolbarItem>
+        <DropdownWithKebabToggle
+          id="cl-select-kebab-overflow-dropdown-"
+          toggleId="cl-filter-overflow-kebab"
+          onSelect={onKebabSelect}
+          dropdownItems={dropdownItems}
+          isPlain
+        />
       </DataToolbarItem>
     </>
   );

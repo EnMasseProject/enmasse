@@ -15,7 +15,7 @@ import { FetchPolicy } from "constant";
 import { getSelectOptionList } from "utils";
 import { RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH } from "graphql-module/queries";
 import { IConnectionListNameSearchResponse } from "schema/ResponseTypes";
-import { ConnectionsToolbar } from "modules/connection/components";
+import { ConnectionsToolbar, IConnection } from "modules/connection/components";
 
 export interface IConnectionToolbarContainerProps {
   selectedHostnames: any[];
@@ -27,6 +27,8 @@ export interface IConnectionToolbarContainerProps {
   setSortValue: (value: ISortBy) => void;
   namespace: string;
   addressSpaceName: string;
+  selectedConnections: IConnection[];
+  onCloseAllConnections: () => void;
 }
 
 export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionToolbarContainerProps> = ({
@@ -38,7 +40,9 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
   sortValue,
   setSortValue,
   namespace,
-  addressSpaceName
+  addressSpaceName,
+  selectedConnections,
+  onCloseAllConnections
 }) => {
   const client = useApolloClient();
   const [hostnameSelected, setHostnameSelected] = useState<string>();
@@ -253,6 +257,8 @@ export const ConnectionToolbarContainer: React.FunctionComponent<IConnectionTool
       setHostContainerInput={setContainerInput}
       onChangeContainerInput={onChangeContainerInput}
       setHostNameInput={setHostnameInput}
+      selectedConnections={selectedConnections}
+      onCloseAll={onCloseAllConnections}
     />
   );
 };

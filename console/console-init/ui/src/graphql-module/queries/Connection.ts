@@ -45,28 +45,28 @@ const ALL_CONECTION_LIST_SORT = (sortBy?: ISortBy) => {
   let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
-      case 0:
+      case 1:
         orderBy = "`$.spec.hostname` ";
         break;
-      case 1:
+      case 2:
         orderBy = "`$.spec.containerId` ";
         break;
-      case 2:
+      case 3:
         orderBy = "`$.spec.protocol` ";
         break;
-      case 3:
+      case 4:
         orderBy = "`$.metadata.creationTimestamp` ";
         break;
-      case 4:
+      case 5:
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_in')].value` ";
         break;
-      case 5:
+      case 6:
         orderBy = "`$.metrics[?(@.name=='enmasse_messages_out')].value` ";
         break;
-      case 6:
+      case 7:
         orderBy = "`$.metrics[?(@.name=='enmasse_senders')].value` ";
         break;
-      case 7:
+      case 8:
         orderBy = "`$.metrics[?(@.name=='enmasse_receivers')].value` ";
         break;
       default:
@@ -435,11 +435,17 @@ const RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPE
   return ALL_CONECTION_LIST;
 };
 
+const CLOSE_CONNECTION = gql`
+  mutation close_connection($cons: [ObjectMeta_v1_Input!]!) {
+    closeConnections(input: $cons)
+  }
+`;
 export {
   RETURN_ALL_CONECTION_LIST,
   RETURN_CONNECTION_DETAIL,
   RETURN_CONNECTION_LINKS,
   RETURN_ALL_CONNECTION_LINKS_FOR_NAME_SEARCH,
   RETURN_ALL_CONNECTION_LINKS_FOR_ADDRESS_SEARCH,
-  RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH
+  RETURN_ALL_CONNECTIONS_HOSTNAME_AND_CONTAINERID_OF_ADDRESS_SPACES_FOR_TYPEAHEAD_SEARCH,
+  CLOSE_CONNECTION
 };
