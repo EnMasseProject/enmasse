@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import { Divider } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
@@ -13,16 +18,14 @@ const styles = StyleSheet.create({
   }
 });
 
-export interface IDividerWithHeading {
-  heading: string;
+export interface IDividerWithTitle {
+  title: string;
 }
 
-export const DividerWithHeading: React.FC<IDividerWithHeading> = ({
-  heading
-}) => {
+export const DividerWithTitle: React.FC<IDividerWithTitle> = ({ title }) => {
   return (
     <div className={styles.container}>
-      {heading}
+      {title}
       <Divider className={styles.divider_align} />
     </div>
   );
