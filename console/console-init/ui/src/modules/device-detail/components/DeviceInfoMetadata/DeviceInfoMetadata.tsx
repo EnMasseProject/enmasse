@@ -5,6 +5,7 @@
 
 import React from "react";
 import { Card, CardBody, CardHeader, Title } from "@patternfly/react-core";
+import { StyleSheet, css } from "@patternfly/react-styles";
 import {
   MetadataListTable,
   IMetadataListTablePorps
@@ -14,6 +15,14 @@ export interface IDeviceInfoMetadataProps
   extends Pick<IMetadataListTablePorps, "dataList"> {
   id: string;
 }
+
+const styles = StyleSheet.create({
+  card_body: {
+    paddingLeft: 0,
+    paddingRight: 0,
+    paddingBottom: 0
+  }
+});
 
 export const DeviceInfoMetadata: React.FC<IDeviceInfoMetadataProps> = ({
   id,
@@ -26,7 +35,7 @@ export const DeviceInfoMetadata: React.FC<IDeviceInfoMetadataProps> = ({
           Device metadata
         </Title>
       </CardHeader>
-      <CardBody>
+      <CardBody className={css(styles.card_body)}>
         <MetadataListTable
           dataList={dataList}
           id={"divice-info-metadata-table"}

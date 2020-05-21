@@ -89,7 +89,9 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
             <>
               <TableHeader headers={headers} aria-labelledby={ariaLabelledby} />
               {metadataOptions &&
-                metadataOptions.map((row: any) => <TableRow rowData={row} />)}
+                metadataOptions.map((row: any) => (
+                  <TableRow rowData={row} key={row.key} />
+                ))}
             </>
           );
         })}
