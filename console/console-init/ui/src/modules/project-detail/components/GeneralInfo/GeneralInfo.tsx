@@ -66,7 +66,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
             {addressSpace}
           </NavLink>{" "}
           <br />
-          <b className={css(styles.style_margin)}>Event address name</b>
+          <b className={css(styles.style_margin)}>Events address name</b>
           {eventAddresses &&
             eventAddresses.length > 0 &&
             eventAddresses.map((address: string) => (

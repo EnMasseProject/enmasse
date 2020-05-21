@@ -151,7 +151,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
         <br />
         {addressSpace && (
           <InputText
-            label={"Address Space"}
+            label={"Address space"}
             type={"text"}
             value={addressSpace}
             isReadOnly={true}
