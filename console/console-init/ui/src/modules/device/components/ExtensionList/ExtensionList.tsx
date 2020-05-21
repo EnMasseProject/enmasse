@@ -14,7 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
 import { css } from "@patternfly/react-styles";
-import { DropdownWithToggle, DividerWithHeading } from "components";
+import { DropdownWithToggle, DividerWithTitle } from "components";
 import { ISelectOption } from "utils";
 import { dropdown_item_styles } from "modules/device";
 import { StyleSheet } from "@patternfly/react-styles";
@@ -77,7 +77,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
     <>
       <Grid id={"el-list-grid"}>
         <GridItem span={12}>
-          <DividerWithHeading heading={"Ext"} />
+          <DividerWithTitle title={"Ext"} />
           <br />
         </GridItem>
         {extensions &&
