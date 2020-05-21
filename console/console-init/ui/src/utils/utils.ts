@@ -133,7 +133,7 @@ const uniqueId = () => {
 const findIndexByProperty = (
   items: any[],
   targetProperty: string,
-  targetPropertyValue: string
+  targetPropertyValue: any
 ) => {
   if (items && targetProperty && targetPropertyValue) {
     return items.findIndex(

@@ -23,7 +23,7 @@ import { css, StyleSheet } from "@patternfly/react-styles";
 import {
   DropdownWithToggle,
   SwitchWithToggle,
-  DividerWithHeading
+  DividerWithTitle
 } from "components";
 import {
   SecretList,
@@ -39,14 +39,10 @@ import {
 } from "modules/device/utils";
 
 const styles = StyleSheet.create({
-  addMoreScrets: { marginLeft: "-15px", marginBottom: "20px" },
-  addMoreExt: { marginLeft: "-15px" },
-  format_item: { whiteSpace: "normal", textAlign: "justify" },
+  addMoreScrets: { marginLeft: -15, marginBottom: 20 },
+  addMoreExt: { marginLeft: -15 },
   dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: "1" },
-  crd_section: {
-    marginTop: "var(--pf-global--spacer--xl)"
-  }
+  dropdown_toggle_align: { flex: 1 }
 });
 
 export interface ICredential {
@@ -148,7 +144,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               </Button>
             </GridItem>
             <GridItem span={12}>
-              <DividerWithHeading title={"Status"} />
+              <DividerWithTitle title={"Status"} />
               <br />
             </GridItem>
             <GridItem span={10}>
@@ -253,7 +249,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                       {shouldSecretsHeadingVisible(
                         type,
                         isExpandedAdvancedSetting
-                      ) && <DividerWithHeading title={"Secrets"} />}
+                      ) && <DividerWithTitle title={"Secrets"} />}
                       {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
                       <Expandable
                         toggleText={
