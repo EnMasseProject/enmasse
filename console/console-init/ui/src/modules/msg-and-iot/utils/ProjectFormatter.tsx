@@ -27,11 +27,11 @@ interface IProjectTypePlanProps {
 
 interface IProjectStatusProps {
   phase: string;
-  messages?: Array<string>;
+  messages?: string[];
 }
 interface IProjectErrorProps {
   errorCount?: number;
-  errorMessages?: Array<string>;
+  errorMessages?: string[];
 }
 interface IProjectEntitiesProps {
   projectType: ProjectTypes;
@@ -41,10 +41,10 @@ interface IProjectEntitiesProps {
   activeCount?: number;
 }
 interface IProjectErrorMessagesProps {
-  messages?: Array<string>;
+  messages?: string[];
 }
 
-const statusToDisplay = (phase: string) => {
+const getStatusIconByPhase = (phase: string) => {
   let icon;
   switch (phase.toLowerCase()) {
     case "active":
@@ -105,10 +105,10 @@ const ProjectError: React.FunctionComponent<IProjectErrorProps> = ({
 
 const ProjectEntities: React.FunctionComponent<IProjectEntitiesProps> = ({
   projectType,
-  addressCount,
-  connectionCount,
-  deviceCount,
-  activeCount
+  addressCount = 0,
+  connectionCount = 0,
+  deviceCount = 0,
+  activeCount = 0
 }) => {
   return (
     <>
@@ -148,7 +148,7 @@ const ProjectStatus: React.FunctionComponent<IProjectStatusProps> = ({
 }) => {
   return (
     <>
-      {statusToDisplay(phase)}
+      {getStatusIconByPhase(phase)}
       {messages &&
         messages.map(message => (
           <>
@@ -181,6 +181,6 @@ export {
   ProjectError,
   ProjectEntities,
   ProjectTypePlan,
-  statusToDisplay,
+  getStatusIconByPhase,
   ProjectErrorMessages
 };

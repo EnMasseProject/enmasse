@@ -47,12 +47,12 @@ export interface IProject {
   deviceCount?: number;
   activeCount?: number;
   selected?: boolean;
-  errorMessages?: Array<string>;
+  errorMessages?: string[];
 }
 
 export interface IProjectListProps extends Pick<TableProps, "sortBy"> {
   onSort?: (_event: any, index: number, direction: SortByDirection) => void;
-  projects: Array<IProject>;
+  projects: IProject[];
   onEdit: (project: IProject) => void;
   onDelete: (project: IProject) => void;
   onDownload: (project: IProject) => void;
@@ -132,7 +132,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           key: displayName + "-" + status
         },
         {
-          title: (
+          title: creationTimestamp && (
             <>
               <FormatDistance date={creationTimestamp || ""} /> ago
             </>

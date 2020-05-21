@@ -36,6 +36,10 @@ describe("<ProjectList/>", () => {
       errorMessageRate: 25,
       deviceCount: 10500,
       activeCount: 7100
+    },
+    // for null value
+    {
+      projectType: ProjectTypes.IOT
     }
   ];
   it("should render without crashing", () => {
@@ -78,6 +82,5 @@ describe("<ProjectList/>", () => {
     getByText(projects[0].projectType + " " + projects[0].plan);
     //second row's data
     getByText(projects[1].displayName || "");
-    getByText(projects[1].projectType);
   });
 });
