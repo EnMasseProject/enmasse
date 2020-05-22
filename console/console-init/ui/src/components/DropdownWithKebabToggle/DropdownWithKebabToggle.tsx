@@ -15,6 +15,7 @@ import {
 export interface IDropdownWithKebabToggleProps
   extends Omit<DropdownProps, "toggle"> {
   toggleId?: string;
+  onSelect?: (event: any) => void;
 }
 
 export const DropdownWithKebabToggle: React.FC<IDropdownWithKebabToggleProps &
@@ -32,6 +33,12 @@ export const DropdownWithKebabToggle: React.FC<IDropdownWithKebabToggleProps &
   const onToggle = (isOpen: boolean) => {
     setIsOpen(isOpen);
   };
+  const onSelectItem = (event: any) => {
+    if (onSelect) {
+      onSelect(event);
+    }
+    setIsOpen(false);
+  };
 
   return (
     <Dropdown
@@ -39,7 +46,7 @@ export const DropdownWithKebabToggle: React.FC<IDropdownWithKebabToggleProps &
       isPlain={isPlain}
       className={className}
       position={position || DropdownPosition.right}
-      onSelect={onSelect}
+      onSelect={onSelectItem}
       isOpen={isOpen}
       toggle={<KebabToggle id={toggleId} onToggle={onToggle} />}
       dropdownItems={dropdownItems}

@@ -7,6 +7,7 @@ import (
 	"io"
 	"strconv"
 
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -61,6 +62,11 @@ type KeyValue struct {
 type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
 	Total int                    `json:"total"`
 	Links []*consolegraphql.Link `json:"links"`
+}
+
+type MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1 struct {
+	Total              int                          `json:"total"`
+	MessagingEndpoints []*v1beta2.MessagingEndpoint `json:"messagingEndpoints"`
 }
 
 type MetadataConsoleapiEnmasseIoV1beta1 struct {
@@ -239,6 +245,98 @@ func (e *LinkRole) UnmarshalGQL(v interface{}) error {
 }
 
 func (e LinkRole) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MessagingEndpointProtocol string
+
+const (
+	MessagingEndpointProtocolAmqp    MessagingEndpointProtocol = "amqp"
+	MessagingEndpointProtocolAmqps   MessagingEndpointProtocol = "amqps"
+	MessagingEndpointProtocolAmqpWs  MessagingEndpointProtocol = "amqp_ws"
+	MessagingEndpointProtocolAmqpWss MessagingEndpointProtocol = "amqp_wss"
+)
+
+var AllMessagingEndpointProtocol = []MessagingEndpointProtocol{
+	MessagingEndpointProtocolAmqp,
+	MessagingEndpointProtocolAmqps,
+	MessagingEndpointProtocolAmqpWs,
+	MessagingEndpointProtocolAmqpWss,
+}
+
+func (e MessagingEndpointProtocol) IsValid() bool {
+	switch e {
+	case MessagingEndpointProtocolAmqp, MessagingEndpointProtocolAmqps, MessagingEndpointProtocolAmqpWs, MessagingEndpointProtocolAmqpWss:
+		return true
+	}
+	return false
+}
+
+func (e MessagingEndpointProtocol) String() string {
+	return string(e)
+}
+
+func (e *MessagingEndpointProtocol) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MessagingEndpointProtocol(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MessagingEndpointProtocol", str)
+	}
+	return nil
+}
+
+func (e MessagingEndpointProtocol) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MessagingEndpointType string
+
+const (
+	MessagingEndpointTypeCluster      MessagingEndpointType = "cluster"
+	MessagingEndpointTypeNodePort     MessagingEndpointType = "nodePort"
+	MessagingEndpointTypeLoadBalancer MessagingEndpointType = "loadBalancer"
+	MessagingEndpointTypeRoute        MessagingEndpointType = "route"
+	MessagingEndpointTypeIngress      MessagingEndpointType = "ingress"
+)
+
+var AllMessagingEndpointType = []MessagingEndpointType{
+	MessagingEndpointTypeCluster,
+	MessagingEndpointTypeNodePort,
+	MessagingEndpointTypeLoadBalancer,
+	MessagingEndpointTypeRoute,
+	MessagingEndpointTypeIngress,
+}
+
+func (e MessagingEndpointType) IsValid() bool {
+	switch e {
+	case MessagingEndpointTypeCluster, MessagingEndpointTypeNodePort, MessagingEndpointTypeLoadBalancer, MessagingEndpointTypeRoute, MessagingEndpointTypeIngress:
+		return true
+	}
+	return false
+}
+
+func (e MessagingEndpointType) String() string {
+	return string(e)
+}
+
+func (e *MessagingEndpointType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MessagingEndpointType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MessagingEndpointType", str)
+	}
+	return nil
+}
+
+func (e MessagingEndpointType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

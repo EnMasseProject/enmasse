@@ -92,6 +92,9 @@ under the License.
             <!-- we need this otherwise ./artemis data imp wouldn't work -->
             <permission type="manage" roles="manage"/>
          </security-setting>
+         <security-setting match="readiness">
+            <permission type="consume" roles="readiness"/>
+         </security-setting>
       </security-settings>
 
       <address-settings>
@@ -107,7 +110,13 @@ under the License.
             <address-full-policy>${ADDRESS_FULL_POLICY}</address-full-policy>
             <default-address-routing-type>ANYCAST</default-address-routing-type>
          </address-setting>
+         <address-setting match="readiness">
+            <auto-create-queues>false</auto-create-queues>
+         </address-setting>
       </address-settings>
+      <addresses>
+         <address name="readiness" />
+      </addresses>
 
       <wildcard-addresses>
         <enabled>true</enabled>

@@ -36,10 +36,15 @@ func NewBrokerState(host Host, port int32) *BrokerState {
 			amqp.ConnProperty("product", "controller-manager")),
 	}
 	state.commandClient.Start()
+	state.reconnectCount = state.commandClient.ReconnectCount()
 	return state
 }
 
 func (b *BrokerState) Initialize(nextResync time.Time) error {
+	if b.reconnectCount != b.commandClient.ReconnectCount() {
+		b.initialized = false
+	}
+
 	if b.initialized {
 		return nil
 	}

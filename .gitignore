@@ -39,3 +39,6 @@ scripts/swagger2markup.jar
 artifacts/
 
 imageenv.txt
+
+# Podman
+.lock

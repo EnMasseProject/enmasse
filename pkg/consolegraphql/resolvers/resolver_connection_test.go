@@ -384,7 +384,7 @@ func TestCloseConnections(t *testing.T) {
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 2, delegate.(*mockCommandDelegate).closeCount)
+	assert.ElementsMatch(t, []metav1.ObjectMeta{con1.ObjectMeta, con2.ObjectMeta}, delegate.(*mockCommandDelegate).closed)
 }
 
 func TestCloseConnectionsOneConnectionNotFound(t *testing.T) {
@@ -412,7 +412,7 @@ func TestCloseConnectionsOneConnectionNotFound(t *testing.T) {
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 1, delegate.(*mockCommandDelegate).closeCount)
+	assert.ElementsMatch(t, []metav1.ObjectMeta{con.ObjectMeta}, delegate.(*mockCommandDelegate).closed)
 }
 
 func createConnectionLink(namespace string, addressspace string, con string, role string, metrics ...*consolegraphql.Metric) *consolegraphql.Link {

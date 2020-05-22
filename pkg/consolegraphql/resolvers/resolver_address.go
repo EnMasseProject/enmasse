@@ -267,8 +267,9 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 			return nil, e
 		}
 
+		copy := *input
 		purgeCommands = append(purgeCommands, func() error {
-			return commandDelegate.PurgeAddress(*input)
+			return commandDelegate.PurgeAddress(copy)
 		})
 	}
 

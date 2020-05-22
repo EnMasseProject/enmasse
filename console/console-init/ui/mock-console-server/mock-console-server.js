@@ -5,6 +5,7 @@
  */
 
 const uuidv1 = require('uuid/v1');
+const uuidv5 = require('uuid/v5');
 const { ApolloServer, gql } = require('apollo-server');
 const typeDefs = require('./schema');
 const { applyPatch, compare } = require('fast-json-patch');
@@ -27,7 +28,17 @@ function calcLowerUpper(offset, first, len) {
 
 var stateChangeTimeout = process.env.STATE_CHANGE_TIMEOUT;
 if (!stateChangeTimeout) {
-  stateChangeTimeout = 30000;
+  stateChangeTimeout = 10000;
+}
+
+function setStateChangeTimeout(timeout) {
+  stateChangeTimeout = timeout
+}
+
+var active = {};
+
+function whenActive(metadata) {
+  return active[metadata] ? active[metadata] : Promise.resolve();
 }
 
 const availableAddressSpaceTypes = [
@@ -437,16 +448,23 @@ function getRandomCreationDate(floor) {
 }
 
 function scheduleSetAddressSpaceStatus(addressSpace, phase, messages) {
-  setTimeout(() => {
-    addressSpace.status = {
-      isReady: phase === "Active",
-      messages: messages,
-      phase: phase
-    };
-    if (phase !== "Active") {
-      scheduleSetAddressSpaceStatus(addressSpace, "Active", []);
-    }
-  }, stateChangeTimeout);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+
+      addressSpace.status = {
+        isReady: phase === "Active",
+        messages: messages,
+        phase: phase,
+        endpointStatuses: phase === "Active" ? createEndpointStatuses(addressSpace) : []
+      };
+      if (phase !== "Active") {
+        scheduleSetAddressSpaceStatus(addressSpace, "Active", []);
+      } else {
+        resolve();
+      }
+    }, stateChangeTimeout);
+
+  });
 }
 
 function createAddressSpace(as) {
@@ -470,6 +488,42 @@ function createAddressSpace(as) {
     throw `Address space with name  '${as.metadata.name} already exists in namespace ${as.metadata.namespace}`;
   }
 
+  if (as.spec.endpoints) {
+    as.spec.endpoints.forEach(ep => {
+      if (ep.service !== 'messaging') {
+        throw `Unrecognised endpoint service type '${ep.service}', known ones are : messaging`;
+      }
+      if (!ep.name) {
+        throw `Endpoint name is mandatory`;
+      }
+
+      if (ep.expose) {
+        if (ep.expose.type !== 'route' && ep.expose.type !== 'loadbalancer') {
+          throw `Unrecognised endpoint expose type '${ep.expose.type}', known ones are : route or loadbalancer`;
+        }
+        if (ep.expose.type === 'route') {
+          if (ep.expose.routeTlsTermination !== 'passthrough' && ep.expose.routeTlsTermination !== 'reencrypt') {
+            throw `Unrecognised endpoint expose routeTlsTermination '${ep.expose.routeTlsTermination}', known ones are : passthrough or reencrypt`;
+          }
+          if (ep.expose.routeServicePort !== 'amqps' && ep.expose.routeServicePort !== 'https') {
+            throw `Unrecognised endpoint expose routeServicePort '${ep.expose.routeServicePort}', known ones are : https or amqps`;
+          }
+        } else {
+          if (!ep.expose.loadBalancerPorts || !Array.isArray(ep.expose.loadBalancerPorts)) {
+            throw `Endpoint loadBalancerPorts is mandatory and must be a list`;
+          }
+          ep.expose.loadBalancerPorts.forEach(lbp => {
+            if (lbp !== 'amqps' && lbp !== 'amqp') {
+              throw `Unrecognised endpoint expose loadBalancerPorts '${ep.expose.loadBalancerPorts}', known ones are : amqp or amqps`;
+            }
+          });
+
+        }
+      }
+    });
+
+  }
+
   var phase = "Active";
   var messages = [];
   if (as.status && as.status.phase) {
@@ -489,6 +543,7 @@ function createAddressSpace(as) {
     spec: {
       plan: spacePlan,
       type: as.spec.type,
+      endpoints: as.spec.endpoints ? as.spec.endpoints : createDefaultEndpoints(),
       authenticationService: {
         name: as.spec.authenticationService ? as.spec.authenticationService.name : null
       }
@@ -496,11 +551,195 @@ function createAddressSpace(as) {
     status: null
   };
 
-  scheduleSetAddressSpaceStatus(addressSpace, phase, messages);
-
   addressSpaces.push(addressSpace);
+  active[addressSpace.metadata] = scheduleSetAddressSpaceStatus(addressSpace, phase, messages);
   return addressSpace.metadata;
 }
+
+function createDefaultEndpoints() {
+  return [
+    {
+      "cert": {
+        "provider": "selfsigned",
+      },
+      "expose": {
+        "routeServicePort": "amqps",
+        "routeTlsTermination": "passthrough",
+        "type": "route"
+      },
+      "name": "messaging",
+      "service": "messaging"
+    },
+    {
+      "cert": {
+        "provider": "selfsigned",
+      },
+      "expose": {
+        "routeServicePort": "https",
+        "routeTlsTermination": "reencrypt",
+        "type": "route"
+      },
+      "name": "messaging-wss",
+      "service": "messaging"
+    }
+  ];
+}
+
+function createEndpointStatuses(addressSpace) {
+
+  var endpointStatuses = [];
+
+  addressSpace.spec.endpoints.forEach(e => {
+    var endpointStatus = {
+      name: e.name,
+    };
+
+    if (e.expose) {
+      if (e.expose.type === "route") {
+        endpointStatus.externalHost = e.expose.routeHost ? e.expose.routeHost : `${e.name}-${addressSpace.metadata.name}.${addressSpace.metadata.namespace}.apps-crc.testing`;
+        endpointStatus.externalPorts = [
+          {name: e.expose.routeServicePort,
+           port: 443}
+        ];
+      } else if (e.expose.type === "loadbalancer") {
+        endpointStatus.externalPorts = [
+          {name: "amqps", port: 5671},
+          {name: "amqps", port: 5672},
+          {name: "amqp-wss", port: 443}
+        ];
+      }
+    }
+
+    if (e.service) {
+      endpointStatus.serviceHost = `${e.service}-${addressSpace.metadata.name}.${addressSpace.metadata.namespace}.svc`;
+      endpointStatus.servicePorts = [
+        {name: "amqps", port: 5671},
+        {name: "amqp", port: 5672},
+        {name: "amqp-wss", port: 443}
+      ];
+    }
+
+    endpointStatuses.push(endpointStatus);
+  });
+
+  return endpointStatuses;
+}
+
+
+
+function makeMessagingEndpoints() {
+
+  function makeMessagingEndpoint(as, name, spec, status) {
+    return {
+      metadata: {
+        name: name,
+        namespace: as.metadata.namespace,
+        uid: uuidv5(name, as.metadata.uid),
+        creationTimestamp: as.metadata.creationTimestamp
+      },
+      spec: spec,
+      status: status
+    };
+  };
+
+  function mapPorts(src, targetProtocols, targetPorts) {
+    src.forEach(sp => {
+      var mappedProtocol = sp.name.replace("-", "_");
+      if (mappedProtocol === "https") {
+        mappedProtocol = "amqp_wss";
+      }
+      targetProtocols.push(mappedProtocol);
+      targetPorts.push({
+        name: sp.name,
+        protocol: mappedProtocol,
+        port: sp.port
+      });
+    });
+  }
+
+  var messagingEndpoints = [];
+  addressSpaces.forEach(as => {
+    var serviceAdded = false;
+    as.spec.endpoints.forEach((ep) => {
+
+      var endpointStatus = as.status && as.status.endpointStatuses ?
+          as.status.endpointStatuses.find(eps => eps.name === ep.name) : null;
+
+
+      if (ep.service && !serviceAdded) {
+        var spec = {
+          protocols: [],
+          cluster: {}
+        };
+        var status = {
+          phase: "Active",
+          message: "",
+          ports: [],
+          internalPorts: [],
+          type: "cluster"
+        };
+
+        var serviceName = `${as.metadata.name}.${ep.service}.cluster`;
+
+        if (endpointStatus) {
+          status.host = endpointStatus.serviceHost;
+          mapPorts(endpointStatus.servicePorts, spec.protocols, status.ports);
+        }
+
+        messagingEndpoints.push(makeMessagingEndpoint(as, serviceName, spec, status));
+        serviceAdded = true;
+      }
+
+      if (ep.expose) {
+        var spec = {
+          protocols: []
+        };
+        var status = {
+          phase: "Active",
+          message: "",
+          ports: [],
+          internalPorts: [],
+          type: ep.expose.type === "route" ? "route" : "loadBalancer"
+        };
+
+        var name = `${as.metadata.name}.${ep.name}`;
+
+        if (endpointStatus) {
+          if (ep.expose.type === "route") {
+            spec.route = {
+              routeTlsTermination: ep.expose.routeTlsTermination
+            };
+
+            status.host = endpointStatus.externalHost;
+            mapPorts(endpointStatus.externalPorts, spec.protocols, status.ports);
+          } else {
+            spec.loadbalancer = {
+            };
+            ep.expose.loadBalancerPorts.forEach(lbp => {
+              spec.protocols.push(lbp);
+
+              var ep = endpointStatus.externalPorts.find(ep => ep.name === lbp);
+              if (ep) {
+                var mappedProtocol = ep.name.replace("-", "_");
+                status.ports.push({
+                  name: ep.name,
+                  protocol: mappedProtocol,
+                  port: ep.port
+                });
+              }
+            });
+
+          }
+        }
+
+        messagingEndpoints.push(makeMessagingEndpoint(as, name, spec, status));
+      }
+    });
+  });
+
+  return messagingEndpoints;
+}
+
 
 function patchAddressSpace(metadata, jsonPatch, patchType) {
   var index = addressSpaces.findIndex(existing => metadata.name === existing.metadata.name && metadata.namespace === existing.metadata.namespace);
@@ -1408,8 +1647,22 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         total: cons.length,
         connections: page
       };
+    },
+    messagingEndpoints:(parent, args, context, info) => {
+      var messagingEndpoints = makeMessagingEndpoints();
+      var filterer = buildFilterer(args.filter);
+      var orderBy = orderer(args.orderBy);
+      var endpoints = messagingEndpoints.filter(me => filterer.evaluate(me)).sort(orderBy);
 
+      var paginationBounds = calcLowerUpper(args.offset, args.first, endpoints.length);
+      var page = endpoints.slice(paginationBounds.lower, paginationBounds.upper);
+
+      return {
+        total: endpoints.length,
+        messagingEndpoints: page
+      };
     }
+
   },
 
   AddressSpace_consoleapi_enmasse_io_v1beta1: {
@@ -1545,7 +1798,10 @@ if (require.main === module) {
 
 
 module.exports.createAddress = createAddress;
+module.exports.createAddressSpace = createAddressSpace;
 module.exports.patchAddress = patchAddress;
 module.exports.patchAddressSpace = patchAddressSpace;
 module.exports.addressCommand = addressCommand;
+module.exports.whenActive = whenActive;
+module.exports.setStateChangeTimeout = setStateChangeTimeout;
 module.exports.resolvers = resolvers;

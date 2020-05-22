@@ -8,13 +8,15 @@
 * #4117: Add support for configuring console to use impersonation
 * #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
+* #4232: Allow configuring standard authentication service in HA mode
 * #4299: Bump vertx from 3.8.3 to 3.9.0
 * #4315: [IoT] Add the ability to configure TLS options
 * #4314: [IoT] Add alerts for infrastructure and projects
 * #4438: Address space connector - offer SASL ANONYMOUS if it cannot offer PLAIN or EXTERNAL.
-* #4232: Allow configuring standard authentication service in HA mode
+* #4442: Disregard incoming remote target on receiving links initiated by the plugin (#4495)
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
 * #4504: Bump gqlgen from v0.10.2 => v0.11.3
+* #4510: Implement a GraphQL messaging endpoint API as a facade over addressspaces #4510
 * #4546: Refactor GraphQL purgeAddress to permit multiple target addresses
 * #4549: Implement GraphQL closeConnections for brokered and standard
 * #4555: Enforce presence of routeServicePort in route endpoints definitions 
@@ -24,7 +26,6 @@
 * #4305: Inject OpenShift generated custom CA trust bundle into console pod so that console authentication works when a custom CA is in use.
 * #4342: address stuck unready - failed to retrieve addresses: null (##4345)
 * #4358: broker init.sh stop script execution of a script if a command has an error (#4359)
-* #4442: Disregard incoming remote target on receiving links initiated by the plugin (#4495)
 
 ## 0.31.1
 * #4046: add network-only as fetch policy for all queries 

@@ -19,10 +19,21 @@ import {
   ConnectionToolbarContainer
 } from "modules/connection/containers";
 import { TablePagination } from "components";
+import { IConnection } from "./components";
+import { compareObject } from "utils";
+import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
+import { getFilteredAdressNames } from "modules/address";
+import {
+  getFilteredConnectionNames,
+  getHeaderTextForCloseAll,
+  getDetailTextForCloseAll
+} from "./utils";
+import { useMutationQuery } from "hooks";
+import { CLOSE_CONNECTION } from "graphql-module";
 
 export default function ConnectionPage() {
+  const { dispatch } = useStoreContext();
   useDocumentTitle("Connection List");
-
   useA11yRouteChange();
   const [hostnames, setHostnames] = useState<Array<string>>([]);
   const [containerIds, setContainerIds] = useState<Array<string>>([]);
@@ -34,6 +45,16 @@ export default function ConnectionPage() {
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
 
+  const [selectedConnections, setSelectedConnections] = useState<IConnection[]>(
+    []
+  );
+
+  const refetchQueries: string[] = ["all_connections_for_addressspace_view"];
+
+  const [setCloseConnectionQueryVariables] = useMutationQuery(
+    CLOSE_CONNECTION,
+    refetchQueries
+  );
   const renderPagination = (page: number, perPage: number) => {
     return (
       <TablePagination
@@ -43,6 +64,67 @@ export default function ConnectionPage() {
         variant="top"
       />
     );
+  };
+
+  const onSelectConnection = (data: IConnection, isSelected: boolean) => {
+    if (isSelected === true && selectedConnections.indexOf(data) === -1) {
+      setSelectedConnections(prevState => [...prevState, data]);
+    } else if (isSelected === false) {
+      setSelectedConnections(prevState =>
+        prevState.filter(
+          connection =>
+            !compareObject(
+              {
+                name: connection.name,
+                containerId: connection.containerId
+              },
+              { name: data.name, containerId: data.containerId }
+            )
+        )
+      );
+    }
+  };
+
+  const onSelectAllConnection = (
+    dataList: IConnection[],
+    isSelected: boolean
+  ) => {
+    if (isSelected === true) {
+      setSelectedConnections(dataList);
+    } else if (isSelected === false) {
+      setSelectedConnections([]);
+    }
+  };
+
+  const onCloseAll = () => {
+    let queryConnectionVariable: Array<{
+      name: string;
+      namespace: string;
+    }> = [];
+    selectedConnections.map((connection: IConnection) =>
+      queryConnectionVariable.push({
+        name: connection.name,
+        namespace: namespace
+      })
+    );
+    if (queryConnectionVariable.length > 0) {
+      setCloseConnectionQueryVariables({ cons: queryConnectionVariable });
+    }
+    setSelectedConnections([]);
+  };
+
+  const onCloseAllConnections = async () => {
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CLOSE_CONNECTIONS,
+      modalProps: {
+        option: "Close",
+        header: getHeaderTextForCloseAll(selectedConnections),
+        onConfirm: onCloseAll,
+        selectedItems: getFilteredConnectionNames(selectedConnections),
+        detail: getDetailTextForCloseAll(selectedConnections)
+      }
+    });
   };
 
   return (
@@ -59,6 +141,8 @@ export default function ConnectionPage() {
             setSortValue={setSortDropdownValue}
             namespace={namespace || ""}
             addressSpaceName={name || ""}
+            selectedConnections={selectedConnections}
+            onCloseAllConnections={onCloseAllConnections}
           />
         </GridItem>
         <GridItem span={6}>{renderPagination(page, perPage)}</GridItem>
@@ -75,6 +159,9 @@ export default function ConnectionPage() {
         sortValue={sortDropDownValue}
         setSortValue={setSortDropdownValue}
         addressSpaceType={type}
+        selectedConnections={selectedConnections}
+        onSelectAllConnection={onSelectAllConnection}
+        onSelectConnection={onSelectConnection}
       />
       {renderPagination(page, perPage)}
     </PageSection>

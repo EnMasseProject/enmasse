@@ -212,7 +212,13 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		loggedOnUser := getLoggedOnUser(req, userclient, "")
+		var loggedOnUser userapiv1.User
+		if sessionManager.Exists(req.Context(), loggedOnUserSessionAttribute) {
+			loggedOnUser = sessionManager.Get(req.Context(), loggedOnUserSessionAttribute).(userapiv1.User)
+		} else {
+			loggedOnUser = getLoggedOnUser(req, userclient, "")
+			sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
+		}
 
 		requestState := &RequestState{
 			EnmasseV1beta1Client: coreClient,

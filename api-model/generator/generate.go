@@ -31,14 +31,14 @@ import (
 )
 
 type Schema struct {
-	MessagingInfra        enmasseapi.MessagingInfrastructure
-	MessagingInfraList    enmasseapi.MessagingInfrastructureList
-	MessagingTenant       enmasseapi.MessagingTenant
-	MessagingTenantList   enmasseapi.MessagingTenantList
-	MessagingAddress      enmasseapi.MessagingAddress
-	MessagingAddressList  enmasseapi.MessagingAddressList
-	MessagingEndpoint     enmasseapi.MessagingEndpoint
-	MessagingEndpointList enmasseapi.MessagingEndpointList
+	MessagingInfrastructure     enmasseapi.MessagingInfrastructure
+	MessagingInfrastructureList enmasseapi.MessagingInfrastructureList
+	MessagingTenant             enmasseapi.MessagingTenant
+	MessagingTenantList         enmasseapi.MessagingTenantList
+	MessagingAddress            enmasseapi.MessagingAddress
+	MessagingAddressList        enmasseapi.MessagingAddressList
+	MessagingEndpoint           enmasseapi.MessagingEndpoint
+	MessagingEndpointList       enmasseapi.MessagingEndpointList
 }
 
 func main() {

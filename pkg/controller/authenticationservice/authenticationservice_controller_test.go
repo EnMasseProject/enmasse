@@ -43,7 +43,7 @@ func TestNoneAuthService(t *testing.T) {
 
 	r := setup(t, authservice)
 
-	if err := os.Setenv("NONE_AUTHSERVICE_IMAGE", "none-authservice"); err != nil {
+	if err := os.Setenv("RELATED_IMAGE_NONE_AUTHSERVICE", "none-authservice"); err != nil {
 		t.Fatalf("Failed to set image version for test: %v", err)
 	}
 

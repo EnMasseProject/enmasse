@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.logs;
 
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -283,6 +284,7 @@ public class GlobalLogCollector {
             List<String> nsList = new ArrayList<>();
             nsList.add(infraNamespace);
             nsList.addAll(Arrays.asList(SystemtestsKubernetesApps.ST_NAMESPACES));
+            nsList.add(Environment.getInstance().getMonitoringNamespace());
             // TMP: trying to understand sporadic problems with openshift 4 console authentication.
             if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
                 nsList.add("openshift-authentication");

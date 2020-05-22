@@ -39,7 +39,6 @@ func createAddressSpace(addressspace, namespace string, addressSpaceHolderOption
 			},
 		},
 	}
-
 	for _, holderOptions := range addressSpaceHolderOptions {
 		holderOptions(ash)
 	}
@@ -53,6 +52,19 @@ func withAddressSpaceAnnotation(name, value string) addressSpaceHolderOption {
 			ash.Annotations = make(map[string]string)
 		}
 		ash.Annotations[name] = value
+	}
+}
+
+func withEndpoint(spec v1beta1.EndpointSpec, status v1beta1.EndpointStatus) addressSpaceHolderOption {
+	return func(ash *consolegraphql.AddressSpaceHolder) {
+		ash.Spec.Endpoints = append(ash.Spec.Endpoints, spec)
+		ash.Status.EndpointStatus = append(ash.Status.EndpointStatus, status)
+	}
+}
+
+func withCACertificate(cACertificate []byte) addressSpaceHolderOption {
+	return func(ash *consolegraphql.AddressSpaceHolder) {
+		ash.Status.CACertificate = cACertificate
 	}
 }
 
@@ -132,17 +144,17 @@ type mockCollector struct {
 }
 
 type mockCommandDelegate struct {
-	purgeCount int
-	closeCount int
+	purged []metav1.ObjectMeta
+	closed []metav1.ObjectMeta
 }
 
-func (mcd *mockCommandDelegate) PurgeAddress(_ metav1.ObjectMeta) error {
-	mcd.purgeCount++
+func (mcd *mockCommandDelegate) PurgeAddress(a metav1.ObjectMeta) error {
+	mcd.purged = append(mcd.purged, a)
 	return nil
 }
 
-func (mcd *mockCommandDelegate) CloseConnection(_ metav1.ObjectMeta) error {
-	mcd.closeCount++
+func (mcd *mockCommandDelegate) CloseConnection(c metav1.ObjectMeta) error {
+	mcd.closed = append(mcd.closed, c)
 	return nil
 }
 

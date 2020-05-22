@@ -13,8 +13,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 )
 
-type linkK8sResolver struct{ *Resolver }
-
 type linkSpecK8sResolver struct{ *Resolver }
 
 func (l linkSpecK8sResolver) Connection(ctx context.Context, obj *consolegraphql.LinkSpec) (*consolegraphql.Connection, error) {

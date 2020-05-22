@@ -111,7 +111,7 @@ export default function AddressDetailPage() {
       name: addressDetail.metadata.name,
       displayName: addressDetail.spec.address,
       namespace: addressDetail.metadata.namespace,
-      type: addressDetail.spec.plan.spec.addressType,
+      type: addressDetail.spec.type || addressDetail.spec.plan.spec.addressType,
       planLabel:
         addressDetail.spec.plan.spec.displayName ||
         addressDetail.spec.plan.metadata.name,
@@ -153,10 +153,12 @@ export default function AddressDetailPage() {
 
   const purgeAddress = (data: any) => {
     const variables = {
-      a: {
-        name: data.name,
-        namespace: data.namespace
-      }
+      addrs: [
+        {
+          name: data.name,
+          namespace: data.namespace
+        }
+      ]
     };
     setPurgeAddressQueryVariables(variables);
   };

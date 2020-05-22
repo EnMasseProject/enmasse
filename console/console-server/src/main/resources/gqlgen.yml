@@ -83,6 +83,15 @@ models:
   LinkSpec_consoleapi_enmasse_io_v1beta1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.LinkSpec
 
+  MessagingEndpoint_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpoint
+  MessagingEndpointSpec_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointSpec
+  MessagingEndpointStatus_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointStatus
+  MessagingEndpointPort_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPort
+
   Address:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Address
 
