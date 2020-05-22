@@ -102,6 +102,11 @@ public class ExternalMessagingClient {
         return this;
     }
 
+    public ExternalMessagingClient withReconnect(boolean reconnect) {
+        this.arguments.put(ClientArgument.CONN_RECONNECT, String.valueOf(reconnect));
+        return this;
+    }
+
     //===================================================================
     //                          Content methods
     //===================================================================

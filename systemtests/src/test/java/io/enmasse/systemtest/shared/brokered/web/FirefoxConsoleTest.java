@@ -76,6 +76,13 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestSharedBrokered {
     }
 
     @Test
+    @ExternalClients
+    @Tag(ACCEPTANCE)
+    void testConnectionClose() throws Exception {
+        doTestConnectionClose(getSharedAddressSpace());
+    }
+
+    @Test
     void testDeleteFilteredAddress() throws Exception {
         doTestDeleteFilteredAddress(getSharedAddressSpace());
     }
