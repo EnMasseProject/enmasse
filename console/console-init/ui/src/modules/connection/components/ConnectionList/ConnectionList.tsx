@@ -19,7 +19,7 @@ import { FormatDistance } from "use-patternfly";
 import { css } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/address-space";
+import { StyleForTable } from "modules/msg-and-iot";
 
 interface IConnectionListProps {
   rows: IConnection[];

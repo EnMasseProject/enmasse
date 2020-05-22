@@ -10,3 +10,4 @@ export * from "./MessagingConfigurationStep";
 export * from "./MessagingReviewStep";
 export * from "./IoTReview";
 export * from "./IoTReviewStep";
+export * from "./ProjectList";
