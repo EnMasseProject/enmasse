@@ -21,7 +21,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
-func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	service := config.Spec.ServicesConfig.DeviceConnection.JDBC
 
@@ -41,7 +41,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, co
 
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameDeviceConnection, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileJdbcDeviceConnectionDeployment(config, deployment, change)
+			return r.reconcileJdbcDeviceConnectionDeployment(config, deployment, change, authServicePsk)
 		})
 	})
 
@@ -50,7 +50,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, co
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder, authServicePsk *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[DeviceConnectionTypeAnnotation] = "jdbc"
@@ -60,6 +60,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 
 	service := config.Spec.ServicesConfig.DeviceConnection
 	applyDefaultDeploymentConfig(deployment, service.JDBC.ServiceConfig, change)
+	cchange.ApplyTo(authServicePsk, "iot.enmasse.io/auth-psk-hash", &deployment.Spec.Template.Annotations)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-connection", func(container *corev1.Container) error {
@@ -98,7 +99,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.JDBC.CommonServiceConfig)

@@ -22,7 +22,7 @@ import (
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
 
-func (r *ReconcileIoTConfig) processInfinispanDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processInfinispanDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	service := config.Spec.ServicesConfig.DeviceConnection.Infinispan
 
@@ -36,14 +36,14 @@ func (r *ReconcileIoTConfig) processInfinispanDeviceConnection(ctx context.Conte
 	})
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameDeviceConnection, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileInfinispanDeviceConnectionDeployment(config, deployment, change)
+			return r.reconcileInfinispanDeviceConnectionDeployment(config, deployment, change, authServicePsk)
 		})
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder, authServicePsk *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[DeviceConnectionTypeAnnotation] = "infinispan"
@@ -53,6 +53,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 
 	service := config.Spec.ServicesConfig.DeviceConnection
 	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, change)
+	cchange.ApplyTo(authServicePsk, "iot.enmasse.io/auth-psk-hash", &deployment.Spec.Template.Annotations)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-connection", func(container *corev1.Container) error {
@@ -91,7 +92,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
 		appendCommonHonoJavaEnv(container, "HONO_DEVICECONNECTION_AMQP_", config, &service.Infinispan.CommonServiceConfig)

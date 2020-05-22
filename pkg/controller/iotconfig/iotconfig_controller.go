@@ -161,6 +161,47 @@ type ReconcileIoTConfig struct {
 	namespace string
 }
 
+type configTrackerAdapter struct {
+	username string
+	password string
+
+	recorder *cchange.ConfigChangeRecorder
+}
+
+type configTracker struct {
+	qdrProxyConfigCtx *cchange.ConfigChangeRecorder
+	authServicePskCtx *cchange.ConfigChangeRecorder
+	adapters          map[string]*configTrackerAdapter
+}
+
+func (c *configTracker) RecordAdapterPassword(a adapter, username []byte, password []byte) {
+	if c.adapters[a.Name] == nil {
+		c.adapters[a.Name] = &configTrackerAdapter{
+			recorder: cchange.NewRecorder(),
+		}
+	}
+
+	ac := c.adapters[a.Name]
+
+	// record for auth service
+
+	ac.username = string(username)
+	ac.password = string(password)
+
+	// record for hash
+
+	ac.recorder.AddBytes(username)
+	ac.recorder.AddBytes(password)
+}
+
+func NewConfigTracker() *configTracker {
+	return &configTracker{
+		qdrProxyConfigCtx: cchange.NewRecorder(),
+		authServicePskCtx: cchange.NewRecorder(),
+		adapters:          make(map[string]*configTrackerAdapter),
+	}
+}
+
 // Reconcile
 //
 // returning an error will get the request re-queued
@@ -198,24 +239,26 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 
 	original := config.DeepCopy()
 
-	// update and store credentials
+	// prepare the adapter status section
 
-	rc.Process(func() (result reconcile.Result, e error) {
-		return r.processGeneratedCredentials(ctx, config)
+	prepareAdapterStatus(config)
+
+	// pre-req reconcile
+
+	configTracker := NewConfigTracker()
+
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processQdrProxyConfig(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
-
-	if rc.Error() != nil || rc.NeedRequeue() {
-		log.Info("Re-queue after processing finalizers")
-		return rc.Result()
-	}
+	rc.ProcessSimple(func() error {
+		return r.processAuthServicePskSecret(ctx, config, configTracker.authServicePskCtx)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processAdapterPskCredentials(ctx, config, configTracker)
+	})
 
 	// start normal reconcile
 
-	qdrProxyConfigCtx := cchange.NewRecorder()
-
-	rc.Process(func() (reconcile.Result, error) {
-		return r.processQdrProxyConfig(ctx, config, qdrProxyConfigCtx)
-	})
 	rc.ProcessSimple(func() error {
 		return r.processInterServiceCAConfigMap(ctx, config)
 	})
@@ -223,28 +266,28 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processServiceMesh(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processAuthService(ctx, config)
+		return r.processAuthService(ctx, config, configTracker)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processTenantService(ctx, config)
+		return r.processTenantService(ctx, config, configTracker.authServicePskCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processDeviceConnection(ctx, config)
+		return r.processDeviceConnection(ctx, config, configTracker.authServicePskCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processDeviceRegistry(ctx, config)
+		return r.processDeviceRegistry(ctx, config, configTracker.authServicePskCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processHttpAdapter(ctx, config, qdrProxyConfigCtx)
+		return r.processHttpAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processMqttAdapter(ctx, config, qdrProxyConfigCtx)
+		return r.processMqttAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processSigfoxAdapter(ctx, config, qdrProxyConfigCtx)
+		return r.processSigfoxAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processLoraWanAdapter(ctx, config, qdrProxyConfigCtx)
+		return r.processLoraWanAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processMonitoring(ctx, config)
@@ -542,43 +585,4 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 	}
 
 	return nil
-}
-
-func (r *ReconcileIoTConfig) processGeneratedCredentials(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
-
-	if config.Status.Services == nil {
-		config.Status.Services = make(map[string]iotv1alpha1.ServiceStatus)
-	}
-
-	original := config.DeepCopy()
-
-	// generate auth service PSK
-
-	if config.Status.AuthenticationServicePSK == nil {
-		s, err := util.GeneratePassword(128)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		config.Status.AuthenticationServicePSK = &s
-	}
-
-	// ensure we have all adapter status entries we want
-
-	config.Status.Adapters = ensureAdapterStatus(config.Status.Adapters)
-
-	// generate adapter users
-
-	if err := initConfigStatus(config); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// compare
-
-	if !reflect.DeepEqual(original, config) {
-		log.Info("Credentials change detected. Updating status and re-queuing.")
-		return reconcile.Result{Requeue: true}, r.updateStatus(ctx, original, config, nil)
-	} else {
-		return reconcile.Result{}, nil
-	}
-
 }

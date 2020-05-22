@@ -111,6 +111,22 @@ func findAdapter(name string) adapter {
 	panic(fmt.Errorf("failed to find adapter '%s'", name))
 }
 
+// prepare the adapter status section
+func prepareAdapterStatus(config *iotv1alpha1.IoTConfig) {
+
+	config.Status.Adapters = make(map[string]iotv1alpha1.AdapterStatus)
+
+	for _, a := range adapters {
+
+		config.Status.Adapters[a.Name] = iotv1alpha1.AdapterStatus{
+			Enabled: a.IsEnabled(config),
+		}
+
+	}
+
+	config.Status.Services = make(map[string]iotv1alpha1.ServiceStatus)
+}
+
 // process the service route
 func (r *ReconcileIoTConfig) processServiceRoute(ctx context.Context, config *iotv1alpha1.IoTConfig,
 	name string,
@@ -253,8 +269,8 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 
 func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Container, adapter adapter) error {
 
-	username := adapter.Name + "-adapter@HONO"
-	password := config.Status.Adapters[adapter.Name].InterServicePassword
+	username := install.FromSecret(adapter.FullName()+"-credentials", keyAdapterUsername)
+	password := install.FromSecret(adapter.FullName()+"-credentials", keyAdapterPassword)
 
 	container.Env = append(container.Env, []corev1.EnvVar{
 		{Name: "HONO_MESSAGING_HOST", Value: "localhost"},
@@ -263,17 +279,17 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 		{Name: "HONO_COMMAND_PORT", Value: "5672"},
 
 		{Name: "HONO_REGISTRATION_HOST", Value: FullHostNameForEnvVar(nameDeviceRegistry)},
-		{Name: "HONO_REGISTRATION_USERNAME", Value: username},
-		{Name: "HONO_REGISTRATION_PASSWORD", Value: password},
+		{Name: "HONO_REGISTRATION_USERNAME", ValueFrom: username},
+		{Name: "HONO_REGISTRATION_PASSWORD", ValueFrom: password},
 		{Name: "HONO_CREDENTIALS_HOST", Value: FullHostNameForEnvVar(nameDeviceRegistry)},
-		{Name: "HONO_CREDENTIALS_USERNAME", Value: username},
-		{Name: "HONO_CREDENTIALS_PASSWORD", Value: password},
+		{Name: "HONO_CREDENTIALS_USERNAME", ValueFrom: username},
+		{Name: "HONO_CREDENTIALS_PASSWORD", ValueFrom: password},
 		{Name: "HONO_DEVICE_CONNECTION_HOST", Value: FullHostNameForEnvVar("iot-device-connection")},
-		{Name: "HONO_DEVICE_CONNECTION_USERNAME", Value: username},
-		{Name: "HONO_DEVICE_CONNECTION_PASSWORD", Value: password},
+		{Name: "HONO_DEVICE_CONNECTION_USERNAME", ValueFrom: username},
+		{Name: "HONO_DEVICE_CONNECTION_PASSWORD", ValueFrom: password},
 		{Name: "HONO_TENANT_HOST", Value: FullHostNameForEnvVar("iot-tenant-service")},
-		{Name: "HONO_TENANT_USERNAME", Value: username},
-		{Name: "HONO_TENANT_PASSWORD", Value: password},
+		{Name: "HONO_TENANT_USERNAME", ValueFrom: username},
+		{Name: "HONO_TENANT_PASSWORD", ValueFrom: password},
 	}...)
 
 	adapterConfig := adapter.AdapterConfigProvider(config)

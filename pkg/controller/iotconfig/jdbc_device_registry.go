@@ -29,7 +29,7 @@ type JdbcDeviceProperties struct {
 	Management *iotv1alpha1.JdbcConnectionInformation `json:"management,omitempty"`
 }
 
-func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 	change := cchange.NewRecorder()
@@ -52,6 +52,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config,
 					deployment,
 					change,
+					authServicePsk,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistry,
@@ -92,6 +93,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config,
 					deployment,
 					change,
+					authServicePsk,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
@@ -107,6 +109,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config,
 					deployment,
 					change,
+					authServicePsk,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistryManagement,
@@ -135,6 +138,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config,
 					deployment,
 					change,
+					authServicePsk,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
@@ -165,6 +169,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	config *iotv1alpha1.IoTConfig,
 	deployment *appsv1.Deployment,
 	change *cchange.ConfigChangeRecorder,
+	authServicePsk *cchange.ConfigChangeRecorder,
 	serviceConfig iotv1alpha1.ServiceConfig,
 	commonConfig iotv1alpha1.CommonServiceConfig,
 	serviceNameForTls string,
@@ -182,6 +187,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	service := config.Spec.ServicesConfig.DeviceRegistry
 	applyDefaultDeploymentConfig(deployment, serviceConfig, change)
+	cchange.ApplyTo(authServicePsk, "iot.enmasse.io/auth-psk-hash", &deployment.Spec.Template.Annotations)
 
 	// container
 
@@ -223,10 +229,10 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
-
-			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.JDBC.Management.AuthTokenCacheExpiration},
+			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
+
+		install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", service.JDBC.Management.AuthTokenCacheExpiration)
 
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &commonConfig)
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_REST_", config, &commonConfig)

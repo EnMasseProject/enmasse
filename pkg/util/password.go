@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -25,6 +25,7 @@ func randomChar() (rune, error) {
 	return PossibleCharacters[val.Int64()], nil
 }
 
+// generate a password which is X characters (runes) long, and also X bytes long
 func GeneratePassword(length int) (string, error) {
 	result := make([]rune, length)
 

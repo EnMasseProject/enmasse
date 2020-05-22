@@ -105,3 +105,20 @@ func (c ConfigChangeRecorder) Clone() *ConfigChangeRecorder {
 		hasher: new,
 	}
 }
+
+func ApplyTo(c *ConfigChangeRecorder, key string, to *map[string]string) {
+	if to == nil {
+		return
+	}
+
+	if c == nil {
+		delete(*to, key)
+		return
+	}
+
+	if *to == nil {
+		*to = make(map[string]string)
+	}
+
+	(*to)[key] = c.HashString()
+}

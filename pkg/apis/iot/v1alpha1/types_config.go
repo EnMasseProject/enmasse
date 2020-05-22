@@ -417,9 +417,8 @@ type IoTConfigStatus struct {
 	Phase   ConfigPhaseType `json:"phase"`
 	Message string          `json:"message,omitempty"`
 
-	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
-	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
-	Services                 map[string]ServiceStatus `json:"services,omitempty"`
+	Adapters map[string]AdapterStatus `json:"adapters,omitempty"`
+	Services map[string]ServiceStatus `json:"services,omitempty"`
 
 	Conditions []ConfigCondition `json:"conditions"`
 }
@@ -466,8 +465,7 @@ type CommonStatus struct {
 type AdapterStatus struct {
 	CommonStatus `json:",inline"`
 
-	InterServicePassword string `json:"interServicePassword,omitempty"`
-	Enabled              bool   `json:"enabled"`
+	Enabled bool `json:"enabled"`
 }
 
 type ServiceStatus struct {

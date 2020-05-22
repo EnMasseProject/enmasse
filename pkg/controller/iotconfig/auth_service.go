@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
+	"github.com/pkg/errors"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
 
@@ -26,7 +27,7 @@ import (
 
 const nameAuthService = "iot-auth-service"
 
-func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig, configTracker *configTracker) (reconcile.Result, error) {
 
 	service := config.Spec.ServicesConfig.Authentication
 
@@ -39,11 +40,16 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 		})
 	})
 	rc.ProcessSimple(func() error {
+		return r.processSecret(ctx, nameAuthService+"-permissions", config, false, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
+			return r.reconcileAuthServiceSecret(config, secret, change, configTracker)
+		})
+	})
+	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameAuthService+"-metrics", config, false, r.reconcileMetricsService(nameAuthService))
 	})
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameAuthService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileAuthServiceDeployment(config, deployment, change)
+			return r.reconcileAuthServiceDeployment(config, deployment, change, configTracker.authServicePskCtx)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -53,12 +59,13 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder, authServicePsk *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	service := config.Spec.ServicesConfig.Authentication
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, change)
+	cchange.ApplyTo(authServicePsk, "iot.enmasse.io/auth-psk-hash", &deployment.Spec.Template.Annotations)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
@@ -95,7 +102,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
-			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "HONO_AUTH_SVC_SIGNING_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 		if err := AppendTrustStores(config, container, []string{"HONO_AUTH_AMQP_TRUST_STORE_PATH"}); err != nil {
 			return err
@@ -109,6 +116,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 		// volume mounts
 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
+		install.ApplyVolumeMountSimple(container, "permissions", "/etc/permissions", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
 
 		// apply container options
@@ -135,6 +143,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 	// volumes
 
 	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameAuthService+"-config")
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "permissions", nameAuthService+"-permissions")
 
 	// inter service secrets
 
@@ -201,25 +210,50 @@ hono:
       keyFormat: PEM
       trustStoreFormat: PEM
     svc:
-      permissionsPath: file:///etc/config/permissions.json
+      permissionsPath: file:///etc/permissions/permissions.json
 `
 
-	// create permissions files
+	// delete legacy entry
 
-	permissions, err := generatePermissions(config, adapters)
-	if err != nil {
-		return err
-	}
-	configMap.Data["permissions.json"] = permissions
+	delete(configMap.Data, "permissions.json")
 
 	// record for config hash
 
-	configCtx.AddStringsFromMap(configMap.Data, "application.yml", "permissions.json", "logback-spring.xml")
+	configCtx.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
+
+	// done
 
 	return nil
 }
 
-func generatePermissions(config *iotv1alpha1.IoTConfig, adapters []adapter) (string, error) {
+func (r *ReconcileIoTConfig) reconcileAuthServiceSecret(config *iotv1alpha1.IoTConfig, secret *corev1.Secret, configCtx *cchange.ConfigChangeRecorder, configTracker *configTracker) error {
+
+	install.ApplyDefaultLabels(&secret.ObjectMeta, "iot", secret.Name)
+
+	// create config map data
+
+	if secret.Data == nil {
+		secret.Data = make(map[string][]byte)
+	}
+
+	// create permissions files
+
+	permissions, err := generatePermissions(config, adapters, configTracker)
+	if err != nil {
+		return err
+	}
+	secret.Data["permissions.json"] = []byte(permissions)
+
+	// record for config hash
+
+	configCtx.AddBytesFromMap(secret.Data, "permissions.json")
+
+	// done
+
+	return nil
+}
+
+func generatePermissions(config *iotv1alpha1.IoTConfig, adapters []adapter, configTracker *configTracker) (string, error) {
 
 	result := `
 {
@@ -278,12 +312,19 @@ func generatePermissions(config *iotv1alpha1.IoTConfig, adapters []adapter) (str
 			continue
 		}
 
-		encodedPassword, err := json.Marshal(config.Status.Adapters[a.Name].InterServicePassword)
+		username := configTracker.adapters[a.Name].username
+		password := configTracker.adapters[a.Name].password
+
+		encodedUsername, err := json.Marshal(username)
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "Failed to JSON encode adapter username")
+		}
+		encodedPassword, err := json.Marshal(password)
+		if err != nil {
+			return "", errors.Wrap(err, "Failed to JSON encode adapter password")
 		}
 
-		result += `		"` + a.Name + `-adapter@HONO":{
+		result += `		` + string(encodedUsername) + `:{
 			"mechanism":"PLAIN",
 			"password":` + string(encodedPassword) + `,
 			"authorities":["protocol-adapter"]
