@@ -14,9 +14,8 @@ import {
   SortByDirection
 } from "@patternfly/react-table";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import { ProjectToolbar } from "modules/project/components/ProjectToolbar";
 
-export const StyleForTable = StyleSheet.create({
+const StyleForTable = StyleSheet.create({
   scroll_overflow: {
     overflowY: "auto",
     paddingBottom: 100
