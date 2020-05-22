@@ -34,3 +34,4 @@ export * from "./DropdownWithBulkSelect";
 export * from "./SwitchWithToggle";
 export * from "./MetadataListTable";
 export * from "./DividerWithTitle";
+export * from "./PasswordLabel";
