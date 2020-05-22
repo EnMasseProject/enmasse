@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 
 public class MonitoringClient {
@@ -63,17 +62,10 @@ public class MonitoringClient {
         }, new TimeoutBudget(3, TimeUnit.MINUTES));
     }
 
-    public void validateQuery(String query, String expectedValue) throws Exception {
-        validateQuery(query, expectedValue, Collections.emptyMap());
-    }
-
     public void validateQuery(String query, String expectedValue, Map<String, String> labels) throws Exception {
         JsonObject queryResult = client.doQuery(query);
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, query, labels, jsonResult -> {
-            JsonArray valueArray = jsonResult.getJsonArray("value", new JsonArray());
-            return valueArray.size() == 2 && valueArray.getString(1).equals(expectedValue);
-        });
+        boolean validateResult = metricQueryResultValidation(queryResult, query, labels, resource -> expectedValue.equals(resource.getValue()));
         if (!validateResult) {
             throw new Exception("Unexpected query result " + queryResult.encodePrettily());
         }
@@ -82,9 +74,8 @@ public class MonitoringClient {
     public void validateRangeQuery(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
         JsonObject queryResult = client.doRangeQuery(query, String.valueOf(start.getEpochSecond()), String.valueOf(Instant.now().getEpochSecond()));
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), jsonResult -> {
-            JsonArray valuesArray = jsonResult.getJsonArray("values", new JsonArray());
-            return rangeValidator.test(valuesArray.stream().map(obj -> (JsonArray) obj).map(array -> array.getString(1)).collect(Collectors.toList()));
+        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), resource -> {
+            return rangeValidator.test(resource.getRangeValues());
         });
         if (!validateResult) {
             throw new Exception("Unexpected query result " + queryResult.encodePrettily());
@@ -122,32 +113,12 @@ public class MonitoringClient {
         }
     }
 
-    private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Map<String, String> labels, Predicate<JsonObject> resultValidator) {
-        JsonObject data = getResults(queryResult, metricName, labels);
+    private boolean metricQueryResultValidation(JsonObject queryResult, String metricName, Map<String, String> labels, Predicate<PrometheusMetricResource> resultValidator) {
+        PrometheusMetricResource data = PrometheusMetricResource.getResource(queryResult, metricName, labels);
         if (data != null) {
             return resultValidator.test(data);
         }
         return false;
-    }
-
-    private JsonObject getResults(JsonObject queryResult, String metricName, Map<String, String> labels) {
-        JsonObject data = queryResult.getJsonObject("data", new JsonObject());
-        for (Object result : data.getJsonArray("result", new JsonArray())) {
-            JsonObject jsonResult = (JsonObject) result;
-            if (jsonResult.getJsonObject("metric", new JsonObject()).getString("__name__", "").equals(metricName)) {
-                boolean match = true;
-                for (Map.Entry<String, String> label : labels.entrySet()) {
-                    if (!jsonResult.getJsonObject("metric", new JsonObject()).getString(label.getKey(), "").equals(label.getValue())) {
-                        match = false;
-                        break;
-                    }
-                }
-                if (match) {
-                    return jsonResult;
-                }
-            }
-        }
-        return null;
     }
 
     private JsonObject getRule(String name) throws Exception {

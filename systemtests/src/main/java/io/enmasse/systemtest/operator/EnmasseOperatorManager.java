@@ -353,7 +353,7 @@ public class EnmasseOperatorManager {
     private void generateTemplates() {
         if (Files.notExists(Paths.get(Environment.getInstance().getTemplatesPath()))) {
             LOGGER.info("Generating templates.");
-            Exec.execute(Arrays.asList("make", "-C", "..", "templates"));
+            Exec.execute(Arrays.asList("make", "-C", "..", "templates"), false);
         }
     }
 
