@@ -64,7 +64,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -127,19 +126,21 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteAddressSpace(addressSpace);
     }
 
-    protected void doTestBlankPageAfterAddressSpaceDeletion() throws Exception {
+    protected void doTestGoneAwayPageAfterAddressSpaceDeletion() throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
         consolePage.openAddressList(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
-        selenium.getDriverWait().withTimeout(Duration.ofMinutes(22))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceTitle()));
-        assertNotNull(consolePage.getNotFoundPage());
+        try {
+            consolePage.awaitGoneAwayPage();
+        } finally {
+            resourcesManager.deleteAddressSpace(addressSpace);
+        }
     }
 
-    protected void doTestBlankPageAfterAddressDeletion() throws Exception {
+    protected void doTestGoneAwayPageAfterAddressDeletion() throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
@@ -149,9 +150,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
         resourcesManager.deleteAddresses(address);
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
-        assertNotNull(consolePage.getNotFoundPage());
+        consolePage.awaitGoneAwayPage();
         resourcesManager.deleteAddressSpace(addressSpace);
     }
 
@@ -1194,7 +1193,7 @@ public abstract class ConsoleTest extends TestBase {
                 consolePage.getClientItems().size(), is(connectionCount * 2));
     }
 
-    protected void doTestEmptyLinkPage(AddressSpace addressSpace, ExtensionContext context) throws Exception {
+    protected void doTestGoneAwayPageAfterConnectionClose(AddressSpace addressSpace, ExtensionContext context) throws Exception {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_LARGE_QUEUE);
@@ -1210,11 +1209,7 @@ public abstract class ConsoleTest extends TestBase {
         kubernetes.deletePod(SystemtestsKubernetesApps.MESSAGING_CLIENTS, pod.getMetadata().getName());
         waitForPodsToTerminate(Collections.singletonList(pod.getMetadata().getUid()));
 
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getLinkContainerId()));
-
-        assertNotNull(consolePage.getNotFoundPage());
-
+        consolePage.awaitGoneAwayPage();
     }
 
     protected void  doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {

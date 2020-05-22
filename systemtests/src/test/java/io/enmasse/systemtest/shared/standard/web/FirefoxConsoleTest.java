@@ -325,8 +325,8 @@ public class FirefoxConsoleTest extends ConsoleTest implements ITestSharedStanda
 
     @Test
     @ExternalClients
-    void testEmptyLinkPage() throws Exception {
-        doTestEmptyLinkPage(getSharedAddressSpace(), TestInfo.getInstance().getActualTest());
+    void testGoneAwayPageAfterConnectionClose() throws Exception {
+        doTestGoneAwayPageAfterConnectionClose(getSharedAddressSpace(), TestInfo.getInstance().getActualTest());
     }
 
     @Test()

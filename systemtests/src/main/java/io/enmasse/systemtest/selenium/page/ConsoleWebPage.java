@@ -41,6 +41,9 @@ import java.util.function.Supplier;
 public class ConsoleWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
+    private static final By ADDRESS_LIST_XPATH = By.xpath("//table[@aria-label='Address List']");
+    private static final By CONNECTION_LIST_XPATH = By.xpath("//table[@aria-label='connection list']");
+    private static final By NOT_FOUND_STATE_XPATH = By.className("pf-c-empty-state");
 
     SeleniumProvider selenium;
     String ocRoute;
@@ -92,7 +95,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getAddressTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='Address List']"));
+        return selenium.getDriver().findElement(ADDRESS_LIST_XPATH);
     }
 
     private WebElement getTableAddressHeader() {
@@ -104,7 +107,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='connection list']"));
+        return selenium.getDriver().findElement(CONNECTION_LIST_XPATH);
     }
 
     private WebElement getTableConnectionHeader() {
@@ -479,8 +482,9 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("adheader-name"));
     }
 
-    public WebElement getNotFoundPage() {
-        return selenium.getDriver().findElement(By.className("pf-c-empty-state"));
+    public void awaitGoneAwayPage() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(120)).until(ExpectedConditions.visibilityOfElementLocated(ConsoleWebPage.NOT_FOUND_STATE_XPATH));
+        selenium.takeScreenShot();
     }
 
     //==================================================================
@@ -695,10 +699,14 @@ public class ConsoleWebPage implements IWebPage {
 
     public void switchToAddressTab() {
         selenium.clickOnItem(getAddressTab(), "Addresses");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(ADDRESS_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void switchToConnectionTab() {
         selenium.clickOnItem(getConnectionTab(), "Connections");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(CONNECTION_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void addFilter(FilterType filterType, String filterValue) throws Exception {
