@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,9 @@ import java.util.function.Supplier;
 public class ConsoleWebPage implements IWebPage {
 
     private static Logger log = CustomLogger.getLogger();
+    private static final By ADDRESS_LIST_XPATH = By.xpath("//table[@aria-label='Address List']");
+    private static final By CONNECTION_LIST_XPATH = By.xpath("//table[@aria-label='connection list']");
+    private static final By NOT_FOUND_STATE_XPATH = By.className("pf-c-empty-state");
 
     SeleniumProvider selenium;
     String ocRoute;
@@ -91,7 +95,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getAddressTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='Address List']"));
+        return selenium.getDriver().findElement(ADDRESS_LIST_XPATH);
     }
 
     private WebElement getTableAddressHeader() {
@@ -103,7 +107,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='connection list']"));
+        return selenium.getDriver().findElement(CONNECTION_LIST_XPATH);
     }
 
     private WebElement getTableConnectionHeader() {
@@ -134,6 +138,10 @@ public class ConsoleWebPage implements IWebPage {
         return getContentElem().findElement(By.id("al-filter-overflow-kebab"));
     }
 
+    private WebElement getConnectionTableDropDown() {
+        return getContentElem().findElement(By.id("cl-filter-overflow-kebab"));
+    }
+
     private WebElement getAddressSpacesDeleteAllButton() {
         return getAddressSpacesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Delete Selected')]"));
     }
@@ -144,6 +152,10 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getAddressesPurgeAllButton() {
         return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Purge Selected')]"));
+    }
+
+    private WebElement getConnectionsCloseAllButton() {
+        return getConnectionTableDropDown().findElement(By.xpath("//button[contains(text(), 'Close Selected')]"));
     }
 
     private WebElement getAddressesDeleteConfirmButton() {
@@ -233,7 +245,7 @@ public class ConsoleWebPage implements IWebPage {
             try {
                 return getter.get();
             } catch (StaleElementReferenceException e) {
-                log.info("StaleElementReferenceException during getConnectionItems() - retriying");
+                log.info("StaleElementReferenceException during getConnectionItems() - retrying");
             }
             try {
                 Thread.sleep(1000);
@@ -470,8 +482,9 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("adheader-name"));
     }
 
-    public WebElement getNotFoundPage() {
-        return selenium.getDriver().findElement(By.className("pf-c-empty-state"));
+    public void awaitGoneAwayPage() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(120)).until(ExpectedConditions.visibilityOfElementLocated(ConsoleWebPage.NOT_FOUND_STATE_XPATH));
+        selenium.takeScreenShot();
     }
 
     //==================================================================
@@ -686,10 +699,14 @@ public class ConsoleWebPage implements IWebPage {
 
     public void switchToAddressTab() {
         selenium.clickOnItem(getAddressTab(), "Addresses");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(ADDRESS_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void switchToConnectionTab() {
         selenium.clickOnItem(getConnectionTab(), "Connections");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(CONNECTION_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void addFilter(FilterType filterType, String filterValue) throws Exception {
@@ -825,6 +842,16 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getConfirmButton());
     }
 
+    public void closeSelectedConnection(ConnectionWebItem... connectionWebItems) {
+        Arrays.stream(connectionWebItems).forEach(c -> {
+            selenium.clickOnItem(c.getCheckBox(), "Select connection");
+
+        });
+        selenium.clickOnItem(getConnectionTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getConnectionsCloseAllButton());
+        selenium.clickOnItem(getConfirmButton());
+    }
+
     public void changeAddressPlan(Address address, String plan) throws Exception {
         AddressWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
         selenium.clickOnItem(item.getActionDropDown(), "Action drop down");
@@ -910,10 +937,8 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isAddressSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-4");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-5");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case STORED_MESSAGES:
             case ADDRESS:
             case SENDERS:
@@ -927,10 +952,8 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-5");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-6");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case HOSTNAME:
             case CONTAINER_ID:
             case PROTOCOL:

@@ -129,7 +129,38 @@ query all_address_spaces {
       }
     }
   }
-}```
+}
+```
+# all_messagingendpoints_for_addressspace_view
+
+```
+query all_messagingendpoints_for_addressspace_view {
+  messagingEndpoints( filter: "`$.metadata.name` LIKE 'jupiter_as1.%' AND `$.metadata.namespace` = 'app1_ns'") {
+    total
+    messagingEndpoints {
+      metadata {
+        name
+        namespace
+        uid
+      }
+      spec {
+        protocols
+      }
+      status {
+        type
+        host
+        ports {
+          name
+          protocol
+          port
+        }
+      }
+    }
+  }
+}
+
+```
+
 
 ## all_addresses_for_addressspace_view
 

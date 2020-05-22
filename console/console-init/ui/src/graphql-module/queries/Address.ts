@@ -225,6 +225,7 @@ const RETURN_ADDRESS_DETAIL = (
           }
           spec {
             address
+            type
             topic
             plan {
               spec {

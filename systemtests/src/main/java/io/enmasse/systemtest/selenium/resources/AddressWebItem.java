@@ -41,8 +41,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.status = webItem.findElement(By.xpath("./td[@data-label='Status']")).getText().replace(" ", "");
         try {
             this.timestamp = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
-            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
-            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-6']")).getText());
+            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='Message In']")).getText());
+            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='Message Out']")).getText());
 
             this.messagesStored = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Stored Messages']")).getText());
             this.senders =  defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());

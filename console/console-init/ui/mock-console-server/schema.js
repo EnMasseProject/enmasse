@@ -47,6 +47,21 @@ const typeDefs = gql`
         amqps
     }
 
+    enum MessagingEndpointType {
+        cluster,
+        nodePort,
+        loadBalancer,
+        route,
+        ingress
+    }
+
+    enum MessagingEndpointProtocol {
+        amqp,
+        amqps,
+        amqp_ws,
+        amqp_wss,
+    }
+
     type Metric_consoleapi_enmasse_io_v1beta1 {
         name: String!
         type: MetricType!
@@ -96,6 +111,7 @@ const typeDefs = gql`
         metadata: ObjectMeta_v1!
         spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
     }
+
     type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
         authenticationServices: [String!]
         description: String
@@ -156,6 +172,11 @@ const typeDefs = gql`
         links: [Link_consoleapi_enmasse_io_v1beta1!]!
     }
 
+    type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
+        total: Int!
+        messagingEndpoints: [MessagingEndpoint_enmasse_io_v1beta2!]!
+    }
+
     #
     # Mirrors of Kubernetes types.  These follow the names and structure of the underlying
     # Kubernetes object exactly.  We don't need to expose every field, just the ones that
@@ -180,7 +201,33 @@ const typeDefs = gql`
   
         authenticationService:  AuthenticationService_enmasse_io_v1beta1
     }
-    
+
+    type MessagingEndpoint_enmasse_io_v1beta2 {
+        metadata: ObjectMeta_v1!
+        spec: MessagingEndpointSpec_enmasse_io_v1beta2!
+        status: MessagingEndpointStatus_enmasse_io_v1beta2
+    }
+
+    type MessagingEndpointSpec_enmasse_io_v1beta2 {
+        protocols: [MessagingEndpointProtocol!]!
+    }
+
+    type MessagingEndpointStatus_enmasse_io_v1beta2 {
+        phase: String!
+        type: MessagingEndpointType!
+        message: String
+        host: String
+
+        ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+        internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+    }
+
+    type MessagingEndpointPort_enmasse_io_v1beta2  {
+        name: String!
+        protocol: MessagingEndpointProtocol!
+        port: Int!
+    }
+
     type AuthenticationService_enmasse_io_v1beta1 {
         name: String!
     }    
@@ -323,6 +370,10 @@ const typeDefs = gql`
 
         "Returns the command-line command, if executed, would create the given address"
         addressCommand(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): String!
+
+        "Returns the messaging endpoints for the given address space"
+        messagingEndpoints(first: Int, offset: Int, filter: String, orderBy: String): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
+
     }
 
     #

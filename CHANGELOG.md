@@ -16,8 +16,10 @@
 * #4442: Disregard incoming remote target on receiving links initiated by the plugin (#4495)
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
 * #4504: Bump gqlgen from v0.10.2 => v0.11.3
+* #4510: Implement a GraphQL messaging endpoint API as a facade over addressspaces #4510
 * #4546: Refactor GraphQL purgeAddress to permit multiple target addresses
 * #4549: Implement GraphQL closeConnections for brokered and standard
+* #4555: Enforce presence of routeServicePort in route endpoints definitions 
 * #4567: Refactor GraphQL deleteAddressSpace and deleteAddress to accept many target objects
 
 ## 0.31.2
