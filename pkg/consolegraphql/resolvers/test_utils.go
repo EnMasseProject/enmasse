@@ -39,7 +39,6 @@ func createAddressSpace(addressspace, namespace string, addressSpaceHolderOption
 			},
 		},
 	}
-
 	for _, holderOptions := range addressSpaceHolderOptions {
 		holderOptions(ash)
 	}
@@ -53,6 +52,19 @@ func withAddressSpaceAnnotation(name, value string) addressSpaceHolderOption {
 			ash.Annotations = make(map[string]string)
 		}
 		ash.Annotations[name] = value
+	}
+}
+
+func withEndpoint(spec v1beta1.EndpointSpec, status v1beta1.EndpointStatus) addressSpaceHolderOption {
+	return func(ash *consolegraphql.AddressSpaceHolder) {
+		ash.Spec.Endpoints = append(ash.Spec.Endpoints, spec)
+		ash.Status.EndpointStatus = append(ash.Status.EndpointStatus, status)
+	}
+}
+
+func withCACertificate(cACertificate []byte) addressSpaceHolderOption {
+	return func(ash *consolegraphql.AddressSpaceHolder) {
+		ash.Status.CACertificate = cACertificate
 	}
 }
 
