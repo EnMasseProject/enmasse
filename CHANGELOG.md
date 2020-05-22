@@ -13,8 +13,10 @@
 * #4315: [IoT] Add the ability to configure TLS options
 * #4314: [IoT] Add alerts for infrastructure and projects
 * #4438: Address space connector - offer SASL ANONYMOUS if it cannot offer PLAIN or EXTERNAL.
+* #4439: [IoT] Squash adapters and device registry implementations into a single container image each
 * #4442: Disregard incoming remote target on receiving links initiated by the plugin (#4495)
 * #4455: Qpid Dispatch Router upgraded to 1.12.0
+* #4499: [IoT] Allow to use X509 client certificates for device authentication
 * #4504: Bump gqlgen from v0.10.2 => v0.11.3
 * #4510: Implement a GraphQL messaging endpoint API as a facade over addressspaces #4510
 * #4546: Refactor GraphQL purgeAddress to permit multiple target addresses
@@ -22,8 +24,12 @@
 * #4555: Enforce presence of routeServicePort in route endpoints definitions 
 * #4574: Set globalMaxSize to 1/4 of broker JVM heap
 * #4567: Refactor GraphQL deleteAddressSpace and deleteAddress to accept many target objects
+* #4569: [IoT] Allowing configuring log levels of IoT infrastructure components
+* #4576: [IoT] Rename the status section field `phaseReason` to `message` to better align with others
+* #4592: [IoT] Externalize infrastructure secrets from `IoTConfig` to actual `Secrets`
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
 * #4656: Defining a connector before its referenced secret exists results in NPE and permanently unready address space
+* #4600: [IoT] Allow configuring Pod affinities
 * #4631: Allow configuring CPU limits for infra
 
 ## 0.31.3
