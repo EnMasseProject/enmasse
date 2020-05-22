@@ -5,25 +5,11 @@
 
 package io.enmasse.iot.registry.infinispan.config;
 
-import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.infinispan.config.InfinispanProperties;
 import static io.enmasse.iot.registry.infinispan.Profiles.PROFILE_DEVICE_REGISTRY;
-import io.enmasse.iot.registry.infinispan.device.impl.CredentialsManagementServiceImpl;
-import io.enmasse.iot.registry.infinispan.device.impl.CredentialsServiceImpl;
-import io.enmasse.iot.registry.infinispan.device.impl.DeviceManagementServiceImpl;
-import io.enmasse.iot.registry.infinispan.device.impl.RegistrationServiceImpl;
-import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
-import io.opentracing.Tracer;
-import io.vertx.core.Vertx;
 import static io.vertx.core.Vertx.vertx;
-import io.vertx.ext.auth.AuthProvider;
-import io.vertx.ext.web.handler.AuthHandler;
 
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
-import org.eclipse.hono.deviceregistry.service.tenant.TenantInformationService;
 import org.eclipse.hono.service.amqp.AmqpEndpoint;
 import org.eclipse.hono.service.credentials.CredentialsService;
 import org.eclipse.hono.service.credentials.DelegatingCredentialsAmqpEndpoint;
@@ -34,12 +20,24 @@ import org.eclipse.hono.service.management.device.DelegatingDeviceManagementHttp
 import org.eclipse.hono.service.management.device.DeviceManagementService;
 import org.eclipse.hono.service.registration.DelegatingRegistrationAmqpEndpoint;
 import org.eclipse.hono.service.registration.RegistrationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.Scope;
+
+import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
+import io.enmasse.iot.infinispan.config.InfinispanProperties;
+import io.enmasse.iot.registry.infinispan.device.impl.CredentialsManagementServiceImpl;
+import io.enmasse.iot.registry.infinispan.device.impl.CredentialsServiceImpl;
+import io.enmasse.iot.registry.infinispan.device.impl.DeviceManagementServiceImpl;
+import io.enmasse.iot.registry.infinispan.device.impl.RegistrationServiceImpl;
+import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
+import io.opentracing.Tracer;
+import io.vertx.core.Vertx;
+import io.vertx.ext.auth.AuthProvider;
+import io.vertx.ext.web.handler.AuthHandler;
 
 @Configuration
 @Profile({PROFILE_DEVICE_REGISTRY})
@@ -85,6 +83,7 @@ public class DeviceServiceConfiguration {
      * Exposes Infinispan credential management service as a Spring bean
      *
      * @param cacheProvider The cache provider.
+     * @param passwordEncoder
      * @return The Infinispan credential management service
      */
     @Bean
@@ -101,7 +100,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(RegistrationService.class)
     public AmqpEndpoint registrationAmqpEndpoint(final RegistrationService service) {
-        return new DelegatingRegistrationAmqpEndpoint<RegistrationService>(vertx(), service);
+        return new DelegatingRegistrationAmqpEndpoint<>(vertx(), service);
     }
 
     /**
@@ -113,7 +112,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(CredentialsService.class)
     public AmqpEndpoint credentialsAmqpEndpoint(final CredentialsService service) {
-        return new DelegatingCredentialsAmqpEndpoint<CredentialsService>(vertx(), service);
+        return new DelegatingCredentialsAmqpEndpoint<>(vertx(), service);
     }
 
     /**
@@ -127,7 +126,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(DeviceManagementService.class)
     public HttpEndpoint deviceHttpEndpoint(final Vertx vertx, final DeviceManagementService service) {
-        return new DelegatingDeviceManagementHttpEndpoint<DeviceManagementService>(vertx, service);
+        return new DelegatingDeviceManagementHttpEndpoint<>(vertx, service);
     }
 
     /**
@@ -141,7 +140,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(CredentialsManagementService.class)
     public HttpEndpoint credentialsHttpEndpoint(final Vertx vertx, final CredentialsManagementService service) {
-        return new DelegatingCredentialsManagementHttpEndpoint<CredentialsManagementService>(vertx, service);
+        return new DelegatingCredentialsManagementHttpEndpoint<>(vertx, service);
     }
 
     /**

@@ -369,3 +369,15 @@ func (csc CommonServiceConfig) RenderConfiguration(config *IoTConfig, defaultRen
 }
 
 // endregion
+
+// region EphemeralInfinispanDeviceConnectionServer
+
+func (e *EphemeralInfinispanDeviceConnectionServer) GetCacheName() string {
+	if e.CacheName == "" {
+		return "device-connection"
+	} else {
+		return e.CacheName
+	}
+}
+
+// endregion

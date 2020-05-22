@@ -7,11 +7,10 @@ package iotconfig
 
 import (
 	"context"
+	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/iot"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"github.com/pkg/errors"
-
-	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
 	"k8s.io/client-go/tools/record"
 	"reflect"
@@ -30,6 +29,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	netv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -113,6 +113,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		{&corev1.ConfigMap{}, false},
 		{&corev1.Secret{}, false},
 		{&corev1.PersistentVolumeClaim{}, false},
+		{&netv1.NetworkPolicy{}, false},
 
 		{&routev1.Route{}, true},
 	} {
@@ -577,6 +578,32 @@ func (r *ReconcileIoTConfig) processRoute(ctx context.Context, name string, conf
 		}
 
 		return manipulator(config, route, endpointStatus)
+	})
+
+	if err != nil {
+		log.Error(err, "Failed calling CreateOrUpdate")
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) processNetworkPolicy(ctx context.Context, name string, config *iotv1alpha1.IoTConfig, delete bool, manipulator func(config *iotv1alpha1.IoTConfig, policy *netv1.NetworkPolicy) error) error {
+
+	policy := &netv1.NetworkPolicy{
+		ObjectMeta: v1.ObjectMeta{Namespace: config.Namespace, Name: name},
+	}
+
+	if delete {
+		return install.DeleteIgnoreNotFound(ctx, r.client, policy, client.PropagationPolicy(v1.DeletePropagationForeground))
+	}
+
+	_, err := controllerutil.CreateOrUpdate(ctx, r.client, policy, func() error {
+		if err := controllerutil.SetControllerReference(config, policy, r.scheme); err != nil {
+			return err
+		}
+
+		return manipulator(config, policy)
 	})
 
 	if err != nil {

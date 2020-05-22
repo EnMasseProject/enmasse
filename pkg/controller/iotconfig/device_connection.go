@@ -25,16 +25,26 @@ func (r *ReconcileIoTConfig) processDeviceConnection(ctx context.Context, config
 
 	// process
 
-	rc.Process(func() (reconcile.Result, error) {
-		switch config.EvalDeviceConnectionImplementation() {
-		case iotv1alpha1.DeviceConnectionInfinispan:
+	switch config.EvalDeviceConnectionImplementation() {
+	case iotv1alpha1.DeviceConnectionInfinispan:
+		rc.Process(func() (reconcile.Result, error) {
 			return r.processInfinispanDeviceConnection(ctx, config, authServicePsk)
-		case iotv1alpha1.DeviceConnectionJdbc:
+		})
+		rc.Process(func() (reconcile.Result, error) {
+			return r.cleanupJdbcDeviceConnection(ctx, config)
+		})
+	case iotv1alpha1.DeviceConnectionJdbc:
+		rc.Process(func() (reconcile.Result, error) {
 			return r.processJdbcDeviceConnection(ctx, config, authServicePsk)
-		default:
-			return reconcile.Result{}, util.NewConfigurationError("illegal device connection configuration")
-		}
-	})
+		})
+		rc.Process(func() (reconcile.Result, error) {
+			return r.cleanupInfinispanDeviceConnection(ctx, config)
+		})
+	default:
+		rc.ProcessSimple(func() error {
+			return util.NewConfigurationError("illegal device connection configuration")
+		})
+	}
 
 	// create services
 
@@ -56,7 +66,7 @@ func (r *ReconcileIoTConfig) processDeviceConnection(ctx context.Context, config
 
 func (r *ReconcileIoTConfig) reconcileDeviceConnectionService(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
-	install.ApplyServiceDefaults(service, "iot", nameDeviceConnection)
+	install.ApplyServiceDefaults(service, "iot", service.Name)
 
 	service.Spec.Type = corev1.ServiceTypeClusterIP
 

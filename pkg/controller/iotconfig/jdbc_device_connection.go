@@ -50,6 +50,16 @@ func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, co
 	return rc.Result()
 }
 
+// Cleanup resources which only used when using "JDBC".
+// This is called when "processJdbcDeviceConnection" is not called.
+func (r *ReconcileIoTConfig) cleanupJdbcDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+
+	rc := &recon.ReconcileContext{}
+
+	return rc.Result()
+
+}
+
 func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder, authServicePsk *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)

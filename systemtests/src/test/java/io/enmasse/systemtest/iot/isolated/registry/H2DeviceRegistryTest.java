@@ -29,6 +29,9 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
+/**
+ * Test JDBC with H2 (and the extension system) for both services.
+ */
 class H2DeviceRegistryTest extends DeviceRegistryTest {
 
     private final Logger log = CustomLogger.getLogger();

@@ -19,6 +19,9 @@ import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
+/**
+ * Test a mixed mode (JDBC + Infinispan) setup.
+ */
 class MixedDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override
@@ -31,7 +34,7 @@ class MixedDeviceRegistryTest extends DeviceRegistryTest {
                 .createDefaultConfig()
                 .editOrNewSpec()
                 .withNewServices()
-                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanExternalDeviceConnectionService(infinispanEndpoint))
                 .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, false))
                 .endServices()
                 .endSpec();

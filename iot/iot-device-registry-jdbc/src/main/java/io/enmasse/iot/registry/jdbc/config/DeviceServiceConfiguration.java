@@ -5,22 +5,9 @@
 
 package io.enmasse.iot.registry.jdbc.config;
 
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
-import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_ADAPTER;
 import static io.enmasse.iot.registry.jdbc.Profiles.PROFILE_REGISTRY_MANAGEMENT;
-import io.enmasse.iot.registry.jdbc.device.impl.CredentialsManagementServiceImpl;
-import io.enmasse.iot.registry.jdbc.device.impl.CredentialsServiceImpl;
-import io.enmasse.iot.registry.jdbc.device.impl.DeviceManagementServiceImpl;
-import io.enmasse.iot.registry.jdbc.device.impl.RegistrationServiceImpl;
-import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
-import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
-import io.opentracing.Tracer;
-import io.vertx.core.Vertx;
 import static io.vertx.core.Vertx.vertx;
-import io.vertx.ext.auth.AuthProvider;
-import io.vertx.ext.web.handler.AuthHandler;
 
 import org.eclipse.hono.auth.HonoPasswordEncoder;
 import org.eclipse.hono.auth.SpringBasedHonoPasswordEncoder;
@@ -39,6 +26,20 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceAdapterStore;
+import io.enmasse.iot.jdbc.store.device.AbstractDeviceManagementStore;
+import io.enmasse.iot.registry.jdbc.device.impl.CredentialsManagementServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.CredentialsServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.DeviceManagementServiceImpl;
+import io.enmasse.iot.registry.jdbc.device.impl.RegistrationServiceImpl;
+import io.enmasse.iot.registry.tenant.KubernetesTenantInformationService;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthHandler;
+import io.enmasse.iot.registry.util.DeviceRegistryTokenAuthProvider;
+import io.opentracing.Tracer;
+import io.vertx.core.Vertx;
+import io.vertx.ext.auth.AuthProvider;
+import io.vertx.ext.web.handler.AuthHandler;
 
 @Configuration
 @Profile({PROFILE_REGISTRY_ADAPTER, PROFILE_REGISTRY_MANAGEMENT})
@@ -104,7 +105,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(RegistrationService.class)
     public AmqpEndpoint registrationAmqpEndpoint(final RegistrationService service) {
-        return new DelegatingRegistrationAmqpEndpoint<RegistrationService>(vertx(), service);
+        return new DelegatingRegistrationAmqpEndpoint<>(vertx(), service);
     }
 
     /**
@@ -116,7 +117,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(CredentialsService.class)
     public AmqpEndpoint credentialsAmqpEndpoint(final CredentialsService service) {
-        return new DelegatingCredentialsAmqpEndpoint<CredentialsService>(vertx(), service);
+        return new DelegatingCredentialsAmqpEndpoint<>(vertx(), service);
     }
 
     /**
@@ -130,7 +131,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(DeviceManagementService.class)
     public HttpEndpoint deviceHttpEndpoint(final Vertx vertx, final DeviceManagementService service) {
-        return new DelegatingDeviceManagementHttpEndpoint<DeviceManagementService>(vertx, service);
+        return new DelegatingDeviceManagementHttpEndpoint<>(vertx, service);
     }
 
     /**
@@ -144,7 +145,7 @@ public class DeviceServiceConfiguration {
     @Bean
     @ConditionalOnBean(CredentialsManagementService.class)
     public HttpEndpoint credentialsHttpEndpoint(final Vertx vertx, final CredentialsManagementService service) {
-        return new DelegatingCredentialsManagementHttpEndpoint<CredentialsManagementService>(vertx, service);
+        return new DelegatingCredentialsManagementHttpEndpoint<>(vertx, service);
     }
 
     /**

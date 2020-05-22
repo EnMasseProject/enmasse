@@ -18,16 +18,24 @@ import io.sundr.builder.annotations.Inline;
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
-                value = "done"
-                )
-        )
+                value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class InfinispanDeviceConnectionServer {
+    private EphemeralInfinispanDeviceConnectionServer ephemeral;
     private ExternalInfinispanDeviceConnectionServer external;
+
+    public void setEphemeral(EphemeralInfinispanDeviceConnectionServer ephemeral) {
+        this.ephemeral = ephemeral;
+    }
+
+    public EphemeralInfinispanDeviceConnectionServer getEphemeral() {
+        return ephemeral;
+    }
 
     public void setExternal(ExternalInfinispanDeviceConnectionServer external) {
         this.external = external;
     }
+
     public ExternalInfinispanDeviceConnectionServer getExternal() {
         return external;
     }

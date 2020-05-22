@@ -19,6 +19,9 @@ import org.junit.jupiter.api.Test;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.systemtest.iot.IoTTestSession;
 
+/**
+ * Test Infinispan for both services.
+ */
 class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
 
     @Override

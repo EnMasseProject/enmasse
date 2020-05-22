@@ -11,6 +11,8 @@ import io.enmasse.iot.model.v1.DeviceConnectionServiceConfig;
 import io.enmasse.iot.model.v1.DeviceConnectionServiceConfigBuilder;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfigBuilder;
+import io.enmasse.iot.model.v1.EphemeralInfinispanDeviceConnectionServer;
+import io.enmasse.iot.model.v1.EphemeralInfinispanDeviceConnectionServerBuilder;
 import io.enmasse.iot.model.v1.ExternalInfinispanDeviceConnectionServer;
 import io.enmasse.iot.model.v1.ExternalInfinispanDeviceConnectionServerBuilder;
 import io.enmasse.iot.model.v1.ExternalInfinispanDeviceRegistryServer;
@@ -44,6 +46,14 @@ public final class DefaultDeviceRegistry {
                 .withSaslRealm("ApplicationRealm")
                 .withSaslServerName("hotrod")
                 .endServer();
+
+        return builder.build();
+    }
+
+    public static EphemeralInfinispanDeviceConnectionServer ephemeralInfinispanConnectionServer() {
+        var builder = new EphemeralInfinispanDeviceConnectionServerBuilder();
+
+        // there is not much to do here
 
         return builder.build();
     }
@@ -183,7 +193,7 @@ public final class DefaultDeviceRegistry {
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
 
         return new ServicesConfigBuilder()
-                .withDeviceConnection(newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceConnection(newInfinispanExternalDeviceConnectionService(infinispanEndpoint))
                 .withDeviceRegistry(newInfinispanDeviceRegistryService(infinispanEndpoint))
                 .build();
     }
@@ -193,17 +203,29 @@ public final class DefaultDeviceRegistry {
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
 
         return new ServicesConfigBuilder()
-                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanDeviceConnectionService(infinispanEndpoint))
+                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanExternalDeviceConnectionService(infinispanEndpoint))
                 .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, false))
                 .build();
     }
 
-    public static DeviceConnectionServiceConfig newInfinispanDeviceConnectionService(final Endpoint infinispanEndpoint) {
+    public static DeviceConnectionServiceConfig newInfinispanExternalDeviceConnectionService(final Endpoint infinispanEndpoint) {
         return new DeviceConnectionServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
 
                 .withExternal(externalInfinispanConnectionServer(infinispanEndpoint))
+
+                .endServer()
+                .endInfinispan()
+                .build();
+    }
+
+    public static DeviceConnectionServiceConfig newInfinispanEphemeralDeviceConnectionService() {
+        return new DeviceConnectionServiceConfigBuilder()
+                .withNewInfinispan()
+                .withNewServer()
+
+                .withExternal(ephemeralInfinispanConnectionServer())
 
                 .endServer()
                 .endInfinispan()

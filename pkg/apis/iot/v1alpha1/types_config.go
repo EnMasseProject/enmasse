@@ -218,13 +218,19 @@ type InfinispanDeviceConnection struct {
 }
 
 type InfinispanDeviceConnectionServer struct {
-	External *ExternalInfinispanDeviceConnectionServer `json:"external,omitempty"`
+	External  *ExternalInfinispanDeviceConnectionServer  `json:"external,omitempty"`
+	Ephemeral *EphemeralInfinispanDeviceConnectionServer `json:"ephemeral,omitempty"`
 }
 
 type ExternalInfinispanDeviceConnectionServer struct {
 	ExternalInfinispanServer `json:",inline"`
 
 	CacheNames *ExternalDeviceConnectionCacheNames `json:"cacheNames,omitempty"`
+}
+
+type EphemeralInfinispanDeviceConnectionServer struct {
+	CacheName string `json:"cacheNames,omitempty"`
+	Owners    uint32 `json:"owners,omitempty"`
 }
 
 type ExternalDeviceConnectionCacheNames struct {

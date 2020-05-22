@@ -6,7 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.registry;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBased;
+import static io.enmasse.systemtest.iot.DefaultDeviceRegistry.newPostgresBasedRegistry;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectDeviceConnectionType;
 import static io.enmasse.systemtest.utils.IoTUtils.assertCorrectRegistryType;
 
@@ -15,25 +15,35 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
+import io.enmasse.systemtest.iot.DefaultDeviceRegistry;
 import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 /**
- * Test PostgreSQL for both services.
+ * Test a mixed mode (JDBC + ephemeral Infinispan) setup.
  */
-class PostgresTableDeviceRegistryTest extends DeviceRegistryTest {
+class MixedDeviceRegistryEphemeralTest extends DeviceRegistryTest {
 
     @Override
     protected IoTConfigBuilder provideIoTConfig() throws Exception {
+
+        var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
+        var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
+
         return IoTTestSession
                 .createDefaultConfig()
                 .editOrNewSpec()
-                .withServices(newPostgresBased(false))
+                .withNewServices()
+                .withDeviceConnection(DefaultDeviceRegistry.newInfinispanExternalDeviceConnectionService(infinispanEndpoint))
+                .withDeviceRegistry(newPostgresBasedRegistry(jdbcEndpoint, false))
+                .endServices()
                 .endSpec();
+
     }
 
     @Test
     void testCorrectTypeDeployed () {
-        assertCorrectDeviceConnectionType("jdbc");
+        assertCorrectDeviceConnectionType("infinispan");
         assertCorrectRegistryType("jdbc");
     }
 

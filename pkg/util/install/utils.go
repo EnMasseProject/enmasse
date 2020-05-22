@@ -243,6 +243,9 @@ func ApplyJobContainerWithError(job *batchv1.Job, name string, mutator func(*cor
 
 func ApplyPersistentVolume(pod *corev1.PodSpec, name string, claimName string) {
 	ApplyVolume(pod, name, func(volume *corev1.Volume) {
+		volume.ConfigMap = nil
+		volume.Secret = nil
+		volume.EmptyDir = nil
 		if volume.PersistentVolumeClaim == nil {
 			volume.PersistentVolumeClaim = &corev1.PersistentVolumeClaimVolumeSource{}
 		}
@@ -252,6 +255,9 @@ func ApplyPersistentVolume(pod *corev1.PodSpec, name string, claimName string) {
 
 func ApplyConfigMapVolume(pod *corev1.PodSpec, name string, configMapName string) {
 	ApplyVolume(pod, name, func(volume *corev1.Volume) {
+		volume.EmptyDir = nil
+		volume.PersistentVolumeClaim = nil
+		volume.Secret = nil
 		if volume.ConfigMap == nil {
 			volume.ConfigMap = &corev1.ConfigMapVolumeSource{}
 		}
@@ -261,6 +267,9 @@ func ApplyConfigMapVolume(pod *corev1.PodSpec, name string, configMapName string
 
 func ApplySecretVolume(pod *corev1.PodSpec, name string, secretName string) {
 	ApplyVolume(pod, name, func(volume *corev1.Volume) {
+		volume.ConfigMap = nil
+		volume.EmptyDir = nil
+		volume.PersistentVolumeClaim = nil
 		if volume.Secret == nil {
 			volume.Secret = &corev1.SecretVolumeSource{}
 		}
@@ -270,6 +279,9 @@ func ApplySecretVolume(pod *corev1.PodSpec, name string, secretName string) {
 
 func ApplyEmptyDirVolume(pod *corev1.PodSpec, name string) {
 	ApplyVolume(pod, name, func(volume *corev1.Volume) {
+		volume.ConfigMap = nil
+		volume.PersistentVolumeClaim = nil
+		volume.Secret = nil
 		if volume.EmptyDir == nil {
 			volume.EmptyDir = &corev1.EmptyDirVolumeSource{}
 		}

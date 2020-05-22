@@ -29,3 +29,6 @@ rules:
   - apiGroups: [ "batch" ]
     resources: [ "jobs" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+  - apiGroups: [ "networking.k8s.io" ]
+    resources: [ "networkpolicies" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
