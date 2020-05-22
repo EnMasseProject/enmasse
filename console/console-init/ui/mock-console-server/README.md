@@ -56,7 +56,6 @@ arguments are `first` which specifies the number of rows to be returned and `off
 the starting index within the result set. The object return provides a count
 of the number of rows in the result set in total.
 
-
 # Environment
 
 The following environment variables are understood:
@@ -101,7 +100,6 @@ query addressTypes {
 }
 ```
 
-
 ## all_address_spaces
 
 ```
@@ -131,6 +129,7 @@ query all_address_spaces {
   }
 }
 ```
+
 # all_messagingendpoints_for_addressspace_view
 
 ```
@@ -160,7 +159,6 @@ query all_messagingendpoints_for_addressspace_view {
 }
 
 ```
-
 
 ## all_addresses_for_addressspace_view
 
@@ -376,9 +374,8 @@ query all_link_names_for_connection {
 }
 ```
 
-
-
 # single_address_with_links_and_metrics
+
 ```
 query single_address_with_links_and_metrics {
   addresses(
@@ -445,6 +442,83 @@ args:
 }
 ```
 
+### cluster service only with self signed certificate
+
+```json
+{
+  "as": {
+    "metadata": { "name": "venus", "namespace": "app1_ns" },
+    "spec": {
+      "type": "standard",
+      "plan": "standard-small",
+      "endpoints": [
+        {
+          "name": "messaging",
+          "service": "messaging",
+          "certificate": {
+            "provider": "selfsigned"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### openshift route and cluster service with self signed certificate
+
+```json
+{
+  "as": {
+    "metadata": { "name": "venus", "namespace": "app1_ns" },
+    "spec": {
+      "type": "standard",
+      "plan": "standard-small",
+      "endpoints": [
+        {
+          "name": "messaging",
+          "service": "messaging",
+          "certificate": {
+            "provider": "selfsigned"
+          },
+          "expose": {
+            "type": "route",
+            "routeServicePort": "amqps",
+            "routeTlsTermination": "passthrough"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### openshift route and cluster service with cert bundle cert
+
+```json
+{
+  "as": { "metadata": {"name": "venus", "namespace": "enmasse-infra" },
+    "spec": {"type": "standard",
+             "plan": "standard-small",
+              "endpoints": [{
+                "name": "messaging",
+                "service": "messaging",
+                "certificate": {
+                  "provider": "certBundle",
+                  "tlsKey" :"LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2Z0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktnd2dnU2tBZ0VBQW9JQkFRREJTakI0UUlUZURTbVcKd3puREdMaVB3N1BnNWxDNi8zTWhPQmFFTTF3NE50V3B6WWxjaGs4anA2ZGlOUzQxTS9uUGFiS2pyNWtsVjAwdwo1UXlpSVdweDQ1LzZEaDBGMW5ocnJNZ1RueC9VYzlVaHovZmVFdkc3dmJZY3ZYY2pjM3dzN3dhbUh6RjZObGJCCkVjZ29zc1ZWWXlmTVFrYjZwbnNESjFrTTZEZ0wyQ1BoMk8yZUxVN2trZzh2aHlTQlFHUXZTbFA3R0pCRjBpWkkKbFpFaWxhM3JQM0RMakd0Tk1iTXpWdWlYU1NEMTJNOG9XQUV2dTlGbDdZSG00MUQxWGsrMmRXTTEveGxldmxBcworUTZsWC96ZU9DMzk5cnN5bFA1WHlYOGFGNHROMWRnTXRlbG1CeUZ2N1Q0SS9mZVh6ektYb29ENXhSaExQM1ExClpuTXRheWc5QWdNQkFBRUNnZ0VBQkJ2QWxmM0JGVHN3WkJ6NE1GWnBMZDBhQ0xDOGpJejdkSHhOdGplbFFTaWgKTi8rL2FMRU9JNUxmc3Uyd2NyOE5FMFNLNElITi9vWXhoTldKaERTem40SVlGMmVQWkYxZnArSS9Tbk42YUxpaApraHRxaUZUY3dJSFN5aCtZMWE4UnQ1N0pCR1RyVjA2cVgyWXlXL01ZMEt6UDNyNlY1YVArUDEzcHZhVjk4M3AyCklISFlMaUFEaVVpNnRiRGNXdnNRZnNHbVNwZkFPOWlhR3BsQXNOTStVSm1xd04vSnQ2UjlrdHpoY0w0ZHNoSGcKSnBKWDBRT1NkRndRdWZpQVJYc2FZOW5zRUdVM3lITFRDdmZxYzRMbVNZRGtPVVpHMHd0dzArRlZqMkFlWTZCbwpDNloyNDR5anJzNTgxcWZwRThTY2VHOUppcFA3ZGZOUUF6OGU4NTB0M1FLQmdRRDFONXNtakV0UnlCSGI1ZnBoClZ3QUR4UWRFRmUxOGl1dWI3eUxXcHdMUjZiRGgzeURJT0V2UU41Mk90YVBKZWN6djBtYStCOHVTUVlaYm5mQzMKU1pPeHhBR2IxM1o0L2pNNHFPSDBXdWhyY2xTNHZ1MVZ0ejlDM3FiajdDTGlOWGVmQ3MvNXkwdXB6YUdOa2pwWQpWQmJIS21mL2UyNzJ2YXpaR1BxU1kyQTlod0tCZ1FESnlnbzBteUMzOVBDc0lud0h2aDB3SFdxL3VXdjdYS2RVCnBtS0F3MEluN3k2KytTOXUvbkJwL21XdFlvM3I4UUc1WlVuMGJ5d1NVRHJYL1YrMy8xYzZ0MmNkSW1NYWR6aE4KWm9LSTJIWWloOG9scEFXRTJUSWFiU2oxR1c2TUd2cCtHTWJIV3Qxc1YzZXRVRGVpUTVnSC90TGNUYmt0NE4xbwoxbURRcW1pOUd3S0JnUUROVTg1YUxNYzBwMjRzenhra1FKRUdsd2hLZm9Ibzh2bnVEQU1EOGJ4dXdGc1lCcG1RCmpYTU4ya1BYcDBpSi82OFdjUHNPeThBdHF5Z3h0c0pFOXhyd2tzczJEdWhvejVGY05DMWZTbStxNklVQVhQNmwKODFiSlMxNDdJeExpanhxbTFZcm9BczVNVko2ZHlIK0tUbjcwTGhIKzN3QS9JdnVFbldIVENkc2dLUUtCZ0hsZApqRC9Sb1o4aXNmSkdGMlVzd2k5ak1nWTRScXI3TWlVbW9ZNGlZbExVZDhBaTdaV0xjUjgvQS9hQmxTeDRXdm9mCjRwZ2ltVlkyYlAzbGhjR0wwUElleHVUdC9yODNQMlRHSi9LWWhvMEVNTi9zdytrQUhUTnB2ajJVV3pubkxBdlYKYVJFVUpLTDZCSi8zNUU0eTYyaTdxaVVZbGl6eTF4Z3NBRFRnbVhoTEFvR0JBS0pWVnl3czJua0hEdzRnVXNKeApieEZJSXppNVhnTUFxMTFLY0NaWXNYUytOZGhHSnk3KytOUjF6MVpienNidGZDS2RwRlltd3BEenJhdWdGdE9uCnoxeklvSUZWUE85MW1ubFQ1U0lTcHBmTjZlTEpLU3FnSEZkNGlQakZWNDRPcEtnVitsYk1NWnZleDk1aDdWOTIKZDJPd3hsRzd6bUZ4SUMwN1ZuV2tWSFRTCi0tLS0tRU5EIFBSSVZBVEUgS0VZLS0tLS0K",
+                  "tlsCert": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUN0VENDQVowQ0ZBYkFHaDZMMlJWTDhpR3ZuTnZDczMxRCt0bUVNQTBHQ1NxR1NJYjNEUUVCQ3dVQU1Cd3gKQ3pBSkJnTlZCQVlUQWxWTE1RMHdDd1lEVlFRS0RBUk5lVU5CTUNBWERUSXdNRFV4TURFM05ESXpPVm9ZRHpJdwpOVEF3TmpJeU1UYzBNak01V2pBUU1RNHdEQVlEVlFRRERBVm5kV1Z6ZERDQ0FTSXdEUVlKS29aSWh2Y05BUUVCCkJRQURnZ0VQQURDQ0FRb0NnZ0VCQU1GS01IaEFoTjROS1piRE9jTVl1SS9EcytEbVVMci9jeUU0Rm9RelhEZzIKMWFuTmlWeUdUeU9ucDJJMUxqVXorYzlwc3FPdm1TVlhUVERsREtJaGFuSGpuL29PSFFYV2VHdXN5Qk9mSDlSegoxU0hQOTk0UzhidTl0aHk5ZHlOemZDenZCcVlmTVhvMlZzRVJ5Q2l5eFZWako4eENSdnFtZXdNbldRem9PQXZZCkkrSFk3WjR0VHVTU0R5K0hKSUZBWkM5S1Uvc1lrRVhTSmtpVmtTS1ZyZXMvY011TWEwMHhzek5XNkpkSklQWFkKenloWUFTKzcwV1h0Z2VialVQVmVUN1oxWXpYL0dWNitVQ3o1RHFWZi9ONDRMZjMydXpLVS9sZkpmeG9YaTAzVgoyQXkxNldZSElXL3RQZ2o5OTVmUE1wZWlnUG5GR0VzL2REVm1jeTFyS0QwQ0F3RUFBVEFOQmdrcWhraUc5dzBCCkFRc0ZBQU9DQVFFQU9lUjBGSk8zcElpeTJScG5SRUlYNzFkMi9RVzlWL1gwUjJOVGNaN2F1MFAyNVY5ZUgvdFEKdktwY1NHc1U4by9mekxSdDZtSG9jaDQvdFJTa25CWTAwaUZ1dFZMdDBOUk9KQi9KYXZlRkYrY2FtdDF6LzBjaQpQK0hQMmk4d1hSQnhybnU0c3lXOG00bXMvRDFveGE3TnMwdkdyNG1xa0RhbFh4amhwVlBsczBwTkZsZVJkc2h1CkJZM0FPLzV4RHJ5MXk1TG54R0NWVGdiektIQU02ejJzcGZiVS9EN0Zhd3ZTSmYraHhRaGVLQ0ZXU2tFRmJKNjYKREFNZGJhdVpld08vNE4wTi9LTmNnYTg0UXJBSVF2RnYrVmMxaVJvZEEzUzh2SVBGSkczdnBIbmRQajJ0QUhoRgo5dnJ5US9zSStYMWYxaklQV3htQjc4MlFCRm9nNDJsR1R3PT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo="
+                },
+                "expose": {
+                  "type": "route",
+                  "routeServicePort": "amqps",
+                  "routeTlsTermination": "passthrough"
+
+                }
+              }]}}
+}
+```
+
+
 ## Patch address space
 
 To patch an address space, pass the input object corresponding to the address space's
@@ -453,34 +527,40 @@ to be made.
 
 The mock server currently implements RFC 6902 application/json-patch+json.
 
-```
+````
+
 mutation patch_as(
-  $a: ObjectMeta_v1_Input!
+$a: ObjectMeta_v1_Input!
   $jsonPatch: String!
-  $patchType: String!
+$patchType: String!
 ) {
   patchAddressSpace(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
 }
+
 ```
 
 args:
 
 (patching a plan)
 ```
+
 {
-  "a": {"name": "jupiter_as1", "namespace": "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium\"}]",
-  "patchType": "application/json-patch+json"
+"a": {"name": "jupiter_as1", "namespace": "app1_ns" },
+"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium\"}]",
+"patchType": "application/json-patch+json"
 }
+
 ```
 
 (patching a authentication service name)
 ```
+
 {
-  "a": {"name": "jupiter_as1", "namespace" : "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/authenticationService/name\",\"value\":\"foo\"}]",
-  "patchType": "application/json-patch+json"
+"a": {"name": "jupiter_as1", "namespace" : "app1_ns" },
+"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/authenticationService/name\",\"value\":\"foo\"}]",
+"patchType": "application/json-patch+json"
 }
+
 ```
 
 ## Delete address space
@@ -489,60 +569,72 @@ To delete an address space, call `deleteAddressSpace` passing the ObjectMeta
 object associated with the address to delete.
 
 ```
+
 mutation delete_as($a:ObjectMeta_v1_Input!) {
   deleteAddressSpace(input:$a)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "a": {"name": "jupiter_as1", "namespace": "app1_ns" }
+"a": {"name": "jupiter_as1", "namespace": "app1_ns" }
 }
+
 ```
 
 ## Create address
 
 ```
+
 mutation create_addr($a:Address_enmasse_io_v1beta1_Input!) {
   createAddress(input: $a) {
-      Name
-      Namespace
-      Uid
-  }
+Name
+Namespace
+Uid
 }
+}
+
 ```
 
 args:
 
 ```
+
 {
-  "a": { "metadata": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" },
-    "spec": {"type": "queue", "plan": "standard-small-queue", "address": "wiby1", "addressSpace": "jupiter_as1"}}
+"a": { "metadata": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" },
+"spec": {"type": "queue", "plan": "standard-small-queue", "address": "wiby1", "addressSpace": "jupiter_as1"}}
 }
+
 ```
 
 It is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name is defaulted
 from the Spec.Address:
 
 ```
+
 mutation create_addr($a:Address_enmasse_io_v1beta1_Input!, $as:String) {
-  createAddress(input: $a, addressSpace: $as) {
-      Name
-      Namespace
-      Uid
-  }
+createAddress(input: $a, addressSpace: $as) {
+Name
+Namespace
+Uid
 }
+}
+
 ```
 
 args:
 
 ```
+
 {
-  "a": { "metadata": {"namespace": "app1_ns" },
-    "spec": {"type": "queue", "plan": "standard-small-queue", "address": "foo2", "addressSpace": "jupiter_as1"}}
+"a": { "metadata": {"namespace": "app1_ns" },
+"spec": {"type": "queue", "plan": "standard-small-queue", "address": "foo2", "addressSpace": "jupiter_as1"}}
 }
+
 ```
 
 # Patch address
@@ -552,23 +644,27 @@ metadata and a JSON patch of the resource's spec describing the update
 to be made.
 
 ```
+
 mutation patch_addr(
-  $a: ObjectMeta_v1_Input!
+$a: ObjectMeta_v1_Input!
   $jsonPatch: String!
-  $patchType: String!
+$patchType: String!
 ) {
   patchAddress(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "a": {"name": "jupiter_as1.ganymede", "namespace": "app1_ns" },
-  "jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium-queue\"}]",
-  "patchType": "application/json-patch+json"
+"a": {"name": "jupiter_as1.ganymede", "namespace": "app1_ns" },
+"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium-queue\"}]",
+"patchType": "application/json-patch+json"
 }
+
 ```
 
 # Delete address
@@ -577,17 +673,21 @@ To delete an address, call `deleteAddress` passing the ObjectMeta
 object associated with the address to delete.
 
 ```
+
 mutation delete_addr($a:ObjectMeta_v1_Input!) {
   deleteAddress(input:$a)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
+"a": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }
 }
+
 ```
 
 # Purging addresses
@@ -596,17 +696,21 @@ To purge addresses (i.e clear them of their messages), call `purgeAddresses` pas
 objects corresponding to the addresses to purge.
 
 ```
+
 mutation purge_addresses($addrs:[ObjectMeta_v1_Input!]!) {
   purgeAddresses(input:$addrs)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "addrs": [{"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }]
+"addrs": [{"name": "jupiter_as1.wiby1", "namespace": "app1_ns" }]
 }
+
 ```
 
 # Closing connection
@@ -615,17 +719,21 @@ To close a connection, call `closeConnection` passing the ObjectMeta
 object associated with the connection to close.
 
 ```
+
 mutation close_connections($cons:[ObjectMeta_v1_Input!]!) {
   closeConnections(input:$cons)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "cons": [{"name": "cassini:55596", "namespace": "app1_ns" }]
+"cons": [{"name": "cassini:55596", "namespace": "app1_ns" }]
 }
+
 ```
 
 # Messaging Certificate For Address Space
@@ -633,15 +741,19 @@ args:
 To get the messaging certificate for an existing address space.
 
 ```
+
 query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
   messagingCertificateChain(input :$as)
 }
+
 ```
 
 ```
+
 {
-  "as": {"name": "cassini:55596", "namespace": "app1_ns" }
+"as": {"name": "cassini:55596", "namespace": "app1_ns" }
 }
+
 ```
 
 # Address Space / Address Command
@@ -649,18 +761,22 @@ query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
 To get the equivalent command line that, if run, would cause the given address space or address to be created.
 
 ```
+
 query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
   addressSpaceCommand(input:$as)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "as": { "metadata": {"name": "wibx", "namespace": "app1_ns" },
-    "spec": {"type": "standard", "plan": "standard-small"}}
+"as": { "metadata": {"name": "wibx", "namespace": "app1_ns" },
+"spec": {"type": "standard", "plan": "standard-small"}}
 }
+
 ```
 
 For addresses, it is also possible to create an address without an ObjectMeta.name.  In this case the ObjectMeta.Name
@@ -668,17 +784,24 @@ is defaulted from the Spec.Address:
 
 
 ```
+
 query cmd($a: Address_enmasse_io_v1beta1_Input!, $as:String) {
-  addressCommand(input:$a, addressSpace: $as)
+addressCommand(input:$a, addressSpace: $as)
 }
+
 ```
 
 args:
 
 ```
+
 {
-  "as": "jupiter_as",
-  "a": { "metadata": {"namespace": "app1_ns" },
-    "spec": {"type": "standard", "plan": "standard-small", "address":"foo"}}
+"as": "jupiter_as",
+"a": { "metadata": {"namespace": "app1_ns" },
+"spec": {"type": "standard", "plan": "standard-small", "address":"foo"}}
 }
+
 ```
+
+```
+````

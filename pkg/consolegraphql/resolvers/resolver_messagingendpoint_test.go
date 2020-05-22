@@ -15,7 +15,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	v12 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -250,7 +249,7 @@ func TestQueryMessagingEndpointAmqpWssRouteAndCluster(t *testing.T) {
 func TestQueryMessagingEndpointSharedServiceAndTwoRoutes(t *testing.T) {
 	r, ctx := newTestMessagingEndpointResolver(t)
 
-	serviceName := "messaging"
+	serviceName := v1beta1.EndpointServiceTypeMessaging
 	serviceHost := "messaging-queuespace.enmasse-infra.svc"
 	servicePorts := []v1beta1.Port{
 		{Name: "amqps", Port: 5671},
@@ -382,7 +381,7 @@ func TestQueryMessagingEndpointLoadbalancerAndCluster(t *testing.T) {
 		Name:    "messaging",
 		Service: "messaging",
 		Expose: &v1beta1.ExposeSpec{
-			Type:                     "loadbalancer",
+			Type:                     v1beta1.ExposeTypeLoadBalancer,
 			LoadBalancerPorts:        []string{"amqp", "amqps"},
 			LoadBalancerSourceRanges: []string{"10.0.0.0/8"},
 		},
@@ -591,8 +590,10 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 		Name:    "myendpoint",
 		Service: "messaging",
 		Certificate: &v1beta1.CertificateSpec{
-			Provider:   "certBundle",
-			SecretName: "mysecret",
+			Provider: "certBundle",
+			TlsKey:   []byte("base64PEM"),
+			TlsCert:  []byte("base64PEM"),
+
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -622,20 +623,10 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 			Tls: &v1beta2.MessagingEndpointSpecTls{
 				External: &v1beta2.MessagingEndpointSpecTlsExternal{
 					Key: v1beta2.InputValue{
-						ValueFromSecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "mysecret",
-							},
-							Key: "tlsKey",
-						},
+						Value: string(endpointSpec.Certificate.TlsKey),
 					},
 					Certificate: v1beta2.InputValue{
-						ValueFromSecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "mysecret",
-							},
-							Key: "tlsCert",
-						},
+						Value: string(endpointSpec.Certificate.TlsCert),
 					},
 				},
 			},

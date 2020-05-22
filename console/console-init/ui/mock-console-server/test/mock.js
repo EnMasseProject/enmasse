@@ -120,18 +120,135 @@ describe('mock', function () {
         });
 
     });
-    describe('patchAddressSpace', function () {
-        it('known_plan', function () {
-            var result = mock.patchAddressSpace({
-                    name: "jupiter_as1",
+    describe('createAddressSpace', function () {
+        it('valid_selfsigned', function () {
+            var m = mock.createAddressSpace({
+                metadata: {
+                    name: "venus_as1",
                     namespace: "app1_ns"
                 },
-                "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-small\"}]",
-                "application/json-patch+json"
-            );
+                spec: {
+                    plan: "standard-small",
+                    type: "standard",
+                    endpoints: [
+                        {
+                            name: "messaging",
+                            service: "messaging",
+                            certificate: {
+                                provider: "selfsigned"
+                            },
+                            expose: {
+                                type: "route",
+                                routeTlsTermination: "passthrough",
+                                routeServicePort: "amqps",
+                            }
+                        }
+                    ]
+                }
+            });
 
-            assert.strictEqual(result.spec.plan.metadata.name, "standard-small");
+            return mock.whenActive(m).then(() => {
+                var result = mock.resolvers.Query.addressSpaces(null,
+                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` = 'venus_as1'"});
+                assert.strictEqual(result.total, 1);
+
+                var addressSpace = result.addressSpaces[0];
+                assert.strictEqual(addressSpace.spec.endpoints.length, 1);
+                assert.strictEqual(addressSpace.status.endpointStatus.length, 1);
+                var endpointStatus = addressSpace.status.endpointStatus[0];
+                assert.strictEqual(endpointStatus.name, "messaging");
+                assert.strictEqual(endpointStatus.externalPorts.length, 1);
+                assert.strictEqual(endpointStatus.servicePorts.length, 3);
+                assert.strictEqual(addressSpace.status.caCertificate && addressSpace.status.caCertificate.length > 0, true);
+            });
         });
+        it('valid_certBundle', function () {
+            var m = mock.createAddressSpace({
+                metadata: {
+                    name: "venus_as2",
+                    namespace: "app1_ns"
+                },
+                spec: {
+                    plan: "standard-small",
+                    type: "standard",
+                    endpoints: [
+                        {
+                            name: "messaging",
+                            service: "messaging",
+                            certificate: {
+                                provider: "certBundle",
+                                tlsKey: Buffer.from("PEMKEY").toString("base64"),
+                                tlsCert: Buffer.from("PEMCERT").toString("base64"),
+                            },
+                            expose: {
+                                type: "route",
+                                routeTlsTermination: "passthrough",
+                                routeServicePort: "amqps",
+                            }
+                        }
+                    ]
+                }
+            });
+
+            return mock.whenActive(m).then(() => {
+                var result = mock.resolvers.Query.addressSpaces(null,
+                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` = 'venus_as2'"});
+                assert.strictEqual(result.total, 1);
+
+                var addressSpace = result.addressSpaces[0];
+                assert.strictEqual(addressSpace.spec.endpoints.length, 1);
+                assert.strictEqual(addressSpace.status.endpointStatus.length, 1);
+                var endpointStatus = addressSpace.status.endpointStatus[0];
+                assert.strictEqual(endpointStatus.name, "messaging");
+                assert.strictEqual(endpointStatus.externalPorts.length, 1);
+                assert.strictEqual(endpointStatus.servicePorts.length, 3);
+                assert.strictEqual(endpointStatus.certificate, addressSpace.spec.endpoints[0].certificate.tlsCert);
+                assert.strictEqual(addressSpace.status.caCertificate === undefined, true);
+            });
+        });
+        it('valid_openshift', function () {
+            var m = mock.createAddressSpace({
+                metadata: {
+                    name: "venus_as3",
+                    namespace: "app1_ns"
+                },
+                spec: {
+                    plan: "standard-small",
+                    type: "standard",
+                    endpoints: [
+                        {
+                            name: "messaging",
+                            service: "messaging",
+                            certificate: {
+                                provider: "openshift",
+                            },
+                            expose: {
+                                type: "route",
+                                routeTlsTermination: "passthrough",
+                                routeServicePort: "amqps",
+                            }
+                        }
+                    ]
+                }
+            });
+
+            return mock.whenActive(m).then(() => {
+                var result = mock.resolvers.Query.addressSpaces(null,
+                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` = 'venus_as3'"});
+                assert.strictEqual(result.total, 1);
+
+                var addressSpace = result.addressSpaces[0];
+                assert.strictEqual(addressSpace.spec.endpoints.length, 1);
+                assert.strictEqual(addressSpace.status.endpointStatus.length, 1);
+                var endpointStatus = addressSpace.status.endpointStatus[0];
+                assert.strictEqual(endpointStatus.name, "messaging");
+                assert.strictEqual(endpointStatus.externalPorts.length, 1);
+                assert.strictEqual(endpointStatus.servicePorts.length, 3);
+                assert.strictEqual(endpointStatus.certificate && endpointStatus.certificate.length > 0, true);
+                assert.strictEqual(addressSpace.status.caCertificate === undefined, true);
+            });
+        });
+
     });
     describe('messaging_endpoints', function () {
         it('cluster_only', function () {
