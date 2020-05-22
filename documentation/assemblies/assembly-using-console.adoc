@@ -22,5 +22,6 @@ include::../modules/ref-view-message-conn-stats-table.adoc[leveloffset=+1]
 
 include::../modules/proc-purging-queues.adoc[leveloffset=+1]
 
-:context: {parent-context}
+include::../modules/proc-closing-connections.adoc[leveloffset=+1]
 
+:context: {parent-context}
