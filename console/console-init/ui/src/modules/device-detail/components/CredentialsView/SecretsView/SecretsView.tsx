@@ -10,6 +10,7 @@ import classNames from "classnames";
 import { getLabelByKey } from "utils";
 import { ISecret } from "modules/device/components";
 import { StyleSheet } from "@patternfly/react-styles";
+import { PasswordLabel } from "components";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -49,11 +50,7 @@ const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
         </Button>
       );
     } else if (key === "key") {
-      return (
-        <Title headingLevel="h1" size="2xl">
-          {". . . . . ."}
-        </Title>
-      );
+      return <PasswordLabel id="sv-key-password-lebel" value={value} />;
     }
     return value;
   };

@@ -4,26 +4,36 @@
  */
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Page,
   PageSection,
   Grid,
   GridItem,
   Split,
-  SplitItem
+  SplitItem,
+  Card,
+  CardBody,
+  CardHeader,
+  Title,
+  Text,
+  TextVariants
 } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "@patternfly/react-styles";
 import {
-  DeviceInfoGateways,
   CredentialsView,
-  ICredentialsViewProps,
-  DeviceInfoMetadata
+  ICredentialsViewProps
 } from "modules/device-detail/components";
-import { SwitchWithToggle, JsonEditor } from "components";
+import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
 
 const styles = StyleSheet.create({
   gateways_align: {
     marginRight: 20
+  },
+  card_body: {
+    paddingLeft: 0,
+    paddingRight: 0,
+    paddingBottom: 0
   }
 });
 
@@ -72,7 +82,32 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
         ) : (
           <Grid>
             <GridItem span={5} className={styles.gateways_align}>
-              <DeviceInfoGateways deviceList={deviceList} />
+              <Card>
+                <CardHeader>
+                  <Title id="di-header-title" headingLevel="h1" size="2xl">
+                    Via gateways
+                  </Title>
+                </CardHeader>
+                <CardBody>
+                  <Grid>
+                    {deviceList &&
+                      deviceList.map((device: string) => {
+                        return (
+                          <GridItem span={2} key={device}>
+                            {/**  TODO:add link redirect url*/}
+                            <Link to={"/"}>{device}</Link>
+                          </GridItem>
+                        );
+                      })}
+                    {!(deviceList && deviceList.length > 0) && (
+                      <Text component={TextVariants.p}>
+                        There are no gateways for this device. This device is
+                        connected to the cloud directly.
+                      </Text>
+                    )}
+                  </Grid>
+                </CardBody>
+              </Card>
               <br />
               <CredentialsView
                 id={"credentials-view"}
@@ -80,10 +115,21 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               />
             </GridItem>
             <GridItem span={7}>
-              <DeviceInfoMetadata
-                dataList={metadataList}
-                id={"divice-info-metadata"}
-              />
+              <Card id={id}>
+                <CardHeader>
+                  <Title headingLevel="h1" size="2xl">
+                    Device metadata
+                  </Title>
+                </CardHeader>
+                <CardBody className={css(styles.card_body)}>
+                  <MetadataListTable
+                    dataList={metadataList}
+                    id={"divice-info-metadata-table"}
+                    aria-label={"device info metadata"}
+                    aria-labelledby-header={"device info metadata header"}
+                  />
+                </CardBody>
+              </Card>
             </GridItem>
           </Grid>
         )}
