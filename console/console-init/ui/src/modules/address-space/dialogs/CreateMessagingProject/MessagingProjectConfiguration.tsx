@@ -13,14 +13,15 @@ import { IOptionForKeyValueLabel } from "modules/address-space/utils";
 import { useQuery } from "@apollo/react-hooks";
 import {
   RETURN_ADDRESS_SPACE_PLANS,
-  RETURN_NAMESPACES,
-  RETURN_AUTHENTICATION_SERVICES
+  RETURN_NAMESPACES
 } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
+import { IAddressSpaceSchema } from "schema/ResponseTypes";
 
 export interface IMessagingProjectConfigurationProps {
   projectDetail: IMessagingProject;
   setProjectDetail: (project: IMessagingProject) => void;
+  addressSpaceSchema?: IAddressSpaceSchema;
 }
 
 export interface IAddressSpacePlans {
@@ -37,10 +38,6 @@ export interface IAddressSpacePlans {
       shortDescription: string;
     };
   }>;
-}
-
-export interface IAddressSpaceAuthServiceResponse {
-  addressSpaceSchema_v2: IAddressSpaceAuthService[];
 }
 
 export interface IAddressSpaceAuthService {
@@ -65,7 +62,8 @@ export interface INamespaces {
 
 const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectConfigurationProps> = ({
   projectDetail,
-  setProjectDetail
+  setProjectDetail,
+  addressSpaceSchema
 }) => {
   const {
     name,
@@ -77,9 +75,6 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     customizeEndpoint
   } = projectDetail && projectDetail;
   const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
-  const { data: authenticationServices } = useQuery<
-    IAddressSpaceAuthServiceResponse
-  >(RETURN_AUTHENTICATION_SERVICES) || { data: { addressSpaceSchema_v2: [] } };
 
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
@@ -97,11 +92,8 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
   const handleNameChange = (value: string) => {
     setProjectDetail({ ...projectDetail, name: value });
   };
-  const handleBrokeredChange = () => {
-    setProjectDetail({ ...projectDetail, type: "brokered" });
-  };
-  const handleStandardChange = () => {
-    setProjectDetail({ ...projectDetail, type: "standard" });
+  const handleTypeChange = (_: boolean, event: any) => {
+    setProjectDetail({ ...projectDetail, type: event?.target.value });
   };
   const onPlanSelect = (value: string) => {
     setProjectDetail({ ...projectDetail, plan: value });
@@ -149,10 +141,10 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
 
   const getAuthenticationServiceOptions = () => {
     let authenticationServiceOptions: IAuthenticationServiceOptions[] = [];
-    if (authenticationServices) {
-      authenticationServices.addressSpaceSchema_v2.forEach(authService => {
-        if (authService.metadata.name === type) {
-          authenticationServiceOptions = authService.spec.authenticationServices.map(
+    if (addressSpaceSchema?.addressSpaceSchema) {
+      addressSpaceSchema.addressSpaceSchema.forEach(as => {
+        if (as.metadata.name === type && as.spec.authenticationServices) {
+          authenticationServiceOptions = as.spec.authenticationServices.map(
             service => ({
               value: service,
               label: service,
@@ -169,16 +161,13 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     <AddressSpaceConfiguration
       onNameSpaceSelect={onNameSpaceSelect}
       handleNameChange={handleNameChange}
-      handleBrokeredChange={handleBrokeredChange}
+      handleTypeChange={handleTypeChange}
       onPlanSelect={onPlanSelect}
-      handleStandardChange={handleStandardChange}
       onAuthenticationServiceSelect={onAuthenticationServiceSelect}
       namespace={namespace || ""}
       namespaceOptions={getNameSpaceOptions()}
       name={name || ""}
       isNameValid={isNameValid || false}
-      isStandardChecked={type === "standard"}
-      isBrokeredChecked={type === "brokered"}
       type={type || ""}
       plan={plan || ""}
       planOptions={getPlanOptions()}

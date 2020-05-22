@@ -4,6 +4,7 @@
  */
 
 import { IMessagingProject } from "../dialogs";
+import { TlsCertificateType } from "./constant";
 
 const getDetailForDeleteDialog = (selectedItems: any[]) => {
   const detail =
@@ -23,7 +24,7 @@ const getHeaderForDeleteDialog = (selectedItems: any[]) => {
   return header;
 };
 
-const isMessgaingProjectConfigurationValid = (
+const isMessagingProjectConfigurationValid = (
   messagingProject: IMessagingProject
 ) => {
   if (messagingProject) {
@@ -45,26 +46,50 @@ const isMessgaingProjectConfigurationValid = (
     return false;
   }
 };
-const isMessgaingProjectValid = (messagingProject: IMessagingProject) => {
-  if (isMessgaingProjectConfigurationValid(messagingProject)) {
-    if (messagingProject.customizeEndpoint) {
-      if (
-        messagingProject.protocols &&
-        messagingProject.protocols.length > 0 &&
-        messagingProject.tlsCertificate &&
-        messagingProject.tlsCertificate.trim() !== ""
-      ) {
-        return true;
-      }
-    } else {
-      return true;
-    }
+
+const isEnabledCertificateStep = (messagingProject: IMessagingProject) => {
+  if (
+    messagingProject.customizeEndpoint === true &&
+    (messagingProject.tlsCertificate !== TlsCertificateType.UPLOAD_CERT ||
+      (messagingProject.privateKey &&
+        messagingProject.privateKey.trim() !== "" &&
+        messagingProject.certValue &&
+        messagingProject.certValue?.trim() !== ""))
+  ) {
+    return true;
   }
   return false;
 };
+
+const isMessagingProjectValid = (messagingProject: IMessagingProject) => {
+  if (
+    isMessagingProjectConfigurationValid(messagingProject) &&
+    (messagingProject.customizeEndpoint === false ||
+      (messagingProject.protocols &&
+        messagingProject.protocols.length > 0 &&
+        messagingProject.tlsCertificate &&
+        messagingProject.tlsCertificate.trim() !== ""))
+  ) {
+    return true;
+  }
+  return false;
+};
+
+const isRouteStepValid = (messagingProject: IMessagingProject) => {
+  if (
+    messagingProject.tlsTermination &&
+    messagingProject.tlsTermination !== ""
+  ) {
+    return true;
+  }
+  return false;
+};
+
 export {
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
-  isMessgaingProjectValid,
-  isMessgaingProjectConfigurationValid
+  isMessagingProjectValid,
+  isMessagingProjectConfigurationValid,
+  isEnabledCertificateStep,
+  isRouteStepValid
 };

@@ -14,12 +14,10 @@ import {
   Switch
 } from "@patternfly/react-core";
 import { IMessagingProject } from "modules/address-space/dialogs";
-import {
-  tlsCertificateOptions,
-  endpointProtocolOptions,
-  TlsCertificateType
-} from "modules/address-space/utils";
+import { TlsCertificateType } from "modules/address-space/utils";
 import { StyleSheet, css } from "@patternfly/react-styles";
+import { IAddressSpaceSchema } from "schema/ResponseTypes";
+import { IDropdownOption } from "components";
 
 const style = StyleSheet.create({
   margin_left: {
@@ -28,13 +26,46 @@ const style = StyleSheet.create({
 });
 interface IEndpointConfigurationProps {
   projectDetail: IMessagingProject;
+  addressSpaceSchema?: IAddressSpaceSchema;
   setProjectDetail: (project: IMessagingProject) => void;
 }
 const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps> = ({
   projectDetail,
+  addressSpaceSchema,
   setProjectDetail
 }) => {
-  const { tlsCertificate, protocols } = projectDetail;
+  const { tlsCertificate, protocols, type } = projectDetail;
+  const getProtocolOptions = () => {
+    let protocols: IDropdownOption[] = [];
+    if (addressSpaceSchema?.addressSpaceSchema) {
+      addressSpaceSchema.addressSpaceSchema.forEach(as => {
+        if (as.metadata.name === type && as.spec.routeServicePorts) {
+          protocols = as.spec.routeServicePorts.map(port => ({
+            value: port.name || "",
+            label: port.displayName || "",
+            key: `key-${port.name}`
+          }));
+        }
+      });
+    }
+    return protocols;
+  };
+  const getCertificateOptions = () => {
+    let certificateOptions: IDropdownOption[] = [];
+    if (addressSpaceSchema?.addressSpaceSchema) {
+      addressSpaceSchema.addressSpaceSchema.forEach(as => {
+        if (as.metadata.name === type && as.spec.certificateProviderTypes) {
+          certificateOptions = as.spec.certificateProviderTypes.map(cert => ({
+            value: cert.name || "",
+            label: cert.description || "",
+            key: `key-${cert.name}`
+          }));
+        }
+      });
+    }
+    return certificateOptions;
+  };
+
   const onRouteChange = (value: boolean) => {
     if (!value) {
       setProjectDetail({
@@ -50,32 +81,22 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
   const onCertificateChange = (_: boolean, event: any) => {
     const value = event.target.value;
     if (value) {
-      if (value === TlsCertificateType.UPLOAD_CERT) {
-        setProjectDetail({
-          ...projectDetail,
-          tlsCertificate: value,
-          addCertificate: true
-        });
-      } else {
-        setProjectDetail({
-          ...projectDetail,
-          tlsCertificate: value,
-          addCertificate: false
-        });
-      }
+      setProjectDetail({
+        ...projectDetail,
+        tlsCertificate: value,
+        addCertificate: value === TlsCertificateType.UPLOAD_CERT ? true : false
+      });
     }
   };
-  const findPrototcol = (protocol: string) => {
+  const findProtocol = (protocol: string) => {
     if (protocols) {
       const filteredProtocols = protocols.filter(pr => pr === protocol);
       return filteredProtocols[0];
     }
   };
   const isProtocolPresent = (protocol: string) => {
-    if (protocols) {
-      if (findPrototcol(protocol)) {
-        return true;
-      }
+    if (protocols && findProtocol(protocol)) {
+      return true;
     }
     return false;
   };
@@ -101,49 +122,54 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     <Grid>
       <GridItem span={6}>
         <Form>
-          <FormGroup
-            fieldId="form-group-endpoint-protocol"
-            label="Protocol"
-            isRequired={true}
-          >
-            {endpointProtocolOptions.map(protocol => (
-              <>
-                <br />
-                <Checkbox
-                  label={protocol.label}
-                  isChecked={isProtocolPresent(protocol.value)}
-                  onChange={onProtocolChange}
-                  value={protocol.value}
-                  aria-label={`Protocol checkbox to select ${protocol.value}`}
-                  id={`checkbox-${protocol.key}`}
-                  key={protocol.key}
-                  name={protocol.key}
-                  className={css(style.margin_left)}
-                />
-              </>
-            ))}
-          </FormGroup>
-          <FormGroup
-            fieldId="form-group-endpoint-tls-certs"
-            label="TLS Certificates"
-            isRequired={true}
-          >
-            {tlsCertificateOptions.map(certificate => (
-              <>
-                <br />
-                <Radio
-                  isChecked={tlsCertificate === certificate.value}
-                  key={certificate.key}
-                  onChange={onCertificateChange}
-                  name={`radio-${certificate.key}`}
-                  label={certificate.label}
-                  id={`radio-${certificate.key}`}
-                  value={certificate.value}
-                  className={css(style.margin_left)}
-                />
-              </>
-            ))}
-          </FormGroup>
+          {getProtocolOptions() && getProtocolOptions().length > 0 && (
+            <FormGroup
+              fieldId="form-group-endpoint-protocol"
+              label="Protocol"
+              isRequired={true}
+            >
+              {getProtocolOptions().map(protocol => (
+                <>
+                  <br />
+                  <Checkbox
+                    label={protocol.label}
+                    isChecked={isProtocolPresent(protocol.value)}
+                    onChange={onProtocolChange}
+                    value={protocol.value}
+                    aria-label={`Protocol checkbox to select ${protocol.value}`}
+                    id={`checkbox-${protocol.key}`}
+                    key={protocol.key}
+                    name={protocol.key}
+                    className={css(style.margin_left)}
+                  />
+                </>
+              ))}
+            </FormGroup>
+          )}
+          {getCertificateOptions() && getCertificateOptions().length > 0 && (
+            <FormGroup
+              fieldId="form-group-endpoint-tls-certs"
+              label="TLS Certificates"
+              isRequired={true}
+            >
+              {getCertificateOptions().map(certificate => (
+                <>
+                  <br />
+                  <Radio
+                    isChecked={tlsCertificate === certificate.value}
+                    key={certificate.key}
+                    onChange={onCertificateChange}
+                    name={`radio-${certificate.key}`}
+                    label={certificate.label}
+                    id={`radio-${certificate.key}`}
+                    value={certificate.value}
+                    className={css(style.margin_left)}
+                  />
+                </>
+              ))}
+            </FormGroup>
+          )}
+
           <FormGroup fieldId="form-group-create-routes" label="Create Routes">
             <br />
             <Switch

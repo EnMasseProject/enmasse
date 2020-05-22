@@ -18,10 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import {
-  tlsCertificateOptions,
-  endpointProtocolOptions
-} from "modules/address-space/utils";
+import { endpointProtocolOptions } from "modules/address-space/utils";
 
 export interface IAddressSpaceReviewProps {
   name?: string;
@@ -32,7 +29,7 @@ export interface IAddressSpaceReviewProps {
   data: {
     addressSpaceCommand: string;
   };
-  protocols?: Array<String>;
+  protocols?: string[];
   customizeEndpoint: boolean;
   addRoutes: boolean;
   tlsCertificate?: string;
@@ -53,6 +50,14 @@ const style = StyleSheet.create({
   preview_info_gridItem: {
     marginBottom: 16,
     marginRight: 5
+  },
+  grid_border: {
+    borderRight: "0.1em solid",
+    borderRightColor: "lightgrey"
+  },
+  editor: {
+    border: "1px solid",
+    borderColor: "lightgrey"
   }
 });
 interface IReviewGridProps {
@@ -99,9 +104,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   tlsCertificate
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const certificate =
-    tlsCertificate &&
-    tlsCertificateOptions.find(cert => cert.value === tlsCertificate);
+  const certificate = tlsCertificate;
   let protocolOptions = [];
   if (protocols) {
     for (const protocol of protocols) {
@@ -121,13 +124,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
         space. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem
-          span={5}
-          style={{
-            borderRight: "0.1em solid",
-            borderRightColor: "lightgrey"
-          }}
-        >
+        <GridItem span={5} className={style.grid_border}>
           <Grid>
             <ReviewGridItem
               valueId="preview-addr-name"
@@ -198,7 +195,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                       span={7}
                       className={css(style.preview_info_gridItem)}
                     >
-                      {certificate.label}
+                      {certificate}
                     </GridItem>
                   </>
                 )}
@@ -266,10 +263,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             value={data.addressSpaceCommand}
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
-            style={{
-              border: "1px solid",
-              borderColor: "lightgrey"
-            }}
+            className={css(style.editor)}
           />
         </GridItem>
       </Grid>

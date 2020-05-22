@@ -34,29 +34,45 @@ const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
     const { name, type, host, ports } = row;
     const tableRow: IRowData = {
       cells: [
-        { title: name, id: `row-name-${name}`, key: `row-name-${name}` },
-        { title: type, id: `row-type-${type}`, key: `row-type-${type}` },
-        { title: host, id: `row-host-${host}`, key: `row-host-${host}` },
         {
-          title: ports.map((port, index) => (
-            <div key={`${port.name}-${index}`}>
-              {port.name?.toString()?.toUpperCase()}
-              <br />
-            </div>
-          )),
-          id: `row-ports-name-${ports[0].name}`,
-          key: `row-ports-name-${ports[0].name}`
+          title: name,
+          id: `row-name-${name && name}`,
+          key: `row-name-${name && name}`
+        },
+        {
+          title: type,
+          id: `row-type-${type && type}`,
+          key: `row-type-${type && type}`
+        },
+        {
+          title: host,
+          id: `row-host-${host && host}`,
+          key: `row-host-${host && host}`
+        },
+        {
+          title:
+            ports &&
+            ports.map((port, index) => (
+              <div key={`${port.name}-${index}`}>
+                {port.name?.toString()?.toUpperCase()}
+                <br />
+              </div>
+            )),
+          id: `row-ports-name-${ports && ports[0]?.name}`,
+          key: `row-ports-name-${ports && ports[0]?.name}`
         },
 
         {
-          title: ports.map((port, index) => (
-            <div key={`${port.port}-${index}`}>
-              {port.port}
-              <br />
-            </div>
-          )),
-          id: `row-ports-port-${ports[0].port}`,
-          key: `row-ports-port-${ports[0].port}`
+          title:
+            ports &&
+            ports.map((port, index) => (
+              <div key={`${port?.port}-${index}`}>
+                {port.port}
+                <br />
+              </div>
+            )),
+          id: `row-ports-port-${ports && ports[0]?.port}`,
+          key: `row-ports-port-${ports && ports[0]?.port}`
         }
       ],
       key: `table-row-${name}`

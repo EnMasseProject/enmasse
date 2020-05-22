@@ -16,10 +16,10 @@ import { useQuery } from "@apollo/react-hooks";
 import { TablePagination } from "components";
 
 export interface IEndPoint {
-  name: string;
-  type: string;
-  host: string;
-  ports: IEndpointProtocol[];
+  name?: string;
+  type?: string;
+  host?: string;
+  ports?: IEndpointProtocol[];
 }
 
 export default function AddressPage() {
@@ -43,28 +43,29 @@ export default function AddressPage() {
   if (data) {
     messagingEndpoints = data.messagingEndpoints.messagingEndpoints;
   }
-
   const endpointList: IEndPoint[] = messagingEndpoints.map(
     (endpoint: IEndpointResponse) => {
       const { metadata, status } = endpoint;
       return {
-        name: metadata.name,
-        type: status.type,
-        host: status.host,
-        ports: status.ports
+        name: metadata?.name,
+        type: status?.type,
+        host: status?.host,
+        ports: status?.ports
       };
     }
   );
 
   const renderPagination = () => {
-    return (
-      <TablePagination
-        itemCount={(data && data.total) || 10}
-        variant={"top"}
-        page={page}
-        perPage={perPage}
-      />
-    );
+    if (data && data.total > 10) {
+      return (
+        <TablePagination
+          itemCount={(data && data.total) || 10}
+          variant={"top"}
+          page={page}
+          perPage={perPage}
+        />
+      );
+    }
   };
   return (
     <PageSection variant={PageSectionVariants.light}>

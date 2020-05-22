@@ -4,8 +4,6 @@
  */
 
 import gql from "graphql-tag";
-import { ISortBy } from "@patternfly/react-table";
-import { generateFilterPattern } from "./query";
 
 const ALL_ENDPOINTS_FOR_ADDRESS_SPACE_FILTER = (
   name?: string,
@@ -32,7 +30,6 @@ const RETURN_ALL_ENDPOINTS_FOR_ADDRESS_SPACE = (
     addressSpaceName,
     namespace
   );
-  //   const orderBy = ALL_ENDPOINTS_SORT(sortBy);
   const all_endpoints = gql`
     query all_endpoints{
       messagingEndpoints( first:${perPage} offset:${perPage * (page - 1)}
@@ -53,11 +50,6 @@ const RETURN_ALL_ENDPOINTS_FOR_ADDRESS_SPACE = (
             message
             host
             ports {
-              name
-              protocol
-              port
-            }
-            internalPorts {
               name
               protocol
               port

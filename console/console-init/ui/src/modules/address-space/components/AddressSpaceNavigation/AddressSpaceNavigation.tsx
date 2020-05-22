@@ -6,10 +6,17 @@
 import React, { useState } from "react";
 import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;
 }
+
+const styles = StyleSheet.create({
+  nav_item_color: {
+    color: "var(--pf-global--palette--black-1000)"
+  }
+});
 export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({
   activeItem
 }) => {
@@ -28,7 +35,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-addresses"
             to={`addresses`}
-            style={{ color: "black" }}
+            className={css(styles.nav_item_color)}
           >
             Addresses
           </NavLink>
@@ -41,7 +48,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-connections"
             to={`connections`}
-            style={{ color: "black" }}
+            className={css(styles.nav_item_color)}
           >
             Connections
           </NavLink>
@@ -54,7 +61,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-endpoints"
             to={`endpoints`}
-            style={{ color: "black" }}
+            className={css(styles.nav_item_color)}
           >
             Endpoints
           </NavLink>

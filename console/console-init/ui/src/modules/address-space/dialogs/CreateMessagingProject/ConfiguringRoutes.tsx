@@ -14,18 +14,87 @@ import {
   Title,
   Radio
 } from "@patternfly/react-core";
-import { tlsTerminationOptions } from "modules/address-space/utils";
+import { IAddressSpaceSchema } from "schema/ResponseTypes";
+import { IOptionForKeyValueLabel } from "modules/address-space";
 
 interface IConfiguringRoutes {
   projectDetail: IMessagingProject;
+  addressSpaceSchema?: IAddressSpaceSchema;
   setProjectDetail: (projectDetail: IMessagingProject) => void;
 }
 
+interface ITlsTerrmination {
+  portName?: string;
+  tlsOptions?: string[];
+}
 const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
   projectDetail,
+  addressSpaceSchema,
   setProjectDetail
 }) => {
-  const { hostname, tlsTermination } = projectDetail;
+  const { hostname, tlsTermination, type, protocols } = projectDetail;
+
+  const getTlsCertificateLabel = (tlsValue: string) => {
+    if (tlsValue === "passthrough") {
+      return "Pass through";
+    } else if (tlsValue === "reencrypt") {
+      return "Re-encrypt";
+    }
+    return tlsValue.toUpperCase();
+  };
+
+  const getTlsTerminations = () => {
+    let tlsTerminations: ITlsTerrmination[] = [];
+    if (addressSpaceSchema?.addressSpaceSchema) {
+      addressSpaceSchema.addressSpaceSchema.forEach(as => {
+        if (as.metadata.name === type && as.spec.routeServicePorts) {
+          as.spec.routeServicePorts.forEach(port => {
+            if (
+              port.routeTlsTerminations &&
+              port.routeTlsTerminations.length > 0
+            ) {
+              tlsTerminations.push({
+                portName: port.name,
+                tlsOptions: port.routeTlsTerminations
+              });
+            }
+          });
+        }
+      });
+    }
+    let tlsTerminationOptions: IOptionForKeyValueLabel[] = [];
+    if (
+      tlsTerminations &&
+      protocols &&
+      tlsTerminations.length > 0 &&
+      protocols.length > 0
+    ) {
+      for (let tlsTermination of tlsTerminations) {
+        for (let protocol of protocols) {
+          if (
+            protocol === tlsTermination.portName &&
+            tlsTermination.tlsOptions &&
+            tlsTermination.tlsOptions.length > 0
+          ) {
+            for (let termination of tlsTermination.tlsOptions) {
+              if (
+                tlsTerminationOptions.findIndex(
+                  term => term.value === termination
+                ) < 0
+              ) {
+                tlsTerminationOptions.push({
+                  key: `key-${termination}`,
+                  label: getTlsCertificateLabel(termination),
+                  value: termination
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+    return tlsTerminationOptions;
+  };
   const onChangeHostname = (value: string) => {
     setProjectDetail({ ...projectDetail, hostname: value });
   };
@@ -51,7 +120,6 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
               helperText="Public hostname for the route.If not specified, a hostname is generated"
             >
               <TextInput
-                isRequired
                 type="text"
                 id="simple-form-name"
                 name="simple-form-name"
@@ -61,26 +129,29 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
               />
             </FormGroup>
             <br />
-            <FormGroup
-              fieldId="form-group-endpoint-tls-certs"
-              label="TLS Certificates"
-            >
-              {tlsTerminationOptions.map(termination => (
-                <>
-                  <br />
-                  <Radio
-                    isChecked={tlsTermination === termination.value}
-                    onChange={onChangeTlsTermination}
-                    name={`radio-${termination.key}`}
-                    key={termination.key}
-                    label={termination.label}
-                    id={`radio-${termination.key}`}
-                    value={termination.value}
-                    style={{ marginLeft: 20 }}
-                  />
-                </>
-              ))}
-            </FormGroup>
+            {getTlsTerminations().length > 0 && (
+              <FormGroup
+                fieldId="form-group-endpoint-tls-certs"
+                label="TLS Certificates"
+                isRequired={true}
+              >
+                {getTlsTerminations().map((termination, index) => (
+                  <div key={`key-termination-${index}`}>
+                    <br />
+                    <Radio
+                      isChecked={tlsTermination === termination.value}
+                      onChange={onChangeTlsTermination}
+                      name={`radio-${termination.key}`}
+                      key={termination.key}
+                      label={termination.label}
+                      id={`radio-${termination.key}`}
+                      value={termination.value}
+                      style={{ marginLeft: 20 }}
+                    />
+                  </div>
+                ))}
+              </FormGroup>
+            )}
           </Form>
         </GridItem>
       </Grid>

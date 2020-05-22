@@ -28,6 +28,7 @@ const EndpointCertificateConfiguration: React.FunctionComponent<IEndpointCertifi
         fieldId="text-file-uplaod-certificate"
         helperText="The PEM format certificate. Upload file by dragging & dropping, selecting it, or pasting from the clipboard"
         helperTextInvalid="Must be a PEM file"
+        isRequired={true}
         validated={isCertRejected ? "error" : "default"}
       >
         <UploadFile
@@ -40,12 +41,12 @@ const EndpointCertificateConfiguration: React.FunctionComponent<IEndpointCertifi
         />
       </FormGroup>
       <br />
-      <br />
       <FormGroup
         label="Private key"
         fieldId="text-file-uplaod-private-key"
         helperText="The PEM format key. Upload file by dragging & dropping, selecting it, or pasting from the clipboard"
         helperTextInvalid="Must be a PEM file"
+        isRequired={true}
         validated={isKeyRejected ? "error" : "default"}
       >
         <UploadFile

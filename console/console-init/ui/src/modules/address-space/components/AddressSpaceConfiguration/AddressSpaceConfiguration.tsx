@@ -38,16 +38,13 @@ export interface IAuthenticationServiceOptions {
 export interface IAddressSpaceConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
   handleNameChange: (name: string) => void;
-  handleBrokeredChange: () => void;
+  handleTypeChange: (checked: boolean, event: any) => void;
   onPlanSelect: (event: any) => void;
-  handleStandardChange: () => void;
   onAuthenticationServiceSelect: (event: any) => void;
   namespaceOptions: IDropdownOption[];
   namespace: string;
   name: string;
   isNameValid: boolean;
-  isStandardChecked: boolean;
-  isBrokeredChecked: boolean;
   type: string;
   plan: string;
   planOptions: IPlanOption[];
@@ -64,9 +61,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   name,
   isNameValid,
   handleNameChange,
-  handleStandardChange,
-  isBrokeredChecked,
-  handleBrokeredChange,
+  handleTypeChange,
   onPlanSelect,
   type,
   plan,
@@ -74,7 +69,6 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   onAuthenticationServiceSelect,
   authenticationService,
   authenticationServiceOptions,
-  isStandardChecked,
   customizeEndpoint,
   handleCustomEndpointChange
 }) => {
@@ -130,16 +124,18 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               isRequired={true}
             >
               <Radio
-                isChecked={isStandardChecked}
-                onChange={handleStandardChange}
+                isChecked={type === "standard"}
+                onChange={handleTypeChange}
+                value={"standard"}
                 id="cas-standard-radio"
                 label="Standard"
                 name="radio-5"
               />
               <Radio
-                isChecked={isBrokeredChecked}
-                onChange={handleBrokeredChange}
+                isChecked={type === "brokered"}
+                onChange={handleTypeChange}
                 id="cas-brokered-radio"
+                value={"brokered"}
                 label="Brokered"
                 name="radio-6"
               />

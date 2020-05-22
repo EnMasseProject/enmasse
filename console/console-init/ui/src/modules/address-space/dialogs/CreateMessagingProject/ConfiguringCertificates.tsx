@@ -6,6 +6,7 @@
 import React from "react";
 import { IMessagingProject } from "./CreateMessagingProject";
 import { EndpointCertificateConfiguration } from "modules/address-space/components";
+import { Grid, GridItem } from "@patternfly/react-core";
 
 interface IConfiguringCertificates {
   projectDetail: IMessagingProject;
@@ -24,14 +25,16 @@ const ConfiguringCertificates: React.FunctionComponent<IConfiguringCertificates>
     setProjectDetail({ ...projectDetail, privateKey: key.trim() });
   };
   return (
-    <>
-      <EndpointCertificateConfiguration
-        certificate={certValue}
-        privateKey={privateKey}
-        setCertificate={setCertValue}
-        setPrivateKey={setPrivateKey}
-      />
-    </>
+    <Grid>
+      <GridItem span={9}>
+        <EndpointCertificateConfiguration
+          certificate={certValue}
+          privateKey={privateKey}
+          setCertificate={setCertValue}
+          setPrivateKey={setPrivateKey}
+        />
+      </GridItem>
+    </Grid>
   );
 };
 

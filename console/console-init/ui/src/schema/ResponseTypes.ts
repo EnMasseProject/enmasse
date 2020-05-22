@@ -86,10 +86,6 @@ export interface IConnectionListResponse {
   };
 }
 
-enum eLinkRole {
-  "sender",
-  "receiver"
-}
 export interface IAddressDetailResponse {
   addresses: {
     total: number;
@@ -353,7 +349,7 @@ export interface IAddressSpaceDetailResponse {
       status: {
         isReady: boolean;
         phase: string;
-        messages: Array<string>;
+        messages: string[];
       };
     }>;
   };
@@ -373,11 +369,37 @@ export enum MessagingEndpointType {
   route,
   ingress
 }
+export interface IAddressSpaceSchema {
+  addressSpaceSchema: Array<{
+    metadata: {
+      name?: string;
+    };
+    spec: {
+      description?: string;
+      authenticationServices?: string[];
+      certificateProviderTypes: Array<{
+        name?: string;
+        displayName?: string;
+        description?: string;
+      }>;
+      routeServicePorts: Array<{
+        name?: string;
+        displayName?: string;
+        routeTlsTerminations?: string[];
+      }>;
+      endpointExposeTypes: Array<{
+        name?: string;
+        displayName?: string;
+        description?: string;
+      }>;
+    };
+  }>;
+}
 
 export interface IEndpointProtocol {
-  name: string;
-  protocol: string;
-  port: number;
+  name?: string;
+  protocol?: string;
+  port?: number;
 }
 export interface IEndpointResponse {
   metadata: {
@@ -386,7 +408,7 @@ export interface IEndpointResponse {
     creationTimestamp: string;
   };
   spec: {
-    protocols: Array<string>;
+    protocols: string[];
   };
   status: {
     phase: string;
@@ -394,7 +416,6 @@ export interface IEndpointResponse {
     message: string;
     host: string;
     ports: IEndpointProtocol[];
-    internalPorts: IEndpointProtocol[];
   };
 }
 export interface IEndpointListResponse {
