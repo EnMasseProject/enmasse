@@ -13,7 +13,7 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-import { StyleForTable } from "modules/address-space/components";
+import { StyleForTable } from "modules/msg-and-iot";
 import { css } from "@patternfly/react-styles";
 
 interface IConnectionLinksListProps {
