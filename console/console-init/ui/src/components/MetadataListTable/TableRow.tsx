@@ -41,11 +41,12 @@ const styles = StyleSheet.create({
 export interface IRowOption {
   key: string;
   type: any;
-  value: string;
+  value: any;
   typeLabel?: string;
 }
 
 export type ITableRowProps = {
+  id: string;
   rowData: IRowOption;
 };
 
@@ -139,7 +140,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
               noPadding
               key={"data-list-content-" + index}
             >
-              <TableRow rowData={row} />
+              <TableRow rowData={row} id={"table-row-" + key} />
             </DataListContent>
           ))}
       </DataListItem>

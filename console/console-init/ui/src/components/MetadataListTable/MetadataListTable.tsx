@@ -15,7 +15,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { getJsonForMetadata } from "utils";
-import { TableRow } from "./TableRow";
+import { TableRow, IRowOption } from "./TableRow";
 
 const styles = StyleSheet.create({
   header_magin_left: {
@@ -89,7 +89,13 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
             <>
               <TableHeader headers={headers} aria-labelledby={ariaLabelledby} />
               {metadataOptions &&
-                metadataOptions.map((row: any) => <TableRow rowData={row} />)}
+                metadataOptions.map((row: IRowOption) => (
+                  <TableRow
+                    id={"ml-table-row-" + row.key}
+                    rowData={row}
+                    key={row.key}
+                  />
+                ))}
             </>
           );
         })}
