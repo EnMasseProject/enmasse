@@ -6,6 +6,4 @@
 export * from "./DeviceDetailNavigation";
 export * from "./DeviceDetailHeader";
 export * from "./DeviceInfo";
-export * from "./DeviceInfoMetadata";
-export * from "./DeviceInfoGateways";
 export * from "./CredentialsView";
