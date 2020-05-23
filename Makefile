@@ -128,7 +128,7 @@ systemtests-tekton:
 	make -C systemtests systemtests-tekton
 
 docu_html:
-	make -C documentation build
+	make -C documentation
 
 docu_check:
 	make -C documentation check

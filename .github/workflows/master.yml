@@ -52,10 +52,6 @@ jobs:
         with:
           java-version: 11.0.2
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6
-
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
 
@@ -75,10 +71,32 @@ jobs:
         if: failure()
         run: ./.github/scripts/collectLogs.sh
 
+      - name: Checkout docs repository
+        uses: actions/checkout@v2
+        with:
+          repository: enmasseproject/enmasseproject.github.io
+          ref: test
+          path: website
+
+      - name: Copy documentation
+        env:
+          FROM: .
+          TO: website
+        run: ./.github/scripts/copy_docs.sh
+
+      - name: Publish documentation
+        uses: ad-m/github-push-action@master
+        with:
+          repository: enmasseproject/enmasseproject.github.io
+          branch: test
+          directory: website
+          github_token: ${{ secrets.TOKEN }}
+
       - name: Upload artifacts
         if: failure()
         uses: actions/upload-artifact@v1.0.0
         with:
           name: smoke-test-logs
           path: test-logs.zip
+
 

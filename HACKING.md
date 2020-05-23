@@ -8,7 +8,6 @@ To build EnMasse, you need
    * [Apache Maven](https://maven.apache.org/) >= 3.5.4
    * [Docker](https://www.docker.com/)
    * [GNU Make](https://www.gnu.org/software/make/)
-   * [Asciidoctor](https://asciidoctor.org/) >= 1.5.7
    * [Go](https://golang.org/) >= 1.13.0
    * [Go Yacc](golang.org/x/tools/cmd/goyacc)
    * [Ragel](http://www.colm.net/open-source/ragel/)
