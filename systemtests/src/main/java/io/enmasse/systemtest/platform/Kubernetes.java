@@ -35,6 +35,7 @@ import java.util.stream.Collectors;
 
 import io.enmasse.systemtest.condition.MultinodeCluster;
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.openshift.api.model.Route;
 import org.apache.commons.io.output.CloseShieldOutputStream;
@@ -523,6 +524,7 @@ public abstract class Kubernetes {
      * List <strong>all</strong> pods.
      * <p>
      * Compared to {@link #listPods(String)}, this method indeed returns all pods.
+     *
      * @param namespace The namespace to list pods in.
      * @return The list of all pods.
      */
@@ -543,6 +545,7 @@ public abstract class Kubernetes {
     /**
      * List <strong>all</strong> pods.
      * <p>
+     *
      * @return The list of all pods.
      */
     public List<Pod> listAllPods() {
@@ -614,8 +617,20 @@ public abstract class Kubernetes {
         return client.apps().deployments().inNamespace(namespace).withLabels(labels).list().getItems();
     }
 
+    public List<Deployment> listDeployments(String namespace) {
+        return client.apps().deployments().inNamespace(namespace).list().getItems();
+    }
+
     public List<StatefulSet> listStatefulSets(Map<String, String> labels) {
         return client.apps().statefulSets().inNamespace(infraNamespace).withLabels(labels).list().getItems();
+    }
+
+    public List<StatefulSet> listStatefulSets(String namespace) {
+        return client.apps().statefulSets().inNamespace(namespace).list().getItems();
+    }
+
+    public List<ReplicaSet> listReplicaSets(String namespace) {
+        return client.apps().replicaSets().inNamespace(namespace).list().getItems();
     }
 
     public List<ServiceAccount> listServiceAccounts(Map<String, String> labels) {
@@ -693,6 +708,7 @@ public abstract class Kubernetes {
 
     /**
      * Creates pod from resource
+     *
      * @param namespace
      * @param resources
      * @throws Exception
@@ -1100,14 +1116,14 @@ public abstract class Kubernetes {
     }
 
     private void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
-                                       Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
+                                 Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
         for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
     private void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
-                                     Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
+                               Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
 
         final Kubernetes kubeCli = Kubernetes.getInstance();
         final KubernetesClient client = kubeCli.getClient();
@@ -1163,19 +1179,19 @@ public abstract class Kubernetes {
      * are attached to some kind of "shell", you can use the {@code afterInput} handler so send some
      * "exit" command after the input stream has been transmitted.
      *
-     * @param podAccess Access to the pod.
-     * @param input The input to stream to the remote side "stdin".
+     * @param podAccess  Access to the pod.
+     * @param input      The input to stream to the remote side "stdin".
      * @param afterInput Called after all the input has been streamed. May be used for an additional
-     *        command. There is no need to flush or close the stream, this will be done automatically.
-     * @param timeout The time to wait for the remote side to exit.
-     * @param command The command to execute in the pod.
-     * @throws IOException If any of the calls throws an {@link IOException}.
-     * @throws TimeoutException When waiting for the command times out.
-     * @throws InterruptedException If waiting for the command fails.
+     *                   command. There is no need to flush or close the stream, this will be done automatically.
+     * @param timeout    The time to wait for the remote side to exit.
+     * @param command    The command to execute in the pod.
      * @return The output from the {@code stdout} stream of the application.
+     * @throws IOException          If any of the calls throws an {@link IOException}.
+     * @throws TimeoutException     When waiting for the command times out.
+     * @throws InterruptedException If waiting for the command fails.
      */
     public static String executeWithInput(final PodResource<Pod, DoneablePod> podAccess, final InputStream input, final AfterInput afterInput, final Duration timeout,
-            final String... command) throws IOException, InterruptedException, TimeoutException {
+                                          final String... command) throws IOException, InterruptedException, TimeoutException {
 
         final ByteArrayOutputStream errorChannel = new ByteArrayOutputStream();
         final ByteArrayOutputStream stdout = new ByteArrayOutputStream();
