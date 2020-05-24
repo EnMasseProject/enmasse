@@ -1,14 +1,10 @@
-# **pack.ag/amqp**
-
 [![Go Report Card](https://goreportcard.com/badge/pack.ag/amqp)](https://goreportcard.com/report/pack.ag/amqp)
 [![Coverage Status](https://coveralls.io/repos/github/vcabbage/amqp/badge.svg?branch=master)](https://coveralls.io/github/vcabbage/amqp?branch=master)
 [![Build Status](https://github.com/vcabbage/amqp/workflows/tests/badge.svg)](https://github.com/vcabbage/amqp/actions)
 [![GoDoc](https://godoc.org/pack.ag/amqp?status.svg)](http://godoc.org/pack.ag/amqp)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/vcabbage/amqp/master/LICENSE)
 
-pack.ag/amqp is an AMQP 1.0 client implementation for Go.
-
-**NOTE: This project is no longer under active development. See [issue #205](https://github.com/vcabbage/amqp/issues/205) for details.**
+This is an AMQP 1.0 client implementation for Go forked from the vcabbage/amqp client which is no longer under active development.
 
 [AMQP 1.0](http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-overview-v1.0-os.html) is not compatible with AMQP 0-9-1 or 0-10, which are
 the most common AMQP protocols in use today. A list of AMQP 1.0 brokers and other
@@ -19,7 +15,7 @@ This library aims to be stable and worthy of production usage, but the API is st
 ## Install
 
 ```
-go get -u pack.ag/amqp
+go get -u github.com/interconnectedcloud/go-amqp
 ```
 
 ## Contributing
@@ -37,7 +33,7 @@ import (
 	"log"
 	"time"
 
-	"pack.ag/amqp"
+	"github.com/interconnectedcloud/go-amqp"
 )
 
 func main() {
