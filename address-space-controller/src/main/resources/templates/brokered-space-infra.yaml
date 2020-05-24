@@ -334,6 +334,8 @@ objects:
             value: ${AUTHENTICATION_SERVICE_CLIENT_SECRET}
           - name: AUTHENTICATION_SERVICE_SASL_INIT_HOST
             value: ${AUTHENTICATION_SERVICE_SASL_INIT_HOST}
+          - name: BROKER_GLOBAL_MAX_SIZE
+            value: ${BROKER_GLOBAL_MAX_SIZE}
           image: ${AGENT_IMAGE}
           imagePullPolicy: ${IMAGE_PULL_POLICY}
           livenessProbe:

@@ -38,6 +38,7 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -50,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -1168,6 +1170,89 @@ class PlansTestStandard extends PlansTestBase implements ITestIsolatedStandard {
         doTestUnknownAddressPlan(addressSpace, stageHolders);
     }
 
+    @Test
+    @Tag(ACCEPTANCE)
+    void testUpdatePlanBrokerCreditChangesPerAddressMaxSize() throws Exception {
+        StandardInfraConfig infra = new StandardInfraConfigBuilder()
+                .withNewMetadata()
+                .withName("upd-plan-credit-infra")
+                .endMetadata()
+                .withNewSpec()
+                .withVersion(environment.enmasseVersion())
+                .withBroker(new StandardInfraConfigSpecBrokerBuilder()
+                        .withGlobalMaxSize("1mb")
+                        .withAddressFullPolicy("FAIL")
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .withStorage("512Mi")
+
+                        .endResources()
+                        .build())
+                .withRouter(PlanUtils.createStandardRouterResourceObject(null, "512Mi", 250, 1))
+                .withAdmin(new StandardInfraConfigSpecAdminBuilder()
+                        .withNewResources()
+                        .withMemory("512Mi")
+                        .endResources()
+                        .build())
+                .endSpec()
+                .build();
+
+        resourcesManager.createInfraConfig(infra);
+
+        //define and create address plans
+        List<ResourceRequest> addressResourcesQueue = List.of(new ResourceRequest("broker", 0.5), new ResourceRequest("router", 0.001));
+        AddressPlan queuePlan = PlanUtils.createAddressPlanObject("upd-plan-credit-queue-plan", AddressType.QUEUE, addressResourcesQueue);
+        List<ResourceRequest> afterAddressResourcesQueue = List.of(new ResourceRequest("broker", 0.7), new ResourceRequest("router", 0.001));
+        List<ResourceRequest> afterAddressLargeResourcesQueue = List.of(new ResourceRequest("broker", 0.9), new ResourceRequest("router", 0.001));
+
+        AddressPlan afterQueuePlan = PlanUtils.createAddressPlanObject("upd-plan-credit-large-queue-plan", AddressType.QUEUE, afterAddressResourcesQueue);
+        AddressPlan afterQueuePlan2 = PlanUtils.createAddressPlanObject("upd-plan-credit-large-queue-plan", AddressType.QUEUE, afterAddressLargeResourcesQueue);
+
+        isolatedResourcesManager.createAddressPlan(queuePlan);
+        isolatedResourcesManager.createAddressPlan(afterQueuePlan);
+
+        //define and create address space plan
+        List<ResourceAllowance> resources = Arrays.asList(
+                new ResourceAllowance("broker", 9),
+                new ResourceAllowance("router", 5.0),
+                new ResourceAllowance("aggregate", 10.0));
+        List<AddressPlan> addressPlans = Arrays.asList(queuePlan, afterQueuePlan);
+
+        AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject("upd-plan-credit-queue-plan", infra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
+        resourcesManager.createAddressSpacePlan(addressSpacePlan);
+
+        //create address space plan with new plan
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("upd-plan-credit-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(addressSpacePlan.getMetadata().getName())
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+        resourcesManager.createAddressSpace(addressSpace);
+
+        //deploy destinations
+        Address queueDest = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "myqueue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("myqueue")
+                .withPlan(queuePlan.getMetadata().getName())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(queueDest);
+        doTestUpdatePlanBrokerCreditChangesPerAddressMaxSize(addressSpace, queueDest, queuePlan, afterQueuePlan, afterQueuePlan2, getAmqpClientFactory());
+
+    }
 
     //------------------------------------------------------------------------------------------------
     // Help methods

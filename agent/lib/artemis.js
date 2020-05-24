@@ -497,7 +497,7 @@ var address_settings_fields = {
     'addressFullMessagePolicy': 'FAIL',
     'slowConsumerThreshold':-1,
     'slowConsumerCheckPeriod':-1,
-    'slowConsumerPolicy':'DROP',
+    'slowConsumerPolicy':'KILL',
     'autoCreateJmsQueues':false,
     'autoDeleteJmsQueues':false,
     'autoCreateJmsTopics':false,
@@ -519,6 +519,12 @@ Artemis.prototype.addAddressSettings = function (match, settings) {
 
 Artemis.prototype.removeAddressSettings = function (match) {
     return this._request('broker', 'removeAddressSettings', [match]);
+};
+
+Artemis.prototype.getAddressSettings = function (match) {
+    return this._request('broker', 'getAddressSettingsAsJSON', [match]).then(function (result) {
+        return JSON.parse(result);
+    });
 };
 
 Artemis.prototype.deleteAddressAndBindings = function (address) {
@@ -581,22 +587,22 @@ Artemis.prototype.createConnectorService = function (connector) {
     };
 
     if (connector.containerId !== undefined) {
-	parameters.containerId = connector.containerId;
+        parameters.containerId = connector.containerId;
     }
     if (connector.linkName !== undefined) {
-	parameters.linkName = connector.linkName;
+        parameters.linkName = connector.linkName;
     }
     if (connector.targetAddress !== undefined) {
-	parameters.targetAddress = connector.targetAddress;
+        parameters.targetAddress = connector.targetAddress;
     }
     if (connector.sourceAddress !== undefined) {
-	parameters.sourceAddress = connector.sourceAddress;
+        parameters.sourceAddress = connector.sourceAddress;
     }
     if (connector.direction !== undefined) {
-	parameters.direction = connector.direction;
+        parameters.direction = connector.direction;
     }
     return this._request('broker', 'createConnectorService', [connector.name, "org.apache.activemq.artemis.integration.amqp.AMQPConnectorServiceFactory", parameters]);
-}
+};
 
 
 Artemis.prototype.destroyConnectorService = function (name) {
@@ -649,10 +655,9 @@ Artemis.prototype.listProducers = function () {
     });
 }
 
-Artemis.prototype.getGlobalMaxSize = function ()
-{
+Artemis.prototype.getGlobalMaxSize = function () {
     return this._request('broker', 'getGlobalMaxSize', []);
-}
+};
 
 /**
  * Create connector service if one does not already exist.
