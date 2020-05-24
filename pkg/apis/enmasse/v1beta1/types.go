@@ -106,7 +106,6 @@ const (
 	EndpointServiceTypeConsole   EndpointServiceType = "console"
 )
 
-
 type EndpointSpec struct {
 	Name    string              `json:"name"`
 	Service EndpointServiceType `json:"service"`
@@ -120,7 +119,7 @@ type CertificateProviderType string
 const (
 	CertificateProviderTypeWildcard       CertificateProviderType = "wildcard"
 	CertificateProviderTypeCertBundle     CertificateProviderType = "certBundle"
-	CertificateProviderTypeCertOpenshift  CertificateProviderType     = "openshift"
+	CertificateProviderTypeCertOpenshift  CertificateProviderType = "openshift"
 	CertificateProviderTypeCertSelfsigned CertificateProviderType = "selfsigned"
 )
 
@@ -150,14 +149,14 @@ type RouteTlsTermination string
 
 const (
 	RouteTlsTerminationPassthrough RouteTlsTermination = "passthrough"
-	RouteTlsTerminationReencrypt RouteTlsTermination = "reencrypt"
+	RouteTlsTerminationReencrypt   RouteTlsTermination = "reencrypt"
 )
 
 type ExposeSpec struct {
-	Type                ExposeType `json:"type"`
+	Type ExposeType `json:"type"`
 
-	RouteHost           string `json:"routeHost"`
-	RouteServicePort    RouteServicePort `json:"routeServicePort"`
+	RouteHost           string              `json:"routeHost"`
+	RouteServicePort    RouteServicePort    `json:"routeServicePort"`
 	RouteTlsTermination RouteTlsTermination `json:"routeTlsTermination"`
 
 	LoadBalancerPorts        []string `json:"loadBalancerPorts"`

@@ -30,7 +30,7 @@ func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 	resolver.Cache = objectCache
 
 	requestState := &server.RequestState{
-		AccessController: accesscontroller.NewAllowAllAccessController(),
+		AccessController:     accesscontroller.NewAllowAllAccessController(),
 		EnmasseV1beta1Client: clientset.EnmasseV1beta1(),
 	}
 
@@ -290,7 +290,7 @@ spec:
 
 func TestQueryAddressSpaceCommandWithEndpoint(t *testing.T) {
 	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("myaddressspace", "mynamespace" )
+	as := createAddressSpace("myaddressspace", "mynamespace")
 	auth := "auth"
 	as.Spec = v1beta1.AddressSpaceSpec{
 		Plan: "standard-small-queue",
@@ -300,16 +300,16 @@ func TestQueryAddressSpaceCommandWithEndpoint(t *testing.T) {
 		},
 		Endpoints: []v1beta1.EndpointSpec{
 			{
-				Name:        "myendpoint",
-				Service:     v1beta1.EndpointServiceTypeMessaging,
+				Name:    "myendpoint",
+				Service: v1beta1.EndpointServiceTypeMessaging,
 				Certificate: &v1beta1.CertificateSpec{
-					Provider:   v1beta1.CertificateProviderTypeCertSelfsigned,
+					Provider: v1beta1.CertificateProviderTypeCertSelfsigned,
 				},
-				Expose:      &v1beta1.ExposeSpec{
-					Type:                     v1beta1.ExposeTypeRoute,
-					RouteHost:                "myhost.example.com",
-					RouteServicePort:         v1beta1.RouteServicePortAmqps,
-					RouteTlsTermination:      v1beta1.RouteTlsTerminationPassthrough,
+				Expose: &v1beta1.ExposeSpec{
+					Type:                v1beta1.ExposeTypeRoute,
+					RouteHost:           "myhost.example.com",
+					RouteServicePort:    v1beta1.RouteServicePortAmqps,
+					RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
 				},
 			},
 		},
@@ -352,16 +352,16 @@ func TestCreateAddressSpace(t *testing.T) {
 		},
 		Endpoints: []v1beta1.EndpointSpec{
 			{
-				Name:        "myendpoint",
-				Service:     v1beta1.EndpointServiceTypeMessaging,
+				Name:    "myendpoint",
+				Service: v1beta1.EndpointServiceTypeMessaging,
 				Certificate: &v1beta1.CertificateSpec{
-					Provider:   v1beta1.CertificateProviderTypeCertSelfsigned,
+					Provider: v1beta1.CertificateProviderTypeCertSelfsigned,
 				},
-				Expose:      &v1beta1.ExposeSpec{
-					Type:                     v1beta1.ExposeTypeRoute,
-					RouteHost:                "myhost.example.com",
-					RouteServicePort:         v1beta1.RouteServicePortAmqps,
-					RouteTlsTermination:      v1beta1.RouteTlsTerminationPassthrough,
+				Expose: &v1beta1.ExposeSpec{
+					Type:                v1beta1.ExposeTypeRoute,
+					RouteHost:           "myhost.example.com",
+					RouteServicePort:    v1beta1.RouteServicePortAmqps,
+					RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
 				},
 			},
 		},

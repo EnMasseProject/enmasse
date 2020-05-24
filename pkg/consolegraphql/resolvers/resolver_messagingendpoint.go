@@ -247,7 +247,7 @@ func buildMessagingEndpointSpecTls(endpointSpec v1beta1.EndpointSpec, status v1b
 			var cert v1beta2.InputValue
 			if len(endpointSpec.Certificate.TlsKey) > 0 && len(endpointSpec.Certificate.TlsCert) > 0 {
 				key = v1beta2.InputValue{
-					Value: string(endpointSpec.Certificate.TlsKey),  // Base64 decode?
+					Value: string(endpointSpec.Certificate.TlsKey), // Base64 decode?
 				}
 				cert = v1beta2.InputValue{
 					Value: string(endpointSpec.Certificate.TlsCert),

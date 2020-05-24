@@ -276,9 +276,8 @@ func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.A
 type portK8sResolver struct{ *Resolver }
 
 func (r *portK8sResolver) Port(_ context.Context, obj *v1beta1.Port) (int, error) {
-	if obj != nil  {
+	if obj != nil {
 		return int(obj.Port), nil
 	}
 	return -1, nil
 }
-
