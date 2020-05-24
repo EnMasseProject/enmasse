@@ -63,19 +63,8 @@ const ALL_ADDRESS_FOR_ADDRESS_SPACE_FILTER = (
   if (typeValue && statusValue) {
     filter += " AND ";
   }
+
   //filter status
-  // if (statusValue) {
-  //   if (statusValue !== "Pending") {
-  //     filter += generateFilterPattern("status.phase", [
-  //       { value: statusValue, isExact: true }
-  //     ]);
-  //   } else {
-  //     filter += generateFilterPattern("status.phase", [
-  //       { value: statusValue, isExact: true },
-  //       { value: "", isExact: true }
-  //     ]);
-  //   }
-  // }
   if (statusValue) {
     if (statusValue !== "Pending") {
       filter += generateFilterPattern("status.phase", [
