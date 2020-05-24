@@ -8,6 +8,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
@@ -37,7 +38,9 @@ func newTestAddressResolver(t *testing.T) (*Resolver, context.Context) {
 		EnmasseV1beta1Client: clientset.EnmasseV1beta1(),
 	}
 
-	ctx := server.ContextWithRequestState(requestState, context.TODO())
+	ctx := graphql.WithResponseContext(server.ContextWithRequestState(requestState, context.TODO()),
+		graphql.DefaultErrorPresenter,
+		graphql.DefaultRecover)
 
 	return &resolver, ctx
 }
@@ -444,6 +447,7 @@ func TestPurgeQueue(t *testing.T) {
 	collector := r.GetCollector(infraUuid)
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
+	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
 
 	assert.ElementsMatch(t, []metav1.ObjectMeta{addr.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
 }
@@ -457,10 +461,7 @@ func TestPurgeQueues(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
 	infraUuid := "abcd1235"
-	as := createAddressSpace(addressspace, namespace)
-	as.Annotations = map[string]string{
-		"enmasse.io/infra-uuid": infraUuid,
-	}
+	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
 	addr1 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
 	addr2 := createAddress(namespace, addressspace+".myaddr", withAddressType("queue"))
@@ -474,27 +475,43 @@ func TestPurgeQueues(t *testing.T) {
 	collector := r.GetCollector(infraUuid)
 	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
 	assert.NoError(t, err)
+	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
 
 	assert.ElementsMatch(t, []metav1.ObjectMeta{addr1.ObjectMeta, addr2.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
 }
 
-func TestPurgeUnsupportedAddressType(t *testing.T) {
+func TestPurgeQueuesSomeFail(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	server.GetRequestStateFromContext(ctx).UserAccessToken = "userToken12345"
+
 	r.GetCollector = getCollector
 
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
-	infraUuid := "abcd1234"
+	infraUuid := "abcd1236"
 	as := createAddressSpace(addressspace, namespace, withAddressSpaceAnnotation("enmasse.io/infra-uuid", infraUuid))
 
-	addr := createAddress(namespace, addressspace+".myaddr", withAddressType("anycast"))
+	addr1 := createAddress(namespace, addressspace+".myaddr1", withAddressType("queue"))
+	addr2 := createAddress(namespace, addressspace+".myaddr2", withAddressType("queue"))
+	absent := createAddress(namespace, addressspace+".absent", withAddressType("queue"))
+	wrongType := createAddress(namespace, addressspace+".wrongType", withAddressType("anycast"))
 
-	err := r.Cache.Add(as, addr)
+	err := r.Cache.Add(as, addr1, addr2, wrongType)
 	assert.NoError(t, err)
 
-	_, err = r.Mutation().PurgeAddress(ctx, addr.ObjectMeta)
-	assert.Error(t, err)
+	_, err = r.Mutation().PurgeAddresses(ctx, []*metav1.ObjectMeta{&addr1.ObjectMeta, &wrongType.ObjectMeta, &absent.ObjectMeta, &addr2.ObjectMeta})
+	assert.NoError(t, err)
+
+	collector := r.GetCollector(infraUuid)
+	delegate, err := collector.CommandDelegate(server.GetRequestStateFromContext(ctx).UserAccessToken, "")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(graphql.GetErrors(ctx)))
+	assert.Contains(t, graphql.GetErrors(ctx)[0].Message,
+		"failed to purge address: 'myaddrspace.wrongType' in namespace: 'mynamespace' - address type 'anycast' is not supported for this operation")
+	assert.Contains(t, graphql.GetErrors(ctx)[1].Message,
+		"failed to purge address: 'myaddrspace.absent' in namespace: 'mynamespace' - address not found")
+
+	assert.ElementsMatch(t, []metav1.ObjectMeta{addr1.ObjectMeta, addr2.ObjectMeta}, delegate.(*mockCommandDelegate).purged)
 }
 
 func createAddressLink(namespace string, addressspace string, addr string, role string) *consolegraphql.Link {
@@ -570,6 +587,30 @@ func TestDeleteAddresses(t *testing.T) {
 
 	_, err = r.Mutation().DeleteAddresses(ctx, []*metav1.ObjectMeta{&addr1.ObjectMeta, &addr2.ObjectMeta})
 	assert.NoError(t, err)
+	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
+
+	list, err := addrClient.List(metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list.Items))
+}
+
+func TestDeleteAddressesOneAddressNotFound(t *testing.T) {
+	r, ctx := newTestAddressResolver(t)
+	namespace := "mynamespace"
+	addr1 := createAddress(namespace, "myaddrspace.myaddr1")
+	addr2 := createAddress(namespace, "myaddrspace.myaddr2")
+	absent := createAddress(namespace, "myaddrspace.absent")
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(namespace)
+	_, err := addrClient.Create(&addr1.Address)
+	assert.NoError(t, err)
+	_, err = addrClient.Create(&addr2.Address)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().DeleteAddresses(ctx, []*metav1.ObjectMeta{&addr1.ObjectMeta, &absent.ObjectMeta, &addr2.ObjectMeta})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(graphql.GetErrors(ctx)))
+	assert.Contains(t, graphql.GetErrors(ctx)[0].Message, "failed to delete address: 'myaddrspace.absent' in namespace: 'mynamespace'")
 
 	list, err := addrClient.List(metav1.ListOptions{})
 	assert.NoError(t, err)

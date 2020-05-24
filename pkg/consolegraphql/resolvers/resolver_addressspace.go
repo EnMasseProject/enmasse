@@ -8,6 +8,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
@@ -252,13 +253,12 @@ func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input metav1.
 
 func (r *mutationResolver) DeleteAddressSpaces(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
-	f := false
 	t := true
 
 	for _, as := range input {
 		e := requestState.EnmasseV1beta1Client.AddressSpaces(as.Namespace).Delete(as.Name, &metav1.DeleteOptions{})
 		if e != nil {
-			return &f, e
+			graphql.AddErrorf(ctx, "failed to delete address space: '%s' in namespace: '%s', %+v", as.Name, as.Namespace, e)
 		}
 	}
 	return &t, nil

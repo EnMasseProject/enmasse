@@ -9,6 +9,7 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
@@ -34,7 +35,10 @@ func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 		EnmasseV1beta1Client: clientset.EnmasseV1beta1(),
 	}
 
-	ctx := server.ContextWithRequestState(requestState, context.TODO())
+	ctx := graphql.WithResponseContext(server.ContextWithRequestState(requestState, context.TODO()),
+		graphql.DefaultErrorPresenter,
+		graphql.DefaultRecover)
+
 	return &resolver, ctx
 }
 
@@ -303,6 +307,30 @@ func TestDeleteAddressSpaces(t *testing.T) {
 
 	_, err = r.Mutation().DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &as2.ObjectMeta})
 	assert.NoError(t, err)
+	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
+
+	list, err := addrClient.List(metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(list.Items))
+}
+
+func TestDeleteAddressSpacesOneAddressSpaceNotFound(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	namespace := "mynamespace"
+	as1 := createAddressSpace("myaddressspace1", namespace)
+	as2 := createAddressSpace("myaddressspace2", namespace)
+	absent := createAddressSpace("absent", namespace)
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(namespace)
+	_, err := addrClient.Create(&as1.AddressSpace)
+	assert.NoError(t, err)
+	_, err = addrClient.Create(&as2.AddressSpace)
+	assert.NoError(t, err)
+
+	_, err = r.Mutation().DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &absent.ObjectMeta, &as2.ObjectMeta})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(graphql.GetErrors(ctx)))
+	assert.Contains(t, graphql.GetErrors(ctx)[0].Message, "failed to delete address space: 'absent' in namespace: 'mynamespace'")
 
 	list, err := addrClient.List(metav1.ListOptions{})
 	assert.NoError(t, err)
