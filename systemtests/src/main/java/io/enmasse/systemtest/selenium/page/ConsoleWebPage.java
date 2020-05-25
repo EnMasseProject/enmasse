@@ -882,7 +882,7 @@ public class ConsoleWebPage implements IWebPage {
     public void openHelpLink(String expectedUrl) {
         selenium.takeScreenShot();
         try {
-            selenium.getWebElement(this::getHelpButton);
+            selenium.clickOnItem(selenium.getWebElement(this::getHelpButton));
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains(expectedUrl));
         } catch (Exception e) {
             e.printStackTrace();
