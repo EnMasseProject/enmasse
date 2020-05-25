@@ -110,23 +110,9 @@ jobs:
           asset_name: ${{ env.ASSETNAME }}
           asset_content_type: application/gzip
     
-      - name: Checkout docs repository
-        uses: actions/checkout@v2
-        with:
-          repository: enmasseproject/enmasseproject.github.io
-          ref: master
-          path: website
-
-      - name: Copy documentation
+      - name: Publish documentation
         env:
           FROM: .
           TO: website
-        run: ./.github/scripts/copy_docs.sh
-
-      - name: Publish documentation
-        uses: ad-m/github-push-action@master
-        with:
-          repository: enmasseproject/enmasseproject.github.io
-          branch: master
-          directory: website
-          github_token: ${{ secrets.CI_TOKEN }}
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: ./.github/scripts/publish_docs.sh

@@ -8,6 +8,8 @@ fi
 
 echo "Publishing docs for version ${DOCVERSION}"
 
+git clone https://${CI_TOKEN}@github.com/EnMasseProject/enmasseproject.github.io.git ${TO}
+
 rm -rf  ${TO}/documentation/${DOCVERSION}/images
 cp -vrL ${FROM}/documentation/target/generated-docs/htmlnoheader/* ${TO}/documentation/${DOCVERSION}
 
@@ -23,4 +25,7 @@ git config user.email "enmasse-ci@redhat.com"
 git add -A
 git commit -s -m "Update documentation from master" --allow-empty
 
+git push origin master
+
 popd
+
