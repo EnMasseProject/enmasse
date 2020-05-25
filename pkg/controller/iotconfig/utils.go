@@ -127,22 +127,28 @@ func AppendStandardHonoJavaOptions(container *corev1.Container) {
 
 }
 
-func applyDefaultStatefulSetConfig(statefulSet *appsv1.StatefulSet, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
+func applyDefaultStatefulSetConfig(statefulSet *appsv1.StatefulSet, serviceConfig iotv1alpha1.ServiceConfig, config *cchange.ConfigChangeRecorder) {
 
 	statefulSet.Spec.Replicas = serviceConfig.Replicas
 	statefulSet.Spec.UpdateStrategy.Type = appsv1.RollingUpdateStatefulSetStrategyType
 
-	cchange.ApplyTo(configCtx, "iot.enmasse.io/config-hash", &statefulSet.Spec.Template.Annotations)
+	applyDefaultPodSpecConfig(&statefulSet.Spec.Template, serviceConfig, config)
 
 }
 
-func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
+func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, config *cchange.ConfigChangeRecorder) {
 
 	deployment.Spec.Replicas = serviceConfig.Replicas
 	deployment.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
 
-	cchange.ApplyTo(configCtx, "iot.enmasse.io/config-hash", &deployment.Spec.Template.Annotations)
+	applyDefaultPodSpecConfig(&deployment.Spec.Template, serviceConfig, config)
 
+}
+
+func applyDefaultPodSpecConfig(template *corev1.PodTemplateSpec, serviceConfig iotv1alpha1.ServiceConfig, config *cchange.ConfigChangeRecorder) {
+	cchange.ApplyTo(config, "iot.enmasse.io/config-hash", &template.Annotations)
+
+	template.Spec.Affinity = serviceConfig.Affinity
 }
 
 func applyContainerConfig(container *corev1.Container, config iotv1alpha1.ContainerConfig) {

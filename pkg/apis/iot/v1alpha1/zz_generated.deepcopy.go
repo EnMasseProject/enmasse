@@ -1799,6 +1799,11 @@ func (in *ServiceConfig) DeepCopyInto(out *ServiceConfig) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.Affinity != nil {
+		in, out := &in.Affinity, &out.Affinity
+		*out = new(v1.Affinity)
+		(*in).DeepCopyInto(*out)
+	}
 	return
 }
 

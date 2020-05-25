@@ -156,7 +156,8 @@ type AdaptersConfig struct {
 }
 
 type ServiceConfig struct {
-	Replicas *int32 `json:"replicas,omitempty"`
+	Replicas *int32           `json:"replicas,omitempty"`
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 }
 
 type ContainerConfig struct {
