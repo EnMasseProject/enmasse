@@ -74,9 +74,7 @@ public class MonitoringClient {
     public void validateRangeQuery(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
         JsonObject queryResult = client.doRangeQuery(query, String.valueOf(start.getEpochSecond()), String.valueOf(Instant.now().getEpochSecond()));
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), resource -> {
-            return rangeValidator.test(resource.getRangeValues());
-        });
+        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), resource -> rangeValidator.test(resource.getRangeValues()));
         if (!validateResult) {
             throw new Exception("Unexpected query result " + queryResult.encodePrettily());
         }
@@ -99,6 +97,12 @@ public class MonitoringClient {
             }
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
+    public PrometheusMetricResource getQueryResult(String query, Map<String, String> labels) throws Exception {
+        JsonObject response = client.doQuery(query);
+        basicQueryResultValidation(query, response);
+        return PrometheusMetricResource.getResource(response, query, labels);
     }
 
     //=============================================================================

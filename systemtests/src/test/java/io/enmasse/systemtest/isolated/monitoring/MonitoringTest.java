@@ -29,8 +29,10 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Map;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(ACCEPTANCE)
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
@@ -39,7 +41,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     private MonitoringClient monitoring;
 
     @BeforeAll
-    void installMonitoring() throws Exception {
+    void installMonitoring() {
         EnmasseOperatorManager.getInstance().installMonitoringOperator();
         Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         monitoring = new MonitoringClient(prometheusEndpoint);
@@ -129,7 +131,12 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
 
-        resourcesManager.setAddresses(topic, queue);
+        resourcesManager.setAddresses(false, topic, queue);
+
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "2");
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CONFIGURING_TOTAL, "2");
+
+        AddressUtils.waitForDestinationsReady(topic, queue);
 
         monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2");
 
@@ -142,6 +149,26 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
         monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
                 Collections.singletonMap("address", queue.getSpec().getAddress()));
+    }
+
+    @Test
+    @OpenShift
+    void testMonitoringCommonQueries() throws Exception {
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "standard-authservice"));
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "none-authservice"));
+
+        assertEquals(environment.enmasseVersion(), monitoring.getQueryResult(MonitoringQueries.ENMASSE_VERSION, Collections.singletonMap("name", "enmasse-operator")).getMetadataValue("version"));
+
+        kubernetes.getAddressSpacePlanClient().list().getItems().forEach(plan -> {
+            monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSSPACEPLAN_INFO, "1", Collections.singletonMap("addressspaceplan", plan.getMetadata().getName()));
+        });
+
+        kubernetes.getAddressPlanClient().list().getItems().forEach(plan -> {
+            monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSPLAN_INFO, "1", Collections.singletonMap("addressplan", plan.getMetadata().getName()));
+        });
+
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "cr-metrics"), Map.entry("job", "enmasse-operator-metrics")));
+        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "http-metrics"), Map.entry("job", "enmasse-operator-metrics")));
     }
 
 }

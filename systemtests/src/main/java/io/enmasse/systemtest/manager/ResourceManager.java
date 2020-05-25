@@ -402,6 +402,11 @@ public abstract class ResourceManager {
         AddressUtils.setAddresses(budget, true, addresses);
     }
 
+    public void setAddresses(boolean wait, Address... addresses) throws Exception {
+        logCollector.collectRouterState("setAddresses");
+        AddressUtils.setAddresses(null, wait, addresses);
+    }
+
     public void setAddresses(Address... addresses) throws Exception {
         setAddresses(new TimeoutBudget(15, TimeUnit.MINUTES), addresses);
     }
