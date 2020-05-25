@@ -7,6 +7,7 @@ package state
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"strings"
 
@@ -28,7 +29,16 @@ const (
 	maxOrder                     = 2
 )
 
-func NewRouterState(host Host, port int32) *RouterState {
+func NewRouterState(host Host, port int32, tlsConfig *tls.Config) *RouterState {
+	opts := make([]amqp.ConnOption, 0)
+	opts = append(opts, amqp.ConnConnectTimeout(10*time.Second))
+	opts = append(opts, amqp.ConnProperty("product", "controller-manager"))
+
+	if tlsConfig != nil {
+		opts = append(opts, amqp.ConnSASLExternal())
+		opts = append(opts, amqp.ConnTLS(true))
+		opts = append(opts, amqp.ConnTLSConfig(tlsConfig))
+	}
 	state := &RouterState{
 		host:        host,
 		port:        port,
@@ -40,11 +50,10 @@ func NewRouterState(host Host, port int32) *RouterState {
 			RouterAutoLinkEntity:   make(map[string]RouterEntity, 0),
 			RouterSslProfileEntity: make(map[string]RouterEntity, 0),
 		},
-		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host.Ip, port),
+		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
 			routerCommandAddress,
 			routerCommandResponseAddress,
-			amqp.ConnConnectTimeout(10*time.Second),
-			amqp.ConnProperty("product", "controller-manager")),
+			opts...),
 	}
 	state.commandClient.Start()
 	state.reconnectCount = state.commandClient.ReconnectCount()

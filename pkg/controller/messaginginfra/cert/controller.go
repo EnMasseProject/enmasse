@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"crypto/sha256"
+	"crypto/tls"
 	"encoding/hex"
 
 	logr "github.com/go-logr/logr"
@@ -19,7 +20,6 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -48,8 +48,9 @@ type CertController struct {
 }
 
 type CertInfo struct {
-	NotBefore time.Time
-	NotAfter  time.Time
+	Certificate *tls.Certificate
+	NotBefore   time.Time
+	NotAfter    time.Time
 }
 
 func NewCertController(client client.Client, scheme *runtime.Scheme, caExpirationTime time.Duration, certExpirationTime time.Duration) *CertController {
@@ -67,7 +68,7 @@ const ANNOTATION_CA_DIGEST = "enmasse.io/ca-digest"
 /*
  * Reconciles the CA for an instance of shared infrastructure. This function also handles renewal of the CA.
  */
-func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) error {
+func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]byte, error) {
 	secretName := fmt.Sprintf("%s-ca", infra.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
@@ -79,7 +80,10 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 		}
 		return c.applyCaSecret(secret, logger)
 	})
-	return err
+	if err != nil {
+		return nil, err
+	}
+	return secret.Data["tls.crt"], nil
 }
 
 /*
@@ -253,7 +257,7 @@ func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Log
  * Reconciles the internal certificate for a given component in a shared infrastructure.
  * This function also handles renewal of the certificate.
  */
-func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, set *appsv1.StatefulSet, commonName string, dnsNames ...string) (*CertInfo, error) {
+func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, object metav1.Object, commonName string, dnsNames ...string) (*CertInfo, error) {
 
 	caSecretName := fmt.Sprintf("%s-ca", infra.Name)
 	caSecret := &corev1.Secret{
@@ -264,13 +268,13 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 		return nil, err
 	}
 
-	secretName := GetCertSecretName(set.Name)
+	secretName := GetCertSecretName(object.GetName())
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
 	var certInfo *CertInfo
 	_, err = controllerutil.CreateOrUpdate(ctx, c.client, secret, func() error {
-		if err := controllerutil.SetControllerReference(set, secret, c.scheme); err != nil {
+		if err := controllerutil.SetControllerReference(object, secret, c.scheme); err != nil {
 			return err
 		}
 		config := certConfig{
@@ -287,15 +291,21 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 }
 
 // Get CertInfo for a given PEM cert.
-func GetCertInfo(pemCert []byte) (*CertInfo, error) {
+func GetCertInfo(pemCert []byte, pemKey []byte) (*CertInfo, error) {
 	cert, err := parsePemCertificate(pemCert)
 	if err != nil {
 		return nil, err
 	}
 
+	tlsCert, err := tls.X509KeyPair(pemCert, pemKey)
+	if err != nil {
+		return nil, err
+	}
+
 	return &CertInfo{
-		NotBefore: cert.NotBefore,
-		NotAfter:  cert.NotAfter,
+		Certificate: &tlsCert,
+		NotBefore:   cert.NotBefore,
+		NotAfter:    cert.NotAfter,
 	}, nil
 }
 
@@ -389,10 +399,16 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 			delete(secret.Data, config.truststore)
 		}
 
+		tlsCert, err := tls.X509KeyPair(cert, key)
+		if err != nil {
+			return nil, err
+		}
+
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
 		certInfo = &CertInfo{
-			NotBefore: validFrom,
-			NotAfter:  expiryDate,
+			Certificate: &tlsCert,
+			NotBefore:   validFrom,
+			NotAfter:    expiryDate,
 		}
 
 	} else if shouldRenewCert(now, expiryDate) || expectedCaDigest != actualCaDigest {
@@ -445,12 +461,18 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 
 		secret.Annotations[ANNOTATION_CA_DIGEST] = actualCaDigest
 
+		tlsCert, err := tls.X509KeyPair(cert, key)
+		if err != nil {
+			return nil, err
+		}
+
 		certInfo = &CertInfo{
-			NotBefore: validFrom,
-			NotAfter:  expiryDate,
+			Certificate: &tlsCert,
+			NotBefore:   validFrom,
+			NotAfter:    expiryDate,
 		}
 	} else {
-		certInfo, err = GetCertInfo(secret.Data[config.crt])
+		certInfo, err = GetCertInfo(secret.Data[config.crt], secret.Data[config.key])
 		if err != nil {
 			return nil, err
 		}

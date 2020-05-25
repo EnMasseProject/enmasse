@@ -7,6 +7,8 @@ package messaginginfra
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"reflect"
@@ -314,6 +316,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 	var ready *v1beta2.MessagingInfrastructureCondition
 	var caCreated *v1beta2.MessagingInfrastructureCondition
+	var certCreated *v1beta2.MessagingInfrastructureCondition
 	var brokersCreated *v1beta2.MessagingInfrastructureCondition
 	var routersCreated *v1beta2.MessagingInfrastructureCondition
 	var brokersConnected *v1beta2.MessagingInfrastructureCondition
@@ -327,6 +330,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 
 		ready = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureReady)
 		caCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureCaCreated)
+		certCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureCertCreated)
 		brokersCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureBrokersCreated)
 		routersCreated = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureRoutersCreated)
 		brokersConnected = infra.Status.GetMessagingInfrastructureCondition(v1beta2.MessagingInfrastructureBrokersConnected)
@@ -338,14 +342,33 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile CA
+	var infraCa *x509.CertPool = x509.NewCertPool()
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
-		err := r.certController.ReconcileCa(ctx, logger, infra)
+		ca, err := r.certController.ReconcileCa(ctx, logger, infra)
 		if err != nil {
 			infra.Status.Message = err.Error()
 			caCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{}, err
 		}
 		caCreated.SetStatus(corev1.ConditionTrue, "", "")
+		infraCa.AppendCertsFromPEM(ca)
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
+	// Reconcile operator cert
+	var controllerCert tls.Certificate
+	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
+		certInfo, err := r.certController.ReconcileCert(ctx, logger, infra, infra, fmt.Sprintf("enmasse-operator-%s", infra.Name))
+		if err != nil {
+			infra.Status.Message = err.Error()
+			certCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
+			return processorResult{}, err
+		}
+		certCreated.SetStatus(corev1.ConditionTrue, "", "")
+		controllerCert = *certInfo.Certificate
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
@@ -425,7 +448,11 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	// Sync all configuration
 	var connectorStatuses []state.ConnectorStatus
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
-		statuses, err := r.clientManager.GetClient(infra).SyncAll(runningRouters, runningBrokers)
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{controllerCert},
+			RootCAs:      infraCa,
+		}
+		statuses, err := r.clientManager.GetClient(infra).SyncAll(runningRouters, runningBrokers, tlsConfig)
 		// Treat as transient error
 		if errors.Is(err, amqpcommand.RequestTimeoutError) {
 			logger.Info("Error syncing infra", "error", err.Error())
