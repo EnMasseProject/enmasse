@@ -71,26 +71,26 @@ jobs:
         if: failure()
         run: ./.github/scripts/collectLogs.sh
 
-      - name: Checkout docs repository
-        uses: actions/checkout@v2
-        with:
-          repository: enmasseproject/enmasseproject.github.io
-          ref: master
-          path: website
+        # - name: Checkout docs repository
+        #   uses: actions/checkout@v2
+        #   with:
+        #     repository: enmasseproject/enmasseproject.github.io
+        #     ref: master
+        #     path: website
 
-      - name: Copy documentation
-        env:
-          FROM: .
-          TO: website
-        run: ./.github/scripts/copy_docs.sh
+        # - name: Copy documentation
+        #   env:
+        #     FROM: .
+        #     TO: website
+        #   run: ./.github/scripts/copy_docs.sh
 
-      - name: Publish documentation
-        uses: ad-m/github-push-action@master
-        with:
-          repository: enmasseproject/enmasseproject.github.io
-          branch: master
-          directory: website
-          github_token: ${{ secrets.CI_TOKEN }}
+        # - name: Publish documentation
+        #   uses: ad-m/github-push-action@master
+        #   with:
+        #     repository: enmasseproject/enmasseproject.github.io
+        #     branch: master
+        #     directory: website
+        #     github_token: ${{ secrets.CI_TOKEN }}
 
       - name: Upload artifacts
         if: failure()
