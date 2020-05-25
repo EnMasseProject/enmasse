@@ -75,7 +75,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: enmasseproject/enmasseproject.github.io
-          ref: test
+          ref: master
           path: website
 
       - name: Copy documentation
@@ -88,9 +88,9 @@ jobs:
         uses: ad-m/github-push-action@master
         with:
           repository: enmasseproject/enmasseproject.github.io
-          branch: test
+          branch: master
           directory: website
-          github_token: ${{ secrets.TOKEN }}
+          github_token: ${{ secrets.CI_TOKEN }}
 
       - name: Upload artifacts
         if: failure()

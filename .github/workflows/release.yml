@@ -129,4 +129,4 @@ jobs:
           repository: enmasseproject/enmasseproject.github.io
           branch: master
           directory: website
-          github_token: ${{ secrets.TOKEN }}
+          github_token: ${{ secrets.CI_TOKEN }}
