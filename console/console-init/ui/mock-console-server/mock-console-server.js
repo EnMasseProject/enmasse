@@ -6,13 +6,35 @@
 
 const uuidv1 = require('uuid/v1');
 const uuidv5 = require('uuid/v5');
-const { ApolloServer, gql } = require('apollo-server');
+const { ApolloServer, ApolloError, gql } = require('apollo-server');
+const { formatApolloErrors } = require('apollo-server-errors');
 const typeDefs = require('./schema');
 const { applyPatch, compare } = require('fast-json-patch');
 const parser = require('./filter_parser.js');
 const clone = require('clone');
 const orderer = require('./orderer.js');
 const _ = require('lodash');
+
+class MultiError extends ApolloError {
+  constructor(message, errors){
+    super(message);
+    this.errors = errors;
+  }
+}
+
+function runOperationForAll(input, operation) {
+  var errors = [];
+  input.forEach( i => {
+    try {
+      operation(i);
+    } catch (e) {
+      errors.push(e);
+    }
+  });
+  if (errors) {
+    throw new MultiError("multi-operation failed", errors);
+  }
+}
 
 function calcLowerUpper(offset, first, len) {
   var lower = 0;
@@ -1495,9 +1517,7 @@ const resolvers = {
       return true;
     },
     deleteAddressSpaces: (parent, args) => {
-      args.input.forEach( i => {
-        deleteAddressSpace(i);
-      });
+      runOperationForAll(args.input, (t) => deleteAddressSpace(t));
       return true;
     },
     createAddress: (parent, args) => {
@@ -1512,9 +1532,7 @@ const resolvers = {
       return true;
     },
     deleteAddresses: (parent, args) => {
-      args.input.forEach( i => {
-        deleteAddress(i);
-      });
+      runOperationForAll(args.input, (t) => deleteAddress(t));
       return true;
     },
     purgeAddress: (parent, args) => {
@@ -1522,15 +1540,11 @@ const resolvers = {
       return true;
     },
     purgeAddresses: (parent, args) => {
-      args.input.forEach( i => {
-        purgeAddress(i);
-      });
+      runOperationForAll(args.input, (t) => purgeAddress(t));
       return true;
     },
     closeConnections: (parent, args) => {
-      args.input.forEach((c) => {
-        closeConnection(c);
-      });
+      runOperationForAll(args.input, (t) => closeConnection(t));
       return true;
     },
   },
@@ -1801,6 +1815,25 @@ if (require.main === module) {
     mockEntireSchema: false,
     introspection: true,
     playground: true,
+    formatResponse: (response, context) => {
+      // Hack - apollo-graphql doesn't support multi-errors from queries/mutations (oddly it does for validation errors).
+      // Here we turn MultiErrors into separate error responses.
+      var errors = response.errors;
+      if (errors) {
+        var replacement = [];
+        errors.forEach(err => {
+          if (err.originalError && err.originalError.errors) {
+            err.originalError.errors.forEach(underlying => {
+              replacement.push(new ApolloError(underlying, err.code, err.extensions));
+            })
+          } else {
+            replacement.push(err);
+          }
+        });
+        response.errors = formatApolloErrors(replacement);
+      }
+      return response;
+    }
   });
 
   server.listen().then(({ url }) => {
