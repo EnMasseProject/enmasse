@@ -17,6 +17,7 @@ jobs:
       DOCKER_REGISTRY: "quay.io"
       TAG: "latest"
       RELEASE: true
+      PUSH_REGISTRY: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
