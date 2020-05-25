@@ -4,8 +4,8 @@ This guide is meant to assist contributors to the EnMasse documentation.
 
 == Dependencies
 
-* asciidoctor
-* python
+* java
+* maven
 
 == Project layout
 
@@ -14,5 +14,5 @@ This guide is meant to assist contributors to the EnMasse documentation.
 _BOOK_DIR_/                          # The source for a book
 common/                              # Shared include files
 common/attributes.adoc               # Global book attributes
-images/                              # Shared image files
+_images/                             # Shared image files
 ----

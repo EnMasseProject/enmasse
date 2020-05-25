@@ -1,20 +1,18 @@
 
 include::common/attributes.adoc[]
 
-:BookNameUrl: /openshift/
+:BookNameUrl: /kubernetes.html
 
 :parent-context: messaging
 :context: messaging
-:imagesdir: ../openshift/images
-:cmdcli: oc
-:KubePlatform: OpenShift
-:KubePlatformCredentials: OpenShift
-:OperatorMarketplaceNamespace: openshift-marketplace
+:cmdcli: kubectl
+:KubePlatform: Kubernetes
+:KubePlatformCredentials: OIDC
+:OperatorMarketplaceNamespace: marketplace
 
-:KubePlatformRbacURL: https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html-single/cluster_administration/index#admin-guide-manage-rbac
+:KubePlatformRbacURL: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
 
-
-= Documentation for {ProductName} on OpenShift
+= Documentation for {ProductName} on Kubernetes
 
 Welcome to the {ProductName} documentation, where you can find information to help you learn about
 {ProductName} and start exploring its features.
