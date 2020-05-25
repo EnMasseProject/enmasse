@@ -559,7 +559,7 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 					return reconcile.Result{}, err
 				}
 				for _, tenant := range tenants.Items {
-					if tenant.Status.MessagingInfrastructureRef != nil && tenant.Status.MessagingInfrastructureRef.Name == infra.Name && tenant.Status.MessagingInfrastructureRef.Namespace == infra.Namespace {
+					if tenant.Status.MessagingInfrastructureRef.Name == infra.Name && tenant.Status.MessagingInfrastructureRef.Namespace == infra.Namespace {
 						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingInfra %s/%s: in use by MessagingTenant %s/%s", infra.Namespace, infra.Name, tenant.Namespace, tenant.Name)
 					}
 				}
@@ -641,7 +641,7 @@ func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1bet
 		return nil, err
 	}
 
-	if tenant.Status.MessagingInfrastructureRef == nil {
+	if !tenant.IsBound() {
 		return nil, utilerrors.NewNotBoundError(namespace)
 	}
 

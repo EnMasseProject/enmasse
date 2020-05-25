@@ -164,7 +164,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingTenant: waiting for %d addresses and %d endpoints to be deleted", len(addresses.Items), len(endpoints.Items))
 					}
 
-					if tenant.Status.MessagingInfrastructureRef != nil {
+					if tenant.IsBound() {
 						secret := &corev1.Secret{
 							ObjectMeta: metav1.ObjectMeta{Namespace: tenant.Status.MessagingInfrastructureRef.Namespace, Name: cert.GetTenantCaSecretName(tenant.Namespace)},
 						}
@@ -198,7 +198,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	// Lookup messaging infra
 	infra := &v1beta2.MessagingInfrastructure{}
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
-		if tenant.Status.MessagingInfrastructureRef == nil {
+		if !tenant.IsBound() {
 			// Find a suiting MessagingInfrastructure to bind to
 			infras := &v1beta2.MessagingInfrastructureList{}
 			err := r.client.List(ctx, infras)
@@ -231,7 +231,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		if infra != nil {
 			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionTrue, "", "")
-			tenant.Status.MessagingInfrastructureRef = &v1beta2.MessagingInfrastructureReference{
+			tenant.Status.MessagingInfrastructureRef = v1beta2.MessagingInfrastructureReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
 			}
