@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.systemtest.bases.TestBase;
@@ -32,6 +34,7 @@ import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.client.KubernetesClient;
 
+@Tag(ISOLATED)
 public class ReloadCertificatesTest extends TestBase implements ITestIoTIsolated {
 
     private static final String NAMESPACE = Kubernetes.getInstance().getInfraNamespace();

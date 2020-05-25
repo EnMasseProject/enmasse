@@ -5,54 +5,53 @@
 
 package io.enmasse.iot.tenant.impl;
 
-import static io.vertx.core.Future.failedFuture;
-import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
+import static java.util.Optional.ofNullable;
 
-import java.net.HttpURLConnection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import javax.security.auth.x500.X500Principal;
 
-import org.eclipse.hono.client.ServerErrorException;
-import org.eclipse.hono.service.tenant.TenantService;
-import org.eclipse.hono.util.CacheDirective;
-import org.eclipse.hono.util.Constants;
+import org.eclipse.hono.util.Strings;
+import org.eclipse.hono.util.TenantConstants;
 import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableMap;
 
 import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.service.base.AbstractProjectBasedService;
 import io.opentracing.Span;
-import io.opentracing.noop.NoopSpan;
 import io.vertx.core.Future;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 @Service
 @Qualifier("backend")
-public class TenantServiceImpl extends AbstractProjectBasedService implements TenantService {
+public class TenantServiceImpl extends AbstractTenantService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
 
-    private static final TenantResult<JsonObject> RESULT_NOT_FOUND = TenantResult.from(HTTP_NOT_FOUND);
-
-    protected TenantServiceConfigProperties configuration;
-
-    @Autowired
-    public void setConfig(final TenantServiceConfigProperties configuration) {
-        this.configuration = configuration;
-    }
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Map<String, IoTProject> projectsByTrustAnchor = new HashMap<>();
+    private final Map<String, Set<String>> projectToTrustAnchors = new HashMap<>();
 
     @Override
     public Future<TenantResult<JsonObject>> get(final String tenantName, final Span span) {
 
         logger.debug("Get tenant - name: {}", tenantName);
 
-        span.log(ImmutableMap.<String,Object>builder()
+        span.log(ImmutableMap.<String, Object>builder()
                 .put("event", "get tenant")
                 .put("tenant_id", tenantName)
                 .build());
@@ -60,41 +59,186 @@ public class TenantServiceImpl extends AbstractProjectBasedService implements Te
         return getProject(tenantName)
 
                 .map(project -> project
-                        .map(p -> convertToHono(tenantName, p))
+                        .map(p -> convertToHono(p, span.context()))
                         .orElse(RESULT_NOT_FOUND));
 
     }
 
     @Override
-    public Future<TenantResult<JsonObject>> get(final X500Principal subjectDn, final Span span) {
-        return failedFuture(new ServerErrorException(HttpURLConnection.HTTP_NOT_IMPLEMENTED));
+    protected void onAdd(final IoTProject project) {
+        super.onAdd(project);
+
+        final String key = key(project);
+        final Set<String> trustAnchors = anchors(project);
+
+        writing(() -> {
+
+            // we add a mapping for each subject dn to the project
+
+            for (String subjectDn : trustAnchors) {
+                this.projectsByTrustAnchor.put(subjectDn, project);
+            }
+
+            // and add a link from the project to the trust anchors
+
+            this.projectToTrustAnchors.put(key, trustAnchors);
+
+            logger.info("Mapped {} -> {}", key, trustAnchors);
+
+        });
+
     }
 
     @Override
-    public Future<TenantResult<JsonObject>> get(String tenantId) {
-        return get(tenantId, NoopSpan.INSTANCE);
+    protected void onDelete(final IoTProject project) {
+
+        super.onDelete(project);
+
+        // the project content might already be gone, so only use the key
+
+        final String key = key(project);
+
+        writing(() -> {
+
+            // we remove and get the mapped trust anchors for this project
+
+            final Set<String> trustAnchors = this.projectToTrustAnchors.remove(key);
+
+            logger.info("Unmapped {} <- {}", key, trustAnchors);
+
+            // and remove all trust anchors
+
+            if (trustAnchors != null) {
+                trustAnchors.forEach(this.projectsByTrustAnchor::remove);
+            }
+
+        });
+
     }
 
     @Override
-    public Future<TenantResult<JsonObject>> get(X500Principal subjectDn) {
-        return get(subjectDn, NoopSpan.INSTANCE);
+    protected void onUpdate(IoTProject project) {
+
+        super.onUpdate(project);
+
+        // the project content might already be gone, so only use the key and the new trust anchors
+        final String key = key(project);
+        final Set<String> newTrustAnchors = anchors(project);
+
+        writing(() -> {
+
+            // we remove and get the mapped trust anchors for this project
+
+            final Set<String> oldTrustAnchors = this.projectToTrustAnchors.remove(key);
+
+            // and delete all old trust anchors
+
+            if (oldTrustAnchors != null) {
+                oldTrustAnchors.forEach(this.projectsByTrustAnchor::remove);
+            }
+
+            // now we re-add all new trust anchor mappings to the project
+
+            for (String subjectDn : newTrustAnchors) {
+                this.projectsByTrustAnchor.put(subjectDn, project);
+            }
+
+            // and also re-add the mapping from the project to the mapped trust anchors
+
+            this.projectToTrustAnchors.put(key, newTrustAnchors);
+
+            logger.info("Re-mapped {} -> {} -> ", key, oldTrustAnchors, newTrustAnchors);
+
+        });
+
     }
 
-    private TenantResult<JsonObject> convertToHono(final String tenantName, final IoTProject project) {
+    private Set<String> anchors(final IoTProject project) {
 
-        final JsonObject payload;
-        if (project.getSpec().getConfiguration() != null) {
-            payload = JsonObject.mapFrom(project.getSpec().getConfiguration());
-        } else {
-            payload = new JsonObject();
+        final JsonObject config = JsonObject.mapFrom(project.getStatus().getAccepted().getConfiguration());
+        final JsonArray trustAnchors = config.getJsonArray(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA);
+        if (trustAnchors == null) {
+            return Collections.emptySet();
         }
 
-        payload.put(Constants.JSON_FIELD_TENANT_ID, tenantName);
+        final Set<String> result = new HashSet<>();
 
-        return TenantResult.from(
-                HttpURLConnection.HTTP_OK,
-                payload,
-                CacheDirective.maxAgeDirective(this.configuration.getCacheTimeToLive().getSeconds()));
+        for (Object value : trustAnchors) {
+            if (!(value instanceof JsonObject)) {
+                continue;
+            }
+            final JsonObject trustAnchor = (JsonObject) value;
+            if (!trustAnchor.getBoolean(TenantConstants.FIELD_ENABLED, true)) {
+                continue;
+            }
+            final String subjectDn = trustAnchor.getString(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN);
+            if (Strings.isNullOrEmpty(subjectDn)) {
+                continue;
+            }
+
+            result.add(subjectDn);
+        }
+
+        return result;
+    }
+
+    @Override
+    public Future<TenantResult<JsonObject>> get(final X500Principal subjectDn, final Span span) {
+
+        logger.debug("Get tenant - subject DN: {}", subjectDn);
+
+        span.log(ImmutableMap.<String, Object>builder()
+                .put("event", "get tenant")
+                .put("subject_dn", subjectDn)
+                .build());
+
+        // get the project
+
+        final Optional<IoTProject> project =
+                reading(() -> ofNullable(this.projectsByTrustAnchor.get(subjectDn.getName())));
+
+        // convert and return the result
+
+        return Future.succeededFuture(project)
+                .map(p -> p
+                        .map(p2 -> convertToHono(p2, span.context()))
+                        .orElse(RESULT_NOT_FOUND));
+
+    }
+
+    /**
+     * Call the runnable, holding the write lock.
+     *
+     * @param runnable The runnable to call.
+     */
+    private void writing(final Runnable runnable) {
+        final Lock lock = this.lock.writeLock();
+        try {
+            lock.lock();
+            runnable.run();
+        } catch (Exception e) {
+            logger.warn("Failed to perform trust anchor update", e);
+            throw e;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Call the supplier, holding the read lock.
+     *
+     * @param <T> Type of the return value.
+     * @param supplier The supplier to call, while holding the read lock.
+     * @return The result of the supplier.
+     */
+    private <T> T reading(final Supplier<T> supplier) {
+        final Lock lock = this.lock.readLock();
+        try {
+            lock.lock();
+            return supplier.get();
+        } finally {
+            lock.unlock();
+        }
     }
 
 }

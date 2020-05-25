@@ -4,6 +4,15 @@
  */
 package io.enmasse.systemtest.manager;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
@@ -14,28 +23,18 @@ import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class IsolatedResourcesManager extends ResourceManager {
 
     private static IsolatedResourcesManager managerInstance = null;
     private static Logger LOGGER;
     protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
     boolean reuseAddressSpace = false;
     private ArrayList<AddressPlan> addressPlans;
     private ArrayList<AddressSpacePlan> addressSpacePlans;
@@ -72,13 +71,11 @@ public class IsolatedResourcesManager extends ResourceManager {
 
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
     public void initFactories(AddressSpace addressSpace, UserCredentials userCredentials) throws Exception {
-        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        closeClientFactories(amqpClientFactory);
         amqpClientFactory = new AmqpClientFactory(addressSpace, userCredentials);
-        mqttClientFactory = new MqttClientFactory(addressSpace, userCredentials);
     }
 
     @Override
@@ -128,9 +125,8 @@ public class IsolatedResourcesManager extends ResourceManager {
             authServices.clear();
 
 
-            closeClientFactories(amqpClientFactory, mqttClientFactory);
+            closeClientFactories(amqpClientFactory);
             amqpClientFactory = null;
-            mqttClientFactory = null;
         } else {
             LOGGER.warn("No custom resources are deleted, SKIP_CLEANUP is set");
         }
@@ -353,13 +349,4 @@ public class IsolatedResourcesManager extends ResourceManager {
         this.amqpClientFactory = amqpClientFactory;
     }
 
-    @Override
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
-    }
-
-    @Override
-    public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
-        this.mqttClientFactory = mqttClientFactory;
-    }
 }

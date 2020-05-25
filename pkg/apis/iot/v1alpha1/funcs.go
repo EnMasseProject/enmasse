@@ -8,6 +8,7 @@ package v1alpha1
 import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -162,6 +163,8 @@ func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *Config
 	return &config.Conditions[len(config.Conditions)-1]
 }
 
+//region CommonCondition
+
 func (config *IoTConfigStatus) RemoveCondition(t ConfigConditionType) {
 
 	for i := len(config.Conditions) - 1; i >= 0; i-- {
@@ -218,6 +221,30 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 		c.SetStatus(corev1.ConditionFalse, reason, message)
 	}
 }
+
+// runs the provided function, using the error result as
+// status for the condition.
+func (c *CommonCondition) RunWith(reason string, processor func() error) error {
+
+	err := processor()
+
+	if err != nil {
+		cause := errors.Cause(err)
+		var message string
+		if cause != nil {
+			message = cause.Error()
+		} else {
+			message = err.Error()
+		}
+		c.SetStatus(corev1.ConditionFalse, reason, message)
+	} else {
+		c.SetStatusOk()
+	}
+
+	return err
+}
+
+//endregion
 
 //region DeviceConnection
 

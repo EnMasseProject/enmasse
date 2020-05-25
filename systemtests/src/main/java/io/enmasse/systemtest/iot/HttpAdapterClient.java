@@ -12,6 +12,8 @@ import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofSeconds;
 
 import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Collections;
@@ -32,6 +34,7 @@ import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.Predicates;
 import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
@@ -43,14 +46,42 @@ public class HttpAdapterClient extends ApiClient {
 
     private final Set<String> tlsVersions;
 
-    public HttpAdapterClient(Endpoint endpoint, String deviceAuthId, String tenantId, String password) {
-        this(endpoint, deviceAuthId, tenantId, password, Collections.emptySet());
+    private final Buffer keyStoreBuffer;
+
+    public HttpAdapterClient(final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
+        this(endpoint, null, null, null, key, certificate, tlsVersions);
     }
 
-    public HttpAdapterClient(Endpoint endpoint, String deviceAuthId, String tenantId, String password, Set<String> tlsVersions) {
+    public HttpAdapterClient(final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password, final Set<String> tlsVersions) throws Exception {
+        this(endpoint, deviceAuthId, tenantId, password, null, null, tlsVersions);
+    }
+
+    public HttpAdapterClient(final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password) throws Exception {
+        this(endpoint, deviceAuthId, tenantId, password, null, null, Collections.emptySet());
+    }
+
+    private HttpAdapterClient(
+            final Endpoint endpoint,
+            final String deviceAuthId, final String tenantId, final String password,
+            final PrivateKey key, final X509Certificate certificate,
+            final Set<String> tlsVersions) throws Exception {
+
         super(() -> endpoint, "");
-        this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
+
         this.tlsVersions = tlsVersions;
+
+        if (deviceAuthId != null && tenantId != null && password != null) {
+            this.authzString = getBasicAuth(deviceAuthId + "@" + tenantId, password);
+        } else {
+            this.authzString = null;
+        }
+
+        if (key != null && certificate != null) {
+            this.keyStoreBuffer = Buffer.buffer(KeyStoreCreator.toByteArray(key, certificate));
+        } else {
+            this.keyStoreBuffer = null;
+        }
+
     }
 
     private static String contentType(final Buffer payload) {
@@ -63,7 +94,7 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     @Override
-    protected void connect() {
+    protected WebClient createClient() {
         var options = new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
@@ -76,24 +107,22 @@ public class HttpAdapterClient extends ApiClient {
             this.tlsVersions.forEach(options::addEnabledSecureTransportProtocol);
         }
 
-        this.client = WebClient.create(vertx, options);
-    }
-
-    @Override
-    public void close() {
-        if (this.client != null) {
-            this.client.close();
-            this.client = null;
+        if (keyStoreBuffer != null) {
+            options.setKeyCertOptions(
+                    new PfxOptions()
+                            .setValue(this.keyStoreBuffer));
         }
+
+        return WebClient.create(vertx, options);
     }
 
     public HttpResponse<?> send(MessageType messageType, Buffer payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
-                                Duration responseTimeout) throws Exception {
+            Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
 
     public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
-                                Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
+            Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
         CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
         var ms = responseTimeout.toMillis();
@@ -106,12 +135,15 @@ public class HttpAdapterClient extends ApiClient {
         if (pathSuffix != null) {
             path += pathSuffix;
         }
-        var request = client.post(endpoint.getPort(), endpoint.getHost(), path)
-                .putHeader(AUTHORIZATION, authzString)
+        var request = getClient().post(endpoint.getPort(), endpoint.getHost(), path)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 // we send with QoS 1 by default, to get some feedback
                 .putHeader("QoS-Level", "1")
                 .timeout(ms);
+
+        if (this.authzString != null) {
+            request = request.putHeader(AUTHORIZATION, authzString);
+        }
 
         // allow to customize request
 

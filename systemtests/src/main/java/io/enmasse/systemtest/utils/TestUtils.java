@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.utils;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -13,6 +14,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
@@ -31,9 +33,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
-import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
@@ -64,6 +64,9 @@ import io.enmasse.systemtest.time.WaitPhase;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 
 public class TestUtils {
 
@@ -82,7 +85,7 @@ public class TestUtils {
      * wait for expected count of Destination replicas in address space
      */
     public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
-                                              Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
+            Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
         Address address = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).withName(destination.getMetadata().getName()).get();
         Map<String, String> labels = new HashMap<>();
         labels.put("role", "broker");
@@ -106,18 +109,17 @@ public class TestUtils {
         waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
     }
 
-
     /**
      * Wait for expected count of replicas
      *
-     * @param expectedReplicas   count of expected replicas
-     * @param labelSelector      labels on scaled pod
+     * @param expectedReplicas count of expected replicas
+     * @param labelSelector labels on scaled pod
      * @param annotationSelector annotations on sclaed pod
-     * @param budget             timeout budget - throws Exception when timeout is reached
+     * @param budget timeout budget - throws Exception when timeout is reached
      * @throws InterruptedException
      */
     public static void waitForNReplicas(int expectedReplicas, boolean readyRequired, String namespace,
-                                        Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+            Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
         int actualReplicas;
         do {
             final List<Pod> pods;
@@ -145,11 +147,13 @@ public class TestUtils {
         // finished successfully
     }
 
-    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget, long checkInterval) throws InterruptedException {
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget,
+            long checkInterval) throws InterruptedException {
         waitForNReplicas(expectedReplicas, true, namespace, labelSelector, annotationSelector, budget, checkInterval);
     }
 
-    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget) throws InterruptedException {
+    public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, Map<String, String> annotationSelector, TimeoutBudget budget)
+            throws InterruptedException {
         waitForNReplicas(expectedReplicas, namespace, labelSelector, annotationSelector, budget, 5000);
     }
 
@@ -190,9 +194,9 @@ public class TestUtils {
     /**
      * Wait for expected count of pods within AddressSpace
      *
-     * @param client      client for manipulation with kubernetes cluster
+     * @param client client for manipulation with kubernetes cluster
      * @param numExpected count of expected pods
-     * @param budget      timeout budget - this method throws Exception when timeout is reached
+     * @param budget timeout budget - this method throws Exception when timeout is reached
      * @throws InterruptedException
      */
     public static void waitForExpectedReadyPods(Kubernetes client, String namespace, int numExpected, TimeoutBudget budget) throws InterruptedException {
@@ -238,7 +242,7 @@ public class TestUtils {
     /**
      * Get list of all running pods from specific AddressSpace
      *
-     * @param kubernetes   client for manipulation with kubernetes cluster
+     * @param kubernetes client for manipulation with kubernetes cluster
      * @param addressSpace
      * @return
      */
@@ -323,7 +327,7 @@ public class TestUtils {
      * Wait until Namespace will be removed
      *
      * @param kubernetes client for manipulation with kubernetes cluster
-     * @param namespace  project/namespace to remove
+     * @param namespace project/namespace to remove
      */
     public static void waitForNamespaceDeleted(Kubernetes kubernetes, String namespace) throws Exception {
         waitUntilCondition(
@@ -338,7 +342,7 @@ public class TestUtils {
      * Repeat command n-times
      *
      * @param retry count of remaining retries
-     * @param fn    request function
+     * @param fn request function
      * @return The value from the first successful call to the callable
      */
     public static <T> T runUntilPass(int retry, Callable<T> fn) throws InterruptedException {
@@ -357,7 +361,7 @@ public class TestUtils {
     /**
      * Repeat command n-times.
      *
-     * @param retries  Number of retries.
+     * @param retries Number of retries.
      * @param callable Code to execute.
      */
     public static void runUntilPass(int retries, ThrowingCallable callable) throws InterruptedException {
@@ -381,8 +385,10 @@ public class TestUtils {
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getFirefoxSeleniumAppEndpoint(Kubernetes.getInstance());
         FirefoxOptions options = new FirefoxOptions();
-        // https://github.com/mozilla/geckodriver/issues/330 enable the emission of console.info(), warn() etc
-        // to stdout of the browser process.  Works around the fact that Firefox logs are not available through
+        // https://github.com/mozilla/geckodriver/issues/330 enable the emission of console.info(), warn()
+        // etc
+        // to stdout of the browser process. Works around the fact that Firefox logs are not available
+        // through
         // WebDriver.manage().logs().
         options.addPreference("devtools.console.stdout.content", true);
         options.addPreference("browser.tabs.unloadOnLowMemory", false);
@@ -473,9 +479,9 @@ public class TestUtils {
     /**
      * Wait for a condition, fail otherwise.
      *
-     * @param condition              The condition to check, returning {@code true} means success.
-     * @param timeout                The maximum time to wait for
-     * @param delay                  The delay between checks.
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param timeout The maximum time to wait for
+     * @param delay The delay between checks.
      * @param timeoutMessageSupplier The supplier of a timeout message.
      * @throws AssertionFailedError In case the timeout expired
      */
@@ -490,13 +496,14 @@ public class TestUtils {
     /**
      * Wait for a condition, throw exception otherwise.
      *
-     * @param condition         The condition to check, returning {@code true} means success.
-     * @param timeout           The maximum time to wait for
-     * @param delay             The delay between checks.
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param timeout The maximum time to wait for
+     * @param delay The delay between checks.
      * @param exceptionSupplier The supplier of the exception to throw.
      * @throws AssertionFailedError In case the timeout expired
      */
-    public static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout, final Duration delay, final Supplier<X> exceptionSupplier) throws X {
+    public static <X extends Throwable> void waitUntilConditionOrThrow(final BooleanSupplier condition, final Duration timeout, final Duration delay,
+            final Supplier<X> exceptionSupplier) throws X {
 
         Objects.requireNonNull(exceptionSupplier);
 
@@ -506,17 +513,17 @@ public class TestUtils {
 
     }
 
-
     /**
      * Wait for a condition, call handler otherwise.
      *
-     * @param condition      The condition to check, returning {@code true} means success.
-     * @param delay          The delay between checks.
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param delay The delay between checks.
      * @param timeoutHandler The handler to call in case of the timeout.
-     * @param <X>            The type of exception thrown by the timeout handler.
+     * @param <X> The type of exception thrown by the timeout handler.
      * @throws AssertionFailedError In case the timeout expired
      */
-    public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay, final TimeoutHandler<X> timeoutHandler) throws X {
+    public static <X extends Throwable> void waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay,
+            final TimeoutHandler<X> timeoutHandler) throws X {
 
         Objects.requireNonNull(timeoutHandler);
 
@@ -529,10 +536,11 @@ public class TestUtils {
     /**
      * Wait for condition, return result.
      * <p>
-     * This will check will put a priority on checking the condition, and only wait, when there is remaining time budget left.
+     * This will check will put a priority on checking the condition, and only wait, when there is
+     * remaining time budget left.
      *
      * @param condition The condition to check, returning {@code true} means success.
-     * @param delay     The delay between checks.
+     * @param delay The delay between checks.
      * @return {@code true} if the condition was met, {@code false otherwise}.
      */
     public static boolean waitUntilCondition(final BooleanSupplier condition, final Duration timeout, final Duration delay) {
@@ -572,7 +580,8 @@ public class TestUtils {
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) throws Exception {
-        waitForChangedResourceVersion(budget, currentResourceVersion, () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
+        waitForChangedResourceVersion(budget, currentResourceVersion,
+                () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
@@ -722,12 +731,6 @@ public class TestUtils {
                 }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
-
-    @FunctionalInterface
-    public interface ThrowingCallable {
-        void call() throws Exception;
-    }
-
     public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {
         return getLogsPath(extensionContext, "failed_test_logs");
     }
@@ -753,4 +756,31 @@ public class TestUtils {
         }
         return path;
     }
+
+    /**
+     * Encode an X509 certificate into PEM format.
+     *
+     * @param certificate The certificate to encode.
+     * @return the PEM encoded certificate, or {@code null} if the input was {@code null}.
+     */
+    public static String toPem(final X509Certificate... certificates) {
+
+        if (certificates == null) {
+            return null;
+        }
+
+        final StringWriter sw = new StringWriter();
+
+        try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
+            for (X509Certificate certificate : certificates) {
+                pw.writeObject(certificate);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return sw.toString();
+
+    }
+
 }

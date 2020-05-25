@@ -18,6 +18,8 @@ import static java.util.Collections.singletonList;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -63,7 +65,8 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingConsumer;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
@@ -154,17 +157,52 @@ public final class IoTTestSession implements AutoCloseable {
 
     public class Device {
 
-        private String deviceId;
+        private final String deviceId;
         private String authId;
         private String password;
+        private PrivateKey key;
+        private X509Certificate certificate;
+        private String name;
 
-        public Device(String deviceId) {
+        private Device(String deviceId) {
             this.deviceId = deviceId;
         }
 
         public Device register() throws Exception {
             IoTTestSession.this.registryClient.registerDevice(getTenantId(), this.deviceId);
             return this;
+        }
+
+        /**
+         * Allows to override the output of the {@link #toString()} method.
+         * <p>
+         * This may be used to provide a stable name for parameterized test.
+         *
+         * @param name The value to report from {@link #toString()}.
+         * @return This instance, for chained method calls.
+         */
+        public Device named(final String name) {
+            this.name = name;
+            return this;
+        }
+
+        @Override
+        public String toString() {
+            if (this.name != null) {
+                return this.name;
+            } else {
+                return super.toString();
+            }
+        }
+
+        /**
+         * Set username and password to random combination.
+         *
+         * @return This instance, for chained method calls.
+         * @throws Exception in case anything went wrong.
+         */
+        public Device setPassword() throws Exception {
+            return setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
         }
 
         public Device setPassword(final String authId, final String password) throws Exception {
@@ -177,13 +215,49 @@ public final class IoTTestSession implements AutoCloseable {
         }
 
         /**
+         * Use a different password then stored in the device registry (using {@link #setPassword()}.
+         * <p>
+         * Uses a new random password.
+         *
+         * @return This instance, for chained method calls.
+         */
+        public Device overridePassword() {
+            this.password = UUID.randomUUID().toString();
+            return this;
+        }
+
+        /**
+         * Use a different password then stored in the device registry (using {@link #setPassword()}.
+         *
+         * @param password The new password to use.
+         * @return This instance, for chained method calls.
+         */
+        public Device overridePassword(final String password) {
+            this.password = password;
+            return this;
+        }
+
+        public Device enableX509(io.enmasse.systemtest.iot.DeviceCertificateManager.Device device) throws Exception {
+            return enableX509(device.getKey().getPrivate(), device.getCertificate());
+        }
+
+        public Device enableX509(final PrivateKey key, final X509Certificate certificate) throws Exception {
+            this.key = key;
+            this.certificate = certificate;
+
+            var x509 = CredentialsRegistryClient.createX509CertificateCredentialsObject(certificate.getSubjectX500Principal().getName(), null);
+            IoTTestSession.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(x509));
+            return this;
+        }
+
+        /**
          * Create a new http adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
          */
-        public HttpAdapterClient createHttpAdapterClient() {
-            return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, null);
+        public HttpAdapterClient createHttpAdapterClient() throws Exception {
+            return createHttpAdapterClient(null);
         }
 
         /**
@@ -192,11 +266,15 @@ public final class IoTTestSession implements AutoCloseable {
          * @param tlsVersions The supported TLS versions.
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
+         * @throws Exception
          */
-        public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) {
-            return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, tlsVersions);
+        public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) throws Exception {
+            if (this.key != null) {
+                return IoTTestSession.this.createHttpAdapterClient(this.key, this.certificate, tlsVersions);
+            } else {
+                return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, tlsVersions);
+            }
         }
-
 
         /**
          * Create a new mqtt adapter client.
@@ -205,7 +283,11 @@ public final class IoTTestSession implements AutoCloseable {
          *         up.
          */
         public MqttAdapterClient createMqttAdapterClient() throws Exception {
-            return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.authId, this.password);
+            if (key != null) {
+                return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.key, this.certificate);
+            } else {
+                return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.authId, this.password);
+            }
         }
 
         public String getTenantId() {
@@ -215,10 +297,11 @@ public final class IoTTestSession implements AutoCloseable {
 
     private final IoTConfig config;
     private final IoTProject project;
-    private List<ThrowingCallable> cleanup;
-    private DeviceRegistryClient registryClient;
-    private CredentialsRegistryClient credentialsClient;
-    private AmqpClient consumerClient;
+    private final Consumer<Throwable> exceptionHandler;
+    private final List<ThrowingCallable> cleanup;
+    private final DeviceRegistryClient registryClient;
+    private final CredentialsRegistryClient credentialsClient;
+    private final AmqpClient consumerClient;
 
     private IoTTestSession(
             final IoTConfig config,
@@ -226,6 +309,7 @@ public final class IoTTestSession implements AutoCloseable {
             final DeviceRegistryClient registryClient,
             final CredentialsRegistryClient credentialsClient,
             final AmqpClient consumerClient,
+            final Consumer<Throwable> exceptionHandler,
             final List<ThrowingCallable> cleanup) {
 
         this.config = config;
@@ -236,6 +320,7 @@ public final class IoTTestSession implements AutoCloseable {
 
         this.consumerClient = consumerClient;
 
+        this.exceptionHandler = exceptionHandler;
         this.cleanup = cleanup;
 
     }
@@ -256,10 +341,30 @@ public final class IoTTestSession implements AutoCloseable {
         return project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
     }
 
-    private HttpAdapterClient createHttpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) {
+    private HttpAdapterClient createHttpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
+
+        var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-http-adapter");
+        var result = new HttpAdapterClient(endpoint, key, certificate, tlsVersions);
+        this.cleanup.add(() -> result.close());
+
+        return result;
+
+    }
+
+    private HttpAdapterClient createHttpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) throws Exception {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-http-adapter");
         var result = new HttpAdapterClient(endpoint, authId, getTenantId(), password, tlsVersions);
+        this.cleanup.add(() -> result.close());
+
+        return result;
+
+    }
+
+    private MqttAdapterClient createMqttAdapterClient(final String deviceId, final PrivateKey key, final X509Certificate certificate) throws Exception {
+
+        var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-mqtt-adapter");
+        var result = MqttAdapterClient.create(endpoint, deviceId, key, certificate);
         this.cleanup.add(() -> result.close());
 
         return result;
@@ -278,6 +383,42 @@ public final class IoTTestSession implements AutoCloseable {
 
     public AmqpClient getConsumerClient() {
         return this.consumerClient;
+    }
+
+    /**
+     * Run code for the session, properly handling exceptions.
+     *
+     * @param code The code to run.
+     * @throws Exception In case anything went wrong.
+     */
+    public void run(final Runnable code) throws Exception {
+        run((Code) session -> code.run());
+    }
+
+    /**
+     * Run code for the session, properly handling exceptions.
+     *
+     * @param code The code to run.
+     * @throws Exception In case anything went wrong.
+     */
+    public void run(final Code code) throws Exception {
+        /*
+         * We need an inner try-catch in order to only handle the exception of the test code.
+         * The exception of the deploy method is handled by the deploy method itself.
+         */
+        try {
+            code.run(this);
+        } catch (Throwable e) {
+            // we need to catch Throwables as unit test assertions
+            // are based on Error instead of Exception.
+            if (log.isDebugEnabled()) {
+                log.debug("Caught exception during test", e);
+            } else {
+                log.info("Caught exception during test, running exception handler");
+            }
+            this.exceptionHandler.accept(e);
+            throw e;
+        }
     }
 
     /**
@@ -311,12 +452,12 @@ public final class IoTTestSession implements AutoCloseable {
             this.project = project;
         }
 
-        public Builder config(final Consumer<IoTConfigBuilder> configCustomizer) {
+        public Builder config(final ThrowingConsumer<IoTConfigBuilder> configCustomizer) throws Exception {
             configCustomizer.accept(this.config);
             return this;
         }
 
-        public Builder project(final Consumer<IoTProjectBuilder> projectCustomizer) {
+        public Builder project(final ThrowingConsumer<IoTProjectBuilder> projectCustomizer) throws Exception {
             projectCustomizer.accept(this.project);
             return this;
         }
@@ -353,25 +494,15 @@ public final class IoTTestSession implements AutoCloseable {
             return adapters(EnumSet.copyOf(Arrays.asList(adapters)));
         }
 
-        public void run(Code code) throws Exception {
+        /**
+         * Deploy the setup, run the code and clean up.
+         *
+         * @param code The code to run.
+         * @throws Exception if anything goes wrong.
+         */
+        public void run(final Code code) throws Exception {
             try (IoTTestSession session = deploy()) {
-                /*
-                 * We need an inner try-catch in order to only handle the exception of the test code.
-                 * The exception of the deploy method is handled by the deploy method itself.
-                 */
-                try {
-                    code.run(session);
-                } catch (Throwable e) {
-                    // we need to catch Throwables as unit test assertions
-                    // are based on Error instead of Exception.
-                    if (log.isDebugEnabled()) {
-                        log.debug("Caught exception during test", e);
-                    } else {
-                        log.info("Caught exception during test, running exception handler");
-                    }
-                    this.exceptionHandler.accept(e);
-                    throw e;
-                }
+                session.run(code);
             }
         }
 
@@ -390,7 +521,7 @@ public final class IoTTestSession implements AutoCloseable {
          * @return The test session for further processing.
          * @throws Exception in case the deployment fails.
          */
-        private IoTTestSession deploy() throws Exception {
+        public IoTTestSession deploy() throws Exception {
 
             // stuff to clean up
 
@@ -477,7 +608,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 // done
 
-                return new IoTTestSession(config, project, registryClient, credentialsClient, client, cleanup);
+                return new IoTTestSession(config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
 
             } catch (Exception e) {
 
@@ -533,12 +664,24 @@ public final class IoTTestSession implements AutoCloseable {
         return new Builder(config, project);
     }
 
+    /**
+     * Create a basic test session builder.
+     * <p>
+     * If you want a ready-to-run configuration, use {@link #createDefault()}.
+     *
+     * @return The new builder, missing services and undeployed.
+     */
     public static IoTTestSession.Builder create() {
         return create(
                 Kubernetes.getInstance().getInfraNamespace(),
                 isOpenShiftCompatible(OCP4));
     }
 
+    /**
+     * Create a default, ready-to-run, setup.
+     *
+     * @return The new builder, still undeployed.
+     */
     public static IoTTestSession.Builder createDefault() {
         return create()
                 .preDeploy(withDefaultServices());
@@ -655,12 +798,16 @@ public final class IoTTestSession implements AutoCloseable {
      * @return The new device creation instance. The device will only be created when the
      *         {@link Device#register()} method is being called.
      */
-    public Device newDevice(String deviceId) {
+    public Device newDevice(final String deviceId) {
         return new Device(deviceId);
     }
 
+    public Device newDevice() {
+        return newDevice(TestUtils.randomCharacters(23 /* max MQTT client ID length */));
+    }
+
     public Device registerNewRandomDeviceWithPassword() throws Exception {
-        return new Device(UUID.randomUUID().toString())
+        return newDevice()
                 .register()
                 .setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     }

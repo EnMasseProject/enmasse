@@ -25,6 +25,8 @@ import org.eclipse.hono.service.management.credentials.PasswordCredential;
 import org.eclipse.hono.service.management.credentials.PasswordSecret;
 import org.eclipse.hono.service.management.credentials.PskCredential;
 import org.eclipse.hono.service.management.credentials.PskSecret;
+import org.eclipse.hono.service.management.credentials.X509CertificateCredential;
+import org.eclipse.hono.service.management.credentials.X509CertificateSecret;
 
 import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.http.HttpMethod;
@@ -120,6 +122,16 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     }
 
+    static X509CertificateSecret createX509CertificateSecret(final String authId, final Instant notAfter) {
+
+        var secret = new X509CertificateSecret();
+
+        secret.setNotAfter(notAfter);
+
+        return secret;
+
+    }
+
     static PasswordSecret createPasswordSecret(final String authId, final String password, final Instant notAfter) {
 
         var secret = new PasswordSecret();
@@ -196,6 +208,20 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     }
 
+    static X509CertificateCredential createX509CertificateCredentialsObject(final String authId, final Instant notAfter) {
+
+        var secret = createX509CertificateSecret(authId, notAfter);
+
+        // create credentials
+
+        var credentials = new X509CertificateCredential();
+        credentials.setAuthId(authId);
+        credentials.setSecrets(Collections.singletonList(secret));
+
+        return credentials;
+
+    }
+
     public void addPskCredentials(final String tenantId, final String deviceId, final String authId, final byte[] key, final Instant notAfter, final int expectedStatusCode) throws Exception {
         addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createPskCredentialsObject(authId, key, notAfter)));
     }
@@ -206,6 +232,10 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
     public void addCredentials(final String tenantId, final String deviceId, final String authId, final String password, final Instant notAfter, final int expectedStatusCode) throws Exception {
         addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createCredentialsObject(authId, password, notAfter)));
+    }
+
+    public void addX509Credentials(final String tenantId, final String deviceId, final String authId, final Instant notAfter, final int expectedStatusCode) throws Exception {
+        addCredentials(tenantId, deviceId, expectedStatusCode, Collections.singletonList(createX509CertificateCredentialsObject(authId, notAfter)));
     }
 
     public void updateCredentials(final String tenantId, final String deviceId, final String authId, final String newPassword, final Instant notAfter) throws Exception {

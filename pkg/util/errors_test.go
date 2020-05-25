@@ -19,6 +19,7 @@ func TestOnlyNonRecoverableErrors(t *testing.T) {
 	}{
 		{input: fmt.Errorf("just a test"), output: false},
 		{input: NewConfigurationError("just another test"), output: true},
+		{input: WrapAsNonRecoverable(fmt.Errorf("just a test")), output: true},
 		{input: multierr.Append(
 			NewConfigurationError("test 1"),
 			NewConfigurationError("test 2")),
