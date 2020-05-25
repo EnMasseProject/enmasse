@@ -252,17 +252,8 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		return nil, err
 	}
 
-	// Add all router hostnames
-	dnsNames := []string{
-		fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace),
-	}
-
-	for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
-		dnsNames = append(dnsNames, fmt.Sprintf("%s-%d.%s.%s.svc", service.Name, i, service.Name, service.Namespace))
-	}
-
 	// Reconcile router certificate
-	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset, fmt.Sprintf("%s", service.Name), dnsNames...)
+	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset, fmt.Sprintf("%s", service.Name), fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace), fmt.Sprintf("*.%s.%s.svc", service.Name, service.Namespace))
 	if err != nil {
 		return nil, err
 	}
