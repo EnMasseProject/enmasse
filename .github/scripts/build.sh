@@ -9,9 +9,9 @@ make
 echo "Build"
 make docker_build
 
-if [[ -v RELEASE ]]
+if [[ -v PUSH_REGISTRY ]]
 then
-    echo "Logging in to Docker Hub"
+    echo "Logging in to registry"
     docker login -u "${REGISTRY_USER}" -p "${REGISTRY_PASS}" "${DOCKER_REGISTRY}"
     make TAG="${VERSION}" docker_tag docker_push
 fi
