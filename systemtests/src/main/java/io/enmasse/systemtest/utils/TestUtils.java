@@ -31,6 +31,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
@@ -605,11 +608,54 @@ public class TestUtils {
         return BaseEncoding.base16().encode(b).substring(length % 2);
     }
 
-    public static void waitUntilDeployed(String namespace) throws Exception {
-        TestUtils.waitUntilCondition("All pods and container is ready", waitPhase -> {
+    public static void waitUntilDeployed(String namespace) {
+        waitUntilDeployed(namespace, Collections.emptyList());
+    }
+
+    /**
+     * Waith until all deployments, replicasets, statefulsets are ready
+     *
+     * @param namespace    namespace where you want to check resource ready
+     * @param expectedPods optional list if you want to be sure all pods from this list are deployed
+     */
+    public static void waitUntilDeployed(String namespace, List<String> expectedPods) {
+        log.info("-------------------------------------------------------------");
+        TestUtils.waitUntilCondition("All Deployments, StatefulSets, ReplicaSets and Pods are ready", waitPhase -> {
+            List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace);
+            for (Deployment deployment : deployments) {
+                if (!Objects.equals(deployment.getStatus().getReplicas(), deployment.getStatus().getReadyReplicas())) {
+                    log.info("Deployment {} has not all replicas ready", deployment.getMetadata().getName());
+                    return false;
+                }
+            }
+            log.info("All current Deployments are ready");
+            List<StatefulSet> statefulSets = Kubernetes.getInstance().listStatefulSets(namespace);
+            for (StatefulSet statefulSet : statefulSets) {
+                if (!Objects.equals(statefulSet.getStatus().getReplicas(), statefulSet.getStatus().getReadyReplicas())) {
+                    log.info("StatefulSet {} has not all replicas ready", statefulSet.getMetadata().getName());
+                    return false;
+                }
+            }
+            log.info("All current StatefulSets are ready");
+            List<ReplicaSet> replicaSets = Kubernetes.getInstance().listReplicaSets(namespace);
+            for (ReplicaSet replicaSet : replicaSets) {
+                if (replicaSet.getSpec().getReplicas() > 0 && !Objects.equals(replicaSet.getStatus().getReplicas(), replicaSet.getStatus().getReadyReplicas())) {
+                    log.info("ReplicaSet {} has not all replicas ready", replicaSet.getMetadata().getName());
+                    return false;
+                }
+            }
+            log.info("All current ReplicaSets are ready");
             List<Pod> pods = Kubernetes.getInstance().listPods(namespace);
+            for (String expectedPod : expectedPods) {
+                if (pods.stream().noneMatch(pod -> pod.getMetadata().getName().contains(expectedPod))) {
+                    log.info("Pod {} is still not deployed", expectedPod);
+                    return false;
+                }
+            }
+            if (expectedPods.size() > 0) {
+                log.info("All expected Pods are deployed");
+            }
             if (pods.size() > 0) {
-                log.info("-------------------------------------------------------------");
                 for (Pod pod : pods) {
                     List<ContainerStatus> initContainers = pod.getStatus().getInitContainerStatuses();
                     for (ContainerStatus s : initContainers) {
@@ -631,6 +677,7 @@ public class TestUtils {
             }
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
+        log.info("-------------------------------------------------------------");
     }
 
     public static void waitForConsoleRollingUpdate(String namespace) throws Exception {
@@ -639,27 +686,6 @@ public class TestUtils {
             pods.removeIf(pod -> !pod.getSpec().getContainers().get(0).getName().equals("console-proxy"));
             return pods.size() == 1;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
-    }
-
-    public static void cleanAllEnmasseResourcesFromNamespace(String namespace) {
-        Kubernetes kube = Kubernetes.getInstance();
-        var brInfraConfigClient = kube.getBrokeredInfraConfigClient(namespace);
-        var stInfraConfigClient = kube.getStandardInfraConfigClient(namespace);
-        var addressSpaceClient = kube.getAddressSpaceClient(namespace);
-        var addressClient = kube.getAddressClient(namespace);
-        var addrSpacePlanClient = kube.getAddressSpacePlanClient(namespace);
-        var addPlanClient = kube.getAddressPlanClient(namespace);
-        var authServiceClient = kube.getAuthenticationServiceClient(namespace);
-        var consoleClient = kube.getConsoleServiceClient(namespace);
-
-        brInfraConfigClient.list().getItems().forEach(cr -> brInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        stInfraConfigClient.list().getItems().forEach(cr -> stInfraConfigClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addressSpaceClient.list().getItems().forEach(cr -> addressSpaceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addressClient.list().getItems().forEach(cr -> addressClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addrSpacePlanClient.list().getItems().forEach(cr -> addrSpacePlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        addPlanClient.list().getItems().forEach(cr -> addPlanClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        authServiceClient.list().getItems().forEach(cr -> authServiceClient.withName(cr.getMetadata().getName()).cascading(true).delete());
-        consoleClient.list().getItems().forEach(cr -> consoleClient.withName(cr.getMetadata().getName()).cascading(true).delete());
     }
 
     public static void waitForPodReady(String name, String namespace) throws Exception {

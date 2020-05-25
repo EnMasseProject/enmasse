@@ -97,7 +97,7 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installMonitoringOperator() throws InterruptedException {
+    public void installMonitoringOperator() {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse enmasse monitoring");
         LOGGER.info("***********************************************************");
@@ -106,7 +106,13 @@ public class EnmasseOperatorManager {
         KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
         KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-deployment"));
-        TestUtils.waitForExpectedReadyPods(kube, env.getMonitoringNamespace(), 6, new TimeoutBudget(3, TimeUnit.MINUTES));
+        TestUtils.waitUntilDeployed(env.getMonitoringNamespace(), Arrays.asList(
+                "prometheus-operator",
+                "application-monitoring-operator",
+                "prometheus-application-monitoring",
+                "alertmanager-application-monitoring",
+                "grafana-operator",
+                "grafana-deployment"));
         enableMonitoringForNamespace();
         enableOperatorMetrics(true);
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
