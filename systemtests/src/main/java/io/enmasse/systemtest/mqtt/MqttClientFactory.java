@@ -141,17 +141,17 @@ public class MqttClientFactory {
         }
 
         public Builder usernameAndPassword(final String username, final String password) {
-            options.setUserName(username);
-            options.setPassword(password.toCharArray());
+            this.options.setUserName(username);
+            this.options.setPassword(password.toCharArray());
             return this;
         }
 
         public Builder clientCertificate(final KeyStore clientCertificateAndKey) throws Exception {
 
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
             kmf.init(clientCertificateAndKey, null);
 
-            keyManagerFactory = kmf;
+            this.keyManagerFactory = kmf;
 
             return this;
 
@@ -159,7 +159,7 @@ public class MqttClientFactory {
 
         public Builder setTrustAnchors(final KeyStore trustAnchors) throws Exception {
 
-            TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
+            final TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
             tmf.init(trustAnchors);
             this.trustManagerFactory = tmf;
 
@@ -168,10 +168,10 @@ public class MqttClientFactory {
         }
 
         public Builder endpointFromAddressSpace(final AddressSpace addressSpace) {
-            endpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
-            if (endpoint == null) {
+            this.endpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
+            if (this.endpoint == null) {
                 String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                endpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+                this.endpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
             }
             return this;
         }
@@ -188,19 +188,23 @@ public class MqttClientFactory {
 
         private void setSslContext() throws Exception {
 
+            if (this.keyManagerFactory == null && this.trustManagerFactory == null) {
+                return;
+            }
+
             KeyManager[] kms = null;
-            if (keyManagerFactory != null) {
-                kms = keyManagerFactory.getKeyManagers();
+            if (this.keyManagerFactory != null) {
+                kms = this.keyManagerFactory.getKeyManagers();
             }
 
             TrustManager[] tms = null;
-            if (trustManagerFactory != null) {
-                tms = trustManagerFactory.getTrustManagers();
+            if (this.trustManagerFactory != null) {
+                tms = this.trustManagerFactory.getTrustManagers();
             }
 
             final SSLContext context = tryGetDefaultSSLContext();
             context.init(kms, tms, null);
-            options.setSocketFactory(context.getSocketFactory());
+            this.options.setSocketFactory(context.getSocketFactory());
 
         }
 
