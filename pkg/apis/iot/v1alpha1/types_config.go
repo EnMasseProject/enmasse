@@ -149,6 +149,7 @@ type ServicesConfig struct {
 type AdaptersConfig struct {
 	DefaultOptions *AdapterOptions `json:"defaults,omitempty"`
 
+	AmqpAdapterConfig    AmqpAdapterConfig    `json:"amqp,omitempty"`
 	HttpAdapterConfig    HttpAdapterConfig    `json:"http,omitempty"`
 	MqttAdapterConfig    MqttAdapterConfig    `json:"mqtt,omitempty"`
 	SigfoxAdapterConfig  SigfoxAdapterConfig  `json:"sigfox,omitempty"`
@@ -394,6 +395,10 @@ type CommonAdapterConfig struct {
 	EndpointConfig EndpointConfig `json:"endpoint,omitempty"`
 }
 
+type AmqpAdapterConfig struct {
+	CommonAdapterConfig `json:",inline"`
+}
+
 type HttpAdapterConfig struct {
 	CommonAdapterConfig `json:",inline"`
 }
@@ -448,6 +453,7 @@ const (
 	ConfigConditionTypeDeviceRegistryAdapterServiceReady    ConfigConditionType = "DeviceRegistryAdapterServiceReady"
 	ConfigConditionTypeDeviceRegistryManagementServiceReady ConfigConditionType = "DeviceRegistryManagementServiceReady"
 
+	ConfigConditionTypeAmqpAdapterReady    ConfigConditionType = "AmqpAdapterReady"
 	ConfigConditionTypeHttpAdapterReady    ConfigConditionType = "HttpAdapterReady"
 	ConfigConditionTypeLorawanAdapterReady ConfigConditionType = "LorawanAdapterReady"
 	ConfigConditionTypeMqttAdapterReady    ConfigConditionType = "MqttAdapterReady"

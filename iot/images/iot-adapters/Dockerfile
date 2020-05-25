@@ -6,6 +6,7 @@ ARG revision
 ENV VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 
 ADD \
+  target/dependency/iot-amqp-adapter.jar \
   target/dependency/iot-http-adapter.jar \
   target/dependency/iot-lorawan-adapter.jar \
   target/dependency/iot-mqtt-adapter.jar \

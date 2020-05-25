@@ -21,6 +21,10 @@ spec:
                 password: user12
                 url: jdbc:postgresql://postgresql/device-registry
   adapters:
+    amqp:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-amqp-adapter-tls
     mqtt:
       enabled: true
       replicas: 1

@@ -15,6 +15,10 @@ spec:
             saslServerName: hotrod
             saslRealm: ApplicationRealm
   adapters:
+    amqp:
+      endpoint:
+        secretNameStrategy:
+          secretName: iot-amqp-adapter-tls
     mqtt:
       endpoint:
         secretNameStrategy:

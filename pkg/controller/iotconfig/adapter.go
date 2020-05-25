@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"os"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
@@ -34,21 +35,83 @@ import (
 // the name of the router image key
 const imageNameRouter = "router"
 
+type adapterPort struct {
+	ContainerPort    int32
+	ServicePort      int32
+	LoadBalancerPort int32
+
+	Protocol corev1.Protocol
+
+	DoesntSupportReencrypt bool
+	EndpointUrlScheme      string
+	EndpointUrlForcePort   bool
+}
+
+func (a adapterPort) GetProtocol() corev1.Protocol {
+	if a.Protocol != "" {
+		return a.Protocol
+	} else {
+		return corev1.ProtocolTCP
+	}
+}
+
+func (a adapterPort) GetServicePort() int32 {
+	if a.ServicePort > 0 {
+		return a.ServicePort
+	} else {
+		return a.ContainerPort
+	}
+}
+
+func (a adapterPort) GetEndpointUrlScheme() string {
+	if a.EndpointUrlScheme == "" {
+		return "https"
+	} else {
+		return a.EndpointUrlScheme
+	}
+}
+
 type adapter struct {
 	Name           string
 	ReadyCondition iotv1alpha1.ConfigConditionType
 	EnvPrefix      string
 
 	AdapterConfigProvider func(*iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig
+
+	Port adapterPort
 }
 
 var adapters = []adapter{
+	{
+		Name:           "amqp",
+		ReadyCondition: iotv1alpha1.ConfigConditionTypeAmqpAdapterReady,
+		EnvPrefix:      "HONO_AMQP_",
+		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
+			return &config.Spec.AdaptersConfig.AmqpAdapterConfig.CommonAdapterConfig
+		},
+		Port: adapterPort{
+			ContainerPort:    5671,
+			LoadBalancerPort: 35671,
+
+			EndpointUrlScheme:      "amqps",
+			EndpointUrlForcePort:   true,
+			DoesntSupportReencrypt: true,
+		},
+	},
 	{
 		Name:           "mqtt",
 		ReadyCondition: iotv1alpha1.ConfigConditionTypeMqttAdapterReady,
 		EnvPrefix:      "HONO_MQTT_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.MqttAdapterConfig.CommonAdapterConfig
+		},
+		Port: adapterPort{
+			ContainerPort:    8883,
+			LoadBalancerPort: 30883,
+
+			EndpointUrlScheme:      "ssl",
+			EndpointUrlForcePort:   true,
+			DoesntSupportReencrypt: true,
 		},
 	},
 	{
@@ -58,6 +121,10 @@ var adapters = []adapter{
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.HttpAdapterConfig.CommonAdapterConfig
 		},
+		Port: adapterPort{
+			ContainerPort:    8443,
+			LoadBalancerPort: 30443,
+		},
 	},
 	{
 		Name:           "lorawan",
@@ -66,6 +133,10 @@ var adapters = []adapter{
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.LoraWanAdapterConfig.CommonAdapterConfig
 		},
+		Port: adapterPort{
+			ContainerPort:    8443,
+			LoadBalancerPort: 30443,
+		},
 	},
 	{
 		Name:           "sigfox",
@@ -73,6 +144,10 @@ var adapters = []adapter{
 		EnvPrefix:      "HONO_SIGFOX_",
 		AdapterConfigProvider: func(config *iotv1alpha1.IoTConfig) *iotv1alpha1.CommonAdapterConfig {
 			return &config.Spec.AdaptersConfig.SigfoxAdapterConfig.CommonAdapterConfig
+		},
+		Port: adapterPort{
+			ContainerPort:    8443,
+			LoadBalancerPort: 30443,
 		},
 	},
 }
@@ -125,6 +200,41 @@ func prepareAdapterStatus(config *iotv1alpha1.IoTConfig) {
 	}
 
 	config.Status.Services = make(map[string]iotv1alpha1.ServiceStatus)
+}
+
+func (r *ReconcileIoTConfig) processStandardAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, change *cchange.ConfigChangeRecorder, adapter adapter) (reconcile.Result, error) {
+
+	enabled := adapter.IsEnabled(config)
+
+	rc := recon.ReconcileContext{}
+
+	rc.ProcessSimple(func() error {
+		return r.processDeployment(ctx, adapter.FullName(), config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileStandardAdapterDeployment(config, deployment, adapter, change)
+		})
+	})
+	rc.ProcessSimple(func() error {
+		return r.processService(ctx, adapter.FullName(), config, !enabled, func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+			return r.reconcileStandardAdapterService(config, service, adapter)
+		})
+	})
+	rc.ProcessSimple(func() error {
+		return r.processService(ctx, adapter.FullName()+"-metrics", config, !enabled, r.reconcileMetricsService(adapter.FullName()))
+	})
+	rc.ProcessSimple(func() error {
+		return r.processAdapterRoute(
+			ctx, config, adapter,
+			func(config *iotv1alpha1.IoTConfig, router *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus) error {
+				return r.reconcileStandardAdapterRoute(config, router, endpointStatus, adapter)
+			},
+			func(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+				return r.reconcileStandardAdapterServiceExternal(config, service, adapter)
+			})
+	})
+
+	// done
+
+	return rc.Result()
 }
 
 // process the service route
@@ -525,4 +635,228 @@ func mergeAdapterOptions(first, second *iotv1alpha1.AdapterOptions) iotv1alpha1.
 func applyDefaultAdapterDeploymentSpec(deployment *appsv1.Deployment) {
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-protocol-adapter"
 	deployment.Annotations[util.ConnectsTo] = "iot-auth-service,iot-device-connection,iot-device-registry,iot-tenant-service"
+}
+
+func (r *ReconcileIoTConfig) reconcileStandardAdapterDeployment(
+	config *iotv1alpha1.IoTConfig,
+	deployment *appsv1.Deployment,
+	adapter adapter,
+	change *cchange.ConfigChangeRecorder,
+) error {
+
+	adapterConfig := adapter.AdapterConfigProvider(config)
+
+	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
+
+	applyDefaultDeploymentConfig(deployment, adapterConfig.ServiceConfig, change)
+	applyDefaultAdapterDeploymentSpec(deployment)
+
+	var tracingContainer *corev1.Container
+	err := install.ApplyDeploymentContainerWithError(deployment, "adapter", func(container *corev1.Container) error {
+
+		tracingContainer = container
+
+		if err := install.SetContainerImage(container, adapter.FullName(), config); err != nil {
+			return err
+		}
+
+		container.Args = []string{"/" + adapter.FullName() + ".jar"}
+		container.Command = nil
+
+		// set default resource limits
+
+		container.Resources = corev1.ResourceRequirements{
+			Limits: corev1.ResourceList{
+				corev1.ResourceMemory: *resource.NewQuantity(512*1024*1024 /* 512Mi */, resource.BinarySI),
+			},
+		}
+
+		container.Ports = []corev1.ContainerPort{
+			{
+				Name:          "adapter",
+				ContainerPort: adapter.Port.ContainerPort,
+				Protocol:      adapter.Port.GetProtocol(),
+			},
+		}
+
+		container.Ports = appendHonoStandardPorts(container.Ports)
+		SetHonoProbes(container)
+
+		// environment
+
+		container.Env = []corev1.EnvVar{
+			{Name: "SPRING_CONFIG_LOCATION", Value: "file:///etc/config/"},
+			{Name: "SPRING_PROFILES_ACTIVE", Value: ""},
+			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
+			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
+
+			{Name: "HONO_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
+		}
+
+		SetupTracing(config, deployment, container)
+		AppendStandardHonoJavaOptions(container)
+
+		if err := AppendHonoAdapterEnvs(config, container, adapter); err != nil {
+			return err
+		}
+
+		// volume mounts
+
+		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
+		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls", true)
+
+		// apply container options
+
+		applyContainerConfig(container, adapterConfig.Containers.Adapter.ContainerConfig)
+
+		// return
+
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// qdr config & proxy
+
+	if err := r.addQpidProxySetup(config, deployment, adapterConfig.Containers); err != nil {
+		return err
+	}
+
+	// reset init containers
+
+	deployment.Spec.Template.Spec.InitContainers = nil
+
+	// tracing
+
+	SetupTracing(config, deployment, tracingContainer)
+
+	// volumes
+
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", adapter.FullName()+"-config")
+
+	// inter service secrets
+
+	if err := ApplyInterServiceForDeployment(r.client, config, deployment, tlsServiceKeyVolumeName, ""); err != nil {
+		return err
+	}
+
+	// endpoint key/cert
+
+	if err := applyEndpointDeployment(r.client, adapterConfig.EndpointConfig, deployment, adapter.FullName(), "tls"); err != nil {
+		return err
+	}
+
+	// return
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileStandardAdapterService(config *iotv1alpha1.IoTConfig, service *corev1.Service, adapter adapter) error {
+
+	install.ApplyServiceDefaults(service, "iot", service.Name)
+
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Name:       "adapter",
+			Protocol:   adapter.Port.GetProtocol(),
+			Port:       adapter.Port.GetServicePort(),
+			TargetPort: intstr.FromString("adapter"),
+		},
+	}
+
+	// annotations
+
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	adapterConfig := adapter.AdapterConfigProvider(config)
+	if err := applyEndpointService(adapterConfig.EndpointConfig, service, adapter.FullName()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileStandardAdapterServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service, adapter adapter) error {
+
+	install.ApplyServiceDefaults(service, "iot", service.Name)
+
+	service.Spec.Type = "LoadBalancer"
+
+	service.Spec.Ports = []corev1.ServicePort{
+		{
+			Name:       "adapter",
+			Protocol:   adapter.Port.GetProtocol(),
+			Port:       adapter.Port.LoadBalancerPort,
+			TargetPort: intstr.FromString("adapter"),
+		},
+	}
+
+	// annotations
+
+	if err := ApplyInterServiceForService(config, service, ""); err != nil {
+		return err
+	}
+
+	adapterConfig := adapter.AdapterConfigProvider(config)
+	if err := applyEndpointService(adapterConfig.EndpointConfig, service, adapter.FullName()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *ReconcileIoTConfig) reconcileStandardAdapterRoute(config *iotv1alpha1.IoTConfig, route *routev1.Route, endpointStatus *iotv1alpha1.EndpointStatus, adapter adapter) error {
+
+	install.ApplyDefaultLabels(&route.ObjectMeta, "iot", route.Name)
+
+	// Port
+
+	route.Spec.Port = &routev1.RoutePort{
+		TargetPort: intstr.FromString("adapter"),
+	}
+
+	// Path
+
+	route.Spec.Path = ""
+
+	// TLS
+
+	if route.Spec.TLS == nil {
+		route.Spec.TLS = &routev1.TLSConfig{}
+	}
+
+	adapterConfig := adapter.AdapterConfigProvider(config)
+
+	if adapterConfig.EndpointConfig.HasCustomCertificate() {
+
+		route.Spec.TLS.Termination = routev1.TLSTerminationPassthrough
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	} else if !adapter.Port.DoesntSupportReencrypt {
+
+		route.Spec.TLS.Termination = routev1.TLSTerminationReencrypt
+		route.Spec.TLS.InsecureEdgeTerminationPolicy = routev1.InsecureEdgeTerminationPolicyNone
+
+	} else {
+
+		return util.NewConfigurationError("reencrypt routes are not supported for adapter type '%s'", adapter.Name)
+
+	}
+
+	// Service
+
+	route.Spec.To.Kind = "Service"
+	route.Spec.To.Name = adapter.FullName()
+
+	// Update endpoint
+
+	updateEndpointStatus(adapter.Port.GetEndpointUrlScheme(), adapter.Port.EndpointUrlForcePort, route, endpointStatus)
+
+	// return
+
+	return nil
 }
