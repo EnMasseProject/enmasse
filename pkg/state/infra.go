@@ -7,6 +7,7 @@ package state
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"math/rand"
@@ -19,8 +20,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type routerStateFunc = func(host Host, port int32) *RouterState
-type brokerStateFunc = func(host Host, port int32) *BrokerState
+type routerStateFunc = func(host Host, port int32, tlsConfig *tls.Config) *RouterState
+type brokerStateFunc = func(host Host, port int32, tlsConfig *tls.Config) *BrokerState
 
 type resourceKey struct {
 	Name      string
@@ -43,6 +44,9 @@ type infraClient struct {
 	brokers     map[Host]*BrokerState
 	hostMap     map[string]Host
 	initialized bool
+
+	// The TLS configuration of the operator to the clients
+	tlsConfig *tls.Config
 
 	// Port allocation map for router ports
 	ports map[int]*string
@@ -185,7 +189,15 @@ func (i *infraClient) updateRouters(hosts []Host) {
 	// Create states for new hosts
 	for hostname, host := range toAdd {
 		log.Printf("Adding router %+v", host)
-		routerState := i.routerStateFactory(host, 7777)
+		var routerTlsConfig *tls.Config
+		if i.tlsConfig != nil {
+			routerTlsConfig = &tls.Config{
+				Certificates: i.tlsConfig.Certificates,
+				RootCAs:      i.tlsConfig.RootCAs,
+				ServerName:   host.Hostname,
+			}
+		}
+		routerState := i.routerStateFactory(host, 55671, routerTlsConfig)
 		i.routers[host] = routerState
 		i.hostMap[hostname] = host
 	}
@@ -237,7 +249,15 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
 	// Create states for new hosts
 	for hostname, host := range toAdd {
 		log.Printf("Adding broker %+v", host)
-		brokerState := i.brokerStateFactory(host, 5671)
+		var brokerTlsConfig *tls.Config
+		if i.tlsConfig != nil {
+			brokerTlsConfig = &tls.Config{
+				Certificates: i.tlsConfig.Certificates,
+				RootCAs:      i.tlsConfig.RootCAs,
+				ServerName:   host.Hostname,
+			}
+		}
+		brokerState := i.brokerStateFactory(host, 5671, brokerTlsConfig)
 		i.brokers[host] = brokerState
 		i.hostMap[hostname] = host
 	}
@@ -261,11 +281,12 @@ func (i *infraClient) initialize(ctx context.Context) error {
 	})
 }
 
-func (i *infraClient) SyncAll(routers []Host, brokers []Host) ([]ConnectorStatus, error) {
+func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]ConnectorStatus, error) {
 	log.Printf("Syncing with routers: %+v, and brokers: %+v", routers, brokers)
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
+	i.tlsConfig = tlsConfig
 	ctx := context.Background()
 
 	i.updateRouters(routers)

@@ -2425,7 +2425,7 @@ func (si *saslInit) frameBody() {}
 func (si *saslInit) marshal(wr *buffer) error {
 	return marshalComposite(wr, typeCodeSASLInit, []marshalField{
 		{value: &si.Mechanism, omit: false},
-		{value: &si.InitialResponse, omit: len(si.InitialResponse) == 0},
+		{value: &si.InitialResponse, omit: false},
 		{value: &si.Hostname, omit: len(si.Hostname) == 0},
 	})
 }

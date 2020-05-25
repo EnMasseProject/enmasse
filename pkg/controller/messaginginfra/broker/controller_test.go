@@ -51,7 +51,7 @@ func TestReconcileBrokerPool(t *testing.T) {
 		},
 	}
 
-	err := bc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
+	_, err := bc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	hosts, err := bc.ReconcileBrokers(context.TODO(), logrtesting.TestLogger{}, &infra)

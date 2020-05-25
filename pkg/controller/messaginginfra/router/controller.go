@@ -253,9 +253,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	// Reconcile router certificate
-	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
-		fmt.Sprintf("%s", service.Name),
-		fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace))
+	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset, fmt.Sprintf("%s", service.Name), fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace), fmt.Sprintf("*.%s.%s.svc", service.Name, service.Namespace))
 	if err != nil {
 		return nil, err
 	}

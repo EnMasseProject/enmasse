@@ -771,7 +771,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 			return processorResult{}, err
 		}
 
-		certInfo, err := cert.GetCertInfo(secret.Data["tls.crt"])
+		certInfo, err := cert.GetCertInfo(secret.Data["tls.crt"], secret.Data["tls.key"])
 		if err != nil {
 			return processorResult{}, err
 		}
@@ -803,7 +803,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 			return processorResult{}, err
 		}
 
-		certInfo, err := cert.GetCertInfo(value)
+		certInfo, err := cert.GetCertInfo(value, key)
 		if err != nil {
 			return processorResult{}, err
 		}
