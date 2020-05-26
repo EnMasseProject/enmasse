@@ -75,7 +75,8 @@ enum RouteTlsTermination_enmasse_io_v1beta1 {
   reencrypt
 }
 
-enum MessagingEndpointType {
+
+enum MessagingEndpointType_enmasse_io_v1beta2  {
   cluster,
   nodePort,
   loadBalancer,
@@ -83,11 +84,17 @@ enum MessagingEndpointType {
   ingress
 }
 
-enum MessagingEndpointProtocol {
+enum MessagingEndpointProtocol_enmasse_io_v1beta2  {
   amqp,
   amqps,
   amqp_ws,
   amqp_wss,
+}
+
+enum MessagingEndpointPhase_enmasse_io_v1beta2  {
+  configuring,
+  active,
+  terminating,
 }
 
 type Metric_consoleapi_enmasse_io_v1beta1 {
@@ -214,12 +221,12 @@ type MessagingEndpoint_enmasse_io_v1beta2 {
 }
 
 type MessagingEndpointSpec_enmasse_io_v1beta2 {
-  protocols: [MessagingEndpointProtocol!]!
+  protocols: [MessagingEndpointProtocol_enmasse_io_v1beta2 !]!
 }
 
 type MessagingEndpointStatus_enmasse_io_v1beta2 {
-  phase: String!
-  type: MessagingEndpointType!
+  phase: MessagingEndpointPhase_enmasse_io_v1beta2!
+  type: MessagingEndpointType_enmasse_io_v1beta2 !
   message: String
   host: String
 
@@ -229,7 +236,7 @@ type MessagingEndpointStatus_enmasse_io_v1beta2 {
 
 type MessagingEndpointPort_enmasse_io_v1beta2  {
   name: String!
-  protocol: MessagingEndpointProtocol!
+  protocol: MessagingEndpointProtocol_enmasse_io_v1beta2 !
   port: Int!
 }
 

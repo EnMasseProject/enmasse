@@ -101,6 +101,12 @@ models:
       model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointStatus
   MessagingEndpointPort_enmasse_io_v1beta2:
       model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPort
+  MessagingEndpointProtocol_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointProtocol
+  MessagingEndpointType_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointType
+  MessagingEndpointPhase_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPhase
 
   Address:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Address
