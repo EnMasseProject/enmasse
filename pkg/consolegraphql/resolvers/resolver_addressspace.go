@@ -252,7 +252,7 @@ func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input metav1.O
 }
 
 func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	return r.DeleteAddresses(ctx, []*metav1.ObjectMeta{&input})
+	return r.DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&input})
 }
 
 func (r *mutationResolver) DeleteAddressSpaces(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
