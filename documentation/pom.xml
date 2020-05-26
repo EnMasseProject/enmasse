@@ -47,6 +47,10 @@
                                     <targetPath>html/images</targetPath>
                                 </resource>
                             </resources>
+                            <attributes>
+                                <toc>left</toc>
+                                <toclevels>3</toclevels>
+                            </attributes>
                         </configuration>
                         <goals>
                             <goal>process-asciidoc</goal>
@@ -65,6 +69,10 @@
                                     <targetPath>html/images</targetPath>
                                 </resource>
                             </resources>
+                            <attributes>
+                                <toc>left</toc>
+                                <toclevels>3</toclevels>
+                            </attributes>
                         </configuration>
                         <goals>
                             <goal>process-asciidoc</goal>
@@ -84,6 +92,10 @@
                                     <targetPath>html/images</targetPath>
                                 </resource>
                             </resources>
+                            <attributes>
+                                <toc>left</toc>
+                                <toclevels>3</toclevels>
+                            </attributes>
                         </configuration>
                         <goals>
                             <goal>process-asciidoc</goal>
