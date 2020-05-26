@@ -47,6 +47,35 @@ const typeDefs = gql`
         amqps
     }
 
+    enum EndpointServiceType_enmasse_io_v1beta1 {
+        messaging
+        mqtt @deprecated(reason: "deprecated"),
+        console @deprecated(reason: "deprecated"),
+    }
+
+    enum CertificateProviderType_enmasse_io_v1beta1 {
+        wildcard,
+        certBundle,
+        openshift,
+        selfsigned
+    }
+
+    enum ExposeType_enmasse_io_v1beta1 {
+        route
+        loadbalancer
+    }
+
+    enum RouteServicePort_enmasse_io_v1beta1 {
+        amqps
+        https
+        secure_mqtt @deprecated(reason: "deprecated")
+    }
+
+    enum RouteTlsTermination_enmasse_io_v1beta1 {
+        passthrough
+        reencrypt
+    }
+
     enum MessagingEndpointType {
         cluster,
         nodePort,
@@ -200,6 +229,32 @@ const typeDefs = gql`
         type:      AddressSpaceType!
   
         authenticationService:  AuthenticationService_enmasse_io_v1beta1
+        endpoints:              [EndpointSpec_enmasse_io_v1beta1!]
+    }
+
+    type EndpointSpec_enmasse_io_v1beta1 {
+        name:        String!
+        service:     EndpointServiceType_enmasse_io_v1beta1!
+        certificate: CertificateSpec_enmasse_io_v1beta1
+        expose:      ExposeSpec_enmasse_io_v1beta1
+    }
+
+    type CertificateSpec_enmasse_io_v1beta1 {
+        provider:   CertificateProviderType_enmasse_io_v1beta1!
+        secretName: String
+        tlsCert:    String
+        tlsKey:     String
+    }
+
+    type ExposeSpec_enmasse_io_v1beta1 {
+        type:  ExposeType_enmasse_io_v1beta1!
+
+        routeHost: String
+        routeServicePort: RouteServicePort_enmasse_io_v1beta1,
+        routeTlsTermination: RouteTlsTermination_enmasse_io_v1beta1,
+
+        loadBalancerPorts: [String!]
+        loadBalancerSourceRanges: [String!]
     }
 
     type MessagingEndpoint_enmasse_io_v1beta2 {
@@ -230,12 +285,29 @@ const typeDefs = gql`
 
     type AuthenticationService_enmasse_io_v1beta1 {
         name: String!
-    }    
+    }
 
     type AddressSpaceStatus_enmasse_io_v1beta1 {
         isReady: Boolean!
         messages: [String!]
         phase: String!
+        caCertificate: String,
+        endpointStatus: [EndpointStatus_enmasse_io_v1beta1!]!
+    }
+
+    type EndpointStatus_enmasse_io_v1beta1 {
+        name: String!
+        certificate: String
+        serviceHost: String!
+        servicePorts: [Port_enmasse_io_v1beta1!]!
+
+        externalHost: String
+        externalPorts: [Port_enmasse_io_v1beta1!]
+    }
+
+    type Port_enmasse_io_v1beta1 {
+        name: String!
+        port: Int!
     }
 
     type AddressSpec_enmasse_io_v1beta1 {
@@ -391,6 +463,7 @@ const typeDefs = gql`
         plan:         String!
         
         authenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
+        endpoints:    [EndpointSpec_enmasse_io_v1beta1_Input!]
     }
     
     input AuthenticationService_enmasse_io_v1beta1_Input {
@@ -408,6 +481,31 @@ const typeDefs = gql`
         type:         String!
         plan:         String!
         topic:        String
+    }
+
+    input EndpointSpec_enmasse_io_v1beta1_Input {
+        name:        String!
+        service:     EndpointServiceType_enmasse_io_v1beta1!
+        certificate: CertificateSpec_enmasse_io_v1beta1_Input
+        expose:      ExposeSpec_enmasse_io_v1beta1_Input
+    }
+
+    input CertificateSpec_enmasse_io_v1beta1_Input {
+        provider:   CertificateProviderType_enmasse_io_v1beta1!
+        secretName: String
+        tlsCert:    String
+        tlsKey:     String
+    }
+
+    input ExposeSpec_enmasse_io_v1beta1_Input {
+        type:  String!
+
+        routeHost: String
+        routeServicePort: RouteServicePort_enmasse_io_v1beta1,
+        routeTlsTermination: RouteTlsTermination_enmasse_io_v1beta1,
+
+        loadBalancerPorts: [String!]
+        loadBalancerSourceRanges: [String!]
     }
 
     input Address_enmasse_io_v1beta1_Input {
