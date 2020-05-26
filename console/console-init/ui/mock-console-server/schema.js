@@ -144,6 +144,26 @@ const typeDefs = gql`
     type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
         authenticationServices: [String!]
         description: String
+        routeServicePorts: [RouteServicePortDescription_enmasse_io_v1beta1!]!
+        certificateProviderTypes: [CertificateProviderTypeDescription_enmasse_io_v1beta1!]!
+        endpointExposeTypes: [EndpointExposeTypeDescription_enmasse_io_v1beta1!]!
+    }
+
+    type RouteServicePortDescription_enmasse_io_v1beta1 {
+        name: RouteServicePort_enmasse_io_v1beta1!
+        displayName: String!
+    }
+
+    type CertificateProviderTypeDescription_enmasse_io_v1beta1 {
+        name: CertificateProviderType_enmasse_io_v1beta1!
+        displayName: String!
+        description: String!
+    }
+
+    type EndpointExposeTypeDescription_enmasse_io_v1beta1 {
+        name: ExposeType_enmasse_io_v1beta1!
+        displayName: String!
+        description: String!
     }
 
     type Connection_consoleapi_enmasse_io_v1beta1 {
