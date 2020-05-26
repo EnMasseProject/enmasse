@@ -185,21 +185,31 @@ Artemis.prototype._request = function (resource, operation, parameters) {
     });
 }
 
+function queueConfig(address, routingType, name, durable, maxConsumers, purgeOnNoConsumers, autoCreateAddress) {
+    return {
+        "name": name,
+        "address": address,
+        "routing-type": routingType,
+        "durable": durable,
+        "max-consumers": maxConsumers,
+        "purge-on-no-consumers": purgeOnNoConsumers
+        "auto-create-address": autoCreateAddress,
+    };
+}
+
 // No response requested
 Artemis.prototype._create_temp_response_queue = function (name) {
-    var request = this._create_request_message('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, false/*durable*/,
-         1/*max consumers*/, true/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+    var request = this._create_request_message('broker', 'createQueue', JSON.stringify(queueConfig(name, 'ANYCAST', name, false,
+                                                                                                   1, true, true)));
     this._send_request(request);
 }
 
 Artemis.prototype.createSubscription = function (name, address, maxConsumers) {
-    return this._request('broker', 'createQueue', [address, 'MULTICAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   maxConsumers/*max consumers*/, false/*purgeOnNoConsumers*/, false/*autoCreateAddress*/]);
+    return this._request('broker', 'createQueue', JSON.stringify(queueConfig(address, 'MULTICAST', name, true, maxConsumers, false, false)));
 }
 
 Artemis.prototype.createQueue = function (name) {
-    return this._request('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, true/*durable*/,
-                                                   -1/*max consumers*/, false/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
+    return this._request('broker', 'createQueue', JSON.stringify(queueConfig(name, 'ANYCAST', name, true, -1, false, true)));
 }
 
 Artemis.prototype.destroyQueue = function (name) {

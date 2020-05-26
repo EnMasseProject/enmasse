@@ -95,7 +95,8 @@ public class Artemis implements AutoCloseable {
 
     public void createQueue(String name, String address) throws TimeoutException {
         log.info("Creating queue {} with address {} on broker {}", name, address, syncRequestClient.getRemoteContainer());
-        doOperation("broker", "createQueue", address, "ANYCAST", name, null, true, -1, false, true);
+        doOperation("broker", "createQueue",
+                String.format("{\"address\", \"%s\", \"routing-type\": \"ANYCAST\", \"name\": \"%s\", \"durable\": true, \"max-consumers\": -1, \"purge-on-no-consumers\": false, \"auto-create-address\": true}", address, name));
     }
 
     public void createConnectorService(String name, Map<String, String> connParams) throws TimeoutException {

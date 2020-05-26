@@ -141,8 +141,7 @@ func (b *BrokerState) createQueue(queue *QueueConfiguration) error {
 
 	log.Printf("[Broker %s] creating queue json: '%s'", b.Host, string(config))
 
-	message, err := newManagementMessage("broker", "createQueue", "", queue.Name, queue.RoutingType, queue.Address, nil, queue.Durable, queue.MaxConsumers, queue.PurgeOnNoConsumers, queue.AutoCreateAddress)
-	// TODO: Artemis 2.12.0 newManagementMessage("broker", "createQueue", "", string(config))
+	message, err := newManagementMessage("broker", "createQueue", "", string(config))
 	if err != nil {
 		return err
 	}
