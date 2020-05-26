@@ -1,0 +1,213 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+// assembly-installing-kubernetes.adoc
+
+[id='proc-iot-logging-{context}']
+
+= Configuring logging
+
+If the default logging settings are not sufficient, the following
+sections describe ways to configure the logging system.
+
+== Configure the global log levels
+
+The global logging configuration is applied to all
+services which do not have any explicit logging configuration.
+
+By default the global default log level is `info`.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+
+.Procedure
+
+. Edit the `IoTConfig` instance named `default`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} edit iotconfig default
+----
+. Configure the logging options, save and exit the editor:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  namespace: enmasse-infra
+  name: default
+spec:
+  logging:
+    level: info # <1>
+    loggers: # <2>
+      io.enmasse: debug # <3>
+      io.netty: error # <4>
+----
+<1> The default global log level. If omitted, `info` will be used.
+<2> The section for log channel specific entries.
+<3> Lowers the filtering to `debug` level for messages in the channel `io.enmasse`
+<4> Raises the filtering to `error` level for messages in the channel `io.netty`
+. The operator will apply the logging configuration and re-deploy all
+  required components.
+
+In the above example:
+
+* A message of level `info` for the logger `org.eclipse.hono` would be logged, because the logger does not match any explicit configuration, and the global default is `info`.
+* A message of level `info` for the logger `io.enmasse` would be logged, because the specific configuration for `io.enmasse` is `debug` and the message level `info` is of higher severity.
+* A message of level `warn` for the logger `io.netty` would be dropped,
+ because the explicit configuration for `io.netty` requires at least a severity of `error`.
+
+== Configuring application specific log levels
+
+In order to override the global defaults, it is possible to configure
+logging specifically for an IoT service.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+
+.Procedure
+
+. Edit the `IoTConfig` instance named `default`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} edit iotconfig default
+----
+. Configure the logging options, save and exit the editor:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  namespace: enmasse-infra
+  name: default
+spec:
+  adapters:
+    mqtt:
+      containers:
+        adapter:
+          logback:
+            level: info # <1>
+            loggers: # <2>
+              io.enmasse: debug # <3>
+              io.netty: error # <4>
+----
+<1> The application global log level. If omitted, the default global level will be used.
+<2> The section for log channel specific entries. If omitted and the
+    application global log level is omitted as well, then the
+    default log channel configuration of the infrastructure
+    will be used. Otherwise, if the application global log level
+    is set, it is considered an empty set, and no log channel
+    specific configuration will be applied
+<3> Lowers the filtering to `debug` level for messages in the channel `io.enmasse`
+<4> Raises the filtering to `error` level for messages in the channel `io.netty`
+. The operator will apply the logging configuration and re-deploy all
+  required components.
+
+== Applying a custom logback specific configuration
+
+For containers, running applications using the Logback
+logging implementation, it is possible to provide a
+custom, XML based, logback configuration file. This will override
+any other logging configuration in the system.
+
+WARNING: The logging configuration is not checked by {ProductName} in
+any way. Providing an incorrect configuration may result is loss of
+performance, stability, or may lead to total systems failure.
+
+For more information about Logback and its configuration see http://logback.qos.ch/manual/configuration.html.
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
+* Create the content of an XML based logback configuration file
+
+=== Using the `IoTConfig` resource
+
+The configuration can be applied using the `IoTConfig` resource.
+
+.Procedure
+
+. Edit the `IoTConfig` instance named `default`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} edit iotconfig default
+----
+. Configure the logging options, save and exit the editor:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  namespace: enmasse-infra
+  name: default
+spec:
+  adapters:
+    mqtt:
+      containers:
+        adapter:
+          logback:
+            logback: | # <1>
+              <configuration>
+                <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                  <encoder>
+                    <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+                  </encoder>
+                </appender>
+                <root level="debug">
+                  <appender-ref ref="STDOUT" />
+                </root>
+              </configuration>
+----
+<1> The full XML based logback configuration
+. The operator will apply the logging configuration and re-deploy all
+  required components.
+
+=== Using the service's ConfigMap resource
+
+In addition to providing the custom configuration using the
+`IoTConfig`, it is also possible to put the custom logging
+configuration into the services's ConfigMap source.
+
+.Procedure
+
+. Edit the `ConfigMap` instance for the service, for example `iot-http-adapter-config` for the HTTP protocol adapter.
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} edit cm iot-http-adapter-config
+----
+. Add the XML based logback configuration in the data section with the key `logback-custom.xml`:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: enmasse-infra
+  name: iot-http-adapter-config
+data:
+  application.yaml: … # <1>
+  logback-spring.xml: … # <2>
+  logback-custom.xml: | # <3>
+    <configuration>
+      <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+      </appender>
+      <root level="debug">
+        <appender-ref ref="STDOUT" />
+      </root>
+    </configuration>
+----
+<1> The application specific configuration file. This file is generated
+    by the operator. Any changes will be overwritten.
+<2> The effective logback configuration, applied by the system. Do not
+    change this, as it will be overwritten by the operator.
+<3> The full XML based logback configuration
+. The operator will detect changes on the `ConfigMap` resource, apply
+  the logging configuration and re-deploy all required components.

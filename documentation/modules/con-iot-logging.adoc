@@ -1,0 +1,44 @@
+// Module included in the following assemblies:
+//
+// assembly-iot-service-admin-guide.adoc
+
+[id='con-iot-logging-{context}']
+= IoT logging
+
+By default the IoT components of {ProductName} are using a rather conservative
+logging configuration for the infrastructure services. This is done order to
+preserve resources for the normal operation.
+
+{ProductName} also allows to enable operation level tracing using Jaeger,
+for more in depth tracing scenarios.
+
+== Configuration options
+
+In some cases however it might be necessary to increase the logging output on
+the application level. This can be done for the IoT components on the following
+levels (ordered in increasing priority):
+
+* A default log level for all IoT components
+* A default configuration for specific log channels
+* A service specific default log level
+* A service specific configuration for specific log channels
+* A service specific custom log configuration file
+
+All configuration is part of the `IoTConfig` instance and will be applied to the
+services by the {ProductName} operator. The only exception is the service specific
+log configuration file. It can either be provided through the `IoTConfig` resource,
+or by creating and entry in the service specific `ConfigMap` resource.
+
+== Log levels
+
+The following log levels can be used:
+
+error:: Error conditions. Typically an unexpected condition which may impact the stability of the system.
+warn:: Warning conditions. Typically an expected condition, which may impact the current operation or stability of the system.
+info:: Informational messages. Typically an expected event, which may impact the current operation.
+debug:: Messages for debugging.
+trace:: All messages.
+
+When limiting output by log level, lower levels will always include
+higher level messages. For example, when limiting the output to "info",
+then this will include "warn" and "error" messages as well.
