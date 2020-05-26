@@ -14,7 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
 import { StyleSheet, css } from "@patternfly/react-styles";
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const styles = StyleSheet.create({
   style_margin: {
@@ -57,21 +57,21 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
         </CardHeader>
         <CardBody>
           <b className={css(styles.style_margin)}>Address space</b>
-          <NavLink
+          <Link
             //TODO:=modify route
             to={`/address-spaces/${namespace}/${addressSpace}/standard/addresses`}
             className="pf-c-nav__link"
             id={`navlink-as-${addressSpace}`}
           >
             {addressSpace}
-          </NavLink>{" "}
+          </Link>{" "}
           <br />
           <b className={css(styles.style_margin)}>Events address name</b>
           {eventAddresses &&
             eventAddresses.length > 0 &&
             eventAddresses.map((address: string) => (
               <>
-                <NavLink
+                <Link
                   //TODO:=modify route
                   to={""}
                   className="pf-c-nav__link"
@@ -79,7 +79,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                   key={`navlink-gi-event-${address}`}
                 >
                   {address}
-                </NavLink>{" "}
+                </Link>{" "}
               </>
             ))}
           <br />
@@ -88,7 +88,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
             telemetryAddresses.length > 0 &&
             telemetryAddresses.map((address: string) => (
               <>
-                <NavLink
+                <Link
                   //TODO:=modify route
                   to={""}
                   className="pf-c-nav__link"
@@ -96,7 +96,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                   key={`navlink-gi-telemetry-${address}`}
                 >
                   {address}
-                </NavLink>{" "}
+                </Link>{" "}
               </>
             ))}
           <br />
@@ -105,7 +105,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
             commandAddresses.length > 0 &&
             commandAddresses.map((address: string) => (
               <>
-                <NavLink
+                <Link
                   //TODO:=modify route
                   to={""}
                   className="pf-c-nav__link"
@@ -113,7 +113,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                   key={`navlink-gi-command-${address}`}
                 >
                   {address}
-                </NavLink>{" "}
+                </Link>{" "}
               </>
             ))}
           <br />

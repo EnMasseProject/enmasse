@@ -6,7 +6,7 @@
 import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+  SERVER_DATA_THRESHOLD
 } from "constant";
 import {
   forbiddenBackslashRegexp,
@@ -47,14 +47,8 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   let records: ISelectOption[] = [];
   if (totalRecords > MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN) {
     const allRecords = [...uniqueList];
-    const top_10_records = allRecords.splice(
-      0,
-      NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-    );
-    if (
-      top_10_records.length >=
-      NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-    ) {
+    const top_10_records = allRecords.splice(0, SERVER_DATA_THRESHOLD);
+    if (top_10_records.length >= SERVER_DATA_THRESHOLD) {
       records.push({
         value: TypeAheadMessage.MORE_CHAR_REQUIRED,
         isDisabled: true
@@ -231,6 +225,11 @@ const convertJsonToMetadataOptions = (object: any, type?: string) => {
   return metadataArray;
 };
 
+/** Accepts a object with key,value,type and typeLabel as convet into a exact json
+ * with key and values from the form
+ * @param object
+ * Internal function used in convertMetadataOptionsToJson
+ * */
 const convertObjectIntoJson = (object: any) => {
   const obj: any = {};
   switch (object.type) {
