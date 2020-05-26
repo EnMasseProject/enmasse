@@ -202,11 +202,13 @@ function createAddressSpaceSchema(name, description) {
       routeServicePorts: [
         {
           name: "amqps",
-          displayName: "Messaging (AMQP)"
+          displayName: "Messaging (AMQP)",
+          routeTlsTerminations: ["passthrough"]
         },
         {
-          name: "amqps",
-          displayName: "Websocket messaging (AMQP-WS)"
+          name: "https",
+          displayName: "Websocket messaging (AMQP-WS)",
+          routeTlsTerminations: ["passthrough", "reencrypt"]
         },
       ],
       certificateProviderTypes: [

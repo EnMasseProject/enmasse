@@ -152,6 +152,7 @@ const typeDefs = gql`
     type RouteServicePortDescription_enmasse_io_v1beta1 {
         name: RouteServicePort_enmasse_io_v1beta1!
         displayName: String!
+        routeTlsTerminations: [RouteTlsTermination_enmasse_io_v1beta1!]!
     }
 
     type CertificateProviderTypeDescription_enmasse_io_v1beta1 {
