@@ -33,6 +33,7 @@ spec:
     resources:
       memory: 512Mi
       storage: 20Mi
+    globalMaxSize: 64Mb
 ----
 
 .Brokered infrastructure configuration example for QA
@@ -48,6 +49,7 @@ spec:
     resources:
       memory: 4Gi
       storage: 50Gi
+    globalMaxSize: 512Mb
 ----
 
 

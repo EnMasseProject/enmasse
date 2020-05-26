@@ -43,6 +43,7 @@ spec:
       memory: 2Gi
       storage: 100Gi
     addressFullPolicy: PAGE
+    globalMaxSize: 256Mb # Should be set to 1/8 of memory for safe operation
   router:
     resources:
       memory: 256Mi
