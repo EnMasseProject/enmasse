@@ -31,7 +31,7 @@ or by creating and entry in the service specific `ConfigMap` resource.
 
 == Log levels
 
-The following log levels can be used:
+The following log levels are available (from low to high level):
 
 error:: Error conditions. Typically an unexpected condition which may impact the stability of the system.
 warn:: Warning conditions. Typically an expected condition, which may impact the current operation or stability of the system.

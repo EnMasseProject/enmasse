@@ -15,7 +15,7 @@ sections describe ways to configure the logging system.
 The global logging configuration is applied to all
 services which do not have any explicit logging configuration.
 
-By default the global default log level is `info`.
+By default the global log level is `info`.
 
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-{context}[The IoT services are installed].
@@ -108,7 +108,7 @@ spec:
 
 == Applying a custom logback specific configuration
 
-For containers, running applications using the Logback
+For containers running applications using the Logback
 logging implementation, it is possible to provide a
 custom, XML based, logback configuration file. This will override
 any other logging configuration in the system.
