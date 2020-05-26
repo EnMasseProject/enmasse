@@ -761,10 +761,13 @@ spec:
   queue:
     resources:
       requests:
+        # Requests: amount of memory it is expected this queue will use, and is used for queue
+        # scheduling. Setting this to a lower value than limits will allow the scheduler to move this queue to 
+        # a different broker to increase density.
         queueSizeMemory: 5Mi
         queueSizeStorage: 20Mi
       limits:
-        # Amount of memory queues with this plan can use on the broker. This translates to the max-size-bytes
+        # Limits: Amount of memory queues with this plan can use on the broker. This translates to the max-size-bytes
         # address setting in the broker.
         queueSizeMemory: 10Mi
         # Amount of storage queues with this plan can use on the broker
