@@ -37,17 +37,24 @@ public class AddressSpaceType {
     private List<@Valid AddressType> addressTypes = new ArrayList<>();
     private List<@Valid EndpointSpec> availableEndpoints = new ArrayList<>();
     private List<@Valid InfraConfig> infraConfigs = new ArrayList<>();
+    private List<@Valid RouteServicePortDescription> routeServicePorts = new ArrayList<>();
+    private List<@Valid CertificateProviderTypeDescription> certificateProviderTypes = new ArrayList<>();
+    private List<@Valid EndpointExposeTypeDescription> endpointExposeTypes = new ArrayList<>();
 
     public AddressSpaceType() {
     }
 
-    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs) {
+    public AddressSpaceType(String name, String description, List<AddressSpacePlan> plans, List<AddressType> addressTypes, List<EndpointSpec> availableEndpoints, List<InfraConfig> infraConfigs,
+                            List<RouteServicePortDescription> routeServicePorts, List<CertificateProviderTypeDescription> certificateProviderTypes, List<EndpointExposeTypeDescription> endpointExposeTypes) {
         this.name = name;
         this.description = description;
         this.plans = plans;
         this.addressTypes = addressTypes;
         this.availableEndpoints = availableEndpoints;
         this.infraConfigs = infraConfigs;
+        this.routeServicePorts = routeServicePorts;
+        this.certificateProviderTypes = certificateProviderTypes;
+        this.endpointExposeTypes = endpointExposeTypes;
     }
 
     public void setName(String name) {
@@ -123,6 +130,30 @@ public class AddressSpaceType {
 
     public List<InfraConfig> getInfraConfigs() {
         return infraConfigs;
+    }
+
+    public List<RouteServicePortDescription> getRouteServicePorts() {
+        return routeServicePorts;
+    }
+
+    public void setRouteServicePorts(List<RouteServicePortDescription> routeServicePorts) {
+        this.routeServicePorts = routeServicePorts;
+    }
+
+    public List<CertificateProviderTypeDescription> getCertificateProviderTypes() {
+        return certificateProviderTypes;
+    }
+
+    public void setCertificateProviderTypes(List<CertificateProviderTypeDescription> certificateProviderTypes) {
+        this.certificateProviderTypes = certificateProviderTypes;
+    }
+
+    public List<EndpointExposeTypeDescription> getEndpointExposeTypes() {
+        return endpointExposeTypes;
+    }
+
+    public void setEndpointExposeTypes(List<EndpointExposeTypeDescription> endpointExposeTypes) {
+        this.endpointExposeTypes = endpointExposeTypes;
     }
 
 }

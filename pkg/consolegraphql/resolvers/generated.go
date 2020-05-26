@@ -110,8 +110,11 @@ type ComplexityRoot struct {
 	}
 
 	AddressSpaceSchemaSpecEnmasseIoV1beta1 struct {
-		AuthenticationServices func(childComplexity int) int
-		Description            func(childComplexity int) int
+		AuthenticationServices   func(childComplexity int) int
+		CertificateProviderTypes func(childComplexity int) int
+		Description              func(childComplexity int) int
+		EndpointExposeTypes      func(childComplexity int) int
+		RouteServicePorts        func(childComplexity int) int
 	}
 
 	AddressSpaceSchemaEnmasseIoV1beta1 struct {
@@ -212,6 +215,12 @@ type ComplexityRoot struct {
 		Name func(childComplexity int) int
 	}
 
+	CertificateProviderTypeDescriptionEnmasseIoV1beta1 struct {
+		Description func(childComplexity int) int
+		DisplayName func(childComplexity int) int
+		Name        func(childComplexity int) int
+	}
+
 	CertificateSpecEnmasseIoV1beta1 struct {
 		Provider   func(childComplexity int) int
 		SecretName func(childComplexity int) int
@@ -239,6 +248,12 @@ type ComplexityRoot struct {
 		Metrics    func(childComplexity int) int
 		ObjectMeta func(childComplexity int) int
 		Spec       func(childComplexity int) int
+	}
+
+	EndpointExposeTypeDescriptionEnmasseIoV1beta1 struct {
+		Description func(childComplexity int) int
+		DisplayName func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	EndpointSpecEnmasseIoV1beta1 struct {
@@ -388,6 +403,12 @@ type ComplexityRoot struct {
 		MessagingEndpoints        func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
 		Namespaces                func(childComplexity int) int
 		Whoami                    func(childComplexity int) int
+	}
+
+	RouteServicePortDescriptionEnmasseIoV1beta1 struct {
+		DisplayName          func(childComplexity int) int
+		Name                 func(childComplexity int) int
+		RouteTlsTerminations func(childComplexity int) int
 	}
 
 	UserV1 struct {
@@ -666,12 +687,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.AuthenticationServices(childComplexity), true
 
+	case "AddressSpaceSchemaSpec_enmasse_io_v1beta1.certificateProviderTypes":
+		if e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.CertificateProviderTypes == nil {
+			break
+		}
+
+		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.CertificateProviderTypes(childComplexity), true
+
 	case "AddressSpaceSchemaSpec_enmasse_io_v1beta1.description":
 		if e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.Description == nil {
 			break
 		}
 
 		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.Description(childComplexity), true
+
+	case "AddressSpaceSchemaSpec_enmasse_io_v1beta1.endpointExposeTypes":
+		if e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.EndpointExposeTypes == nil {
+			break
+		}
+
+		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.EndpointExposeTypes(childComplexity), true
+
+	case "AddressSpaceSchemaSpec_enmasse_io_v1beta1.routeServicePorts":
+		if e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.RouteServicePorts == nil {
+			break
+		}
+
+		return e.complexity.AddressSpaceSchemaSpecEnmasseIoV1beta1.RouteServicePorts(childComplexity), true
 
 	case "AddressSpaceSchema_enmasse_io_v1beta1.metadata":
 		if e.complexity.AddressSpaceSchemaEnmasseIoV1beta1.ObjectMeta == nil {
@@ -1059,6 +1101,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AuthenticationServiceEnmasseIoV1beta1.Name(childComplexity), true
 
+	case "CertificateProviderTypeDescription_enmasse_io_v1beta1.description":
+		if e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.Description == nil {
+			break
+		}
+
+		return e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.Description(childComplexity), true
+
+	case "CertificateProviderTypeDescription_enmasse_io_v1beta1.displayName":
+		if e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.DisplayName(childComplexity), true
+
+	case "CertificateProviderTypeDescription_enmasse_io_v1beta1.name":
+		if e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.Name == nil {
+			break
+		}
+
+		return e.complexity.CertificateProviderTypeDescriptionEnmasseIoV1beta1.Name(childComplexity), true
+
 	case "CertificateSpec_enmasse_io_v1beta1.provider":
 		if e.complexity.CertificateSpecEnmasseIoV1beta1.Provider == nil {
 			break
@@ -1182,6 +1245,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ConnectionConsoleapiEnmasseIoV1beta1.Spec(childComplexity), true
+
+	case "EndpointExposeTypeDescription_enmasse_io_v1beta1.description":
+		if e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.Description == nil {
+			break
+		}
+
+		return e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.Description(childComplexity), true
+
+	case "EndpointExposeTypeDescription_enmasse_io_v1beta1.displayName":
+		if e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.DisplayName(childComplexity), true
+
+	case "EndpointExposeTypeDescription_enmasse_io_v1beta1.name":
+		if e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.Name == nil {
+			break
+		}
+
+		return e.complexity.EndpointExposeTypeDescriptionEnmasseIoV1beta1.Name(childComplexity), true
 
 	case "EndpointSpec_enmasse_io_v1beta1.certificate":
 		if e.complexity.EndpointSpecEnmasseIoV1beta1.Certificate == nil {
@@ -1906,6 +1990,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Whoami(childComplexity), true
 
+	case "RouteServicePortDescription_enmasse_io_v1beta1.displayName":
+		if e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.DisplayName == nil {
+			break
+		}
+
+		return e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.DisplayName(childComplexity), true
+
+	case "RouteServicePortDescription_enmasse_io_v1beta1.name":
+		if e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.Name == nil {
+			break
+		}
+
+		return e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.Name(childComplexity), true
+
+	case "RouteServicePortDescription_enmasse_io_v1beta1.routeTlsTerminations":
+		if e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.RouteTlsTerminations == nil {
+			break
+		}
+
+		return e.complexity.RouteServicePortDescriptionEnmasseIoV1beta1.RouteTlsTerminations(childComplexity), true
+
 	case "User_v1.fullName":
 		if e.complexity.UserV1.FullName == nil {
 			break
@@ -2004,7 +2109,6 @@ var sources = []*ast.Source{
 #
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
-directive @goModel(model: String, models: [String!]) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION
 
 
 scalar CertBytes
@@ -2367,6 +2471,27 @@ type AddressSpaceSchema_enmasse_io_v1beta1 {
 type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
   authenticationServices: [String!]
   description: String
+  routeServicePorts: [RouteServicePortDescription_enmasse_io_v1beta1!]!
+  certificateProviderTypes: [CertificateProviderTypeDescription_enmasse_io_v1beta1!]!
+  endpointExposeTypes: [EndpointExposeTypeDescription_enmasse_io_v1beta1!]!
+}
+
+type RouteServicePortDescription_enmasse_io_v1beta1 {
+  name: RouteServicePort_enmasse_io_v1beta1!
+  displayName: String!
+  routeTlsTerminations: [RouteTlsTermination_enmasse_io_v1beta1!]!
+}
+
+type CertificateProviderTypeDescription_enmasse_io_v1beta1 {
+  name: CertificateProviderType_enmasse_io_v1beta1!
+  displayName: String!
+  description: String!
+}
+
+type EndpointExposeTypeDescription_enmasse_io_v1beta1 {
+  name: ExposeType_enmasse_io_v1beta1!
+  displayName: String!
+  description: String!
 }
 
 type Metadata_consoleapi_enmasse_io_v1beta1 {
@@ -3949,6 +4074,108 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_descripti
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalOString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_routeServicePorts(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AddressSpaceSchemaSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RouteServicePorts, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta1.RouteServicePortDescription)
+	fc.Result = res
+	return ec.marshalNRouteServicePortDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePortDescriptionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_certificateProviderTypes(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AddressSpaceSchemaSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CertificateProviderTypes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta1.CertificateProviderTypeDescription)
+	fc.Result = res
+	return ec.marshalNCertificateProviderTypeDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderTypeDescriptionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1_endpointExposeTypes(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchemaSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "AddressSpaceSchemaSpec_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EndpointExposeTypes, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta1.EndpointExposeTypeDescription)
+	fc.Result = res
+	return ec.marshalNEndpointExposeTypeDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐEndpointExposeTypeDescriptionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressSpaceSchema_enmasse_io_v1beta1_metadata(ctx context.Context, field graphql.CollectedField, obj *v1beta1.AddressSpaceSchema) (ret graphql.Marshaler) {
@@ -5741,6 +5968,108 @@ func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1_name(ctx c
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _CertificateProviderTypeDescription_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.CertificateProviderTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CertificateProviderTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(v1beta1.CertificateProviderType)
+	fc.Result = res
+	return ec.marshalNCertificateProviderType_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CertificateProviderTypeDescription_enmasse_io_v1beta1_displayName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.CertificateProviderTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CertificateProviderTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _CertificateProviderTypeDescription_enmasse_io_v1beta1_description(ctx context.Context, field graphql.CollectedField, obj *v1beta1.CertificateProviderTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "CertificateProviderTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _CertificateSpec_enmasse_io_v1beta1_provider(ctx context.Context, field graphql.CollectedField, obj *v1beta1.CertificateSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6315,6 +6644,108 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1_links(ctx 
 	res := resTmp.(*LinkQueryResultConsoleapiEnmasseIoV1beta1)
 	fc.Result = res
 	return ec.marshalNLinkQueryResult_consoleapi_enmasse_io_v1beta12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐLinkQueryResultConsoleapiEnmasseIoV1beta1(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _EndpointExposeTypeDescription_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.EndpointExposeTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "EndpointExposeTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(v1beta1.ExposeType)
+	fc.Result = res
+	return ec.marshalNExposeType_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐExposeType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _EndpointExposeTypeDescription_enmasse_io_v1beta1_displayName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.EndpointExposeTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "EndpointExposeTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _EndpointExposeTypeDescription_enmasse_io_v1beta1_description(ctx context.Context, field graphql.CollectedField, obj *v1beta1.EndpointExposeTypeDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "EndpointExposeTypeDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Description, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _EndpointSpec_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.EndpointSpec) (ret graphql.Marshaler) {
@@ -9480,6 +9911,108 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RouteServicePortDescription_enmasse_io_v1beta1_name(ctx context.Context, field graphql.CollectedField, obj *v1beta1.RouteServicePortDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "RouteServicePortDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(v1beta1.RouteServicePort)
+	fc.Result = res
+	return ec.marshalNRouteServicePort_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePort(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RouteServicePortDescription_enmasse_io_v1beta1_displayName(ctx context.Context, field graphql.CollectedField, obj *v1beta1.RouteServicePortDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "RouteServicePortDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.DisplayName, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RouteServicePortDescription_enmasse_io_v1beta1_routeTlsTerminations(ctx context.Context, field graphql.CollectedField, obj *v1beta1.RouteServicePortDescription) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "RouteServicePortDescription_enmasse_io_v1beta1",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RouteTlsTerminations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]v1beta1.RouteTlsTermination)
+	fc.Result = res
+	return ec.marshalNRouteTlsTermination_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTerminationᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _User_v1_metadata(ctx context.Context, field graphql.CollectedField, obj *v12.User) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -11271,6 +11804,21 @@ func (ec *executionContext) _AddressSpaceSchemaSpec_enmasse_io_v1beta1(ctx conte
 			out.Values[i] = ec._AddressSpaceSchemaSpec_enmasse_io_v1beta1_authenticationServices(ctx, field, obj)
 		case "description":
 			out.Values[i] = ec._AddressSpaceSchemaSpec_enmasse_io_v1beta1_description(ctx, field, obj)
+		case "routeServicePorts":
+			out.Values[i] = ec._AddressSpaceSchemaSpec_enmasse_io_v1beta1_routeServicePorts(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "certificateProviderTypes":
+			out.Values[i] = ec._AddressSpaceSchemaSpec_enmasse_io_v1beta1_certificateProviderTypes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "endpointExposeTypes":
+			out.Values[i] = ec._AddressSpaceSchemaSpec_enmasse_io_v1beta1_endpointExposeTypes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -11916,6 +12464,43 @@ func (ec *executionContext) _AuthenticationService_enmasse_io_v1beta1(ctx contex
 	return out
 }
 
+var certificateProviderTypeDescription_enmasse_io_v1beta1Implementors = []string{"CertificateProviderTypeDescription_enmasse_io_v1beta1"}
+
+func (ec *executionContext) _CertificateProviderTypeDescription_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.CertificateProviderTypeDescription) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, certificateProviderTypeDescription_enmasse_io_v1beta1Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CertificateProviderTypeDescription_enmasse_io_v1beta1")
+		case "name":
+			out.Values[i] = ec._CertificateProviderTypeDescription_enmasse_io_v1beta1_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._CertificateProviderTypeDescription_enmasse_io_v1beta1_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._CertificateProviderTypeDescription_enmasse_io_v1beta1_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var certificateSpec_enmasse_io_v1beta1Implementors = []string{"CertificateSpec_enmasse_io_v1beta1"}
 
 func (ec *executionContext) _CertificateSpec_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.CertificateSpec) graphql.Marshaler {
@@ -12105,6 +12690,43 @@ func (ec *executionContext) _Connection_consoleapi_enmasse_io_v1beta1(ctx contex
 				}
 				return res
 			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var endpointExposeTypeDescription_enmasse_io_v1beta1Implementors = []string{"EndpointExposeTypeDescription_enmasse_io_v1beta1"}
+
+func (ec *executionContext) _EndpointExposeTypeDescription_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.EndpointExposeTypeDescription) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, endpointExposeTypeDescription_enmasse_io_v1beta1Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EndpointExposeTypeDescription_enmasse_io_v1beta1")
+		case "name":
+			out.Values[i] = ec._EndpointExposeTypeDescription_enmasse_io_v1beta1_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._EndpointExposeTypeDescription_enmasse_io_v1beta1_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "description":
+			out.Values[i] = ec._EndpointExposeTypeDescription_enmasse_io_v1beta1_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -13220,6 +13842,43 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 	return out
 }
 
+var routeServicePortDescription_enmasse_io_v1beta1Implementors = []string{"RouteServicePortDescription_enmasse_io_v1beta1"}
+
+func (ec *executionContext) _RouteServicePortDescription_enmasse_io_v1beta1(ctx context.Context, sel ast.SelectionSet, obj *v1beta1.RouteServicePortDescription) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, routeServicePortDescription_enmasse_io_v1beta1Implementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RouteServicePortDescription_enmasse_io_v1beta1")
+		case "name":
+			out.Values[i] = ec._RouteServicePortDescription_enmasse_io_v1beta1_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._RouteServicePortDescription_enmasse_io_v1beta1_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "routeTlsTerminations":
+			out.Values[i] = ec._RouteServicePortDescription_enmasse_io_v1beta1_routeTlsTerminations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var user_v1Implementors = []string{"User_v1"}
 
 func (ec *executionContext) _User_v1(ctx context.Context, sel ast.SelectionSet, obj *v12.User) graphql.Marshaler {
@@ -14134,6 +14793,47 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCertificateProviderTypeDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderTypeDescription(ctx context.Context, sel ast.SelectionSet, v v1beta1.CertificateProviderTypeDescription) graphql.Marshaler {
+	return ec._CertificateProviderTypeDescription_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNCertificateProviderTypeDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderTypeDescriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []v1beta1.CertificateProviderTypeDescription) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNCertificateProviderTypeDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderTypeDescription(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalNCertificateProviderType_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐCertificateProviderType(ctx context.Context, v interface{}) (v1beta1.CertificateProviderType, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return v1beta1.CertificateProviderType(tmp), err
@@ -14216,6 +14916,47 @@ func (ec *executionContext) marshalNConnection_consoleapi_enmasse_io_v1beta12ᚖ
 		return graphql.Null
 	}
 	return ec._Connection_consoleapi_enmasse_io_v1beta1(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNEndpointExposeTypeDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐEndpointExposeTypeDescription(ctx context.Context, sel ast.SelectionSet, v v1beta1.EndpointExposeTypeDescription) graphql.Marshaler {
+	return ec._EndpointExposeTypeDescription_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNEndpointExposeTypeDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐEndpointExposeTypeDescriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []v1beta1.EndpointExposeTypeDescription) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNEndpointExposeTypeDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐEndpointExposeTypeDescription(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalNEndpointServiceType_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐEndpointServiceType(ctx context.Context, v interface{}) (v1beta1.EndpointServiceType, error) {
@@ -14848,6 +15589,134 @@ func (ec *executionContext) unmarshalNProtocol2githubᚗcomᚋenmasseprojectᚋe
 
 func (ec *executionContext) marshalNProtocol2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐProtocol(ctx context.Context, sel ast.SelectionSet, v Protocol) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNRouteServicePortDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePortDescription(ctx context.Context, sel ast.SelectionSet, v v1beta1.RouteServicePortDescription) graphql.Marshaler {
+	return ec._RouteServicePortDescription_enmasse_io_v1beta1(ctx, sel, &v)
+}
+
+func (ec *executionContext) marshalNRouteServicePortDescription_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePortDescriptionᚄ(ctx context.Context, sel ast.SelectionSet, v []v1beta1.RouteServicePortDescription) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRouteServicePortDescription_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePortDescription(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalNRouteServicePort_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePort(ctx context.Context, v interface{}) (v1beta1.RouteServicePort, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return v1beta1.RouteServicePort(tmp), err
+}
+
+func (ec *executionContext) marshalNRouteServicePort_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteServicePort(ctx context.Context, sel ast.SelectionSet, v v1beta1.RouteServicePort) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNRouteTlsTermination_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTermination(ctx context.Context, v interface{}) (v1beta1.RouteTlsTermination, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	return v1beta1.RouteTlsTermination(tmp), err
+}
+
+func (ec *executionContext) marshalNRouteTlsTermination_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTermination(ctx context.Context, sel ast.SelectionSet, v v1beta1.RouteTlsTermination) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNRouteTlsTermination_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTerminationᚄ(ctx context.Context, v interface{}) ([]v1beta1.RouteTlsTermination, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]v1beta1.RouteTlsTermination, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNRouteTlsTermination_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTermination(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNRouteTlsTermination_enmasse_io_v1beta12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTerminationᚄ(ctx context.Context, sel ast.SelectionSet, v []v1beta1.RouteTlsTermination) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNRouteTlsTermination_enmasse_io_v1beta12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1beta1ᚐRouteTlsTermination(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
