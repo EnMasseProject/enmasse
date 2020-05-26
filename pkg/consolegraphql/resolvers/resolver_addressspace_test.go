@@ -420,7 +420,7 @@ func TestCreateAddressSpace(t *testing.T) {
 	assert.Equal(t, as.Name, obj.Name)
 
 	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(as.Namespace)
-	retrieved, err := addrClient.Get(as.Name, v1.GetOptions{})
+	retrieved, err := addrClient.Get(as.Name, metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, "standard-small-queue", retrieved.Spec.Plan)
 	assert.Equal(t, 1, len(retrieved.Spec.Endpoints))
