@@ -76,6 +76,12 @@ function pre_configuration() {
     fi
     echo "export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks" >> $BROKER_CUSTOM/bin/env.sh
     echo "export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
+
+    if [ "${GLOBAL_MAX_SIZE}" == "-1" ]; then
+        CONTAINER_MEMORY=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
+        export GLOBAL_MAX_SIZE=$((${CONTAINER_MEMORY} / 4))
+    fi
+
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
     source $BROKER_CUSTOM/bin/env.sh
