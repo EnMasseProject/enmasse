@@ -14,6 +14,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag(ACCEPTANCE)
@@ -51,6 +53,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
     @AfterAll
     void uninstallMonitoring() throws Exception {
+        EnmasseOperatorManager.getInstance().removeIoT();
         EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
         kubernetes.deleteNamespace(testNamespace);
     }
@@ -75,15 +78,15 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1");
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1"));
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0");
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0"));
 
         //tests address spaces ready goes from 0 to 1
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range));
+        assertDoesNotThrow(() -> monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range)));
 
         //tests address spaces not ready goes from 1 to 0
-        monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, range -> Ordering.natural().reverse().isOrdered(range));
+        assertDoesNotThrow(() -> monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, startTs, range -> Ordering.natural().reverse().isOrdered(range)));
     }
 
     @Test
@@ -133,42 +136,69 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
         resourcesManager.setAddresses(false, topic, queue);
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "2");
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CONFIGURING_TOTAL, "2");
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "2"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CONFIGURING_TOTAL, "2"));
 
         AddressUtils.waitForDestinationsReady(topic, queue);
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2");
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2"));
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0");
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0"));
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "0",
-                Collections.singletonMap("address", queue.getSpec().getAddress()));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "0",
+                Collections.singletonMap("address", queue.getSpec().getAddress())));
 
         getClientUtils().sendDurableMessages(resourcesManager, addressSpace, user, 10, queue);
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
-                Collections.singletonMap("address", queue.getSpec().getAddress()));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
+                Collections.singletonMap("address", queue.getSpec().getAddress())));
     }
 
     @Test
     @OpenShift
     void testMonitoringCommonQueries() throws Exception {
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "standard-authservice"));
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "none-authservice"));
-
-        assertEquals(environment.enmasseVersion(), monitoring.getQueryResult(MonitoringQueries.ENMASSE_VERSION, Collections.singletonMap("name", "enmasse-operator")).getMetadataValue("version"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "standard-authservice")));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_AUTHENTICATION_SERVICE_READY, "1", Collections.singletonMap("authservice_name", "none-authservice")));
 
         kubernetes.getAddressSpacePlanClient().list().getItems().forEach(plan -> {
-            monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSSPACEPLAN_INFO, "1", Collections.singletonMap("addressspaceplan", plan.getMetadata().getName()));
+            assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSSPACEPLAN_INFO, "1", Collections.singletonMap("addressspaceplan", plan.getMetadata().getName())));
         });
 
         kubernetes.getAddressPlanClient().list().getItems().forEach(plan -> {
-            monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSPLAN_INFO, "1", Collections.singletonMap("addressplan", plan.getMetadata().getName()));
+            assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESSPLAN_INFO, "1", Collections.singletonMap("addressplan", plan.getMetadata().getName())));
         });
 
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "cr-metrics"), Map.entry("job", "enmasse-operator-metrics")));
-        monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "http-metrics"), Map.entry("job", "enmasse-operator-metrics")));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "cr-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "http-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
+
+        assertEquals(environment.enmasseVersion(), monitoring.getQueryResult(MonitoringQueries.ENMASSE_VERSION, Collections.singletonMap("name", "enmasse-operator")).getMetadataValue("version"));
+    }
+
+    @Test
+    @OpenShift
+    void testMonitoringIoTComponents() throws Exception {
+        EnmasseOperatorManager.getInstance().installIoTOperator();
+        IoTTestSession
+                .createDefault()
+                .adapters(IoTTestSession.Adapter.HTTP)
+                .config(config -> config
+                        .editOrNewSpec()
+                        .editOrNewAdapters()
+                        .editOrNewDefaults()
+                        .withMaxPayloadSize(256)
+                        .endDefaults()
+                        .endAdapters()
+                        .endSpec())
+                .run(session -> {
+                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG, "1"));
+                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG_ACTIVE, "1"));
+                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT, "1"));
+                    assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT_ACTIVE, "1"));
+                });
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_CONFIG_ACTIVE, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_IOT_PROJECT_ACTIVE, "0"));
     }
 
 }

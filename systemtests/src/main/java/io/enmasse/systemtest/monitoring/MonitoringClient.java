@@ -35,7 +35,7 @@ public class MonitoringClient {
     }
 
     public void validateQueryAndWait(String query, String expectedValue, Map<String, String> labels) {
-        TestUtils.waitUntilCondition(query, phase -> {
+        TestUtils.waitUntilCondition(String.format("Query: %s, expected value: %s", query, expectedValue), phase -> {
             try {
                 validateQuery(query, expectedValue, labels);
                 return true;
@@ -49,7 +49,7 @@ public class MonitoringClient {
     }
 
     public void validateRangeQueryAndWait(String query, Instant start, Predicate<List<String>> rangeValidator) {
-        TestUtils.waitUntilCondition(query, phase -> {
+        TestUtils.waitUntilCondition(String.format("Range query: %s, from %s to now", query, start), phase -> {
             try {
                 validateRangeQuery(query, start, query, rangeValidator);
                 return true;

@@ -18,4 +18,9 @@ public interface MonitoringQueries {
     String ENMASSE_AUTHENTICATION_SERVICE_READY = "enmasse_authentication_service_ready";
     String ENMASSE_COMPONENT_HEALTH = "enmasse_component_health";
     String ENMASSE_VERSION = "enmasse_version";
+
+    String ENMASSE_IOT_CONFIG = "enmasse_iot_configs";
+    String ENMASSE_IOT_CONFIG_ACTIVE = "enmasse_iot_configs_active";
+    String ENMASSE_IOT_PROJECT = "enmasse_iot_projects";
+    String ENMASSE_IOT_PROJECT_ACTIVE = "enmasse_iot_projects_active";
 }
