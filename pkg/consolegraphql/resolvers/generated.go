@@ -350,15 +350,17 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CloseConnections   func(childComplexity int, input []*v1.ObjectMeta) int
-		CreateAddress      func(childComplexity int, input v1beta1.Address, addressSpace *string) int
-		CreateAddressSpace func(childComplexity int, input v1beta1.AddressSpace) int
-		DeleteAddress      func(childComplexity int, input v1.ObjectMeta) int
-		DeleteAddressSpace func(childComplexity int, input v1.ObjectMeta) int
-		PatchAddress       func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
-		PatchAddressSpace  func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
-		PurgeAddress       func(childComplexity int, input v1.ObjectMeta) int
-		PurgeAddresses     func(childComplexity int, input []*v1.ObjectMeta) int
+		CloseConnections    func(childComplexity int, input []*v1.ObjectMeta) int
+		CreateAddress       func(childComplexity int, input v1beta1.Address, addressSpace *string) int
+		CreateAddressSpace  func(childComplexity int, input v1beta1.AddressSpace) int
+		DeleteAddress       func(childComplexity int, input v1.ObjectMeta) int
+		DeleteAddressSpace  func(childComplexity int, input v1.ObjectMeta) int
+		DeleteAddressSpaces func(childComplexity int, input []*v1.ObjectMeta) int
+		DeleteAddresses     func(childComplexity int, input []*v1.ObjectMeta) int
+		PatchAddress        func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
+		PatchAddressSpace   func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
+		PurgeAddress        func(childComplexity int, input v1.ObjectMeta) int
+		PurgeAddresses      func(childComplexity int, input []*v1.ObjectMeta) int
 	}
 
 	NamespaceStatusV1 struct {
@@ -478,9 +480,11 @@ type MutationResolver interface {
 	CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error)
 	PatchAddressSpace(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteAddressSpace(ctx context.Context, input v1.ObjectMeta) (*bool, error)
+	DeleteAddressSpaces(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	CreateAddress(ctx context.Context, input v1beta1.Address, addressSpace *string) (*v1.ObjectMeta, error)
 	PatchAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
+	DeleteAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	PurgeAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	PurgeAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
@@ -1684,6 +1688,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteAddressSpace(childComplexity, args["input"].(v1.ObjectMeta)), true
 
+	case "Mutation.deleteAddressSpaces":
+		if e.complexity.Mutation.DeleteAddressSpaces == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteAddressSpaces_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAddressSpaces(childComplexity, args["input"].([]*v1.ObjectMeta)), true
+
+	case "Mutation.deleteAddresses":
+		if e.complexity.Mutation.DeleteAddresses == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteAddresses_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
+
 	case "Mutation.patchAddress":
 		if e.complexity.Mutation.PatchAddress == nil {
 			break
@@ -2649,11 +2677,15 @@ input Address_enmasse_io_v1beta1_Input {
 type Mutation {
   createAddressSpace(input: AddressSpace_enmasse_io_v1beta1_Input!): ObjectMeta_v1!
   patchAddressSpace(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean
+  deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "deletes addressspace(s)"
+  deleteAddressSpaces(input: [ObjectMeta_v1_Input!]!): Boolean
 
   createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddress(input: ObjectMeta_v1_Input!): Boolean
+  deleteAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "deletes addressspace(s)"
+  deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "purges address(es)"
   purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
@@ -2885,12 +2917,40 @@ func (ec *executionContext) field_Mutation_deleteAddressSpace_args(ctx context.C
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteAddressSpaces_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*v1.ObjectMeta
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 v1.ObjectMeta
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*v1.ObjectMeta
+	if tmp, ok := rawArgs["input"]; ok {
+		arg0, err = ec.unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -8560,6 +8620,44 @@ func (ec *executionContext) _Mutation_deleteAddressSpace(ctx context.Context, fi
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_deleteAddressSpaces(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteAddressSpaces_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAddressSpaces(rctx, args["input"].([]*v1.ObjectMeta))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -8664,6 +8762,44 @@ func (ec *executionContext) _Mutation_deleteAddress(ctx context.Context, field g
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().DeleteAddress(rctx, args["input"].(v1.ObjectMeta))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteAddresses_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAddresses(rctx, args["input"].([]*v1.ObjectMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13358,6 +13494,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_patchAddressSpace(ctx, field)
 		case "deleteAddressSpace":
 			out.Values[i] = ec._Mutation_deleteAddressSpace(ctx, field)
+		case "deleteAddressSpaces":
+			out.Values[i] = ec._Mutation_deleteAddressSpaces(ctx, field)
 		case "createAddress":
 			out.Values[i] = ec._Mutation_createAddress(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -13367,6 +13505,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_patchAddress(ctx, field)
 		case "deleteAddress":
 			out.Values[i] = ec._Mutation_deleteAddress(ctx, field)
+		case "deleteAddresses":
+			out.Values[i] = ec._Mutation_deleteAddresses(ctx, field)
 		case "purgeAddress":
 			out.Values[i] = ec._Mutation_purgeAddress(ctx, field)
 		case "purgeAddresses":

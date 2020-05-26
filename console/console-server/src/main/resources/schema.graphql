@@ -544,11 +544,15 @@ input Address_enmasse_io_v1beta1_Input {
 type Mutation {
   createAddressSpace(input: AddressSpace_enmasse_io_v1beta1_Input!): ObjectMeta_v1!
   patchAddressSpace(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean
+  deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "deletes addressspace(s)"
+  deleteAddressSpaces(input: [ObjectMeta_v1_Input!]!): Boolean
 
   createAddress(input: Address_enmasse_io_v1beta1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddress(input: ObjectMeta_v1_Input!): Boolean
+  deleteAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "deletes addresss(es)"
+  deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "purges address(es)"
   purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean

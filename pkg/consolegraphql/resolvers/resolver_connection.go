@@ -168,7 +168,6 @@ func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.Obj
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
-	f := false
 	t := true
 
 	connFilter := func(obj interface{}) (bool, bool, error) {
@@ -200,35 +199,28 @@ func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.Obj
 	for _, obj := range objects {
 		con, ok := obj.(*consolegraphql.Connection)
 		if !ok {
-			return &f, fmt.Errorf("unexpected type: %T", obj)
+			return nil, fmt.Errorf("unexpected type: %T", obj)
 		}
 
-		addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", con.Namespace, con.Spec.AddressSpace), nil)
+		infraUid, e := r.GetInfraUid(con.Namespace, con.Spec.AddressSpace)
 		if e != nil {
-			return nil, e
+			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - %+v", con.Name, con.Namespace, e)
+			continue
 		}
-
-		if len(addressSpaces) == 0 {
-			return &f, fmt.Errorf("address space: '%s' not found ", con.Spec.AddressSpace)
-		}
-
-		as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
-
-		if as.ObjectMeta.Annotations == nil || as.ObjectMeta.Annotations[infraUuidAnnotation] == "" {
-			return &f, fmt.Errorf("address space: '%s' does not have expected '%s' annotation ", as.Name, infraUuidAnnotation)
-		}
-		infraUid := as.ObjectMeta.Annotations[infraUuidAnnotation]
 
 		collector := r.GetCollector(infraUid)
 		if collector == nil {
-			return &f, fmt.Errorf("cannot find collector for infraUuid '%s' (address space %s) at this time", infraUid, as.Name)
+			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
+				con.Name, con.Namespace, infraUid)
+			continue
 		}
 
 		token := requestState.UserAccessToken
 
 		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
 		if e != nil {
-			return nil, e
+			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace '%s', %+v", con.Name, con.Namespace, e)
+			continue
 		}
 
 		e = commandDelegate.CloseConnection(con.ObjectMeta)

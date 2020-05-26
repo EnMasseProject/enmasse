@@ -8,12 +8,13 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -101,7 +102,7 @@ func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.Add
 			// There might be a plan change in progress, or the user may have created a space referring to
 			// an unknown plan.
 			return &v1beta2.AddressSpacePlan{
-				ObjectMeta: v1.ObjectMeta{
+				ObjectMeta: metav1.ObjectMeta{
 					Name: addressSpacePlan,
 				},
 				Spec: v1beta2.AddressSpacePlanSpec{
@@ -218,7 +219,7 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 	return nil, nil
 }
 
-func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error) {
+func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input metav1.ObjectMeta) (string, error) {
 
 	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/"+input.Namespace+"/"+input.Name, nil)
 	if e != nil {
@@ -231,7 +232,7 @@ func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input v1.
 
 }
 
-func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*v1.ObjectMeta, error) {
+func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	nw, e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Create(&input)
@@ -241,7 +242,7 @@ func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1
 	return &nw.ObjectMeta, e
 }
 
-func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input v1.ObjectMeta, patch string, patchType string) (*bool, error) {
+func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
 	pt := types.PatchType(patchType)
 	requestState := server.GetRequestStateFromContext(ctx)
 
@@ -250,12 +251,21 @@ func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input v1.Objec
 	return &b, e
 }
 
-func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input v1.ObjectMeta) (*bool, error) {
-	requestState := server.GetRequestStateFromContext(ctx)
+func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
+	return r.DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&input})
+}
 
-	e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Delete(input.Name, &v1.DeleteOptions{})
-	b := e == nil
-	return &b, e
+func (r *mutationResolver) DeleteAddressSpaces(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
+	requestState := server.GetRequestStateFromContext(ctx)
+	t := true
+
+	for _, as := range input {
+		e := requestState.EnmasseV1beta1Client.AddressSpaces(as.Namespace).Delete(as.Name, &metav1.DeleteOptions{})
+		if e != nil {
+			graphql.AddErrorf(ctx, "failed to delete address space: '%s' in namespace: '%s', %+v", as.Name, as.Namespace, e)
+		}
+	}
+	return &t, nil
 }
 
 func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
