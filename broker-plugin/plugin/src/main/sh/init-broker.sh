@@ -79,7 +79,7 @@ function pre_configuration() {
 
     if [ "${GLOBAL_MAX_SIZE}" == "-1" ]; then
         CONTAINER_MEMORY=$(cat /sys/fs/cgroup/memory/memory.limit_in_bytes)
-        export GLOBAL_MAX_SIZE=$((${CONTAINER_MEMORY} / 4))
+        export GLOBAL_MAX_SIZE=$((${CONTAINER_MEMORY} / 8))
     fi
 
     TRUSTSTORE_PASS=enmasse
