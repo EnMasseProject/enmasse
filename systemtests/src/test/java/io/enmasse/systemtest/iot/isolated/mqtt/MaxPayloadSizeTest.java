@@ -26,9 +26,10 @@ public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
         return Adapter.MQTT;
     }
 
+    @SuppressWarnings("resource")
     @Override
     protected Sender sender(Device device) throws Exception {
-        return device.createMqttAdapterClient()::sendQos1;
+        return cleanup(device.createMqttAdapterClient())::sendQos1;
     }
 
 }

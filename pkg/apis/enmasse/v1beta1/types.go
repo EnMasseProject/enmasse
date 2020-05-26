@@ -98,27 +98,69 @@ type AddressSpaceSpec struct {
 	Connectors []ConnectorSpec `json:"connectors,omitempty"`
 }
 
+type EndpointServiceType string
+
+const (
+	EndpointServiceTypeMessaging EndpointServiceType = "messaging"
+	EndpointServiceTypeMqtt      EndpointServiceType = "mqtt"
+	EndpointServiceTypeConsole   EndpointServiceType = "console"
+)
+
 type EndpointSpec struct {
-	Name        string           `json:"name"`
-	Service     string           `json:"service"`
+	Name    string              `json:"name"`
+	Service EndpointServiceType `json:"service"`
+
 	Certificate *CertificateSpec `json:"cert,omitempty"`
 	Expose      *ExposeSpec      `json:"expose,omitempty"`
 }
 
+type CertificateProviderType string
+
+const (
+	CertificateProviderTypeWildcard       CertificateProviderType = "wildcard"
+	CertificateProviderTypeCertBundle     CertificateProviderType = "certBundle"
+	CertificateProviderTypeCertOpenshift  CertificateProviderType = "openshift"
+	CertificateProviderTypeCertSelfsigned CertificateProviderType = "selfsigned"
+)
+
 type CertificateSpec struct {
-	Provider   string `json:"provider"`
-	SecretName string `json:"secretName,omitempty"`
+	Provider   CertificateProviderType `json:"provider"`
+	SecretName string                  `json:"secretName,omitempty"`
+	TlsKey     []byte                  `json:"tlsKey,omitempty"`
+	TlsCert    []byte                  `json:"tlsCert,omitempty"`
 }
 
-type ExposeSpec struct {
-	Type                string `json:"type"`
+type ExposeType string
 
-	RouteHost           string `json:"routeHost"`
-	RouteServicePort    string `json:"routeServicePort"`
-	RouteTlsTermination string `json:"routeTlsTermination"`
+const (
+	ExposeTypeRoute        ExposeType = "route"
+	ExposeTypeLoadBalancer ExposeType = "loadbalancer"
+)
+
+type RouteServicePort string
+
+const (
+	RouteServicePortAmqps      RouteServicePort = "amqps"
+	RouteServicePortHttps      RouteServicePort = "https"
+	RouteServicePortSecureMqtt RouteServicePort = "secure_mqtt"
+)
+
+type RouteTlsTermination string
+
+const (
+	RouteTlsTerminationPassthrough RouteTlsTermination = "passthrough"
+	RouteTlsTerminationReencrypt   RouteTlsTermination = "reencrypt"
+)
+
+type ExposeSpec struct {
+	Type ExposeType `json:"type"`
+
+	RouteHost           string              `json:"routeHost"`
+	RouteServicePort    RouteServicePort    `json:"routeServicePort"`
+	RouteTlsTermination RouteTlsTermination `json:"routeTlsTermination"`
 
 	LoadBalancerPorts        []string `json:"loadBalancerPorts"`
-	LoadBalancerSourceRanges []string `json:"LoadBalancerSourceRanges"`
+	LoadBalancerSourceRanges []string `json:"loadBalancerSourceRanges"`
 }
 
 type ConnectorSpec struct {

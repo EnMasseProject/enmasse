@@ -473,12 +473,15 @@ function scheduleSetAddressSpaceStatus(addressSpace, phase, messages) {
   return new Promise((resolve) => {
     setTimeout(() => {
 
-      addressSpace.status = {
-        isReady: phase === "Active",
-        messages: messages,
-        phase: phase,
-        endpointStatuses: phase === "Active" ? createEndpointStatuses(addressSpace) : []
-      };
+      if (!addressSpace.status) {
+        addressSpace.status = {};
+      }
+
+      addressSpace.status.idReady = phase === "Active";
+      addressSpace.status.messages = messages;
+      addressSpace.status.phase = phase;
+      addressSpace.status.endpointStatus = phase === "Active" ?  createEndpointStatuses(addressSpace) : [];
+
       if (phase !== "Active") {
         scheduleSetAddressSpaceStatus(addressSpace, "Active", []);
       } else {
@@ -542,6 +545,32 @@ function createAddressSpace(as) {
 
         }
       }
+
+      if (ep.certificate) {
+        if (ep.certificate.provider) {
+          if (ep.certificate.provider !== 'selfsigned' && ep.certificate.provider !== 'certBundle' && ep.certificate.provider !== 'openshift') {
+            throw `Unrecognised endpoint cert provider '${ep.certificate.provider}', known ones are : selfsigned, certBundle, or openshift`;
+          }
+          if (ep.certificate.provider === 'certBundle') {
+            function validBase64(str) {
+              return Buffer.from(str, 'base64').toString('base64') === str;
+            }
+            if (!ep.certificate.tlsKey) {
+              throw `Endpoint cert provider '${ep.certificate.provider}' requires 'cert.tlsKey' field.`;
+            }
+            if (!validBase64(ep.certificate.tlsKey)) {
+              throw `Endpoint cert provider '${ep.certificate.provider}' requires 'cert.tlsKey' to be valid base64.`;
+            }
+
+            if (!ep.certificate.tlsCert) {
+              throw `Endpoint cert provider '${ep.certificate.provider}' requires 'cert.tlsCert' field.`;
+            }
+            if (!validBase64(ep.certificate.tlsCert)) {
+              throw `Endpoint cert provider '${ep.certificate.provider}' requires 'cert.tlsCert' to be valid base64.`;
+            }
+          }
+        }
+      }
     });
 
   }
@@ -581,7 +610,7 @@ function createAddressSpace(as) {
 function createDefaultEndpoints() {
   return [
     {
-      "cert": {
+      "certificate": {
         "provider": "selfsigned",
       },
       "expose": {
@@ -593,7 +622,7 @@ function createDefaultEndpoints() {
       "service": "messaging"
     },
     {
-      "cert": {
+      "certificate": {
         "provider": "selfsigned",
       },
       "expose": {
@@ -615,6 +644,64 @@ function createEndpointStatuses(addressSpace) {
     var endpointStatus = {
       name: e.name,
     };
+
+    if (!e.certificate) {
+      e.certificate = { provider: "selfsigned" };
+    } else if (!e.certificate.provider) {
+      e.certificate.provider = "selfsigned";
+    }
+
+    if (e.certificate.provider === "certBundle") {
+      endpointStatus.certificate = e.certificate.tlsCert;
+    } else {
+      endpointStatus.certificate = `
+----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIUSBUjPhOi9/v+7QezYF/scX+tH3IwDQYJKoZIhvcNAQEL
+BQAwQjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0eTEcMBoGA1UE
+CgwTRGVmYXVsdCBDb21wYW55IEx0ZDAgFw0yMDA1MjIwODQxNTJaGA8yMDUwMDcw
+NDA4NDE1MlowRjETMBEGA1UECgwKaW8uZW5tYXNzZTEvMC0GA1UEAwwmbWVzc2Fn
+aW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5zdmMwggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQDK9JHlyeZt+WRfO7jxL5vMykIjNoC8TbrENXWA+y6E
+E4XBiJ8tWpfwWM8uFYiJeaoFeqCzjSuFnTgU/bkgKdlp5PDsZFBUOlmYH0U7tbwK
+GJedimNHquZSgGT5m4wL+5VxnHWEShn/y+4YuhnwYQBjm5zKWy9mufNuwpWYBLzJ
+Ii7E1SxjJpeD+VkakSbf8fE6QZTw4KWkfq4iuU3IevaViZZYBF7MhKQu2+JXrZnK
+ydfrCIL4HjP7Vy9ZGRsG7OJ2++VD9X17qHyChnRuOv0nHCS8LfceNEw08UuS+Kg3
+n2jYKByxPNpOZxkl+TLazSwZ3yA0cJtrs/PuwrMzhcWnAgMBAAGjgZYwgZMwgZAG
+A1UdEQSBiDCBhYImbWVzc2FnaW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5z
+dmOCM21lc3NhZ2luZy1xdWV1ZXNwYWNlLWVubWFzc2UtaW5mcmEuYXBwcy1jcmMu
+dGVzdGluZ4ImbWVzc2FnaW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5zdmMw
+DQYJKoZIhvcNAQELBQADggEBAJv5Qfhi0pLJJK4Y9go1sXF0x1YcnU5zd9Aur7aP
+0BpdZhHpiLoXuP3Um5WIMXZw1tF4H7yisb4yZTPG+vHOI3W1JzLp1sxDQC48rbAf
+vWRM3ZqORjeaBNppdsSsEecUq/6VPTmmnnxgEj4NMUaL/sKDgjoZT1alkwfk+s6v
+QzMugsw71TgwnpWtpOxHIhQuSxkIyNBHswNTq+js8I1RVqBJiwMKhsOMCssbyCaq
+iuQC6VD1peb6Eby7JeDQjPrBmJnInuBNfLlDq0jgxZB/6kLfhug8dPc7v5TSPV9E
+37Bon8FHRQit5qZNw/AGSzcPXMUeBG3pUOCuAZ5/yU7X0fc=
+-----END CERTIFICATE-----`
+      if (e.certificate.provider === "selfsigned") {
+        addressSpace.status.caCertificate =
+            `-----BEGIN CERTIFICATE-----
+MIIDZzCCAk+gAwIBAgIUdLEKQr2fin9g5ZI+Fr5GOyvWNtowDQYJKoZIhvcNAQEL
+BQAwQjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0eTEcMBoGA1UE
+CgwTRGVmYXVsdCBDb21wYW55IEx0ZDAgFw0yMDA1MjIwODQxNTJaGA8yMDUwMDcw
+NDA4NDE1MlowQjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0eTEc
+MBoGA1UECgwTRGVmYXVsdCBDb21wYW55IEx0ZDCCASIwDQYJKoZIhvcNAQEBBQAD
+ggEPADCCAQoCggEBAOdye+zIiD7PuWjzehyhIXtPyOq3isnPRIg8Y+CMXdlsWZFK
+Tx6KTqRvycOQoZLqy16eiYTA3i7QU1TljX/jzylXZ0ZfRRWG2iVfcl88H9HwP6bS
+e61rR3h8UvBFizvsCVWVa95wSv1pWO9kORInERQBsNaFOiA3WDA97X0ujN1AxzAX
+VxNzU/SmR3NyQvKqL0z6YBCL7kK+gMW5UmJwvWw5EKQAo0jZKecBtOMQOo0dMCbj
+fORWIBCaENu+05ufvGC4Og4OCnoJRaMIru9BeRkHhBgcIdzkDlH2CJxjaPAFZ7dW
+zj5eo+FAxb5QFy18F5ZyMtRNQb+dlglpMtf7zB0CAwEAAaNTMFEwHQYDVR0OBBYE
+FGU2LfUON9+IN8lE2J6J6/9X3usuMB8GA1UdIwQYMBaAFGU2LfUON9+IN8lE2J6J
+6/9X3usuMA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBADPtJccg
+tvfDE02RGVMuQMQ+PKCqZJCjHIWp1rVR5jHS4smuHKAhCYLHXUTRWGfzzcXnbCOB
+oJ8N8wzCSLTqscuiEUTQTspxJPPXMxR6ETiktszDEI1KYuk233CWxIuc6VuNkbVI
+X7vvR7CYfopRzwKT8k8BqncQl3MTK/80/So+afYA+vCrobTNhYDiiPaDUFqchSby
+rGcfstMRWL5xxzDG+kgP2ArW72ZrlDjemscN4mUx0IDyEDuMyaX29uKF/MEE0YNx
+Mai51vfoGPbivv+DrqQ08OLx9BqyxptjGijKMa7UwAy/g70RXDICoyFFX9avW5Yv
+s5YkUqynapz1Meo=
+-----END CERTIFICATE-----`
+      }
+    }
 
     if (e.expose) {
       if (e.expose.type === "route") {
@@ -684,8 +771,8 @@ function makeMessagingEndpoints() {
     var serviceAdded = false;
     as.spec.endpoints.forEach((ep) => {
 
-      var endpointStatus = as.status && as.status.endpointStatuses ?
-          as.status.endpointStatuses.find(eps => eps.name === ep.name) : null;
+      var endpointStatus = as.status && as.status.endpointStatus ?
+          as.status.endpointStatus.find(eps => eps.name === ep.name) : null;
 
 
       if (ep.service && !serviceAdded) {

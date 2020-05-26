@@ -8,7 +8,6 @@ import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.manager.IsolatedResourcesManager;
 import io.enmasse.systemtest.manager.ResourceManager;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 
 
 public interface ITestIsolatedSharedInfra extends ITestBase {
@@ -17,10 +16,6 @@ public interface ITestIsolatedSharedInfra extends ITestBase {
 
     default AmqpClientFactory getAmqpClientFactory() {
         return isolatedResourcesManager.getAmqpClientFactory();
-    }
-
-    default MqttClientFactory getMqttClientFactory() {
-        return isolatedResourcesManager.getMqttClientFactory();
     }
 
     @Override

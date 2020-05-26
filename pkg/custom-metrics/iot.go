@@ -12,85 +12,85 @@ import (
 
 var (
 
-	//region IoTConfig
+	// region IoTConfig
 
 	IoTConfig = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_configs",
+			Name:        "iot_configs",
 			Help:        "Number of IoT Configs",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTConfigActive = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_configs_active",
+			Name:        "iot_configs_active",
 			Help:        "Number of IoT Configs with status 'active'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTConfigConfiguring = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_configs_configuring",
+			Name:        "iot_configs_configuring",
 			Help:        "Number of IoT Configs with status 'configuring'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTConfigTerminating = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_configs_terminating",
+			Name:        "iot_configs_terminating",
 			Help:        "Number of IoT Configs with status 'terminating'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTConfigFailed = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_configs_failed",
+			Name:        "iot_configs_failed",
 			Help:        "Number of IoT Configs with status 'failed'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 
-	//endregion
+	// endregion
 
-	//region IoTProject
+	// region IoTProject
 
 	IoTProject = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_projects",
+			Name:        "iot_projects",
 			Help:        "Number of IoT Projects",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTProjectActive = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_projects_active",
+			Name:        "iot_projects_active",
 			Help:        "Number of IoT Projects with status 'active'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTProjectConfiguring = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_projects_configuring",
+			Name:        "iot_projects_configuring",
 			Help:        "Number of IoT Projects with status 'configuring'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTProjectTerminating = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_projects_terminating",
+			Name:        "iot_projects_terminating",
 			Help:        "Number of IoT Projects with status 'terminating'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 	IoTProjectFailed = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "enmasse_iot_projects_failed",
+			Name:        "iot_projects_failed",
 			Help:        "Number of IoT Projects with status 'failed'",
 			ConstLabels: defaultLabels(),
 		},
 	)
 
-	//endregion
+	// endregion
 
 )
 

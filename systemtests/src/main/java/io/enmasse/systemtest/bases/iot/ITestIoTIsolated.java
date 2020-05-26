@@ -4,6 +4,8 @@
  */
 package io.enmasse.systemtest.bases.iot;
 
+import org.junit.jupiter.api.Tag;
+
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.ITestBase;
@@ -11,8 +13,6 @@ import io.enmasse.systemtest.manager.IsolatedIoTManager;
 import io.enmasse.systemtest.manager.ResourceManager;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import org.junit.jupiter.api.Tag;
 
 @Tag(TestTag.ISOLATED_IOT)
 public interface ITestIoTIsolated extends ITestIoTBase, ITestBase {
@@ -21,10 +21,6 @@ public interface ITestIoTIsolated extends ITestIoTBase, ITestBase {
 
     default AmqpClientFactory getAmqpClientFactory() {
         return isolatedIoTManager.getAmqpClientFactory();
-    }
-
-    default MqttClientFactory getMqttClientFactory() {
-        return isolatedIoTManager.getMqttClientFactory();
     }
 
     @Override

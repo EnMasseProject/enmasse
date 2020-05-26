@@ -7,6 +7,7 @@ package state
 
 import (
 	"context"
+	"crypto/tls"
 	"testing"
 	"time"
 
@@ -26,14 +27,14 @@ func (t *testClock) Now() time.Time {
 func TestUpdateRouters(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
-	i := NewInfra(func(host Host, port int32) *RouterState {
+	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
 		return &RouterState{
 			host:          host,
 			port:          port,
 			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
 			commandClient: rclient,
 		}
-	}, func(host Host, port int32) *BrokerState {
+	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
@@ -55,14 +56,14 @@ func TestUpdateRouters(t *testing.T) {
 func TestUpdateBrokers(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
-	i := NewInfra(func(host Host, port int32) *RouterState {
+	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
 		return &RouterState{
 			host:          host,
 			port:          port,
 			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
 			commandClient: rclient,
 		}
-	}, func(host Host, port int32) *BrokerState {
+	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
@@ -105,14 +106,14 @@ func assertBroker(t *testing.T, i *infraClient, host string, ip string) {
 func TestSyncConnectors(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
-	i := NewInfra(func(host Host, port int32) *RouterState {
+	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
 		return &RouterState{
 			host:          host,
 			port:          port,
 			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
 			commandClient: rclient,
 		}
-	}, func(host Host, port int32) *BrokerState {
+	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
@@ -143,7 +144,7 @@ func TestSyncConnectors(t *testing.T) {
 
 	statuses, err := i.SyncAll(
 		[]Host{{"r1.example.com", "10.0.0.1"}, {"r2.example.com", "10.0.0.2"}},
-		[]Host{{"b1.example.com", "10.0.0.3"}, {"b2.example.com", "10.0.0.4"}})
+		[]Host{{"b1.example.com", "10.0.0.3"}, {"b2.example.com", "10.0.0.4"}}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(i.routers[Host{"r1.example.com", "10.0.0.1"}].entities[RouterConnectorEntity]))
 	assert.Equal(t, 2, len(i.routers[Host{"r2.example.com", "10.0.0.2"}].entities[RouterConnectorEntity]))

@@ -25,7 +25,7 @@ func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
-	clientset := fake.NewSimpleClientset(&v1beta1.Address{})
+	clientset := fake.NewSimpleClientset(&v1beta1.AddressSpace{})
 
 	resolver := Resolver{}
 	resolver.Cache = objectCache
@@ -129,7 +129,7 @@ func TestQueryAddressSpaceConnections(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
-	// Different addresspace, should not be found
+	// Different address space, should not be found
 	con2 := createConnection("host:1234", namespace, "myaddressspace1")
 	err := r.Cache.Add(con1, con2)
 	assert.NoError(t, err)
@@ -267,7 +267,7 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 
 func TestQueryAddressSpaceCommand(t *testing.T) {
 	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("mynamespace", "myaddressspace")
+	as := createAddressSpace("myaddressspace", "mynamespace")
 	auth := "auth"
 	as.Spec = v1beta1.AddressSpaceSpec{
 		AuthenticationService: &v1beta1.AuthenticationService{
@@ -279,14 +279,65 @@ func TestQueryAddressSpaceCommand(t *testing.T) {
 	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
 	assert.NoError(t, err)
 
-	assert.NoError(t, err)
 	expectedMetaData := `kind: AddressSpace
 metadata:
-  name: mynamespace`
+  name: myaddressspace`
 	expectedSpec := `
 spec:
   authenticationService:
     name: auth
+  plan: standard-small-queue
+  type: queue`
+	assert.Contains(t, obj, expectedMetaData, "Expect name and namespace to be set")
+	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
+}
+
+func TestQueryAddressSpaceCommandWithEndpoint(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	as := createAddressSpace("myaddressspace", "mynamespace")
+	auth := "auth"
+	as.Spec = v1beta1.AddressSpaceSpec{
+		Plan: "standard-small-queue",
+		Type: "queue",
+		AuthenticationService: &v1beta1.AuthenticationService{
+			Name: auth,
+		},
+		Endpoints: []v1beta1.EndpointSpec{
+			{
+				Name:    "myendpoint",
+				Service: v1beta1.EndpointServiceTypeMessaging,
+				Certificate: &v1beta1.CertificateSpec{
+					Provider: v1beta1.CertificateProviderTypeCertSelfsigned,
+				},
+				Expose: &v1beta1.ExposeSpec{
+					Type:                v1beta1.ExposeTypeRoute,
+					RouteHost:           "myhost.example.com",
+					RouteServicePort:    v1beta1.RouteServicePortAmqps,
+					RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
+				},
+			},
+		},
+	}
+	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
+	assert.NoError(t, err)
+
+	expectedMetaData := `kind: AddressSpace
+metadata:
+  name: myaddressspace`
+	expectedSpec := `
+spec:
+  authenticationService:
+    name: auth
+  endpoints:
+  - cert:
+      provider: selfsigned
+    expose:
+      routeHost: myhost.example.com
+      routeServicePort: amqps
+      routeTlsTermination: passthrough
+      type: route
+    name: myendpoint
+    service: messaging
   plan: standard-small-queue
   type: queue`
 	assert.Contains(t, obj, expectedMetaData, "Expect name and namespace to be set")
@@ -335,4 +386,45 @@ func TestDeleteAddressSpacesOneAddressSpaceNotFound(t *testing.T) {
 	list, err := addrClient.List(metav1.ListOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(list.Items))
+}
+
+func TestCreateAddressSpace(t *testing.T) {
+	r, ctx := newTestAddressSpaceResolver(t)
+	as := createAddressSpace("myaddressspace", "mynamespace")
+	auth := "auth"
+	as.Spec = v1beta1.AddressSpaceSpec{
+		Plan: "standard-small-queue",
+		Type: "queue",
+		AuthenticationService: &v1beta1.AuthenticationService{
+			Name: auth,
+		},
+		Endpoints: []v1beta1.EndpointSpec{
+			{
+				Name:    "myendpoint",
+				Service: v1beta1.EndpointServiceTypeMessaging,
+				Certificate: &v1beta1.CertificateSpec{
+					Provider: v1beta1.CertificateProviderTypeCertSelfsigned,
+				},
+				Expose: &v1beta1.ExposeSpec{
+					Type:                v1beta1.ExposeTypeRoute,
+					RouteHost:           "myhost.example.com",
+					RouteServicePort:    v1beta1.RouteServicePortAmqps,
+					RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
+				},
+			},
+		},
+	}
+	obj, err := r.Mutation().CreateAddressSpace(ctx, as.AddressSpace)
+	assert.NoError(t, err)
+	assert.Equal(t, as.Namespace, obj.Namespace)
+	assert.Equal(t, as.Name, obj.Name)
+
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(as.Namespace)
+	retrieved, err := addrClient.Get(as.Name, v1.GetOptions{})
+	assert.NoError(t, err)
+	assert.Equal(t, "standard-small-queue", retrieved.Spec.Plan)
+	assert.Equal(t, 1, len(retrieved.Spec.Endpoints))
+	assert.Equal(t, "myendpoint", retrieved.Spec.Endpoints[0].Name)
+	assert.NotNil(t, retrieved.Spec.Endpoints[0].Expose)
+	assert.Equal(t, v1beta1.ExposeTypeRoute, retrieved.Spec.Endpoints[0].Expose.Type)
 }

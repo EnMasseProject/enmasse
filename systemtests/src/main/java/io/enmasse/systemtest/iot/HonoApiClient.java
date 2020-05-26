@@ -1,11 +1,20 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.systemtest.iot;
 
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+
 import com.google.common.net.HttpHeaders;
+
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -15,13 +24,6 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
-import org.slf4j.Logger;
-
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public abstract class HonoApiClient extends ApiClient {
 
@@ -32,8 +34,8 @@ public abstract class HonoApiClient extends ApiClient {
     }
 
     @Override
-    protected void connect() {
-        this.client = WebClient.create(vertx, new WebClientOptions()
+    protected WebClient createClient () {
+        return WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
                 .setVerifyHost(false));
@@ -42,7 +44,7 @@ public abstract class HonoApiClient extends ApiClient {
     protected HttpResponse<Buffer> execute (final HttpMethod method, final String requestPath, final String body) throws Exception {
         final CompletableFuture<HttpResponse<Buffer>> responsePromise = new CompletableFuture<>();
         log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
-        client.request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
+        getClient().request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
@@ -72,7 +74,7 @@ public abstract class HonoApiClient extends ApiClient {
     protected Buffer execute (final HttpMethod method, final String requestPath, final String body, int expectedStatusCode, String failureMessage) throws Exception {
         final CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
         log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
-        client.request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
+        getClient().request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
             .putHeader(HttpHeaders.AUTHORIZATION, authzString)

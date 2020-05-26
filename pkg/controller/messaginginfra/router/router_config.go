@@ -72,7 +72,7 @@ func generateConfig(router *v1beta2.MessagingInfrastructureSpecRouter) routerCon
 				"listener",
 				map[string]interface{}{
 					"name":             "local-management",
-					"host":             "0.0.0.0",
+					"host":             "127.0.0.1",
 					"port":             7777,
 					"authenticatePeer": false,
 				},

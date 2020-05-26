@@ -105,6 +105,7 @@ type MessagingInfrastructureConditionType string
 const (
 	MessagingInfrastructureReady            MessagingInfrastructureConditionType = "Ready"
 	MessagingInfrastructureCaCreated        MessagingInfrastructureConditionType = "CaCreated"
+	MessagingInfrastructureCertCreated      MessagingInfrastructureConditionType = "CertCreated"
 	MessagingInfrastructureBrokersCreated   MessagingInfrastructureConditionType = "BrokersCreated"
 	MessagingInfrastructureRoutersCreated   MessagingInfrastructureConditionType = "RoutersCreated"
 	MessagingInfrastructureSynchronized     MessagingInfrastructureConditionType = "Synchronized"

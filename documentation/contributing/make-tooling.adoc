@@ -8,8 +8,8 @@ Make is a useful tool for building your documentation and pushing it to a public
 == Make commands to build documentation
 
 `make clean`:: Delete all temporary files
-`make check`:: Execute the custom checks in `.travis/check_docs.sh`
-`make build`:: Build the docs using asciidoc, including the generated documentation
-`make publish`:: Build the docs via `make build` and publish them using `rsync`. The publish destination is configured via a `Makefile.publish` (not included in this PR; provided by each user so they can publish to their own location). The `Makefile.publish` needs to configure a single `PUBLISH_DEST` variable which is the remote directory (`<host>:<dir>`) to copy the generated docs to.
+`make check`:: Execute the custom checks in `scripts/check_docs.sh`
+`make`:: Build the docs using asciidoc, including the generated documentation
+`make publish`:: Build the docs via `make build` and publish them using `rsync`. The publish destination is configured via the PUBLISH_DEST parameter.
 
-See the output in your browser at file in your project directory at: `documentation/html/index.html`
+See the output in your browser at file in your project directory at: `documentation/target/generated-docs/html/kuberneges-guide.html`

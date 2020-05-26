@@ -7,6 +7,7 @@ package state
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -22,18 +23,25 @@ import (
 const brokerCommandAddress = "activemq.management"
 const brokerCommandResponseAddress = "activemq.management_broker_command_response"
 
-func NewBrokerState(host Host, port int32) *BrokerState {
+func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
+	opts := make([]amqp.ConnOption, 0)
+	opts = append(opts, amqp.ConnConnectTimeout(10*time.Second))
+	opts = append(opts, amqp.ConnProperty("product", "controller-manager"))
+
+	if tlsConfig != nil {
+		opts = append(opts, amqp.ConnSASLExternal())
+		opts = append(opts, amqp.ConnTLS(true))
+		opts = append(opts, amqp.ConnTLSConfig(tlsConfig))
+	}
 	state := &BrokerState{
 		Host:        host,
 		Port:        port,
 		initialized: false,
 		queues:      make(map[string]bool),
-		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqp://%s:%d", host.Ip, 5672),
+		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
 			brokerCommandAddress,
 			brokerCommandResponseAddress,
-			amqp.ConnSASLPlain("admin", "admin"),
-			amqp.ConnConnectTimeout(10*time.Second),
-			amqp.ConnProperty("product", "controller-manager")),
+			opts...),
 	}
 	state.commandClient.Start()
 	state.reconnectCount = state.commandClient.ReconnectCount()

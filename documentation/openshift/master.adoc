@@ -1,11 +1,10 @@
 
 include::common/attributes.adoc[]
 
-:BookNameUrl: /openshift/
+:BookNameUrl: /openshift.html
 
 :parent-context: messaging
 :context: messaging
-:imagesdir: ../openshift/images
 :cmdcli: oc
 :KubePlatform: OpenShift
 :KubePlatformCredentials: OpenShift
@@ -52,6 +51,7 @@ include::modules/ref-standard-infra-config-fields.adoc[leveloffset=+1]
 == REST API reference
 
 include::common/restapi-reference.adoc[leveloffset=+2]
+include::common/device-management-reference.adoc[leveloffset=+2]
 
 // Revision information
 //include::common/revision-info.adoc[]

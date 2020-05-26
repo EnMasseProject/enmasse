@@ -1,13 +1,14 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.iot.model.v1;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -22,8 +23,6 @@ import io.sundr.builder.annotations.Inline;
                 value = "done"
                 )
         )
-//FIXME: implement missing fields and remove ignore annotation
-@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTProjectStatus {
 
@@ -31,6 +30,9 @@ public class IoTProjectStatus {
     private ExternalDownstreamStrategy downstreamEndpoint;
     private List<ProjectCondition> conditions;
     private String phase;
+    private String phaseReason;
+    private AcceptedStatus accepted;
+    private ManagedStatus managed;
 
     public String getTenantName() {
         return tenantName;
@@ -62,6 +64,30 @@ public class IoTProjectStatus {
 
     public String getPhase() {
         return phase;
+    }
+
+    public void setPhaseReason(String phaseReason) {
+        this.phaseReason = phaseReason;
+    }
+
+    public String getPhaseReason() {
+        return phaseReason;
+    }
+
+    public void setAccepted(AcceptedStatus accepted) {
+        this.accepted = accepted;
+    }
+
+    public AcceptedStatus getAccepted() {
+        return accepted;
+    }
+
+    public void setManaged(ManagedStatus managed) {
+        this.managed = managed;
+    }
+
+    public ManagedStatus getManaged() {
+        return managed;
     }
 
 }

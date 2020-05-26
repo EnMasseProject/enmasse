@@ -1,11 +1,10 @@
 
 include::common/attributes.adoc[]
 
-:BookNameUrl: /kubernetes/
+:BookNameUrl: /kubernetes.html
 
 :parent-context: messaging
 :context: messaging
-:imagesdir: ../kubernetes/images
 :cmdcli: kubectl
 :KubePlatform: Kubernetes
 :KubePlatformCredentials: OIDC
@@ -51,6 +50,7 @@ include::modules/ref-standard-infra-config-fields.adoc[leveloffset=+1]
 == REST API reference
 
 include::common/restapi-reference.adoc[leveloffset=+2]
+include::common/device-management-reference.adoc[leveloffset=+2]
 
 // Revision information
 //include::common/revision-info.adoc[]

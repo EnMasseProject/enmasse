@@ -19,7 +19,7 @@ jobs:
     env:
       DOCKER_REGISTRY: "quay.io"
       TAG: "latest"
-      RELEASE: true
+      PUSH_REGISTRY: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -52,10 +52,6 @@ jobs:
         with:
           java-version: 11.0.2
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6
-
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
 
@@ -75,10 +71,18 @@ jobs:
         if: failure()
         run: ./.github/scripts/collectLogs.sh
 
+      - name: Publish documentation
+        env:
+          FROM: .
+          TO: website
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: ./.github/scripts/publish_docs.sh
+
       - name: Upload artifacts
         if: failure()
         uses: actions/upload-artifact@v1.0.0
         with:
           name: smoke-test-logs
           path: test-logs.zip
+
 

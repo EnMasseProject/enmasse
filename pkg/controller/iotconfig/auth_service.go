@@ -28,13 +28,14 @@ const nameAuthService = "iot-auth-service"
 
 func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
-	configCtx := cchange.NewRecorder()
+	service := config.Spec.ServicesConfig.Authentication
 
 	rc := &recon.ReconcileContext{}
+	change := cchange.NewRecorder()
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameAuthService+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileAuthServiceConfigMap(config, configMap, configCtx)
+			return r.reconcileAuthServiceConfigMap(config, service, configMap, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -42,7 +43,7 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 	})
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameAuthService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileAuthServiceDeployment(config, deployment, configCtx)
+			return r.reconcileAuthServiceDeployment(config, deployment, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -52,12 +53,12 @@ func (r *ReconcileIoTConfig) processAuthService(ctx context.Context, config *iot
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	service := config.Spec.ServicesConfig.Authentication
-	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, configCtx)
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, change)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "auth-service", func(container *corev1.Container) error {
@@ -112,7 +113,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 
 		// apply container options
 
-		applyContainerConfig(container, service.Container)
+		applyContainerConfig(container, service.Container.ContainerConfig)
 
 		// return
 
@@ -170,7 +171,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceService(config *iotv1alpha1.IoT
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.IoTConfig, service iotv1alpha1.AuthenticationServiceConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -180,9 +181,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceConfigMap(config *iotv1alpha1.I
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -215,8 +214,7 @@ hono:
 
 	// record for config hash
 
-	configCtx.AddString(configMap.Data["application.yml"])
-	configCtx.AddString(configMap.Data["permissions.json"])
+	configCtx.AddStringsFromMap(configMap.Data, "application.yml", "permissions.json", "logback-spring.xml")
 
 	return nil
 }

@@ -39,8 +39,8 @@ type MessagingTenantStatus struct {
 	Phase   MessagingTenantPhase `json:"phase,omitempty"`
 	Message string               `json:"message,omitempty"`
 	// MessagingInfra this tenant is bound to.
-	MessagingInfrastructureRef *MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
-	Conditions                 []MessagingTenantCondition        `json:"conditions,omitempty"`
+	MessagingInfrastructureRef MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
+	Conditions                 []MessagingTenantCondition       `json:"conditions,omitempty"`
 }
 
 type MessagingTenantCondition struct {

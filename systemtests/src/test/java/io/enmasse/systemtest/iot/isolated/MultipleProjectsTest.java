@@ -18,7 +18,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +31,6 @@ import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.iot.ITestIoTIsolated;
@@ -106,23 +104,25 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
     void testMultipleProjects() throws Exception {
 
         for (final IoTProjectTestContext ctx : projects) {
-            new MessageSendTester()
-                    .type(MessageSendTester.Type.TELEMETRY)
-                    .delay(Duration.ofSeconds(1))
-                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
-                    .sender(ctx.getHttpAdapterClient()::send)
-                    .amount(50)
-                    .consume(MessageSendTester.Consume.BEFORE)
-                    .execute();
+            try (var http = ctx.getHttpAdapterClient()) {
+                new MessageSendTester()
+                        .type(MessageSendTester.Type.TELEMETRY)
+                        .delay(Duration.ofSeconds(1))
+                        .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
+                        .sender(http::send)
+                        .amount(50)
+                        .consume(MessageSendTester.Consume.BEFORE)
+                        .execute();
 
-            new MessageSendTester()
-                    .type(MessageSendTester.Type.EVENT)
-                    .delay(Duration.ofMillis(100))
-                    .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
-                    .sender(ctx.getHttpAdapterClient()::send)
-                    .amount(5)
-                    .consume(MessageSendTester.Consume.AFTER)
-                    .execute();
+                new MessageSendTester()
+                        .type(MessageSendTester.Type.EVENT)
+                        .delay(Duration.ofMillis(100))
+                        .consumerFactory(ConsumerFactory.of(ctx.getAmqpClient(), IoTUtils.getTenantId(ctx.getProject())))
+                        .sender(http::send)
+                        .amount(5)
+                        .consume(MessageSendTester.Consume.AFTER)
+                        .execute();
+            }
         }
 
     }
@@ -189,15 +189,15 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         credentialsClient.addCredentials(tenant, ctx.getDeviceId(), ctx.getDeviceAuthId(), ctx.getDevicePassword(), null, HttpURLConnection.HTTP_NO_CONTENT);
         Endpoint httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         ctx.setHttpAdapterClient(new HttpAdapterClient(httpAdapterEndpoint, ctx.getDeviceAuthId(), tenant, ctx.getDevicePassword()));
-        MqttConnectOptions mqttOptions = new MqttConnectOptions();
-        mqttOptions.setAutomaticReconnect(true);
-        mqttOptions.setConnectionTimeout(60);
-        mqttOptions.setHttpsHostnameVerificationEnabled(false);
-        IMqttClient mqttAdapterClient = new MqttClientFactory(null, new UserCredentials(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword()))
-                .build()
+        IMqttClient mqttAdapterClient = new MqttClientFactory.Builder()
                 .clientId(ctx.getDeviceId())
                 .endpoint(kubernetes.getExternalEndpoint("iot-mqtt-adapter"))
-                .mqttConnectionOptions(mqttOptions)
+                .usernameAndPassword(ctx.getDeviceAuthId() + "@" + tenant, ctx.getDevicePassword())
+                .mqttConnectionOptions(options -> {
+                    options.setAutomaticReconnect(true);
+                    options.setConnectionTimeout(60);
+                    options.setHttpsHostnameVerificationEnabled(false);
+                })
                 .create();
         TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
             try {
@@ -221,10 +221,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
         registryClient.deleteDeviceRegistration(tenant, deviceId);
         registryClient.getDeviceRegistration(tenant, deviceId, HttpURLConnection.HTTP_NOT_FOUND);
         ctx.getHttpAdapterClient().close();
-        if (ctx.getMqttAdapterClient().isConnected()) {
-            ctx.getMqttAdapterClient().disconnect();
-            ctx.getMqttAdapterClient().close();
-        }
+        ctx.getMqttAdapterClient().close();
     }
 
 }

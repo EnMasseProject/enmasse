@@ -5,7 +5,48 @@
 
 package io.enmasse.systemtest.bases;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import javax.jms.DeliveryMode;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.message.Message;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+
 import com.google.common.collect.Ordering;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Environment;
@@ -23,45 +64,11 @@ import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.JmsProvider;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingConsumer;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.apache.qpid.proton.message.Message;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-
-import javax.jms.DeliveryMode;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Base class for all tests
@@ -77,6 +84,32 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
     protected UserCredentials defaultCredentials = null;
     protected UserCredentials managementCredentials = null;
     protected ResourceManager infraResourceManager = ResourceManager.getInstance();
+
+    protected List<ThrowingCallable> cleanup = new LinkedList<>();
+
+    /**
+     * Close any provided resource at the end of test, by calling the cleaner.
+     *
+     * @param <T> The type of the closable.
+     * @param resource The closable to close.
+     * @param cleaner The cleaner, which will be called.
+     * @return The input value, for chained calls.
+     */
+    protected <T> T cleanup(final T resource, final ThrowingConsumer<T> cleaner) {
+        this.cleanup.add(() -> cleaner.accept(resource));
+        return resource;
+    }
+
+    /**
+     * Close an {@link AutoCloseable} at the end of the test.
+     *
+     * @param <T> The type of the closable.
+     * @param closeable The closable to close.
+     * @return The input value, for chained calls.
+     */
+    protected <T extends AutoCloseable> T cleanup (final T closeable) {
+        return cleanup(closeable, AutoCloseable::close);
+    }
 
     @BeforeEach
     public void initTest() throws Exception {
@@ -95,6 +128,26 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
             defaultCredentials = environment.getDefaultCredentials();
             managementCredentials = environment.getManagementCredentials();
             resourcesManager.setup();
+        }
+    }
+
+    @AfterEach
+    private void cleanup() throws Exception {
+        Exception exception = null;
+        for (ThrowingCallable cleanup : this.cleanup) {
+            try {
+                cleanup.call();
+            } catch (Exception e) {
+                if (exception == null) {
+                    exception = e;
+                } else {
+                    exception.addSuppressed(e);
+                }
+            }
+        }
+        this.cleanup.clear();
+        if (exception != null) {
+            throw exception;
         }
     }
 
@@ -233,7 +286,7 @@ public abstract class TestBase implements ITestBase, ITestSeparator {
                 if (i % everyN == 0) {
                     Future<Integer> sent = client.sendMessages(dest.get(i).getSpec().getAddress(), TestUtils.generateMessages(messageCount));
                     //wait for messages sent
-                    assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES).intValue(),
+                    assertEquals(messageCount, sent.get(1, TimeUnit.MINUTES),
                             "Incorrect count of messages send");
                 }
             }

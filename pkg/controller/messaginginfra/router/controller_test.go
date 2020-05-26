@@ -53,7 +53,7 @@ func TestReconcileRouterReplicas(t *testing.T) {
 		},
 	}
 
-	err := rc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
+	_, err := rc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	hosts, err := rc.ReconcileRouters(context.TODO(), logrtesting.TestLogger{}, &infra)

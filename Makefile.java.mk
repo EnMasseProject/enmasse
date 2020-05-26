@@ -1,4 +1,4 @@
-TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
+TOPDIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 MVNPROJ=$(shell realpath --relative-to="$(realpath $(TOPDIR))" "$(shell pwd)")
 include $(TOPDIR)/Makefile.common
 

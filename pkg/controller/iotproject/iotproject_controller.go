@@ -272,9 +272,12 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		// the call to Update will re-trigger us, and we don't need to set "requeue"
 	}
 
-	// set the tenant name in the status section
-
-	project.Status.TenantName = project.TenantName()
+	rc.ProcessSimple(func() error {
+		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
+			RunWith("ConfigurationNotAccepted", func() error {
+				return r.acceptConfiguration(project)
+			})
+	})
 
 	// process different types
 

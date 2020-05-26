@@ -19,17 +19,15 @@ import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.IoTUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.systemtest.utils.TestUtils.ThrowingCallable;
+import io.enmasse.systemtest.utils.ThrowingCallable;
 
 public class IsolatedIoTManager extends ResourceManager {
 
     private Logger LOGGER = CustomLogger.getLogger();
     protected AmqpClientFactory amqpClientFactory;
-    protected MqttClientFactory mqttClientFactory;
     protected List<IoTProject> ioTProjects;
     protected List<IoTConfig> ioTConfigs;
     private static IsolatedIoTManager instance = null;
@@ -49,7 +47,6 @@ public class IsolatedIoTManager extends ResourceManager {
 
     public void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(addressSpace, defaultCredentials);
     }
 
     public void initFactories(IoTProject project) {
@@ -63,11 +60,11 @@ public class IsolatedIoTManager extends ResourceManager {
         kubernetes.createNamespace(IOT_PROJECT_NAMESPACE);
     }
 
-    private static Exception cleanup(ThrowingCallable callable, Exception e) {
+    private static Throwable cleanup(ThrowingCallable callable, Throwable e) {
         try {
             callable.call();
             return e;
-        } catch (Exception e1) {
+        } catch (Throwable e1) {
             if (e == null) {
                 return e1;
             } else {
@@ -88,12 +85,15 @@ public class IsolatedIoTManager extends ResourceManager {
 
             // the next lines, using cleanup(...) prevent that the failure of
             // one cleanup step prevents the next step from being executed.
+            // Also we must handle Throwables here, since some parts of the code
+            // call 'assert*', which throws a 'AssertionFailedError', which is
+            // is an 'Error' rather than an 'Exception'.
 
-            Exception e = null;
+            Throwable e = null;
             e = cleanup(() -> tearDownProjects(), e);
             e = cleanup(() -> tearDownConfigs(), e);
             if (context.getExecutionException().isPresent()) {
-                Path path = TestUtils.getFailedTestLogsPath(context);
+                final Path path = TestUtils.getFailedTestLogsPath(context);
                 e = cleanup(() -> SystemtestsKubernetesApps.collectInfinispanServerLogs(path), e);
             }
             e = cleanup(() -> SystemtestsKubernetesApps.deleteInfinispanServer(), e);
@@ -101,8 +101,12 @@ public class IsolatedIoTManager extends ResourceManager {
             e = cleanup(() -> SystemtestsKubernetesApps.deleteH2Server(), e);
 
             if (e != null) {
-                LOGGER.error("Error tearing down IoT test: {}", e.getMessage());
-                throw e;
+                LOGGER.error("Error tearing down IoT test: {}", e);
+                if (e instanceof Exception) {
+                    throw (Exception) e;
+                } else {
+                    throw new Exception(e);
+                }
             }
 
         }
@@ -143,16 +147,6 @@ public class IsolatedIoTManager extends ResourceManager {
     @Override
     public void setAmqpClientFactory(AmqpClientFactory amqpClientFactory) {
         this.amqpClientFactory = amqpClientFactory;
-    }
-
-    @Override
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
-    }
-
-    @Override
-    public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
-        this.mqttClientFactory = mqttClientFactory;
     }
 
     public void createIoTProject(IoTProject project) throws Exception {

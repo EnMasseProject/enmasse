@@ -6,6 +6,7 @@
 package state
 
 import (
+	"crypto/tls"
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
@@ -38,7 +39,7 @@ type InfraClient interface {
 	// Start any internal state management processes
 	Start()
 	// Synchronize all resources for infrastructure for the provided routers and brokers
-	SyncAll(routers []Host, brokers []Host) ([]ConnectorStatus, error)
+	SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
 	Shutdown() error
 	// Schedule durable address for tenant

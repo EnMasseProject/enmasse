@@ -5,11 +5,15 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
+import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
@@ -19,9 +23,11 @@ import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 
+@Tag(ISOLATED)
 public class TlsVersionTest {
 
     @OpenShift(version = OpenShiftVersion.OCP4)
+    @Test
     public void testWithExplicitVersion() throws Exception {
         IoTTestSession
                 .createDefault()

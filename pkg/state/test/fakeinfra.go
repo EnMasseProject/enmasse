@@ -6,6 +6,8 @@
 package test
 
 import (
+	"crypto/tls"
+
 	"github.com/enmasseproject/enmasse/pkg/state"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
@@ -49,7 +51,7 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error
 func (i *FakeClient) Start() {
 }
 
-func (i *FakeClient) SyncAll(routers []state.Host, brokers []state.Host) ([]state.ConnectorStatus, error) {
+func (i *FakeClient) SyncAll(routers []state.Host, brokers []state.Host, tlsConfig *tls.Config) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers
 	return nil, nil

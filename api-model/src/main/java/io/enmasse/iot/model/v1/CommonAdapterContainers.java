@@ -24,14 +24,14 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CommonAdapterContainers {
 
-    private ContainerConfig adapter;
+    private JavaContainerConfig adapter;
     private ContainerConfig proxy;
     private ContainerConfig proxyConfigurator;
 
-    public ContainerConfig getAdapter() {
+    public JavaContainerConfig getAdapter() {
         return adapter;
     }
-    public void setAdapter(ContainerConfig adapter) {
+    public void setAdapter(JavaContainerConfig adapter) {
         this.adapter = adapter;
     }
 

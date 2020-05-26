@@ -1,0 +1,1476 @@
+= Eclipse Hono™ Device Registry API
+
+[abstract]
+.Abstract
+This API defines how to manage *Devices* and their *Credentials*.
+
+
+// markup not found, no include::{specDir}intro.adoc[opts=optional]
+
+
+
+== Endpoints
+
+
+[.Credentials]
+=== Credentials
+
+
+[.getAllCredentials]
+==== getAllCredentials
+    
+`GET /credentials/{tenantId}/{deviceId}`
+
+Get credentials set of a device.
+
+===== Description 
+
+Get the credentials set of a device. As long as the device is registered and the user has read access to it, this call should never return \"not found\". Depending on its implementation (or configuration), the device registry can either return all credentials information including full secret details or secret metadata along with the generated identifier (an `id` property). The identifier can be used for the follow-up `update` operation). 
+
+
+// markup not found, no include::{specDir}credentials/\{tenantId\}/\{deviceId\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+
+
+
+
+
+===== Return Type
+
+array[<<TypedCredentials>>]
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 200
+| Operation successful
+| List[<<TypedCredentials>>] 
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 404
+| Object not found. This may also be returned for some operations if the user misses read access for the object. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}credentials/\{tenantId\}/\{deviceId\}/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}credentials/\{tenantId\}/\{deviceId\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :credentials/{tenantId}/{deviceId}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}credentials/\{tenantId\}/\{deviceId\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.setAllCredentials]
+==== setAllCredentials
+    
+`PUT /credentials/{tenantId}/{deviceId}`
+
+Update credentials set for registered device
+
+===== Description 
+
+If the device registry is handling full secret details, the updated credential set will be an exact match of the provided content. If it is using secret metadata, data will be merged in based on the secret identities.
+
+
+// markup not found, no include::{specDir}credentials/\{tenantId\}/\{deviceId\}/PUT/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+===== Body Parameter
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| TypedCredentials 
+|  <<TypedCredentials>> 
+| X 
+|  
+|  
+
+|===         
+
+
+====== Header Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| If-Match 
+| The expected resource version  
+| - 
+| null 
+|  
+
+|===         
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 204
+| Object updated.
+|  <<>>
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 403
+| Operation not allowed. If the user does not have read access for this object, then &#x60;404&#x60; will be returned instead. 
+|  <<Error>>
+
+
+| 404
+| Object not found. This may also be returned for some operations if the user misses read access for the object. 
+|  <<Error>>
+
+
+| 412
+| Expected resource version does not match current. This can only happen when the request header &#x60;If-Match&#x60; was set. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}credentials/\{tenantId\}/\{deviceId\}/PUT/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}credentials/\{tenantId\}/\{deviceId\}/PUT/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :credentials/{tenantId}/{deviceId}/PUT/PUT.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}credentials/\{tenantId\}/\{deviceId\}/PUT/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.Devices]
+=== Devices
+
+
+[.createDeviceRegistration]
+==== createDeviceRegistration
+    
+`POST /devices/{tenantId}`
+
+Create new device registration with auto-generated ID
+
+===== Description 
+
+
+
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+|===         
+
+===== Body Parameter
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| Device 
+| New device <<Device>> 
+| - 
+|  
+|  
+
+|===         
+
+
+
+
+
+===== Return Type
+
+<<inline_response_201>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 201
+| Object created.
+|  <<inline_response_201>>
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 403
+| Operation not allowed. If the user does not have read access for this object, then &#x60;404&#x60; will be returned instead. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/POST/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :devices/{tenantId}/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.createDeviceRegistrationWithId]
+==== createDeviceRegistrationWithId
+    
+`POST /devices/{tenantId}/{deviceId}`
+
+Create new device registration
+
+===== Description 
+
+
+
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/POST/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+===== Body Parameter
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| Device 
+| New device <<Device>> 
+| - 
+|  
+|  
+
+|===         
+
+
+
+
+
+===== Return Type
+
+<<inline_response_201>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 201
+| Object created.
+|  <<inline_response_201>>
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 403
+| Operation not allowed. If the user does not have read access for this object, then &#x60;404&#x60; will be returned instead. 
+|  <<Error>>
+
+
+| 409
+| Object already exists. If the user has no read access for the existing object, then &#x60;403&#x60; should be returned instead. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/POST/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/POST/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :devices/{tenantId}/{deviceId}/POST/POST.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/POST/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.deleteRegistration]
+==== deleteRegistration
+    
+`DELETE /devices/{tenantId}/{deviceId}`
+
+Delete device registration
+
+===== Description 
+
+
+
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/DELETE/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+
+
+====== Header Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| If-Match 
+| The expected resource version  
+| - 
+| null 
+|  
+
+|===         
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 204
+| Object deleted.
+|  <<>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 403
+| Operation not allowed. If the user does not have read access for this object, then &#x60;404&#x60; will be returned instead. 
+|  <<Error>>
+
+
+| 404
+| Object not found. This may also be returned for some operations if the user misses read access for the object. 
+|  <<Error>>
+
+
+| 412
+| Expected resource version does not match current. This can only happen when the request header &#x60;If-Match&#x60; was set. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/DELETE/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/DELETE/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :devices/{tenantId}/{deviceId}/DELETE/DELETE.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/DELETE/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.getRegistration]
+==== getRegistration
+    
+`GET /devices/{tenantId}/{deviceId}`
+
+Get device registration information
+
+===== Description 
+
+
+
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/GET/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+
+
+
+
+
+===== Return Type
+
+<<Device>>
+
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 200
+| operation successful
+|  <<Device>>
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 404
+| Object not found. This may also be returned for some operations if the user misses read access for the object. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/GET/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/GET/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :devices/{tenantId}/{deviceId}/GET/GET.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/GET/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[.updateRegistration]
+==== updateRegistration
+    
+`PUT /devices/{tenantId}/{deviceId}`
+
+Update existing device registration
+
+===== Description 
+
+
+
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/PUT/spec.adoc[opts=optional]
+
+
+
+===== Parameters
+
+====== Path Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| tenantId 
+| The ID of the tenant  
+| X 
+| null 
+|  
+
+| deviceId 
+| The ID of the device  
+| X 
+| null 
+|  
+
+|===         
+
+===== Body Parameter
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| Device 
+| Updated device registration <<Device>> 
+| X 
+|  
+|  
+
+|===         
+
+
+====== Header Parameters
+
+[cols="2,3,1,1,1"]
+|===         
+|Name| Description| Required| Default| Pattern
+
+| If-Match 
+| The expected resource version  
+| - 
+| null 
+|  
+
+|===         
+
+
+
+===== Return Type
+
+
+
+-
+
+===== Content Type
+
+* application/json
+
+===== Responses
+
+.http response codes
+[cols="2,3,1"]
+|===         
+| Code | Message | Datatype 
+
+
+| 204
+| Object updated.
+|  <<>>
+
+
+| 400
+| Malformed request
+|  <<Error>>
+
+
+| 401
+| Authentication credentials are required, but missing.
+|  <<>>
+
+
+| 403
+| Operation not allowed. If the user does not have read access for this object, then &#x60;404&#x60; will be returned instead. 
+|  <<Error>>
+
+
+| 404
+| Object not found. This may also be returned for some operations if the user misses read access for the object. 
+|  <<Error>>
+
+
+| 412
+| Expected resource version does not match current. This can only happen when the request header &#x60;If-Match&#x60; was set. 
+|  <<Error>>
+
+|===         
+
+===== Samples
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/PUT/http-request.adoc[opts=optional]
+
+
+// markup not found, no include::{snippetDir}devices/\{tenantId\}/\{deviceId\}/PUT/http-response.adoc[opts=optional]
+
+
+
+// file not found, no * wiremock data link :devices/{tenantId}/{deviceId}/PUT/PUT.json[]
+
+
+ifdef::internal-generation[]
+===== Implementation
+
+// markup not found, no include::{specDir}devices/\{tenantId\}/\{deviceId\}/PUT/implementation.adoc[opts=optional]
+
+
+endif::internal-generation[]
+
+
+[#models]
+== Models
+
+
+[#CommonCredentials]
+=== _CommonCredentials_ 
+
+
+
+[.fields-CommonCredentials]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| type 
+| X 
+| String  
+| 
+|  
+
+| auth-id 
+| X 
+| String  
+| 
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+|===
+
+
+[#CommonSecret]
+=== _CommonSecret_ 
+
+
+
+[.fields-CommonSecret]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| id 
+|  
+| String  
+| The device registry can assign an identity to the secret. This value can be used to update secrets based on their metadata.
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| not-before 
+|  
+| Date  
+| 
+| date-time 
+
+| not-after 
+|  
+| Date  
+| 
+| date-time 
+
+| comment 
+|  
+| String  
+| 
+|  
+
+|===
+
+
+[#Device]
+=== _Device_ 
+
+
+
+[.fields-Device]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| defaults 
+|  
+| Map  of <<object>> 
+| Defaults for properties defined on the tenant and device level.
+|  
+
+| via 
+|  
+| List  of <<string>> 
+| The device IDs of the gateways that are registered to act on behalf of this device. Note that \&quot;via\&quot; and \&quot;memberOf\&quot; must not be set at the same time.
+|  
+
+| viaGroups 
+|  
+| List  of <<string>> 
+| The IDs of the gateway groups that are registered to act on behalf of this device. Note that \&quot;viaGroups\&quot; and \&quot;memberOf\&quot; must not be set at the same time.
+|  
+
+| memberOf 
+|  
+| List  of <<string>> 
+| The IDs of the gateway groups that this device is a member of. Note that \&quot;via\&quot; and \&quot;memberOf\&quot; must not be set at the same time. The same applies for \&quot;viaGroups\&quot; and \&quot;memberOf\&quot; which must be set at the same time too. The reason is that Eclipse Hono does not support groups of gateway groups.
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+|===
+
+
+[#Error]
+=== _Error_ 
+
+
+
+[.fields-Error]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| error 
+| X 
+| String  
+| A human readable error message of what went wrong.
+|  
+
+|===
+
+
+[#InlineResponse201]
+=== _InlineResponse201_ 
+
+
+
+[.fields-InlineResponse201]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| id 
+| X 
+| String  
+| The ID of the created object
+|  
+
+|===
+
+
+[#PSKCredentials]
+=== _PSKCredentials_ 
+
+
+
+[.fields-PSKCredentials]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| type 
+| X 
+| String  
+| 
+|  
+
+| auth-id 
+| X 
+| String  
+| 
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+| secrets 
+|  
+| List  of <<PSKSecret>> 
+| 
+|  
+
+|===
+
+
+[#PSKCredentialsAllOf]
+=== _PSKCredentialsAllOf_ 
+
+
+
+[.fields-PSKCredentialsAllOf]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| secrets 
+|  
+| List  of <<PSKSecret>> 
+| 
+|  
+
+|===
+
+
+[#PSKSecret]
+=== _PSKSecret_ 
+
+
+
+[.fields-PSKSecret]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| id 
+|  
+| String  
+| The device registry can assign an identity to the secret. This value can be used to update secrets based on their metadata.
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| not-before 
+|  
+| Date  
+| 
+| date-time 
+
+| not-after 
+|  
+| Date  
+| 
+| date-time 
+
+| comment 
+|  
+| String  
+| 
+|  
+
+| key 
+| X 
+| byte[]  
+| 
+| byte 
+
+|===
+
+
+[#PSKSecretAllOf]
+=== _PSKSecretAllOf_ 
+
+
+
+[.fields-PSKSecretAllOf]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| key 
+| X 
+| byte[]  
+| 
+| byte 
+
+|===
+
+
+[#PasswordCredentials]
+=== _PasswordCredentials_ 
+
+
+
+[.fields-PasswordCredentials]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| type 
+| X 
+| String  
+| 
+|  
+
+| auth-id 
+| X 
+| String  
+| 
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+| secrets 
+|  
+| List  of <<PasswordSecret>> 
+| 
+|  
+
+|===
+
+
+[#PasswordCredentialsAllOf]
+=== _PasswordCredentialsAllOf_ 
+
+
+
+[.fields-PasswordCredentialsAllOf]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| secrets 
+|  
+| List  of <<PasswordSecret>> 
+| 
+|  
+
+|===
+
+
+[#PasswordSecret]
+=== _PasswordSecret_ 
+
+
+
+[.fields-PasswordSecret]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| id 
+|  
+| String  
+| The device registry can assign an identity to the secret. This value can be used to update secrets based on their metadata.
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| not-before 
+|  
+| Date  
+| 
+| date-time 
+
+| not-after 
+|  
+| Date  
+| 
+| date-time 
+
+| comment 
+|  
+| String  
+| 
+|  
+
+| hash-function 
+|  
+| String  
+| The name of the hash function used to create the password hash (defined in &#x60;pwd-hash&#x60; property). If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+|  
+
+| pwd-hash 
+|  
+| byte[]  
+| The password hash created using the &#x60;hash-function&#x60; and optional &#x60;salt&#x60; values. If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+| byte 
+
+| salt 
+|  
+| byte[]  
+| The Base64 encoding of the salt used in the password hash (defined in the &#x60;pwd-hash&#x60; property). If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+| byte 
+
+| pwd-plain 
+|  
+| byte[]  
+| The clear text value of the password to be hashed by the device registry. If this property is specified, the device registry will ignore user-provided hash properties (&#x60;hash-function&#x60;, &#x60;pwd-hash&#x60; and &#x60;salt&#x60;). This property must never be stored by the device registry. This property must be empty when returning passwords from the device registry.
+| byte 
+
+|===
+
+
+[#PasswordSecretAllOf]
+=== _PasswordSecretAllOf_ 
+
+
+
+[.fields-PasswordSecretAllOf]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| hash-function 
+|  
+| String  
+| The name of the hash function used to create the password hash (defined in &#x60;pwd-hash&#x60; property). If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+|  
+
+| pwd-hash 
+|  
+| byte[]  
+| The password hash created using the &#x60;hash-function&#x60; and optional &#x60;salt&#x60; values. If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+| byte 
+
+| salt 
+|  
+| byte[]  
+| The Base64 encoding of the salt used in the password hash (defined in the &#x60;pwd-hash&#x60; property). If the password is defined using a &#x60;pwd-plain&#x60; property, this value will be ignored by the device registry. This property should be empty when returning passwords from the device registry using only secret metadata. In this case the id field must be set instead.
+| byte 
+
+| pwd-plain 
+|  
+| byte[]  
+| The clear text value of the password to be hashed by the device registry. If this property is specified, the device registry will ignore user-provided hash properties (&#x60;hash-function&#x60;, &#x60;pwd-hash&#x60; and &#x60;salt&#x60;). This property must never be stored by the device registry. This property must be empty when returning passwords from the device registry.
+| byte 
+
+|===
+
+
+[#TypedCredentials]
+=== _TypedCredentials_ 
+
+
+
+[.fields-TypedCredentials]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| type 
+| X 
+| String  
+| 
+|  
+
+| auth-id 
+| X 
+| String  
+| 
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+| secrets 
+|  
+| List  of <<X509CertificateSecret>> 
+| 
+|  
+
+|===
+
+
+[#X509CertificateCredentials]
+=== _X509CertificateCredentials_ 
+
+
+
+[.fields-X509CertificateCredentials]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| type 
+| X 
+| String  
+| 
+|  
+
+| auth-id 
+| X 
+| String  
+| 
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| ext 
+|  
+| Map  of <<object>> 
+| Allows arbitrary properties as extension to the ones specified by the Hono API.
+|  
+
+| secrets 
+|  
+| List  of <<X509CertificateSecret>> 
+| 
+|  
+
+|===
+
+
+[#X509CertificateCredentialsAllOf]
+=== _X509CertificateCredentialsAllOf_ 
+
+
+
+[.fields-X509CertificateCredentialsAllOf]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| secrets 
+|  
+| List  of <<X509CertificateSecret>> 
+| 
+|  
+
+|===
+
+
+[#X509CertificateSecret]
+=== _X509CertificateSecret_ 
+
+
+
+[.fields-X509CertificateSecret]
+[cols="2,1,2,4,1"]
+|===         
+| Field Name| Required| Type| Description| Format
+
+| id 
+|  
+| String  
+| The device registry can assign an identity to the secret. This value can be used to update secrets based on their metadata.
+|  
+
+| enabled 
+|  
+| Boolean  
+| 
+|  
+
+| not-before 
+|  
+| Date  
+| 
+| date-time 
+
+| not-after 
+|  
+| Date  
+| 
+| date-time 
+
+| comment 
+|  
+| String  
+| 
+|  
+
+|===
+
+
