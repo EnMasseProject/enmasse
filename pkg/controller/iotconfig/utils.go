@@ -147,11 +147,7 @@ func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig i
 	}
 }
 
-func applyContainerConfig(container *corev1.Container, config *iotv1alpha1.ContainerConfig) {
-
-	if config == nil {
-		return
-	}
+func applyContainerConfig(container *corev1.Container, config iotv1alpha1.ContainerConfig) {
 
 	if config.Resources != nil {
 		container.Resources = *config.Resources

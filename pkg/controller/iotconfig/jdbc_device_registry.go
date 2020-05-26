@@ -32,23 +32,19 @@ type JdbcDeviceProperties struct {
 func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
-
 	change := cchange.NewRecorder()
-
-	// configmap
-
-	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileJdbcDeviceRegistryConfigMap(config, configMap, change)
-		})
-	})
-
-	// deployment
 
 	if config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management != nil &&
 		config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter == nil {
 
 		// combined deployment
+
+		rc.ProcessSimple(func() error {
+			return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+				service := config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management
+				return r.reconcileJdbcDeviceRegistryConfigMap(config, service, configMap, change)
+			})
+		})
 
 		rc.ProcessSimple(func() error {
 			return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -59,20 +55,36 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistry,
+					nameDeviceRegistry+"-config",
 					"registry-adapter,registry-management",
 					true, true,
 				)
 			})
 		})
 
-		// delete extra management deployment
+		// delete extra management
 
+		rc.Delete(ctx, r.client, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement + "-config"}})
 		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement}})
 
 	} else if config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management != nil &&
 		config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter != nil {
 
 		// split deployment
+
+		rc.ProcessSimple(func() error {
+			return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+				service := config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter
+				return r.reconcileJdbcDeviceRegistryConfigMap(config, service, configMap, change)
+			})
+		})
+
+		rc.ProcessSimple(func() error {
+			return r.processConfigMap(ctx, nameDeviceRegistryManagement+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+				service := config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management
+				return r.reconcileJdbcDeviceRegistryConfigMap(config, service, configMap, change)
+			})
+		})
 
 		rc.ProcessSimple(func() error {
 			return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
@@ -83,6 +95,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
+					nameDeviceRegistry+"-config",
 					"registry-adapter",
 					true, false,
 				)
@@ -97,6 +110,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Management.CommonServiceConfig,
 					nameDeviceRegistryManagement,
+					nameDeviceRegistryManagement+"-config",
 					"registry-management",
 					false, true,
 				)
@@ -109,6 +123,13 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 		// read-only deployment
 
 		rc.ProcessSimple(func() error {
+			return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+				service := config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter
+				return r.reconcileJdbcDeviceRegistryConfigMap(config, service, configMap, change)
+			})
+		})
+
+		rc.ProcessSimple(func() error {
 			return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 				return r.reconcileCommonJdbcDeviceRegistryDeployment(
 					config,
@@ -117,6 +138,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.ServiceConfig,
 					config.Spec.ServicesConfig.DeviceRegistry.JDBC.Server.External.Adapter.CommonServiceConfig,
 					nameDeviceRegistry,
+					nameDeviceRegistry+"-config",
 					"registry-adapter",
 					true, false,
 				)
@@ -125,6 +147,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceRegistry(ctx context.Context, conf
 
 		// delete extra management
 
+		rc.Delete(ctx, r.client, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement + "-config"}})
 		rc.Delete(ctx, r.client, &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameDeviceRegistryManagement}})
 
 	} else {
@@ -145,6 +168,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 	serviceConfig iotv1alpha1.ServiceConfig,
 	commonConfig iotv1alpha1.CommonServiceConfig,
 	serviceNameForTls string,
+	configMapName string,
 	profiles string,
 	adapter bool,
 	management bool,
@@ -236,7 +260,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 		// apply container options
 
 		if service.JDBC != nil {
-			applyContainerConfig(container, commonConfig.Container)
+			applyContainerConfig(container, commonConfig.Container.ContainerConfig)
 		}
 
 		// return
@@ -265,7 +289,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 	// volumes
 
-	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceRegistry+"-config")
+	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", configMapName)
 	install.DropVolume(&deployment.Spec.Template.Spec, "registry")
 	ext.AddExtensionVolume(&deployment.Spec.Template.Spec)
 
@@ -326,7 +350,7 @@ func ExternalJdbcRegistryConnections(config *iotv1alpha1.IoTConfig) (*JdbcDevice
 
 }
 
-func (r *ReconcileIoTConfig) reconcileJdbcDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileJdbcDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, service *iotv1alpha1.ExternalJdbcRegistryService, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -334,9 +358,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceRegistryConfigMap(config *iotv1a
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
 
 	devices, err := ExternalJdbcRegistryConnections(config)
 	if err != nil {
@@ -409,7 +431,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceRegistryConfigMap(config *iotv1a
 
 	// config change
 
-	change.AddStringsFromMap(configMap.Data)
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
 
 	// return ok
 

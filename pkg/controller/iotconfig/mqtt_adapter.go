@@ -29,15 +29,20 @@ const nameMqttAdapter = "iot-mqtt-adapter"
 
 func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
-	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
+	change := qdrProxyConfigCtx.Clone()
 
 	adapter := findAdapter("mqtt")
 	enabled := adapter.IsEnabled(config)
 
 	rc.ProcessSimple(func() error {
+		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, !enabled, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileMqttAdapterConfigMap(config, adapter, configMap, change)
+		})
+	})
+	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameMqttAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileMqttAdapterDeployment(config, deployment, configCtx)
+			return r.reconcileMqttAdapterDeployment(config, deployment, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -47,22 +52,19 @@ func (r *ReconcileIoTConfig) processMqttAdapter(ctx context.Context, config *iot
 		return r.processService(ctx, nameMqttAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameMqttAdapter))
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameMqttAdapter+"-config", config, !enabled, r.reconcileMqttAdapterConfigMap)
-	})
-	rc.ProcessSimple(func() error {
 		return r.processAdapterRoute(ctx, config, adapter, r.reconcileMqttAdapterRoute, r.reconcileMqttAdapterServiceExternal)
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.MqttAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, change)
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "mqtt-adapter")
@@ -118,7 +120,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterDeployment(config *iotv1alpha1.
 
 		// apply container options
 
-		applyContainerConfig(container, adapter.Containers.Adapter)
+		applyContainerConfig(container, adapter.Containers.Adapter.ContainerConfig)
 
 		// return
 
@@ -196,7 +198,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterService(config *iotv1alpha1.IoT
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileMqttAdapterConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileMqttAdapterConfigMap(config *iotv1alpha1.IoTConfig, a adapter, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -204,9 +206,7 @@ func (r *ReconcileIoTConfig) reconcileMqttAdapterConfigMap(_ *iotv1alpha1.IoTCon
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = a.RenderLoggingConfig(config, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -236,6 +236,8 @@ hono:
     port: 5671
     trustStoreFormat: PEM
 `
+
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
 
 	return nil
 }

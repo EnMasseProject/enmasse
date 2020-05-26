@@ -23,6 +23,8 @@ import (
 
 func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
+	service := config.Spec.ServicesConfig.DeviceConnection.JDBC
+
 	rc := &recon.ReconcileContext{}
 
 	change := cchange.NewRecorder()
@@ -31,7 +33,7 @@ func (r *ReconcileIoTConfig) processJdbcDeviceConnection(ctx context.Context, co
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameDeviceConnection+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileJdbcDeviceConnectionConfigMap(config, configMap, change)
+			return r.reconcileJdbcDeviceConnectionConfigMap(config, service, configMap, change)
 		})
 	})
 
@@ -121,7 +123,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 		// apply container options
 
 		if service.JDBC != nil {
-			applyContainerConfig(container, service.JDBC.Container)
+			applyContainerConfig(container, service.JDBC.Container.ContainerConfig)
 		}
 
 		// return
@@ -172,7 +174,7 @@ func ExternalJdbcConnectionConnections(config *iotv1alpha1.IoTConfig) (*iotv1alp
 	}
 }
 
-func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionConfigMap(config *iotv1alpha1.IoTConfig, service *iotv1alpha1.JdbcDeviceConnection, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -180,9 +182,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionConfigMap(config *iotv
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
 
 	deviceInformation, err := ExternalJdbcConnectionConnections(config)
 	if err != nil {
@@ -243,7 +243,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionConfigMap(config *iotv
 
 	// config change
 
-	change.AddStringsFromMap(configMap.Data)
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
 
 	// return ok
 

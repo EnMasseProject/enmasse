@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strconv"
@@ -23,19 +24,26 @@ import (
 
 func (r *ReconcileIoTConfig) processInfinispanDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
+	service := config.Spec.ServicesConfig.DeviceConnection.Infinispan
+
 	rc := &recon.ReconcileContext{}
+	change := cchange.NewRecorder()
 
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceConnection+"-config", config, false, r.reconcileInfinispanDeviceConnectionConfigMap)
+		return r.processConfigMap(ctx, nameDeviceConnection+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileInfinispanDeviceConnectionConfigMap(config, service, configMap, change)
+		})
 	})
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceConnection, config, false, r.reconcileInfinispanDeviceConnectionDeployment)
+		return r.processDeployment(ctx, nameDeviceConnection, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileInfinispanDeviceConnectionDeployment(config, deployment, change)
+		})
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[DeviceConnectionTypeAnnotation] = "infinispan"
@@ -44,7 +52,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 	deployment.Spec.Template.Annotations[DeviceConnectionTypeAnnotation] = "infinispan"
 
 	service := config.Spec.ServicesConfig.DeviceConnection
-	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, nil)
+	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, change)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-connection", func(container *corev1.Container) error {
@@ -105,7 +113,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 		// apply container options
 
 		if service.Infinispan != nil {
-			applyContainerConfig(container, service.Infinispan.Container)
+			applyContainerConfig(container, service.Infinispan.Container.ContainerConfig)
 		}
 
 		// apply infinispan server options
@@ -177,7 +185,7 @@ func appendInfinispanExternalConnectionServer(container *v1.Container, external 
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionConfigMap(config *iotv1alpha1.IoTConfig, service *iotv1alpha1.InfinispanDeviceConnection, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -185,9 +193,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionConfigMap(_ *iot
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -217,5 +223,8 @@ hono:
       certPath: /etc/tls/tls.crt
       keyFormat: PEM
 `
+
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
+
 	return nil
 }

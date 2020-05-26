@@ -703,11 +703,16 @@ public final class IoTTestSession implements AutoCloseable {
     public static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
 
         var config = new IoTConfigBuilder()
-
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(namespace)
                 .endMetadata();
+
+        config = config.editOrNewSpec()
+                .withNewLogging()
+                .withNewLevel("debug")
+                .endLogging()
+                .endSpec();
 
         if (isOpenshiftFour) {
 

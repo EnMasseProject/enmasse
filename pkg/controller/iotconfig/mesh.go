@@ -37,19 +37,18 @@ const nameCommandMeshSecretName = nameServiceMesh + "-command"
 
 func (r *ReconcileIoTConfig) processServiceMesh(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
-	configCtx := cchange.NewRecorder()
-
 	rc := &recon.ReconcileContext{}
+	change := cchange.NewRecorder()
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, nameServiceMesh+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileServiceMeshConfigMap(config, configMap, configCtx)
+			return r.reconcileServiceMeshConfigMap(config, configMap, change)
 		})
 	})
 	var commandUserPassword []byte
 	rc.ProcessSimple(func() error {
 		return r.processSecret(ctx, nameServiceMesh+"-users", config, false, func(config *iotv1alpha1.IoTConfig, secret *corev1.Secret) error {
-			pwd, err := r.reconcileServiceMeshUsersSecret(config, secret, configCtx)
+			pwd, err := r.reconcileServiceMeshUsersSecret(config, secret, change)
 			commandUserPassword = pwd
 			return err
 		})
@@ -61,7 +60,7 @@ func (r *ReconcileIoTConfig) processServiceMesh(ctx context.Context, config *iot
 	})
 	rc.ProcessSimple(func() error {
 		return r.processStatefulSet(ctx, nameServiceMesh, config, false, func(config *iotv1alpha1.IoTConfig, statefulSet *appsv1.StatefulSet) error {
-			return r.reconcileServiceMeshStatefulSet(config, statefulSet, configCtx)
+			return r.reconcileServiceMeshStatefulSet(config, statefulSet, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -76,12 +75,12 @@ func (r *ReconcileIoTConfig) processServiceMesh(ctx context.Context, config *iot
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileServiceMeshStatefulSet(config *iotv1alpha1.IoTConfig, statefulSet *appsv1.StatefulSet, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileServiceMeshStatefulSet(config *iotv1alpha1.IoTConfig, statefulSet *appsv1.StatefulSet, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyStatefulSetDefaults(statefulSet, "iot", statefulSet.Name)
 
 	mesh := config.Spec.Mesh
-	applyDefaultStatefulSetConfig(statefulSet, mesh.ServiceConfig, configCtx)
+	applyDefaultStatefulSetConfig(statefulSet, mesh.ServiceConfig, change)
 
 	err := install.ApplyStatefulSetContainerWithError(statefulSet, "router", func(container *corev1.Container) error {
 
@@ -146,7 +145,7 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshStatefulSet(config *iotv1alpha1
 
 		// apply container options
 
-		applyContainerConfig(container, &mesh.ContainerConfig)
+		applyContainerConfig(container, mesh.ContainerConfig)
 
 		// return
 
@@ -201,7 +200,7 @@ func ensurePassword(data map[string][]byte, name string, minLength int) ([]byte,
 	}
 }
 
-func (r *ReconcileIoTConfig) reconcileServiceMeshUsersSecret(_ *iotv1alpha1.IoTConfig, secret *corev1.Secret, configCtx *cchange.ConfigChangeRecorder) ([]byte, error) {
+func (r *ReconcileIoTConfig) reconcileServiceMeshUsersSecret(_ *iotv1alpha1.IoTConfig, secret *corev1.Secret, change *cchange.ConfigChangeRecorder) ([]byte, error) {
 
 	install.ApplyDefaultLabels(&secret.ObjectMeta, "iot", secret.Name)
 
@@ -229,7 +228,7 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshUsersSecret(_ *iotv1alpha1.IoTC
 
 	// record hash
 
-	configCtx.AddBytesFromMap(secret.Data)
+	change.AddBytesFromMap(secret.Data)
 
 	// done
 
@@ -254,7 +253,7 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshCommandUserSecret(_ *iotv1alpha
 
 }
 
-func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -401,7 +400,7 @@ func (r *ReconcileIoTConfig) reconcileServiceMeshConfigMap(config *iotv1alpha1.I
 
 	// record for config hash
 
-	configCtx.AddString(jstr)
+	change.AddString(jstr)
 
 	// done
 
