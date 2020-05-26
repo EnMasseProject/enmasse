@@ -23,7 +23,6 @@ import {
   DownloadIcon
 } from "@patternfly/react-icons";
 import { InputText, JsonEditor, SwitchWithToggle } from "components";
-import { getCombinedString } from "utils";
 
 export interface IMessagingObject {
   url?: string;
@@ -165,7 +164,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <InputText
             label={"Events address name"}
             type={"text"}
-            value={getCombinedString(eventsAddresses)}
+            value={eventsAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
             isExpandable={eventsAddresses.length > 1}
@@ -178,7 +177,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <InputText
             label={"Telemetry address name"}
             type={"text"}
-            value={getCombinedString(telemetryAddresses)}
+            value={telemetryAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
             isExpandable={telemetryAddresses.length > 1}
@@ -191,7 +190,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <InputText
             label={"Command address name"}
             type={"text"}
-            value={getCombinedString(commandAddresses)}
+            value={commandAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
             isExpandable={commandAddresses.length > 1}
