@@ -10,6 +10,7 @@
 :sectnums:
 :source-highlighter: highlightjs
 :linkattrs:
+:icons: font
 
 // Product attributes
 
