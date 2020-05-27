@@ -8,9 +8,22 @@ spec:
       caSecretName: iot-service-ca
       serviceSecretNames:
         iot-auth-service: iot-auth-service-tls
+        iot-device-connection: iot-device-connection-tls
         iot-device-registry: iot-device-registry-tls
         iot-tenant-service: iot-tenant-service-tls
+        iot-mesh-inter: iot-mesh-inter-tls
+        iot-command-mesh: iot-command-mesh-tls
   services:
+    deviceConnection:
+      infinispan:
+        server:
+          external:
+            host: infinispan
+            port: 11222
+            username: app
+            password: test12
+            saslServerName: hotrod
+            saslRealm: ApplicationRealm
     deviceRegistry:
       infinispan:
         server:
@@ -21,6 +34,10 @@ spec:
             password: test12
             saslServerName: hotrod
             saslRealm: ApplicationRealm
+      management:
+        endpoint:
+          secretNameStrategy:
+            secretName: iot-device-registry-tls
   adapters:
     http:
       endpoint:
