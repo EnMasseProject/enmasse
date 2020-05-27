@@ -2713,21 +2713,21 @@
   dependencies:
     ramda "^0.26.0"
 
-"@rh-uxd/integration-core@0.1.8", "@rh-uxd/integration-core@^0.1.8":
-  version "0.1.8"
-  resolved "https://registry.yarnpkg.com/@rh-uxd/integration-core/-/integration-core-0.1.8.tgz#3e99c2d87fbd542f317eba02e9e199f9dacd3454"
-  integrity sha512-VyjAwY5/duhxGWFgpx2SCYyUsxwAQuykmNq6HnxAHjBUqyerwqsg3msjYE8NlzrGi9J3RtvvbV1QNcOzDBN6HA==
+"@rh-uxd/integration-core@1.0.1", "@rh-uxd/integration-core@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@rh-uxd/integration-core/-/integration-core-1.0.1.tgz#85275b29a08bdbc6396822ed33634ba1169454c8"
+  integrity sha512-XeUvTZYfyplIlG1X03Kcyu1AuLvX8wpH6a13gM4Y0Az7UC2Dt8gnUGBAc4xq2hkNTHrKr2v+GqVoFZzWLaRT7g==
   dependencies:
     axios "0.19.2"
 
-"@rh-uxd/integration-react@^0.1.5":
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/@rh-uxd/integration-react/-/integration-react-0.1.5.tgz#7dfca10eb0f807af1dd295fc16c84ba9ad9c6f48"
-  integrity sha512-u7XmNfnHs2jLLXpCK8g4FxH17UehEe1zJJp6cn0NvyiLy8fLI+rToWCpAGG+bjyU+uxv4Fyy/3LXloF0LwgNvQ==
+"@rh-uxd/integration-react@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@rh-uxd/integration-react/-/integration-react-1.0.1.tgz#468b6df167d2060d8122fc980b27148ddc5a67b2"
+  integrity sha512-fzV8p10kQ8jcepc1VTT3K1nN7BkzeLAfje7upgV20tR/cMh7dHIPDsGExXp6ovf5Er7HjhirMoQsFlhvXEAo4w==
   dependencies:
     "@patternfly/react-core" "3.129.3"
     "@patternfly/react-icons" "3.14.30"
-    "@rh-uxd/integration-core" "0.1.8"
+    "@rh-uxd/integration-core" "1.0.1"
     react "16.13.0"
     react-dom "16.13.0"
 

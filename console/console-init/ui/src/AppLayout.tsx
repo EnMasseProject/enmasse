@@ -23,6 +23,7 @@ import "./App.css";
 import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
 import { useErrorContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
+import rhiImage from "@rh-uxd/integration-core/styles/assets/Logo-Red_Hat-Managed_Integration-A-Reverse-RGB.png";
 
 let history: any, dispactAction: any, states: any;
 
@@ -43,7 +44,8 @@ const avatar = (
   </React.Fragment>
 );
 
-const logo = <Brand src={brandImg} alt="Console Logo" />;
+const rhiImgLogo = <Brand src={rhiImage} alt="Integration Logo" />;
+const brandImgLogo = <Brand src={brandImg} alt="AMQ Logo" />;
 
 const AppLayout: React.FC = () => {
   history = useHistory();
@@ -57,17 +59,25 @@ const AppLayout: React.FC = () => {
     [history]
   );
 
-  const [availableApps, setHasAvailableApps] = React.useState(
-    [] as CrossNavApp[]
-  );
+  const [availableApps, setHasAvailableApps] = React.useState<
+    CrossNavApp[] | null
+  >(null);
+  const [showLogo, setShowLog] = React.useState(false);
 
-  getAvailableApps(
-    process.env.REACT_APP_RHMI_SERVER_URL
-      ? process.env.REACT_APP_RHMI_SERVER_URL
-      : getSolutionExplorerServer()
-  ).then(apps => {
-    setHasAvailableApps(apps);
-  });
+  if (!availableApps) {
+    getAvailableApps(
+      process.env.REACT_APP_RHMI_SERVER_URL
+        ? process.env.REACT_APP_RHMI_SERVER_URL
+        : getSolutionExplorerServer(),
+      undefined,
+      process.env.REACT_APP_RHMI_SERVER_URL ? "localhost:3006" : undefined,
+      ["3scale", "amqonline"],
+      !!process.env.REACT_APP_RHMI_SERVER_URL
+    ).then(apps => {
+      setHasAvailableApps(apps);
+      setShowLog(true);
+    });
+  }
 
   return (
     <ApolloProvider client={client}>
@@ -78,8 +88,14 @@ const AppLayout: React.FC = () => {
           name: "AMQ Online",
           rootUrl: window.location.href
         }}
-        logoProps={logoProps}
-        logo={logo}
+        // logoProps={availableApps && availableApps.length > 0 && {}}
+        logo={
+          showLogo
+            ? availableApps && availableApps.length > 0
+              ? rhiImgLogo
+              : brandImgLogo
+            : null
+        }
         avatar={avatar}
         toolbar={<NavToolBar />}
       />

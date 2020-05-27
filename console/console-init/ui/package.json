@@ -10,8 +10,8 @@
     "@patternfly/react-styles": "^3.6.6",
     "@patternfly/react-table": "^2.24.22",
     "@rescripts/cli": "^0.0.13",
-    "@rh-uxd/integration-core": "^0.1.8",
-    "@rh-uxd/integration-react": "^0.1.5",
+    "@rh-uxd/integration-core": "^1.0.1",
+    "@rh-uxd/integration-react": "^1.0.1",
     "@types/jest": "24.0.23",
     "@types/node": "12.12.9",
     "@types/react": "16.9.11",
@@ -38,6 +38,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "start:crossconsole": "PORT=3003 react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
