@@ -13,13 +13,15 @@ import {
   SplitItem,
   Text,
   TextVariants,
-  Switch
+  Title
 } from "@patternfly/react-core";
-import { InputText, JsonEditor } from "components";
+import { InputText, JsonEditor, SwitchWithToggle } from "components";
 import { IAdapterConfig } from "modules/project-detail/components";
 import { StyleSheet, css } from "@patternfly/react-styles";
 
 interface IDeviceRegistationManagementProps {
+  token?: string;
+  endpoiuntUrl?: string;
   username?: string;
   password?: string;
   registrationApi?: IAdapterConfig;
@@ -31,6 +33,8 @@ const styles = StyleSheet.create({
 });
 
 const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationManagementProps> = ({
+  token,
+  endpoiuntUrl,
   username,
   password,
   registrationApi,
@@ -152,16 +156,16 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       <CardHeader className={css(styles.fontSize)}>
         <Split>
           <SplitItem>
-            <h1>
-              <b>Device Registration Management</b>
-            </h1>
+            <Title size="xl" headingLevel="h2">
+              Device Registration Management
+            </Title>
           </SplitItem>
           <SplitItem isFilled />
           <SplitItem>
-            <Switch
+            <SwitchWithToggle
               id="device-registration-management-switch"
-              label="View in Json"
-              labelOff="View in Json"
+              label="View JSON format"
+              labelOff="View JSON format"
               isChecked={isHidden}
               onChange={onToggle}
             />
@@ -175,32 +179,76 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       ) : (
         <CardBody>
           {username && (
-            <InputText
-              label={"Username"}
-              type={"text"}
-              value={username}
-              isReadOnly={true}
-              enableCopy={true}
-              id={"username-input"}
-              ariaLabel={"username"}
-              isExpandable={false}
-            />
+            <>
+              <br />
+              <InputText
+                label={"Username"}
+                type={"text"}
+                value={username}
+                isReadOnly={true}
+                enableCopy={true}
+                id={"username-input"}
+                ariaLabel={"username"}
+                isExpandable={false}
+              />
+            </>
           )}
-          <br />
           {password && (
-            <InputText
-              label={"Password"}
-              type={"password"}
-              value={password}
-              isReadOnly={true}
-              id={"password-input"}
-              ariaLabel={"password"}
-            />
+            <>
+              <br />
+              <InputText
+                label={"Password"}
+                type={"password"}
+                value={password}
+                isReadOnly={true}
+                id={"password-input"}
+                ariaLabel={"password"}
+              />
+            </>
           )}
-          <br />
-          <RegistrationApi />
-          <br />
-          <CredentialApi />
+          {token && (
+            <>
+              <br />
+              <InputText
+                label={"Token"}
+                type={"password"}
+                value={token}
+                isReadOnly={true}
+                id={"drm-input-token"}
+                ariaLabel={"token"}
+              />
+            </>
+          )}
+          {endpoiuntUrl && (
+            <>
+              <br />
+              <Title size="xl" headingLevel="h2">
+                Endpoint
+              </Title>
+              <br />
+              <InputText
+                label={"URL"}
+                type={"text"}
+                value={endpoiuntUrl}
+                isReadOnly={true}
+                enableCopy={true}
+                id={"drm-input-endpoiunt-url"}
+                ariaLabel={"endpoiunt url"}
+              />
+            </>
+          )}
+          {registrationApi && (
+            <>
+              <br />
+              <RegistrationApi />
+            </>
+          )}
+          {credentialApi && (
+            <>
+              <br />
+              <CredentialApi />
+            </>
+          )}
         </CardBody>
       )}
     </Card>
