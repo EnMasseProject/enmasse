@@ -414,8 +414,8 @@ type MqttAdapterConfig struct {
 //region Status
 
 type IoTConfigStatus struct {
-	Phase       ConfigPhaseType `json:"phase"`
-	PhaseReason string          `json:"phaseReason,omitempty"`
+	Phase   ConfigPhaseType `json:"phase"`
+	Message string          `json:"message,omitempty"`
 
 	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
 	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`

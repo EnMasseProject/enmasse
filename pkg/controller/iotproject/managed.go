@@ -233,7 +233,7 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 			// cleanup old address space first
 
 			project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
-			project.Status.PhaseReason = "Address Space changed"
+			project.Status.Message = "Address Space changed"
 
 			result, err := cleanupManagedResources(ctx, r.client, project)
 			if err != nil {
