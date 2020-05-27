@@ -76,7 +76,7 @@ const typeDefs = gql`
         reencrypt
     }
 
-    enum MessagingEndpointType {
+    enum MessagingEndpointType_enmasse_io_v1beta2  {
         cluster,
         nodePort,
         loadBalancer,
@@ -84,11 +84,17 @@ const typeDefs = gql`
         ingress
     }
 
-    enum MessagingEndpointProtocol {
+    enum MessagingEndpointProtocol_enmasse_io_v1beta2  {
         amqp,
         amqps,
         amqp_ws,
         amqp_wss,
+    }
+
+    enum MessagingEndpointPhase_enmasse_io_v1beta2  {
+        configuring,
+        active,
+        terminating,
     }
 
     type Metric_consoleapi_enmasse_io_v1beta1 {
@@ -264,12 +270,12 @@ const typeDefs = gql`
     }
 
     type MessagingEndpointSpec_enmasse_io_v1beta2 {
-        protocols: [MessagingEndpointProtocol!]!
+        protocols: [MessagingEndpointProtocol_enmasse_io_v1beta2!]!
     }
 
     type MessagingEndpointStatus_enmasse_io_v1beta2 {
-        phase: String!
-        type: MessagingEndpointType!
+        phase: MessagingEndpointPhase_enmasse_io_v1beta2!
+        type: MessagingEndpointType_enmasse_io_v1beta2!
         message: String
         host: String
 
@@ -279,7 +285,7 @@ const typeDefs = gql`
 
     type MessagingEndpointPort_enmasse_io_v1beta2  {
         name: String!
-        protocol: MessagingEndpointProtocol!
+        protocol: MessagingEndpointProtocol_enmasse_io_v1beta2!
         port: Int!
     }
 
