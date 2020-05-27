@@ -131,6 +131,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
+        waitUntilAddressSpaceActive(addressSpace);
         consolePage.openAddressList(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
         try {
@@ -553,7 +554,7 @@ public abstract class ConsoleTest extends TestBase {
         AddressWebItem addressWebItem = consolePage.getAddressItem(queue);
         selenium.clickOnItem(addressWebItem.getActionDropDown());
         selenium.clickOnItem(addressWebItem.getEditMenuItem());
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")), "Edit address plan");
+        selenium.clickOnItem(selenium.getWebElement(consolePage::getEditAddrPlan), "Edit address plan");
         assertTrue(selenium.getDriver().findElement(By.xpath("//option[@value='" + queuePlanName1 + "']")).getText().contains(queuePlanName1));
     }
 
@@ -614,8 +615,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteSelectedAddressSpaces(brokered, standard);
         assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
 
-        WebElement emptyAddessSpace = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("empty-ad-space")));
+        WebElement emptyAddessSpace = selenium.getWebElement(() -> consolePage.getEmptyAddSpace());
         assertTrue(emptyAddessSpace.isDisplayed());
     }
 
@@ -1291,7 +1291,6 @@ public abstract class ConsoleTest extends TestBase {
         assertEquals(1, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
 
         AmqpClient amqpClient = getResourceManager().getAmqpClientFactory().createQueueClient(addressSpace);
-//        amqpQueueCli.getConnectOptions().setCredentials(cred);
         var countMessages = 50;
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
@@ -1557,7 +1556,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.createAddress(address);
         consolePage.waitForErrorDialogToBePresent();
-        assertThat("Error dialog is not present after error situation!", consolePage.getErrorDialog(), notNullValue());
+        assertThat("Error dialog is not present after error situation!",
+                selenium.getWebElement(consolePage::getDangerAlertElement), notNullValue());
 
     }
 

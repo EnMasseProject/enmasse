@@ -14,7 +14,7 @@ public interface IWebPage {
      * Method for check if current opened web page is AuthorizeAccessWebPage
      * this method should be called in constructor
      */
-    void checkReachableWebPage();
+    void checkReachableWebPage() throws Exception;
 
     default void checkTitle(SeleniumProvider selenium, String webPageTitle) {
         boolean isOpened = false;
