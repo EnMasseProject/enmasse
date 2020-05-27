@@ -6,7 +6,7 @@
 |===
 | Standard attributes         | common/attributes.adoc
 | Shared includes             | common/
-| Images                      | images/
+| Images                      | _images/
 |===
 
 [[anchor-and-file-names]]

@@ -164,6 +164,7 @@ spec:
                       - required:
                           - type
                           - routeTlsTermination
+                          - routeServicePort
                         properties:
                           type:
                             type: string

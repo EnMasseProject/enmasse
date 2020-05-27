@@ -90,6 +90,10 @@ pipeline {
                         env.DOCKER_REGISTRY = 'quay.io'
                         env.INTERNAL_REGISTRY = 'quay.io'
                         env.DOCKER_ORG = 'enmasse'
+                        if (env.OC_VERSION == "4") {
+                            env.OCP4_EXTERNAL_IMAGE_REGISTRY = 'default-route-openshift-image-registry.apps-crc.testing'
+                            env.OCP4_INTERNAL_IMAGE_REGISTRY = 'image-registry.openshift-image-registry.svc:5000'
+                        }
                     } else {
                         env.TEST_ONLY = false
                         if (env.OC_VERSION == "4") {
@@ -242,7 +246,7 @@ pipeline {
             script {
                 dir('enmasse') {
                     enmasse.postAction(env.ARTIFACTS_DIR)
-                    sh "sudo ./systemtests/scripts/build_pr_response.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}' '${env.BUILD_NUMBER}' ${env.OC_VERSION}"
+                    sh "sudo ./systemtests/scripts/build_pr_response.sh ./systemtests/target/surefire-reports/ '${env.TEST_CASE}' '${env.TEST_PROFILE}' '${env.BUILD_NUMBER}' ${env.OC_VERSION} ${currentBuild.result}"
                     enmasse.postGithubPrComment("results.json")
                 }
             }

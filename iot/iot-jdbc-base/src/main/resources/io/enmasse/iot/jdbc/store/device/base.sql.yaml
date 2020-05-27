@@ -1,3 +1,9 @@
+
+#
+# For other databases, this can be provided using extensions
+# An example for H2 is available at: https://github.com/EnMasseProject/h2-iot-container-images
+#
+
 create: |
    INSERT INTO %s (
       tenant_id,

@@ -9,12 +9,10 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import io.enmasse.systemtest.selenium.resources.BindingSecretData;
 import io.enmasse.systemtest.selenium.resources.ProvisionedServiceItem;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -152,7 +150,6 @@ public class OpenshiftWebPage implements IWebPage {
         log.info("Opening openshift web page on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
-            selenium.getAngularDriver().waitForAngularRequestsToFinish();
             selenium.takeScreenShot();
             try {
                 logout();
@@ -162,7 +159,6 @@ public class OpenshiftWebPage implements IWebPage {
             if (!login())
                 throw new IllegalAccessException(loginPage.getAlertMessage());
         }
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
             throw new IllegalStateException("Openshift console not loaded");
         }

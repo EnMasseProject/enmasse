@@ -12,12 +12,14 @@ import (
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
 	corev1 "k8s.io/api/core/v1"
 
 	k8errors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
 	"k8s.io/client-go/tools/record"
@@ -35,10 +37,11 @@ var log = logf.Log.WithName("controller_messagingtenant")
 var _ reconcile.Reconciler = &ReconcileMessagingTenant{}
 
 type ReconcileMessagingTenant struct {
-	client    client.Client
-	reader    client.Reader
-	recorder  record.EventRecorder
-	namespace string
+	client         client.Client
+	reader         client.Reader
+	recorder       record.EventRecorder
+	certController *cert.CertController
+	namespace      string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -60,10 +63,11 @@ func newReconciler(mgr manager.Manager) *ReconcileMessagingTenant {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
 	return &ReconcileMessagingTenant{
-		client:    mgr.GetClient(),
-		reader:    mgr.GetAPIReader(),
-		recorder:  mgr.GetEventRecorderFor("messagingtenant"),
-		namespace: namespace,
+		client:         mgr.GetClient(),
+		reader:         mgr.GetAPIReader(),
+		recorder:       mgr.GetEventRecorderFor("messagingtenant"),
+		certController: cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour),
+		namespace:      namespace,
 	}
 }
 
@@ -119,6 +123,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 			tenant.Status.Phase = v1beta2.MessagingTenantConfiguring
 		}
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound)
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCaCreated)
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady)
 		return processorResult{}, nil
 	})
@@ -159,6 +164,16 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingTenant: waiting for %d addresses and %d endpoints to be deleted", len(addresses.Items), len(endpoints.Items))
 					}
 
+					if tenant.IsBound() {
+						secret := &corev1.Secret{
+							ObjectMeta: metav1.ObjectMeta{Namespace: tenant.Status.MessagingInfrastructureRef.Namespace, Name: cert.GetTenantCaSecretName(tenant.Namespace)},
+						}
+						err = r.client.Delete(ctx, secret)
+						if err != nil && k8errors.IsNotFound(err) {
+							return reconcile.Result{}, nil
+						}
+						return reconcile.Result{}, err
+					}
 					return reconcile.Result{}, nil
 				},
 			},
@@ -181,24 +196,23 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	}
 
 	// Lookup messaging infra
-	infra := &v1beta2.MessagingInfra{}
+	infra := &v1beta2.MessagingInfrastructure{}
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
-		if tenant.Status.MessagingInfraRef == nil {
-			// Find a suiting MessagingInfra to bind to
-			infras := &v1beta2.MessagingInfraList{}
+		if !tenant.IsBound() {
+			// Find a suiting MessagingInfrastructure to bind to
+			infras := &v1beta2.MessagingInfrastructureList{}
 			err := r.client.List(ctx, infras)
 			if err != nil {
 				logger.Info("Error listing infras")
 				return processorResult{}, err
 			}
-			logger.Info("Infras", "infras", infras)
 			infra = findBestMatch(tenant, infras.Items)
 			return processorResult{}, nil
 		} else {
-			err := r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfraRef.Name, Namespace: tenant.Status.MessagingInfraRef.Namespace}, infra)
+			err := r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
 			if err != nil {
 				if k8errors.IsNotFound(err) {
-					msg := fmt.Sprintf("Infrastructure %s/%s not found!", tenant.Status.MessagingInfraRef.Namespace, tenant.Status.MessagingInfraRef.Name)
+					msg := fmt.Sprintf("Infrastructure %s/%s not found!", tenant.Status.MessagingInfrastructureRef.Namespace, tenant.Status.MessagingInfrastructureRef.Name)
 					tenant.Status.Message = msg
 					tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionFalse, "", msg)
 					return processorResult{RequeueAfter: 10 * time.Second}, nil
@@ -217,7 +231,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		if infra != nil {
 			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).SetStatus(corev1.ConditionTrue, "", "")
-			tenant.Status.MessagingInfraRef = &v1beta2.MessagingInfraReference{
+			tenant.Status.MessagingInfrastructureRef = v1beta2.MessagingInfrastructureReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
 			}
@@ -233,6 +247,21 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		return result.Result(), err
 	}
 
+	// Reconcile Tenant CA
+	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
+		err := r.certController.ReconcileTenantCa(ctx, logger, infra, tenant.Namespace)
+		if err != nil {
+			tenant.Status.Message = err.Error()
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCaCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			return processorResult{}, err
+		}
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCaCreated).SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
 	// Update tenant status
 	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
 		originalStatus := tenant.Status.DeepCopy()
@@ -241,6 +270,8 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, tenant.Status) {
 			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status,
+				"originalBoundTransition", originalStatus.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).LastTransitionTime.UnixNano(),
+				"originalReadyTransition", originalStatus.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).LastTransitionTime.UnixNano(),
 				"boundTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound).LastTransitionTime.UnixNano(),
 				"readyTransition", tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady).LastTransitionTime.UnixNano())
 			// If there was an error and the status has changed, perform an update so that
@@ -253,10 +284,13 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	return result.Result(), err
 }
 
-func findBestMatch(tenant *v1beta2.MessagingTenant, infras []v1beta2.MessagingInfra) *v1beta2.MessagingInfra {
-	var bestMatch *v1beta2.MessagingInfra
+func findBestMatch(tenant *v1beta2.MessagingTenant, infras []v1beta2.MessagingInfrastructure) *v1beta2.MessagingInfrastructure {
+	var bestMatch *v1beta2.MessagingInfrastructure
 	var bestMatchSelector *v1beta2.NamespaceSelector
 	for _, infra := range infras {
+		if infra.Status.Phase != v1beta2.MessagingInfrastructureActive {
+			continue
+		}
 		selector := infra.Spec.NamespaceSelector
 		// If there is a global one without a selector, use it
 		if selector == nil && bestMatch == nil {

@@ -34,7 +34,7 @@ function start(env) {
             env.ADDRESS_SPACE_PREFIX = env.ADDRESS_SPACE + ".";
             var address_source = new AddressSource(env);
 
-            var console_server = new ConsoleServer(address_source, env, openshift);
+            var console_server = new ConsoleServer(env, openshift);
             bind_event(address_source, 'addresses_defined', console_server.addresses);
 
             var server_promise = console_server.listen(env);

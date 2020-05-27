@@ -62,5 +62,10 @@
           <destName>broker-cli.jar</destName>
           <fileMode>0644</fileMode>
         </file>
+        <file>
+          <source>${project.basedir}/../build/broker-probe</source>
+          <outputDirectory>${plugin.home}/bin</outputDirectory>
+          <fileMode>0755</fileMode>
+       </file>
     </files>
 </assembly>

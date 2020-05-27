@@ -41,7 +41,13 @@ var finalizers = []finalizer.Finalizer{
 		Name:        "iot.enmasse.io/deviceRegistryCleanup",
 		Deconstruct: cleanupDeviceRegistry,
 	},
+	{
+		Name:        "iot.enmasse.io/trust-anchors",
+		Deconstruct: cleanupTrustAnchors,
+	},
 }
+
+// region Resources
 
 func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
 
@@ -166,6 +172,10 @@ func cleanupResource(ctx context.Context, c client.Client, project *iotv1alpha1.
 
 }
 
+// endregion
+
+// region Device Registry
+
 func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
 
 	project, ok := ctx.Object.(*iotv1alpha1.IoTProject)
@@ -226,3 +236,33 @@ func deleteJob(ctx finalizer.DeconstructorContext, job *batchv1.Job) error {
 		PropagationPolicy: &p,
 	})
 }
+
+// endregion
+
+// region Trust Anchors
+
+func cleanupTrustAnchors(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
+
+	project, ok := ctx.Object.(*iotv1alpha1.IoTProject)
+
+	namespace := util.MustGetInfrastructureNamespace()
+
+	if !ok {
+		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
+	}
+
+	err := ctx.Client.DeleteAllOf(ctx.Context, &corev1.ConfigMap{},
+		client.InNamespace(namespace),
+		client.MatchingLabels{
+			labelProjectOwnerNamespace: project.Namespace,
+			labelProjectOwnerName:      project.Name,
+		},
+	)
+
+	// done
+
+	return reconcile.Result{}, err
+
+}
+
+// endregion

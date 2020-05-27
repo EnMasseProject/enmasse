@@ -133,4 +133,14 @@ public class Minikube extends Kubernetes {
     public String getHost() {
         return runCommand("minikube", "ip");
     }
+    
+    @Override
+    public String getClusterExternalImageRegistry() {
+        return "localhost:5000";
+    }
+
+    @Override
+    public String getClusterInternalImageRegistry() {
+        return "localhost:5000";
+    }
 }

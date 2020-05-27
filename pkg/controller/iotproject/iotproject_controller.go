@@ -127,7 +127,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 	if reconciledProject.DeletionTimestamp != nil {
 
 		newProject.Status.Phase = iotv1alpha1.ProjectPhaseTerminating
-		newProject.Status.PhaseReason = "Project deleted"
+		newProject.Status.Message = "Project deleted"
 		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
 		resourcesCreatedCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
 		resourcesReadyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
@@ -142,7 +142,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 			newProject.Status.DownstreamEndpoint != nil {
 
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseActive
-			newProject.Status.PhaseReason = ""
+			newProject.Status.Message = ""
 
 		} else {
 
@@ -272,9 +272,12 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 		// the call to Update will re-trigger us, and we don't need to set "requeue"
 	}
 
-	// set the tenant name in the status section
-
-	project.Status.TenantName = project.TenantName()
+	rc.ProcessSimple(func() error {
+		return project.Status.GetProjectCondition(iotv1alpha1.ProjectConditionTypeConfigurationAccepted).
+			RunWith("ConfigurationNotAccepted", func() error {
+				return r.acceptConfiguration(project)
+			})
+	})
 
 	// process different types
 

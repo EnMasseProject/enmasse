@@ -299,8 +299,8 @@ public class Exec {
     }
 
     public static ExecutionResultData execute(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String, String> env, String input) {
+        Exec executor = new Exec(appendLineSeparator);
         try {
-            Exec executor = new Exec(appendLineSeparator);
             executor.setEnv(env);
             int ret = executor.exec(input, command, timeout);
             synchronized (lock) {
@@ -316,8 +316,7 @@ public class Exec {
             }
             return new ExecutionResultData(ret, executor.getStdOut(), executor.getStdErr());
         } catch (Exception ex) {
-            ex.printStackTrace();
-            return new ExecutionResultData(1, null, null);
+            return new ExecutionResultData(1, executor.getStdOut(), executor.getStdErr());
         }
     }
 

@@ -5,25 +5,24 @@
 
 package io.enmasse.systemtest.manager;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class SharedResourceManager extends ResourceManager {
     private static final Logger LOGGER = CustomLogger.getLogger();
     private static SharedResourceManager instance;
     private static Map<String, Integer> spaceCountMap = new HashMap<>();
     protected AmqpClientFactory amqpClientFactory = null;
-    protected MqttClientFactory mqttClientFactory = null;
     private AddressSpace sharedAddressSpace = null;
     private static final String DEFAULT_ADDRESS_TEMPLATE = "-shared-";
     private UserCredentials defaultCredentials = environment.getSharedDefaultCredentials();
@@ -73,15 +72,13 @@ public class SharedResourceManager extends ResourceManager {
                 LOGGER.warn("Failed to delete addresses from shared address space (ignored)", e);
             }
         }
-        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        closeClientFactories(amqpClientFactory);
         amqpClientFactory = null;
-        mqttClientFactory = null;
         sharedAddressSpace = null;
     }
 
     void initFactories(AddressSpace addressSpace) {
         amqpClientFactory = new AmqpClientFactory(sharedAddressSpace, defaultCredentials);
-        mqttClientFactory = new MqttClientFactory(sharedAddressSpace, defaultCredentials);
     }
 
     @Override
@@ -124,7 +121,7 @@ public class SharedResourceManager extends ResourceManager {
         LOGGER.info("Deleting addresses");
         deleteAddresses(sharedAddressSpace);
         LOGGER.info("Closing clients");
-        closeClientFactories(amqpClientFactory, mqttClientFactory);
+        closeClientFactories(amqpClientFactory);
         initFactories(sharedAddressSpace);
     }
 
@@ -136,16 +133,6 @@ public class SharedResourceManager extends ResourceManager {
     @Override
     public void setAmqpClientFactory(AmqpClientFactory amqpClientFactory) {
         this.amqpClientFactory = amqpClientFactory;
-    }
-
-    @Override
-    public MqttClientFactory getMqttClientFactory() {
-        return mqttClientFactory;
-    }
-
-    @Override
-    public void setMqttClientFactory(MqttClientFactory mqttClientFactory) {
-        this.mqttClientFactory = mqttClientFactory;
     }
 
 }

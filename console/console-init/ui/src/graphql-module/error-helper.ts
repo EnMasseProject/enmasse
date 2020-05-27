@@ -4,7 +4,7 @@
  */
 
 import { types } from "context-state-reducer";
-import { QUERY } from "constants/constants";
+import { QUERY } from "constant";
 
 const onServerError = (error: any, dispactAction: any, states: any) => {
   const { graphQLErrors, networkError, operation } = error;

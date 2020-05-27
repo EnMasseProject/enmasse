@@ -264,6 +264,10 @@ Router.prototype.create_entity = function (type, name, attributes) {
     return this.request('CREATE', {'type':type, 'name':name}, attributes || {});
 };
 
+Router.prototype.update_entity = function (type, identity, attributes) {
+    return this.request('UPDATE', {'type':type, 'identity':identity}, attributes || {});
+};
+
 Router.prototype.delete_entity = function (type, name) {
     return this.request('DELETE', {'type':type, 'name':name}, {});
 };
@@ -331,36 +335,39 @@ Router.prototype.close = function () {
     this._clear_timer();
 };
 
-function add_resource_type (name, typename, plural) {
+function add_resource_type (crudFlags, name, typename, plural) {
     var resource_type = typename || name;
-    Router.prototype['create_' + name] = function (o) {
-        return this.create_entity(resource_type, o.name, o);
-    };
-    Router.prototype['delete_' + name] = function (o) {
-        return this.delete_entity(resource_type, o.name);
-    };
     var plural_name = plural || name + 's';
-    Router.prototype['get_' + plural_name] = function (options) {
-        return this.query(resource_type, options);
-    };
-
+    if (crudFlags.indexOf("C") > -1) {
+        Router.prototype['create_' + name] = function (o) {
+            return this.create_entity(resource_type, o.name, o);
+        }
+    }
+    if (crudFlags.indexOf("R") > -1) {
+        Router.prototype['get_' + plural_name] = function (options) {
+            return this.query(resource_type, options);
+        }
+    }
+    if (crudFlags.indexOf("U") > -1) {
+        Router.prototype['update_' + name] = function (o, attributes) {
+            return this.update_entity(resource_type, o.identity, attributes);
+        }
+    }
+    if (crudFlags.indexOf("D") > -1) {
+        Router.prototype['delete_' + name] = function (o) {
+            return this.delete_entity(resource_type, o.name);
+        }
+    }
 }
 
-function add_queryable_type (name, typename) {
-    var resource_type = typename || name;
-    Router.prototype['get_' + name] = function (options) {
-        return this.query(resource_type, options);
-    };
-}
+add_resource_type('CRD', 'connector');
+add_resource_type('CRD', 'listener');
+add_resource_type('CRD', 'address', 'org.apache.qpid.dispatch.router.config.address', 'addresses');
+add_resource_type('CRD', 'link_route', 'org.apache.qpid.dispatch.router.config.linkRoute');
 
-add_resource_type('connector');
-add_resource_type('listener');
-add_resource_type('address', 'org.apache.qpid.dispatch.router.config.address', 'addresses');
-add_resource_type('link_route', 'org.apache.qpid.dispatch.router.config.linkRoute');
-
-add_queryable_type('connections', 'org.apache.qpid.dispatch.connection');
-add_queryable_type('links', 'org.apache.qpid.dispatch.router.link');
-add_queryable_type('address_stats', 'org.apache.qpid.dispatch.router.address');
+add_resource_type('RU', 'connection', 'org.apache.qpid.dispatch.connection');
+add_resource_type('R', 'link', 'org.apache.qpid.dispatch.router.link');
+add_resource_type('R', 'address_stat', 'org.apache.qpid.dispatch.router.address');
 
 var amqp = require('rhea').create_container();
 module.exports.Router = Router;

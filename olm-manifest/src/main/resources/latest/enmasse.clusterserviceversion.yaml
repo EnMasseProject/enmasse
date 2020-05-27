@@ -423,66 +423,6 @@ spec:
     supported: false
   - type: AllNamespaces
     supported: true
-
-  relatedImages:
-    - name: address-space-controller
-      image: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
-    - name: standard-controller
-      image: ${STANDARD_CONTROLLER_IMAGE}
-    - name: router
-      image: ${ROUTER_IMAGE}
-    - name: broker
-      image: ${BROKER_IMAGE}
-    - name: broker-plugin
-      image: ${BROKER_PLUGIN_IMAGE}
-    - name: topic-forwarder
-      image: ${TOPIC_FORWARDER_IMAGE}
-    - name: agent
-      image: ${AGENT_IMAGE}
-    - name: none-authservice
-      image: ${NONE_AUTHSERVICE_IMAGE}
-    - name: keycloak
-      image: ${KEYCLOAK_IMAGE}
-    - name: keycloak-plugin
-      image: ${KEYCLOAK_PLUGIN_IMAGE}
-    - name: mqtt-gateway
-      image: ${MQTT_GATEWAY_IMAGE}
-    - name: mqtt-lwt
-      image: ${MQTT_LWT_IMAGE}
-    - name: console-init
-      image: ${CONSOLE_INIT_IMAGE}
-    - name: console-proxy-openshift
-      image: ${CONSOLE_PROXY_OPENSHIFT_IMAGE}
-    - name: console-proxy-kubernetes
-      image: ${CONSOLE_PROXY_KUBERNETES_IMAGE}
-    - name: console-server
-      image: ${CONSOLE_SERVER_IMAGE}
-    - name: controller-manager
-      image: ${CONTROLLER_MANAGER_IMAGE}
-    - name: iot-proxy-configurator
-      image: ${IOT_PROXY_CONFIGURATOR_IMAGE}
-    - name: iot-auth-service
-      image: ${IOT_AUTH_SERVICE_IMAGE}
-    - name: iot-device-connection-infinispan
-      image: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
-    - name: iot-device-connection-jdbc
-      image: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
-    - name: iot-device-registry-infinispan
-      image: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
-    - name: iot-device-registry-jdbc
-      image: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
-    - name: iot-http-adapter
-      image: ${IOT_HTTP_ADAPTER_IMAGE}
-    - name: iot-mqtt-adapter
-      image: ${IOT_MQTT_ADAPTER_IMAGE}
-    - name: iot-lorawan-adapter
-      image: ${IOT_LORAWAN_ADAPTER_IMAGE}
-    - name: iot-sigfox-adapter
-      image: ${IOT_SIGFOX_ADAPTER_IMAGE}
-    - name: iot-tenant-service
-      image: ${IOT_TENANT_SERVICE_IMAGE}
-    - name: iot-tenant-cleaner
-      image: ${IOT_TENANT_CLEANER_IMAGE}
   install:
     strategy: deployment
     spec:
@@ -494,7 +434,7 @@ spec:
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "" ]
           resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "services/finalizers", "pods" ]
-          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+          verbs: [ "get", "list", "watch", "update", "create", "patch", "delete", "deletecollection" ]
         - apiGroups: [ "", "route.openshift.io" ]
           resources: [ "routes", "routes/custom-host", "routes/status"]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
@@ -590,6 +530,9 @@ spec:
         - apiGroups: [ "enmasse.io" ]
           resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "authentication.k8s.io" ]
+          resources: [ "tokenreviews" ]
+          verbs: [ "create" ]
       - serviceAccountName: standard-authservice
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -725,65 +668,65 @@ spec:
                   value: "true"
                 - name: CONTROLLER_ENABLE_MESSAGING_USER
                   value: "true"
-                - name: ADDRESS_SPACE_CONTROLLER_IMAGE
+                - name: RELATED_IMAGE_ADDRESS_SPACE_CONTROLLER
                   value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
-                - name: CONTROLLER_MANAGER_IMAGE
+                - name: RELATED_IMAGE_CONTROLLER_MANAGER
                   value: ${CONTROLLER_MANAGER_IMAGE}
-                - name: IOT_AUTH_SERVICE_IMAGE
+                - name: RELATED_IMAGE_IOT_AUTH_SERVICE
                   value: ${IOT_AUTH_SERVICE_IMAGE}
-                - name: IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE
+                - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_INFINISPAN
                   value: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
-                - name: IOT_DEVICE_CONNECTION_JDBC_IMAGE
+                - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_JDBC
                   value: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
-                - name: IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE
+                - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_INFINISPAN
                   value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
-                - name: IOT_DEVICE_REGISTRY_JDBC_IMAGE
+                - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_JDBC
                   value: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
-                - name: IOT_HTTP_ADAPTER_IMAGE
+                - name: RELATED_IMAGE_IOT_HTTP_ADAPTER
                   value: ${IOT_HTTP_ADAPTER_IMAGE}
-                - name: IOT_MQTT_ADAPTER_IMAGE
+                - name: RELATED_IMAGE_IOT_MQTT_ADAPTER
                   value: ${IOT_MQTT_ADAPTER_IMAGE}
-                - name: IOT_LORAWAN_ADAPTER_IMAGE
+                - name: RELATED_IMAGE_IOT_LORAWAN_ADAPTER
                   value: ${IOT_LORAWAN_ADAPTER_IMAGE}
-                - name: IOT_SIGFOX_ADAPTER_IMAGE
+                - name: RELATED_IMAGE_IOT_SIGFOX_ADAPTER
                   value: ${IOT_SIGFOX_ADAPTER_IMAGE}
-                - name: IOT_TENANT_CLEANER_IMAGE
+                - name: RELATED_IMAGE_IOT_TENANT_CLEANER
                   value: ${IOT_TENANT_CLEANER_IMAGE}
-                - name: IOT_TENANT_SERVICE_IMAGE
+                - name: RELATED_IMAGE_IOT_TENANT_SERVICE
                   value: ${IOT_TENANT_SERVICE_IMAGE}
-                - name: IOT_PROXY_CONFIGURATOR_IMAGE
+                - name: RELATED_IMAGE_IOT_PROXY_CONFIGURATOR
                   value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
-                - name: ROUTER_IMAGE
+                - name: RELATED_IMAGE_ROUTER
                   value: ${ROUTER_IMAGE}
-                - name: STANDARD_CONTROLLER_IMAGE
+                - name: RELATED_IMAGE_STANDARD_CONTROLLER
                   value: ${STANDARD_CONTROLLER_IMAGE}
-                - name: AGENT_IMAGE
+                - name: RELATED_IMAGE_AGENT
                   value: ${AGENT_IMAGE}
-                - name: BROKER_IMAGE
+                - name: RELATED_IMAGE_BROKER
                   value: ${BROKER_IMAGE}
-                - name: BROKER_PLUGIN_IMAGE
+                - name: RELATED_IMAGE_BROKER_PLUGIN
                   value: ${BROKER_PLUGIN_IMAGE}
-                - name: TOPIC_FORWARDER_IMAGE
+                - name: RELATED_IMAGE_TOPIC_FORWARDER
                   value: ${TOPIC_FORWARDER_IMAGE}
-                - name: MQTT_GATEWAY_IMAGE
+                - name: RELATED_IMAGE_MQTT_GATEWAY
                   value: ${MQTT_GATEWAY_IMAGE}
-                - name: MQTT_LWT_IMAGE
+                - name: RELATED_IMAGE_MQTT_LWT
                   value: ${MQTT_LWT_IMAGE}
-                - name: NONE_AUTHSERVICE_IMAGE
+                - name: RELATED_IMAGE_NONE_AUTHSERVICE
                   value: ${NONE_AUTHSERVICE_IMAGE}
-                - name: KEYCLOAK_IMAGE
+                - name: RELATED_IMAGE_KEYCLOAK
                   value: ${KEYCLOAK_IMAGE}
-                - name: KEYCLOAK_PLUGIN_IMAGE
+                - name: RELATED_IMAGE_KEYCLOAK_PLUGIN
                   value: ${KEYCLOAK_PLUGIN_IMAGE}
                 - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
                   value: "true"
-                - name: CONSOLE_INIT_IMAGE
+                - name: RELATED_IMAGE_CONSOLE_INIT
                   value: "${CONSOLE_INIT_IMAGE}"
-                - name: CONSOLE_SERVER_IMAGE
+                - name: RELATED_IMAGE_CONSOLE_SERVER
                   value: "${CONSOLE_SERVER_IMAGE}"
-                - name: CONSOLE_PROXY_OPENSHIFT_IMAGE
+                - name: RELATED_IMAGE_CONSOLE_PROXY_OPENSHIFT
                   value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
-                - name: CONSOLE_PROXY_KUBERNETES_IMAGE
+                - name: RELATED_IMAGE_CONSOLE_PROXY_KUBERNETES
                   value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{}"

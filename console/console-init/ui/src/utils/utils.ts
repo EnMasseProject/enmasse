@@ -1,8 +1,13 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
   NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-} from "constants/constants";
+} from "constant";
 import {
   forbiddenBackslashRegexp,
   forbiddenSingleQuoteRegexp,
@@ -11,7 +16,8 @@ import {
 
 export interface ISelectOption {
   value: string;
-  isDisabled: boolean;
+  isDisabled?: boolean;
+  key?: string;
 }
 
 /**
@@ -38,10 +44,12 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
       0,
       NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
     );
-    records.push({
-      value: TypeAheadMessage.MORE_CHAR_REQUIRED,
-      isDisabled: true
-    });
+    if (top_10_records.length >= 10) {
+      records.push({
+        value: TypeAheadMessage.MORE_CHAR_REQUIRED,
+        isDisabled: true
+      });
+    }
     top_10_records.map((data: string) =>
       records.push(createSelectOptionObject(data, false))
     );
@@ -53,6 +61,20 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   return records;
 };
 
+const compareObject = (obj1: any, obj2: any) => {
+  if (obj1 && obj2) {
+    return JSON.stringify(obj1) === JSON.stringify(obj2);
+  }
+};
+
+const getType = (type: string) => {
+  switch (type && type.toLowerCase()) {
+    case "standard":
+      return " Standard";
+    case "brokered":
+      return " Brokered";
+  }
+};
 const removeForbiddenChars = (input: string) => {
   let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
   escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
@@ -60,4 +82,42 @@ const removeForbiddenChars = (input: string) => {
   return escapedInput;
 };
 
-export { getSelectOptionList, removeForbiddenChars };
+export const getTypeColor = (type: string) => {
+  let iconColor = "";
+  switch (type.toUpperCase()) {
+    case "Q": {
+      iconColor = "#8A8D90";
+      break;
+    }
+    case "T": {
+      iconColor = "#8481DD";
+      break;
+    }
+    case "S": {
+      iconColor = "#EC7A08";
+      break;
+    }
+    case "M": {
+      iconColor = "#009596";
+      break;
+    }
+    case "A": {
+      iconColor = "#F4C145";
+      break;
+    }
+  }
+  return iconColor;
+};
+const dnsSubDomainRfc1123NameRegexp = new RegExp(
+  "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
+);
+const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
+
+export {
+  getSelectOptionList,
+  compareObject,
+  getType,
+  removeForbiddenChars,
+  dnsSubDomainRfc1123NameRegexp,
+  messagingAddressNameRegexp
+};

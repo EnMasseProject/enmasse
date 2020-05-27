@@ -17,6 +17,7 @@ jobs:
       DOCKER_REGISTRY: "quay.io"
       TAG: "latest"
       RELEASE: true
+      PUSH_REGISTRY: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -37,22 +38,21 @@ jobs:
       - name: Install dependencies
         run: ./.github/scripts/install_dep.sh
 
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.13.1'
+      - run: go version
+
       - name: setup-docker
         run: ./.github/scripts/setup_docker.sh
 
       - name: Minikube setup with registry
-        uses: EnMasseProject/minikube-setup@V1.0.0
-        with:
-          k8s-version: 1.15.0
+        uses: EnMasseProject/minikube-setup@V1.0.2
 
       - name: Set up JDK 11
         uses: actions/setup-java@v1
         with:
           java-version: 11.0.2
-
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 2.6
 
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
@@ -110,3 +110,9 @@ jobs:
           asset_name: ${{ env.ASSETNAME }}
           asset_content_type: application/gzip
     
+      - name: Publish documentation
+        env:
+          FROM: .
+          TO: website
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: ./.github/scripts/publish_docs.sh

@@ -24,22 +24,14 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(NON_NULL)
 public class CommonServiceConfig extends ServiceConfig {
 
-    private ContainerConfig container;
-    private JavaContainerOptions java;
+    private JavaContainerConfig container;
     private TlsOptions tls;
 
-    public ContainerConfig getContainer() {
+    public JavaContainerConfig getContainer() {
         return container;
     }
-    public void setContainer(ContainerConfig container) {
+    public void setContainer(JavaContainerConfig container) {
         this.container = container;
-    }
-
-    public void setJava(JavaContainerOptions java) {
-        this.java = java;
-    }
-    public JavaContainerOptions getJava() {
-        return java;
     }
 
     public void setTls(TlsOptions tls) {

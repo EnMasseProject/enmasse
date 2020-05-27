@@ -25,8 +25,8 @@ func (c *FakeEnmasseV1beta2) MessagingEndpoints(namespace string) v1beta2.Messag
 	return &FakeMessagingEndpoints{c, namespace}
 }
 
-func (c *FakeEnmasseV1beta2) MessagingInfras(namespace string) v1beta2.MessagingInfraInterface {
-	return &FakeMessagingInfras{c, namespace}
+func (c *FakeEnmasseV1beta2) MessagingInfrastructures(namespace string) v1beta2.MessagingInfrastructureInterface {
+	return &FakeMessagingInfrastructures{c, namespace}
 }
 
 func (c *FakeEnmasseV1beta2) MessagingTenants(namespace string) v1beta2.MessagingTenantInterface {

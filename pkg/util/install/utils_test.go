@@ -175,7 +175,6 @@ func TestComputeConfigMapHash(t *testing.T) {
 	}
 	empty := corev1.ConfigMap{}
 
-
 	assert.NotEqual(t, "", hash(empty))
 
 	nameonly1 := corev1.ConfigMap{

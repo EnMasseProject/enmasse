@@ -13,8 +13,8 @@ public enum SortType {
     CONTAINER_ID,
     PROTOCOL,
     TIME_CREATED,
-    MESSAGES_IN,
-    MESSAGES_OUT,
+    MESSAGE_IN,
+    MESSAGE_OUT,
     STORED_MESSAGES;
 
     @Override

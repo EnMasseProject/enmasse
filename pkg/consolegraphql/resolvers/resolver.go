@@ -5,7 +5,7 @@
 
 package resolvers
 
-//go:generate go run github.com/99designs/gqlgen generate --config console/console-server/src/main/resources/gqlgen.yml --verbose
+//go:generate go run ../../../hack/gqlgen.go --config ../../../console/console-server/src/main/resources/gqlgen.yml --verbose
 
 import (
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"

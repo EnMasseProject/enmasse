@@ -4,24 +4,28 @@
  */
 
 import React from "react";
+import { useHistory } from "react-router-dom";
+import ApolloClient from "apollo-boost";
 import "@patternfly/react-core/dist/styles/base.css";
 import { AppLayout as Layout } from "use-patternfly";
-import { useHistory } from "react-router-dom";
 import { Brand, Avatar } from "@patternfly/react-core";
 import { CrossNavHeader, CrossNavApp } from "@rh-uxd/integration-react";
 import {
   getAvailableApps,
   getSolutionExplorerServer
 } from "@rh-uxd/integration-core";
-import ApolloClient from "apollo-boost";
 import { ApolloProvider } from "@apollo/react-hooks";
-import NavToolBar from "components/NavToolBar/NavToolBar";
+import {
+  NavToolBar,
+  ServerMessageAlert,
+  NetworkStatusAlert,
+  RootModal
+} from "components";
 import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
-import { ServerMessageAlert, NetworkStatusAlert } from "./components/common";
-import { useErrorContext } from "./context-state-reducer";
+import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
 import rhiImage from "@rh-uxd/integration-core/styles/assets/Logo-Red_Hat-Managed_Integration-A-Reverse-RGB.png";
 
@@ -49,14 +53,14 @@ const brandImgLogo = <Brand src={brandImg} alt="AMQ Logo" />;
 
 const AppLayout: React.FC = () => {
   history = useHistory();
-  const { dispatch, state } = useErrorContext();
+  const { dispatch, state } = useStoreContext();
   states = state;
   dispactAction = dispatch;
   const logoProps = React.useMemo(
     () => ({
       onClick: () => history.push("/")
     }),
-    [history]
+    []
   );
 
   const [availableApps, setHasAvailableApps] = React.useState<
@@ -81,6 +85,7 @@ const AppLayout: React.FC = () => {
 
   return (
     <ApolloProvider client={client}>
+      <RootModal />
       <CrossNavHeader
         apps={availableApps}
         currentApp={{
@@ -96,8 +101,6 @@ const AppLayout: React.FC = () => {
               : brandImgLogo
             : null
         }
-        avatar={avatar}
-        toolbar={<NavToolBar />}
       />
       <NetworkStatusAlert />
       <ServerMessageAlert />

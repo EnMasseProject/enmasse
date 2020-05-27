@@ -1,4 +1,4 @@
-TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
+TOPDIR:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 MVNPROJ=$(shell realpath --relative-to="$(realpath $(TOPDIR))" "$(shell pwd)")
 include $(TOPDIR)/Makefile.common
 
@@ -31,6 +31,9 @@ clean_java:
 	mvn clean $(MAVEN_ARGS)
 	rm -rf build target
 else
+build: build_deps
+	:
+
 clean_java:
 	rm -rf build target
 endif

@@ -54,6 +54,7 @@ import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.openshift.api.model.Route;
@@ -63,7 +64,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -126,19 +126,22 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteAddressSpace(addressSpace);
     }
 
-    protected void doTestBlankPageAfterAddressSpaceDeletion() throws Exception {
+    protected void doTestGoneAwayPageAfterAddressSpaceDeletion() throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         consolePage.createAddressSpace(addressSpace);
+        waitUntilAddressSpaceActive(addressSpace);
         consolePage.openAddressList(addressSpace);
         resourcesManager.deleteAddressSpaceWithoutWait(addressSpace);
-        selenium.getDriverWait().withTimeout(Duration.ofMinutes(22))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressSpaceTitle()));
-        assertNotNull(consolePage.getNotFoundPage());
+        try {
+            consolePage.awaitGoneAwayPage();
+        } finally {
+            resourcesManager.deleteAddressSpace(addressSpace);
+        }
     }
 
-    protected void doTestBlankPageAfterAddressDeletion() throws Exception {
+    protected void doTestGoneAwayPageAfterAddressDeletion() throws Exception {
         AddressSpace addressSpace = generateAddressSpaceObject(AddressSpaceType.STANDARD);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
@@ -148,9 +151,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.openClientsList(address);
         resourcesManager.deleteAddresses(address);
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getAddressTitle()));
-        assertNotNull(consolePage.getNotFoundPage());
+        consolePage.awaitGoneAwayPage();
         resourcesManager.deleteAddressSpace(addressSpace);
     }
 
@@ -553,7 +554,7 @@ public abstract class ConsoleTest extends TestBase {
         AddressWebItem addressWebItem = consolePage.getAddressItem(queue);
         selenium.clickOnItem(addressWebItem.getActionDropDown());
         selenium.clickOnItem(addressWebItem.getEditMenuItem());
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")), "Edit address plan");
+        selenium.clickOnItem(selenium.getWebElement(consolePage::getEditAddrPlan), "Edit address plan");
         assertTrue(selenium.getDriver().findElement(By.xpath("//option[@value='" + queuePlanName1 + "']")).getText().contains(queuePlanName1));
     }
 
@@ -614,8 +615,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.deleteSelectedAddressSpaces(brokered, standard);
         assertThat("Console should show empty list", consolePage.getAddressSpaceItems().size(), is(0));
 
-        WebElement emptyAddessSpace = selenium.getWebElement(() ->
-                selenium.getDriver().findElement(By.id("empty-ad-space")));
+        WebElement emptyAddessSpace = selenium.getWebElement(() -> consolePage.getEmptyAddSpace());
         assertTrue(emptyAddessSpace.isDisplayed());
     }
 
@@ -668,7 +668,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.createAddress(destination, false);
-        Thread.sleep(5_000);
+        Thread.sleep(5000);
         assertThat("Console failed, expected PENDING or READY state",
                 consolePage.getAddressItem(destination).getStatus(),
                 either(is(AddressStatus.PENDING)).or(is(AddressStatus.READY)));
@@ -723,20 +723,20 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddressesAndWait(addresses.toArray(new Address[0]));
 
         String subText = "queue";
-        consolePage.addFilter(FilterType.ADDRESS, subText);
+        consolePage.addFilter(FilterType.NAME, subText);
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
         assertAddressName("Console failed, does not contain addresses contain " + subText, items, subText);
 
         subText = "topic";
-        consolePage.addFilter(FilterType.ADDRESS, subText);
+        consolePage.addFilter(FilterType.NAME, subText);
         items = consolePage.getAddressItems();
         assertEquals(addressCount, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount));
 
 
-        consolePage.removeAddressFilter(FilterType.ADDRESS, "queue");
+        consolePage.removeAddressFilter(FilterType.NAME, "queue");
         items = consolePage.getAddressItems();
         assertEquals(addressCount / 2, items.size(),
                 String.format("Console failed, does not contain %d addresses", addressCount / 2));
@@ -776,10 +776,10 @@ public abstract class ConsoleTest extends TestBase {
 
         TestUtils.waitUntilCondition(() -> consolePage.getAddressItems().size() == addressCount, Duration.ofSeconds(30), Duration.ofMillis(500));
 
-        consolePage.addFilter(FilterType.STATUS, "Failed");
+        consolePage.addFilter(FilterType.STATUS, "Pending");
         List<AddressWebItem> items = consolePage.getAddressItems();
         assertEquals(badAddresses.size(), items.size(),
-                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Failed"));
+                String.format("Console failed, does not contain %d addresses when %s filter", badAddresses.size(), "Pending"));
 
         consolePage.addFilter(FilterType.STATUS, "Active");
         items = consolePage.getAddressItems();
@@ -855,6 +855,45 @@ public abstract class ConsoleTest extends TestBase {
         assertThat(client.getMessages().size(), is(0));
     }
 
+    protected void doTestConnectionClose(AddressSpace addressSpace) throws Exception {
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addressSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addressSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType("queue")
+                .withAddress("test-queue1")
+                .withPlan(addressSpace.getSpec().getType().equals(AddressSpaceType.BROKERED.toString()) ? DestinationPlan.BROKERED_QUEUE : DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+
+        resourcesManager.setAddresses(queue);
+
+        ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientReceiver())
+                .withMessagingRoute(AddressSpaceUtils.getMessagingRoute(addressSpace))
+                .withCredentials(defaultCredentials)
+                .withCount(1)
+                .withReconnect(false)
+                .withTimeout(180);
+
+        client.withAddress(queue).runAsync(false);
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openConnectionList(addressSpace);
+
+        selenium.waitUntilPropertyPresent(60, 1, () -> consolePage.getConnectionItems().size());
+
+        Optional<ConnectionWebItem> connRow = consolePage.getConnectionItems().stream().findFirst();
+        assertThat("Connection item not found", connRow.isPresent(), is(true));
+
+        consolePage.closeSelectedConnection(connRow.get());
+
+        selenium.waitUntilPropertyPresent(60, 0, () -> consolePage.getConnectionItems().size());
+    }
+
     protected void doTestEditAddress(AddressSpace addressSpace, Address address, String plan) throws Exception {
         resourcesManager.setAddresses(address);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
@@ -923,9 +962,9 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.openConsolePage();
         consolePage.openAddressList(addressSpace);
         consolePage.createAddresses(addresses.toArray(new Address[0]));
-        consolePage.sortAddresses(SortType.ADDRESS, true);
+        consolePage.sortAddresses(SortType.NAME, true);
         assertSorted("Console failed, items are not sorted by name asc", consolePage.getAddressItems());
-        consolePage.sortAddresses(SortType.ADDRESS, false);
+        consolePage.sortAddresses(SortType.NAME, false);
         assertSorted("Console failed, items are not sorted by name desc", consolePage.getAddressItems(), true);
     }
 
@@ -1154,7 +1193,7 @@ public abstract class ConsoleTest extends TestBase {
                 consolePage.getClientItems().size(), is(connectionCount * 2));
     }
 
-    protected void doTestEmptyLinkPage(AddressSpace addressSpace, ExtensionContext context) throws Exception {
+    protected void doTestGoneAwayPageAfterConnectionClose(AddressSpace addressSpace, ExtensionContext context) throws Exception {
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
         Address address = generateAddressObject(addressSpace, DestinationPlan.STANDARD_LARGE_QUEUE);
@@ -1170,14 +1209,10 @@ public abstract class ConsoleTest extends TestBase {
         kubernetes.deletePod(SystemtestsKubernetesApps.MESSAGING_CLIENTS, pod.getMetadata().getName());
         waitForPodsToTerminate(Collections.singletonList(pod.getMetadata().getUid()));
 
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(90))
-                .until(ExpectedConditions.invisibilityOf(consolePage.getLinkContainerId()));
-
-        assertNotNull(consolePage.getNotFoundPage());
-
+        consolePage.awaitGoneAwayPage();
     }
 
-    protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
+    protected void  doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace, SortType.CONTAINER_ID,
                 this::attachClients,
                 c -> c.getContainerId() != null,
@@ -1256,7 +1291,6 @@ public abstract class ConsoleTest extends TestBase {
         assertEquals(1, consolePage.getAddressItems().size(), "Unexpected number of addresses present before attaching clients");
 
         AmqpClient amqpClient = getResourceManager().getAmqpClientFactory().createQueueClient(addressSpace);
-//        amqpQueueCli.getConnectOptions().setCredentials(cred);
         var countMessages = 50;
         List<String> msgs = TestUtils.generateMessages(countMessages);
         Count<Message> predicate = new Count<>(msgs.size());
@@ -1522,7 +1556,8 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.createAddress(address);
         consolePage.createAddress(address);
         consolePage.waitForErrorDialogToBePresent();
-        assertThat("Error dialog is not present after error situation!", consolePage.getErrorDialog(), notNullValue());
+        assertThat("Error dialog is not present after error situation!",
+                selenium.getWebElement(consolePage::getDangerAlertElement), notNullValue());
 
     }
 
@@ -1541,9 +1576,6 @@ public abstract class ConsoleTest extends TestBase {
 
         Optional<Route> oauthRoute = kubernetes.listRoutes(openshiftAuthenticationNamespace, oauthRouteLabels).stream().findFirst();
         assertThat(oauthRoute.isPresent(), is(true));
-
-        Optional<Deployment> console = kubernetes.listDeployments(consoleDeploymentLabels).stream().findFirst();
-        assertThat(console.isPresent(), is(true));
 
         CertPair originalOauthCert = OpenSSLUtil.downloadCert(oauthRoute.get().getSpec().getHost(), 443);
 
@@ -1583,15 +1615,14 @@ public abstract class ConsoleTest extends TestBase {
                     String.format("--patch={\"spec\":{\"defaultCertificate\": {\"name\": \"%s\"}}}", customIngressSecretName)), true);
             assertThat("failed to patch ingress", patchIngress.getRetCode(), is(true));
 
+            awaitCertChange(ca, oauth.get(), oauthRoute.get());
 
-            awaitCertChange(ca, oauth.get(), console.get(), oauthRoute.get());
-
-            System.out.println(cluster.getCert());
-            System.out.println(cluster.getKey());
-
-            doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
-
+            awaitEnMasseConsoleAvailable("Ensuring console functional after certificate change");
+            SeleniumProvider.getInstance().tearDownDrivers();
+            SeleniumProvider.getInstance().setupDriver(this.getClass().getSimpleName().toLowerCase().contains("chrome") ? TestUtils.getChromeDriver() : TestUtils.getFirefoxDriver());
         } finally {
+            Optional<ConfigMap> bundle = kubernetes.listConfigMaps(Map.of("app", "enmasse")).stream().filter(cm -> "console-trusted-ca-bundle".equals(cm.getMetadata().getName())).findFirst();
+            bundle.ifPresent(cm -> log.info("console-trusted-ca-bundle resource version before rollback : {}", cm.getMetadata().getResourceVersion()));
 
             Exec.execute(Arrays.asList(kubernetes.getCluster().getKubeCmd(), "patch", "proxy/cluster",
                     "--type=merge",
@@ -1606,16 +1637,15 @@ public abstract class ConsoleTest extends TestBase {
                     "--namespace", openshiftIngressNamespace), false);
 
 
-            awaitCertChange(originalOauthCert, oauth.get(), console.get(), oauthRoute.get());
-
+            awaitCertChange(originalOauthCert, oauth.get(), oauthRoute.get());
+            awaitEnMasseConsoleAvailable("Ensuring console functional after certificate rollback");
         }
     }
 
-    private void awaitCertChange(CertPair expectedCa, Deployment oauthDeployment, Deployment consoleDeployment, Route oauthRoute) {
-        TestUtils.waitUntilCondition("Awaiting cert change", waitPhase -> {
+    private void awaitEnMasseConsoleAvailable(String forWhat) {
+        TestUtils.waitUntilCondition(forWhat, waitPhase -> {
             try {
-                KubeCMDClient.loginUser(clusterUser.getUsername(), clusterUser.getUsername());
-                verifyCertChange(expectedCa, oauthDeployment, consoleDeployment, oauthRoute);
+                doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
                 return true;
             } catch (Exception e) {
                 return false;
@@ -1623,7 +1653,22 @@ public abstract class ConsoleTest extends TestBase {
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
-    private void verifyCertChange(CertPair ca, Deployment oauthDeployment, Deployment consoleDeployment, Route oauthRoute) throws Exception {
+    private void awaitCertChange(CertPair expectedCa, Deployment oauthDeployment, Route oauthRoute) {
+        TestUtils.waitUntilCondition("Awaiting cert change", waitPhase -> {
+            try {
+                KubeCMDClient.loginUser(clusterUser.getUsername(), clusterUser.getUsername());
+                verifyCertChange(expectedCa, oauthDeployment, oauthRoute);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }, new TimeoutBudget(5, TimeUnit.MINUTES));
+    }
+
+    private void verifyCertChange(CertPair ca, Deployment oauthDeployment, Route oauthRoute) throws Exception {
+        Optional<ConfigMap> bundle = kubernetes.listConfigMaps(Map.of("app", "enmasse")).stream().filter(cm -> "console-trusted-ca-bundle".equals(cm.getMetadata().getName())).findFirst();
+        bundle.ifPresent(cm -> log.info("console-trusted-ca-bundle resource version : {}", cm.getMetadata().getResourceVersion()));
+
         log.info("Awaiting openshift oauth to be ready again");
         TestUtils.waitForChangedResourceVersion(new TimeoutBudget(1, TimeUnit.MINUTES), oauthDeployment.getMetadata().getResourceVersion(),
                 () -> {
@@ -1645,15 +1690,6 @@ public abstract class ConsoleTest extends TestBase {
                 return consolePing.getRetCode();
             }, new TimeoutBudget(3, TimeUnit.MINUTES));
         }
-
-        log.info("Awaiting EnMasse console to be ready again");
-        TestUtils.waitForChangedResourceVersion(new TimeoutBudget(1, TimeUnit.MINUTES), consoleDeployment.getMetadata().getResourceVersion(),
-                () -> {
-                    Optional<Deployment> upd = kubernetes.listDeployments(consoleDeployment.getMetadata().getLabels()).stream().findFirst();
-                    assertThat(upd.isPresent(), is(true));
-                    return upd.get().getMetadata().getResourceVersion();
-                });
-        KubeCMDClient.awaitRollout(new TimeoutBudget(3, TimeUnit.MINUTES), kubernetes.getInfraNamespace(), consoleDeployment.getMetadata().getName());
     }
 
     //============================================================================================

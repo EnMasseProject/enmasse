@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"strconv"
@@ -23,19 +24,26 @@ import (
 
 func (r *ReconcileIoTConfig) processInfinispanDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
+	service := config.Spec.ServicesConfig.DeviceRegistry.Infinispan
+
 	rc := &recon.ReconcileContext{}
+	change := cchange.NewRecorder()
 
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, r.reconcileInfinispanDeviceRegistryConfigMap)
+		return r.processConfigMap(ctx, nameDeviceRegistry+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileInfinispanDeviceRegistryConfigMap(config, service, configMap, change)
+		})
 	})
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameDeviceRegistry, config, false, r.reconcileInfinispanDeviceRegistryDeployment)
+		return r.processDeployment(ctx, nameDeviceRegistry, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileInfinispanDeviceRegistryDeployment(config, deployment, change)
+		})
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 	deployment.Annotations[RegistryTypeAnnotation] = "infinispan"
@@ -44,7 +52,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	deployment.Spec.Template.Annotations[RegistryTypeAnnotation] = "infinispan"
 
 	service := config.Spec.ServicesConfig.DeviceRegistry
-	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, nil)
+	applyDefaultDeploymentConfig(deployment, service.Infinispan.ServiceConfig, change)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "device-registry", func(container *corev1.Container) error {
@@ -106,12 +114,11 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 		install.ApplyVolumeMountSimple(container, "config", "/etc/config", true)
 		install.ApplyVolumeMountSimple(container, "tls", "/etc/tls-internal", true)
 		install.ApplyVolumeMountSimple(container, "tls-endpoint", "/etc/tls-external", true)
-		install.DropVolumeMount(container, "registry")
 
 		// apply container options
 
 		if service.Infinispan != nil {
-			applyContainerConfig(container, service.Infinispan.Container)
+			applyContainerConfig(container, service.Infinispan.Container.ContainerConfig)
 		}
 
 		// apply infinispan server options
@@ -144,7 +151,6 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 	// volumes
 
 	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "config", nameDeviceRegistry+"-config")
-	install.DropVolume(&deployment.Spec.Template.Spec, "registry")
 
 	// inter service secrets
 
@@ -194,7 +200,7 @@ func appendInfinispanExternalServer(container *v1.Container, external *iotv1alph
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(config *iotv1alpha1.IoTConfig, service *iotv1alpha1.InfinispanDeviceRegistry, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -202,9 +208,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryConfigMap(_ *iotv1
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -246,5 +250,8 @@ enmasse:
       certPath: /etc/tls-external/tls.crt
       keyFormat: PEM
 `
+
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
+
 	return nil
 }

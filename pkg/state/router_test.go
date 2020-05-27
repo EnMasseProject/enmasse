@@ -21,7 +21,7 @@ func TestInitialize(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &RouterState{
-		host:        "",
+		host:        Host{},
 		port:        0,
 		initialized: false,
 		entities: map[RouterEntityType]map[string]RouterEntity{
@@ -64,7 +64,7 @@ func TestEnsureConnector(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &RouterState{
-		host:        "",
+		host:        Host{},
 		port:        0,
 		initialized: false,
 		entities: map[RouterEntityType]map[string]RouterEntity{

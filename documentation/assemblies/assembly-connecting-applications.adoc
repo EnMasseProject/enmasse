@@ -19,8 +19,7 @@ To connect to the messaging service from outside the {KubePlatform} cluster, TLS
 
 The messaging protocols supported depends on the type of address space used. For more information about address space types, see  link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#con-address-space-messaging[Address space].
 
-//TODO: Add information about retrieving the CA certificate and using
-//that in the client examples.
+include::../modules/proc-client-get-cer.adoc[leveloffset=+1]
 
 //TODO: Add information about authentication.
 
@@ -41,4 +40,3 @@ include::../modules/ref-dotnet-example.adoc[leveloffset=+2]
 //TODO: add links for all these clients
 
 :context: {parent-context}
-

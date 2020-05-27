@@ -75,6 +75,9 @@ public class AddressSpaceSchema extends AbstractHasMetadata<AddressSpaceSchema> 
                 .withAuthenticationServices(authenticationServiceList.stream()
                         .map(authenticationService -> authenticationService.getMetadata().getName())
                         .collect(Collectors.toList()))
+                .withRouteServicePorts(addressSpaceType.getRouteServicePorts())
+                .withCertificateProviderTypes(addressSpaceType.getCertificateProviderTypes())
+                .withEndpointExposeTypes(addressSpaceType.getEndpointExposeTypes())
                 .endSpec()
                 .build();
     }

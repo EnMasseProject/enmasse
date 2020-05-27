@@ -37,3 +37,7 @@ func (c *MessagingTenantCondition) SetStatus(status corev1.ConditionStatus, reas
 	c.Reason = reason
 	c.Message = message
 }
+
+func (t *MessagingTenant) IsBound() bool {
+	return t.Status.MessagingInfrastructureRef.Name != "" && t.Status.MessagingInfrastructureRef.Namespace != ""
+}

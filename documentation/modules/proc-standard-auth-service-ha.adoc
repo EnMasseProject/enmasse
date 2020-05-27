@@ -1,0 +1,56 @@
+// Module included in the following assemblies:
+//
+// assembly-auth-services.adoc
+
+[id='proc-deploying-standard-auth-service-ha-{context}']
+= Deploying the `standard` authentication service for high availability (HA)
+
+For production deployment, the authentication services should be setup for high availability in order to reduce downtime during {KubePlatform} updates or in the event of a node failure. To implement the `standard` authentication service in HA mode, you deploy it using a PostgreSQL database as the backend.
+
+.Prerequisites
+* A PostgreSQL database.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u admin
+----
+endif::[]
+. Create a secret with the database credentials:
++
+[source,yaml,options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} create secret generic db-creds -n _{ProductNamespace}_ --from-literal=database-user=_admin_ --from-literal=database-password=_secure-password_
+----
+
+. Create an `AuthenticationService` definition:
++
+[source,yaml,options="nowrap"]
+----
+apiVersion: admin.enmasse.io/v1beta1
+kind: AuthenticationService
+metadata:
+  name: standard-authservice
+spec:
+  type: standard
+  standard:
+    replicas: 2
+    datasource:
+      type: postgresql
+      host: database.example.com
+      port: 5431
+      database: auth
+      credentialsSecret:
+        name: db-creds
+----
+
+. Deploy the authentication service:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} create -f standard-authservice.yaml -n _{ProductNamespace}_
+----

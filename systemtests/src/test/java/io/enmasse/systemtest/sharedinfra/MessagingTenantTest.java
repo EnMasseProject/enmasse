@@ -4,8 +4,8 @@
  */
 package io.enmasse.systemtest.sharedinfra;
 
-import io.enmasse.api.model.MessagingInfra;
-import io.enmasse.api.model.MessagingInfraBuilder;
+import io.enmasse.api.model.MessagingInfrastructure;
+import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
@@ -13,21 +13,19 @@ import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.time.Duration;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(TestTag.ISOLATED_SHARED_INFRA)
 public class MessagingTenantTest extends TestBase implements ITestIsolatedSharedInfra {
 
     @Test
     public void testMultipleMessagingTenants() {
-        MessagingInfra infra = new MessagingInfraBuilder()
+        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
                 .withNamespace(environment.namespace())
@@ -57,21 +55,21 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
         MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(t1.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t1.getStatus().getMessagingInfraRef().getName());
-        assertEquals(environment.namespace(), t1.getStatus().getMessagingInfraRef().getNamespace());
+        assertEquals("default-infra", t1.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(environment.namespace(), t1.getStatus().getMessagingInfrastructureRef().getNamespace());
 
         t2 = MessagingTenantResourceType.getOperation().inNamespace(t2.getMetadata().getNamespace()).withName(t2.getMetadata().getName()).get();
         assertNotNull(t2);
         condition = MessagingTenantResourceType.getCondition(t2.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t2.getStatus().getMessagingInfraRef().getName());
-        assertEquals(environment.namespace(), t2.getStatus().getMessagingInfraRef().getNamespace());
+        assertEquals("default-infra", t2.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(environment.namespace(), t2.getStatus().getMessagingInfrastructureRef().getNamespace());
     }
 
     @Test
     public void testSelectors() {
-        MessagingInfra infra = new MessagingInfraBuilder()
+        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
                 .withNamespace(environment.namespace())
@@ -100,21 +98,12 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
         infraResourceManager.createResource(infra, t1);
         infraResourceManager.createResource(false, t2);
 
-        MessagingTenantCondition condition = null;
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(2));
-        while (!budget.timeoutExpired()) {
-            t2 = MessagingTenantResourceType.getOperation().inNamespace(t2.getMetadata().getNamespace()).withName(t2.getMetadata().getName()).get();
-            assertNotNull(t2);
-            if (t2.getStatus() != null && t2.getStatus().getConditions() != null) {
-                condition = MessagingTenantResourceType.getCondition(t2.getStatus().getConditions(), "Bound");
-                if (condition != null && "False".equals(condition.getStatus())) {
-                    break;
-                }
-            }
-        }
-
-        assertNotNull(condition);
-        assertEquals("False", condition.getStatus());
+        assertTrue(infraResourceManager.waitResourceCondition(t2, messagingTenant ->
+                messagingTenant != null &&
+                        messagingTenant.getStatus() != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound") != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus() != null &&
+                        MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus().equals("False")));
     }
 
 

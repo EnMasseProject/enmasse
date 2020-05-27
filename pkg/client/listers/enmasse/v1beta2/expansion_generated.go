@@ -23,13 +23,13 @@ type MessagingEndpointListerExpansion interface{}
 // MessagingEndpointNamespaceLister.
 type MessagingEndpointNamespaceListerExpansion interface{}
 
-// MessagingInfraListerExpansion allows custom methods to be added to
-// MessagingInfraLister.
-type MessagingInfraListerExpansion interface{}
+// MessagingInfrastructureListerExpansion allows custom methods to be added to
+// MessagingInfrastructureLister.
+type MessagingInfrastructureListerExpansion interface{}
 
-// MessagingInfraNamespaceListerExpansion allows custom methods to be added to
-// MessagingInfraNamespaceLister.
-type MessagingInfraNamespaceListerExpansion interface{}
+// MessagingInfrastructureNamespaceListerExpansion allows custom methods to be added to
+// MessagingInfrastructureNamespaceLister.
+type MessagingInfrastructureNamespaceListerExpansion interface{}
 
 // MessagingTenantListerExpansion allows custom methods to be added to
 // MessagingTenantLister.

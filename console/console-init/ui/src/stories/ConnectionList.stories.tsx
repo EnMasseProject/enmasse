@@ -7,9 +7,11 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import {
   ConnectionList,
-  IConnection
-} from "components/AddressSpace/Connection/ConnectionList";
-import { EmptyConnection } from "components/AddressSpace/Connection/EmptyConnection";
+  IConnection,
+  ConnectionStatus
+} from "modules/connection/components/ConnectionList/ConnectionList";
+import { EmptyConnection } from "modules/connection/components/EmptyConnection/EmptyConnection";
+import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Connection"
@@ -25,7 +27,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno2",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   },
@@ -38,7 +40,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno3",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   },
@@ -51,7 +53,7 @@ const rows: IConnection[] = [
     messageOut: 123,
     senders: 123,
     receivers: 123,
-    status: "running",
+    status: ConnectionStatus.RUNNING,
     name: "juno4",
     creationTimestamp: "2020-01-20T11:44:28.607Z"
   }
@@ -59,7 +61,12 @@ const rows: IConnection[] = [
 
 export const connectionList = () => (
   <MemoryRouter>
-    <ConnectionList rows={rows} />
+    <ConnectionList
+      rows={rows}
+      onCloseConnection={action("onCloseConnection")}
+      onSelectAllConnection={action("select all connection")}
+      onSelectConnection={action("select connection")}
+    />
   </MemoryRouter>
 );
 

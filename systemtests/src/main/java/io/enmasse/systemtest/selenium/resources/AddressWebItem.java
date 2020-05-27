@@ -30,8 +30,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     public AddressWebItem(WebElement item) {
         this.webItem = item;
         this.checkBox = webItem.findElement(By.xpath("./td[@data-key='0']")).findElement(By.tagName("input"));
-        this.address = parseName(webItem.findElement(By.xpath("./td[@data-label='Address']")));
-        this.clientsRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-label='Address']")));
+        this.address = parseName(webItem.findElement(By.xpath("./td[@data-label='Name']")));
+        this.clientsRoute = parseRoute(webItem.findElement(By.xpath("./td[@data-label='Name']")));
         try {
             this.plan = webItem.findElement(By.xpath("./td[@data-label='Type/Plan']")).getText().toLowerCase().substring(2);
         } catch (Exception ex) {
@@ -41,8 +41,8 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
         this.status = webItem.findElement(By.xpath("./td[@data-label='Status']")).getText().replace(" ", "");
         try {
             this.timestamp = webItem.findElement(By.xpath("./td[@data-label='Time created']")).getText();
-            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-5']")).getText());
-            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='column-6']")).getText());
+            this.messagesIn =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='Message In']")).getText());
+            this.messagesOut =  defaultDouble(webItem.findElement(By.xpath("./td[@data-label='Message Out']")).getText());
 
             this.messagesStored = defaultInt(webItem.findElement(By.xpath("./td[@data-label='Stored Messages']")).getText());
             this.senders =  defaultInt(webItem.findElement(By.xpath("./td[@data-label='Senders']")).getText());
@@ -104,6 +104,7 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
             case "Active":
                 return AddressStatus.READY;
             case "Configuring":
+            case "Pending":
                 return AddressStatus.PENDING;
             default:
                 return AddressStatus.ERROR;
@@ -136,15 +137,15 @@ public class AddressWebItem extends WebItem implements Comparable<AddressWebItem
     }
 
     public WebElement getEditMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Edit')]"));
+        return getActionDropDown().findElement(By.id("edit-address"));
     }
 
     public WebElement getDeleteMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Delete')]"));
+        return getActionDropDown().findElement(By.id("delete-address"));
     }
 
     public WebElement getPurgeMenuItem() {
-        return getActionDropDown().findElement(By.xpath("//a[contains(text(), 'Purge')])]"));
+        return getActionDropDown().findElement(By.id("purge-address"));
     }
 
     private String parseName(WebElement elem) {

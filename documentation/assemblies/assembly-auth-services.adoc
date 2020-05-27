@@ -18,6 +18,8 @@ include::../modules/ref-standard-auth-service-example.adoc[leveloffset=+2]
 
 include::../modules/proc-standard-auth-service.adoc[leveloffset=+2]
 
+include::../modules/proc-standard-auth-service-ha.adoc[leveloffset=+2]
+
 // External auth service
 include::../modules/con-external-auth-service.adoc[leveloffset=+1]
 

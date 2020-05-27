@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -39,7 +40,10 @@ import java.util.function.Supplier;
 
 public class ConsoleWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger log = CustomLogger.getLogger();
+    private static final By ADDRESS_LIST_XPATH = By.xpath("//table[@aria-label='Address List']");
+    private static final By CONNECTION_LIST_XPATH = By.xpath("//table[@aria-label='connection list']");
+    private static final By NOT_FOUND_STATE_XPATH = By.className("pf-c-empty-state");
 
     SeleniumProvider selenium;
     String ocRoute;
@@ -56,6 +60,13 @@ public class ConsoleWebPage implements IWebPage {
     //================================================================================================
     // Getters and finders of elements and data
     //================================================================================================
+    private WebElement getLoginButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Log in with OpenShift')]"));
+    }
+
+    public WebElement getEmptyAddSpace() {
+        return selenium.getDriver().findElement(By.id("empty-ad-space"));
+    }
 
     private WebElement getAddressTab() {
         return getContentElem().findElement(By.id("ad-space-nav-addresses"));
@@ -74,16 +85,8 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("al-filter-overflow-button")));
     }
 
-    private WebElement getCreateButtonEmptyPage() {
-        return selenium.getDriver().findElement(By.id("empty-ad-space-create-button"));
-    }
-
     private WebElement getAddressSpaceTable() {
         return selenium.getDriver().findElement(By.xpath("//table[@aria-label='address space list']"));
-    }
-
-    private WebElement getTableAddressSpaceHeader() {
-        return getAddressSpaceTable().findElement(By.id("aslist-table-header"));
     }
 
     private WebElement getAddressSpaceList() {
@@ -91,7 +94,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getAddressTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='Address List']"));
+        return selenium.getDriver().findElement(ADDRESS_LIST_XPATH);
     }
 
     private WebElement getTableAddressHeader() {
@@ -103,7 +106,7 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionTable() {
-        return selenium.getDriver().findElement(By.xpath("//table[@aria-label='connection list']"));
+        return selenium.getDriver().findElement(CONNECTION_LIST_XPATH);
     }
 
     private WebElement getTableConnectionHeader() {
@@ -118,10 +121,6 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.xpath("//table[@aria-label='client list']"));
     }
 
-    private WebElement getTableClientsHeader() {
-        return getClientsTable().findElement(By.id("aslist-table-header"));
-    }
-
     private WebElement getTableConnectionList() {
         return getConnectionTable().findElement(By.tagName("tbody"));
     }
@@ -132,6 +131,10 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getAddressesTableDropDown() {
         return getContentElem().findElement(By.id("al-filter-overflow-kebab"));
+    }
+
+    private WebElement getConnectionTableDropDown() {
+        return getContentElem().findElement(By.id("cl-filter-overflow-kebab"));
     }
 
     private WebElement getAddressSpacesDeleteAllButton() {
@@ -146,18 +149,39 @@ public class ConsoleWebPage implements IWebPage {
         return getAddressesTableDropDown().findElement(By.xpath("//button[contains(text(), 'Purge Selected')]"));
     }
 
+    private WebElement getConnectionsCloseAllButton() {
+        return getConnectionTableDropDown().findElement(By.xpath("//button[contains(text(), 'Close Selected')]"));
+    }
+
     private WebElement getAddressesDeleteConfirmButton() {
         return selenium.getDriver().findElement(By.className("pf-c-backdrop"))
                     .findElement(By.className("pf-c-modal-box"))
                     .findElement(By.xpath("//button[contains(text(), 'Confirm')]"));
     }
 
-    private WebElement getAddressSpaceMainTopDropdown() {
-        return getContentElem().findElement(By.id("as-header-kebab"));
+    public WebElement getDangerAlertElement() {return selenium.getDriver().findElement(By.xpath("//div[@aria-label='Danger Alert']"));}
+
+    private WebElement getHelpButton() {
+       return selenium.getDriver().findElement(By.xpath("//a[contains(text(), 'Help')]"));
+    }
+    private WebElement getApplicationsButton() {
+        return selenium.getDriver().findElement(By.xpath("//button[@aria-label='Applications']"));
     }
 
-    private WebElement getAddressMainTopDropdown() {
-        return getContentElem().findElement(By.id("adheader-kebab"));
+    private WebElement getApplicationsElem() {
+        return selenium.getDriver().findElement(By.xpath("//ul[@role='menu']"));
+    }
+
+    public WebElement getEditAddrPlan() {
+        return selenium.getDriver().findElement(By.id("edit-addr-plan"));
+    }
+
+    private WebElement getAddressPlanItem(String plan) {
+        return selenium.getDriver().findElement(By.xpath("//option[@value='" + plan + "']"));
+    }
+
+    private WebElement getEditAuthService() {
+        return selenium.getDriver().findElement(By.id("edit-addr-auth"));
     }
     //==============================================================
 
@@ -233,7 +257,7 @@ public class ConsoleWebPage implements IWebPage {
             try {
                 return getter.get();
             } catch (StaleElementReferenceException e) {
-                log.info("StaleElementReferenceException during getConnectionItems() - retriying");
+                log.info("StaleElementReferenceException during getConnectionItems() - retrying");
             }
             try {
                 Thread.sleep(1000);
@@ -264,16 +288,6 @@ public class ConsoleWebPage implements IWebPage {
             clients.add(client);
         }
         return clients;
-    }
-
-    public ClientWebItem getClientItem(String containerId) {
-        ClientWebItem returnedElement = null;
-        List<ClientWebItem> clients = getClientItems();
-        for (ClientWebItem item : clients) {
-            if (item.getContainerId().equals(containerId))
-                returnedElement = item;
-        }
-        return returnedElement;
     }
     //==============================================================
 
@@ -306,16 +320,8 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Next')]"));
     }
 
-    private WebElement getCancelButton() {
-        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Cancel')]"));
-    }
-
     private WebElement getFinishButton() {
         return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Finish')]"));
-    }
-
-    private WebElement getBackButton() {
-        return selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Back')]"));
     }
 
     private WebElement getConfirmButton() {
@@ -372,23 +378,23 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getTypeFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterType"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdowntype"));
     }
 
     private WebElement getStatusFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterStatus"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownstatus"));
     }
 
     private WebElement getAddressFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterAddress"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownname"));
     }
 
     private WebElement getNamespaceFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterNamespace"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownnamespace"));
     }
 
     private WebElement getNameFilterDropDownItem() throws Exception {
-        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownfilterName"));
+        return getAddressFilterDropDown().findElement(By.id("al-filter-dropdownname"));
     }
 
     private WebElement getSearchButtonAddress() throws Exception {
@@ -404,23 +410,23 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     private WebElement getConnectionsHostnameFilterDropDownItem() throws Exception {
-        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterHostName"));
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemhostname"));
     }
 
     private WebElement getConnectionsContainerFilterDropDownItem() throws Exception {
-        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemfilterContainer"));
+        return getConnectionFilterDropDown().findElement(By.id("cl-filter-dropdown-itemcontainer"));
     }
 
     private WebElement getClientsContainerFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterContainers"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemcontainers"));
     }
 
     private WebElement getClientsNameFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterName"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemname"));
     }
 
     private WebElement getClientsRoleFilterDropDownItem() throws Exception {
-        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemfilterRole"));
+        return  getClientFilterDropDown().findElement(By.id("ad-links-filter-dropdown-itemrole"));
     }
 
     private WebElement getClientsContainerSearchButton() throws Exception {
@@ -470,8 +476,27 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getDriver().findElement(By.id("adheader-name"));
     }
 
-    public WebElement getNotFoundPage() {
-        return selenium.getDriver().findElement(By.className("pf-c-empty-state"));
+    public void awaitGoneAwayPage() {
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(120)).until(ExpectedConditions.visibilityOfElementLocated(ConsoleWebPage.NOT_FOUND_STATE_XPATH));
+        selenium.takeScreenShot();
+    }
+
+    private WebElement getAuthServiceElement(String authService) {
+        return selenium.getDriver()
+                .findElement(By.xpath("//option[@value='" + authService + "']"));
+    }
+
+    private WebElement getEditConfirmButton() {
+        return selenium.getDriver().findElement(By.id("as-list-edit-confirm"));
+    }
+
+    private WebElement getAddressSpacePlan(String addressSpacePlan) {
+        return selenium.getDriver()
+                .findElement(By.xpath("//option[@value='" + addressSpacePlan + "']"));
+    }
+
+    private List<WebElement> getDeploymentSnippetLines() {
+        return selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
     }
 
     //==================================================================
@@ -485,7 +510,6 @@ public class ConsoleWebPage implements IWebPage {
         log.info("Opening global console on route {}", ocRoute);
         selenium.getDriver().get(ocRoute);
         if (waitUntilLoginPage()) {
-            selenium.getAngularDriver().waitForAngularRequestsToFinish();
             selenium.takeScreenShot();
             try {
                 logout();
@@ -495,14 +519,13 @@ public class ConsoleWebPage implements IWebPage {
             if (!login())
                 throw new IllegalAccessException(loginPage.getAlertMessage());
         }
-        selenium.getAngularDriver().waitForAngularRequestsToFinish();
         if (!waitUntilConsolePage()) {
             throw new IllegalStateException("Openshift console not loaded");
         }
     }
 
     public WebElement getFirstLineOfDeploymentSnippet() {
-        List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+        List<WebElement> snippetElements = getDeploymentSnippetLines();
         return snippetElements.get(0);
     }
 
@@ -511,7 +534,7 @@ public class ConsoleWebPage implements IWebPage {
 
         StringBuilder addressSpaceDeployment = new StringBuilder();
         for (int i = 0; i < RETRY_COUNTER && addressSpaceDeployment.toString().isEmpty(); i++) {
-            List<WebElement> snippetElements = selenium.getDriver().findElements(By.xpath("//div[@class='ace_line']"));
+            List<WebElement> snippetElements = getDeploymentSnippetLines();
 
             for (WebElement currentElement : snippetElements) {
                 if (currentElement.getText().contains(KubeCMDClient.getCMD())
@@ -601,10 +624,9 @@ public class ConsoleWebPage implements IWebPage {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "Address space dropdown");
         selenium.clickOnItem(item.getEditMenuItem());
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")));
-        selenium.clickOnItem(selenium.getDriver()
-                .findElement(By.xpath("//option[@value='" + addressSpacePlan + "']")));
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
+        selenium.clickOnItem(getEditAddrPlan());
+        selenium.clickOnItem(getAddressSpacePlan(addressSpacePlan));
+        selenium.clickOnItem(getEditConfirmButton());
         selenium.refreshPage();
         addressSpace.getSpec().setPlan(addressSpacePlan);
     }
@@ -613,10 +635,9 @@ public class ConsoleWebPage implements IWebPage {
         AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.clickOnItem(item.getActionDropDown(), "AddressSpaceDropdown");
         selenium.clickOnItem(item.getEditMenuItem());
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-auth")));
-        selenium.clickOnItem(selenium.getDriver()
-                .findElement(By.xpath("//option[@value='" + authServiceName + "']")));
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("as-list-edit-confirm")));
+        selenium.clickOnItem(getEditAuthService());
+        selenium.clickOnItem(getAuthServiceElement(authServiceName));
+        selenium.clickOnItem(getEditConfirmButton());
         selenium.refreshPage();
         addressSpace.getSpec().getAuthenticationService().setName(authServiceName);
         addressSpace.getSpec().getAuthenticationService().setType(type);
@@ -688,10 +709,14 @@ public class ConsoleWebPage implements IWebPage {
 
     public void switchToAddressTab() {
         selenium.clickOnItem(getAddressTab(), "Addresses");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(ADDRESS_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void switchToConnectionTab() {
         selenium.clickOnItem(getConnectionTab(), "Connections");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(CONNECTION_LIST_XPATH));
+        selenium.takeScreenShot();
     }
 
     public void addFilter(FilterType filterType, String filterValue) throws Exception {
@@ -707,7 +732,7 @@ public class ConsoleWebPage implements IWebPage {
                 selenium.clickOnItem(getStatusFilterDropDownItem());
                 selenium.clickOnItem(getSelectStatusDropDown(), "Status phase dropdown");
                 selenium.clickOnItem(getSelectStatusDropDown()
-                        .findElement(By.id("al-filter-select-status-dropdown-itemstatus" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1))));
+                        .findElement(By.id("al-filter-select-status-dropdown-item" + filterValue.toLowerCase())));
                 break;
             case NAME:
                 selenium.clickOnItem(getNameFilterDropDownItem());
@@ -725,10 +750,10 @@ public class ConsoleWebPage implements IWebPage {
                 WebElement selectedType;
                 try {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-select-type-dropdown-itemtype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-select-type-dropdown-item" + filterValue.toLowerCase()));
                 } catch (Exception ex) {
                     selectedType = getSelectTypeDropDown()
-                            .findElement(By.id("al-filter-dropdown-item-typetype" + filterValue.substring(0, 1).toUpperCase() + filterValue.substring(1)));
+                            .findElement(By.id("al-filter-dropdown-item-type" + filterValue.toLowerCase()));
                 }
                 selenium.clickOnItem(selectedType);
                 break;
@@ -827,22 +852,23 @@ public class ConsoleWebPage implements IWebPage {
         selenium.clickOnItem(getConfirmButton());
     }
 
+    public void closeSelectedConnection(ConnectionWebItem... connectionWebItems) {
+        Arrays.stream(connectionWebItems).forEach(c -> {
+            selenium.clickOnItem(c.getCheckBox(), "Select connection");
+
+        });
+        selenium.clickOnItem(getConnectionTableDropDown(), "Main dropdown");
+        selenium.clickOnItem(getConnectionsCloseAllButton());
+        selenium.clickOnItem(getConfirmButton());
+    }
+
     public void changeAddressPlan(Address address, String plan) throws Exception {
         AddressWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressItem(address));
         selenium.clickOnItem(item.getActionDropDown(), "Action drop down");
         selenium.clickOnItem(item.getEditMenuItem(), "Edit");
-        selenium.clickOnItem(selenium.getDriver().findElement(By.id("edit-addr-plan")), "Edit address plan");
-        selenium.clickOnItem(selenium.getDriver()
-                .findElement(By.xpath("//option[@value='" + plan + "']")));
+        selenium.clickOnItem(selenium.getWebElement(this::getEditAddrPlan), "Editing address plan");
+        selenium.clickOnItem(selenium.getWebElement(() -> getAddressPlanItem(plan)));
         selenium.clickOnItem(getConfirmButton());
-    }
-
-    private WebElement getApplicationsButton() {
-        return selenium.getDriver().findElement(By.xpath("//button[@aria-label='Applications']"));
-    }
-
-    private WebElement getApplicationsElem() {
-        return selenium.getDriver().findElement(By.xpath("//ul[@role='menu']"));
     }
 
     public String getHelpLink() {
@@ -856,25 +882,17 @@ public class ConsoleWebPage implements IWebPage {
     public void openHelpLink(String expectedUrl) {
         selenium.takeScreenShot();
         try {
-            selenium.clickOnItem(getApplicationsElem().findElement(By.xpath("//a[contains(text(), 'Help')]")));
+            selenium.clickOnItem(selenium.getWebElement(this::getHelpButton));
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(30)).until(ExpectedConditions.urlContains(expectedUrl));
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             selenium.takeScreenShot();
         }
     }
 
-    public WebElement getErrorDialog() {
-        try {
-            WebElement error = selenium.getDriver().findElement(By.xpath("//div[@aria-label='Danger Alert']"));
-            return error;
-        } catch (NotFoundException e) {
-            return null;
-        }
-    }
-
-    public void waitForErrorDialogToBePresent() {
-        selenium.getDriverWait().withTimeout(Duration.ofSeconds(30))
-                .until(ExpectedConditions.visibilityOfAllElementsLocatedBy(By.xpath("//div[@aria-label='Danger Alert']")));
+    public void waitForErrorDialogToBePresent() throws Exception {
+        selenium.getWebElement(this::getDangerAlertElement);
     }
 
     public void sortAddresses(SortType sortType, boolean asc) throws Exception {
@@ -912,14 +930,13 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isAddressSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-4");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-5");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case STORED_MESSAGES:
             case ADDRESS:
             case SENDERS:
             case RECEIVERS:
+            case NAME:
                 return dataLabel.toUpperCase().equals(sortType.toString());
             default:
                 return false;
@@ -928,10 +945,8 @@ public class ConsoleWebPage implements IWebPage {
 
     private boolean isConnectionsSortType(String dataLabel, SortType sortType) {
         switch (sortType) {
-            case MESSAGES_IN:
-                return dataLabel.equals("column-4");
-            case MESSAGES_OUT:
-                return dataLabel.equals("column-5");
+            case MESSAGE_IN:
+            case MESSAGE_OUT:
             case HOSTNAME:
             case CONTAINER_ID:
             case PROTOCOL:
@@ -967,7 +982,7 @@ public class ConsoleWebPage implements IWebPage {
         try {
             selenium.getDriverWait().withTimeout(Duration.ofSeconds(3)).until(ExpectedConditions.titleContains("Log"));
             try {
-                selenium.clickOnItem(selenium.getDriver().findElement(By.xpath("//button[contains(text(), 'Log in with OpenShift')]")));
+                selenium.clickOnItem(selenium.getWebElement(this::getLoginButton));
             } catch (Exception ex) {
                 log.info("Only openshift auth provider is enabled");
             }

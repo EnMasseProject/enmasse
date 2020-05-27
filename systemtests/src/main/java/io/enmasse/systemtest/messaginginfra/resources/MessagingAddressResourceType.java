@@ -11,15 +11,10 @@ import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingAddressCondition;
 import io.enmasse.api.model.MessagingAddressList;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
-import java.time.Duration;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MessagingAddressResourceType implements ResourceType<MessagingAddress> {
     private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingAddresses(), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
@@ -27,6 +22,11 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
     @Override
     public String getKind() {
         return "MessagingAddress";
+    }
+
+    @Override
+    public MessagingAddress get(String namespace, String name) {
+        return operation.inNamespace(namespace).withName(name).get();
     }
 
     public static MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> getOperation() {
@@ -45,36 +45,21 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
     }
 
     @Override
-    public void delete(MessagingAddress resource) {
+    public void delete(MessagingAddress resource) throws Exception {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
-    void waitDeleted() {
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-
-
-        }
+    @Override
+    public boolean isReady(MessagingAddress address) {
+        return address != null && address.getStatus() != null &&
+                "Active".equals(address.getStatus().getPhase());
     }
 
     @Override
-    public void waitReady(MessagingAddress infra) {
-        MessagingAddress found = null;
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-            found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            assertNotNull(found);
-            if (found.getStatus() != null &&
-                    "Active".equals(found.getStatus().getPhase())) {
-                break;
-            }
-        }
-        assertNotNull(found);
-        assertNotNull(found.getStatus());
-        assertEquals("Active", found.getStatus().getPhase());
-        infra.setMetadata(found.getMetadata());
-        infra.setSpec(found.getSpec());
-        infra.setStatus(found.getStatus());
+    public void refreshResource(MessagingAddress existing, MessagingAddress newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
     }
 
     public static MessagingAddressCondition getCondition(List<MessagingAddressCondition> conditions, String type) {

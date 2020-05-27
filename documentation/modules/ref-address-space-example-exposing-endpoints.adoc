@@ -31,10 +31,10 @@ spec:
      loadBalancerPorts: <4>
      - amqp
      - amqps
-    annotations: <5>
-      mykey: myvalue
-    loadBalancerSourceRanges: <6>
-    - 10.0.0.0/8
+      annotations: <5>
+        mykey: myvalue
+      loadBalancerSourceRanges: <6>
+      - 10.0.0.0/8
 ----
 <1> (Required) The name of the endpoint. The name specified affects the name of the {KubePlatform} service to be created as well as the name of the endpoint in the status section of the `AddressSpace`.
 <2> (Required) The service configured for the endpoint. Valid values for `service` are `messaging` and `mqtt`. However, the `mqtt` service is supported for the `standard` address space type only.

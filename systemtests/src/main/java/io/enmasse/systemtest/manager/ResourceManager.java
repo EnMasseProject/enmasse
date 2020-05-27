@@ -5,20 +5,27 @@
 
 package io.enmasse.systemtest.manager;
 
+import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
+import static java.time.Duration.ofMinutes;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.*;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
-import io.enmasse.systemtest.mqtt.MqttClientFactory;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -32,17 +39,6 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthenticationType;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
-import static java.time.Duration.ofMinutes;
 
 public abstract class ResourceManager {
     protected static final Environment environment = Environment.getInstance();
@@ -75,10 +71,6 @@ public abstract class ResourceManager {
 
     public abstract void setAmqpClientFactory(AmqpClientFactory amqpClientFactory);
 
-    public abstract MqttClientFactory getMqttClientFactory();
-
-    public abstract void setMqttClientFactory(MqttClientFactory mqttClientFactory);
-
     public AddressSpace getSharedAddressSpace() {
         return null;
     }
@@ -95,12 +87,9 @@ public abstract class ResourceManager {
     // Client factories
     //------------------------------------------------------------------------------------------------
 
-    public void closeClientFactories(AmqpClientFactory amqpClientFactory, MqttClientFactory mqttClientFactory) throws Exception {
+    public void closeClientFactories(AmqpClientFactory amqpClientFactory) throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();
-        }
-        if (mqttClientFactory != null) {
-            mqttClientFactory.close();
         }
     }
 
@@ -224,17 +213,28 @@ public abstract class ResourceManager {
 
     public void waitForAuthPods(AuthenticationService authenticationService) throws Exception {
         String desiredPodName = authenticationService.getMetadata().getName();
+        int expectedMatches = 1;
+        if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.none) &&
+                authenticationService.getSpec().getNone() != null &&
+                authenticationService.getSpec().getNone().getReplicas() != null) {
+            expectedMatches = authenticationService.getSpec().getNone().getReplicas();
+        } else if (authenticationService.getSpec().getType().equals(AuthenticationServiceType.standard) &&
+                authenticationService.getSpec().getStandard() != null &&
+                authenticationService.getSpec().getStandard().getReplicas() != null) {
+            expectedMatches = authenticationService.getSpec().getStandard().getReplicas();
+        }
+        int finalExpectedMatches = expectedMatches;
         TestUtils.waitUntilCondition("Auth service is deployed: " + desiredPodName, phase -> {
                     List<Pod> pods = TestUtils.listReadyPods(Kubernetes.getInstance(), authenticationService.getMetadata().getNamespace());
                     long matching = pods.stream().filter(pod ->
                             pod.getMetadata().getName().contains(desiredPodName)).count();
-                    if (matching != 1) {
+                    if (matching != finalExpectedMatches) {
                         List<String> podNames = pods.stream().map(p -> p.getMetadata().getName()).collect(Collectors.toList());
                         LOGGER.info("Still awaiting pod with name : {}, matching : {}, current pods  {}",
                                 desiredPodName, matching, podNames);
                     }
 
-                    return matching == 1;
+                    return matching == finalExpectedMatches;
                 },
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }

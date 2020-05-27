@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.enmasse.iot.model.v1.IoTProject;
@@ -102,8 +101,12 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
 
         final Tenant tenant;
         try {
-            tenant = this.mapper.treeToValue(project.getSpec().getConfiguration(), Tenant.class);
-        } catch (JsonProcessingException e) {
+            // we re-encode the accepted configuration into the Hono management structure,
+            // which isn't completely correct as the Hono 'Tenant' object is not the same
+            // as the Hono 'TenantObject'.
+            var json = this.mapper.valueToTree(project.getStatus().getAccepted().getConfiguration());
+            tenant = this.mapper.treeToValue(json, Tenant.class);
+        } catch (Exception e) {
             return failedFuture(e);
         }
 

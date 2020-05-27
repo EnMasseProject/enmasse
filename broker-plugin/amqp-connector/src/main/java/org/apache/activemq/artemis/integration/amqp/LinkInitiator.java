@@ -39,12 +39,18 @@ import org.apache.qpid.proton.engine.Receiver;
 import org.apache.qpid.proton.engine.Sender;
 import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
+import org.apache.qpid.proton.engine.impl.LinkMutator;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Event handler for establishing outgoing links
  */
 public class LinkInitiator implements EventHandler {
    private final LinkInfo linkInfo;
+   private final Map<Link, org.apache.qpid.proton.amqp.transport.Target> initiatedReceivingLinks = new ConcurrentHashMap<>();
+   private final Map<Link, org.apache.qpid.proton.amqp.transport.Source> initiatedSendingLinks = new ConcurrentHashMap<>();
 
    public LinkInitiator(LinkInfo linkInfo) {
       this.linkInfo = linkInfo;
@@ -158,6 +164,8 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteClose(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} closed. Closing connection", link.getName());
+      initiatedSendingLinks.remove(link);
+      initiatedReceivingLinks.remove(link);
       link.getSession().getConnection().close();
    }
 
@@ -174,6 +182,8 @@ public class LinkInitiator implements EventHandler {
    @Override
    public void onRemoteDetach(Link link) throws Exception {
       ActiveMQAMQPLogger.LOGGER.infov("Link {0} detached. Closing connection", link.getName());
+      initiatedSendingLinks.remove(link);
+      initiatedReceivingLinks.remove(link);
       link.getSession().getConnection().close();
    }
 
@@ -206,17 +216,20 @@ public class LinkInitiator implements EventHandler {
    }
 
    private void createLink(org.apache.qpid.proton.engine.Session session) throws Exception {
+      Link initiatedLink = null;
       switch (linkInfo.getDirection()) {
          case out:
-            createSender(session);
+            initiatedLink = createSender(session);
+            initiatedSendingLinks.put(initiatedLink, initiatedLink.getSource().copy());
             break;
          case in:
-            createReceiver(session);
+            initiatedLink = createReceiver(session);
+            initiatedReceivingLinks.put(initiatedLink, initiatedLink.getTarget().copy());
             break;
       }
    }
 
-   private void createReceiver(Session session) {
+   private Link createReceiver(Session session) {
       Receiver receiver;
       if (linkInfo.getLinkName() != null) {
          receiver = session.receiver(linkInfo.getLinkName());
@@ -239,9 +252,10 @@ public class LinkInitiator implements EventHandler {
       }
       receiver.setSource(source);
       receiver.open();
+      return receiver;
    }
 
-   private void createSender(Session session) {
+   private Link createSender(Session session) {
       Sender sender;
       if (linkInfo.getLinkName() != null) {
          sender = session.sender(linkInfo.getLinkName());
@@ -265,5 +279,14 @@ public class LinkInitiator implements EventHandler {
       sender.setSource(source);
 
       sender.open();
+      return sender;
+   }
+
+   public void preserveInitiatedSourceTargetInfo(Link link) {
+      if (initiatedReceivingLinks.containsKey(link)) {
+         LinkMutator.setRemoteTarget(link, initiatedReceivingLinks.get(link));
+      } else if (initiatedSendingLinks.containsKey(link)) {
+         LinkMutator.setRemoteSource(link, initiatedSendingLinks.get(link));
+      }
    }
 }

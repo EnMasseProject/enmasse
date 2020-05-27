@@ -27,24 +27,27 @@ import java.util.Objects;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthenticationServiceSpecNone extends AbstractWithAdditionalProperties {
     private SecretReference certificateSecret;
+    private Integer replicas;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AuthenticationServiceSpecNone that = (AuthenticationServiceSpecNone) o;
-        return Objects.equals(certificateSecret, that.certificateSecret);
+        return Objects.equals(certificateSecret, that.certificateSecret) &&
+                Objects.equals(replicas, that.replicas);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(certificateSecret);
+        return Objects.hash(certificateSecret, replicas);
     }
 
     @Override
     public String toString() {
         return "AuthenticationServiceSpecNone{" +
                 "certificateSecret=" + certificateSecret +
+                ", replicas=" + replicas +
                 '}';
     }
 
@@ -54,5 +57,13 @@ public class AuthenticationServiceSpecNone extends AbstractWithAdditionalPropert
 
     public void setCertificateSecret(SecretReference certificateSecret) {
         this.certificateSecret = certificateSecret;
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
     }
 }

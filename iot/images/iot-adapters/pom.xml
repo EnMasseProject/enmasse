@@ -48,6 +48,7 @@
         <configuration>
           <excludeTransitive>true</excludeTransitive>
           <stripVersion>true</stripVersion>
+          <overWriteSnapshots>true</overWriteSnapshots>
         </configuration>
         <executions>
           <execution>

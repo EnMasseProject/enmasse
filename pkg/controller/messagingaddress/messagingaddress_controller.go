@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"time"
 
+	amqp "github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/state"
@@ -113,7 +114,7 @@ func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brok
 		broker := brokers[0]
 		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
 			State: v1beta2.MessagingAddressBrokerScheduled,
-			Host:  broker.Host,
+			Host:  broker.Host.Hostname,
 		})
 	} else {
 		return fmt.Errorf("no available broker")
@@ -230,7 +231,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result.Result(), err
 	}
 
-	var infra *v1beta2.MessagingInfra
+	var infra *v1beta2.MessagingInfrastructure
 	// Retrieve the MessagingInfra for this MessagingAddress
 	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
 		i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
@@ -271,7 +272,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			scheduled.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) {
+			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
@@ -292,7 +293,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, state.NotSyncedError) {
+			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) || errors.Is(err, state.NoEndpointsError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 		} else {

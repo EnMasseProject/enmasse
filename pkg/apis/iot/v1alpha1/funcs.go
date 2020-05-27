@@ -8,6 +8,7 @@ package v1alpha1
 import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/pkg/errors"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -81,13 +82,13 @@ func (m MeshConfig) TlsVersions(config *IoTConfig) []string {
 
 //endregion
 
-//region CommonAdapterConfig
+// region CommonAdapterConfig
 
 func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
-	if c.Java.RequireNativeTls == nil {
+	if c.Containers.Adapter.RequireNativeTls == nil {
 		return config.Spec.DefaultNativeTlsRequired()
 	}
-	return *c.Java.RequireNativeTls
+	return *c.Containers.Adapter.RequireNativeTls
 }
 
 func (c *CommonAdapterConfig) TlsVersions(config *IoTConfig) []string {
@@ -98,18 +99,15 @@ func (c *CommonAdapterConfig) TlsVersions(config *IoTConfig) []string {
 	}
 }
 
-//endregion
+// endregion
 
-//region CommonServiceConfig
+// region CommonServiceConfig
 
 func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
-	if c.Java == nil {
+	if c.Container.RequireNativeTls == nil {
 		return config.Spec.DefaultNativeTlsRequired()
 	}
-	if c.Java.RequireNativeTls == nil {
-		return config.Spec.DefaultNativeTlsRequired()
-	}
-	return *c.Java.RequireNativeTls
+	return *c.Container.RequireNativeTls
 }
 
 func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
@@ -120,7 +118,7 @@ func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
 	}
 }
 
-//endregion
+// endregion
 
 func (p *IoTProjectStatus) GetProjectCondition(t ProjectConditionType) *ProjectCondition {
 	for i, c := range p.Conditions {
@@ -162,6 +160,30 @@ func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *Config
 	return &config.Conditions[len(config.Conditions)-1]
 }
 
+//region CommonCondition
+
+func (config *IoTConfigStatus) RemoveCondition(t ConfigConditionType) {
+
+	for i := len(config.Conditions) - 1; i >= 0; i-- {
+		c := config.Conditions[i]
+		if c.Type == t {
+			config.Conditions = append(
+				config.Conditions[:i],
+				config.Conditions[i+1:]...,
+			)
+		}
+	}
+
+}
+
+func (c *CommonCondition) SetStatusAsBoolean(status bool, reason string, message string) {
+	if status {
+		c.SetStatus(corev1.ConditionTrue, reason, message)
+	} else {
+		c.SetStatus(corev1.ConditionFalse, reason, message)
+	}
+}
+
 func (c *CommonCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
 
 	if c.Status != status {
@@ -183,6 +205,10 @@ func (c *CommonCondition) SetStatusOk() {
 	c.SetStatus(corev1.ConditionTrue, "", "")
 }
 
+func (c *CommonCondition) SetStatusError(reason string, message string) {
+	c.SetStatus(corev1.ConditionFalse, reason, message)
+}
+
 // Call SetStatusOk() when "ok" is true. Otherwise calls SetStatus() with the provided
 // reason and message.
 func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message string) {
@@ -192,6 +218,30 @@ func (c *CommonCondition) SetStatusOkOrElse(ok bool, reason string, message stri
 		c.SetStatus(corev1.ConditionFalse, reason, message)
 	}
 }
+
+// runs the provided function, using the error result as
+// status for the condition.
+func (c *CommonCondition) RunWith(reason string, processor func() error) error {
+
+	err := processor()
+
+	if err != nil {
+		cause := errors.Cause(err)
+		var message string
+		if cause != nil {
+			message = cause.Error()
+		} else {
+			message = err.Error()
+		}
+		c.SetStatus(corev1.ConditionFalse, reason, message)
+	} else {
+		c.SetStatusOk()
+	}
+
+	return err
+}
+
+//endregion
 
 //region DeviceConnection
 
@@ -275,3 +325,47 @@ func (r JdbcDeviceRegistry) IsSplitRegistry() (bool, error) {
 }
 
 //endregion
+
+// region Logging
+
+type DefaultLoggingRenderer func(rootLogger LogLevel, loggers map[string]LogLevel) string
+
+func (log LogbackConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
+
+	// did we get overridden
+	if override != "" {
+		return override
+	}
+
+	// if we have an explicit configuration
+	if log.Logback != "" {
+		// use it
+		return log.Logback
+	}
+
+	// if we have a local level or loggers
+	if log.Level != "" || log.Loggers != nil {
+		// if the local root level is empty
+		if log.Level == "" {
+			// use the global root level
+			log.Level = config.Spec.Logging.Level
+		}
+		defaultRenderer(log.Level, log.Loggers)
+	}
+
+	// if we have a global explicit logback config
+	if config.Spec.Logging.Defaults.Logback != "" {
+		// use it
+		return config.Spec.Logging.Defaults.Logback
+	}
+
+	// generate some reasonable defaults
+	return defaultRenderer(config.Spec.Logging.Level, config.Spec.Logging.Loggers)
+
+}
+
+func (csc CommonServiceConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
+	return csc.Container.Logback.RenderConfiguration(config, defaultRenderer, override)
+}
+
+// endregion

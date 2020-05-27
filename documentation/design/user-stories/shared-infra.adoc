@@ -1,0 +1,954 @@
+:toc:
+:toc-placement!:
+
+User stories describing functionality of EnMasse 1.0 and how to configure resource for those stories.
+
+toc::[]
+
+== Tenant Admin
+
+=== Enable messaging for a namespace by creating a messaging tenant
+=== Reference infra, plans and identity services in different namespaces
+
+To enable messaging in a Kubernetes namespace, a `MessagingTenant` resource must be created by the tenant admin.
+
+* The `MessagingTenant` may reference a specific `MessagingInfrastructure`, `MessagingPlan` and `IdentityProviders`
+that should be used for the namespace.
+* If a plan, infra or identity providers is not specified, a default will be selected based on the service admin configuration.
+* If the `namespace` field of the reference is omitted, the namespace of the operator is assumed.
+* The `MessagingTenant` must have a name set to `default`
+
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingTenant
+metadata:
+  name: default
+  namespace: myapp
+spec:
+  infraRef:
+    name: myinfra
+    namespace: infra-space
+
+  planRef:
+    name: small
+    namespace: plan-space
+
+  identityProviderSelector:
+    matchLabels:
+      type: uat
+```
+
+Then apply this resource using the command line tools or the console. Once applied, the status
+of the tenant can be checked by querying the API:
+
+```
+$ kubectl get messagingtenant -n myapp default
+NAME      PHASE         AGE
+default   Configuring   27s
+```
+
+---
+
+=== Disable messaging for a namespace by deleting a messaging tenant
+
+To disable messaging for a namespace, delete the `MessagingTenant` resource:
+
+```
+kubectl delete messagingtenant default -n myapp
+```
+
+NOTE: If there are still addresses and endpoints left in the namespace, the `MessagingTenant` will have the phase `Terminating` until they are removed.
+
+---
+
+=== CRUDLW a messaging address in a namespace where messaging is enabled
+
+A tenant admin creates a `MessagingAddress` resource with the desired settings.
+
+* An address may specify only a single type.
+* An optional field `addressPlanRef` may reference a `MessagingAddressPlan`. If not set, a default will be used based on the service admin configuration.
+
+
+
+==== Resource definition
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddress
+metadata:
+  name: myqueue
+  namespace: myapp
+spec:
+  anycast: {}
+  multicast: {}
+  queue: {}
+  topic: {}
+  subscription:
+    # References a MessagingAddress named mytopic with type topic.
+    topic: mytopic
+
+  # A system-wide address available on all brokers
+  deadLetter: {}
+status:
+  phase: Pe
+```
+
+---
+
+=== Ability to configure DLQ, expiry, forwarders etc. per address
+
+* Queues that should be configured with a DLQ or ExpiryQueue should reference an address with type `deadLetter`.
+* Forwarders may be configured for the queue (`in` and `out`), subscription (`out`) or deadLetter(`out`)) types.
+* If the referenced DLQ does not exist, the status section of the address will provide an error message.
+
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddress
+metadata:
+  name: myqueue
+  namespace: myapp
+spec:
+  queue:
+    # Note: a queue 'mydlq' must exist!
+    deadLetterQueue: admin-addr
+    # Note: a queue 'myexpiry' must exist!
+    expiryQueue: admin-addr
+
+    # Forwarders require a MessagingConnector to exist, in this case one that is named 'remote1'.
+    forwarders:
+    - name: fwd1
+      remoteAddress: remote1/queue1
+      direction: in
+status:
+  phase: Pending | Configuring | Active | Failed | Terminating
+  message: "Useful error message"
+  # Type allows CLI tooling to show the type
+  type: Anycast | Multicast | Queue | Topic | Subscription | DeadLetter
+
+  # If a plan was configured, show the applied plan
+  appliedPlanRef:
+    name: myplan
+    namespace: planspace
+
+  conditions:
+  - type: Scheduled
+    status: "True"
+    lastTransitionTime: 2020-......
+```
+
+---
+=== CRUDLW a messaging endpoint in a namespace where messaging is enabled
+=== Managing certificates for a messaging endpoint
+
+Create a `MessagingEndpoint` resource with one of the supported types.
+
+* Supported types are `cluster`, `route`, `ingress`, `loadBalancer` or `nodePort`.
+* An endpoint can only be of a single type.
+* Support protocols are AMQP, AMQPS (AMQP over TLS), AMQP-WS and AMQP-WSS (AMQP over secure websocket).
+* For "Ingress" and "Route", only the AMQPS or AMQP-WSS maybe specified (not both!)
+* Default protocols are defined in a `MessagingPlan` for a namespace. If the plan does not specify defaults, they will be:
+** For `route` and `ingress`: AMQPS
+** For `cluster`, `nodePort` and `loadBalancer`: AMQP,AMQPS
+* By default the endpoint allows authentications to `IdentityProviders` realised at the `MessageTenant`.  It
+  is possible to restrict the endpoint to a subset of these identity providers using a selector.
+
+==== Resource definition
+
+Example resource with all configuration knobs exposed for all types:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingEndpoint
+metadata:
+  name: endpoint1
+  namespace: myapp
+spec:
+  protocols:
+  - AMQP
+  - AMQPS
+  - AMQP-WS
+  - AMQP-WSS
+
+  # Optional: Override generated hostname for endpoint. Clients must have the AMQP OPEN hostname set to this value.
+  host: example.com
+
+  # Optional: specify TLS configuration for endpoint.
+  tls:
+    # Selfsigned is default unless specified by a `MessagingPlan`.
+    selfsigned: {}
+    # OpenShift requests a service certificate signed by OpenShift service CA
+    openshift: {}
+    # External allows providing certificate externally. CN/SANs are validated against host
+    external:
+      certificate: # Reuse structure from address space connector spec
+      key: # Reuse structure from address space connector spec
+
+  # Optional: Allow configuring annotations specific to ingress controller implementations
+  annotations: {}
+
+  # Optional: restricts the identity providers available at this endpoint.
+  identityProviderSelector:
+    matchLabels:
+      type: messaging
+
+  # Optional: restrict the secureOnlyMechanism
+  secureOnlyMechanism: []
+
+  # Cluster type creates a on-cluster load balancer
+  cluster: {}
+
+  # NodePort type creates a nodePort service, exposing the application on an ephemeral port on all nodes.
+  nodePort: {}
+
+  # LoadBalancer type creates an external load balancer for this endpoint.
+  loadBalancer: {}
+
+  # Ingress type creates an Ingress resource
+  ingress: {}
+
+  # Route type maps to OpenShift Route resource
+  route:
+    # Allows controlling the TLS termination of this route. Reencrypt and edge is only supported for AMQP-WSS protocol.
+    tlsTermination: passthrough | reencrypt | edge
+
+status:
+  phase: Pending | Configuring | Active | Failed | Terminating
+  message: "Useful error message"
+
+  type: cluster | nodePort | loadBalancer | ingress | route
+
+  # Host set to auto-generated value
+  host: messaging.example.com
+
+  ports:
+  - name: endpoint1-amqp
+    port: 5672
+    protocol: AMQP
+  tls:
+    serverCertificateInfo:
+      serialNumber: <SERIAL>
+      cn: <CN>
+      notBefore: <CERT START DATE>
+      notAfter: <CERT EXPIRY DATE>
+    caCertificate: <PEM VALUE>
+  identityProviders:
+  - name:  myldap
+    namespace: infrastuff
+    secureOnlyMechanisms: PLAIN, OAUTHBEARER
+    subjectPrefix: enamsse.io:myldap:infrastuff:
+  conditions:
+  - type: FoundTenant
+    status: "True"
+    lastTransitionTime: 2020-......
+```
+
+==== Configure an in-cluster endpoint with TLS
+
+The following resource will create a `cluster` endpoint with `AMQPS` protocol enabled using OpenShift-signed certs:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingEndpoint
+metadata:
+  name: endpoint1
+  namespace: myapp
+spec:
+  protocols:
+  - AMQPS
+  tls:
+    openshift: {}
+  cluster: {}
+```
+
+==== Configure an endpoint exposed as a route
+
+The following resource will create a `route` endpoint with `AMQPS` protocol enabled overriding the hostname and certificate configuration.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingEndpoint
+metadata:
+  name: endpoint1
+  namespace: myapp
+spec:
+  tls:
+    external:
+      cert:
+        valueFromSecret:
+          name: messaging-cert
+          key: tls.crt
+      key:
+        valueFromSecret:
+          name: messaging-cert
+          key: tls.key
+  # Optional: Default selected
+  protocols:
+  - AMQPS
+  host: messaging.example.com
+  route: {}
+```
+
+==== Configure an endpoint exposed as a loadBalancer
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingEndpoint
+metadata:
+  name: endpoint1
+  namespace: myapp
+spec:
+  tls: {}
+  loadBalancer
+    annotations: {}
+```
+
+---
+
+=== CRUDLW a messaging connector in a namespace where messaging is enabled
+
+Connectors are created by defining a resource of kind `MessagingConnector`.
+
+* The connector name is taken from the `metadata.name` field and should be used as the prefix for any forwarders created on addresses.
+* Resource is similar to what exists in `AddressSpace` `.spec.connectors`.
+
+==== Resource definition:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingConnector
+metadata:
+  name: conn1
+  namespace: myspace
+spec:
+  endpointHosts:
+  - host: example.com
+    port: 5672
+  role: route-container
+  idleTimeout: 12
+  maxFrameSize: 12345
+  tls:
+    caCert:
+      value: <Base64-encoded PEM>
+    clientCert:
+      valueFromSecret:
+        name: client-cert
+    clientKey:
+      valueFromSecret:
+        name: client-cert
+  credentials:
+    username:
+      value: myuser
+    password:
+      valueFromSecret:
+        name: client-password
+        key: password
+  addresses:
+    - name: pat1
+      pattern: queue*
+```
+
+---
+
+=== CRUDLW a messaging user in a namespace where messaging is enabled for use by an messaging application for authentication.
+
+Messaging users (for use with the Namespace IdentityProvider) are created by defining a resource of kind `MessagingUser`.
+The username for user comes fro the `MessagingUser` resource name.
+
+==== Resource definition:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingUser
+metadata:
+  name: myuser
+  namespace: myspace
+spec:
+  password: password
+```
+
+---
+
+=== CRUDLW a kuberenetes service account for use by an messaging application for authentication. 
+
+A service account token corresponding to a kuberenetes service account may be used by an messaging application for authentication.
+
+==== Resource definition:
+
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: myserviceaccount
+  namespace: myspace
+```
+
+---
+
+=== CRUDLW a messaging role in a namespace where messaging is enabled in order to name a group of address permissions
+
+Named groups of address permissions (permission to send and/or receive) are defined in a resource of kind `MessagingRole`.
+
+==== Resource definition:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingRole
+metadata:
+  name: myrole
+  namespace: myspace
+spec:
+  addressPatterns: ["alpha*", "beta", "gamma"]
+  verbs: ["send", "receive"]
+```
+
+---
+
+=== CRUDLW a messaging role binding  in a namespace where messaging is enabled in order to associate subjects with messaging roles
+
+Named groups of address permissions (permission to send and/or receive) are defined in a resource of kind `MessagingRole`.
+The notation used for refering to subjects is model following https://kubernetes.io/docs/reference/access-authn-authz/rbac/#referring-to-subjects[kubernetes conventions].
+
+==== Resource definition:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingRoleBinding
+metadata:
+  name: myapps1-permissions
+  namespace: myspace
+subjects:
+- kind: Subject
+  name: system:serviceaccount:myspace:myappuser # refers to ServiceAccount myapp in mysspace
+- kind: Subject
+  name: enamsse.io:messaginguser:myspace:myappuser  # refers to MessagingUser myappuser in myns
+- kind: Subject
+  name: enamsse.io:messaginguser::myappuser  # refers to MessagingUser myappuser in myspace (implict form)
+- kind: Subject
+  name: enamsse.io:ldap.mycompany.com:myrootns:bill
+- kind: Subject
+  name: enamsse.io:tlsclientauth:myrootns:cn=John Doe,dc=example,dc=com
+messagingRoleRef:
+  name: myrole
+```
+
+---
+
+=== CRUDLW an identity provider in a namespace where messaging is enabled in order to config tenant specific identity requirements
+
+==== Resource definition:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: IdentityProvider
+metadata:
+  name: mykeycloak
+  namespace: myspace
+spec:
+  keycloakProvider:
+    host:
+    port:
+```
+
+---
+
+== Developer
+
+=== Connect a Messaging Application to a namespace where messaging messaging is enabled
+
+The status section of the `MessagingEndpoint` provides the developer with sufficient details to form the connection
+url required by the AMQP 1.0 client. 
+
+* host
+* port
+* TLS CA
+* identity provider
+
+The credentials will be provided by an out of band mechanism that depends on the type of identity provider used.
+
+---
+
+== Service Admin
+
+
+=== Define infra, plans and access control services in different namespaces
+
+A `MessagingInfrastructure`, `MessagingPlan`, and `IdentityProvider` may be created in any
+namespace where permissions is granted by the cluster admin. However, resources defined in namespaces not watched by the operator will not be processed.
+
+---
+
+=== CRUDLW an instance of messaging infrastructure shared between multiple messaging tenants
+
+Create the following `MessagingInfrastructure` to make the infrastructure shared between all namespaces on the cluster:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: infra1
+  namespace: enmasse-infra
+spec: {}
+```
+
+Create the following `MessagingInfrastructure` to make the infrastructure shared by a selection of namespaces based on their names:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: infra1
+  namespace: enmasse-infra
+spec:
+  namespaceSelector:
+    matchNames:
+    - "ns1"
+    - "ns2"
+```
+
+Create the following `MessagingInfrastructure` to make the infrastructure shared by a selection of namespaces based on labels:
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: infra1
+  namespace: enmasse-infra
+spec:
+  namespaceSelector:
+    matchLabels:
+      environment: test
+```
+
+---
+
+=== Restrict plans available to messaging tenants
+
+When creating the plan, define a selector with the desired restrictions on which namespaces it can be referenced from.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  # Selects which namespaces this tenant plans should be available for
+  namespaceSelector:
+    # Restrict to specific namespaces
+    matchNames:
+     - ns1
+     - ns2
+    # Restrict to namespaces matching labels
+    matchLabels:
+      environment: production
+```
+
+=== Restrict address plans available to addresses
+
+In the same way as for `MessagingPlan`, a `MessagingAddressPlan` may define a selector to restrict
+which namespaces it can be referenced by.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddressPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  # Selects which namespaces this tenant plans should be available for
+  namespaceSelector:
+    # Restrict to specific namespaces
+    matchNames:
+     - ns1
+     - ns2
+    # Restrict to namespaces matching labels
+    matchLabels:
+      environment: production
+```
+
+
+=== Specify default plans for messaging tenants
+
+When creating the plan, define a selector with the desired namespaces it should be available for.
+
+* The plan will automatically be the default for namespaces matching its selector.
+* If multiple plans are overlapping the same namespace, the default will be the oldest plan (ordered by creationTimestamp)
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  namespaceSelector:
+    matchLabels:
+      environment: dev
+```
+
+=== Specify default address plans for messaging tenants
+
+When creating the plan, define a selector with the desired namespaces it should be available for.
+
+* The plan will automatically be the default for addresses in the namespaces matching its selector.
+* If multiple plans are overlapping the same namespace, the default will be the oldest plan (ordered by creationTimestamp)
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddressPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  namespaceSelector:
+    matchLabels:
+      environment: dev
+```
+
+=== Specify default endpoints and cert providers to be created for messaging tenants
+
+Default endpoint configuration is specified in the `MessagingPlan` under the `endpoint.default` field.
+
+* The controller creates one `MessagingEndpoint` for each entry in the plan list
+* The schema for each entry corresponds to the `spec` object in `MessagingEndpoint` with the following exceptions:
+  * The `host` field is ignored and set to default.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingPlan
+metadata:
+  name: myplan
+  namespace: planspace
+spec:
+  endpoints:
+  - route: {}
+    protocols:
+    - AMQPS
+    tls:
+      openshift: {}
+  - cluster: {}
+     # Define which protocols are supported by the default endpoint
+    protocols:
+    - AMQP
+```
+
+=== Restrict which endpoint types and cert providers can be used for messaging tenants
+
+Restricting allowed endpoint types and cert providers allow the service admin to control
+exposure of messaging endpoints in a cluster. To do this, the Open Policy Agent (OPA) must be installed on the cluster.
+
+To enforce restrictions, policy agent rules must be written for the `MessagingEndpoint` resource.
+
+NOTE: These examples are not yet tested, but written based on OPA documentation.
+
+Examples:
+
+===== Enforce 'AMQPS' protocol for all endpoints
+
+```
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  protocol := input.request.object.spec.protocols[_]
+  protocol != "AMQPS"
+  msg := sprintf("unsupported protocol '%s'", [protocol])
+}
+```
+
+===== Enforce `route` endpoint with a shared wildcard certificate
+
+```
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.external.cert.valueFromSecret.name != "messaging-cert"
+  input.request.object.spec.tls.external.cert.valueFromSecret.namespace != "enmasse-infra"
+  msg := "incorrect certificate referenced"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.selfsigned
+  msg := "selfsigned certificate not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.openshift
+  msg := "openshift certificate not allowed"
+}
+```
+
+
+===== Allow all endpoints except nodePort and loadBalancer and disable self-signed certificates for all endpoints
+
+```
+package kubernetes.admission
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.external.cert.valueFromSecret.name != "messaging-cert"
+  input.request.object.spec.tls.external.cert.valueFromSecret.namespace != "enmasse-infra"
+  msg := "incorrect certificate referenced"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.nodePort
+  msg := "nodePort not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.loadBalancer
+  msg := "loadBalancer not allowed"
+}
+
+deny[msg] {
+  input.request.kind.kind == "MessagingEndpoint"
+  input.request.object.spec.tls.selfsigned
+  msg := "selfsigned certificate not allowed"
+}
+```
+
+=== Restrict how much memory and storage is consumed per messaging tenant
+
+Create a `MessagingPlan` with the limits to be applied to tenants.
+
+* `requests` will in the future be used as a parameter when selecting which shared infrastructure a tenant should run on. For instance, if a tenant is requesting initially 512MB of broker memory, and is starting to go beyond that, the operator maybe migrate the tenant to a different shared infrastructure.
+* `limits` are used to ensure that tenants with this plan are not allowed to use more resources than the limit values. If a tenant creates addresses whose address plan limits go beyond the messaging plan limits, it will not be configured.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingPlan
+metadata:
+  name: plan1
+  namespace: planspace
+spec:
+  resources:
+    requests:
+      memory: 512Mi
+      storage: 1Gi
+      connections: 10
+    limits:
+      memory: 1Gi
+      storage: 10Gi
+      connections: 100
+```
+
+=== Restrict how much memory and storage is consumed per address
+
+Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
+
+* Plans apply to any address type but settings are defined for each type
+* If resource limit is not set - limit is not specified
+* If resource request is not set - it equals the limit
+* If resource is not set - no limits are specified
+* When configuring an address, the operator will look at the sum of limits for all addresses and check that the new address does not cause it to go above the limits set in the MessagingPlan. If it does, then status section would be updated with QuotaExceeded error.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingAddressPlan
+metadata:
+  name: plan1
+  namespace: planspace
+spec:
+  # Per-address type properties
+  queue:
+    resources:
+      requests:
+        # Requests: amount of memory it is expected this queue will use, and is used for queue
+        # scheduling. Setting this to a lower value than limits will allow the scheduler to move this queue to 
+        # a different broker to increase density.
+        queueSizeMemory: 5Mi
+        queueSizeStorage: 20Mi
+      limits:
+        # Limits: Amount of memory queues with this plan can use on the broker. This translates to the max-size-bytes
+        # address setting in the broker.
+        queueSizeMemory: 10Mi
+        # Amount of storage queues with this plan can use on the broker
+        queueSizeStorage: 30Mi
+    expiryQueue: myexp
+    partitions: 3
+  topic:
+    maxConsumers: 2
+    resources:
+      limits:
+        # Total memory usage for all subscriptions to this topic
+        topicSizeMemory: 50Mi
+```
+
+=== Configure scaling of the routers based on the connection load and throughput
+
+Create/modify the `MessagingInfrastructure` resource to include the `dynamic` strategy for the router. This strategy scales
+the number of router replicas based on the parameters `connections` and `messageThroughputSeconds` per router.
+
+* If the observed value of these parameters go above the max, the number of router replicas is increased.
+* If the observed value of these parameters go below min, the number of router replicas is decreased.
+* Client connections will need to be terminated at scaling events in order for them to be rebalanced.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: myinfra
+spec:
+  router:
+    scalingStrategy:
+      dynamic:
+        # Specify the range of replicas this strategy can operate within
+        replicas:
+          min: 2
+          max: 5
+        # Strategy parameters that is used for determining if it should scale up/down
+        parameters:
+          # Number of connections _per router replica_
+          connections:
+            min: 100
+            max: 1000
+          # Number of messages/sec _per router replica_
+          messageThroughputSeconds
+            min: 1000.0
+            max: 15000
+```
+
+=== Configure scaling of the brokers based on the queue and topic memory and storage usage
+
+Create/modify the `MessagingInfrastructure` resource to include the `dynamic` strategy for the broker. This strategy scales
+the number of broker instances based on the parameters `addresses` per broker.
+
+* If the observed value of these parameters go above the max, the number of broker instances is increased.
+* If the observed value of these parameters go below min, the number of broker instances is decreased.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: myinfra
+spec:
+  broker:
+    scalingStrategy:
+      dynamic:
+        # Specify the pool range this strategy can operate within
+        poolSize:
+          min: 2
+          max: 5
+        # Strategy parameters that is used for determining if it should scale up/down
+        parameters:
+          # Number of addresses per broker
+          addresses:
+            min: 100
+            max: 1000
+```
+
+=== Configure per-user limits for connections, links, message size
+
+TODO: Needs support in router plugin and auth service
+
+=== Migrate tenant configuration and data from 0.x to 1.0 (with downtime)
+
+Configuration migration:
+
+* StandardInfraConfig/BrokeredInfraConfig -> MessagingInfrastructure: Manual
+* AuthenticationService -> MessagingInfrastructure + IdentityProvider: Manual
+* A separate cluster must be used for the 1.0 cluster
+* AddressPlan -> MessagingAddressPlan: Manual
+* AddressSpacePlan -> MessagingPlan: Manual
+* AddressSpace -> MessagingTenant, MessagingConnector and MessagingEndpoint: Script-assisted
+* Address -> MessagingAddress: Script-assisted
+* MessagingUser -> MessagingUser, MessagingRole, MessagingRoleBinding: Script-assited
+
+Data migration:
+
+Once the second cluster is configured with tenants and addresses, the next steps are:
+
+* Create user on 0.x cluster with access to all address spaces and addresses
+* Create user on 1.0 cluster with access to all tenants and their addresses
+* Stop traffic to 0.x cluster
+* Run migration application with configured users. The application will:
+** Lookup output data from the address space and address configuration conversion scripts
+** Consume messages from each address in each address space on the 0.x cluster
+** Send messages to each corresponding address and tenant on the 1.x cluster
+* Sanity check migration application output
+* Switch traffic to 1.x cluster
+
+NOTE: This approach will currently only work for queues. For subscriptions, we may need a way to enable producing to a subscription for an admin user for instance.
+
+=== CRUDLW an Identity provider that allows tenants to utilize of a namespace scoped users for the purpose of messaging authentication
+
+Create the following `IdentityProvider`.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: IdentityProvider
+metadata:
+  name: namespacescopedusers
+  namespace: infraspace
+spec:
+  namespaceProvider: {}
+```
+
+=== CRUDLW an Identity provider that allows tenants to utilise of an external Keycloak instance for the purpose of messaging authentication
+
+Create the following `IdentityProvider`.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: IdentityProvider
+metadata:
+  name: corpkeycloak
+  namespace: infraspace
+spec:
+  keycloakProvider:
+    host:
+    port:
+    tls: # borrow structure from connector (trust, client cert)
+    credentials: # borrow structure from connector
+    realm: # keycloak realm
+```
+
+=== Restrict the availablity of an Identity Provider using Tenant namespace criteria
+
+Create an `IdentityProvider` with a namespace selector, restricting the use of Identity Provider to tenants in matching namespaces.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: IdentityProvider
+metadata:
+  name: corpkeycloak
+  namespace: infraspace
+spec:
+  ...
+  namespaceSelector:
+    matchNames:
+    - ns1
+    matchLabels:
+      environment: uat1
+```
+
+=== Understand the state of the IdentityProvider
+
+For identity providers that utilise an external system, the System Admin must be able to understand the state of
+the connection to that external resource.
+
+```
+apiVersion: enmasse.io/v1beta2
+kind: IdentityProvider
+metadata:
+  name: corpkeycloak
+  namespace: infraspace
+status:
+  type: namespace | serviceaccount | keycloak | ldap | anonymous | clientauth
+  conditions:
+    lastTransitionTime: 2020-04-05 06:07:08Z
+    message: connection refused
+    status: false
+    type: Connected
+```
+
+
+

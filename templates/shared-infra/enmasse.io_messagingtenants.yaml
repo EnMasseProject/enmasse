@@ -53,7 +53,7 @@ spec:
           type: object
         spec:
           properties:
-            messagingInfraRef:
+            messagingInfrastructureRef:
               description: Reference to a specific MessagingInfra to use (must be
                 available for this tenant).
               properties:
@@ -90,7 +90,7 @@ spec:
               type: array
             message:
               type: string
-            messagingInfraRef:
+            messagingInfrastructureRef:
               description: MessagingInfra this tenant is bound to.
               properties:
                 name:

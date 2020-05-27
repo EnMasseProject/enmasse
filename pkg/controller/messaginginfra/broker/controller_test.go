@@ -15,11 +15,11 @@ import (
 
 	logrtesting "github.com/go-logr/logr/testing"
 
-	// corev1 "k8s.io/api/core/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 
+	// "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
@@ -29,7 +29,7 @@ import (
 
 func setup(t *testing.T) *BrokerController {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfra{})
+	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfrastructure{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
 	return NewBrokerController(cl, s, certController)
@@ -38,12 +38,12 @@ func setup(t *testing.T) *BrokerController {
 func TestReconcileBrokerPool(t *testing.T) {
 	bc := setup(t)
 
-	infra := v1beta2.MessagingInfra{
+	infra := v1beta2.MessagingInfrastructure{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
-		Spec: v1beta2.MessagingInfraSpec{
-			Broker: v1beta2.MessagingInfraSpecBroker{
-				ScalingStrategy: &v1beta2.MessagingInfraSpecBrokerScalingStrategy{
-					Static: &v1beta2.MessagingInfraSpecBrokerScalingStrategyStatic{
+		Spec: v1beta2.MessagingInfrastructureSpec{
+			Broker: v1beta2.MessagingInfrastructureSpecBroker{
+				ScalingStrategy: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy{
+					Static: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
 						PoolSize: 2,
 					},
 				},
@@ -51,7 +51,7 @@ func TestReconcileBrokerPool(t *testing.T) {
 		},
 	}
 
-	err := bc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
+	_, err := bc.certController.ReconcileCa(context.TODO(), logrtesting.TestLogger{}, &infra)
 	assert.Nil(t, err)
 
 	hosts, err := bc.ReconcileBrokers(context.TODO(), logrtesting.TestLogger{}, &infra)

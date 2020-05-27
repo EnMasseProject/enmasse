@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Service;
@@ -171,5 +172,23 @@ public class OpenShift extends Kubernetes {
     @Override
     public List<Route> listRoutes(String namespace, Map<String, String> labels) {
         return client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withLabels(labels).list().getItems();
+    }
+
+    @Override
+    public String getClusterExternalImageRegistry() {
+        if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
+            return getExternalEndpoint("default-route", "openshift-image-registry").getHost();
+        } else {
+            return "172.30.1.1:5000";
+        }
+    }
+
+    @Override
+    public String getClusterInternalImageRegistry() {
+        if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
+            return "image-registry.openshift-image-registry.svc:5000";
+        } else {
+            return "172.30.1.1:5000";
+        }
     }
 }

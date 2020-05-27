@@ -8,12 +8,14 @@ package broker
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	logr "github.com/go-logr/logr"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -42,7 +44,7 @@ func NewBrokerController(client client.Client, scheme *runtime.Scheme, certContr
 	}
 }
 
-func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
+func getBrokerLabels(infra *v1beta2.MessagingInfrastructure) map[string]string {
 	labels := make(map[string]string, 0)
 	labels[common.LABEL_INFRA] = infra.Name
 	labels["component"] = "broker"
@@ -56,7 +58,7 @@ func getBrokerLabels(infra *v1beta2.MessagingInfra) map[string]string {
  *
  * Each instance of a broker is created as a statefulset. If we want to support HA in the future, each statefulset can use replicas to configure HA.
  */
-func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]string, error) {
+func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]state.Host, error) {
 	setDefaultBrokerScalingStrategy(&infra.Spec.Broker)
 	logger.Info("Reconciling brokers", "broker", infra.Spec.Broker)
 
@@ -108,10 +110,29 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 	}
 
 	// Update discoverable brokers
-	allHosts := make([]string, 0)
-	for host, _ := range hosts {
-		allHosts = append(allHosts, host)
+	brokerPods := corev1.PodList{}
+	err = b.client.List(ctx, &brokerPods, client.InNamespace(infra.Namespace), client.MatchingLabels(labels))
+	if err != nil {
+		return nil, err
 	}
+
+	allHosts := make([]state.Host, 0)
+	for expectedHost, _ := range hosts {
+		podIp := ""
+		for _, pod := range brokerPods.Items {
+			if pod.Status.Phase == corev1.PodRunning && pod.Status.PodIP != "" {
+				logger.Info("Found broker pod", "ip", pod.Status.PodIP)
+				// Rather than re-constructing the DNS name of the pod, check that it is a prefix of any expected full hostname
+				// (which includes pod name, statefulset name and namespace), as this is guaranteed to match only one host.
+				if strings.HasPrefix(expectedHost, pod.Name) {
+					podIp = pod.Status.PodIP
+					break
+				}
+			}
+		}
+		allHosts = append(allHosts, state.Host{Hostname: expectedHost, Ip: podIp})
+	}
+
 	return allHosts, nil
 }
 
@@ -123,7 +144,7 @@ func toNamespacedHost(broker *appsv1.StatefulSet) string {
 	return fmt.Sprintf("%s-0", broker.Name)
 }
 
-func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra, statefulset *appsv1.StatefulSet) error {
+func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, statefulset *appsv1.StatefulSet) error {
 	logger.Info("Creating broker", "name", statefulset.Name)
 
 	certSecretName := cert.GetCertSecretName(statefulset.Name)
@@ -184,10 +205,15 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyEnvSimple(container, "HOME", "/var/run/artemis")
 			container.Command = []string{"/opt/apache-artemis/custom/bin/launch-broker.sh"}
 
-			// TODO:
+			// TODO: Make these configurable in MessagingInfra
 			install.ApplyEnvSimple(container, "ADDRESS_SPACE_TYPE", "shared")
 			install.ApplyEnvSimple(container, "GLOBAL_MAX_SIZE", "-1")
 			install.ApplyEnvSimple(container, "ADDRESS_FULL_POLICY", "FAIL")
+
+			install.ApplyEnvSimple(container, "PROBE_ADDRESS", "readiness")
+			install.ApplyEnvSimple(container, "PROBE_USERNAME", "probe")
+			install.ApplyEnvSimple(container, "PROBE_PASSWORD", "probe")
+			install.ApplyEnvSimple(container, "PROBE_TIMEOUT", "2s")
 
 			install.ApplyVolumeMountSimple(container, "data", "/var/run/artemis", false)
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
@@ -198,6 +224,33 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 					ContainerPort: 5671,
 					Name:          "amqps",
 				},
+			}
+
+			container.LivenessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"sh",
+							"-c",
+							"$ARTEMIS_HOME/custom/bin/probe.sh",
+						},
+					},
+				},
+				InitialDelaySeconds: 300,
+			}
+
+			container.ReadinessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					Exec: &corev1.ExecAction{
+						Command: []string{
+							"sh",
+							"-c",
+							"$ARTEMIS_HOME/custom/bin/broker-probe",
+						},
+					},
+				},
+				TimeoutSeconds:      3,
+				InitialDelaySeconds: 30,
 			}
 
 			return nil
@@ -268,18 +321,18 @@ func int32ptr(v int32) *int32 {
 	return &v
 }
 
-func setDefaultBrokerScalingStrategy(broker *v1beta2.MessagingInfraSpecBroker) {
+func setDefaultBrokerScalingStrategy(broker *v1beta2.MessagingInfrastructureSpecBroker) {
 	// Set static scaler by default
 	if broker.ScalingStrategy == nil {
-		broker.ScalingStrategy = &v1beta2.MessagingInfraSpecBrokerScalingStrategy{
-			Static: &v1beta2.MessagingInfraSpecBrokerScalingStrategyStatic{
+		broker.ScalingStrategy = &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy{
+			Static: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
 				PoolSize: 1,
 			},
 		}
 	}
 }
 
-func numBrokersToCreate(strategy *v1beta2.MessagingInfraSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
+func numBrokersToCreate(strategy *v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
 	if strategy.Static != nil {
 		if int(strategy.Static.PoolSize) > len(brokers) {
 			return int(strategy.Static.PoolSize) - len(brokers)
@@ -289,7 +342,7 @@ func numBrokersToCreate(strategy *v1beta2.MessagingInfraSpecBrokerScalingStrateg
 	return 0
 }
 
-func numBrokersToDelete(strategy *v1beta2.MessagingInfraSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
+func numBrokersToDelete(strategy *v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
 	if strategy.Static != nil {
 		if int(strategy.Static.PoolSize) < len(brokers) {
 			return len(brokers) - int(strategy.Static.PoolSize)

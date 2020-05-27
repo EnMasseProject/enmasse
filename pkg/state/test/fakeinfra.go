@@ -6,14 +6,16 @@
 package test
 
 import (
+	"crypto/tls"
+
 	"github.com/enmasseproject/enmasse/pkg/state"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
 type FakeClient struct {
-	Routers []string
-	Brokers []string
+	Routers []state.Host
+	Brokers []state.Host
 }
 
 var _ state.InfraClient = &FakeClient{}
@@ -29,19 +31,19 @@ func NewFakeManager() *FakeManager {
 	}
 }
 
-func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfra) state.InfraClient {
+func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfrastructure) state.InfraClient {
 	client, exists := m.Clients[infra.Name]
 	if !exists {
 		client = &FakeClient{
-			Routers: make([]string, 0),
-			Brokers: make([]string, 0),
+			Routers: make([]state.Host, 0),
+			Brokers: make([]state.Host, 0),
 		}
 		m.Clients[infra.Name] = client
 	}
 	return client
 }
 
-func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
+func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error {
 	delete(m.Clients, infra.Name)
 	return nil
 }
@@ -49,7 +51,7 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfra) error {
 func (i *FakeClient) Start() {
 }
 
-func (i *FakeClient) SyncAll(routers []string, brokers []string) ([]state.ConnectorStatus, error) {
+func (i *FakeClient) SyncAll(routers []state.Host, brokers []state.Host, tlsConfig *tls.Config) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers
 	return nil, nil

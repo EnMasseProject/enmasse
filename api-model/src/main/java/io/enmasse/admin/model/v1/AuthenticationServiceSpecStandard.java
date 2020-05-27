@@ -31,14 +31,7 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
     private SecretReference certificateSecret;
     private AuthenticationServiceSpecStandardStorage storage;
     private PodSecurityContext securityContext;
-
-    public SecretReference getCredentialsSecret() {
-        return credentialsSecret;
-    }
-
-    public void setCredentialsSecret(SecretReference credentialsSecret) {
-        this.credentialsSecret = credentialsSecret;
-    }
+    private Integer replicas;
 
     @Override
     public boolean equals(Object o) {
@@ -48,12 +41,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
         return Objects.equals(credentialsSecret, that.credentialsSecret) &&
                 Objects.equals(certificateSecret, that.certificateSecret) &&
                 Objects.equals(storage, that.storage) &&
-                Objects.equals(securityContext, that.securityContext);
+                Objects.equals(securityContext, that.securityContext) &&
+                Objects.equals(replicas, that.replicas);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(credentialsSecret, certificateSecret, storage, securityContext);
+        return Objects.hash(credentialsSecret, certificateSecret, storage, securityContext, replicas);
     }
 
     @Override
@@ -63,7 +57,16 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
                 ", certificateSecret=" + certificateSecret +
                 ", storage=" + storage +
                 ", securityContext=" + securityContext +
+                ", replicas=" + replicas +
                 '}';
+    }
+
+    public SecretReference getCredentialsSecret() {
+        return credentialsSecret;
+    }
+
+    public void setCredentialsSecret(SecretReference credentialsSecret) {
+        this.credentialsSecret = credentialsSecret;
     }
 
     public SecretReference getCertificateSecret() {
@@ -88,5 +91,13 @@ public class AuthenticationServiceSpecStandard extends AbstractWithAdditionalPro
 
     public void setSecurityContext(PodSecurityContext securityContext) {
         this.securityContext = securityContext;
+    }
+
+    public Integer getReplicas() {
+        return replicas;
+    }
+
+    public void setReplicas(Integer replicas) {
+        this.replicas = replicas;
     }
 }

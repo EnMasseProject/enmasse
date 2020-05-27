@@ -29,8 +29,8 @@ public class OpenshiftCertValidatorApiClient extends ApiClient {
     }
 
     @Override
-    protected void connect() {
-        this.client = WebClient.create(vertx, new WebClientOptions()
+    protected WebClient createClient() {
+        return WebClient.create(vertx, new WebClientOptions()
                 .setSsl(false)
                 .setTrustAll(true)
                 .setVerifyHost(false));
@@ -38,7 +38,7 @@ public class OpenshiftCertValidatorApiClient extends ApiClient {
 
     public JsonObject test(JsonObject request) throws InterruptedException, ExecutionException, TimeoutException {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.get(endpoint.getPort(), endpoint.getHost(), "")
+        getClient().get(endpoint.getPort(), endpoint.getHost(), "")
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
                 .sendJson(request,

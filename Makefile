@@ -4,12 +4,12 @@ include $(TOPDIR)/Makefile.env.mk
 GO_DIRS = \
 	controller-manager \
 	iot/iot-proxy-configurator \
-	console/console-server
+	console/console-server \
+	broker-plugin
 
 DOCKER_DIRS = \
 	agent \
 	topic-forwarder \
-	broker-plugin \
 	address-space-controller \
 	none-authservice \
 	standard-controller \
@@ -128,7 +128,7 @@ systemtests-tekton:
 	make -C systemtests systemtests-tekton
 
 docu_html:
-	make -C documentation build
+	make -C documentation
 
 docu_check:
 	make -C documentation check

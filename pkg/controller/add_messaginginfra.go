@@ -14,7 +14,7 @@ func init() {
 
 	// add ourselves to the list of controllers
 
-	if util.IsModuleEnabled("MESSAGING_INFRA") {
+	if util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
 		AddToManagerFuncs = append(AddToManagerFuncs, messaginginfra.Add)
 	}
 }

@@ -1,0 +1,33 @@
+// Module included in the following assemblies:
+//
+// assembly-using-console.adoc
+
+[id="proc-closing-connections_{context}"]
+
+= Closing connections using the {ConsoleName}
+
+If an application has unexpectedly stopped processing messages, you can force the application’s messaging connections to close using the {ConsoleName}. This may be a useful way to return the application to service.
+
+Be aware that closing a connection closes the application’s connection to {ProductName}. If the application is configured to do so, the application should reconnect automatically.
+
+.Procedure
+
+. Log in to the {ConsoleName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+. Navigate to the *Connections* page.
+
+. To close a single connection:
+
+.. Locate the connection that you want to close.
+
+.. In the far right column, click the vertical ellipsis icon and select *Close*.
+
+.. When prompted, click *Confirm* to confirm that you want to close the connection. The connection is closed.
+
+. To close multiple connections in a single operation:
+
+.. Select the check box next to the connections that you want to close.
+
+.. At the top of the page, right-click the vertical ellipsis icon and select *Close Selected*.
+
+.. When prompted, click *Confirm* to confirm that you want to close the connections. The connections are closed.

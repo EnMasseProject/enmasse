@@ -40,12 +40,14 @@ const (
 )
 
 type AuthenticationServiceSpecNone struct {
+	Replicas          *int32                        `json:"replicas,omitempty"`
 	CertificateSecret *corev1.SecretReference       `json:"certificateSecret,omitempty"`
 	Image             *enmassev1beta1.ImageOverride `json:"image,omitempty"`
 	Resources         *corev1.ResourceRequirements  `json:"resources,omitempty"`
 }
 
 type AuthenticationServiceSpecStandard struct {
+	Replicas           *int32                                       `json:"replicas,omitempty"`
 	CredentialsSecret  *corev1.SecretReference                      `json:"credentialsSecret,omitempty"`
 	CertificateSecret  *corev1.SecretReference                      `json:"certificateSecret,omitempty"`
 	ServiceAccountName *string                                      `json:"serviceAccountName,omitempty"`

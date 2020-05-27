@@ -99,4 +99,10 @@ class InfinispanDeviceRegistryTest extends DeviceRegistryTest {
     void testTenantDeletionTriggersDevicesDeletion() throws Exception {
         super.doTestTenantDeletionTriggersDevicesDeletion();
     }
+
+    @Override
+    @Disabled("Not supported by Infinispan")
+    public void testDeviceWithSameAuthIdOfSameTypesFails() throws Exception {
+        super.testDeviceWithSameAuthIdOfSameTypesFails();
+    }
 }

@@ -210,7 +210,7 @@ public class KubeCMDClient {
 
     public static ExecutionResultData checkPermission(String operation, String kind, String namespace, String serviceaccount) {
         List<String> cmd = new LinkedList<>(Arrays.asList(CMD, "auth", "can-i", operation, kind, "-n", namespace, "--as", "system:serviceaccount:enmasse-monitoring:" + serviceaccount));
-        return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
+        return Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, false);
     }
 
     public static void loginUser(String apiToken) {
@@ -331,15 +331,6 @@ public class KubeCMDClient {
             log.info("Error returning events: {}", data.getStdErr());
         }
         return data;
-    }
-
-    public static ExecutionResultData getApiServices(String name) {
-        List<String> command = Arrays.asList(CMD, "get", "apiservices", name,
-                "--output", "custom-columns=NAME:{.name}",
-                "--no-headers=true",
-                "--sort-by={.name}");
-
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 
     public static ExecutionResultData deleteIoTConfig(String namespace, String name) {

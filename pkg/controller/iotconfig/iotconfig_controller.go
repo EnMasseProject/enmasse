@@ -7,7 +7,6 @@ package iotconfig
 
 import (
 	"context"
-
 	"github.com/enmasseproject/enmasse/pkg/util/iot"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"github.com/pkg/errors"
@@ -53,7 +52,6 @@ const iotServiceCaConfigMapName = "iot-service-ca"
 const DeviceConnectionTypeAnnotation = iotPrefix + "/deviceConnection.type"
 
 const RegistryTypeAnnotation = iotPrefix + "/registry.type"
-const RegistryJdbcModeAnnotation = iotPrefix + "/registry.jdbc.mode"
 
 var log = logf.Log.WithName("controller_iotconfig")
 
@@ -88,7 +86,6 @@ func newReconciler(mgr manager.Manager, infraNamespace string, configName string
 
 type watching struct {
 	obj       runtime.Object
-	name      string
 	openshift bool
 }
 
@@ -110,13 +107,14 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 	ownerEventLog := log.V(2)
 
 	for _, w := range []watching{
-		{&appsv1.Deployment{}, "Deployment", false},
-		{&corev1.Service{}, "Service", false},
-		{&corev1.ConfigMap{}, "ConfigMap", false},
-		{&corev1.Secret{}, "Secret", false},
-		{&corev1.PersistentVolumeClaim{}, "PersistentVolumeClaim", false},
+		{&appsv1.Deployment{}, false},
+		{&appsv1.StatefulSet{}, false},
+		{&corev1.Service{}, false},
+		{&corev1.ConfigMap{}, false},
+		{&corev1.Secret{}, false},
+		{&corev1.PersistentVolumeClaim{}, false},
 
-		{&routev1.Route{}, "Route", true},
+		{&routev1.Route{}, true},
 	} {
 
 		if w.openshift && !util.IsOpenshift() {
@@ -127,7 +125,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		err = c.Watch(&source.Kind{Type: w.obj}, loghandler.New(&handler.EnqueueRequestForOwner{
 			OwnerType:    &iotv1alpha1.IoTConfig{},
 			IsController: true,
-		}, ownerEventLog, w.name))
+		}, ownerEventLog, w.obj.GetObjectKind().GroupVersionKind().Kind))
 		if err != nil {
 			return err
 		}
@@ -136,10 +134,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 
 	// watch secrets referenced by infrastructure
 
-	s, err := NewSecretHandler(r.client, r.configName)
-	if err != nil {
-		return errors.Wrap(err, "Failed to create secret event handler")
-	}
+	s := NewSecretHandler(r.client, r.configName)
 	if err := c.Watch(&source.Kind{Type: &corev1.Secret{}}, s); err != nil {
 		return err
 	}
@@ -222,9 +217,6 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processQdrProxyConfig(ctx, config, qdrProxyConfigCtx)
 	})
 	rc.ProcessSimple(func() error {
-		return r.processCollector(ctx, config)
-	})
-	rc.ProcessSimple(func() error {
 		return r.processInterServiceCAConfigMap(ctx, config)
 	})
 	rc.Process(func() (reconcile.Result, error) {
@@ -261,22 +253,13 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	return r.updateFinalStatus(ctx, original, config, rc)
 }
 
-func syncConfigCondition(status *iotv1alpha1.IoTConfigStatus) {
-	ready := status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
-	ready.SetStatusOkOrElse(status.Phase == iotv1alpha1.ConfigPhaseActive, "NotReady", "infrastructure is not ready yet")
-}
-
 func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, original *iotv1alpha1.IoTConfig, config *iotv1alpha1.IoTConfig, err error) error {
 
-	// we are initialized when there is no error
+	// update the status condition
 
-	if err == nil {
-		config.Status.Phase = iotv1alpha1.ConfigPhaseActive
-	} else {
-		config.Status.Phase = iotv1alpha1.ConfigPhaseFailed
-	}
+	r.updateConditions(ctx, config, err)
 
-	syncConfigCondition(&config.Status)
+	// record state change in event log
 
 	if config.Status.Phase != original.Status.Phase {
 		switch config.Status.Phase {
@@ -285,7 +268,7 @@ func (r *ReconcileIoTConfig) updateStatus(ctx context.Context, original *iotv1al
 			r.recorder.Eventf(config, corev1.EventTypeNormal, "Activated", "IoT infrastructure successfully activated")
 		case iotv1alpha1.ConfigPhaseFailed:
 			// record event that the infrastructure failed
-			r.recorder.Eventf(config, corev1.EventTypeNormal, "Failed", "IoT infrastructure failed")
+			r.recorder.Eventf(config, corev1.EventTypeWarning, "Failed", "IoT infrastructure failed")
 		}
 	}
 
@@ -326,8 +309,9 @@ func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, original *io
 func (r *ReconcileIoTConfig) failWrongConfigName(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	config.Status.Phase = iotv1alpha1.ConfigPhaseFailed
+	config.Status.Message = "The name of the resource must be 'default'"
 
-	syncConfigCondition(&config.Status)
+	config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady).SetStatusError("WrongName", config.Status.Message)
 
 	if err := r.client.Status().Update(ctx, config); err != nil {
 		return reconcile.Result{}, err

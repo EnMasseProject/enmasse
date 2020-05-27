@@ -10,7 +10,10 @@ import (
 	"flag"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/99designs/gqlgen/handler"
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
+	"github.com/99designs/gqlgen/graphql/playground"
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -21,7 +24,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/vektah/gqlparser/gqlerror"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"k8s.io/client-go/tools/clientcmd"
 	"log"
 	"net/http"
@@ -161,10 +164,13 @@ http://localhost:` + port + `/graphql
 
 	queryServer := http.NewServeMux()
 
+	gqlServer := handler.New(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}))
+
 	queryEndpoint := "/graphql/query"
 	if graphqlPlayground || *developmentMode {
-		playground := handler.Playground("GraphQL playground", queryEndpoint)
-		queryServer.Handle("/graphql/", playground)
+		playgroundHandler := playground.Handler("GraphQL playground", queryEndpoint)
+		queryServer.Handle("/graphql/", playgroundHandler)
+		gqlServer.Use(extension.Introspection{})
 	}
 
 	sessionManager := server.CreateSessionManager(sessionLifetime, sessionIdleTimeout,
@@ -172,39 +178,36 @@ http://localhost:` + port + `/graphql
 		func() { manager.EndWatching() },
 		sessionCountMetric)
 
-	gql := handler.GraphQL(resolvers.NewExecutableSchema(resolvers.Config{Resolvers: &resolver}),
-		handler.ErrorPresenter(
-			func(ctx context.Context, e error) *gqlerror.Error {
-				rctx := graphql.GetRequestContext(ctx)
-				if rctx != nil {
-					log.Printf("Query error - op: %s query: %s vars: %+v error: %s\n", rctx.OperationName, rctx.RawQuery, rctx.Variables, e)
-				}
-				queryErrorCountMetric.WithLabelValues(rctx.OperationName).Inc()
-				return graphql.DefaultErrorPresenter(ctx, e)
-			},
-		),
-		handler.RequestMiddleware(func(ctx context.Context, next func(ctx context.Context) []byte) []byte {
+	gqlServer.AddTransport(transport.GET{})
+	gqlServer.AddTransport(transport.POST{})
 
-			loggedOnUser := "<unknown>"
-			start := time.Now()
-			result := next(ctx)
+	gqlServer.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		rctx := graphql.GetOperationContext(ctx)
+		if rctx != nil {
+			log.Printf("Query error - op: %s query: %s vars: %+v error: %s\n", rctx.OperationName, rctx.RawQuery, rctx.Variables, err)
+		}
+		queryErrorCountMetric.WithLabelValues(rctx.OperationName).Inc()
+		return graphql.DefaultErrorPresenter(ctx, err)
+	})
 
-			loggedOnUser = server.UpdateAccessControllerState(ctx, loggedOnUser, sessionManager)
-
-			rctx := graphql.GetRequestContext(ctx)
-			if rctx != nil {
-				since := time.Since(start)
-				log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, since)
-				queryTimeMetric.WithLabelValues(rctx.OperationName).Observe(since.Seconds())
-			}
-			return result
-		}),
-	)
+	gqlServer.AroundResponses(func(ctx context.Context, next graphql.ResponseHandler) *graphql.Response {
+		loggedOnUser := "<unknown>"
+		start := time.Now()
+		result := next(ctx)
+		loggedOnUser = server.UpdateAccessControllerState(ctx, loggedOnUser, sessionManager)
+		rctx := graphql.GetOperationContext(ctx)
+		if rctx != nil {
+			since := time.Since(start)
+			log.Printf("[%s] Query execution - op: %s %s\n", loggedOnUser, rctx.OperationName, since)
+			queryTimeMetric.WithLabelValues(rctx.OperationName).Observe(since.Seconds())
+		}
+		return result
+	})
 
 	if *developmentMode {
-		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gql, sessionManager, config.BearerToken))
+		queryServer.Handle(queryEndpoint, server.DevelopmentHandler(gqlServer, sessionManager, config.BearerToken))
 	} else {
-		queryServer.Handle(queryEndpoint, server.AuthHandler(gql, sessionManager, impersonationConfig))
+		queryServer.Handle(queryEndpoint, server.AuthHandler(gqlServer, sessionManager, impersonationConfig))
 	}
 
 	go func() {

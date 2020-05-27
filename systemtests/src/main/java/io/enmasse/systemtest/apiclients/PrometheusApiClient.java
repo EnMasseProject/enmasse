@@ -4,16 +4,16 @@
  */
 package io.enmasse.systemtest.apiclients;
 
+import java.net.HttpURLConnection;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+
 import io.enmasse.systemtest.Endpoint;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.ext.web.codec.BodyCodec;
-
-import java.net.HttpURLConnection;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class PrometheusApiClient extends ApiClient {
 
@@ -27,8 +27,8 @@ public class PrometheusApiClient extends ApiClient {
     }
 
     @Override
-    protected void connect() {
-        this.client = WebClient.create(vertx, new WebClientOptions()
+    protected WebClient createClient() {
+        return WebClient.create(vertx, new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
                 .setVerifyHost(false));
@@ -36,7 +36,7 @@ public class PrometheusApiClient extends ApiClient {
 
     public JsonObject getRules() throws Exception {
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
-        client.get(endpoint.getPort(), endpoint.getHost(), "/api/v1/rules")
+        getClient().get(endpoint.getPort(), endpoint.getHost(), "/api/v1/rules")
                 .bearerTokenAuthentication(token)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
@@ -48,7 +48,7 @@ public class PrometheusApiClient extends ApiClient {
         Objects.requireNonNull(query);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         String uri = String.format("/api/v1/query?query=%s", query);
-        client.get(endpoint.getPort(), endpoint.getHost(), uri)
+        getClient().get(endpoint.getPort(), endpoint.getHost(), uri)
                 .bearerTokenAuthentication(token)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)
@@ -62,7 +62,7 @@ public class PrometheusApiClient extends ApiClient {
         Objects.requireNonNull(endTs);
         CompletableFuture<JsonObject> responsePromise = new CompletableFuture<>();
         String uri = String.format("/api/v1/query_range?query=%s&start=%s&end=%s&step=14", query, startTs, endTs);
-        client.get(endpoint.getPort(), endpoint.getHost(), uri)
+        getClient().get(endpoint.getPort(), endpoint.getHost(), uri)
                 .bearerTokenAuthentication(token)
                 .as(BodyCodec.jsonObject())
                 .timeout(120000)

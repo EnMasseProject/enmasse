@@ -8,6 +8,7 @@ package router
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	"crypto/sha256"
 	"encoding/hex"
@@ -17,6 +18,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -48,7 +50,7 @@ func NewRouterController(client client.Client, scheme *runtime.Scheme, certContr
 /*
  * Reconciles the router instances for an instance of shared infrastructure.
  */
-func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfra) ([]string, error) {
+func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]state.Host, error) {
 
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
@@ -83,6 +85,44 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	rawSha := sha256.Sum256(routerConfigBytes)
 	routerConfigSha := hex.EncodeToString(rawSha[:])
 
+	// Reconcile the tenant certificate secret. This secret is created by infra, but is updated by the endpoints controller.
+	tenantSecretName := cert.GetTenantSecretName(infra.Name)
+	tenantSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: tenantSecretName},
+	}
+
+	certSha := sha256.New()
+
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, tenantSecret, func() error {
+		if err := controllerutil.SetControllerReference(infra, tenantSecret, r.scheme); err != nil {
+			return err
+		}
+		keys := make([]string, 0, len(tenantSecret.Data))
+		for key, _ := range tenantSecret.Data {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+		for _, key := range keys {
+			value := tenantSecret.Data[key]
+			_, err := certSha.Write([]byte(key))
+			if err != nil {
+				return err
+			}
+			_, err = certSha.Write(value)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	certShaSum := make([]byte, 0, certSha.Size())
+	certShaSum = certSha.Sum(certShaSum)
+	routerCertSha := hex.EncodeToString(certShaSum[:])
+
 	// Reconcile statefulset of the router
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
@@ -112,6 +152,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 			install.ApplyVolumeMountSimple(container, "config", "/etc/qpid-dispatch/config", false)
+			install.ApplyVolumeMountSimple(container, "tenant-certs", "/etc/enmasse-tenant-certs", false)
 
 			install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
 			install.ApplyEnvSimple(container, "QDROUTERD_CONF", "/etc/qpid-dispatch/config/qdrouterd.json")
@@ -128,6 +169,36 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 					ContainerPort: 7777,
 					Name:          "management",
 				},
+				{
+					ContainerPort: 7778,
+					Name:          "liveness",
+				},
+				{
+					ContainerPort: 7779,
+					Name:          "readiness",
+				},
+			}
+
+			container.LivenessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path:   "/healthz",
+						Scheme: corev1.URISchemeHTTP,
+						Port:   intstr.FromString("liveness"),
+					},
+				},
+				InitialDelaySeconds: 30,
+			}
+
+			container.ReadinessProbe = &corev1.Probe{
+				Handler: corev1.Handler{
+					HTTPGet: &corev1.HTTPGetAction{
+						Path:   "/healthz",
+						Scheme: corev1.URISchemeHTTP,
+						Port:   intstr.FromString("readiness"),
+					},
+				},
+				InitialDelaySeconds: 30,
 			}
 
 			for i := 40000; i < 40100; i++ {
@@ -147,6 +218,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 		install.ApplyConfigMapVolume(&statefulset.Spec.Template.Spec, "config", routerInfraName)
 		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "certs", certSecretName)
+		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "tenant-certs", tenantSecretName)
 		return nil
 	})
 
@@ -181,30 +253,60 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	// Reconcile router certificate
-	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
-		fmt.Sprintf("%s", service.Name),
-		fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace))
+	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset, fmt.Sprintf("%s", service.Name), fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace), fmt.Sprintf("*.%s.%s.svc", service.Name, service.Namespace))
 	if err != nil {
 		return nil, err
 	}
 
-	// Update discoverable routers
-	allHosts := make([]string, 0)
-	for i := 0; i < int(*statefulset.Spec.Replicas); i++ {
-		allHosts = append(allHosts, fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace))
+	// Annotate pods with sha to trigger their update without redeploying them
+	pods := &corev1.PodList{}
+	err = r.client.List(ctx, pods, client.MatchingLabels(statefulset.Spec.Template.Labels), client.InNamespace(infra.Namespace))
+	if err != nil {
+		return nil, err
 	}
+
+	for _, pod := range pods.Items {
+		if pod.Annotations[common.ANNOTATION_CERT_DIGEST] != routerCertSha {
+			logger.Info("Patching pod with updated cert digest", "pod", pod.Name, "oldsha256", pod.Annotations[common.ANNOTATION_CERT_DIGEST], "sha256", routerCertSha)
+			pod.Annotations[common.ANNOTATION_CERT_DIGEST] = routerCertSha
+			err := r.client.Update(ctx, &pod)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+	}
+
+	// Update expected routers
+	expectedPods := int(*statefulset.Spec.Replicas)
+	allHosts := make([]state.Host, 0)
+	for i := 0; i < expectedPods; i++ {
+		podIp := ""
+		expectedHost := fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace)
+		for _, pod := range pods.Items {
+			if pod.Status.Phase == corev1.PodRunning && pod.Status.PodIP != "" {
+				host := fmt.Sprintf("%s.%s.%s.svc", pod.Name, statefulset.Name, statefulset.Namespace)
+				if host == expectedHost {
+					podIp = pod.Status.PodIP
+					break
+				}
+			}
+		}
+		allHosts = append(allHosts, state.Host{Hostname: expectedHost, Ip: podIp})
+	}
+
 	return allHosts, nil
 }
 
-func getRouterInfraName(infra *v1beta2.MessagingInfra) string {
+func getRouterInfraName(infra *v1beta2.MessagingInfrastructure) string {
 	return fmt.Sprintf("router-%s", infra.Name)
 }
 
-func setDefaultRouterScalingStrategy(router *v1beta2.MessagingInfraSpecRouter) {
+func setDefaultRouterScalingStrategy(router *v1beta2.MessagingInfrastructureSpecRouter) {
 	if router.ScalingStrategy == nil {
 		// Set static scaler by default
-		router.ScalingStrategy = &v1beta2.MessagingInfraSpecRouterScalingStrategy{
-			Static: &v1beta2.MessagingInfraSpecRouterScalingStrategyStatic{
+		router.ScalingStrategy = &v1beta2.MessagingInfrastructureSpecRouterScalingStrategy{
+			Static: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategyStatic{
 				Replicas: 1,
 			},
 		}
@@ -215,7 +317,7 @@ func int32ptr(val int32) *int32 {
 	return &val
 }
 
-func applyScalingStrategy(strategy *v1beta2.MessagingInfraSpecRouterScalingStrategy, set *appsv1.StatefulSet) {
+func applyScalingStrategy(strategy *v1beta2.MessagingInfrastructureSpecRouterScalingStrategy, set *appsv1.StatefulSet) {
 	if strategy.Static != nil {
 		set.Spec.Replicas = int32ptr(strategy.Static.Replicas)
 	}

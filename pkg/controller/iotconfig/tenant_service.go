@@ -8,6 +8,7 @@ package iotconfig
 import (
 	"context"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -27,9 +28,19 @@ const nameTenantService = "iot-tenant-service"
 func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
+	change := cchange.NewRecorder()
+
+	service := config.Spec.ServicesConfig.Tenant
 
 	rc.ProcessSimple(func() error {
-		return r.processDeployment(ctx, nameTenantService, config, false, r.reconcileTenantServiceDeployment)
+		return r.processConfigMap(ctx, nameTenantService+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileTenantServiceConfigMap(config, service, configMap, change)
+		})
+	})
+	rc.ProcessSimple(func() error {
+		return r.processDeployment(ctx, nameTenantService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+			return r.reconcileTenantServiceDeployment(config, deployment, change)
+		})
 	})
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameTenantService, config, false, r.reconcileTenantServiceService)
@@ -37,21 +48,18 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameTenantService+"-metrics", config, false, r.reconcileMetricsService(nameTenantService))
 	})
-	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameTenantService+"-config", config, false, r.reconcileTenantServiceConfigMap)
-	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
+func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
 	service := config.Spec.ServicesConfig.Tenant
 	deployment.Annotations[util.ConnectsTo] = "iot-auth-service"
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
-	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, nil)
+	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, change)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
@@ -107,7 +115,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 
 		// apply container options
 
-		applyContainerConfig(container, service.Container)
+		applyContainerConfig(container, service.Container.ContainerConfig)
 
 		// return
 
@@ -165,7 +173,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(_ *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(config *iotv1alpha1.IoTConfig, service iotv1alpha1.TenantServiceConfig, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -173,9 +181,9 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(_ *iotv1alpha1.IoTC
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
+
+	change.AddStringsFromMap(configMap.Data, "logback-spring.xml")
 
 	return nil
 }

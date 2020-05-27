@@ -4,7 +4,9 @@
  */
 package io.enmasse.systemtest.logs;
 
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -282,6 +284,13 @@ public class GlobalLogCollector {
             List<String> nsList = new ArrayList<>();
             nsList.add(infraNamespace);
             nsList.addAll(Arrays.asList(SystemtestsKubernetesApps.ST_NAMESPACES));
+            nsList.add(Environment.getInstance().getMonitoringNamespace());
+            // TMP: trying to understand sporadic problems with openshift 4 console authentication.
+            if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
+                nsList.add("openshift-authentication");
+            }
+            // TMP: check logs from openshift router.
+            nsList.add("default");
             for (String ns : nsList) {
                 if (kube.namespaceExists(ns)) {
                     List<Pod> pods = kube.listAllPods(ns);
@@ -320,6 +329,8 @@ public class GlobalLogCollector {
                     Files.writeString(path.resolve(String.format("configmaps.%s.yaml", ns)), KubeCMDClient.getConfigmaps(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("secrets.%s.yaml", ns)), KubeCMDClient.getSecrets(ns).getStdOut());
                     Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("deployments.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("statefulsets.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml", "-n", ns).getStdOut());
                 }
             }
 
@@ -335,6 +346,8 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("storageclass.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "storageclass", "-o", "yaml").getStdOut());
             if (Kubernetes.isOpenShiftCompatible()) {
                 Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
+                Files.writeString(path.resolve("routes.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "-A", "routes", "-o", "yaml").getStdOut());
+
             }
             Files.writeString(path.resolve("events.txt"), KubeCMDClient.getAllEvents().getStdOut());
             Files.writeString(path.resolve("describe_nodes.txt"), KubeCMDClient.describeNodes().getStdOut());

@@ -91,21 +91,21 @@ endif::[]
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-{cmdcli} get addressspace -n _namespace_ _addressspacename_ --output 'jsonpath={.spec.plan}{"\n"}'
+{cmdcli} get addressspace -n _namespace_ _address-space-name_ --output 'jsonpath={.spec.plan}{"\n"}'
 ----
 
 . Determine the `standardinfraconfig` name for the `addressspaceplan` name:
 +
 [subs="+quotes,attributes",options="nowrap"]
 ----
-{cmdcli} get addressspaceplan _addressspaceplan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
+{cmdcli} get addressspaceplan _address-space-plan_ --output 'jsonpath={.spec.infraConfigRef}{"\n"}'
 ----
 
 . Enable the protocol trace for all routers of all address spaces using that `standardinfraconfig`:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} patch standardinfraconfig _standardinfraconfigname_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"router"}]}}}}}'
+{cmdcli} patch standardinfraconfig _standardinfraconfig-name_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM","value":"true"}],"name":"router"}]}}}}}'
 ----
 
 . Display the logs for the Pod that will include the protocol trace:
@@ -119,5 +119,5 @@ endif::[]
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} patch standardinfraconfig _standardinfraconfig name_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"router"}]}}}}}'
+{cmdcli} patch standardinfraconfig _standardinfraconfig-name_ --type=merge -p '{"spec":{"router":{"podTemplate":{"spec":{"containers":[{"env":[{"name":"PN_TRACE_FRM"}],"name":"router"}]}}}}}'
 ----

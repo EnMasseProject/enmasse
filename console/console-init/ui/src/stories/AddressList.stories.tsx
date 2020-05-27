@@ -3,16 +3,12 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import { MemoryRouter } from "react-router";
-import {
-  AddressList,
-  IAddress
-} from "components/AddressSpace/Address/AddressList";
+import { AddressList, IAddress } from "modules/address/components/AddressList";
 import { action } from "@storybook/addon-actions";
-import { select } from "@storybook/addon-knobs";
 // import { AddressListFilter } from "..//Components/AddressSpace/AddressListFilter";
-import { EmptyAddress } from "components/AddressSpace/Address/EmptyAddress";
+import { EmptyAddress } from "modules/address/components/EmptyAddress";
 
 export default {
   title: "Address list"
@@ -86,10 +82,9 @@ export const addressList = () => (
 );
 
 export const emptyAddress = () => {
-  const [isOpen, setIsOpen] = React.useState<boolean>(false);
   return (
     <MemoryRouter>
-      <EmptyAddress isWizardOpen={isOpen} setIsWizardOpen={setIsOpen} />
+      <EmptyAddress />
     </MemoryRouter>
   );
 };

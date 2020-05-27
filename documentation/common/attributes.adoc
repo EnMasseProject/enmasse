@@ -4,14 +4,13 @@
 :doctype: book
 :experimental:
 :idprefix:
-:imagesdir: ../images
+:imagesdir: images
 :numbered:
 :sectanchors!:
 :sectnums:
 :source-highlighter: highlightjs
-:toc: left
 :linkattrs:
-:toclevels: 3
+:icons: font
 
 // Product attributes
 

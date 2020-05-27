@@ -7,8 +7,7 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import { text, number, select } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { AddressDetailHeader } from "components/AddressDetail/AddressDetailHeader";
-import { AddressLinksFilter } from "pages/AddressDetail/AddressLinksFilter";
+import { AddressDetailHeader } from "modules/address-detail/components/AddressDetailHeader/AddressDetailHeader";
 
 export default {
   title: "Address Detail"
@@ -22,7 +21,6 @@ export const AddressDetailHead = () => (
       type={text("Type", "Queue")}
       name={text("Name", "newqueue")}
       plan={text("Plan", "Small")}
-      partitions={number("partition", 1)}
       onEdit={action("onEdit Clicked")}
       onDelete={action("onDelete Clicked")}
       onPurge={action("onPurge Clicked")}

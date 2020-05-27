@@ -30,6 +30,9 @@ public class AddressSpaceSchemaSpec {
     private List<@Valid AddressTypeInformation> addressTypes = new ArrayList<>();
     private List<@Valid AddressSpacePlanDescription> plans = new ArrayList<>();
     private List<@Valid String> authenticationServices = new ArrayList<>();
+    private List<@Valid RouteServicePortDescription> routeServicePorts = new ArrayList<>();
+    private List<@Valid CertificateProviderTypeDescription> certificateProviderTypes = new ArrayList<>();
+    private List<@Valid EndpointExposeTypeDescription> endpointExposeTypes = new ArrayList<>();
 
     public String getDescription() {
         return this.description;
@@ -63,6 +66,30 @@ public class AddressSpaceSchemaSpec {
         this.authenticationServices = authenticationServices;
     }
 
+    public List<RouteServicePortDescription> getRouteServicePorts() {
+        return routeServicePorts;
+    }
+
+    public void setRouteServicePorts(List<RouteServicePortDescription> routeServicePorts) {
+        this.routeServicePorts = routeServicePorts;
+    }
+
+    public List<CertificateProviderTypeDescription> getCertificateProviderTypes() {
+        return certificateProviderTypes;
+    }
+
+    public void setCertificateProviderTypes(List<CertificateProviderTypeDescription> certificateProviderTypes) {
+        this.certificateProviderTypes = certificateProviderTypes;
+    }
+
+    public List<EndpointExposeTypeDescription> getEndpointExposeTypes() {
+        return endpointExposeTypes;
+    }
+
+    public void setEndpointExposeTypes(List<EndpointExposeTypeDescription> endpointExposeTypes) {
+        this.endpointExposeTypes = endpointExposeTypes;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -71,12 +98,15 @@ public class AddressSpaceSchemaSpec {
         return Objects.equals(description, that.description) &&
                 Objects.equals(addressTypes, that.addressTypes) &&
                 Objects.equals(plans, that.plans) &&
-                Objects.equals(authenticationServices, that.authenticationServices);
+                Objects.equals(authenticationServices, that.authenticationServices) &&
+                Objects.equals(routeServicePorts, that.routeServicePorts) &&
+                Objects.equals(certificateProviderTypes, that.certificateProviderTypes) &&
+                Objects.equals(endpointExposeTypes, that.endpointExposeTypes);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(description, addressTypes, plans, authenticationServices);
+        return Objects.hash(description, addressTypes, plans, authenticationServices, routeServicePorts, certificateProviderTypes, endpointExposeTypes);
     }
 
     @Override
@@ -88,6 +118,9 @@ public class AddressSpaceSchemaSpec {
         sb.append(",");
         sb.append("addressTypes=").append(this.addressTypes);
         sb.append("authenticationServices=").append(this.authenticationServices);
+        sb.append("routeServicePortDescriptions=").append(this.routeServicePorts);
+        sb.append("certificateProviderTypeDescriptions=").append(this.certificateProviderTypes);
+        sb.append("endpointExposeTypeDescriptions=").append(this.endpointExposeTypes);
         return sb.append("}").toString();
     }
 }

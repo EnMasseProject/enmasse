@@ -20,6 +20,10 @@ spec:
       - sourceLabels: [__name__]
         targetLabel: __name__
         replacement: "enmasse_${1}"
+      - sourceLabels: [broker]
+        regex: '(.*-.*)-.*-.*'
+        replacement: '$1'
+        targetLabel: broker_prefix
   namespaceSelector:
     matchLabels:
       monitoring-key: middleware

@@ -18,103 +18,114 @@ import (
 
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
-// +kubebuilder:resource:shortName=msgi;msginfra;msginfras,categories=enmasse
+// +kubebuilder:resource:shortName=msgi;msginfra;msginfras;messaginginfras,categories=enmasse
 // +kubebuilder:subresource:status
 // +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase."
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",priority=1,description="Message describing the reason for the current Phase."
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type MessagingInfra struct {
+type MessagingInfrastructure struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
-	Spec              MessagingInfraSpec   `json:"spec,omitempty"`
-	Status            MessagingInfraStatus `json:"status,omitempty"`
+	Spec              MessagingInfrastructureSpec   `json:"spec,omitempty"`
+	Status            MessagingInfrastructureStatus `json:"status,omitempty"`
 }
 
-type MessagingInfraSpec struct {
+type MessagingInfrastructureSpec struct {
 	// A selector defining which namespaces this infra should serve. Default is all namespaces.
 	NamespaceSelector *NamespaceSelector `json:"namespaceSelector,omitempty"`
 	// Router configuration options.
-	Router MessagingInfraSpecRouter `json:"router,omitempty"`
+	Router MessagingInfrastructureSpecRouter `json:"router,omitempty"`
 	// Broker configuration options.
-	Broker MessagingInfraSpecBroker `json:"broker,omitempty"`
+	Broker MessagingInfrastructureSpecBroker `json:"broker,omitempty"`
 }
 
-type MessagingInfraSpecRouter struct {
+type MessagingInfrastructureSpecRouter struct {
 	// Router image to use instead of default image.
 	Image *v1beta1.ImageOverride `json:"image,omitempty"`
 	// Strategy for scaling the routers. Default is 'static'.
-	ScalingStrategy *MessagingInfraSpecRouterScalingStrategy `json:"scalingStrategy,omitempty"`
+	ScalingStrategy *MessagingInfrastructureSpecRouterScalingStrategy `json:"scalingStrategy,omitempty"`
 }
 
-type MessagingInfraSpecRouterScalingStrategy struct {
+type MessagingInfrastructureSpecRouterScalingStrategy struct {
 	// Strategy which configures a static number of router pods.
-	Static *MessagingInfraSpecRouterScalingStrategyStatic `json:"static,omitempty"`
+	Static *MessagingInfrastructureSpecRouterScalingStrategyStatic `json:"static,omitempty"`
 }
 
-type MessagingInfraSpecRouterScalingStrategyStatic struct {
+type MessagingInfrastructureSpecRouterScalingStrategyStatic struct {
 	// The number of router replicas to create.
 	Replicas int32 `json:"replicas"`
 }
 
-type MessagingInfraSpecBroker struct {
+type MessagingInfrastructureSpecBroker struct {
 	// Broker init image to use instead of default image.
 	InitImage *v1beta1.ImageOverride `json:"initImage,omitempty"`
 	// Broker image to use instead of default image.
 	Image *v1beta1.ImageOverride `json:"image,omitempty"`
 	// Strategy for scaling the brokers. Default is 'static'.
-	ScalingStrategy *MessagingInfraSpecBrokerScalingStrategy `json:"scalingStrategy,omitempty"`
+	ScalingStrategy *MessagingInfrastructureSpecBrokerScalingStrategy `json:"scalingStrategy,omitempty"`
 }
 
-type MessagingInfraSpecBrokerScalingStrategy struct {
+type MessagingInfrastructureSpecBrokerScalingStrategy struct {
 	// Scaler which configures a static number of broker pods.
-	Static *MessagingInfraSpecBrokerScalingStrategyStatic `json:"static,omitempty"`
+	Static *MessagingInfrastructureSpecBrokerScalingStrategyStatic `json:"static,omitempty"`
 }
 
-type MessagingInfraSpecBrokerScalingStrategyStatic struct {
+type MessagingInfrastructureSpecBrokerScalingStrategyStatic struct {
 	// The number of brokers to create.
 	PoolSize int32 `json:"poolSize"`
 }
 
-type MessagingInfraStatus struct {
+type MessagingInfrastructureStatus struct {
 	// +kubebuilder:printcolumn
-	Phase      MessagingInfraPhase       `json:"phase,omitempty"`
-	Message    string                    `json:"message,omitempty"`
-	Conditions []MessagingInfraCondition `json:"conditions,omitempty"`
+	Phase      MessagingInfrastructurePhase          `json:"phase,omitempty"`
+	Message    string                                `json:"message,omitempty"`
+	Conditions []MessagingInfrastructureCondition    `json:"conditions,omitempty"`
+	Routers    []MessagingInfrastructureStatusRouter `json:"routers,omitempty"`
+	Brokers    []MessagingInfrastructureStatusBroker `json:"brokers,omitempty"`
 }
 
-type MessagingInfraCondition struct {
-	Type               MessagingInfraConditionType `json:"type"`
-	Status             corev1.ConditionStatus      `json:"status"`
-	LastTransitionTime metav1.Time                 `json:"lastTransitionTime,omitempty"`
-	Reason             string                      `json:"reason,omitempty"`
-	Message            string                      `json:"message,omitempty"`
+type MessagingInfrastructureStatusRouter struct {
+	Host string `json:"host"`
 }
 
-type MessagingInfraConditionType string
+type MessagingInfrastructureStatusBroker struct {
+	Host string `json:"host"`
+}
+
+type MessagingInfrastructureCondition struct {
+	Type               MessagingInfrastructureConditionType `json:"type"`
+	Status             corev1.ConditionStatus               `json:"status"`
+	LastTransitionTime metav1.Time                          `json:"lastTransitionTime,omitempty"`
+	Reason             string                               `json:"reason,omitempty"`
+	Message            string                               `json:"message,omitempty"`
+}
+
+type MessagingInfrastructureConditionType string
 
 const (
-	MessagingInfraReady            MessagingInfraConditionType = "Ready"
-	MessagingInfraCaCreated        MessagingInfraConditionType = "CaCreated"
-	MessagingInfraBrokersCreated   MessagingInfraConditionType = "BrokersCreated"
-	MessagingInfraRoutersCreated   MessagingInfraConditionType = "RoutersCreated"
-	MessagingInfraSynchronized     MessagingInfraConditionType = "Synchronized"
-	MessagingInfraBrokersConnected MessagingInfraConditionType = "BrokersConnected"
+	MessagingInfrastructureReady            MessagingInfrastructureConditionType = "Ready"
+	MessagingInfrastructureCaCreated        MessagingInfrastructureConditionType = "CaCreated"
+	MessagingInfrastructureCertCreated      MessagingInfrastructureConditionType = "CertCreated"
+	MessagingInfrastructureBrokersCreated   MessagingInfrastructureConditionType = "BrokersCreated"
+	MessagingInfrastructureRoutersCreated   MessagingInfrastructureConditionType = "RoutersCreated"
+	MessagingInfrastructureSynchronized     MessagingInfrastructureConditionType = "Synchronized"
+	MessagingInfrastructureBrokersConnected MessagingInfrastructureConditionType = "BrokersConnected"
 )
 
-type MessagingInfraPhase string
+type MessagingInfrastructurePhase string
 
 const (
-	MessagingInfraPending     MessagingInfraPhase = "Pending"
-	MessagingInfraConfiguring MessagingInfraPhase = "Configuring"
-	MessagingInfraActive      MessagingInfraPhase = "Active"
-	MessagingInfraTerminating MessagingInfraPhase = "Terminating"
+	MessagingInfrastructurePending     MessagingInfrastructurePhase = "Pending"
+	MessagingInfrastructureConfiguring MessagingInfrastructurePhase = "Configuring"
+	MessagingInfrastructureActive      MessagingInfrastructurePhase = "Active"
+	MessagingInfrastructureTerminating MessagingInfrastructurePhase = "Terminating"
 )
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type MessagingInfraList struct {
+type MessagingInfrastructureList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
 
-	Items []MessagingInfra `json:"items"`
+	Items []MessagingInfrastructure `json:"items"`
 }

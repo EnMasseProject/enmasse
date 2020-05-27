@@ -11,15 +11,10 @@ import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.api.model.MessagingTenantList;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
-import java.time.Duration;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class MessagingTenantResourceType implements ResourceType<MessagingTenant> {
     private static final MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingTenants(), MessagingTenant.class, MessagingTenantList.class, DoneableMessagingTenant.class);
@@ -27,6 +22,11 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     @Override
     public String getKind() {
         return "MessagingTenant";
+    }
+
+    @Override
+    public MessagingTenant get(String namespace, String name) {
+        return operation.inNamespace(namespace).withName(name).get();
     }
 
     public static MessagingTenant getDefault() {
@@ -54,28 +54,22 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     }
 
     @Override
-    public void delete(MessagingTenant resource) {
+    public void delete(MessagingTenant resource) throws InterruptedException {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
     @Override
-    public void waitReady(MessagingTenant infra) {
-        MessagingTenant found = null;
-        TimeoutBudget budget = TimeoutBudget.ofDuration(Duration.ofMinutes(5));
-        while (!budget.timeoutExpired()) {
-            found = operation.inNamespace(infra.getMetadata().getNamespace()).withName(infra.getMetadata().getName()).get();
-            assertNotNull(found);
-            if (found.getStatus() != null &&
-                    "Active".equals(found.getStatus().getPhase())) {
-                break;
-            }
-        }
-        assertNotNull(found);
-        assertNotNull(found.getStatus());
-        assertEquals("Active", found.getStatus().getPhase());
-        infra.setMetadata(found.getMetadata());
-        infra.setSpec(found.getSpec());
-        infra.setStatus(found.getStatus());
+    public boolean isReady(MessagingTenant infra) {
+        return infra != null &&
+                infra.getStatus() != null &&
+                "Active".equals(infra.getStatus().getPhase());
+    }
+
+    @Override
+    public void refreshResource(MessagingTenant existing, MessagingTenant newResource) {
+        existing.setMetadata(newResource.getMetadata());
+        existing.setSpec(newResource.getSpec());
+        existing.setStatus(newResource.getStatus());
     }
 
     public static MessagingTenantCondition getCondition(List<MessagingTenantCondition> conditions, String type) {

@@ -54,7 +54,7 @@ In the standard address, there may be many brokers.  To identify the broker(s) h
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} get address _address resource name_  -o jsonpath="{.status.brokerStatuses[*].containerId}"
+{cmdcli} get address _address-resource-name_  -o jsonpath="{.status.brokerStatuses[*].containerId}"
 ----
 +
 
@@ -64,14 +64,14 @@ To execute an {BrokerName} CLI command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} exec _broker pod name_ -- {BrokerCLI} address show --user _username_ --password _password_
+{cmdcli} exec _broker-pod-name_ -- {BrokerCLI} address show --user _username_ --password _password_
 ----
 +
 To execute an {BrokerName} Jolokia JMX command, use a command similar to the following:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} exec _broker pod name_ -- curl --silent --insecure --user _username_:_password_ -H "Origin: https://localhost:8161" 'https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker="_broker pod name_"/AddressMemoryUsage'
+{cmdcli} exec _broker-pod-name_ -- curl --silent --insecure --user _username_:_password_ -H "Origin: https://localhost:8161" 'https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker="_broker pod name_"/AddressMemoryUsage'
 ----
 +
 IMPORTANT: The double quotes around the broker pod name within the URL are required. Make sure you protect them from your

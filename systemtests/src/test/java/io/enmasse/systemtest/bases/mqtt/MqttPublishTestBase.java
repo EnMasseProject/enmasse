@@ -4,19 +4,9 @@
  */
 package io.enmasse.systemtest.bases.mqtt;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.shared.ITestBaseShared;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.model.address.AddressType;
-import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
-import io.enmasse.systemtest.mqtt.MqttUtils;
-import io.enmasse.systemtest.utils.AddressUtils;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.slf4j.Logger;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -26,9 +16,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.slf4j.Logger;
+
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.shared.ITestBaseShared;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.mqtt.MqttClientFactory;
+import io.enmasse.systemtest.mqtt.MqttClientFactory.Builder;
+import io.enmasse.systemtest.mqtt.MqttUtils;
+import io.enmasse.systemtest.utils.AddressUtils;
 
 public abstract class MqttPublishTestBase extends TestBase implements ITestBaseShared {
 
@@ -86,24 +87,26 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         retainedMessage.setRetained(true);
 
         // send retained message to the topic
-        Builder publisherBuilder = getMqttClientFactory().build();
+        Builder publisherBuilder = new MqttClientFactory.Builder();
         customizeClient(publisherBuilder);
-        IMqttClient publisher = publisherBuilder.create();
-        publisher.connect();
-        publisher.publish(topic.getSpec().getAddress(), retainedMessage);
-        publisher.disconnect();
+        try(IMqttClient publisher = publisherBuilder.create()) {
+            publisher.connect();
+            publisher.publish(topic.getSpec().getAddress(), retainedMessage);
+            publisher.disconnect();
+        }
 
         // each client which will subscribe to the topic should receive retained message!
-        Builder subscriberBuilder = getMqttClientFactory().build();
+        Builder subscriberBuilder = new MqttClientFactory.Builder();
         customizeClient(subscriberBuilder);
-        IMqttClient subscriber = subscriberBuilder.create();
-        subscriber.connect();
-        CompletableFuture<MqttMessage> messageFuture = new CompletableFuture<>();
-        subscriber.subscribe(topic.getSpec().getAddress(), (topic1, message) -> messageFuture.complete(message));
-        MqttMessage receivedMessage = messageFuture.get(1, TimeUnit.MINUTES);
-        assertTrue(receivedMessage.isRetained(), "Retained message expected");
+        try(IMqttClient subscriber = subscriberBuilder.create()) {
+            subscriber.connect();
+            CompletableFuture<MqttMessage> messageFuture = new CompletableFuture<>();
+            subscriber.subscribe(topic.getSpec().getAddress(), (topic1, message) -> messageFuture.complete(message));
+            MqttMessage receivedMessage = messageFuture.get(1, TimeUnit.MINUTES);
+            assertTrue(receivedMessage.isRetained(), "Retained message expected");
 
-        subscriber.disconnect();
+            subscriber.disconnect();
+        }
     }
 
     private void publish(List<MqttMessage> messages, int subscriberQos) throws Exception {
@@ -121,17 +124,16 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
                 .build();
         resourcesManager.setAddresses(dest);
 
-        MqttConnectOptions options = new MqttConnectOptions();
-        options.setConnectionTimeout(options.getConnectionTimeout() * 2);  //Default is 30 seconds, increase it to 1 min.
-        options.setAutomaticReconnect(true);
-        Builder clientBuilder = getMqttClientFactory().build().mqttConnectionOptions(options);
+        Builder clientBuilder = new MqttClientFactory.Builder()
+                .mqttConnectionOptions(options -> {
+                    options.setConnectionTimeout(options.getConnectionTimeout() * 2); // Default is 30 seconds, increase it to 1 min.
+                    options.setAutomaticReconnect(true);
+                });
         customizeClient(clientBuilder);
-        IMqttClient client = clientBuilder.create();
 
-        try {
+        try (IMqttClient client = clientBuilder.create()) {
             log.info("Connecting");
             client.connect();
-
 
             List<CompletableFuture<MqttMessage>> receiveFutures = MqttUtils.subscribeAndReceiveMessages(client, dest.getSpec().getAddress(), messages.size(), subscriberQos);
             List<CompletableFuture<Void>> publishFutures = MqttUtils.publish(client, dest.getSpec().getAddress(), messages);
@@ -143,11 +145,6 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
             int receivedCount = MqttUtils.awaitAndReturnCode(receiveFutures, 2, TimeUnit.MINUTES);
             assertThat("Incorrect count of messages received",
                     receivedCount, is(messages.size()));
-        } finally {
-            log.info("Disconnecting");
-            if (client != null) {
-                client.disconnect();
-            }
         }
 
     }

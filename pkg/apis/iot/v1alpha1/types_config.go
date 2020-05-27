@@ -37,7 +37,42 @@ type IoTConfigSpec struct {
 	AdaptersConfig AdaptersConfig   `json:"adapters"`
 	Tracing        TracingConfig    `json:"tracing"`
 	Monitoring     MonitoringConfig `json:"monitoring"`
+	Logging        LoggingConfig    `json:"logging"`
 }
+
+// region Logging
+
+type LogLevel string
+
+const (
+	LogLevelTrace   LogLevel = "trace"
+	LogLevelDebug   LogLevel = "debug"
+	LogLevelInfo    LogLevel = "info"
+	LogLevelWarning LogLevel = "warn"
+	LogLevelError   LogLevel = "error"
+)
+
+type LoggingConfig struct {
+	Level    LogLevel            `json:"level,omitempty"`
+	Loggers  map[string]LogLevel `json:"loggers,omitempty"`
+	Defaults LoggingDefaults     `json:"defaults,omitempty"`
+}
+
+type LoggingDefaults struct {
+	Logback string `json:"logback,omitempty"`
+}
+
+type CommonLoggingConfig struct {
+	Level   LogLevel            `json:"level,omitempty"`
+	Loggers map[string]LogLevel `json:"loggers,omitempty"`
+}
+
+type LogbackConfig struct {
+	CommonLoggingConfig `json:",inline"`
+	Logback             string `json:"logback,omitempty"`
+}
+
+// endregion
 
 //region Mesh
 
@@ -89,10 +124,6 @@ type TlsOptions struct {
 	Versions []string `json:"versions,omitempty"`
 }
 
-type JavaContainerOptions struct {
-	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
-}
-
 type InterServiceCertificates struct {
 	SecretCertificatesStrategy *SecretCertificatesStrategy `json:"secretCertificatesStrategy,omitempty"`
 	ServiceCAStrategy          *ServiceCAStrategy          `json:"serviceCAStrategy,omitempty"`
@@ -132,6 +163,14 @@ type ContainerConfig struct {
 	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
+type JavaContainerConfig struct {
+	ContainerConfig `json:",inline"`
+
+	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
+
+	Logback LogbackConfig `json:"logback,omitempty"`
+}
+
 type EndpointConfig struct {
 	EnableDefaultRoute *bool               `json:"enableDefaultRoute,omitempty"`
 	SecretNameStrategy *SecretNameStrategy `json:"secretNameStrategy,omitempty"`
@@ -148,9 +187,9 @@ type SecretNameStrategy struct {
 }
 
 type CommonAdapterContainers struct {
-	Adapter           *ContainerConfig `json:"adapter,omitempty"`
-	Proxy             *ContainerConfig `json:"proxy,omitempty"`
-	ProxyConfigurator *ContainerConfig `json:"proxyConfigurator,omitempty"`
+	Adapter           JavaContainerConfig `json:"adapter,omitempty"`
+	Proxy             ContainerConfig     `json:"proxy,omitempty"`
+	ProxyConfigurator ContainerConfig     `json:"proxyConfigurator,omitempty"`
 }
 
 //region Collector
@@ -313,9 +352,8 @@ type JdbcRegistryManagement struct {
 
 // Common options for a single container Java service
 type CommonServiceConfig struct {
-	Container *ContainerConfig      `json:"container,omitempty"`
-	Java      *JavaContainerOptions `json:"java,omitempty"`
-	Tls       TlsOptions            `json:"tls,omitempty"`
+	Container JavaContainerConfig `json:"container,omitempty"`
+	Tls       TlsOptions          `json:"tls,omitempty"`
 }
 
 //region TenantService
@@ -350,7 +388,6 @@ type CommonAdapterConfig struct {
 	AdapterConfig `json:",inline"`
 
 	Containers CommonAdapterContainers `json:"containers,omitempty"`
-	Java       JavaContainerOptions    `json:"java,omitempty"`
 	Tls        TlsOptions              `json:"tls,omitempty"`
 
 	EndpointConfig EndpointConfig `json:"endpoint,omitempty"`
@@ -377,8 +414,8 @@ type MqttAdapterConfig struct {
 //region Status
 
 type IoTConfigStatus struct {
-	Phase       ConfigPhaseType `json:"phase"`
-	PhaseReason string          `json:"phaseReason,omitempty"`
+	Phase   ConfigPhaseType `json:"phase"`
+	Message string          `json:"message,omitempty"`
 
 	AuthenticationServicePSK *string                  `json:"authenticationServicePSK"`
 	Adapters                 map[string]AdapterStatus `json:"adapters,omitempty"`
@@ -399,7 +436,22 @@ const (
 type ConfigConditionType string
 
 const (
-	ConfigConditionTypeReady ConfigConditionType = "Ready"
+	ConfigConditionTypeReady    ConfigConditionType = "Ready"
+	ConfigConditionTypeDegraded ConfigConditionType = "Degraded"
+
+	ConfigConditionTypeReconciled ConfigConditionType = "Reconciled"
+
+	ConfigConditionTypeCommandMeshReady                     ConfigConditionType = "CommandMeshReady"
+	ConfigConditionTypeAuthServiceReady                     ConfigConditionType = "AuthServiceReady"
+	ConfigConditionTypeTenantServiceReady                   ConfigConditionType = "TenantServiceReady"
+	ConfigConditionTypeDeviceConnectionServiceReady         ConfigConditionType = "DeviceConnectionServiceReady"
+	ConfigConditionTypeDeviceRegistryAdapterServiceReady    ConfigConditionType = "DeviceRegistryAdapterServiceReady"
+	ConfigConditionTypeDeviceRegistryManagementServiceReady ConfigConditionType = "DeviceRegistryManagementServiceReady"
+
+	ConfigConditionTypeHttpAdapterReady    ConfigConditionType = "HttpAdapterReady"
+	ConfigConditionTypeLorawanAdapterReady ConfigConditionType = "LorawanAdapterReady"
+	ConfigConditionTypeMqttAdapterReady    ConfigConditionType = "MqttAdapterReady"
+	ConfigConditionTypeSigfoxAdapterReady  ConfigConditionType = "SigfoxAdapterReady"
 )
 
 type ConfigCondition struct {

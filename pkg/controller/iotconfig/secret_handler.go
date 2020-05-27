@@ -30,18 +30,15 @@ type secretHandler struct {
 
 // constructor
 
-func NewSecretHandler(client client.Client, configName string) (*secretHandler, error) {
-	namespace, err := util.GetInfrastructureNamespace()
-	if err != nil {
-		return nil, err
-	}
+func NewSecretHandler(client client.Client, configName string) *secretHandler {
+	namespace := util.MustGetInfrastructureNamespace()
 
 	return &secretHandler{
 		client:     client,
 		configName: configName,
 		namespace:  namespace,
 		openshift:  util.IsOpenshift(),
-	}, nil
+	}
 }
 
 func (s *secretHandler) getConfig() (*iotv1alpha1.IoTConfig, error) {

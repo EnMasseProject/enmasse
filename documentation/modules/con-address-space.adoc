@@ -8,6 +8,8 @@
 
 An address space is a group of addresses that can be accessed through a single connection (per protocol). This means that clients connected to the endpoints of an address space can send messages to or receive messages from any authorized address within that address space. An address space can support multiple protocols, as defined by the address space type.
 
+NOTE: You cannot modify endpoints for an existing address space.
+
 {ProductName} has two types of address spaces:
 
 ifdef::SingleBookLink[]
@@ -25,4 +27,3 @@ endif::SingleBookLink[]
 ifndef::SingleBookLink[]
 * link:{BookUrlBase}{BaseProductVersion}{UsingGuideUrl}#con-brokered-address-space-messaging[Brokered]
 endif::SingleBookLink[]
-

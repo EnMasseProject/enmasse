@@ -6,6 +6,7 @@
 package state
 
 import (
+	"crypto/tls"
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
@@ -17,10 +18,18 @@ import (
 type ClientManager interface {
 	// Retrieve a client handle for communicating with messaging infrastructure. Client is thread
 	// safe and shared with multiple threads.
-	GetClient(infra *v1beta2.MessagingInfra) InfraClient
+	GetClient(infra *v1beta2.MessagingInfrastructure) InfraClient
 
 	// Remove client from manager. This will take care to call client.Shutdown() to cleanup client resources.
-	DeleteClient(infra *v1beta2.MessagingInfra) error
+	DeleteClient(infra *v1beta2.MessagingInfrastructure) error
+}
+
+/**
+ * Represents a Kubernetes host and corresponding pod IP
+ */
+type Host struct {
+	Hostname string
+	Ip       string
 }
 
 /**
@@ -30,7 +39,7 @@ type InfraClient interface {
 	// Start any internal state management processes
 	Start()
 	// Synchronize all resources for infrastructure for the provided routers and brokers
-	SyncAll(routers []string, brokers []string) ([]ConnectorStatus, error)
+	SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
 	Shutdown() error
 	// Schedule durable address for tenant
