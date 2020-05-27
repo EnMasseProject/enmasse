@@ -11,25 +11,27 @@ import {
   PageSection,
   Split,
   SplitItem,
-  Text,
-  TextVariants,
   Grid,
   GridItem,
-  Switch
+  Title,
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
-import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
-import { InputText, JsonEditor } from "components";
-import { IInfoTypePlan } from "modules/project-detail/components/GeneralInfo";
-import { getCombinedString } from "utils";
+import {
+  CheckCircleIcon,
+  ErrorCircleOIcon,
+  DownloadIcon
+} from "@patternfly/react-icons";
+import { InputText, JsonEditor, SwitchWithToggle } from "components";
 
 export interface IMessagingObject {
   url?: string;
   username?: string;
   password?: string;
   addressSpace?: string;
-  eventsAddressName?: IInfoTypePlan;
-  telemetryAddressName?: IInfoTypePlan;
-  commandAddressName?: IInfoTypePlan;
+  eventsAddresses?: Array<string>;
+  telemetryAddresses?: Array<string>;
+  commandAddresses?: Array<string>;
 }
 export interface IAdapterConfig {
   url?: string;
@@ -46,28 +48,30 @@ export interface IAccessCredentialsProps {
   tenantId: string;
   messaging: IMessagingObject;
   adapters: IAdapter[];
+  onDownloadCertificate: (certificateType: ".pem" | ".jks") => void;
 }
 
 const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
   tenantId,
   messaging,
-  adapters
+  adapters,
+  onDownloadCertificate
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
   const onToggle = () => {
     setIsHidden(!isHidden);
   };
   const EditIcon = () => (
-    <Switch
+    <SwitchWithToggle
       id="access-credential-switch"
-      label="View in Json"
-      labelOff="View in Json"
+      label="View JSON format"
+      labelOff="View JSON format"
       isChecked={isHidden}
       onChange={onToggle}
     />
   );
 
-  const data = {
+  const accessCredentailJsonData = {
     access_credentials: {
       tenantId: tenantId,
       messaging: messaging,
@@ -87,19 +91,27 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     );
   };
 
+  const onPemCertificateClick = () => {
+    onDownloadCertificate(".pem");
+  };
+  const onJksCertificateClick = () => {
+    onDownloadCertificate(".jks");
+  };
   const Messaging = () => {
     const {
       url,
       username,
       password,
       addressSpace,
-      commandAddressName,
-      eventsAddressName,
-      telemetryAddressName
+      commandAddresses,
+      eventsAddresses,
+      telemetryAddresses
     } = messaging || {};
     return (
       <>
-        <Text component={TextVariants.h2}>Messaging</Text>
+        <Title size="xl" headingLevel="h2">
+          Messaging
+        </Title>
         <br />
         {url && (
           <InputText
@@ -138,7 +150,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
         <br />
         {addressSpace && (
           <InputText
-            label={"Address Space"}
+            label={"Address space"}
             type={"text"}
             value={addressSpace}
             isReadOnly={true}
@@ -148,49 +160,40 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           />
         )}
         <br />
-        {eventsAddressName && (
+        {eventsAddresses && eventsAddresses.length > 0 && (
           <InputText
             label={"Events address name"}
             type={"text"}
-            value={getCombinedString(
-              eventsAddressName.type,
-              eventsAddressName.plan
-            )}
+            value={eventsAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
-            isExpandable={eventsAddressName.plan ? true : false}
+            isExpandable={eventsAddresses.length > 1}
             id={"messaging-event-address-name-input"}
             ariaLabel={"messaging event Address Name"}
           />
         )}
         <br />
-        {telemetryAddressName && (
+        {telemetryAddresses && telemetryAddresses.length > 0 && (
           <InputText
             label={"Telemetry address name"}
             type={"text"}
-            value={getCombinedString(
-              telemetryAddressName.type,
-              telemetryAddressName.plan
-            )}
+            value={telemetryAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
-            isExpandable={telemetryAddressName.plan ? true : false}
+            isExpandable={telemetryAddresses.length > 1}
             id={"messaging-telemetry-address-name-input"}
             ariaLabel={"messaging telemetry Address Name"}
           />
         )}
         <br />
-        {commandAddressName && (
+        {commandAddresses && commandAddresses.length > 0 && (
           <InputText
             label={"Command address name"}
             type={"text"}
-            value={getCombinedString(
-              commandAddressName.type,
-              commandAddressName.plan
-            )}
+            value={commandAddresses.join(", ")}
             isReadOnly={true}
             enableCopy={true}
-            isExpandable={commandAddressName.plan ? true : false}
+            isExpandable={commandAddresses.length > 1}
             id={"messaging-command-address-name-input"}
             ariaLabel={"messaging command Address Name"}
           />
@@ -204,15 +207,15 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     const { value, type } = adapter;
     return (
       <>
-        <Text component={TextVariants.h2}>
+        <Title size="xl" headingLevel="h2">
           {type.toUpperCase() + " Adapter"}
-        </Text>
+        </Title>
         {value.tlsEnabled && (
           <>
             <br />
             <Grid>
               <GridItem span={4}>
-                <b>tls</b>
+                <b>TLS</b>
               </GridItem>
               <GridItem span={8}>{isEnabled(value.tlsEnabled)}</GridItem>
             </Grid>
@@ -222,12 +225,13 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <>
             <br />
             <InputText
-              label={"Url"}
+              label={"URL"}
               type={"text"}
               value={value.url}
               isReadOnly={true}
               enableCopy={true}
               id={`adapter-${type}-api-url-input`}
+              key={`adapter-${type}-api-url-input`}
               ariaLabel={`adapter-${type}-api-url`}
               isExpandable={false}
             />
@@ -285,9 +289,9 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       <CardHeader style={{ fontSize: 20 }}>
         <Split>
           <SplitItem>
-            <h1>
-              <b>Access Credentials</b>
-            </h1>
+            <Title size="xl" headingLevel="h2">
+              Access Credentials
+            </Title>
           </SplitItem>
           <SplitItem isFilled />
           <SplitItem>
@@ -297,7 +301,10 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       </CardHeader>
       {isHidden ? (
         <CardBody>
-          <JsonEditor readOnly={true} value={JSON.stringify(data)} />
+          <JsonEditor
+            readOnly={true}
+            value={JSON.stringify(accessCredentailJsonData, undefined, 2)}
+          />
         </CardBody>
       ) : (
         <CardBody>
@@ -313,19 +320,28 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             />
           )}
           <br />
-          {/*TODO: Add certificate options*/}
-          {/* {password && (
-            <InputText
-              label={"Password"}
-              type={"password"}
-              value={password}
-              isReadOnly={true}
-              ariaLabel={"input-password"}
-            />
-          )} 
+          <Grid>
+            <GridItem span={4}>
+              <b>Certificate</b>
+            </GridItem>
+            <GridItem span={8}>
+              <Button
+                variant={ButtonVariant.tertiary}
+                onClick={onPemCertificateClick}
+              >
+                <DownloadIcon /> Download PEM
+              </Button>
+              {"  "}
+              <Button
+                variant={ButtonVariant.tertiary}
+                onClick={onJksCertificateClick}
+              >
+                <DownloadIcon /> Download JKS
+              </Button>
+            </GridItem>
+          </Grid>
           <br />
-          */}
-          {Messaging}
+          <Messaging />
           <br />
           <Adapters />
         </CardBody>

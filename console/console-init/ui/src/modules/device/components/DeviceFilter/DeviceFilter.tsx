@@ -20,7 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithToggle } from "components";
-import { compareJsonObject, createDeepCopy } from "utils";
+import { compareObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/device";
 import { AddCriteria } from "./AddCriteria";
 import { LastSeenFilterSection } from "./LastSeenFilterSection";
@@ -126,7 +126,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   };
 
   const isEnabledRunFilter = () => {
-    return compareJsonObject(Object.assign({}, filter), getInitialFilter());
+    return compareObject(Object.assign({}, filter), getInitialFilter());
   };
 
   const kebabDropdownItems = [
