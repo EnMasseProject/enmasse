@@ -58,8 +58,15 @@ Artemis.prototype.log_info = function (context) {
 Artemis.prototype.sender_open = function () {
     var tmp_reply_address = 'activemq.management.tmpreply.' + amqp.generate_uuid();
     log.debug('[%s] sender ready, creating reply to address: %s', this.connection.container_id, tmp_reply_address);
+    var self = this;
+    var opened = false;
+    this.sender.on('accepted', function (context) {
+        if (!opened) {
+            self.connection.open_receiver({source:{address: tmp_reply_address}});
+            opened = true;
+        }
+    });
     this._create_temp_response_queue(tmp_reply_address);
-    this.connection.open_receiver({source:{address: tmp_reply_address}});
 }
 
 Artemis.prototype.receiver_ready = function (context) {
