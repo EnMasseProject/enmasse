@@ -18,6 +18,6 @@ export * from "./SortForMobileView";
 export * from "./WindowDimension";
 export * from "./NetworkStatusAlert";
 export * from "./User";
-export * from "./NavToolbar";
+export * from "./NavToolBar";
 export * from "./NoDataFound";
 export * from "./SelectWithToggle";
