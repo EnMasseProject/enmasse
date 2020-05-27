@@ -6,7 +6,10 @@
 import React from "react";
 import { text, number } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
-import { GeneralInfo, IInfoTypePlan } from "modules/project-detail/components";
+import {
+  GeneralInfo,
+  IMessagingObject
+} from "modules/project-detail/components";
 import {
   Page,
   PageSection,
@@ -20,6 +23,7 @@ import {
   IAdapterConfig,
   AccessCredentials
 } from "modules/project-detail/components";
+import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Project Detail Page"
@@ -36,25 +40,25 @@ export const projectDetailPage = () => {
     host: "mange.bosh-iot-hub.com",
     port: 268
   };
-  const eventAddressName: IInfoTypePlan = {
-    type: text("Event Address Name Type", "qpid-jms:sender")
-  };
-  const telemetryAddressName: IInfoTypePlan = {
-    type: text("Telemetry Address Name Type", "qpid-jms:sender")
-  };
-  const commandAddressName: IInfoTypePlan = {
-    type: text("Command Address Name Type", "qpid-jms:sender"),
-    plan: text("Command Address Name Plan", "Reciever-156458")
-  };
+  const eventAddresses: Array<string> = [
+    text("Event Address Name", "event_address"),
+    text("Event Address Name 1", "event_address1")
+  ];
+  const telemetryAddresses: Array<string> = [
+    text("Telemetry Address Name", "telemetry_address")
+  ];
+  const commandAddresses: Array<string> = [
+    text("Command Address Name", "command_address")
+  ];
 
-  const messaging = {
+  const messaging: IMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),
     addressSpace: text("Address space", "devops-iottest"),
-    eventsAddressNam: eventAddressName,
-    telemetryAddressName: telemetryAddressName,
-    commandAddressName: commandAddressName
+    eventsAddresses: eventAddresses,
+    telemetryAddresses: telemetryAddresses,
+    commandAddresses: commandAddresses
   };
   const httpAdapter: IAdapterConfig = {
     url: "https://http.bosch-iot-hub.com"
@@ -82,19 +86,18 @@ export const projectDetailPage = () => {
       <GridItem span={6}>
         <GeneralInfo
           addressSpace={text("addressSpace", "devops_iot")}
-          eventAddressName={eventAddressName}
-          telemetryAddressName={telemetryAddressName}
-          commandAddressName={commandAddressName}
+          eventAddresses={eventAddresses}
+          telemetryAddresses={telemetryAddresses}
+          commandAddresses={commandAddresses}
           maxConnection={number("Max connections", 50000)}
           dataVolume={number("Data volume", 50000)}
           startDate={text("Start Date", "start Date")}
           endDate={text("End Date", "end Date")}
+          namespace={text("Namespace", "namespace")}
         />
         <DeviceRegistationManagement
-          username={text("username", "username")}
-          password={text("password", "password")}
-          registrationApi={registrationApi}
-          credentialApi={credentialApi}
+          token={text("token", "username")}
+          endpoiuntUrl={text("url", "https://http.bosch-iot-hub.com")}
         />
       </GridItem>
       <GridItem span={6}>
@@ -102,6 +105,7 @@ export const projectDetailPage = () => {
           tenantId={text("Tenenant Id", "FNDSKB5GSD58EGWAW6663RWfsaf8")}
           messaging={messaging}
           adapters={adapters}
+          onDownloadCertificate={action("onDownload triggered")}
         />
       </GridItem>
     </Grid>

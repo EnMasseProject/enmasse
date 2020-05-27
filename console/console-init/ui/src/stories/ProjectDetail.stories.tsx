@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   ProjectNavigation,
   GeneralInfo,
-  IInfoTypePlan
+  IMessagingObject
 } from "modules/project-detail/components";
 import { Page, Grid, GridItem } from "@patternfly/react-core";
 import {
@@ -18,6 +18,7 @@ import {
   IAdapterConfig,
   AccessCredentials
 } from "modules/project-detail/components";
+import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Project Detail"
@@ -33,19 +34,11 @@ export const projectDetailHeaderNavigation = () => {
     </MemoryRouter>
   );
 };
+const eventAddresses: Array<string> = ["qpid-jms:sender"];
+const telemetryAddresses: Array<string> = ["qpid-jms:sender"];
+const commandAddresses: Array<string> = ["qpid-jms:sender", "Reciever-156458"];
 
 export const projectGeneralInfo = () => {
-  const eventAddressName: IInfoTypePlan = {
-    type: "qpid-jms:sender"
-  };
-  const telemetryAddressName: IInfoTypePlan = {
-    type: "qpid-jms:sender"
-  };
-  const commandAddressName: IInfoTypePlan = {
-    type: "qpid-jms:sender",
-    plan: "Reciever-156458"
-  };
-
   return (
     <MemoryRouter>
       <Page>
@@ -53,9 +46,10 @@ export const projectGeneralInfo = () => {
           <GridItem span={6}>
             <GeneralInfo
               addressSpace={text("addressSpace", "devops_iot")}
-              eventAddressName={eventAddressName}
-              telemetryAddressName={telemetryAddressName}
-              commandAddressName={commandAddressName}
+              eventAddresses={eventAddresses}
+              namespace={""}
+              telemetryAddresses={telemetryAddresses}
+              commandAddresses={commandAddresses}
               maxConnection={number("Max connections", 50000)}
               dataVolume={number("Data volume", 50000)}
               startDate={text("Start Date", "start Date")}
@@ -97,25 +91,14 @@ export const projectDetailRegistryManagement = () => {
 };
 
 export const projectAccessCredentials = () => {
-  const eventAddressName: IInfoTypePlan = {
-    type: text("Event Address Name Type", "qpid-jms:sender")
-  };
-  const telemetryAddressName: IInfoTypePlan = {
-    type: text("Telemetry Address Name Type", "qpid-jms:sender")
-  };
-  const commandAddressName: IInfoTypePlan = {
-    type: text("Command Address Name Type", "qpid-jms:sender"),
-    plan: text("Command Address Name Plan", "Reciever-156458")
-  };
-
-  const messaging = {
+  const messaging: IMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),
     addressSpace: text("Address space", "devops-iottest"),
-    eventsAddressNam: eventAddressName,
-    telemetryAddressName: telemetryAddressName,
-    commandAddressName: commandAddressName
+    eventsAddresses: eventAddresses,
+    telemetryAddresses: telemetryAddresses,
+    commandAddresses: commandAddresses
   };
   const httpAdapter: IAdapterConfig = {
     url: "https://http.bosch-iot-hub.com"
@@ -147,6 +130,7 @@ export const projectAccessCredentials = () => {
               tenantId={text("Tenenant Id", "FNDSKB5GSD58EGWAW6663RWfsaf8")}
               messaging={messaging}
               adapters={adapters}
+              onDownloadCertificate={action("onDownload triggered")}
             />
           </GridItem>
         </Grid>

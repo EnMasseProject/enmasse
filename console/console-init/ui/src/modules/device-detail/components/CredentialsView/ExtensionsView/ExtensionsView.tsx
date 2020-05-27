@@ -7,7 +7,7 @@ import React from "react";
 import { Title, Grid, GridItem } from "@patternfly/react-core";
 import { Table, TableHeader, TableBody } from "@patternfly/react-table";
 import { StyleSheet } from "@patternfly/react-styles";
-import { getJsonForMetadata } from "utils";
+import { convertJsonToMetadataOptions } from "utils";
 
 const styles = StyleSheet.create({
   type: {
@@ -57,7 +57,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
     }
   ];
 
-  const extOptions = getJsonForMetadata(ext);
+  const extOptions = convertJsonToMetadataOptions(ext);
 
   const rows = extOptions.map((ext: any) => {
     const { key, value, typeLabel } = ext || {};
