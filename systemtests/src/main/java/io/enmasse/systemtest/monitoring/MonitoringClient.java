@@ -35,7 +35,7 @@ public class MonitoringClient {
     }
 
     public void validateQueryAndWait(String query, String expectedValue, Map<String, String> labels) {
-        TestUtils.waitUntilCondition(query, phase -> {
+        TestUtils.waitUntilCondition(String.format("Query: %s, expected value: %s", query, expectedValue), phase -> {
             try {
                 validateQuery(query, expectedValue, labels);
                 return true;
@@ -49,7 +49,7 @@ public class MonitoringClient {
     }
 
     public void validateRangeQueryAndWait(String query, Instant start, Predicate<List<String>> rangeValidator) {
-        TestUtils.waitUntilCondition(query, phase -> {
+        TestUtils.waitUntilCondition(String.format("Range query: %s, from %s to now", query, start), phase -> {
             try {
                 validateRangeQuery(query, start, query, rangeValidator);
                 return true;
@@ -74,9 +74,7 @@ public class MonitoringClient {
     public void validateRangeQuery(String query, Instant start, String addressSpace, Predicate<List<String>> rangeValidator) throws Exception {
         JsonObject queryResult = client.doRangeQuery(query, String.valueOf(start.getEpochSecond()), String.valueOf(Instant.now().getEpochSecond()));
         basicQueryResultValidation(query, queryResult);
-        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), resource -> {
-            return rangeValidator.test(resource.getRangeValues());
-        });
+        boolean validateResult = metricQueryResultValidation(queryResult, addressSpace, Collections.emptyMap(), resource -> rangeValidator.test(resource.getRangeValues()));
         if (!validateResult) {
             throw new Exception("Unexpected query result " + queryResult.encodePrettily());
         }
@@ -99,6 +97,12 @@ public class MonitoringClient {
             }
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
+    }
+
+    public PrometheusMetricResource getQueryResult(String query, Map<String, String> labels) throws Exception {
+        JsonObject response = client.doQuery(query);
+        basicQueryResultValidation(query, response);
+        return PrometheusMetricResource.getResource(response, query, labels);
     }
 
     //=============================================================================
