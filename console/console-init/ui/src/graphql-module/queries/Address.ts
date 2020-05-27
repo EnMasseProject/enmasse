@@ -9,8 +9,8 @@ import { removeForbiddenChars } from "utils";
 import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS = gql`
-  mutation delete_addr($a: ObjectMeta_v1_Input!) {
-    deleteAddress(input: $a)
+  mutation delete_addr($a: [ObjectMeta_v1_Input!]!) {
+    deleteAddresses(input: $a)
   }
 `;
 

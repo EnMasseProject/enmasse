@@ -154,10 +154,12 @@ export default function AddressSpaceDetailPage() {
 
   const onDelete = () => {
     const variables = {
-      a: {
-        name: addressSpaceDetails.name,
-        namespace: addressSpaceDetails.namespace
-      }
+      as: [
+        {
+          name: addressSpaceDetails.name,
+          namespace: addressSpaceDetails.namespace
+        }
+      ]
     };
     setDeleteAddressSpaceQueryVariables(variables);
   };
