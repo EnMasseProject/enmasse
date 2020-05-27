@@ -24,7 +24,7 @@ export const ServerMessageAlert: React.FC = () => {
   };
 
   const getErrorMessage = () => {
-    let message: string = "Something went wrong, please try again...";
+    let messages: string[] = [];
     if (errors && Array.isArray(errors)) {
       return (
         <List>
@@ -32,21 +32,31 @@ export const ServerMessageAlert: React.FC = () => {
             errors.map((error: any, index: number) => {
               const { networkError, graphQLErrors } = error;
               if (graphQLErrors && graphQLErrors.length > 0) {
-                message = graphQLErrors[0].message;
+                graphQLErrors.map((err: any) => {
+                  messages.push(err.message);
+                });
               } else {
-                message =
+                if (
                   networkError &&
                   networkError.result &&
-                  networkError.result.errors[0] &&
-                  networkError.result.errors[0].message;
+                  networkError.result.errors &&
+                  networkError.result.errors.length > 0
+                ) {
+                  networkError.result.errors.map((err: any) =>
+                    messages.push(err.message)
+                  );
+                }
               }
-              return <ListItem key={index}>{message}</ListItem>;
+              return messages.map((message: string) => (
+                <ListItem key={`li-error-${index}`}>{message}</ListItem>
+              ));
             })}
         </List>
       );
+    } else {
+      messages.push("Something went wrong, please try again...");
     }
-
-    return message;
+    return messages[0];
   };
 
   useEffect(() => {
