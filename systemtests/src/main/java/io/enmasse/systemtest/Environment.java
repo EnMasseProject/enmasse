@@ -52,11 +52,13 @@ public class Environment {
     private static final String SCALE_CONFIG = "SCALE_CONFIG";
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
+    private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
 
     //Collecting variables
     private static Environment instance;
     private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
     private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
+    private final String overrideClusterType = System.getenv().getOrDefault(OVERRIDE_CLUSTER_TYPE, "");
     private String token = System.getenv(K8S_API_TOKEN_ENV);
     private String url = System.getenv(K8S_API_URL_ENV);
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
@@ -312,5 +314,9 @@ public class Environment {
 
     public String getClusterInternalImageRegistry() {
         return clusterInternalImageRegistry;
+    }
+
+    public String getOverrideClusterType() {
+        return overrideClusterType;
     }
 }

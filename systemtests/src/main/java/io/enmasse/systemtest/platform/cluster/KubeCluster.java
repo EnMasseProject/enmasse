@@ -4,7 +4,9 @@
  */
 package io.enmasse.systemtest.platform.cluster;
 
+import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.logs.CustomLogger;
+import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -22,18 +24,28 @@ public interface KubeCluster {
 
         KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new CRCCluster(), new OpenShiftCluster()};
         KubeCluster cluster = null;
-        for (KubeCluster kc : clusters) {
-            if (kc.isAvailable()) {
-                LOGGER.debug("Cluster {} is installed", kc);
-                if (kc.isClusterUp()) {
-                    LOGGER.debug("Cluster {} is running", kc);
+        String overrideCluster = Environment.getInstance().getOverrideClusterType();
+        if (!Strings.isNullOrEmpty(overrideCluster)) {
+            LOGGER.info("Found override cluster env {}", overrideCluster);
+            for (KubeCluster kc : clusters) {
+                if (overrideCluster.equals(kc.toString())) {
                     cluster = kc;
-                    break;
-                } else {
-                    LOGGER.debug("Cluster {} is not running", kc);
                 }
-            } else {
-                LOGGER.debug("Cluster {} is not installed", kc);
+            }
+        } else {
+            for (KubeCluster kc : clusters) {
+                if (kc.isAvailable()) {
+                    LOGGER.debug("Cluster {} is installed", kc);
+                    if (kc.isClusterUp()) {
+                        LOGGER.debug("Cluster {} is running", kc);
+                        cluster = kc;
+                        break;
+                    } else {
+                        LOGGER.debug("Cluster {} is not running", kc);
+                    }
+                } else {
+                    LOGGER.debug("Cluster {} is not installed", kc);
+                }
             }
         }
         if (cluster == null) {
