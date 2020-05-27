@@ -10,7 +10,7 @@ import { generateFilterPattern } from "./query";
 
 const DELETE_ADDRESS_SPACE = gql`
   mutation delete_as($as: [ObjectMeta_v1_Input!]!) {
-    deleteAddressSpaces(input: $a)
+    deleteAddressSpaces(input: $as)
   }
 `;
 
