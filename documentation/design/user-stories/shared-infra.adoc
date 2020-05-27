@@ -12,7 +12,7 @@ toc::[]
 
 To enable messaging in a Kubernetes namespace, a `MessagingTenant` resource must be created by the tenant admin.
 
-* The `MessagingTenant` may reference a specific `MessagingInfra`, `MessagingPlan` and `IdentityProviders`
+* The `MessagingTenant` may reference a specific `MessagingInfrastructure`, `MessagingPlan` and `IdentityProviders`
 that should be used for the namespace.
 * If a plan, infra or identity providers is not specified, a default will be selected based on the service admin configuration.
 * If the `namespace` field of the reference is omitted, the namespace of the operator is assumed.
@@ -227,9 +227,11 @@ status:
     port: 5672
     protocol: AMQP
   tls:
-    certificateValidity:
-     notBefore: <CERT START DATE>
-     notAfter: <CERT EXPIRY DATE>
+    serverCertificateInfo:
+      serialNumber: <SERIAL>
+      cn: <CN>
+      notBefore: <CERT START DATE>
+      notAfter: <CERT EXPIRY DATE>
     caCertificate: <PEM VALUE>
   identityProviders:
   - name:  myldap
@@ -472,29 +474,29 @@ The credentials will be provided by an out of band mechanism that depends on the
 
 === Define infra, plans and access control services in different namespaces
 
-A `MessagingInfra`, `MessagingPlan`, and `IdentityProvider` may be created in any
+A `MessagingInfrastructure`, `MessagingPlan`, and `IdentityProvider` may be created in any
 namespace where permissions is granted by the cluster admin. However, resources defined in namespaces not watched by the operator will not be processed.
 
 ---
 
 === CRUDLW an instance of messaging infrastructure shared between multiple messaging tenants
 
-Create the following `MessagingInfra` to make the infrastructure shared between all namespaces on the cluster:
+Create the following `MessagingInfrastructure` to make the infrastructure shared between all namespaces on the cluster:
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingInfrastructure
 metadata:
   name: infra1
   namespace: enmasse-infra
 spec: {}
 ```
 
-Create the following `MessagingInfra` to make the infrastructure shared by a selection of namespaces based on their names:
+Create the following `MessagingInfrastructure` to make the infrastructure shared by a selection of namespaces based on their names:
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingInfrastructure
 metadata:
   name: infra1
   namespace: enmasse-infra
@@ -505,11 +507,11 @@ spec:
     - "ns2"
 ```
 
-Create the following `MessagingInfra` to make the infrastructure shared by a selection of namespaces based on labels:
+Create the following `MessagingInfrastructure` to make the infrastructure shared by a selection of namespaces based on labels:
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingInfrastructure
 metadata:
   name: infra1
   namespace: enmasse-infra
@@ -620,17 +622,16 @@ metadata:
   name: myplan
   namespace: planspace
 spec:
-  endpoint:
-    default:
-     - route: {}
-       protocols:
-       - AMQPS
-       tls:
-         openshift: {}
-     - cluster: {}
-        # Define which protocols are supported by the default endpoint
-       protocols:
-       - AMQP
+  endpoints:
+  - route: {}
+    protocols:
+    - AMQPS
+    tls:
+      openshift: {}
+  - cluster: {}
+     # Define which protocols are supported by the default endpoint
+    protocols:
+    - AMQP
 ```
 
 === Restrict which endpoint types and cert providers can be used for messaging tenants
@@ -728,30 +729,26 @@ metadata:
   name: plan1
   namespace: planspace
 spec:
-  broker:
-    resources:
-      requests:
-        memory: 512Mi
-        storage: 1Gi
-      limits:
-        memory: 1Gi
-        storage: 10Gi
-  router:
-    resources:
-      requests:
-        connections: 10
-      limits:
-        connections: 100
+  resources:
+    requests:
+      memory: 512Mi
+      storage: 1Gi
+      connections: 10
+    limits:
+      memory: 1Gi
+      storage: 10Gi
+      connections: 100
 ```
 
 === Restrict how much memory and storage is consumed per address
 
 Create the following `MessagingAddressPlan` to enforce limits for multiple address types:
 
-* Plans apply to any address type
+* Plans apply to any address type but settings are defined for each type
 * If resource limit is not set - limit is not specified
 * If resource request is not set - it equals the limit
 * If resource is not set - no limits are specified
+* When configuring an address, the operator will look at the sum of limits for all addresses and check that the new address does not cause it to go above the limits set in the MessagingPlan. If it does, then status section would be updated with QuotaExceeded error.
 
 ```
 apiVersion: enmasse.io/v1beta2
@@ -760,28 +757,34 @@ metadata:
   name: plan1
   namespace: planspace
 spec:
-  # Resource limits are applied to any address type that is stored on a broker
-  broker:
-    resources:
-      requests:
-        memory: 5Mi
-        storage: 20Mi
-      limits:
-        memory: 10Mi
-        storage: 30Mi
-
   # Per-address type properties
   queue:
+    resources:
+      requests:
+        # Requests: amount of memory it is expected this queue will use, and is used for queue
+        # scheduling. Setting this to a lower value than limits will allow the scheduler to move this queue to 
+        # a different broker to increase density.
+        queueSizeMemory: 5Mi
+        queueSizeStorage: 20Mi
+      limits:
+        # Limits: Amount of memory queues with this plan can use on the broker. This translates to the max-size-bytes
+        # address setting in the broker.
+        queueSizeMemory: 10Mi
+        # Amount of storage queues with this plan can use on the broker
+        queueSizeStorage: 30Mi
     expiryQueue: myexp
     partitions: 3
-
-  # If settings can be overridden by address definition
-  allowOverride: true | false
+  topic:
+    maxConsumers: 2
+    resources:
+      limits:
+        # Total memory usage for all subscriptions to this topic
+        topicSizeMemory: 50Mi
 ```
 
 === Configure scaling of the routers based on the connection load and throughput
 
-Create/modify the `MessagingInfra` resource to include the `dynamic` strategy for the router. This strategy scales
+Create/modify the `MessagingInfrastructure` resource to include the `dynamic` strategy for the router. This strategy scales
 the number of router replicas based on the parameters `connections` and `messageThroughputSeconds` per router.
 
 * If the observed value of these parameters go above the max, the number of router replicas is increased.
@@ -790,7 +793,7 @@ the number of router replicas based on the parameters `connections` and `message
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingInfrastructure
 metadata:
   name: myinfra
 spec:
@@ -815,7 +818,7 @@ spec:
 
 === Configure scaling of the brokers based on the queue and topic memory and storage usage
 
-Create/modify the `MessagingInfra` resource to include the `dynamic` strategy for the broker. This strategy scales
+Create/modify the `MessagingInfrastructure` resource to include the `dynamic` strategy for the broker. This strategy scales
 the number of broker instances based on the parameters `addresses` per broker.
 
 * If the observed value of these parameters go above the max, the number of broker instances is increased.
@@ -823,7 +826,7 @@ the number of broker instances based on the parameters `addresses` per broker.
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingInfra
+kind: MessagingInfrastructure
 metadata:
   name: myinfra
 spec:
@@ -850,8 +853,8 @@ TODO: Needs support in router plugin and auth service
 
 Configuration migration:
 
-* StandardInfraConfig/BrokeredInfraConfig -> MessagingInfra: Manual
-* AuthenticationService -> MessagingInfra + IdentityProvider: Manual
+* StandardInfraConfig/BrokeredInfraConfig -> MessagingInfrastructure: Manual
+* AuthenticationService -> MessagingInfrastructure + IdentityProvider: Manual
 * A separate cluster must be used for the 1.0 cluster
 * AddressPlan -> MessagingAddressPlan: Manual
 * AddressSpacePlan -> MessagingPlan: Manual
