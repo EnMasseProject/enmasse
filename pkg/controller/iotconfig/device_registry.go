@@ -173,7 +173,7 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryRoute(config *iotv1alpha1.Io
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(_ *iotv1alpha1.IoTConfig, service *corev1.Service) error {
+func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service) error {
 
 	install.ApplyServiceDefaults(service, "iot", service.Name)
 
@@ -191,6 +191,14 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(_ 
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
 	}
+
+	// we must point the selector to the management deployment
+
+	name, err := getRegistryManagementServiceName(config)
+	if err != nil {
+		return err
+	}
+	service.Spec.Selector["name"] = name
 
 	return nil
 }
