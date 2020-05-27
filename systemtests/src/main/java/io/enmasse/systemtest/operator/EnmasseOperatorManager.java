@@ -74,7 +74,7 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse"));
+        kube.apply(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse"));
         TestUtils.waitUntilDeployed(kube.getInfraNamespace());
         LOGGER.info("***********************************************************");
     }
@@ -88,24 +88,24 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installIoTOperator() {
+    public void installIoTOperator() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse IoT operator install");
         LOGGER.info("***********************************************************");
         LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
+        kube.apply(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         LOGGER.info("***********************************************************");
     }
 
-    public void installMonitoringOperator() {
+    public void installMonitoringOperator() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse enmasse monitoring");
         LOGGER.info("***********************************************************");
         enableOperatorMetrics(false);
         kube.createNamespace(env.getMonitoringNamespace());
-        KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
+        kube.apply(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
         waitForMonitoringResources();
-        KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-deployment"));
+        kube.apply(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-deployment"));
         TestUtils.waitUntilDeployed(env.getMonitoringNamespace(), Arrays.asList(
                 "prometheus-operator",
                 "application-monitoring-operator",
@@ -115,7 +115,7 @@ public class EnmasseOperatorManager {
                 "grafana-deployment"));
         enableMonitoringForNamespace();
         enableOperatorMetrics(true);
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
+        kube.apply(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
         LOGGER.info("***********************************************************");
     }
 
@@ -192,35 +192,35 @@ public class EnmasseOperatorManager {
         installExamplesBundle(getNamespaceByOlmInstallationType(Environment.getInstance().olmInstallType()));
     }
 
-    public void installOperators() {
+    public void installOperators() throws Exception {
         LOGGER.info("Installing enmasse operators from: {}", Environment.getInstance().getTemplatesPath());
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
+        kube.apply(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
     }
 
-    public void installExamplePlans(String namespace) {
+    public void installExamplePlans(String namespace) throws Exception {
         LOGGER.info("Installing enmasse example plans from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-plans"));
     }
 
-    public void installExampleRoles(String namespace) {
+    public void installExampleRoles(String namespace) throws Exception {
         LOGGER.info("Installing enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
     }
 
     public void installExampleAuthServices(String namespace) throws Exception {
         LOGGER.info("Installing enmasse example auth services from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "standard-authservice.yaml"));
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "none-authservice.yaml"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "standard-authservice.yaml"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-authservices", "none-authservice.yaml"));
         TestUtils.waitForPodReady("standard-authservice", namespace);
         TestUtils.waitForPodReady("none-authservice", namespace);
     }
 
-    public void installServiceCatalog(String namespace) {
+    public void installServiceCatalog(String namespace) throws Exception {
         LOGGER.info("Installing enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
+        kube.apply(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
     public void removeExamplePlans(String namespace) {
