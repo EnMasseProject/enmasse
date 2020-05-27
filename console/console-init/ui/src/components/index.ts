@@ -34,3 +34,5 @@ export * from "./SwitchWithToggle";
 export * from "./MetadataListTable";
 export * from "./DividerWithTitle";
 export * from "./PasswordLabel";
+export * from "./UpdatePassword";
+export * from "./PasswordInputFieldWithToggle";
