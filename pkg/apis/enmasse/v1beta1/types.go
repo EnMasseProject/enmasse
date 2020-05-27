@@ -31,6 +31,9 @@ type AddressSpaceSchema struct {
 
 type AddressSpaceSchemaSpec struct {
 	AuthenticationServices []string `json:"authenticationServices,omitempty"`
+	RouteServicePorts []RouteServicePortDescription `json:"routeServicePorts,omitempty"`
+	CertificateProviderTypes []CertificateProviderTypeDescription `json:"certificateProviderTypes,omitempty"`
+	EndpointExposeTypes []EndpointExposeTypeDescription `json:"endpointExposeTypes,omitempty"`
 	Description            string   `json:"description,omitempty"`
 }
 
@@ -41,6 +44,25 @@ type AddressSpaceSchemaList struct {
 	metav1.ListMeta `json:"metadata,omitempty"`
 
 	Items []AddressSpaceSchema `json:"items"`
+}
+
+type RouteServicePortDescription struct {
+	Name                 RouteServicePort      `json:"name,omitempty"`
+	DisplayName          string                `json:"displayName,omitempty"`
+	Description          string                `json:"description,omitempty"`
+	RouteTlsTerminations []RouteTlsTermination `json:"routeTlsTerminations,omitempty"`
+}
+
+type CertificateProviderTypeDescription struct {
+	Name                 CertificateProviderType `json:"name,omitempty"`
+	DisplayName          string                  `json:"displayName,omitempty"`
+	Description          string                  `json:"description,omitempty"`
+}
+
+type EndpointExposeTypeDescription struct {
+	Name        ExposeType `json:"name,omitempty"`
+	DisplayName string     `json:"displayName,omitempty"`
+	Description string     `json:"description,omitempty"`
 }
 
 // ** AuthenticationService

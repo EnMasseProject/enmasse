@@ -213,27 +213,62 @@ function createAuthenticationService(type, name) {
   };
 }
 
+function createAddressSpaceSchema(name, description) {
+  return {
+    metadata: {
+      name: name
+    },
+    spec: {
+      authenticationServices: ["none-authservice", "standard-authservice"],
+      description: description,
+      routeServicePorts: [
+        {
+          name: "amqps",
+          displayName: "Messaging (AMQP)",
+          routeTlsTerminations: ["passthrough"]
+        },
+        {
+          name: "https",
+          displayName: "Websocket messaging (AMQP-WS)",
+          routeTlsTerminations: ["passthrough", "reencrypt"]
+        },
+      ],
+      certificateProviderTypes: [
+        {
+          name: "openshift",
+          displayName: "OpenShift",
+          description: "OpenShift provides a TLS certificate"
+        },
+        {
+          name: "selfsigned",
+          displayName: "Self-Signed",
+          description: "System generates self-signed TLS certificate"
+        },
+        {
+          name: "certBundle",
+          displayName: "Certificate Bundle",
+          description: "Upload a TLS certificate bundle"
+        },
+      ],
+      endpointExposeTypes: [
+        {
+          name: "route",
+          displayName: "OpenShift Route",
+          description: "OpenShift Route"
+        },
+        {
+          name: "loadbalancer",
+          displayName: "LoadBalancer service",
+          description: "LoadBalancer service"
+        }
+      ]
+    }
+  };
+}
+
 const availableAddressSpaceSchemas = [
-  {
-    metadata: {
-      name: "brokered"
-    },
-    spec: {
-      authenticationServices: ["none-authservice", "standard-authservice"],
-      description:
-        "A brokered address space consists of a broker combined with a console for managing addresses."
-    }
-  },
-  {
-    metadata: {
-      name: "standard"
-    },
-    spec: {
-      authenticationServices: ["none-authservice", "standard-authservice"],
-      description:
-        "A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API."
-    }
-  }
+  createAddressSpaceSchema("brokered", "A brokered address space consists of a broker combined with a console for managing addresses."),
+  createAddressSpaceSchema("standard", "A standard address space consists of an AMQP router network in combination with attachable 'storage units'. The implementation of a storage unit is hidden from the client and the routers with a well defined API."),
 ];
 
 const availableNamespaces = [
