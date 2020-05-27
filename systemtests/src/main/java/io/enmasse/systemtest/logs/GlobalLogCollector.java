@@ -4,17 +4,8 @@
  */
 package io.enmasse.systemtest.logs;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.platform.KubeCMDClient;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.Pod;
-import org.slf4j.Logger;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,8 +20,18 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import org.slf4j.Logger;
+
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.Pod;
 
 public class GlobalLogCollector {
     private final static Logger LOGGER = CustomLogger.getLogger();
@@ -331,6 +332,8 @@ public class GlobalLogCollector {
                     Files.writeString(path.resolve(String.format("pvcs.%s.txt", ns)), KubeCMDClient.runOnClusterWithoutLogger("describe", "pvc", "-n", ns).getStdOut());
                     Files.writeString(path.resolve(String.format("deployments.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "deployments", "-o", "yaml", "-n", ns).getStdOut());
                     Files.writeString(path.resolve(String.format("statefulsets.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "statefulsets", "-o", "yaml", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("endpoints.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "endpoints", "-o", "yaml", "-n", ns).getStdOut());
+                    Files.writeString(path.resolve(String.format("services.%s.yml", ns)), KubeCMDClient.runOnClusterWithoutLogger("get", "services", "-o", "yaml", "-n", ns).getStdOut());
                 }
             }
 
