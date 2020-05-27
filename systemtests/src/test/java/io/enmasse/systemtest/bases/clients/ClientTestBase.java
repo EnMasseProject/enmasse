@@ -100,6 +100,7 @@ public abstract class ClientTestBase extends TestBase implements ITestBaseShared
                 .withCount(expectedMsgCount)
                 .withMessageBody("msg no. %d")
                 .withTimeout(30)
+                .withAdditionalArgument(ClientArgument.LOG_LIB, "ALL") // KWDEBUG investigating websocket failure.
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, websocket)
                 .withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, getSharedAddressSpace().getSpec().getType().equals(AddressSpaceType.STANDARD.toString()) ? "binary" : "")
                 .withAdditionalArgument(ClientArgument.DEST_TYPE, "ANYCAST");
