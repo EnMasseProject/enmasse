@@ -93,6 +93,10 @@ broker which is the case after 0.26.x.
       </security-settings>
 
       <address-settings>
+         <!--to ensure management queues does not get the wrong properties set -->
+         <address-setting match="activemq.management.tmpreply#">
+            <auto-create-queues>false</auto-create-queues>
+         </address-setting>
          <!--default for catch all-->
          <address-setting match="#">
             <max-delivery-attempts>-1</max-delivery-attempts>
