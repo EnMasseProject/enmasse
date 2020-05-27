@@ -6,7 +6,7 @@
 import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+  SERVER_DATA_THRESHOLD
 } from "constant";
 import {
   forbiddenBackslashRegexp,
@@ -19,6 +19,7 @@ export interface ISelectOption {
   isDisabled?: boolean;
   key?: string;
   label?: string;
+  id?: string;
 }
 
 /**
@@ -27,7 +28,12 @@ export interface ISelectOption {
  * @param isDisabled
  */
 const createSelectOptionObject = (value: string, isDisabled: boolean) => {
-  const data: ISelectOption = { value: value, isDisabled: isDisabled };
+  const data: ISelectOption = {
+    key: `key-${value}`,
+    id: `id-${value}`,
+    value: value,
+    isDisabled: isDisabled
+  };
   return data;
 };
 
@@ -41,11 +47,8 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   let records: ISelectOption[] = [];
   if (totalRecords > MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN) {
     const allRecords = [...uniqueList];
-    const top_10_records = allRecords.splice(
-      0,
-      NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-    );
-    if (top_10_records.length >= 10) {
+    const top_10_records = allRecords.splice(0, SERVER_DATA_THRESHOLD);
+    if (top_10_records.length >= SERVER_DATA_THRESHOLD) {
       records.push({
         value: TypeAheadMessage.MORE_CHAR_REQUIRED,
         isDisabled: true
@@ -68,7 +71,7 @@ const compareObject = (obj1: any, obj2: any) => {
   }
 };
 
-const getType = (type: string) => {
+const getAddressSpaceLabelForType = (type: string) => {
   switch (type && type.toLowerCase()) {
     case "standard":
       return " Standard";
@@ -144,19 +147,9 @@ const findIndexByProperty = (
 };
 
 const hasOwnProperty = (obj: Object, property: string) => {
-  if (obj && property) {
+  if (obj && property && property.trim() !== "") {
     return obj.hasOwnProperty(property);
   }
-};
-
-const getCombinedString = (a: string, b?: string) => {
-  let s: string = "";
-  s += a;
-  if (b !== undefined) {
-    s += ", ";
-    s += b;
-  }
-  return s;
 };
 
 const getLabelForTypeOfObject = (value: any) => {
@@ -179,55 +172,79 @@ const getLabelForTypeOfObject = (value: any) => {
   }
 };
 
-const getJsonForMetadata = (object: any, type?: string) => {
+/**
+ * Accepts a json object and convert it into array of objects with
+ * key,value,type and typeLabel as key with values
+ * @Examle
+    input ={
+      'asdf':"ASD"
+    }
+    output=
+    [
+      {
+        key:'asdf',
+        value:"ASD",
+        type:"string",
+        typeLabel:"String"
+      }
+    ]
+ * @param object 
+ * @param type 
+ */
+const convertJsonToMetadataOptions = (object: any, type?: string) => {
   const keys = Object.keys(object);
-  let data = [];
-  for (var i of keys) {
-    if (typeof object[i] === "object") {
-      if (Array.isArray(object[i])) {
-        const datas: any[] = getJsonForMetadata(object[i], "array");
-        data.push({
-          key: i,
+  let metadataArray = [];
+  for (var key of keys) {
+    if (typeof object[key] === "object") {
+      if (Array.isArray(object[key])) {
+        const datas: any[] = convertJsonToMetadataOptions(object[key], "array");
+        metadataArray.push({
+          key: key,
           value: datas,
           type: "array",
-          typeLabel: getLabelForTypeOfObject(object[i])
+          typeLabel: getLabelForTypeOfObject(object[key])
         });
       } else {
-        const datas: any[] = getJsonForMetadata(object[i]);
-        data.push({
-          key: type && type === "array" ? "" : i,
+        const datas: any[] = convertJsonToMetadataOptions(object[key]);
+        metadataArray.push({
+          key: type && type === "array" ? "" : key,
           value: datas,
           type: "object",
-          typeLabel: getLabelForTypeOfObject(object[i])
+          typeLabel: getLabelForTypeOfObject(object[key])
         });
       }
     } else {
-      data.push({
-        key: type && type === "array" ? "" : i,
-        value: object[i],
-        type: typeof object[i],
-        typeLabel: getLabelForTypeOfObject(object[i])
+      metadataArray.push({
+        key: type && type === "array" ? "" : key,
+        value: object[key],
+        type: typeof object[key],
+        typeLabel: getLabelForTypeOfObject(object[key])
       });
     }
   }
-  return data;
+  return metadataArray;
 };
 
-const getJsonForObject = (object: any) => {
+/** Accepts a object with key,value,type and typeLabel as convet into a exact json
+ * with key and values from the form
+ * @param object
+ * Internal function used in convertMetadataOptionsToJson
+ * */
+const convertObjectIntoJson = (object: any) => {
   const obj: any = {};
   switch (object.type) {
     case "array":
       let res: any[] = [];
-      for (let i of object.value) {
-        const data = getJson(i);
-        res.push(data[i.key]);
+      for (let objectValue of object.value) {
+        const data = convertMetadataOptionsToJson(objectValue);
+        res.push(data[objectValue.key]);
       }
       obj[object.key] = res;
       break;
     case "object":
       let objs: any = {};
-      for (let i of object.value) {
-        const data = getJsonForObject(i);
+      for (let objectValue of object.value) {
+        const data = convertObjectIntoJson(objectValue);
         const key = Object.keys(data)[0];
         const value = data[key];
         objs[key] = value;
@@ -241,7 +258,26 @@ const getJsonForObject = (object: any) => {
   return obj;
 };
 
-const getJson = (objects: any[]) => {
+/**
+ * Accepts a array of objects with key,value,type and typeLabel as key and values from the form
+ * And converts it into actual Json
+ * @Examle
+    input =
+    [
+      {
+        key:'asdf',
+        value:"ASD",
+        type:"string",
+        typeLabel:"String"
+      }
+    ]
+    output ={
+      'asdf':"ASD"
+    }
+ * @param object 
+ * @param type 
+ */
+const convertMetadataOptionsToJson = (objects: any[]) => {
   let options: any[];
   if (!Array.isArray(objects)) {
     options = [objects];
@@ -249,8 +285,8 @@ const getJson = (objects: any[]) => {
     options = objects;
   }
   let object: any = {};
-  for (let i of options) {
-    const data = getJsonForObject(i);
+  for (let option of options) {
+    const data = convertObjectIntoJson(option);
     object = Object.assign(object, data);
   }
   return object;
@@ -258,13 +294,6 @@ const getJson = (objects: any[]) => {
 
 const createDeepCopy = (object: any) => {
   return JSON.parse(JSON.stringify(object));
-};
-
-const compareJsonObject = (object1: any, object2: any) => {
-  if (JSON.stringify(object1) === JSON.stringify(object2)) {
-    return true;
-  }
-  return false;
 };
 
 const getFormattedJsonString = (json: any) => {
@@ -293,7 +322,7 @@ const getLabelByKey = (key: string) => {
 export {
   getSelectOptionList,
   compareObject,
-  getType,
+  getAddressSpaceLabelForType,
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
   messagingAddressNameRegexp,
@@ -301,11 +330,9 @@ export {
   uniqueId,
   findIndexByProperty,
   hasOwnProperty,
-  getCombinedString,
-  getJsonForMetadata,
-  getJson,
+  convertJsonToMetadataOptions,
+  convertMetadataOptionsToJson,
   createDeepCopy,
-  compareJsonObject,
   getFormattedJsonString,
   getLabelByKey
 };

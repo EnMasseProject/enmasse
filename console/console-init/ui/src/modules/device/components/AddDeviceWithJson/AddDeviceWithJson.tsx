@@ -18,7 +18,7 @@ import {
   connectedViaGatewayDeviceTemplate,
   directlyConnectedDeviceTemplate
 } from "./AddJsonUsingTemplate";
-import { compareJsonObject, getFormattedJsonString } from "utils";
+import { compareObject, getFormattedJsonString } from "utils";
 import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { DeviceListAlert } from "modules/device";
 import { TemplateType } from "constant";
@@ -61,11 +61,11 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
     try {
       const detail = deviceDetail && JSON.parse(deviceDetail);
       if (detail && selectedTemplate === TemplateType.DIRECTLY_CONNECTED) {
-        if (!compareJsonObject(detail, directlyConnectedDeviceTemplate)) {
+        if (!compareObject(detail, directlyConnectedDeviceTemplate)) {
           isJsonPresent = true;
         }
       } else if (selectedTemplate === TemplateType.VIA_GATEWAY) {
-        if (!compareJsonObject(detail, connectedViaGatewayDeviceTemplate)) {
+        if (!compareObject(detail, connectedViaGatewayDeviceTemplate)) {
           isJsonPresent = true;
         }
       }
