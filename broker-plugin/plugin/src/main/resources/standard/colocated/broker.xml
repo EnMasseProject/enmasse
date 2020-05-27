@@ -86,6 +86,9 @@ under the License.
 
       <address-settings>
          <!--default for catch all-->
+         <address-setting match="activemq.management.tmpreply#">
+            <auto-create-queues>false</auto-create-queues>
+         </address-setting>
          <address-setting match="#">
             <max-delivery-attempts>-1</max-delivery-attempts>
             <redelivery-delay>1</redelivery-delay>
