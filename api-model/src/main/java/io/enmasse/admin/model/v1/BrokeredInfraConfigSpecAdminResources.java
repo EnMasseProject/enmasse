@@ -19,37 +19,11 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"memory"})
+@JsonPropertyOrder({"cpu", "memory"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecAdminResources extends AbstractWithAdditionalProperties {
     private String memory;
-
-    public BrokeredInfraConfigSpecAdminResources() {
-    }
-
-    public BrokeredInfraConfigSpecAdminResources(final String memory) {
-        setMemory(memory);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        BrokeredInfraConfigSpecAdminResources that = (BrokeredInfraConfigSpecAdminResources) o;
-        return Objects.equals(memory, that.memory);
-    }
-
-    @Override
-    public String toString() {
-        return "BrokeredInfraConfigSpecAdminResources{" +
-                "memory='" + memory + '\'' +
-                '}';
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(memory);
-    }
+    private String cpu;
 
     public void setMemory(String memory) {
         this.memory = memory;
@@ -59,4 +33,33 @@ public class BrokeredInfraConfigSpecAdminResources extends AbstractWithAdditiona
         return memory;
     }
 
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BrokeredInfraConfigSpecAdminResources that = (BrokeredInfraConfigSpecAdminResources) o;
+        return Objects.equals(memory, that.memory) &&
+                Objects.equals(cpu, that.cpu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(memory, cpu);
+    }
+
+    @Override
+    public String toString() {
+        return "BrokeredInfraConfigSpecAdminResources{" +
+                "memory='" + memory + '\'' +
+                ", cpu='" + cpu + '\'' +
+                '}';
+    }
 }

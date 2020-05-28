@@ -5,6 +5,7 @@
 
 package io.enmasse.controller.standard;
 
+import static io.enmasse.address.model.KubeUtil.applyCpuMemory;
 import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
 import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
 import static io.enmasse.config.Apps.setPartOf;
@@ -117,9 +118,6 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
             if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
-                if (standardInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
-                    paramMap.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-                }
                 if (standardInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
                     paramMap.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
                 }
@@ -161,11 +159,16 @@ public class TemplateBrokerSetGenerator implements BrokerSetGenerator {
                 Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(standardInfraConfig));
                 setPartOf(set, options.getInfraUuid());
 
+                if (standardInfraConfig.getSpec().getBroker() != null && standardInfraConfig.getSpec().getBroker().getResources() != null) {
+                    applyCpuMemory(set.getSpec().getTemplate(), standardInfraConfig.getSpec().getBroker().getResources().getCpu(), standardInfraConfig.getSpec().getBroker().getResources().getMemory());
+                }
+
                 if (standardInfraConfig.getSpec().getBroker() != null && standardInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
                     PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getBroker().getPodTemplate();
                     PodTemplateSpec actualPodTemplate = set.getSpec().getTemplate();
                     applyPodTemplate(actualPodTemplate, podTemplate);
                 }
+
                 overrideFsGroup(set.getSpec().getTemplate(), "broker",  kubernetes.getNamespace());
             } else if (item instanceof Deployment) {
                 Deployment deployment = (Deployment) item;

@@ -19,19 +19,12 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"memory", "storage"})
+@JsonPropertyOrder({"cpu", "memory", "storage"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecBrokerResources extends AbstractWithAdditionalProperties {
     private String memory;
     private String storage;
-
-    public StandardInfraConfigSpecBrokerResources() {
-    }
-
-    public StandardInfraConfigSpecBrokerResources(final String memory, final String storage ) {
-        setMemory(memory);
-        setStorage(storage);
-    }
+    private String cpu;
 
     public void setMemory(String memory) {
         this.memory = memory;
@@ -49,18 +42,27 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
         return storage;
     }
 
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         StandardInfraConfigSpecBrokerResources that = (StandardInfraConfigSpecBrokerResources) o;
         return Objects.equals(memory, that.memory) &&
-                Objects.equals(storage, that.storage);
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(cpu, that.cpu);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(memory, storage);
+        return Objects.hash(memory, storage, cpu);
     }
 
     @Override
@@ -68,6 +70,7 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
         return "StandardInfraConfigSpecBrokerResources{" +
                 "memory='" + memory + '\'' +
                 ", storage='" + storage + '\'' +
+                ", cpu='" + cpu + '\'' +
                 '}';
     }
 }

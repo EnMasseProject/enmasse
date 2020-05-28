@@ -4,6 +4,7 @@
  */
 package io.enmasse.controller;
 
+import static io.enmasse.address.model.KubeUtil.applyCpuMemory;
 import static io.enmasse.address.model.KubeUtil.applyPodTemplate;
 import static io.enmasse.address.model.KubeUtil.lookupResource;
 import static io.enmasse.address.model.KubeUtil.overrideFsGroup;
@@ -150,9 +151,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         if (standardInfraConfig.getSpec().getBroker() != null) {
             if (standardInfraConfig.getSpec().getBroker().getResources() != null) {
-                if (standardInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
-                    parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, standardInfraConfig.getSpec().getBroker().getResources().getMemory());
-                }
                 if (standardInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
                     parameters.put(TemplateParameter.BROKER_STORAGE_CAPACITY, standardInfraConfig.getSpec().getBroker().getResources().getStorage());
                 }
@@ -165,16 +163,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             if (standardInfraConfig.getSpec().getBroker().getGlobalMaxSize() != null) {
                 parameters.put(TemplateParameter.BROKER_GLOBAL_MAX_SIZE, standardInfraConfig.getSpec().getBroker().getGlobalMaxSize());
             }
-        }
-
-        if (standardInfraConfig.getSpec().getRouter() != null) {
-            if (standardInfraConfig.getSpec().getRouter().getResources() != null && standardInfraConfig.getSpec().getRouter().getResources().getMemory() != null) {
-                parameters.put(TemplateParameter.ROUTER_MEMORY_LIMIT, standardInfraConfig.getSpec().getRouter().getResources().getMemory());
-            }
-        }
-
-        if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getResources() != null && standardInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {
-            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
         }
 
         parameters.put(TemplateParameter.STANDARD_INFRA_CONFIG_NAME, standardInfraConfig.getMetadata().getName());
@@ -197,11 +185,17 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
                 if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
                     StatefulSet router = (StatefulSet) item;
                     router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+                    if (standardInfraConfig.getSpec().getRouter().getResources() != null ) {
+                        applyCpuMemory(router.getSpec().getTemplate(), standardInfraConfig.getSpec().getRouter().getResources().getCpu(), standardInfraConfig.getSpec().getRouter().getResources().getMemory());
+                    }
                 }
             }
         }
 
         Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAdminDeploymentName(addressSpace), items);
+        if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getResources() != null) {
+            applyCpuMemory(adminDeployment.getSpec().getTemplate(), standardInfraConfig.getSpec().getAdmin().getResources().getCpu(), standardInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
         if (standardInfraConfig.getSpec().getAdmin() != null && standardInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = standardInfraConfig.getSpec().getAdmin().getPodTemplate();
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
@@ -244,9 +238,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
 
         if (brokeredInfraConfig.getSpec().getBroker() != null) {
             if (brokeredInfraConfig.getSpec().getBroker().getResources() != null) {
-                if (brokeredInfraConfig.getSpec().getBroker().getResources().getMemory() != null) {
-                    parameters.put(TemplateParameter.BROKER_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
-                }
                 if (brokeredInfraConfig.getSpec().getBroker().getResources().getStorage() != null) {
                     parameters.put(TemplateParameter.BROKER_STORAGE_CAPACITY, brokeredInfraConfig.getSpec().getBroker().getResources().getStorage());
                 }
@@ -265,10 +256,6 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
             }
         }
 
-        if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getResources() != null && brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory() != null) {
-            parameters.put(TemplateParameter.ADMIN_MEMORY_LIMIT, brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
-        }
-
         setIfEnvPresent(parameters, TemplateParameter.AGENT_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.BROKER_IMAGE);
         setIfEnvPresent(parameters, TemplateParameter.BROKER_PLUGIN_IMAGE);
@@ -283,6 +270,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         }
 
         Deployment adminDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getAgentDeploymentName(addressSpace), items);
+        if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getResources() != null) {
+            applyCpuMemory(adminDeployment.getSpec().getTemplate(), brokeredInfraConfig.getSpec().getAdmin().getResources().getCpu(), brokeredInfraConfig.getSpec().getAdmin().getResources().getMemory());
+        }
         if (brokeredInfraConfig.getSpec().getAdmin() != null && brokeredInfraConfig.getSpec().getAdmin().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getAdmin().getPodTemplate();
             PodTemplateSpec actualPodTemplate = adminDeployment.getSpec().getTemplate();
@@ -291,6 +281,9 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         setPartOf(adminDeployment, addressSpace);
 
         Deployment brokerDeployment = lookupResource(Deployment.class, "Deployment", KubeUtil.getBrokeredBrokerSetName(addressSpace), items);
+        if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getResources() != null) {
+            applyCpuMemory(brokerDeployment.getSpec().getTemplate(), brokeredInfraConfig.getSpec().getBroker().getResources().getCpu(), brokeredInfraConfig.getSpec().getBroker().getResources().getMemory());
+        }
         if (brokeredInfraConfig.getSpec().getBroker() != null && brokeredInfraConfig.getSpec().getBroker().getPodTemplate() != null) {
             PodTemplateSpec podTemplate = brokeredInfraConfig.getSpec().getBroker().getPodTemplate();
             PodTemplateSpec actualPodTemplate = brokerDeployment.getSpec().getTemplate();

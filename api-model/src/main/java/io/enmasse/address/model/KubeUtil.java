@@ -7,6 +7,7 @@ package io.enmasse.address.model;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -25,6 +26,10 @@ import io.fabric8.kubernetes.api.model.PodSecurityContext;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Probe;
+import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.QuantityBuilder;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
 
 /**
  * Various static utilities that don't belong in a specific place
@@ -172,6 +177,32 @@ public final class KubeUtil {
         throw new IllegalStateException("Unable to find resource of kind '" + kind + "' and name '" + name + "'");
     }
 
+    public static void applyCpuMemory(PodTemplateSpec podTemplateSpec, String cpu, String memory) {
+        Map<String, Quantity> resources = new LinkedHashMap<>();
+        if (cpu != null) {
+            resources.put("cpu", new Quantity(cpu));
+        }
+        if (memory != null) {
+            resources.put("memory", new Quantity(memory));
+        }
+
+        for (Container container : podTemplateSpec.getSpec().getContainers()) {
+            if (container.getResources() == null) {
+                container.setResources(new ResourceRequirements());
+            }
+
+            if (container.getResources().getRequests() == null) {
+                container.getResources().setRequests(new LinkedHashMap<>());
+            }
+            container.getResources().getRequests().putAll(resources);
+
+            if (container.getResources().getLimits() == null) {
+                container.getResources().setLimits(new LinkedHashMap<>());
+            }
+
+            container.getResources().getLimits().putAll(resources);
+        }
+    }
 
     public static void applyPodTemplate(PodTemplateSpec actual, PodTemplateSpec desired) {
         if (desired.getMetadata() != null && desired.getMetadata().getLabels() != null) {
