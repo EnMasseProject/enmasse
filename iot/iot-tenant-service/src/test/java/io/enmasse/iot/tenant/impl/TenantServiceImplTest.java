@@ -6,10 +6,12 @@
 package io.enmasse.iot.tenant.impl;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import javax.security.auth.x500.X500Principal;
 
 import org.eclipse.hono.util.TenantConstants;
+import org.eclipse.hono.util.TenantObject;
 import org.eclipse.hono.util.TenantResult;
 import org.junit.jupiter.api.Test;
 
@@ -32,18 +34,19 @@ public class TenantServiceImplTest {
     }
 
     @Test
-    public void test1 () throws Exception {
+    public void testInvalidTrustAnchor () throws Exception {
 
-        X500Principal name = new X500Principal("CN=Foo,O=Bar,C=Baz");
+        final X500Principal name = new X500Principal("CN=Foo,O=Bar,C=Baz");
 
-        JsonObject configuration = new JsonObject()
+        // The trust anchor does not have any not-before and not-after dates
+        final JsonObject configuration = new JsonObject()
                 .put(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA,
                         new JsonArray()
                         .add(new JsonObject()
                                 .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())
                         ));
 
-        IoTProject project = new IoTProjectBuilder()
+        final IoTProject project = new IoTProjectBuilder()
                 .withNewMetadata()
                 .withNamespace("ns")
                 .withName("iot")
@@ -55,13 +58,22 @@ public class TenantServiceImplTest {
                 .endStatus()
                 .build();
 
+        // mock discovery of project
+
         this.service.onAdd(project);
+
+        // call service method
 
         final Future<TenantResult<JsonObject>> result = this.service.get(name);
 
-        TenantResult<JsonObject> r = MoreFutures.get(result);
+        // assert result
 
+        final TenantResult<JsonObject> r = MoreFutures.get(result);
         assertNotNull(r);
+
+        final TenantObject tenant = r.getPayload().mapTo(TenantObject.class);
+        assertNotNull(tenant);
+        assertTrue(tenant.getTrustAnchors().isEmpty());
     }
 
 }
