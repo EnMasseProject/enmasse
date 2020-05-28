@@ -87,7 +87,8 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         retainedMessage.setRetained(true);
 
         // send retained message to the topic
-        Builder publisherBuilder = new MqttClientFactory.Builder();
+        Builder publisherBuilder = new MqttClientFactory.Builder()
+                .usernameAndPassword(defaultCredentials);
         customizeClient(publisherBuilder);
         try(IMqttClient publisher = publisherBuilder.create()) {
             publisher.connect();
@@ -96,7 +97,8 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         }
 
         // each client which will subscribe to the topic should receive retained message!
-        Builder subscriberBuilder = new MqttClientFactory.Builder();
+        Builder subscriberBuilder = new MqttClientFactory.Builder()
+                .usernameAndPassword(defaultCredentials);
         customizeClient(subscriberBuilder);
         try(IMqttClient subscriber = subscriberBuilder.create()) {
             subscriber.connect();
@@ -125,6 +127,7 @@ public abstract class MqttPublishTestBase extends TestBase implements ITestBaseS
         resourcesManager.setAddresses(dest);
 
         Builder clientBuilder = new MqttClientFactory.Builder()
+                .usernameAndPassword(defaultCredentials)
                 .mqttConnectionOptions(options -> {
                     options.setConnectionTimeout(options.getConnectionTimeout() * 2); // Default is 30 seconds, increase it to 1 min.
                     options.setAutomaticReconnect(true);
