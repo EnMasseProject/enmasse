@@ -18,6 +18,7 @@ import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -32,6 +33,7 @@ import static io.enmasse.systemtest.TestTag.SCALE;
 
 @Tag(ISOLATED_SHARED_INFRA)
 @Tag(SCALE)
+@Disabled("will be anabled in enmasse 1.0")
 @SkipResourceLogging
 public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
     /**
