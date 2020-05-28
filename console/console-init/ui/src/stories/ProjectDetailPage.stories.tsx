@@ -7,23 +7,21 @@ import React from "react";
 import { text, number } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
 import {
-  GeneralInfo,
-  IMessagingObject
-} from "modules/project-detail/components";
+  DeviceRegistationManagement,
+  IAdapterConfig,
+  AccessCredentials,
+  IMessagingObject,
+  IAdapter,
+  GeneralInfo
+} from "modules/iot-project-detail/components";
+import { action } from "@storybook/addon-actions";
 import {
-  Page,
-  PageSection,
   Grid,
   GridItem,
+  Page,
+  PageSection,
   PageSectionVariants
 } from "@patternfly/react-core";
-import {
-  DeviceRegistationManagement,
-  IAdapter,
-  IAdapterConfig,
-  AccessCredentials
-} from "modules/project-detail/components";
-import { action } from "@storybook/addon-actions";
 
 export default {
   title: "Project Detail Page"

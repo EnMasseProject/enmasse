@@ -10,14 +10,14 @@ import {
   ProjectNavigation,
   GeneralInfo,
   IMessagingObject
-} from "modules/project-detail/components";
+} from "modules/iot-project-detail/components";
 import { Page, Grid, GridItem } from "@patternfly/react-core";
 import {
   DeviceRegistationManagement,
   IAdapter,
   IAdapterConfig,
   AccessCredentials
-} from "modules/project-detail/components";
+} from "modules/iot-project-detail/components";
 import { action } from "@storybook/addon-actions";
 
 export default {
