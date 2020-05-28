@@ -5,7 +5,7 @@
 [id='proc-create-address-space-console-{context}']
 = Creating an address space using the {ConsoleName}
 
-You can create a new address space using the {ConsoleName}.
+You can create a new address space using the {ConsoleName}, including configuring the endpoints of an address space using different certificate providers and creating endpoints to make the address space available for messaging applications to use.
 
 .Procedure
 
@@ -13,9 +13,8 @@ You can create a new address space using the {ConsoleName}.
 +
 For more information about how to access the {ConsoleName}, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
 
-. Click *Create Address Space*. The Create an instance wizard opens.
+. Click *Create Address Space*. The Create address space wizard opens.
 
 . Complete the required fields and when you are finished, click *Finish* to create the new address space.
 
-When the address space has been successfully created, you can click the address space name to view information about the newly created address space.
-
+When the address space has been successfully created, you can click the address space name to view information about the newly created address space, including messaging and application statistics and endpoint information.

@@ -32,9 +32,6 @@ endif::Asciidoctor[]
 // |Standard address space and queue address type only: Number of rejected messages stored in the global dead-letter queue (DLQ) |*Global DLQ*
 |===
 
-
-.Application connection statistics reference table
-
 ifdef::Asciidoctor[]
 image::console-screenshot-conns.png[{ConsoleName}]
 endif::Asciidoctor[]
@@ -43,6 +40,7 @@ ifndef::Asciidoctor[]
 image::{imagesdir}/console-screenshot-conns.png[{ConsoleName}]
 endif::Asciidoctor[]
 
+.Application connection statistics reference table
 [cols="50%a,50%a",options="header"]
 |===
 |To view... |On the Connections page...
@@ -52,4 +50,3 @@ endif::Asciidoctor[]
 // |Standard address space only: Username used by the client to connect |See the third column
 |===
 NOTE: For the brokered address space only, on the Connections page, the number of senders is either `0` or `1`. As soon as one or more senders exist, `1` is displayed rather than reflecting the actual number of senders.
-
