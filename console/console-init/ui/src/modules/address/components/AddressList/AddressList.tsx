@@ -18,7 +18,7 @@ import {
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/msg-and-iot";
+import { StyleForTable } from "modules/project";
 import {
   AddressStatus,
   AddressErrorMessage,
