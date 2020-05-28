@@ -75,6 +75,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
           } else {
             setOptions([
               <SelectOption
+                key={0}
                 value={TypeAheadMessage.NO_RESULT_FOUND}
                 isDisabled={true}
               />
