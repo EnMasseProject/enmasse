@@ -12,13 +12,13 @@ import {
   IDevice,
   EmptyDeviceList,
   DeviceListToolbar
-} from "modules/device";
+} from "modules/iot-device";
 import { text, select, boolean } from "@storybook/addon-knobs";
 
-import { getTableCells } from "modules/device/utils";
+import { getTableCells } from "modules/iot-device/utils";
 import { action } from "@storybook/addon-actions";
 import { IRowData } from "@patternfly/react-table";
-import { DeviceDetailNavigation } from "modules/device-detail";
+import { DeviceDetailNavigation } from "modules/iot-device-detail";
 import { DropdownItem } from "@patternfly/react-core";
 
 export default {

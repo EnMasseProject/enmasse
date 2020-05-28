@@ -1,7 +1,7 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
 import { Page } from "@patternfly/react-core";
-import { AddDeviceWithJson } from "modules/device/components/AddDeviceWithJson";
+import { AddDeviceWithJson } from "modules/iot-device/components/AddDeviceWithJson";
 
 export default {
   title: "Add Device With Json"
