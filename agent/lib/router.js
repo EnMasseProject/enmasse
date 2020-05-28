@@ -210,14 +210,16 @@ ConnectedRouter.prototype.delete_entity = function (type, name) {
     return this.router_mgmt.delete_entity(type, name);
 };
 
-ConnectedRouter.prototype.sync_addresses = function (desired) {
+ConnectedRouter.prototype.sync_addresses = function (desired, brokers) {
     this.desired = desired;
+    this.brokers = brokers;
+    log.info('[%s] sync %d addresses for %d brokers', this.container_id, desired.length, brokers.length);
     this.realise_address_definitions();
 };
 
 ConnectedRouter.prototype._realise_address_definitions = function () {
     var self = this;
-    return router_config.realise_address_definitions(this.desired, this.router_mgmt).then(function (result) {
+    return router_config.realise_address_definitions(this.desired, this.router_mgmt, this.brokers).then(function (result) {
         self.actual = result;
         log.info('[%s] addresses synchronized', self.container_id);
         if (self.initial_provisioning_completed !== true) {
@@ -245,7 +247,8 @@ ConnectedRouter.prototype.is_synchronized = function () {
             return false;
         }
     }
-    if (Object.keys(this.actual).length !== this.desired.length) {
+    if (Object.keys(this.actual).length !== (this.desired.length + (this.brokers !== undefined ? this.brokers.length : 0))) {
+        log.info('[%s] not synchronized,  %s of wrong type expected %s got %s', this.container_id, desired.address, desired.type, actual.type);
         log.info('[%s] not synchronized, have extra addresses', this.container_id);
         return false;
     }

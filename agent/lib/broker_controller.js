@@ -330,7 +330,7 @@ function exclude_subscriptions(type) {
 }
 
 function excluded_addresses(address) {
-    return address === '!!GLOBAL_DLQ' || address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management';
+    return address === '!!GLOBAL_DLQ' || address === 'DLQ' || address === 'ExpiryQueue' || address === 'activemq.notifications' || address === 'activemq.management' || address.startsWith("!!HEALTH_CHECK_BROKER");
 }
 
 function is_temp_queue(a) {

@@ -11,6 +11,7 @@ public interface MonitoringQueries {
     String ENMASSE_ADDRESS_NOT_READY_TOTAL = "enmasse_addresses_not_ready_total";
     String ENMASSE_ADDRESS_CONFIGURING_TOTAL = "enmasse_addresses_configuring_total";
     String ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT = "enmasse_artemis_durable_message_count";
+    String ENMASSE_ADDRESS_CANARY_HEALTH_FAILURES_TOTAL = "enmasse_address_canary_health_failures_total";
 
     String ENMASSE_ADDRESSSPACEPLAN_INFO = "enmasse_addressspaceplan_info";
     String ENMASSE_ADDRESSPLAN_INFO = "enmasse_addressplan_info";

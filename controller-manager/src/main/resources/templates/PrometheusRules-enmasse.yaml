@@ -55,6 +55,20 @@ spec:
         severity: warning
       expr: enmasse_addresses_not_ready_total > 0
       for: 300s
+    - alert: AddressCanaryCheckHealth
+      annotations:
+        description: Address(s) canary health check endpoints have failed for more than 5 minutes
+        value: "{{ "{{" }} $value {{ "}}" }}"
+        severity: warning
+      expr: increase(enmasse_address_canary_health_check_failures_total[5m]) > 0
+      for: 300s
+    - alert: AddressCanaryHealth
+      annotations:
+        description: Address(s) canary health have been failing for more than 5 minutes
+        value: "{{ "{{" }} $value {{ "}}" }}"
+        severity: warning
+      expr: enmasse_address_canary_health_failures_total > 0
+      for: 300s
     - alert: RouterMeshConnectivityHealth
       annotations:
         description: Router mesh(s) have not been fully connected for over 5 minutes

@@ -147,9 +147,9 @@ function verify_multicast(name, all_addresses) {
     assert.equal(addresses[0].waypoint, false);
 }
 
-function verify_addresses(inputs, router, verify_extra) {
+function verify_addresses(inputs, router, brokers, verify_extra) {
     if (util.isArray(router)) {
-        router.forEach(function (r) { verify_addresses(inputs, r, verify_extra); });
+        router.forEach(function (r) { verify_addresses(inputs, r, brokers, verify_extra); });
     } else {
         var addresses = router.list_objects('org.apache.qpid.dispatch.router.config.address');
         var linkroutes = router.list_objects('org.apache.qpid.dispatch.router.config.linkRoute');
@@ -171,12 +171,25 @@ function verify_addresses(inputs, router, verify_extra) {
             }
         }
         if (verify_extra) verify_extra({'addresses':addresses, 'linkroutes':linkroutes,'autolinks':autolinks});
-        if (addresses.length) console.warn('Unexpected addresses found: ' + JSON.stringify(addresses));
-        if (autolinks.length) console.warn('Unexpected auto links found: ' + JSON.stringify(autolinks));
+
+        var expected_addresses = 0;
+        if (brokers !== undefined && brokers > 0) {
+            var health_check_addresses = 0;
+            for (var i = 0; i < addresses.length; i++) {
+                if (addresses[i].prefix.startsWith("!!HEALTH_CHECK_")) {
+                    health_check_addresses += 1;
+                }
+            }
+            assert.equal(brokers, health_check_addresses);
+            expected_addresses = health_check_addresses;
+        }
+
+        if (addresses.length != expected_addresses) console.warn('Unexpected addresses found: ' + JSON.stringify(addresses));
+        if (autolinks.length != (expected_addresses * 2)) console.warn('Unexpected auto links found: ' + JSON.stringify(autolinks));
         if (linkroutes.length) console.warn('Unexpected link routes found: ' + JSON.stringify(linkroutes));
-        assert.equal(addresses.length, 0);
+        assert.equal(addresses.length, expected_addresses);
         assert.equal(linkroutes.length, 0);
-        assert.equal(autolinks.length, 0);
+        assert.equal(autolinks.length, expected_addresses * 2);
     }
 }
 
@@ -573,7 +586,7 @@ describe('basic router configuration', function() {
     });
     it('ignores link route override', simple_address_test([{address:'a',type:'topic'}, {address:'b',type:'queue'}],
        function (routers, address_list) {
-           verify_addresses(address_list, routers, function (objects) {
+           verify_addresses(address_list, routers, 0, function (objects) {
                var extra_linkroutes = remove(objects.linkroutes, function (o) { return o.prefix === 'foo' && o.direction === 'in'; });
                assert.equal(extra_linkroutes.length, 1);
                assert.equal(extra_linkroutes[0].name, 'override-foo');
@@ -1101,7 +1114,7 @@ describe('broker configuration', function() {
             address_source.add_address_definition({address:'a', type:'queue'}, undefined, '1234', undefined, {brokerStatuses:[{clusterId: 'broker_a', containerId:'broker_a-0', state: 'Active'}]});
             address_source.add_address_definition({address:'b', type:'queue'}, undefined, '1234', undefined, {brokerStatuses:[{clusterId: 'broker_b', containerId:'broker_b-0', state: 'Active'}]});
             ragent.wait_for_stable(2, 1, 2).then(function () {
-                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}], router);
+                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}], router, 2);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
@@ -1119,14 +1132,14 @@ describe('broker configuration', function() {
             address_source.add_address_definition({address:'b', type:'queue'}, 'address-config-b', '1234', undefined, {brokerStatuses:[{clusterId: 'broker_b', containerId:'broker_b-0', state: 'Active'}]});
             address_source.add_address_definition({address:'c', type:'queue'}, 'address-config-c', '1234', undefined, {brokerStatuses:[{clusterId: 'broker_a', containerId:'broker_a-0', state: 'Active'}]});
             ragent.wait_for_stable(3, 1, 2).then(function () {
-                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router);
+                verify_addresses([{address:'a', type:'queue', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router, 2);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'queue'}, {address:'c', type:'queue'}]);
                 broker_b.verify_addresses([{address:'b', type:'queue'}]);
                 //delete configmap
                 address_source.remove_resource_by_name('addresses', 'address-config-a');
                 ragent.wait_for_stable(2, 1, 2).then(function () {
-                    verify_addresses([{address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router);
+                    verify_addresses([{address:'b', type:'queue', allocated_to:[broker_state('broker_b')]}, {address:'c', type:'queue', allocated_to:[broker_state('broker_a')]}], router, 2);
                     broker_a.verify_addresses([{address:'c', type:'queue'}]);
                     broker_b.verify_addresses([{address:'b', type:'queue'}]);
                     done();
@@ -1147,7 +1160,7 @@ describe('broker configuration', function() {
             ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'a', type:'topic', allocated_to:[broker_state('broker_a')]}, {address:'b', type:'topic', allocated_to:[broker_state('broker_b')]},
                                   {address:'sub-a', type:'subscription', topic:'a', allocated_to:[broker_state('broker_a')]},
-                                  {address:'sub-b', type:'subscription', topic:'b', allocated_to:[broker_state('broker_b')]}], router);
+                                  {address:'sub-b', type:'subscription', topic:'b', allocated_to:[broker_state('broker_b')]}], router, 2);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'a'}]);
                 broker_b.verify_addresses([{address:'b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'b'}]);
@@ -1168,7 +1181,7 @@ describe('broker configuration', function() {
             ragent.wait_for_stable(4, 1, 2).then(function () {
                 verify_addresses([{address:'topic-a', type:'topic', allocated_to:[broker_state('broker_a')]}, {address:'topic-b', type:'topic', allocated_to:[broker_state('broker_b')]},
                                   {address:'sub-a', type:'subscription', topic:'topic-a', allocated_to:[broker_state('broker_a')]},
-                                  {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:[broker_state('broker_b')]}], router);
+                                  {address:'sub-b', type:'subscription', topic:'topic-b', allocated_to:[broker_state('broker_b')]}], router, 2);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses([{address:'topic-a', type:'topic'}, {address:'sub-a', type:'subscription', topic:'topic-a'}]);
                 broker_b.verify_addresses([{address:'topic-b', type:'topic'}, {address:'sub-b', type:'subscription', topic:'topic-b'}]);
@@ -1208,7 +1221,7 @@ describe('broker configuration', function() {
                 address_source.add_address_definition(a, undefined, '1234', undefined, {brokerStatuses:[{clusterId: allocated_to, containerId: allocated_to + "-0", state: 'Active'}]});
             });
             ragent.wait_for_stable(2000, 1, 2).then(function () {
-                verify_addresses(desired, router);
+                verify_addresses(desired, router, 2);
                 //verify queues on respective brokers:
                 broker_a.verify_addresses(desired.filter(function (a) { return a.allocated_to[0].containerId === 'broker_a-0'; }));
                 broker_b.verify_addresses(desired.filter(function (a) { return a.allocated_to[0].containerId === 'broker_b-0'; }));

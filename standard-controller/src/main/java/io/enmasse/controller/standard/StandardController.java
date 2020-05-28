@@ -74,6 +74,7 @@ public class StandardController {
     private final NamespacedKubernetesClient kubeClient;
     private final StandardControllerOptions options;
     private AddressController addressController;
+    private AddressCanaryHealth addressCanaryHealth;
     private HTTPServer httpServer;
 
     public StandardController(StandardControllerOptions options) {
@@ -143,6 +144,14 @@ public class StandardController {
         log.info("Starting standard controller for " + options.getAddressSpace());
         addressController.start();
 
+        if (options.getHealthCheckInterval().getSeconds() > 0) {
+            AddressProber probeRunner = AddressProber.withCertsInDir(vertx, "standard-controller-healthcheck", options.getHealthProbeTimeout(), options.getCertDir());
+            addressCanaryHealth = new AddressCanaryHealth(kubernetes, options.getHealthCheckInterval(), probeRunner, metrics);
+
+            log.info("Starting health checker for " + options.getAddressSpace());
+            addressCanaryHealth.start();
+        }
+
         httpServer = new HTTPServer( 8889, metrics);
         httpServer.start();
     }
@@ -160,6 +169,13 @@ public class StandardController {
                     try {
                         addressController.stop();
                     } catch (Exception ignore) {
+                    } finally {
+                        if (addressCanaryHealth != null) {
+                            try {
+                                addressCanaryHealth.stop();
+                            } catch (Exception ignore) {
+                            }
+                        }
                     }
                 }
             } finally {
