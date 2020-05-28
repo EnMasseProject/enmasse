@@ -24,14 +24,15 @@ import io.enmasse.systemtest.utils.TestUtils;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
@@ -173,32 +174,23 @@ class ForwardersTest extends BridgingBase {
 
         //send until remote broker is full
         AmqpClient clientToRemote = createClientToRemoteBroker();
-        boolean full = false;
         byte[] bytes = new byte[1024];
         Random random = new Random();
-        int messagesSent = 0;
-        TimeoutBudget timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
-        do {
-            Message message = Message.Factory.create();
-            random.nextBytes(bytes);
-            message.setBody(new AmqpValue(new Data(new Binary(bytes))));
-            message.setAddress(REMOTE_QUEUE1);
-            try {
-                clientToRemote.sendMessage(REMOTE_QUEUE1, message).get(5, TimeUnit.SECONDS);
-                messagesSent++;
-                if (timeout.timeoutExpired()) {
-                   Assertions.fail("Timeout waiting for remote broker to become full, probably error in test env configuration");
-                }
-            } catch (Exception e) {
-                full = true;
-                log.info("broker is full");
-            }
-        } while(!full);
+        Message message = Message.Factory.create();
+        random.nextBytes(bytes);
+        message.setBody(new AmqpValue(new Data(new Binary(bytes))));
+        message.setAddress(REMOTE_QUEUE1);
+
+
+        Stream<Message> messageStream = Stream.generate(() -> message);
+        int messagesSent = clientToRemote.sendMessagesCheckDelivery(REMOTE_QUEUE1, messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && !protonDelivery.getRemoteState().getType().equals(DeliveryState.DeliveryStateType.Accepted))
+                .get(5, TimeUnit.MINUTES);
 
         int messagesBatch = 20;
 
         AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
         localClient.getConnectOptions().setCredentials(localUser);
+
         //send to address with forwarder wich will retry forwarding indefinetly until remote broker is available
         localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
 

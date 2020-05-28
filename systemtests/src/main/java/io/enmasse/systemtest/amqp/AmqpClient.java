@@ -200,8 +200,7 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
         vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), messages, predicate, connectPromise, resultPromise, containerId));
 
-        try {
-            connectPromise.get(2, TimeUnit.MINUTES);
+        try { connectPromise.get(2, TimeUnit.MINUTES);
         } catch (Exception e) {
             resultPromise.completeExceptionally(e);
         }
@@ -209,7 +208,6 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public CompletableFuture<List<ProtonDelivery>> sendMessage(String address, Message message) {
-
         CompletableFuture<List<ProtonDelivery>> resultPromise = new CompletableFuture<>();
         Vertx vertx = VertxFactory.create();
         clients.add(vertx);
@@ -222,9 +220,24 @@ public class AmqpClient implements AutoCloseable {
         } catch (Exception e) {
             resultPromise.completeExceptionally(e);
         }
-
         return resultPromise
                 .whenComplete((res, err) -> vertx.close());
+    }
+
+    public CompletableFuture<Integer> sendMessagesCheckDelivery(String address, Iterable<Message> messages, Predicate<ProtonDelivery> predicate) {
+        CompletableFuture<Integer> resultPromise = new CompletableFuture<>();
+        Vertx vertx = VertxFactory.create();
+        clients.add(vertx);
+        String containerId = "systemtest-sender-" + address;
+        CompletableFuture<Void> connectPromise = new CompletableFuture<>();
+        vertx.deployVerticle(new DeliveryPredicateSender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), messages, predicate, connectPromise, resultPromise, containerId));
+
+        try {
+            connectPromise.get(2, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            resultPromise.completeExceptionally(e);
+        }
+        return resultPromise;
     }
 
     public CompletableFuture<Void> connect() {
