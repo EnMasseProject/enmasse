@@ -20,11 +20,13 @@ spec:
       memory: 256Mi
   broker: <3>
     resources:
+      cpu: 0.5
       memory: 2Gi
       storage: 100Gi
     addressFullPolicy: PAGE
   router: <4>
     resources:
+      cpu: 1
       memory: 256Mi
     linkCapacity: 1000
     minReplicas: 1
