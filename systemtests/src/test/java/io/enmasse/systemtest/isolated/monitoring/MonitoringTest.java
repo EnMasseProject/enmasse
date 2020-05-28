@@ -25,6 +25,7 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -39,20 +40,33 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(ACCEPTANCE)
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     String testNamespace = "monitoring-test";
+    private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     private MonitoringClient monitoring;
 
     @BeforeAll
     void installMonitoring() {
-        EnmasseOperatorManager.getInstance().installMonitoringOperator();
-        Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
-        monitoring = new MonitoringClient(prometheusEndpoint);
-        monitoring.waitUntilPrometheusReady();
-        kubernetes.createNamespace(testNamespace);
+        try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
+            EnmasseOperatorManager.getInstance().installMonitoringOperator();
+            Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
+            monitoring = new MonitoringClient(prometheusEndpoint);
+            monitoring.waitUntilPrometheusReady();
+            kubernetes.createNamespace(testNamespace);
+        } catch (Exception ex) {
+            beforeAllException = ex;
+        }
+    }
+
+    @BeforeEach
+    void catchBeforeAllException() throws Exception {
+        if (beforeAllException != null) {
+            throw beforeAllException;
+        }
     }
 
     @AfterAll
     void uninstallMonitoring() throws Exception {
+        beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         EnmasseOperatorManager.getInstance().removeIoT();
         EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
         kubernetes.deleteNamespace(testNamespace);
