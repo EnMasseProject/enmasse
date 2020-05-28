@@ -96,7 +96,7 @@ export const UpdatePassword: React.FC<{}> = () => {
       isFooterLeftAligned={true}
     >
       <Alert variant="info" isInline title="Want to update the secrets?">
-        If you want to update the secretsm you can go to the
+        If you want to update the secrets, you can go to the
         {/**
          * TODO: add link path
          */}

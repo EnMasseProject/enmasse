@@ -48,7 +48,7 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
     }
   };
 
-  const type = isShowPassword === true ? "text" : "password";
+  const type = isShowPassword ? "text" : "password";
 
   return (
     <>
