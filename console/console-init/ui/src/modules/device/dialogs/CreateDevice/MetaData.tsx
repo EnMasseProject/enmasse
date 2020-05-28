@@ -4,36 +4,39 @@
  */
 
 import React, { useState } from "react";
-import {
-  Button,
-  SelectOptionObject,
-  GridItem,
-  Grid
-} from "@patternfly/react-core";
+import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
+import { deviceRegistrationTypeOptions } from "modules/device";
 
 export interface IMetaData {
   onChangePropertyInput?: (value: string) => Promise<any>;
 }
 
+const defaultType = deviceRegistrationTypeOptions[0].value;
+
 export const MetaData: React.FC<IMetaData> = ({ onChangePropertyInput }) => {
-  const [formData, setFormData] = useState([{ defaults: {}, ext: {} }]);
+  const [metadataList, setMetadataList] = useState([
+    { key: "", value: [], type: defaultType }
+  ]);
 
   const handleAddParentRow = () => {
-    setFormData([...formData, { defaults: {}, ext: {} }]);
+    setMetadataList([
+      ...metadataList,
+      { key: "", value: [], type: defaultType }
+    ]);
   };
 
   return (
     <>
       <MetaDataHeader sectionName="Default properties" />
-      {formData.map((data, index) => (
+      {metadataList.map((matadataRow, index: number) => (
         <MetaDataRow
           key={index}
-          onChangePropertyInput={onChangePropertyInput}
-          formData={formData}
-          setFormData={setFormData}
+          metadataList={metadataList}
+          setMetadataList={setMetadataList}
+          rowIndex={index}
         />
       ))}
       <Grid>

@@ -11,108 +11,172 @@ import {
   Button,
   DropdownPosition,
   TextInput,
-  DropdownItem,
-  SelectOptionObject
+  SelectOptionObject,
+  SelectVariant,
+  Select,
+  SelectOption
 } from "@patternfly/react-core";
-import { TypeAheadSelect, DropdownWithToggle } from "components";
+import { DropdownWithToggle } from "components";
 import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
-import { ISelectOption } from "utils";
+import { deviceRegistrationTypeOptions, getLabelByValue } from "modules/device";
+import { DataType } from "constant";
 
 export interface IMetaDataRow {
-  onChangePropertyInput?: (value: string) => Promise<any>;
-  formData: any;
-  setFormData: (formData: any) => void;
+  metadataList: any;
+  setMetadataList: (metadataList: any) => void;
+  rowIndex: number;
 }
 
 export const MetaDataRow: React.FC<IMetaDataRow> = ({
-  onChangePropertyInput,
-  formData,
-  setFormData
+  metadataList,
+  setMetadataList,
+  rowIndex
 }) => {
-  const [currentValue, setCurrentValue] = useState("");
-  const [currentKey, setCurrentKey] = useState("");
+  const metadataRow = metadataList[rowIndex];
+  // console.log("metadataList", metadataList, "type", metadataRow.type);
   const [propertySelected, setPropertySelected] = useState<string | undefined>(
     ""
   );
-  const [propertyInput, setPropertyInput] = useState<string | undefined>("");
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+
+  const onToggle = (isExpanded: boolean) => {
+    setIsExpanded(isExpanded);
+  };
+
+  const onTypeAheadSelect = (e: any, selection: SelectOptionObject) => {
+    onPropertySelect && onPropertySelect(e, selection);
+    setIsExpanded(false);
+  };
+
+  const onSelectType = (typeValue: string) => {
+    let updatedTypeMetadata = [...metadataList];
+    updatedTypeMetadata[rowIndex].type = typeValue;
+    setMetadataList(updatedTypeMetadata);
+  };
+
+  //TODO: Move this method to container
+  const onFilter = (e: any) => {
+    const propertyInput = e.target.value && e.target.value.trim();
+    //TODO: Analyze if option type can be changed
+    let propertyOptions: React.ReactElement[] = [];
+    onChangePropertyInput &&
+      onChangePropertyInput(propertyInput).then((options: any) => {
+        const propertyList = options;
+        propertyOptions = propertyList
+          ? propertyList.map((propertyItem: any, index: number) => (
+              <SelectOption
+                disabled={propertyItem.isDisabled}
+                key={index}
+                value={propertyItem.value}
+              />
+            ))
+          : [];
+      });
+
+    return propertyOptions;
+  };
+
+  //TODO: Call graphql queries and populate options in SelectOption
+  const onChangePropertyInput = async (propertyKey: string) => {
+    let updatedPropertyMetadata = [...metadataList];
+    updatedPropertyMetadata[rowIndex].key = propertyKey;
+    setMetadataList(updatedPropertyMetadata);
+  };
 
   const handleAddChildRow = (event: any, parentKey: string) => {
-    let element = { defaults: { parentKey: {} }, ext: {} };
-    setFormData([...formData, element]);
+    let newRow = {
+      key: parentKey + "/",
+      value: [],
+      type: deviceRegistrationTypeOptions[0].value
+    };
+    setMetadataList([...metadataList, newRow]);
   };
 
   const handleDeleteRow = (index: any) => {
-    const metadataList = [...formData];
-    metadataList.splice(index, 1);
-    setFormData(metadataList);
+    const deletedRowMetadata = [...metadataList];
+    deletedRowMetadata.splice(index, 1);
+    setMetadataList(deletedRowMetadata);
   };
 
-  const handleInputChange = (e: any, index: any) => {
-    const { name, value } = e.target;
-    let metadataList = [...formData];
-    // metadataList[index][name]=value;
-    setFormData(metadataList);
+  const handleValueChange = (propertyValue: string, e: any) => {
+    let updatedValueMetadata = [...metadataList];
+    updatedValueMetadata[rowIndex].value = propertyValue;
+    setMetadataList(updatedValueMetadata);
   };
 
   const onPropertySelect = (e: any, selection: SelectOptionObject) => {
     setPropertySelected(selection.toString());
-    setPropertyInput(undefined);
   };
 
   const onPropertyClear = () => {
     setPropertySelected(undefined);
-    setPropertyInput(undefined);
+    let updatedPropertyMetadata = [...metadataList];
+    updatedPropertyMetadata[rowIndex].key = "";
+    setMetadataList(updatedPropertyMetadata);
   };
 
-  const typeOptions: ISelectOption[] = [
-    { key: "string", label: "String", value: "String" },
-    { key: "number", label: "Number", value: "Number" },
-    { key: "boolean", label: "Boolean", value: "Boolean" }
-  ];
+  //TODO: Clear value of property when type is array or object
+  //TODO: Disable Type when type is array or object
 
+  const isChildAdditionEnabled = (type: DataType.ARRAY | DataType.OBJECT) => {
+    return type === DataType.OBJECT || type === DataType.ARRAY;
+  };
+
+  //TODO: Increase width of type dropdown
   return (
     <>
       <Grid gutter="sm">
         <GridItem span={5}>
           <InputGroup>
-            <TypeAheadSelect
+            <Select
               id="cd-metadata-typeahead-parameter"
+              variant={SelectVariant.typeahead}
               ariaLabelTypeAhead={"Select parameter"}
-              ariaLabelledBy={"typeahead-parameter-id"}
-              onSelect={onPropertySelect}
+              onToggle={onToggle}
+              onSelect={onTypeAheadSelect}
               onClear={onPropertyClear}
-              selected={propertySelected}
-              inputData={propertyInput || ""}
+              selections={propertySelected || metadataRow.key}
+              isExpanded={isExpanded}
+              onFilter={onFilter}
+              ariaLabelledBy={"typeahead-parameter-id"}
               placeholderText={"Select property"}
-              onChangeInput={onChangePropertyInput}
-              setInput={setPropertyInput}
-            />
-            <Button
-              variant="control"
-              aria-label="Add child on button click"
-              onClick={e => handleAddChildRow(e, "context")}
-            >
-              <PlusIcon />
-            </Button>
+            ></Select>
+            {metadataRow.length > 0 ? (
+              isChildAdditionEnabled(metadataRow.type) && (
+                <Button
+                  variant="control"
+                  aria-label="Add child on button click"
+                  onClick={e => {
+                    let parentValue: string = metadataRow.key;
+                    handleAddChildRow(e, parentValue);
+                  }}
+                >
+                  <PlusIcon />
+                </Button>
+              )
+            ) : (
+              <></>
+            )}
           </InputGroup>
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
             id="cd-metadata-dropdown-type"
             position={DropdownPosition.left}
-            onSelectItem={() => {}}
-            dropdownItems={typeOptions}
-            value={"String"}
+            onSelectItem={onSelectType}
+            dropdownItems={deviceRegistrationTypeOptions}
+            value={getLabelByValue(metadataRow.type)}
           />
         </GridItem>
         <GridItem span={5}>
           <InputGroup>
             <TextInput
               id="cd-metadata-text-value"
-              value={currentValue}
+              value={metadataRow.value}
               type="text"
-              onChange={handleInputChange}
+              onChange={handleValueChange}
               aria-label="text input example"
+              isDisabled={isChildAdditionEnabled(metadataRow.type)}
             />
             <Button
               id="cd-metadata-button-delete"
