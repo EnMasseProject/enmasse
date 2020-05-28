@@ -5,9 +5,7 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { DeviceFilter } from "modules/device";
-import { text } from "@storybook/addon-knobs";
-import { action } from "@storybook/addon-actions";
+import { DeviceFilter } from "modules/iot-device";
 import {
   Grid,
   GridItem,

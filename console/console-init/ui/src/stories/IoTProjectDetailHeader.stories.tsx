@@ -7,7 +7,7 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { IoTProjectDetailHeader } from "modules/iot-detail/components";
+import { IoTProjectDetailHeader } from "modules/iot-project-detail/components";
 
 export default {
   title: "IoT Project Detail"

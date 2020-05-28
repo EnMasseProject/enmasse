@@ -7,7 +7,7 @@ import React from "react";
 import { MemoryRouter } from "react-router";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { DeviceDetailHeader } from "modules/device-detail";
+import { DeviceDetailHeader } from "modules/iot-device-detail";
 
 export default {
   title: "Device"
