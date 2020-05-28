@@ -50,7 +50,7 @@ public class TemplateBrokerSetGeneratorTest {
         List<HasMetadata> resources = clusterList.getResources().getItems();
         assertThat(resources.size(), is(1));
         Map<String,String> parameters = captor.getValue();
-        assertThat(parameters.size(), is(13));
+        assertThat(parameters.size(), is(12));
     }
 
     @Test
@@ -69,7 +69,7 @@ public class TemplateBrokerSetGeneratorTest {
         PodTemplateSpec templateSpec = standardControllerSchema.getSchema().findAddressSpaceType("standard").map(type -> (StandardInfraConfig) type.findInfraConfig("cfg1").orElse(null)).orElse(null).getSpec().getBroker().getPodTemplate();
         assertTemplateSpec(set.getSpec().getTemplate(), templateSpec);
         Map<String,String> parameters = captor.getValue();
-        assertThat(parameters.size(), is(13));
+        assertThat(parameters.size(), is(12));
     }
 
     @Test
