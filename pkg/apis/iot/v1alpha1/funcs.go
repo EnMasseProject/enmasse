@@ -350,7 +350,7 @@ func (log LogbackConfig) RenderConfiguration(config *IoTConfig, defaultRenderer 
 			// use the global root level
 			log.Level = config.Spec.Logging.Level
 		}
-		defaultRenderer(log.Level, log.Loggers)
+		return defaultRenderer(log.Level, log.Loggers)
 	}
 
 	// if we have a global explicit logback config
