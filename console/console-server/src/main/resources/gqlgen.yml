@@ -46,6 +46,12 @@ models:
     model: v1beta1.AddressSpaceSchemaSpec
   AuthenticationService_enmasse_io_v1beta1:
     model: v1beta1.AuthenticationService
+  RouteServicePortDescription_enmasse_io_v1beta1:
+    model: v1beta1.RouteServicePortDescription
+  CertificateProviderTypeDescription_enmasse_io_v1beta1:
+    model: v1beta1.CertificateProviderTypeDescription
+  EndpointExposeTypeDescription_enmasse_io_v1beta1:
+    model: v1beta1.EndpointExposeTypeDescription
 
   Address_consoleapi_enmasse_io_v1beta1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.AddressHolder
@@ -62,6 +68,16 @@ models:
     model: v1beta1.AddressSpaceSpec
   AddressSpaceStatus_enmasse_io_v1beta1:
     model: v1beta1.AddressSpaceStatus
+  EndpointSpec_enmasse_io_v1beta1:
+    model: v1beta1.EndpointSpec
+  CertificateSpec_enmasse_io_v1beta1:
+    model: v1beta1.CertificateSpec
+  ExposeSpec_enmasse_io_v1beta1:
+    model: v1beta1.ExposeSpec
+  EndpointStatus_enmasse_io_v1beta1:
+    model: v1beta1.EndpointStatus
+  Port_enmasse_io_v1beta1:
+    model: v1beta1.Port
 
   AddressPlan_admin_enmasse_io_v1beta2:
     model: v1beta2.AddressPlan
@@ -91,6 +107,12 @@ models:
       model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointStatus
   MessagingEndpointPort_enmasse_io_v1beta2:
       model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPort
+  MessagingEndpointProtocol_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointProtocol
+  MessagingEndpointType_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointType
+  MessagingEndpointPhase_enmasse_io_v1beta2:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPhase
 
   Address:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Address
@@ -109,6 +131,26 @@ models:
     model: v1beta1.AddressSpaceSpec
   AuthenticationService_enmasse_io_v1beta1_Input:
     model: v1beta1.AuthenticationService
+  EndpointSpec_enmasse_io_v1beta1_Input:
+    model: v1beta1.EndpointSpec
+  CertificateSpec_enmasse_io_v1beta1_Input:
+    model: v1beta1.CertificateSpec
+
+  ExposeSpec_enmasse_io_v1beta1_Input:
+    model: v1beta1.ExposeSpec
 
   Metric_consoleapi_enmasse_io_v1beta1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Metric
+
+  CertBytes:
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers.CertBytes
+  EndpointServiceType_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.EndpointServiceType
+  CertificateProviderType_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.CertificateProviderType
+  ExposeType_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.ExposeType
+  RouteServicePort_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.RouteServicePort
+  RouteTlsTermination_enmasse_io_v1beta1:
+    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.RouteTlsTermination

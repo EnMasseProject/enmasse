@@ -59,6 +59,15 @@ func pruneEmpty(m *map[string]interface{}) {
 				if len(t) == 0 {
 					delete(*m, k)
 				}
+			case []interface{}:
+				for _, it := range t {
+					if im, ok := it.(map[string]interface{}); ok {
+						pruneEmpty(&im)
+					}
+				}
+				if len(t) == 0 {
+					delete(*m, k)
+				}
 			}
 		}
 	}

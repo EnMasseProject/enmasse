@@ -16,7 +16,6 @@ import (
 	"github.com/google/uuid"
 	routev1 "github.com/openshift/api/route/v1"
 	"golang.org/x/net/context"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"strings"
@@ -104,10 +103,10 @@ func buildExposedEndpoint(addressSpace v1beta1.AddressSpace, spec v1beta1.Endpoi
 	var route *v1beta2.MessagingEndpointSpecRoute
 	var loadbalancer *v1beta2.MessagingEndpointSpecLoadBalancer
 
-	if spec.Expose.Type == "route" {
+	if spec.Expose.Type == v1beta1.ExposeTypeRoute {
 		statusType = v1beta2.MessagingEndpointTypeRoute
 		var termination *routev1.TLSTerminationType
-		if spec.Expose.RouteTlsTermination == "reencrypt" {
+		if spec.Expose.RouteTlsTermination == v1beta1.RouteTlsTerminationReencrypt {
 			reencrypt := routev1.TLSTerminationReencrypt
 			termination = &reencrypt
 		}
@@ -139,7 +138,7 @@ func buildExposedEndpoint(addressSpace v1beta1.AddressSpace, spec v1beta1.Endpoi
 				protocols = append(protocols, protocol)
 			}
 		}
-	} else if spec.Expose.Type == "loadbalancer" {
+	} else if spec.Expose.Type == v1beta1.ExposeTypeLoadBalancer {
 		statusType = v1beta2.MessagingEndpointTypeLoadBalancer
 
 		loadbalancer = &v1beta2.MessagingEndpointSpecLoadBalancer{}
@@ -239,35 +238,26 @@ func buildMessagingEndpointSpecTls(endpointSpec v1beta1.EndpointSpec, status v1b
 		var tlsExternal *v1beta2.MessagingEndpointSpecTlsExternal
 
 		switch endpointSpec.Certificate.Provider {
-		case "selfsigned":
+		case v1beta1.CertificateProviderTypeCertSelfsigned:
 			tlsSelfSigned = &v1beta2.MessagingEndpointSpecTlsSelfsigned{}
-		case "openshift":
+		case v1beta1.CertificateProviderTypeCertOpenshift:
 			tlsOpenshift = &v1beta2.MessagingEndpointSpecTlsOpenshift{}
-		case "certBundle":
+		case v1beta1.CertificateProviderTypeCertBundle:
 			var key v1beta2.InputValue
 			var cert v1beta2.InputValue
-			if endpointSpec.Certificate.SecretName != "" {
-				secretRef := corev1.LocalObjectReference{
-					Name: endpointSpec.Certificate.SecretName,
-				}
+			if len(endpointSpec.Certificate.TlsKey) > 0 && len(endpointSpec.Certificate.TlsCert) > 0 {
 				key = v1beta2.InputValue{
-					ValueFromSecret: &corev1.SecretKeySelector{
-						LocalObjectReference: secretRef,
-						Key:                  "tlsKey",
-					},
+					Value: string(endpointSpec.Certificate.TlsKey), // Base64 decode?
 				}
 				cert = v1beta2.InputValue{
-					ValueFromSecret: &corev1.SecretKeySelector{
-						LocalObjectReference: secretRef,
-						Key:                  "tlsCert",
-					},
+					Value: string(endpointSpec.Certificate.TlsCert),
 				}
 			}
 			tlsExternal = &v1beta2.MessagingEndpointSpecTlsExternal{
 				Key:         key,
 				Certificate: cert,
 			}
-		case "wildcard":
+		case v1beta1.CertificateProviderTypeWildcard:
 			// TODO - wildcard secret name not accessible - it is hardcoded config to the ASC.
 		}
 		specTls = &v1beta2.MessagingEndpointSpecTls{
@@ -319,84 +309,6 @@ func findStatus(status v1beta1.AddressSpaceStatus, name string) *v1beta1.Endpoin
 		}
 	}
 	return nil
-}
-
-func (r *Resolver) MessagingEndpointSpec_enmasse_io_v1beta2() MessagingEndpointSpec_enmasse_io_v1beta2Resolver {
-	return &messagingEndpointSpecK8sResolver{r}
-}
-
-type messagingEndpointSpecK8sResolver struct{ *Resolver }
-
-func (m messagingEndpointSpecK8sResolver) Protocols(ctx context.Context, obj *v1beta2.MessagingEndpointSpec) ([]MessagingEndpointProtocol, error) {
-	protocols := make([]MessagingEndpointProtocol, 0)
-	if obj != nil {
-		for _, p := range obj.Protocols {
-			switch p {
-			case v1beta2.MessagingProtocolAMQPS:
-				protocols = append(protocols, MessagingEndpointProtocolAmqps)
-			case v1beta2.MessagingProtocolAMQP:
-				protocols = append(protocols, MessagingEndpointProtocolAmqp)
-			case v1beta2.MessagingProtocolAMQPWSS:
-				protocols = append(protocols, MessagingEndpointProtocolAmqpWss)
-			case v1beta2.MessagingProtocolAMQPWS:
-				protocols = append(protocols, MessagingEndpointProtocolAmqpWs)
-			}
-		}
-	}
-	return protocols, nil
-}
-
-func (r *Resolver) MessagingEndpointStatus_enmasse_io_v1beta2() MessagingEndpointStatus_enmasse_io_v1beta2Resolver {
-	return &messagingEndpointStatusK8sResolver{r}
-}
-
-type messagingEndpointStatusK8sResolver struct{ *Resolver }
-
-func (m messagingEndpointStatusK8sResolver) Phase(ctx context.Context, obj *v1beta2.MessagingEndpointStatus) (string, error) {
-	if obj != nil {
-		return string(obj.Phase), nil
-	}
-	return "", nil
-}
-
-func (r *Resolver) MessagingEndpointPort_enmasse_io_v1beta2() MessagingEndpointPort_enmasse_io_v1beta2Resolver {
-	return &messagingEndpointPortK8sResolver{r}
-}
-
-type messagingEndpointPortK8sResolver struct{ *Resolver }
-
-func (m messagingEndpointPortK8sResolver) Protocol(ctx context.Context, obj *v1beta2.MessagingEndpointPort) (MessagingEndpointProtocol, error) {
-	if obj != nil {
-		switch obj.Protocol {
-		case v1beta2.MessagingProtocolAMQPS:
-			return MessagingEndpointProtocolAmqps, nil
-		case v1beta2.MessagingProtocolAMQP:
-			return MessagingEndpointProtocolAmqp, nil
-		case v1beta2.MessagingProtocolAMQPWSS:
-			return MessagingEndpointProtocolAmqpWss, nil
-		case v1beta2.MessagingProtocolAMQPWS:
-			return MessagingEndpointProtocolAmqpWs, nil
-		}
-	}
-	return "", nil
-}
-
-func (m messagingEndpointStatusK8sResolver) Type(ctx context.Context, obj *v1beta2.MessagingEndpointStatus) (MessagingEndpointType, error) {
-	if obj != nil {
-		switch obj.Type {
-		case v1beta2.MessagingEndpointTypeLoadBalancer:
-			return MessagingEndpointTypeLoadBalancer, nil
-		case v1beta2.MessagingEndpointTypeCluster:
-			return MessagingEndpointTypeCluster, nil
-		case v1beta2.MessagingEndpointTypeRoute:
-			return MessagingEndpointTypeRoute, nil
-		case v1beta2.MessagingEndpointTypeIngress:
-			return MessagingEndpointTypeIngress, nil
-		case v1beta2.MessagingEndpointTypeNodePort:
-			return MessagingEndpointTypeNodePort, nil
-		}
-	}
-	return "", nil
 }
 
 func createStableUuidV5(m metav1.ObjectMeta, endpointName string) (uid types.UID) {

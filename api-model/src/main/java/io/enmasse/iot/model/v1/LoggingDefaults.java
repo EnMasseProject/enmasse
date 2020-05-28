@@ -1,43 +1,36 @@
 /*
- * Copyright 2019-2020, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.iot.model.v1;
 
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.sundr.builder.annotations.Buildable;
+import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
 @Buildable(
         editableEnabled = false,
         generateBuilderPackage = false,
+        refs = {@BuildableReference(ResourceRequirements.class)},
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(
                 type = Doneable.class,
                 prefix = "Doneable",
                 value = "done"))
-@JsonInclude(NON_NULL)
-public class CommonServiceConfig extends ServiceConfig {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class LoggingDefaults {
 
-    private JavaContainerConfig container;
-    private TlsOptions tls;
+    private String logback;
 
-    public JavaContainerConfig getContainer() {
-        return container;
+    public void setLogback(String logback) {
+        this.logback = logback;
     }
-    public void setContainer(JavaContainerConfig container) {
-        this.container = container;
-    }
-
-    public void setTls(TlsOptions tls) {
-        this.tls = tls;
-    }
-    public TlsOptions getTls() {
-        return tls;
+    public String getLogback() {
+        return logback;
     }
 }

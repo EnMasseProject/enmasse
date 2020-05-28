@@ -309,9 +309,9 @@ func (r *ReconcileIoTConfig) updateFinalStatus(ctx context.Context, original *io
 func (r *ReconcileIoTConfig) failWrongConfigName(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
 
 	config.Status.Phase = iotv1alpha1.ConfigPhaseFailed
-	config.Status.PhaseReason = "The name of the resource must be 'default'"
+	config.Status.Message = "The name of the resource must be 'default'"
 
-	config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady).SetStatusError("WrongName", config.Status.PhaseReason)
+	config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady).SetStatusError("WrongName", config.Status.Message)
 
 	if err := r.client.Status().Update(ctx, config); err != nil {
 		return reconcile.Result{}, err

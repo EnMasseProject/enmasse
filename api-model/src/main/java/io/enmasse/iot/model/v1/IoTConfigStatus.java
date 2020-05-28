@@ -27,7 +27,7 @@ import io.sundr.builder.annotations.Inline;
 public class IoTConfigStatus {
 
     private String phase;
-    private String phaseReason;
+    private String message;
     private String authenticationServicePSK;
     private Map<String, AdapterStatus> adapters;
     private Map<String, ServiceStatus> services;
@@ -41,12 +41,12 @@ public class IoTConfigStatus {
         this.phase = phase;
     }
 
-    public String getPhaseReason() {
-        return phaseReason;
+    public String getMessage() {
+        return message;
     }
 
-    public void setPhaseReason(String phaseReason) {
-        this.phaseReason = phaseReason;
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public String getAuthenticationServicePSK() {

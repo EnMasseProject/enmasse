@@ -1079,7 +1079,10 @@ public class SerializationTest {
                 Collections.singletonList(addressSpacePlan),
                 Collections.singletonList(addressType),
                 Collections.singletonList(endpointSpec),
-                Collections.singletonList(infraConfig));
+                Collections.singletonList(infraConfig),
+                Collections.emptyList(),
+                Collections.emptyList(),
+                Collections.emptyList());
 
         AddressSpaceSchema schema = AddressSpaceSchema.fromAddressSpaceType(addressSpaceType, Collections.singletonList(authService));
 

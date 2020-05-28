@@ -28,15 +28,20 @@ const nameSigfoxAdapter = "iot-sigfox-adapter"
 
 func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
-	configCtx := qdrProxyConfigCtx.Clone()
 	rc := &recon.ReconcileContext{}
+	change := qdrProxyConfigCtx.Clone()
 
 	adapter := findAdapter("sigfox")
 	enabled := adapter.IsEnabled(config)
 
 	rc.ProcessSimple(func() error {
+		return r.processConfigMap(ctx, nameSigfoxAdapter+"-config", config, !enabled, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+			return r.reconcileSigfoxAdapterConfigMap(config, adapter, configMap, change)
+		})
+	})
+	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameSigfoxAdapter, config, !enabled, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileSigfoxAdapterDeployment(config, deployment, configCtx)
+			return r.reconcileSigfoxAdapterDeployment(config, deployment, change)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -46,22 +51,19 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 		return r.processService(ctx, nameSigfoxAdapter+"-metrics", config, !enabled, r.reconcileMetricsService(nameSigfoxAdapter))
 	})
 	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameSigfoxAdapter+"-config", config, !enabled, r.reconcileSigfoxAdapterConfigMap)
-	})
-	rc.ProcessSimple(func() error {
 		return r.processAdapterRoute(ctx, config, adapter, r.reconcileSigfoxAdapterRoute, r.reconcileSigfoxAdapterServiceExternal)
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
 
 	adapter := config.Spec.AdaptersConfig.SigfoxAdapterConfig
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
-	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, configCtx)
+	applyDefaultDeploymentConfig(deployment, adapter.ServiceConfig, change)
 	applyDefaultAdapterDeploymentSpec(deployment)
 
 	install.DropContainer(deployment, "sigfox-adapter")
@@ -117,7 +119,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterDeployment(config *iotv1alpha
 
 		// apply container options
 
-		applyContainerConfig(container, adapter.Containers.Adapter)
+		applyContainerConfig(container, adapter.Containers.Adapter.ContainerConfig)
 
 		// return
 
@@ -195,7 +197,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterService(config *iotv1alpha1.I
 	return nil
 }
 
-func (r *ReconcileIoTConfig) reconcileSigfoxAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
+func (r *ReconcileIoTConfig) reconcileSigfoxAdapterConfigMap(config *iotv1alpha1.IoTConfig, a adapter, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
 
@@ -203,9 +205,7 @@ func (r *ReconcileIoTConfig) reconcileSigfoxAdapterConfigMap(config *iotv1alpha1
 		configMap.Data = make(map[string]string)
 	}
 
-	if configMap.Data["logback-spring.xml"] == "" {
-		configMap.Data["logback-spring.xml"] = DefaultLogbackConfig
-	}
+	configMap.Data["logback-spring.xml"] = a.RenderLoggingConfig(config, configMap.Data["logback-custom.xml"])
 
 	configMap.Data["application.yml"] = `
 hono:
@@ -235,6 +235,8 @@ hono:
     port: 5671
     trustStoreFormat: PEM
 `
+
+	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")
 
 	return nil
 }

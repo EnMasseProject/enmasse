@@ -77,6 +77,11 @@ var adapters = []adapter{
 	},
 }
 
+// render the logback configuration
+func (a adapter) RenderLoggingConfig(config *iotv1alpha1.IoTConfig, override string) string {
+	return a.AdapterConfigProvider(config).Containers.Adapter.Logback.RenderConfiguration(config, logbackDefault, override)
+}
+
 func (a adapter) IsEnabled(config *iotv1alpha1.IoTConfig) bool {
 
 	// find adapter config

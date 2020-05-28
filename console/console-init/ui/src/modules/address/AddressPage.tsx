@@ -87,10 +87,10 @@ export default function AddressPage() {
   );
 
   const refetchQueries: string[] = ["all_addresses_for_addressspace_view"];
-  const [setDeleteAdressQueryVariables] = useMutation(DELETE_ADDRESS, {
-    refetchQueries,
-    awaitRefetchQueries: true
-  });
+  const [setDeleteAdressQueryVariables] = useMutationQuery(
+    DELETE_ADDRESS,
+    refetchQueries
+  );
   const [setPurgeAddressQueryVariables] = useMutationQuery(
     PURGE_ADDRESS,
     refetchQueries
@@ -109,36 +109,6 @@ export default function AddressPage() {
       addressSpaces.addressSpaces[0].spec.plan.metadata.name;
     setAddressSpacePlan(name);
   }
-
-  const purgeAddressErrors: any = [];
-  const deleteAdressErrors: any = [];
-
-  const deleteAddress = async (address: any, index: number) => {
-    try {
-      const variables = {
-        a: {
-          name: address.name,
-          namespace: address.namespace
-        }
-      };
-      await setDeleteAdressQueryVariables({ variables });
-    } catch (error) {
-      deleteAdressErrors.push(error);
-    }
-    /**
-     * dispatch action to set server errors after completion all queries
-     */
-    if (
-      selectedAddresses &&
-      selectedAddresses.length === index + 1 &&
-      deleteAdressErrors.length > 0
-    ) {
-      dispatch({
-        type: types.SET_SERVER_ERROR,
-        payload: { errors: deleteAdressErrors }
-      });
-    }
-  };
 
   const onDeleteAll = () => {
     dispatch({
@@ -170,10 +140,19 @@ export default function AddressPage() {
 
   const onConfirmDeleteAll = async () => {
     if (selectedAddresses && selectedAddresses.length > 0) {
-      const data = selectedAddresses;
-      await Promise.all(
-        data.map((address, index) => deleteAddress(address, index))
+      let queryVariables: Array<{ name: string; namespace: string }> = [];
+      selectedAddresses.map((address: IAddress) =>
+        queryVariables.push({
+          name: address.name,
+          namespace: address.namespace
+        })
       );
+      if (queryVariables.length > 0) {
+        const queryVariable = {
+          a: queryVariables
+        };
+        await setDeleteAdressQueryVariables(queryVariable);
+      }
       setSelectedAddresses([]);
     }
   };
@@ -181,25 +160,19 @@ export default function AddressPage() {
   const onConfirmPurgeAll = async () => {
     const filteredAddresses = getFilteredAddressesByType(selectedAddresses);
     if (filteredAddresses && filteredAddresses.length > 0) {
-      // const data = filteredAddresses;
       let variables: any[] = [];
-      filteredAddresses.map((address: IAddress) => {
+      filteredAddresses.map((address: IAddress) =>
         variables.push({
           name: address.name,
           namespace: address.namespace
-        });
-      });
+        })
+      );
       if (variables.length > 0) {
         const queryVariable = {
           addrs: variables
         };
         await setPurgeAddressQueryVariables(queryVariable);
       }
-      // await Promise.all(
-      //   data.map((address, index) =>
-      //     purgeAddress(address, filteredAddresses, index)
-      //   )
-      // );
       setSelectedAddresses([]);
     }
   };

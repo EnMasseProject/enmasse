@@ -113,13 +113,15 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
 
   const onDeleteAddressSpace = (addressSpace: IAddressSpace) => {
     if (addressSpace) {
-      const variables = {
-        a: {
-          name: addressSpace.name,
-          namespace: addressSpace.nameSpace
-        }
+      const queryVariable = {
+        as: [
+          {
+            name: addressSpace.name,
+            namespace: addressSpace.nameSpace
+          }
+        ]
       };
-      setDeleteAddressSpaceQueryVariables(variables);
+      setDeleteAddressSpaceQueryVariables(queryVariable);
     }
   };
 

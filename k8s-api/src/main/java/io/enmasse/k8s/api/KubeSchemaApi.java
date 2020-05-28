@@ -194,6 +194,10 @@ public class KubeSchemaApi implements SchemaApi {
                 createEndpointSpec("messaging-wss", "messaging", "https", TlsTermination.reencrypt),
                 createEndpointSpec("mqtt", "mqtt", "secure-mqtt", TlsTermination.passthrough)));
 
+        builder.withCertificateProviderTypes(createCertificateProviderTypeDescriptions());
+        builder.withRouteServicePorts(createRouteServicePortDescriptions("standard"));
+        builder.withEndpointExposeTypes(createEndpointExposeTypeDescription());
+
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "standard".equals(plan.getAddressSpaceType()))
                 .collect(Collectors.toList());
@@ -246,6 +250,10 @@ public class KubeSchemaApi implements SchemaApi {
                 createEndpointSpec("messaging", "messaging", "amqps", TlsTermination.passthrough),
                 createEndpointSpec("messaging-wss", "messaging", "amqps", TlsTermination.reencrypt)));
 
+        builder.withCertificateProviderTypes(createCertificateProviderTypeDescriptions());
+        builder.withRouteServicePorts(createRouteServicePortDescriptions("brokered"));
+        builder.withEndpointExposeTypes(createEndpointExposeTypeDescription());
+
         List<AddressSpacePlan> filteredAddressSpaceplans = addressSpacePlans.stream()
                 .filter(plan -> "brokered".equals(plan.getAddressSpaceType()))
                 .collect(Collectors.toList());
@@ -280,6 +288,65 @@ public class KubeSchemaApi implements SchemaApi {
         builder.withName(name);
         builder.withDescription(description);
         return builder.build();
+    }
+
+    private List<RouteServicePortDescription> createRouteServicePortDescriptions(String addressSpaceType) {
+        List<RouteServicePortDescription> servicePortDescriptions = new ArrayList<>();
+
+        String displayName = "brokered".equals(addressSpaceType) ? "Messaging (AMQP, CORE, OpenWire, MQTT, STOMP)": "Messaging (AMQP)";
+        servicePortDescriptions.add(new RouteServicePortDescriptionBuilder()
+                .withName("amqps")
+                .withDisplayName(displayName)
+                .withDescription(displayName)
+                .withRouteTlsTerminations(List.of(TlsTermination.passthrough))
+                .build());
+
+        servicePortDescriptions.add(new RouteServicePortDescriptionBuilder()
+                .withName("https")
+                .withDisplayName("Websocket messaging (AMQP-WS)")
+                .withDescription("Websocket messaging (AMQP-WS)")
+                .withRouteTlsTerminations(List.of(TlsTermination.passthrough, TlsTermination.reencrypt))
+                .build());
+
+        return servicePortDescriptions;
+    }
+
+    private List<CertificateProviderTypeDescription> createCertificateProviderTypeDescriptions() {
+        List<CertificateProviderTypeDescription> certificateProviders = new ArrayList<>();
+        certificateProviders.add(new CertificateProviderTypeDescriptionBuilder()
+                .withName("certBundle")
+                .withDisplayName("Certificate Bundle")
+                .withDescription("User provided TLS certificate bundle.").build());
+        certificateProviders.add(new CertificateProviderTypeDescriptionBuilder()
+                .withName("selfsigned")
+                .withDisplayName("Self-Signed")
+                .withDescription("System generates self-signed TLS certificate.").build());
+        if (isOpenShift) {
+            certificateProviders.add(new CertificateProviderTypeDescriptionBuilder()
+                    .withName("openshift")
+                    .withDisplayName("OpenShift")
+                    .withDescription("OpenShift provides a TLS certificate.").build());
+        }
+        return certificateProviders;
+    }
+
+    private List<EndpointExposeTypeDescription> createEndpointExposeTypeDescription() {
+        List<EndpointExposeTypeDescription> endpointExposeTypeDescriptions = new ArrayList<>();
+
+        if (isOpenShift) {
+            endpointExposeTypeDescriptions.add(new EndpointExposeTypeDescriptionBuilder()
+                    .withName(ExposeType.route)
+                    .withDisplayName("OpenShift Route")
+                    .withDescription("OpenShift Route")
+                    .build());
+        }
+        endpointExposeTypeDescriptions.add(new EndpointExposeTypeDescriptionBuilder()
+                .withName(ExposeType.loadbalancer)
+                .withDisplayName("LoadBalancer service")
+                .withDescription("LoadBalancer service")
+                .build());
+
+        return endpointExposeTypeDescriptions;
     }
 
     @Override

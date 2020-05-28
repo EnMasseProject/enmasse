@@ -28,7 +28,6 @@ public class InfinispanDeviceRegistry {
     @JsonUnwrapped
     private CommonDeviceRegistry commonDeviceRegistry;
     private ContainerConfig container;
-    private JavaContainerOptions java;
     private InfinispanDeviceRegistryServer server;
 
     public CommonDeviceRegistry getCommonDeviceRegistry() {
@@ -55,11 +54,4 @@ public class InfinispanDeviceRegistry {
         this.server = server;
     }
 
-    public void setJava(JavaContainerOptions java) {
-        this.java = java;
-    }
-
-    public JavaContainerOptions getJava() {
-        return java;
-    }
 }

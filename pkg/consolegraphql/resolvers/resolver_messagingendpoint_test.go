@@ -15,7 +15,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	v12 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
-	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
@@ -53,7 +52,7 @@ func TestQueryMessagingEndpointClusterOnly(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "myendpoint",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 	}
 	endpointStatus := v1beta1.EndpointStatus{
 		Name:        "myendpoint",
@@ -98,11 +97,11 @@ func TestQueryMessagingEndpointAmqpsRouteAndCluster(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "messaging",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Expose: &v1beta1.ExposeSpec{
-			Type:                "route",
-			RouteServicePort:    "amqps",
-			RouteTlsTermination: "passthrough",
+			Type:                v1beta1.ExposeTypeRoute,
+			RouteServicePort:    v1beta1.RouteServicePortAmqps,
+			RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -173,11 +172,11 @@ func TestQueryMessagingEndpointAmqpWssRouteAndCluster(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "messaging-wss",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Expose: &v1beta1.ExposeSpec{
-			Type:                "route",
-			RouteServicePort:    "https",
-			RouteTlsTermination: "reencrypt",
+			Type:                v1beta1.ExposeTypeRoute,
+			RouteServicePort:    v1beta1.RouteServicePortHttps,
+			RouteTlsTermination: v1beta1.RouteTlsTerminationReencrypt,
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -250,7 +249,7 @@ func TestQueryMessagingEndpointAmqpWssRouteAndCluster(t *testing.T) {
 func TestQueryMessagingEndpointSharedServiceAndTwoRoutes(t *testing.T) {
 	r, ctx := newTestMessagingEndpointResolver(t)
 
-	serviceName := "messaging"
+	serviceName := v1beta1.EndpointServiceTypeMessaging
 	serviceHost := "messaging-queuespace.enmasse-infra.svc"
 	servicePorts := []v1beta1.Port{
 		{Name: "amqps", Port: 5671},
@@ -262,9 +261,9 @@ func TestQueryMessagingEndpointSharedServiceAndTwoRoutes(t *testing.T) {
 		Name:    "messaging",
 		Service: serviceName,
 		Expose: &v1beta1.ExposeSpec{
-			Type:                "route",
-			RouteServicePort:    "amqps",
-			RouteTlsTermination: "passthrough",
+			Type:                v1beta1.ExposeTypeRoute,
+			RouteServicePort:    v1beta1.RouteServicePortAmqps,
+			RouteTlsTermination: v1beta1.RouteTlsTerminationPassthrough,
 		},
 	}
 	endpointStatus1 := v1beta1.EndpointStatus{
@@ -380,9 +379,9 @@ func TestQueryMessagingEndpointLoadbalancerAndCluster(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "messaging",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Expose: &v1beta1.ExposeSpec{
-			Type:                     "loadbalancer",
+			Type:                     v1beta1.ExposeTypeLoadBalancer,
 			LoadBalancerPorts:        []string{"amqp", "amqps"},
 			LoadBalancerSourceRanges: []string{"10.0.0.0/8"},
 		},
@@ -453,7 +452,7 @@ func TestFilterMessagingEndpoints(t *testing.T) {
 
 	as1EndpointSpec := v1beta1.EndpointSpec{
 		Name:    "messaging",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 	}
 	endpointStatus := v1beta1.EndpointStatus{
 		Name:        "messaging",
@@ -480,9 +479,9 @@ func TestQueryMessagingEndpointTlsSelfSigned(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "myendpoint",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Certificate: &v1beta1.CertificateSpec{
-			Provider: "selfsigned",
+			Provider: v1beta1.CertificateProviderTypeCertSelfsigned,
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -536,9 +535,9 @@ func TestQueryMessagingEndpointTlsOpenShift(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "myendpoint",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Certificate: &v1beta1.CertificateSpec{
-			Provider: "openshift",
+			Provider: v1beta1.CertificateProviderTypeCertOpenshift,
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -589,10 +588,11 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 
 	endpointSpec := v1beta1.EndpointSpec{
 		Name:    "myendpoint",
-		Service: "messaging",
+		Service: v1beta1.EndpointServiceTypeMessaging,
 		Certificate: &v1beta1.CertificateSpec{
-			Provider:   "certBundle",
-			SecretName: "mysecret",
+			Provider: v1beta1.CertificateProviderTypeCertBundle,
+			TlsKey:   []byte("base64PEM"),
+			TlsCert:  []byte("base64PEM"),
 		},
 	}
 	endpointStatus := v1beta1.EndpointStatus{
@@ -622,20 +622,10 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 			Tls: &v1beta2.MessagingEndpointSpecTls{
 				External: &v1beta2.MessagingEndpointSpecTlsExternal{
 					Key: v1beta2.InputValue{
-						ValueFromSecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "mysecret",
-							},
-							Key: "tlsKey",
-						},
+						Value: string(endpointSpec.Certificate.TlsKey),
 					},
 					Certificate: v1beta2.InputValue{
-						ValueFromSecret: &corev1.SecretKeySelector{
-							LocalObjectReference: corev1.LocalObjectReference{
-								Name: "mysecret",
-							},
-							Key: "tlsCert",
-						},
+						Value: string(endpointSpec.Certificate.TlsCert),
 					},
 				},
 			},

@@ -248,6 +248,6 @@ func (r *ReconcileIoTConfig) updateConditions(ctx context.Context, config *iotv1
 	phase, message := aggregator.Aggregate(ctx, r.client, config, reconcileError)
 
 	config.Status.Phase = phase
-	config.Status.PhaseReason = message
+	config.Status.Message = message
 
 }

@@ -53,6 +53,7 @@ import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -143,6 +144,14 @@ public class MqttClientFactory {
         public Builder usernameAndPassword(final String username, final String password) {
             this.options.setUserName(username);
             this.options.setPassword(password.toCharArray());
+            return this;
+        }
+
+        public Builder usernameAndPassword(final UserCredentials credentials) {
+            if (credentials != null) {
+                this.options.setUserName(credentials.getUsername());
+                this.options.setPassword(credentials.getPassword().toCharArray());
+            }
             return this;
         }
 

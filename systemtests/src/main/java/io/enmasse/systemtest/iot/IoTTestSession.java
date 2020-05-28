@@ -414,7 +414,7 @@ public final class IoTTestSession implements AutoCloseable {
             if (log.isDebugEnabled()) {
                 log.debug("Caught exception during test", e);
             } else {
-                log.info("Caught exception during test, running exception handler");
+                log.error("Caught exception during test, running exception handler");
             }
             this.exceptionHandler.accept(e);
             throw e;
@@ -550,6 +550,10 @@ public final class IoTTestSession implements AutoCloseable {
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(Kubernetes.getInstance(), config));
                 }
+
+                //create namespace if not created
+                Kubernetes.getInstance().createNamespace(project.getMetadata().getNamespace());
+
                 IoTUtils.createIoTProject(project);
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(Kubernetes.getInstance(), project));
@@ -703,11 +707,16 @@ public final class IoTTestSession implements AutoCloseable {
     public static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
 
         var config = new IoTConfigBuilder()
-
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(namespace)
                 .endMetadata();
+
+        config = config.editOrNewSpec()
+                .withNewLogging()
+                .withNewLevel("debug")
+                .endLogging()
+                .endSpec();
 
         if (isOpenshiftFour) {
 
@@ -857,7 +866,7 @@ public final class IoTTestSession implements AutoCloseable {
         }
         // deploy will try to undeploy first, so it can always be called
         Exec.execute(
-                asList(examplesIoT.resolve("k8s-tls/deploy").toAbsolutePath().toString()),
+                singletonList(examplesIoT.resolve("k8s-tls/deploy").toAbsolutePath().toString()),
                 60_000, true, true,
                 Map.of(
                         "CLI", KubeCMDClient.getCMD(),
