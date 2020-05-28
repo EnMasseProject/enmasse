@@ -183,7 +183,7 @@ class ForwardersTest extends BridgingBase {
 
 
         Stream<Message> messageStream = Stream.generate(() -> message);
-        int messagesSent = clientToRemote.sendMessagesCheckDelivery(REMOTE_QUEUE1, messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && !protonDelivery.getRemoteState().getType().equals(DeliveryState.DeliveryStateType.Accepted))
+        int messagesSent = clientToRemote.sendMessagesCheckDelivery(REMOTE_QUEUE1, messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && protonDelivery.getRemoteState().getType().equals(DeliveryState.DeliveryStateType.Rejected))
                 .get(5, TimeUnit.MINUTES);
 
         int messagesBatch = 20;

@@ -718,7 +718,7 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
         message.setDurable(true);
 
         Stream<Message> messageStream = Stream.generate(() -> message);
-        messagesSent = client.sendMessagesCheckDelivery(address1.getSpec().getAddress(), messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && !protonDelivery.getRemoteState().getType().equals(DeliveryStateType.Accepted))
+        messagesSent = client.sendMessagesCheckDelivery(address1.getSpec().getAddress(), messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && protonDelivery.getRemoteState().getType().equals(DeliveryStateType.Rejected))
                 .get(5, TimeUnit.SECONDS);
 
         assertTrue(messagesSent > 0, "Incorrect test set up, 0 messages sent");
