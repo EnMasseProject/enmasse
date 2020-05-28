@@ -5,17 +5,17 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { DeviceFilter } from "modules/device";
+import { DeviceFilter } from "modules/iot-device";
 import {
   DeviceListAlert,
   DeviceList,
   IDevice,
   DeviceListToolbar,
   DeviceListFooterToolbar
-} from "modules/device";
+} from "modules/iot-device";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { getTableCells } from "modules/device/utils";
+import { getTableCells } from "modules/iot-device/utils";
 import {
   PageSection,
   Page,

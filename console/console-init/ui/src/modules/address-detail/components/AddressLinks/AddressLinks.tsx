@@ -17,7 +17,7 @@ import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { css } from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-import { StyleForTable } from "modules/msg-and-iot";
+import { StyleForTable } from "modules/project";
 
 interface IAddressLinksProps {
   rows: IAddressLink[];

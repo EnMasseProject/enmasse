@@ -5,7 +5,7 @@
 
 import React from "react";
 import { HashRouter as Router } from "react-router-dom";
-import { DeviceInfo } from "modules/device-detail/components";
+import { DeviceInfo } from "modules/iot-device-detail/components";
 
 export default {
   title: "Device Info view"
