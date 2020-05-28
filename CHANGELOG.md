@@ -20,6 +20,7 @@
 * #4546: Refactor GraphQL purgeAddress to permit multiple target addresses
 * #4549: Implement GraphQL closeConnections for brokered and standard
 * #4555: Enforce presence of routeServicePort in route endpoints definitions 
+* #4574: Set globalMaxSize to 1/4 of broker JVM heap
 * #4567: Refactor GraphQL deleteAddressSpace and deleteAddress to accept many target objects
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
 

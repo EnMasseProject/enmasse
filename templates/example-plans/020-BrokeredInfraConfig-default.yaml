@@ -13,3 +13,4 @@ spec:
       memory: 512Mi
       storage: 5Gi
     addressFullPolicy: FAIL
+    globalMaxSize: 64Mb

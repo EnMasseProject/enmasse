@@ -27,6 +27,7 @@ spec:
       memory: 2Gi
       storage: 100Gi
     addressFullPolicy: PAGE
+    globalMaxSize: 256Mb
     podTemplate: <4>
       spec:
         priorityClassName: messaging

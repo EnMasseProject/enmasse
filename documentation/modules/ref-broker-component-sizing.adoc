@@ -47,7 +47,7 @@ spec:
     addressFullPolicy: FAIL
     globalMaxSize: 1.35Gb
     resources:
-      memory: 4Gi
+      memory: 8Gi
       storage: 2Gi
   ...
 ----
@@ -73,7 +73,7 @@ spec:
     addressFullPolicy: PAGE
     globalMaxSize: 124Mb
     resources:
-      memory: 512Mi
+      memory: 1Gi
       storage: 2Gi
   ...
 ----
