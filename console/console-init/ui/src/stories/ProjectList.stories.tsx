@@ -10,7 +10,7 @@ import {
   StatusTypes,
   ProjectList,
   ProjectTypes
-} from "modules/msg-and-iot";
+} from "modules/project";
 import { action } from "@storybook/addon-actions";
 import { text } from "@storybook/addon-knobs";
 
