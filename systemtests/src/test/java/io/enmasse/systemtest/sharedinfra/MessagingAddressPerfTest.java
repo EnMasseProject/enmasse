@@ -33,7 +33,7 @@ import static io.enmasse.systemtest.TestTag.SCALE;
 
 @Tag(ISOLATED_SHARED_INFRA)
 @Tag(SCALE)
-@Disabled("will be anabled in enmasse 1.0")
+@Disabled("will be enabled in enmasse 1.0")
 @SkipResourceLogging
 public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
     /**
