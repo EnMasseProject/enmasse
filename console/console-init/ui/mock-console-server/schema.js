@@ -254,7 +254,7 @@ const typeDefs = gql`
     type AddressSpaceSpec_enmasse_io_v1beta1 {
         plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
         type:      AddressSpaceType!
-  
+
         authenticationService:  AuthenticationService_enmasse_io_v1beta1
         endpoints:              [EndpointSpec_enmasse_io_v1beta1!]
     }
@@ -514,11 +514,11 @@ const typeDefs = gql`
     input AddressSpaceSpec_enmasse_io_v1beta1_Input {
         type:         String!
         plan:         String!
-        
+
         authenticationService:  AuthenticationService_enmasse_io_v1beta1_Input
         endpoints:    [EndpointSpec_enmasse_io_v1beta1_Input!]
     }
-    
+
     input AuthenticationService_enmasse_io_v1beta1_Input {
         name:  String!
     }
