@@ -2197,24 +2197,24 @@ enum RouteTlsTermination_enmasse_io_v1beta1 {
 
 
 enum MessagingEndpointType_enmasse_io_v1beta2  {
-  cluster,
-  nodePort,
-  loadBalancer,
-  route,
-  ingress
+  Cluster,
+  NodePort,
+  LoadBalancer,
+  Route,
+  Ingress
 }
 
 enum MessagingEndpointProtocol_enmasse_io_v1beta2  {
-  amqp,
-  amqps,
-  amqp_ws,
-  amqp_wss,
+  AMQP,
+  AMQPS,
+  AMQP_WS,
+  AMQP_WSS,
 }
 
 enum MessagingEndpointPhase_enmasse_io_v1beta2  {
-  configuring,
-  active,
-  terminating,
+  Configuring,
+  Active,
+  Terminating,
 }
 
 type Metric_consoleapi_enmasse_io_v1beta1 {

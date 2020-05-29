@@ -276,7 +276,7 @@ describe('mock', function () {
 
                 var endpoint = result.messagingEndpoints[0];
                 assert.strictEqual(endpoint.spec.protocols.length, 3);
-                assert.strictEqual(endpoint.status.type, "cluster");
+                assert.strictEqual(endpoint.status.type, "Cluster");
                 assert.strictEqual(endpoint.status.phase, "Active");
                 assert.strictEqual(endpoint.status.host, "messaging-mercury_as1.app1_ns.svc");
                 assert.strictEqual(endpoint.status.ports.length, 3);
@@ -311,14 +311,14 @@ describe('mock', function () {
                 assert.strictEqual(result.total, 2);
 
                 var clusterEndpoint = result.messagingEndpoints[0];
-                assert.strictEqual(clusterEndpoint.status.type, "cluster");
+                assert.strictEqual(clusterEndpoint.status.type, "Cluster");
 
                 var routeEndpoint = result.messagingEndpoints[1];
                 assert.strictEqual(routeEndpoint.spec.protocols.length, 1);
-                assert.strictEqual(routeEndpoint.spec.protocols[0], "amqps");
+                assert.strictEqual(routeEndpoint.spec.protocols[0], "AMQPS");
                 assert.strictEqual(routeEndpoint.spec.route.routeTlsTermination, "passthrough");
 
-                assert.strictEqual(routeEndpoint.status.type, "route");
+                assert.strictEqual(routeEndpoint.status.type, "Route");
                 assert.strictEqual(routeEndpoint.status.phase, "Active");
                 assert.strictEqual(routeEndpoint.status.host, "messaging-mercury_as2.app1_ns.apps-crc.testing");
                 assert.strictEqual(routeEndpoint.status.ports.length, 1);
@@ -353,18 +353,18 @@ describe('mock', function () {
                 assert.strictEqual(result.total, 2);
 
                 var clusterEndpoint = result.messagingEndpoints[0];
-                assert.strictEqual(clusterEndpoint.status.type, "cluster");
+                assert.strictEqual(clusterEndpoint.status.type, "Cluster");
 
                 var routeEndpoint = result.messagingEndpoints[1];
                 assert.strictEqual(routeEndpoint.spec.protocols.length, 1);
-                assert.strictEqual(routeEndpoint.spec.protocols[0], "amqp_wss");
+                assert.strictEqual(routeEndpoint.spec.protocols[0], "AMQP_WSS");
                 assert.strictEqual(routeEndpoint.spec.route.routeTlsTermination, "reencrypt");
 
-                assert.strictEqual(routeEndpoint.status.type, "route");
+                assert.strictEqual(routeEndpoint.status.type, "Route");
                 assert.strictEqual(routeEndpoint.status.phase, "Active");
                 assert.strictEqual(routeEndpoint.status.host, "messaging-wss-mercury_as3.app1_ns.apps-crc.testing");
                 assert.strictEqual(routeEndpoint.status.ports.length, 1);
-                assert.strictEqual(routeEndpoint.status.ports[0].protocol, "amqp_wss");
+                assert.strictEqual(routeEndpoint.status.ports[0].protocol, "AMQP_WSS");
             });
         });
         it('two_routes_and_cluster', function () {
@@ -431,7 +431,7 @@ describe('mock', function () {
 
             return mock.whenActive(m).then(() => {
                 var result = mock.resolvers.Query.messagingEndpoints(null,
-                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` LIKE 'mercury_as5.%' AND `$.status.type` = 'route'"});
+                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` LIKE 'mercury_as5.%' AND `$.status.type` = 'Route'"});
                 assert.strictEqual(result.total, 1);
 
                 var routeEndpoint = result.messagingEndpoints[0];
@@ -462,14 +462,14 @@ describe('mock', function () {
 
             return mock.whenActive(m).then(() => {
                 var result = mock.resolvers.Query.messagingEndpoints(null,
-                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` LIKE 'mercury_as6.%' AND `$.status.type` = 'loadBalancer'"});
+                    {filter: "`$.metadata.namespace` = 'app1_ns' AND `$.metadata.name` LIKE 'mercury_as6.%' AND `$.status.type` = 'LoadBalancer'"});
                 assert.strictEqual(result.total, 1);
 
                 var loadbalancerEndpoint = result.messagingEndpoints[0];
-                assert.strictEqual(loadbalancerEndpoint.status.type, "loadBalancer");
+                assert.strictEqual(loadbalancerEndpoint.status.type, "LoadBalancer");
                 assert.strictEqual(loadbalancerEndpoint.status.phase, "Active");
                 assert.strictEqual(loadbalancerEndpoint.status.ports.length, 1);
-                assert.strictEqual(loadbalancerEndpoint.status.ports[0].protocol, "amqps");
+                assert.strictEqual(loadbalancerEndpoint.status.ports[0].protocol, "AMQPS");
             });
         });
 
