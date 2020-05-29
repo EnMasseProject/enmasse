@@ -104,7 +104,6 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 	})
 
 	// create routes
-
 	rc.ProcessSimple(func() error {
 		return r.processServiceRoute(ctx, config, routeDeviceRegistry, config.Spec.ServicesConfig.DeviceRegistry.Management.Endpoint, r.reconcileDeviceRegistryRoute, r.reconcileDeviceRegistryManagementServiceExternal)
 	})
