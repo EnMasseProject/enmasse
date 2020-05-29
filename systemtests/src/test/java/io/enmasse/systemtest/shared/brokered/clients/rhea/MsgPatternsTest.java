@@ -6,6 +6,8 @@ package io.enmasse.systemtest.shared.brokered.clients.rhea;
 
 import io.enmasse.systemtest.bases.clients.ClientTestBase;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import org.junit.jupiter.api.DisplayName;
@@ -23,6 +25,7 @@ class MsgPatternsTest extends ClientTestBase implements ITestSharedBrokered {
     }
 
     @Test
+    @OpenShift(version = OpenShiftVersion.OCP3)
     void testBasicMessageWebSocket() throws Exception {
         doBasicMessageTest(new RheaClientSender(logPath), new RheaClientReceiver(logPath), true);
     }

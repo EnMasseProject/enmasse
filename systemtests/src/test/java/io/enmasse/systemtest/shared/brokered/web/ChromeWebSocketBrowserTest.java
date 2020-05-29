@@ -7,6 +7,8 @@ package io.enmasse.systemtest.shared.brokered.web;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.annotations.SeleniumChrome;
 import io.enmasse.systemtest.utils.AddressUtils;
@@ -17,6 +19,7 @@ import static io.enmasse.systemtest.TestTag.NON_PR;
 
 @Tag(NON_PR)
 @SeleniumChrome
+@OpenShift(version = OpenShiftVersion.OCP3)
 class ChromeWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedBrokered {
 
 
