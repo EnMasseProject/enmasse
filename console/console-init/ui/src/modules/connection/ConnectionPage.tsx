@@ -22,7 +22,6 @@ import { TablePagination } from "components";
 import { IConnection } from "./components";
 import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
-import { getFilteredAdressNames } from "modules/address";
 import {
   getFilteredConnectionNames,
   getHeaderTextForCloseAll,

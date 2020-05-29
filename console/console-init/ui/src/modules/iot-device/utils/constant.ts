@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import { ISelectOption } from "utils";
 import { IDeviceFilter } from "../components";
 
@@ -40,8 +45,8 @@ const deviceStatusOptions: ISelectOption[] = [
 ];
 
 const credentialTypeOptions: ISelectOption[] = [
-  { key: "hashed_password", label: "Password", value: "hashed_password" },
-  { key: "x509", label: "X-509 Certificate", value: "x509" },
+  { key: "hashed-password", label: "Password", value: "hashed-password" },
+  { key: "x509-cert", label: "X.509 Certificate", value: "x509-cert" },
   { key: "psk", label: "PSK", value: "psk" }
 ];
 

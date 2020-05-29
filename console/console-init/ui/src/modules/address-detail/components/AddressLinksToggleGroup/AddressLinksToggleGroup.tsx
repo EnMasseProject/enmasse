@@ -5,7 +5,6 @@
 
 import React from "react";
 import {
-  SelectVariant,
   SelectOptionObject,
   DataToolbarToggleGroup,
   DataToolbarGroup,
@@ -21,11 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
-import {
-  DropdownWithToggle,
-  TypeAheadSelect,
-  SelectWithToggle
-} from "components";
+import { DropdownWithToggle, TypeAheadSelect } from "components";
 
 export interface IAddressLinksToggleGroupProps {
   totalRecords: number;
