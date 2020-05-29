@@ -309,7 +309,10 @@ const getLabelByKey = (key: string) => {
     "pwd-hash": "Password",
     hashed_password: "Password",
     psk: "PSK",
-    "x-509": "X-509 certificate"
+    "x-509": "X-509 certificate",
+    "subject-dn": "Subject-dn",
+    "public-key": "Public key",
+    "auto-provisioning-enabled": "Auto-provision"
   };
 
   if (key in keyLabels) {
