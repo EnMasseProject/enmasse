@@ -7,12 +7,15 @@ package io.enmasse.systemtest.shared.brokered.web;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.systemtest.bases.shared.ITestSharedBrokered;
 import io.enmasse.systemtest.bases.web.WebSocketBrowserTest;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.annotations.SeleniumFirefox;
 import io.enmasse.systemtest.utils.AddressUtils;
 import org.junit.jupiter.api.Test;
 
 @SeleniumFirefox
+@OpenShift(version = OpenShiftVersion.OCP3)
 class FirefoxWebSocketBrowserTest extends WebSocketBrowserTest implements ITestSharedBrokered {
 
 

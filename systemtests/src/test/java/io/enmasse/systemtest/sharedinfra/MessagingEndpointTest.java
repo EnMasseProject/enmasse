@@ -391,7 +391,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     }
 
     @Test
-    @OpenShift
+    @OpenShift(version = OpenShiftVersion.OCP3)
     public void testRouteEndpointWebsocketTlsReencrypt() throws Exception {
         MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
