@@ -266,13 +266,13 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
   }
 
-  type AddressSpaceSpec_enmasse_io_v1beta1 {
-    plan: AddressSpacePlan_admin_enmasse_io_v1!
-    type: AddressSpaceType!
+    type AddressSpaceSpec_enmasse_io_v1beta1 {
+        plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
+        type:      AddressSpaceType!
 
-    authenticationService: AuthenticationService_enmasse_io_v1beta1
-    endpoints: [EndpointSpec_enmasse_io_v1beta1!]
-  }
+        authenticationService:  AuthenticationService_enmasse_io_v1beta1
+        endpoints:              [EndpointSpec_enmasse_io_v1beta1!]
+    }
 
   type EndpointSpec_enmasse_io_v1beta1 {
     name: String!
