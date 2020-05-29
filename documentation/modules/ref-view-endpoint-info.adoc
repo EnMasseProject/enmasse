@@ -28,15 +28,17 @@ endif::Asciidoctor[]
 
 `cluster`:: An endpoint accessible on the {KubePlatform} cluster through a cluster IP address.
 
+ifeval::["{cmdcli}" =="oc"]
 `route`:: An {KubePlatform} route available outside the cluster.
+endif::[]
 
 `loadbalancer`:: A `LoadBalancer` service integrating with an external load balancer.
 
 ifeval::["{cmdcli}" == "oc"]
 For more information, see the following {KubePlatform} documentation:
 
-* link:https://docs.openshift.com/container-platform/4.4/networking/routes/route-configuration.html[Route Configuration]
-* link:https://docs.openshift.com/container-platform/4.4/networking/configuring_ingress_cluster_traffic/configuring-ingress-cluster-traffic-load-balancer.html[Configuring ingress cluster traffic using a load balancer]
+* link:{OCPBookUrlBase}{OCPProductVersion}/networking/routes/route-configuration.html[Route Configuration]
+* link:{OCPBookUrlBase}{OCPProductVersion}/networking/configuring_ingress_cluster_traffic/configuring-ingress-cluster-traffic-load-balancer.html[Configuring ingress cluster traffic using a load balancer]
 endif::[]
 
 ifeval::["{cmdcli}" == "kubectl"]
