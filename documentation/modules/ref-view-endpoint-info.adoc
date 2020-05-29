@@ -28,7 +28,7 @@ endif::Asciidoctor[]
 
 `cluster`:: An endpoint accessible on the {KubePlatform} cluster through a cluster IP address.
 
-`route`:: Creates a cluster endpoint available through the {KubePlatform} route.
+`route`:: An {KubePlatform} route available outside the cluster.
 
 `loadbalancer`:: A `LoadBalancer` service integrating with an external load balancer.
 
