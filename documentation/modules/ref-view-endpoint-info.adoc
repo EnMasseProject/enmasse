@@ -30,7 +30,7 @@ endif::Asciidoctor[]
 
 `route`:: Creates a cluster endpoint available through the {KubePlatform} route.
 
-`loadbalancer`:: Creates a cluster endpoint available through the `LoadBalancer` service.
+`loadbalancer`:: A `LoadBalancer` service integrating with an external load balancer.
 
 ifeval::["{cmdcli}" == "oc"]
 For more information, see the following {KubePlatform} documentation:
