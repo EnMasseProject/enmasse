@@ -14,6 +14,7 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -189,7 +190,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     }
 
     @Test
-    @OpenShift
+    @OpenShift(version = OpenShiftVersion.OCP4)
     void testMonitoringIoTComponents() throws Exception {
         EnmasseOperatorManager.getInstance().installIoTOperator();
         IoTTestSession
