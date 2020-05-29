@@ -130,7 +130,7 @@ func (r *ReconcileIoTConfig) processServiceRoute(ctx context.Context, config *io
 
 	} else {
 
-		return r.processService(ctx, name+"-external", config, !routesEnabled, serviceManipulator)
+		return r.processService(ctx, "iot-"+name+"-external", config, !routesEnabled, serviceManipulator)
 
 	}
 
