@@ -788,9 +788,9 @@ function makeMessagingEndpoints() {
 
   function mapPorts(src, targetProtocols, targetPorts) {
     src.forEach(sp => {
-      var mappedProtocol = sp.name.replace("-", "_");
-      if (mappedProtocol === "https") {
-        mappedProtocol = "amqp_wss";
+      var mappedProtocol = sp.name.replace("-", "_").toUpperCase();
+      if (mappedProtocol === "HTTPS") {
+        mappedProtocol = "AMQP_WSS";
       }
       targetProtocols.push(mappedProtocol);
       targetPorts.push({
@@ -820,7 +820,7 @@ function makeMessagingEndpoints() {
           message: "",
           ports: [],
           internalPorts: [],
-          type: "cluster"
+          type: "Cluster"
         };
 
         var serviceName = `${as.metadata.name}.${ep.service}.cluster`;
@@ -843,7 +843,7 @@ function makeMessagingEndpoints() {
           message: "",
           ports: [],
           internalPorts: [],
-          type: ep.expose.type === "route" ? "route" : "loadBalancer"
+          type: ep.expose.type === "route" ? "Route" : "LoadBalancer"
         };
 
         var name = `${as.metadata.name}.${ep.name}`;
@@ -864,7 +864,7 @@ function makeMessagingEndpoints() {
 
               var ep = endpointStatus.externalPorts.find(ep => ep.name === lbp);
               if (ep) {
-                var mappedProtocol = ep.name.replace("-", "_");
+                var mappedProtocol = ep.name.replace("-", "_").toUpperCase();
                 status.ports.push({
                   name: ep.name,
                   protocol: mappedProtocol,
