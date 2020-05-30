@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { isMessagingProjectValid } from "modules/project/dailogs";
+import { isMessagingProjectValid } from "modules/project/utils";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { Configuration } from "modules/address-space";
 

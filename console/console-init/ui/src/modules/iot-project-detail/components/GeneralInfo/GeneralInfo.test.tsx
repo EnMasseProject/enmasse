@@ -31,7 +31,7 @@ describe("<GeneralInfo />", () => {
     );
     getByText("General Info");
     getByText("Address space");
-    getByText("Event address name");
+    getByText("Events address name");
     getByText("Telemetry address name");
     getByText("Command address name");
     getByText("Max Connection");
