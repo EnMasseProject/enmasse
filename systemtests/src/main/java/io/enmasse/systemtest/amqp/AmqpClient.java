@@ -200,7 +200,8 @@ public class AmqpClient implements AutoCloseable {
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
         vertx.deployVerticle(new Sender(options, new LinkOptions(options.getTerminusFactory().getSource(address), options.getTerminusFactory().getTarget(address), Optional.empty()), messages, predicate, connectPromise, resultPromise, containerId));
 
-        try { connectPromise.get(2, TimeUnit.MINUTES);
+        try {
+            connectPromise.get(2, TimeUnit.MINUTES);
         } catch (Exception e) {
             resultPromise.completeExceptionally(e);
         }
