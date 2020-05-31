@@ -12,8 +12,10 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "@patternfly/react-styles";
+import { Link } from "react-router-dom";
 interface IFinishedStepProps {
   onClose: () => void;
+  routeDetail?: { name: string; namespace: string; type?: string };
   success: boolean;
   projectType?: "IoT" | "Messaging";
 }
@@ -26,6 +28,7 @@ const styles = StyleSheet.create({
 
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   onClose,
+  routeDetail,
   success,
   projectType
 }) => {
@@ -45,6 +48,13 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
     return () => clearInterval(interval);
   }, [percent]);
 
+  const projectDetailUrl = () => {
+    if (routeDetail && projectType === "IoT") {
+      return `/`;
+    } else {
+      return `/address-spaces/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
+    }
+  };
   return (
     <>
       {!isCompleted || !success ? (
@@ -92,9 +102,11 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
             Enter your {projectType} Project for management, or return to
             homepage to view all projects.
           </EmptyStateBody>
-          <Button variant={ButtonVariant.primary} component="a" href="/">
-            View the project
-          </Button>
+          <Link to={projectDetailUrl()}>
+            <Button variant={ButtonVariant.primary} component="a">
+              View the project
+            </Button>
+          </Link>
           <br />
           <br />
           <Button variant="link" onClick={onClose}>

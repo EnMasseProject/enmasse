@@ -71,6 +71,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     value: string | boolean,
     event: React.FormEvent<HTMLInputElement>
   ) => {
+    // const cerftificateField = event?.target?.name;
     const { name: cerftificateField } = event.currentTarget;
     const newCertificateData = { ...certificateFormData };
     (newCertificateData as any)[cerftificateField] = value;

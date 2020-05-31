@@ -4,9 +4,9 @@
  */
 
 import React from "react";
-import { isMessagingProjectValid } from "modules/project/utils";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { Configuration } from "modules/address-space";
+import { isMessagingProjectValid } from "modules/project/utils";
 
 export interface IMessagingProjectInput {
   messagingProjectName?: string;

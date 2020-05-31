@@ -148,7 +148,8 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               mode="xml"
               theme="github"
               fontSize={14}
-              onChange={() => {}}
+              width={"auto"}
+              // onChange={() => {}}
               value={"data"}
               name="UNIQUE_ID_OF_DIV"
               editorProps={{ $blockScrolling: true }}

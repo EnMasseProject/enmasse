@@ -16,10 +16,10 @@ export interface IDropdownWithBulkSelectProps {
   checkBoxId: string;
   ariaLabel: string;
   isChecked: boolean;
-  isOpen: boolean;
-  handleOnToggle: (val: boolean) => void;
-  items: React.ReactNode[];
-  handleOnSelect: () => void;
+  isOpen?: boolean;
+  handleOnToggle?: (val: boolean) => void;
+  items?: React.ReactNode[];
+  handleOnSelect?: () => void;
   handleOnChange: (val: boolean) => void;
 }
 

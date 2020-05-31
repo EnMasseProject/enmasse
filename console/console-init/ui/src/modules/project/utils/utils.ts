@@ -4,6 +4,7 @@
  */
 
 import { IMessagingProjectInput, IIoTProjectInput } from "modules/project";
+import { IProjectFilter } from "../ProjectPage";
 
 const isMessagingProjectValid = (projectDetail?: IMessagingProjectInput) => {
   if (
@@ -38,4 +39,18 @@ const isIoTProjectValid = (projectDetail?: IIoTProjectInput) => {
   }
   return false;
 };
-export { isMessagingProjectValid, isIoTProjectValid };
+
+const initialiseFilterForProject = () => {
+  const filter: IProjectFilter = {
+    filterType: "Name",
+    names: [],
+    namespaces: []
+  };
+  return filter;
+};
+
+export {
+  isMessagingProjectValid,
+  isIoTProjectValid,
+  initialiseFilterForProject
+};
