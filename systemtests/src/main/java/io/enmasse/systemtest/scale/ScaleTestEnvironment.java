@@ -194,7 +194,7 @@ public class ScaleTestEnvironment {
     }
 
     private <T> T getOrDefault(String var, Function<String, T> converter, T defaultValue) {
-        String value = jsonEnv.get(var) == null ? System.getenv(var) : jsonEnv.get(var).asText();
+        String value = System.getenv(var) != null ? System.getenv(var) : (jsonEnv.get(var) != null ? jsonEnv.get(var).asText() : null);
         T returnValue = defaultValue;
         if (value != null) {
             returnValue = converter.apply(value);

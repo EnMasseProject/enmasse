@@ -336,7 +336,7 @@ public class Environment {
     }
 
     private <T> T getOrDefault(JsonNode jsonConfig, String var, Function<String, T> converter, T defaultValue) {
-        String value = jsonConfig.get(var) == null ? System.getenv(var) : jsonConfig.get(var).asText();
+        String value = System.getenv(var) != null ? System.getenv(var) : (jsonConfig.get(var) != null ? jsonConfig.get(var).asText() : null);
         T returnValue = defaultValue;
         if (value != null) {
             returnValue = converter.apply(value);
