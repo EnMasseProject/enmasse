@@ -229,6 +229,9 @@ public class RouterConfigController implements Controller {
         boolean needsUpdate = false;
         log.debug("Reconciling connector secret {} for connector {}", connectorSecret, connector);
         if (connector.getTls() != null) {
+            if (connectorSecret.getData() == null) {
+                connectorSecret.setData(new HashMap<>());
+            }
             if (connector.getTls().getCaCert() != null) {
                 String data = getSelectorValue(addressSpace.getMetadata().getNamespace(), connector.getTls().getCaCert(), "ca.crt").orElse(null);
                 if (data == null) {
