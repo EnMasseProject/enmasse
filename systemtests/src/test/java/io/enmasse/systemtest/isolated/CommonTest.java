@@ -46,13 +46,11 @@ import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.github.artsok.RepeatedIfExceptionsTest;
-
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.apache.qpid.proton.amqp.transport.DeliveryState.DeliveryStateType;
 import org.apache.qpid.proton.message.Message;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -709,38 +707,19 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
         AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
         client.getConnectOptions().setCredentials(user);
-        boolean full = false;
         byte[] bytes = new byte[1024 * 100];
         Random random = new Random();
         int messagesSent = 0;
-        TimeoutBudget timeout = new TimeoutBudget(30, TimeUnit.SECONDS);
         log.info("Start time: get queue full");
-        do {
-            Message message = Message.Factory.create();
-            random.nextBytes(bytes);
-            message.setBody(new AmqpValue(new Data(new Binary(bytes))));
-            message.setAddress(address1.getSpec().getAddress());
-            message.setDurable(true);
-            try {
-                var deliveries = client.sendMessage(address1.getSpec().getAddress(), message).get(5, TimeUnit.SECONDS);
+        Message message = Message.Factory.create();
+        random.nextBytes(bytes);
+        message.setBody(new AmqpValue(new Data(new Binary(bytes))));
+        message.setAddress(address1.getSpec().getAddress());
+        message.setDurable(true);
 
-                assertEquals(deliveries.size(), 1);
-                var state = deliveries.get(0).getRemoteState();
-                if (state.getType() == DeliveryStateType.Modified || state.getType() == DeliveryStateType.Rejected) {
-                    full = true;
-                    log.info("broker is full with state {} after sending {} messages", state, messagesSent);
-                }
-                messagesSent++;
-
-                if (timeout.timeoutExpired()) {
-                    log.info("Delivery state is {}", state.getType());
-                    Assertions.fail("Timeout waiting for broker to become full, probably error in test env configuration");
-                }
-            } catch (Exception e) {
-                full = true;
-                log.info("broker is full after sending {} messages, exception", messagesSent, e);
-            }
-        } while(!full);
+        Stream<Message> messageStream = Stream.generate(() -> message);
+        messagesSent = client.sendMessagesCheckDelivery(address1.getSpec().getAddress(), messageStream::iterator, protonDelivery -> protonDelivery.remotelySettled() && protonDelivery.getRemoteState().getType().equals(DeliveryStateType.Rejected))
+                .get(5, TimeUnit.MINUTES);
 
         assertTrue(messagesSent > 0, "Incorrect test set up, 0 messages sent");
 
