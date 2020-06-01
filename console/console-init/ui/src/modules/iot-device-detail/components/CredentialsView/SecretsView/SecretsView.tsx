@@ -11,6 +11,7 @@ import { getLabelByKey } from "utils";
 import { ISecret } from "modules/iot-device/components";
 import { StyleSheet } from "@patternfly/react-styles";
 import { PasswordLabel } from "components";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -35,6 +36,14 @@ export interface ISecretsViewProps {
 }
 
 const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
+  const { dispatch } = useStoreContext();
+  const onOpenChangePassword = () => {
+    dispatch &&
+      dispatch({
+        type: types.SHOW_MODAL,
+        modaltype: MODAL_TYPES.UPDATE_PASSWORD
+      });
+  };
   const renderGridItemValue = (value: string, key: string) => {
     if (key === "pwd-hash") {
       return (
@@ -45,6 +54,7 @@ const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
             styles.c_button_PaddingLeft,
             styles.c_button_PaddingBottom
           ])}
+          onClick={onOpenChangePassword}
         >
           Change password
         </Button>

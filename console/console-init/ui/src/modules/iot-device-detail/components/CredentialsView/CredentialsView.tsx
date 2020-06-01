@@ -122,7 +122,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
     <Card id={id}>
       <CardHeader>
         <Title id="credential-view-header" headingLevel="h1" size="2xl">
-          Credentials
+          <b>Credentials</b>
         </Title>
       </CardHeader>
       <CardBody>

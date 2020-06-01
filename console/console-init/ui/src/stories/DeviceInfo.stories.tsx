@@ -91,7 +91,7 @@ const ext = {
 
 const credentials = [
   {
-    type: "hashed_password",
+    type: "hashed-password",
     "auth-id": "user-1",
     enabled: false,
     secrets: [
@@ -106,7 +106,7 @@ const credentials = [
     ]
   },
   {
-    type: "hashed_password",
+    type: "hashed-password",
     "auth-id": "alternate-user-1",
     enabled: true,
     secrets: [
@@ -126,7 +126,7 @@ const credentials = [
     ]
   },
   {
-    type: "x-509",
+    type: "x509-cert",
     "auth-id": "other-id-1",
     enabled: false,
     secrets: [],

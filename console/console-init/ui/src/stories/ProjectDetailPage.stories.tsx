@@ -8,10 +8,8 @@ import { text, number } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
 import {
   DeviceRegistationManagement,
-  IAdapterConfig,
   AccessCredentials,
   IMessagingObject,
-  IAdapter,
   GeneralInfo
 } from "modules/iot-project-detail/components";
 import { action } from "@storybook/addon-actions";
@@ -22,22 +20,14 @@ import {
   PageSection,
   PageSectionVariants
 } from "@patternfly/react-core";
+import { IAdapterConfig, IAdapter } from "components";
+import { Protocols } from "constant";
 
 export default {
   title: "Project Detail Page"
 };
 
 export const projectDetailPage = () => {
-  const registrationApi: IAdapterConfig = {
-    url: "https://http.bosch-iot-hub.com",
-    host: "mange.bosh-iot-hub.com",
-    port: 5647
-  };
-  const credentialApi: IAdapterConfig = {
-    url: "https://http.bosch-iot-hub.com",
-    host: "mange.bosh-iot-hub.com",
-    port: 268
-  };
   const eventAddresses: Array<string> = [
     text("Event Address Name", "event_address"),
     text("Event Address Name 1", "event_address1")
@@ -73,10 +63,10 @@ export const projectDetailPage = () => {
     url: "https://http.bosch-iot-hub.com"
   };
   const adapters: IAdapter[] = [
-    { type: "http", value: httpAdapter },
-    { type: "mqtt", value: mqttAdapter },
-    { type: "amqp", value: amqpAdapter },
-    { type: "coap", value: coapAdapter }
+    { type: Protocols.HTTP, value: httpAdapter },
+    { type: Protocols.MQTT, value: mqttAdapter },
+    { type: Protocols.AMQP, value: amqpAdapter },
+    { type: Protocols.COAP, value: coapAdapter }
   ];
 
   const Data = (
