@@ -5,43 +5,54 @@
 
 package io.enmasse.systemtest;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.fabric8.kubernetes.client.Config;
 import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class Environment {
     private static final Logger LOGGER = CustomLogger.getLogger();
+    private static JsonNode jsonEnv;
+    private final List<Map.Entry<String, String>> values = new ArrayList<>();
 
     // Env variables
-    public static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";
-    public static final String K8S_NAMESPACE_ENV = "KUBERNETES_NAMESPACE";
-    public static final String K8S_API_URL_ENV = "KUBERNETES_API_URL";
-    public static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
-    public static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
-    public static final String ENMASSE_DOCS_SYSTEM_PROPERTY = "enmasse.docs";
-    public static final String ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY = "enmasse.olm.replaces";
-    public static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
-    public static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
-    public static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
-    public static final String K8S_API_WRITE_TIMEOUT = "KUBERNETES_API_WRITE_TIMEOUT";
-    public static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
-    public static final String START_TEMPLATES_ENV = "START_TEMPLATES";
-    public static final String TEMPLATES_PATH = "TEMPLATES";
-    public static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
-    public static final String SKIP_UNNSTALL = "SKIP_UNINSTALL";
-    public static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
-    public static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
-    public static final String TAG_ENV = "TAG";
-    public static final String PRODUCT_NAME_ENV = "PRODUCT_NAME";
-    public static final String INSTALL_TYPE = "INSTALL_TYPE";
-    public static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
+    private static final String SCALE_CONFIG = "SCALE_CONFIG";
+    private static final String CONFIG = "CONFIG";
+    private static final String TEST_LOG_DIR_ENV = "TEST_LOGDIR";
+    private static final String K8S_NAMESPACE_ENV = "KUBERNETES_NAMESPACE";
+    private static final String K8S_API_URL_ENV = "KUBERNETES_API_URL";
+    private static final String K8S_API_TOKEN_ENV = "KUBERNETES_API_TOKEN";
+    private static final String ENMASSE_VERSION_SYSTEM_PROPERTY = "enmasse.version";
+    private static final String ENMASSE_DOCS_SYSTEM_PROPERTY = "enmasse.docs";
+    private static final String ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY = "enmasse.olm.replaces";
+    private static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
+    private static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
+    private static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
+    private static final String K8S_API_WRITE_TIMEOUT = "KUBERNETES_API_WRITE_TIMEOUT";
+    private static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
+    private static final String START_TEMPLATES_ENV = "START_TEMPLATES";
+    private static final String TEMPLATES_PATH = "TEMPLATES";
+    private static final String SKIP_CLEANUP_ENV = "SKIP_CLEANUP";
+    private static final String SKIP_UNNSTALL = "SKIP_UNINSTALL";
+    private static final String STORE_SCREENSHOTS_ENV = "STORE_SCREENSHOTS";
+    private static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
+    private static final String TAG_ENV = "TAG";
+    private static final String PRODUCT_NAME_ENV = "PRODUCT_NAME";
+    private static final String INSTALL_TYPE = "INSTALL_TYPE";
+    private static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
     private static final String SKIP_DEPLOY_INFINISPAN = "SKIP_DEPLOY_INFINISPAN";
     private static final String SKIP_DEPLOY_POSTGRESQL = "SKIP_DEPLOY_POSTGRESQL";
@@ -49,18 +60,50 @@ public class Environment {
     private static final String INFINISPAN_PROJECT = "INFINISPAN_PROJECT";
     private static final String POSTGRESQL_PROJECT = "POSTGRESQL_PROJECT";
     private static final String H2_PROJECT = "H2_PROJECT";
-    private static final String SCALE_CONFIG = "SCALE_CONFIG";
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
 
+    //Config paths
+    private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
+    private static final String config = System.getenv().getOrDefault(CONFIG, Paths.get(System.getProperty("user.dir"), "config.json").toAbsolutePath().toString());
+
     //Collecting variables
     private static Environment instance;
-    private final String namespace = System.getenv().getOrDefault(K8S_NAMESPACE_ENV, "enmasse-infra");
-    private final String testLogDir = System.getenv().getOrDefault(TEST_LOG_DIR_ENV, "/tmp/testlogs");
-    private final String overrideClusterType = System.getenv().getOrDefault(OVERRIDE_CLUSTER_TYPE, "");
-    private String token = System.getenv(K8S_API_TOKEN_ENV);
-    private String url = System.getenv(K8S_API_URL_ENV);
+    private final String namespace = getOrDefault(jsonEnv, K8S_NAMESPACE_ENV, "enmasse-infra");
+    private final String testLogDir = getOrDefault(jsonEnv, TEST_LOG_DIR_ENV, "/tmp/testlogs");
+    private final String overrideClusterType = getOrDefault(jsonEnv, OVERRIDE_CLUSTER_TYPE, "");
+    private String token = getOrDefault(jsonEnv, K8S_API_TOKEN_ENV, "");
+    private String url = getOrDefault(jsonEnv, K8S_API_URL_ENV, "");
+    private String kubernetesDomain = getOrDefault(jsonEnv, K8S_DOMAIN_ENV, "");
+    private final String startTemplates = getOrDefault(jsonEnv, START_TEMPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String upgradeTemplates = getOrDefault(jsonEnv, UPGRADE_TEPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String monitoringNamespace = getOrDefault(jsonEnv, MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
+    private final String tag = getOrDefault(jsonEnv, TAG_ENV, "latest");
+    private final String productName = getOrDefault(jsonEnv, PRODUCT_NAME_ENV, "enmasse");
+    private final boolean skipSaveState = getOrDefault(jsonEnv, SKIP_SAVE_STATE, Boolean::parseBoolean, false);
+    private final boolean skipDeployInfinispan = getOrDefault(jsonEnv, SKIP_DEPLOY_INFINISPAN, Boolean::parseBoolean, false);
+    private final boolean skipDeployPostgresql = getOrDefault(jsonEnv, SKIP_DEPLOY_POSTGRESQL, Boolean::parseBoolean, false);
+    private final boolean skipDeployH2 = getOrDefault(jsonEnv, SKIP_DEPLOY_H2, Boolean::parseBoolean, false);
+    private final String infinispanProject = getOrDefault(jsonEnv, INFINISPAN_PROJECT, "systemtests-infinispan");
+    private final String postgresqlProject = getOrDefault(jsonEnv, POSTGRESQL_PROJECT, "systemtests-postgresql");
+    private final String h2Project = getOrDefault(jsonEnv, H2_PROJECT, "systemtests-h2");
+    private final Duration kubernetesApiConnectTimeout = getOrDefault(jsonEnv, K8S_API_CONNECT_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
+    private final Duration kubernetesApiReadTimeout = getOrDefault(jsonEnv, K8S_API_READ_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
+    private final Duration kubernetesApiWriteTimeout = getOrDefault(jsonEnv, K8S_API_WRITE_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
+    private final EnmasseInstallType installType = getOrDefault(jsonEnv, INSTALL_TYPE, value -> EnmasseInstallType.valueOf(value.toUpperCase()), EnmasseInstallType.BUNDLE);
+    private final OLMInstallationType olmInstallType = Optional.ofNullable(getOrDefault(jsonEnv, OLM_INSTALL_TYPE, "")).map(s -> s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s).map(value -> OLMInstallationType.valueOf(value.toUpperCase())).orElse(OLMInstallationType.SPECIFIC);
+    private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
+    private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
+    private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
+
+    //Default values
+    private final UserCredentials managementCredentials = new UserCredentials(null, null);
+    private final UserCredentials defaultCredentials = new UserCredentials(null, null);
+    private final UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
+    private final UserCredentials sharedDefaultCredentials = new UserCredentials("test", "test");
+
+    //Collectings properties
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
     private final String enmasseDocs = System.getProperty(ENMASSE_DOCS_SYSTEM_PROPERTY);
     private final String enmasseOlmDocsUrl = System.getProperty("enmasse.olm.docs.url");
@@ -69,32 +112,7 @@ public class Environment {
     private final String enmasseOlmDocConfigUrl = System.getProperty("enmasse.olm.doc.configure.url");
     private final String enmasseOlmDocIotUrl = System.getProperty("enmasse.olm.doc.iot.url");
     private final String enmasseOlmReplaces = System.getProperty(ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY);
-    private String kubernetesDomain = System.getenv(K8S_DOMAIN_ENV);
-    private final String startTemplates = System.getenv().getOrDefault(START_TEMPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String upgradeTemplates = System.getenv().getOrDefault(UPGRADE_TEPLATES_ENV, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String monitoringNamespace = System.getenv().getOrDefault(MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
-    private final String tag = System.getenv().getOrDefault(TAG_ENV, "latest");
-    private final String productName = System.getenv().getOrDefault(PRODUCT_NAME_ENV, "enmasse");
-    private final boolean skipSaveState = Boolean.parseBoolean(System.getenv(SKIP_SAVE_STATE));
-    private final boolean skipDeployInfinispan = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_INFINISPAN));
-    private final boolean skipDeployPostgresql = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_POSTGRESQL));
-    private final boolean skipDeployH2 = Boolean.parseBoolean(System.getenv(SKIP_DEPLOY_H2));
-    private final String infinispanProject = System.getenv().getOrDefault(INFINISPAN_PROJECT, "systemtests-infinispan");
-    private final String postgresqlProject = System.getenv().getOrDefault(POSTGRESQL_PROJECT, "systemtests-postgresql");
-    private final String h2Project = System.getenv().getOrDefault(H2_PROJECT, "systemtests-h2");
-    private final Duration kubernetesApiConnectTimeout = Optional.ofNullable(System.getenv().get(K8S_API_CONNECT_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
-    private final Duration kubernetesApiReadTimeout = Optional.ofNullable(System.getenv().get(K8S_API_READ_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
-    private final Duration kubernetesApiWriteTimeout = Optional.ofNullable(System.getenv().get(K8S_API_WRITE_TIMEOUT)).map(i -> Duration.ofSeconds(Long.parseLong(i))).orElse(Duration.ofSeconds(60));
-    private final EnmasseInstallType installType = Optional.ofNullable(System.getenv().get(INSTALL_TYPE)).map(value -> EnmasseInstallType.valueOf(value.toUpperCase())).orElse(EnmasseInstallType.BUNDLE);
-    private final OLMInstallationType olmInstallType = Optional.ofNullable(System.getenv().get(OLM_INSTALL_TYPE)).map(s -> s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s).map(value -> OLMInstallationType.valueOf(value.toUpperCase())).orElse(OLMInstallationType.SPECIFIC);
-    protected String templatesPath = System.getenv().getOrDefault(TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
-    private final String clusterExternalImageRegistry = System.getenv().getOrDefault(OCP4_EXTERNAL_IMAGE_REGISTRY, "");
-    private final String clusterInternalImageRegistry = System.getenv().getOrDefault(OCP4_INTERNAL_IMAGE_REGISTRY, "");
-    protected UserCredentials managementCredentials = new UserCredentials(null, null);
-    protected UserCredentials defaultCredentials = new UserCredentials(null, null);
-    protected UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
-    protected UserCredentials sharedDefaultCredentials = new UserCredentials("test", "test");
-    protected String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
+
     /**
      * Skip removing address-spaces
      */
@@ -108,7 +126,7 @@ public class Environment {
 
     // Constructor and getters
     private Environment() {
-        if (token == null || url == null) {
+        if (Strings.isNullOrEmpty(token) || Strings.isNullOrEmpty(url)) {
             Config config = Config.autoConfigure(System.getenv()
                     .getOrDefault("TEST_CLUSTER_CONTEXT", null));
             token = config.getOauthToken();
@@ -132,21 +150,14 @@ public class Environment {
                 this.kubernetesDomain = "nip.io";
             }
         }
-        LOGGER.info(debugFormat, K8S_NAMESPACE_ENV, namespace);
-        LOGGER.info(debugFormat, K8S_API_URL_ENV, url);
-        LOGGER.info(debugFormat, K8S_API_TOKEN_ENV, token);
-        LOGGER.info(debugFormat, ENMASSE_VERSION_SYSTEM_PROPERTY, enmasseVersion);
-        LOGGER.info(debugFormat, K8S_DOMAIN_ENV, kubernetesDomain);
-        LOGGER.info(debugFormat, TEMPLATES_PATH, templatesPath);
-        LOGGER.info(debugFormat, TEST_LOG_DIR_ENV, testLogDir);
-        LOGGER.info(debugFormat, PRODUCT_NAME_ENV, productName);
-        LOGGER.info(debugFormat, SKIP_CLEANUP_ENV, skipCleanup);
-        LOGGER.info(debugFormat, SKIP_UNNSTALL, skipUninstall);
-        LOGGER.info(debugFormat, TAG_ENV, tag);
+        LOGGER.info(debugFormat, "CONFIG", config);
+        LOGGER.info(debugFormat, "SCALE_CONFIG", scaleConfig);
+        values.forEach(v -> LOGGER.info(debugFormat, v.getKey(), v.getValue()));
     }
 
     public static synchronized Environment getInstance() {
         if (instance == null) {
+            jsonEnv = loadJsonEnv();
             instance = new Environment();
         }
         return instance;
@@ -318,5 +329,30 @@ public class Environment {
 
     public String getOverrideClusterType() {
         return overrideClusterType;
+    }
+
+    private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {
+        return getOrDefault(jsonConfig, varName, String::toString, defaultValue);
+    }
+
+    private <T> T getOrDefault(JsonNode jsonConfig, String var, Function<String, T> converter, T defaultValue) {
+        String value = System.getenv(var) != null ? System.getenv(var) : (jsonConfig.get(var) != null ? jsonConfig.get(var).asText() : null);
+        T returnValue = defaultValue;
+        if (value != null) {
+            returnValue = converter.apply(value);
+        }
+        values.add(Map.entry(var, String.valueOf(returnValue)));
+        return returnValue;
+    }
+
+    private static JsonNode loadJsonEnv() {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            File jsonFile = new File(config).getAbsoluteFile();
+            return mapper.readTree(jsonFile);
+        } catch (Exception e) {
+            LOGGER.warn("Json configuration not provider or not exists");
+            return mapper.createObjectNode();
+        }
     }
 }
