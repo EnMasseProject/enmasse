@@ -634,7 +634,10 @@ function createAddressSpace(as) {
         name: as.spec.authenticationService ? as.spec.authenticationService.name : null
       }
     },
-    status: null
+    status: {
+      phase:"",
+      messages:[]
+    }
   };
 
   addressSpaces.push(addressSpace);
@@ -1202,7 +1205,10 @@ function createAddress(addr, addressSpaceName) {
       type: addr.spec.type,
       topic: addr.spec.topic
     },
-    status: null,
+    status: {
+      phase:"",
+      messages:[]
+    },
   };
   scheduleSetAddressStatus(address, phase, messages, planStatus);
   addresses.push(address);

@@ -25,6 +25,8 @@ export interface IMessagingToolbarContainerProps {
   setSelectedNamespaces: (value: Array<any>) => void;
   typeSelected?: string | null;
   setTypeSelected: (value: string | null) => void;
+  statusSelected?: string | null;
+  setStatusSelected: (value: string | null) => void;
   totalAddressSpaces: number;
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
@@ -39,6 +41,8 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   setSelectedNamespaces,
   typeSelected,
   setTypeSelected,
+  statusSelected,
+  setStatusSelected,
   totalAddressSpaces,
   sortValue,
   setSortValue,
@@ -58,6 +62,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
     setSelectedNamespaces([]);
     setSelectedNames([]);
     setTypeSelected(null);
+    setStatusSelected(null);
   };
 
   const onCreateAddressSpace = () => {
@@ -77,7 +82,8 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const resettInitialState = () => {
     setNameInput("");
     setNamespaceInput("");
-    setTypeSelected("");
+    setTypeSelected(null);
+    setStatusSelected(null);
   };
 
   const onFilterSelect = (value: string) => {
@@ -156,6 +162,10 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
 
   const onTypeSelect = (selection: string) => {
     setTypeSelected(selection);
+  };
+
+  const onStatusSelect = (selection: string) => {
+    setStatusSelected(selection);
   };
 
   const onSearch = () => {
@@ -248,6 +258,9 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       case "type":
         setTypeSelected(null);
         break;
+      case "status":
+        setStatusSelected(null);
+        break;
     }
   };
 
@@ -260,6 +273,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       namespaceSelected={namespaceSelected}
       namespaceInput={namespaceInput}
       typeSelected={typeSelected}
+      statusSelected={statusSelected}
       selectedNames={selectedNames}
       selectedNamespaces={selectedNamespaces}
       onFilterSelect={onFilterSelect}
@@ -268,6 +282,7 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
       onNamespaceSelect={onNamespaceSelect}
       onNamespaceClear={onNamespaceClear}
       onTypeSelect={onTypeSelect}
+      onStatusSelect={onStatusSelect}
       onDeleteAll={onDeleteAll}
       onSearch={onSearch}
       onDelete={onDelete}
