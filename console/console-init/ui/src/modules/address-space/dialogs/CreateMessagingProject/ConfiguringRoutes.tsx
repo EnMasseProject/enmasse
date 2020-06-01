@@ -109,7 +109,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
     <>
       <Grid>
         <GridItem span={6}>
-          <Title headingLevel="h2" size="2xl">
+          <Title headingLevel="h2" size="lg">
             Configure OpenShift Route
           </Title>
           <br />

@@ -213,7 +213,7 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
         setProjectDetail={setMessagingProject}
       />
     ),
-    enableegxt: isMessagingProjectConfigurationValid(messagingProject)
+    enableNext: isMessagingProjectConfigurationValid(messagingProject)
   };
   const endpointConfiguringStep = {
     name: "Configuring",

@@ -125,7 +125,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
           {getProtocolOptions() && getProtocolOptions().length > 0 && (
             <FormGroup
               fieldId="form-group-endpoint-protocol"
-              label="Protocol"
+              label="Protocols"
               isRequired={true}
             >
               {getProtocolOptions().map(protocol => (

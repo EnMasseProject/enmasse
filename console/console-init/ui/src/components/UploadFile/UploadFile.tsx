@@ -33,6 +33,9 @@ const UploadFile: React.FunctionComponent<IUploadFileProps> = ({
   ) => {
     setFilename(filename);
     setValue(value.toString());
+    if (isRejected) {
+      setIsRejected(false);
+    }
   };
   const handleFileRejected = (rejectedFiles: File[], event: any) => {
     setIsRejected(true);
