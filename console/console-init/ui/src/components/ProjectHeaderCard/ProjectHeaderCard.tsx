@@ -13,8 +13,7 @@ import {
   FlexItem,
   Divider,
   Gallery,
-  CardHeader,
-  Page
+  CardHeader
 } from "@patternfly/react-core";
 import {
   CheckCircleIcon,
@@ -67,9 +66,9 @@ const ProjectHeaderCard: React.FunctionComponent<IProjectHeaderCardProps> = ({
                 <br />
                 <Divider />
                 <Flex>
-                  {(!ioTCount.configuring || ioTCount.configuring == 0) &&
-                    (!ioTCount.failed || ioTCount.failed == 0) &&
-                    (!ioTCount.pending || ioTCount.pending == 0) && (
+                  {(!ioTCount.configuring || ioTCount.configuring === 0) &&
+                    (!ioTCount.failed || ioTCount.failed === 0) &&
+                    (!ioTCount.pending || ioTCount.pending === 0) && (
                       <FlexItem>
                         <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
                       </FlexItem>
@@ -120,9 +119,9 @@ const ProjectHeaderCard: React.FunctionComponent<IProjectHeaderCardProps> = ({
                 <br />
                 <Divider />
                 <Flex>
-                  {(!msgCount.configuring || msgCount.configuring == 0) &&
-                    (!msgCount.failed || msgCount.failed == 0) &&
-                    (!msgCount.pending || msgCount.pending == 0) && (
+                  {(!msgCount.configuring || msgCount.configuring === 0) &&
+                    (!msgCount.failed || msgCount.failed === 0) &&
+                    (!msgCount.pending || msgCount.pending === 0) && (
                       <FlexItem>
                         <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
                       </FlexItem>

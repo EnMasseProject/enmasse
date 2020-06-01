@@ -307,12 +307,13 @@ const getLabelByKey = (key: string) => {
     "not-after": "Not after",
     "not-before": "Not before",
     "pwd-hash": "Password",
-    hashed_password: "Password",
+    "hashed-password": "Password",
     psk: "PSK",
     "x-509": "X-509 certificate",
     "subject-dn": "Subject-dn",
     "public-key": "Public key",
-    "auto-provisioning-enabled": "Auto-provision"
+    "auto-provisioning-enabled": "Auto-provision",
+    "x509-cert": "X-509 certificate"
   };
 
   if (key in keyLabels) {
