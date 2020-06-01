@@ -15,8 +15,12 @@ import {
   TextVariants,
   Title
 } from "@patternfly/react-core";
-import { InputText, JsonEditor, SwitchWithToggle } from "components";
-import { IAdapterConfig } from "modules/iot-project-detail/components";
+import {
+  InputText,
+  JsonEditor,
+  SwitchWithToggle,
+  IAdapterConfig
+} from "components";
 import { StyleSheet, css } from "@patternfly/react-styles";
 
 interface IDeviceRegistationManagementProps {

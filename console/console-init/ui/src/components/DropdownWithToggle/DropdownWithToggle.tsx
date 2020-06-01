@@ -91,7 +91,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
         }
       }
     }
-  }, [dropdownItems]);
+  }, [dropdownItems, value, onSelectItem]);
 
   const onSelect = (e: any) => {
     const value =
