@@ -23,6 +23,7 @@
 * #4574: Set globalMaxSize to 1/4 of broker JVM heap
 * #4567: Refactor GraphQL deleteAddressSpace and deleteAddress to accept many target objects
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
+* #4650: Install uncaught exception handler in address-space-controller and standard-controller
 * #4656: Defining a connector before its referenced secret exists results in NPE and permanently unready address space
 
 ## 0.31.2

@@ -110,6 +110,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
          // forwarding.
          protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(true);
          protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(true);
+         protocolManager.setAmqpMinLargeMessageSize(-1);
 
          NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
          connector.start();
