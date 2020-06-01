@@ -6,7 +6,7 @@
 = Creating a new callback in the Sigfox backend
 
 .Prerequisites
-* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-iot-configure-sigfox-connection-information-{context}[Prepared the Sigfox connection information].
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#ref-iot-prepare-sigfox-connection-information-messaging-iot-iot-iot-iot-iot-iot-iot[Prepared the Sigfox connection information].
 
 .Procedure
 
@@ -21,4 +21,3 @@ Url pattern:: The _URL pattern_. For example, `\https://iot-sigfox-adapter.my.cl
 Use HTTP Method:: `GET`
 Headers:: `Authorization` – `Basic…`
 Send SNI:: ☑ (Enabled)
-
