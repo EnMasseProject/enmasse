@@ -27,9 +27,6 @@ import {
 import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
 
 const styles = StyleSheet.create({
-  gateways_align: {
-    marginRight: 20
-  },
   card_body: {
     paddingLeft: 0,
     paddingRight: 0,
@@ -80,8 +77,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
             maxLines={45}
           />
         ) : (
-          <Grid>
-            <GridItem span={5} className={styles.gateways_align}>
+          <Grid gutter="sm">
+            <GridItem span={5}>
               <Card>
                 <CardHeader>
                   <Title id="di-header-title" headingLevel="h1" size="2xl">

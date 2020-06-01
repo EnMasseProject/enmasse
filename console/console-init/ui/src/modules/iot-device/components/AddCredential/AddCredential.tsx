@@ -28,7 +28,7 @@ export const AddCredential: React.FC<{}> = () => {
     const initialState: ICredential = {
       id: uniqueId(),
       "auth-id": "",
-      type: "hashed_password",
+      type: "hashed-password",
       secrets: [{ "pwd-hash": "" }],
       ext: [getExtensionsFieldsInitialState()],
       enabled: true,
@@ -40,13 +40,13 @@ export const AddCredential: React.FC<{}> = () => {
   const [credentials, setCredentials] = useState([
     getCredentialsFieldsInitialState()
   ]);
-  const [type, setType] = useState<string>("hashed_password");
+  const [type, setType] = useState<string>("hashed-password");
   const [activeCredentialFormId, setActiveCredentialFormId] = useState();
 
   const getSecretsFieldsInitialState = () => {
     let initialState: ISecret = {};
     switch (type && type.toLowerCase()) {
-      case "hashed_password":
+      case "hashed-password":
         initialState = {
           "pwd-hash": "",
           "not-before": "",

@@ -17,12 +17,14 @@ import {
   Button,
   ButtonVariant
 } from "@patternfly/react-core";
+import { DownloadIcon } from "@patternfly/react-icons";
 import {
-  CheckCircleIcon,
-  ErrorCircleOIcon,
-  DownloadIcon
-} from "@patternfly/react-icons";
-import { InputText, JsonEditor, SwitchWithToggle } from "components";
+  InputText,
+  JsonEditor,
+  SwitchWithToggle,
+  AdapterList,
+  IAdapter
+} from "components";
 
 export interface IMessagingObject {
   url?: string;
@@ -33,17 +35,6 @@ export interface IMessagingObject {
   telemetryAddresses?: Array<string>;
   commandAddresses?: Array<string>;
 }
-export interface IAdapterConfig {
-  url?: string;
-  host?: string;
-  port?: number;
-  tlsEnabled?: boolean;
-}
-export interface IAdapter {
-  type: "http" | "https" | "mqtt" | "amqp" | "amqps" | "coap";
-  value: IAdapterConfig;
-}
-
 export interface IAccessCredentialsProps {
   tenantId: string;
   messaging: IMessagingObject;
@@ -77,18 +68,6 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       messaging: messaging,
       adapters: adapters
     }
-  };
-
-  const isEnabled = (value: boolean) => {
-    return value ? (
-      <>
-        <CheckCircleIcon color={"green"} /> &nbsp;Enabled
-      </>
-    ) : (
-      <>
-        <ErrorCircleOIcon color={"red"} /> &nbsp;Disabled
-      </>
-    );
   };
 
   const onPemCertificateClick = () => {
@@ -203,87 +182,6 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
     );
   };
 
-  const getAdapter = (adapter: IAdapter) => {
-    const { value, type } = adapter;
-    return (
-      <>
-        <Title size="xl" headingLevel="h2">
-          {type.toUpperCase() + " Adapter"}
-        </Title>
-        {value.tlsEnabled && (
-          <>
-            <br />
-            <Grid>
-              <GridItem span={4}>
-                <b>TLS</b>
-              </GridItem>
-              <GridItem span={8}>{isEnabled(value.tlsEnabled)}</GridItem>
-            </Grid>
-          </>
-        )}
-        {value.url && (
-          <>
-            <br />
-            <InputText
-              label={"URL"}
-              type={"text"}
-              value={value.url}
-              isReadOnly={true}
-              enableCopy={true}
-              id={`adapter-${type}-api-url-input`}
-              key={`adapter-${type}-api-url-input`}
-              ariaLabel={`adapter-${type}-api-url`}
-              isExpandable={false}
-            />
-          </>
-        )}
-        {value.host && (
-          <>
-            <br />
-            <InputText
-              label={"Host"}
-              type={"number"}
-              value={value.host}
-              isReadOnly={true}
-              enableCopy={true}
-              id={`adapter-${type}-api-host-input`}
-              ariaLabel={`adapter ${type} api host`}
-              isExpandable={false}
-            />
-          </>
-        )}
-        {value.port && (
-          <>
-            <br />
-            <InputText
-              label={"Port"}
-              type={"number"}
-              value={value.port}
-              isReadOnly={true}
-              enableCopy={true}
-              id={`adapter-${type}-api-port-input`}
-              ariaLabel={`adapter ${type} api port`}
-              isExpandable={false}
-            />
-          </>
-        )}
-      </>
-    );
-  };
-
-  const Adapters = () => (
-    <>
-      {adapters &&
-        adapters.map((adapter: IAdapter) => (
-          <>
-            {" "}
-            {getAdapter(adapter)}
-            <br />
-          </>
-        ))}
-    </>
-  );
-
   const CardToDisplay = () => (
     <Card>
       <CardHeader style={{ fontSize: 20 }}>
@@ -343,7 +241,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <br />
           <Messaging />
           <br />
-          <Adapters />
+          <AdapterList id="ac-adapter-list" adapters={adapters} />
         </CardBody>
       )}
     </Card>

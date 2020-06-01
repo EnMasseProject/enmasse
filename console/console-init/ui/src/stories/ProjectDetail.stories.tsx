@@ -14,11 +14,11 @@ import {
 import { Page, Grid, GridItem } from "@patternfly/react-core";
 import {
   DeviceRegistationManagement,
-  IAdapter,
-  IAdapterConfig,
   AccessCredentials
 } from "modules/iot-project-detail/components";
+import { IAdapter, IAdapterConfig } from "components";
 import { action } from "@storybook/addon-actions";
+import { Protocols } from "constant";
 
 export default {
   title: "Project Detail"
@@ -115,10 +115,10 @@ export const projectAccessCredentials = () => {
     url: "https://http.bosch-iot-hub.com"
   };
   const adapters: IAdapter[] = [
-    { type: "http", value: httpAdapter },
-    { type: "mqtt", value: mqttAdapter },
-    { type: "amqp", value: amqpAdapter },
-    { type: "coap", value: coapAdapter }
+    { type: Protocols.HTTP, value: httpAdapter },
+    { type: Protocols.MQTT, value: mqttAdapter },
+    { type: Protocols.AMQP, value: amqpAdapter },
+    { type: Protocols.COAP, value: coapAdapter }
   ];
 
   return (

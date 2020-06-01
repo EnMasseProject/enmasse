@@ -8,7 +8,6 @@ import {
   CheckCircleIcon,
   InProgressIcon,
   ExclamationCircleIcon,
-  BanIcon,
   ErrorCircleOIcon
 } from "@patternfly/react-icons";
 import { Badge } from "@patternfly/react-core";

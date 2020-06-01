@@ -45,6 +45,15 @@ enum DataType {
   OBJECT = "object"
 }
 
+enum Protocols {
+  HTTP = "http",
+  HTTPS = "https",
+  MQTT = "mqtt",
+  AMQP = "amqp",
+  AMQPS = "amqps",
+  COAP = "coap"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -58,5 +67,6 @@ export {
   ErrorCodes,
   AddressTypes,
   TemplateType,
-  DataType
+  DataType,
+  Protocols
 };
