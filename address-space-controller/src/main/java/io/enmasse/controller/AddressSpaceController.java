@@ -267,6 +267,8 @@ public class AddressSpaceController {
     }
 
     public static void main(String args[]) {
+        setUncaughtExceptionHandler();
+
         AddressSpaceController controller = null;
         try {
             final AddressSpaceControllerOptions options = AddressSpaceControllerOptions.fromEnv(System.getenv());
@@ -285,4 +287,27 @@ public class AddressSpaceController {
             }
         }
     }
+
+    protected static void setUncaughtExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                System.err.println("########################################################################");
+                System.err.println("#");
+                System.err.print("# Uncaught Exception ");
+                System.err.print(e.toString());
+                System.err.print(" in Thread ");
+                System.err.println(t.getName());
+                System.err.println("#");
+                System.err.println("#");
+                System.err.println("########################################################################");
+                e.printStackTrace(System.err);
+
+                log.error("Fatal, uncaught exception", e);
+
+            } finally {
+                Runtime.getRuntime().halt(1);
+            }
+        });
+    }
+
 }

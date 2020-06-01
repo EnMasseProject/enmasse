@@ -50,6 +50,7 @@ public class StandardController {
     }
 
     public static void main(String[] args) throws Exception {
+        setUncaughtExceptionHandler();
         StandardController standardController = null;
         try {
             Map<String, String> env = System.getenv();
@@ -166,5 +167,27 @@ public class StandardController {
                 log.info("StandardController stopped");
             }
         }
+    }
+
+    protected static void setUncaughtExceptionHandler() {
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                System.err.println("########################################################################");
+                System.err.println("#");
+                System.err.print("# Uncaught Exception ");
+                System.err.print(e.toString());
+                System.err.print(" in Thread ");
+                System.err.println(t.getName());
+                System.err.println("#");
+                System.err.println("#");
+                System.err.println("########################################################################");
+                e.printStackTrace(System.err);
+
+                log.error("Fatal, uncaught exception", e);
+
+            } finally {
+                Runtime.getRuntime().halt(1);
+            }
+        });
     }
 }
