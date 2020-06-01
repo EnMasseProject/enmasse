@@ -39,7 +39,7 @@ public class ResultWriter {
 
     private void savePlotCSV(Path file, Map<String, Object> data) throws IOException {
         try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
-            writer.write(String.join(",", data.keySet().toArray(new String[0])));
+            writer.write(String.join(",", data.keySet().toArray(new String[0])).toLowerCase());
             writer.newLine();
             writer.write(String.join(",", data.values().stream().map(value -> value.toString().replaceAll("\\D+", "")).toArray(String[]::new)));
             writer.newLine();

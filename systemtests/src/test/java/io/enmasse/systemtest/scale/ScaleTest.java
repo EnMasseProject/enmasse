@@ -333,7 +333,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         data.put("connection_count", manager.getConnections());
         data.put("links", manager.getConnections() * 5);
         saveResultsFile("operable_addresses.json", data);
-        savePlotCSV("operable-addresses.csv", data);
+        savePlotCSV("operable_addresses.csv", data);
         assertThat(operableAddresses, greaterThan(failureThreshold));
     }
 
@@ -663,7 +663,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         LOGGER.info("Saving plot data into {}", logsPath);
         Files.createDirectories(logsPath);
         try (BufferedWriter writer = Files.newBufferedWriter(logsPath.resolve(fileName), StandardCharsets.UTF_8, StandardOpenOption.CREATE)) {
-            writer.write(String.join(",", data.keySet().toArray(new String[0])));
+            writer.write(String.join(",", data.keySet().toArray(new String[0])).toLowerCase());
             writer.newLine();
             writer.write(String.join(",", data.values().stream().map(value -> value.toString().replaceAll("\\D+", "")).toArray(String[]::new)));
             writer.newLine();
