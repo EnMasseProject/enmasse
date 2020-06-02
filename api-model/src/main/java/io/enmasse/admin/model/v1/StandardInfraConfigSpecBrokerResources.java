@@ -19,18 +19,35 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"memory", "storage"})
+@JsonPropertyOrder({"cpu", "memory", "storage"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecBrokerResources extends AbstractWithAdditionalProperties {
     private String memory;
     private String storage;
+    private String cpu;
 
-    public StandardInfraConfigSpecBrokerResources() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StandardInfraConfigSpecBrokerResources that = (StandardInfraConfigSpecBrokerResources) o;
+        return Objects.equals(memory, that.memory) &&
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(cpu, that.cpu);
     }
 
-    public StandardInfraConfigSpecBrokerResources(final String memory, final String storage ) {
-        setMemory(memory);
-        setStorage(storage);
+    @Override
+    public int hashCode() {
+        return Objects.hash(memory, storage, cpu);
+    }
+
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecBrokerResources{" +
+                "memory='" + memory + '\'' +
+                ", storage='" + storage + '\'' +
+                ", cpu='" + cpu + '\'' +
+                '}';
     }
 
     public void setMemory(String memory) {
@@ -49,25 +66,12 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
         return storage;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StandardInfraConfigSpecBrokerResources that = (StandardInfraConfigSpecBrokerResources) o;
-        return Objects.equals(memory, that.memory) &&
-                Objects.equals(storage, that.storage);
+    public String getCpu() {
+        return cpu;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(memory, storage);
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
     }
 
-    @Override
-    public String toString() {
-        return "StandardInfraConfigSpecBrokerResources{" +
-                "memory='" + memory + '\'' +
-                ", storage='" + storage + '\'' +
-                '}';
-    }
 }

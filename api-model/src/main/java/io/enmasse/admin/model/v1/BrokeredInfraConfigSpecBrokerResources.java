@@ -19,19 +19,12 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"memory", "storage"})
+@JsonPropertyOrder({"cpu", "memory", "storage"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BrokeredInfraConfigSpecBrokerResources extends AbstractWithAdditionalProperties {
     private String memory;
     private String storage;
-
-    public BrokeredInfraConfigSpecBrokerResources() {
-    }
-
-    public BrokeredInfraConfigSpecBrokerResources(final String memory, final String storage) {
-        setMemory(memory);
-        setStorage(storage);
-    }
+    private String cpu;
 
     @Override
     public boolean equals(Object o) {
@@ -39,7 +32,13 @@ public class BrokeredInfraConfigSpecBrokerResources extends AbstractWithAddition
         if (o == null || getClass() != o.getClass()) return false;
         BrokeredInfraConfigSpecBrokerResources that = (BrokeredInfraConfigSpecBrokerResources) o;
         return Objects.equals(memory, that.memory) &&
-                Objects.equals(storage, that.storage);
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(cpu, that.cpu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(memory, storage, cpu);
     }
 
     @Override
@@ -47,12 +46,8 @@ public class BrokeredInfraConfigSpecBrokerResources extends AbstractWithAddition
         return "BrokeredInfraConfigSpecBrokerResources{" +
                 "memory='" + memory + '\'' +
                 ", storage='" + storage + '\'' +
+                ", cpu='" + cpu + '\'' +
                 '}';
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(memory, storage);
     }
 
     public void setMemory(String memory) {
@@ -69,6 +64,14 @@ public class BrokeredInfraConfigSpecBrokerResources extends AbstractWithAddition
 
     public String getStorage() {
         return storage;
+    }
+
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
     }
 
 }

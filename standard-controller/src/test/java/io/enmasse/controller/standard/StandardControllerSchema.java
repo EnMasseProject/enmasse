@@ -4,11 +4,25 @@
  */
 package io.enmasse.controller.standard;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.address.model.AddressSpaceType;
+import io.enmasse.address.model.AddressSpaceTypeBuilder;
+import io.enmasse.address.model.AddressTypeBuilder;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.Schema;
+import io.enmasse.address.model.SchemaBuilder;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.ResourceAllowance;
+import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.SchemaProvider;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.NodeSelectorRequirementBuilder;
+import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.PreferredSchedulingTermBuilder;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -191,17 +205,24 @@ public class StandardControllerSchema implements SchemaProvider {
                             .withNewSpec()
                                 .withVersion("latest")
                                 .withNewAdmin()
-                                    .withNewResources("512Mi")
-                                    .endAdmin()
+                                    .editOrNewResources()
+                                    .withMemory("512Mi")
+                                    .endResources()
+                                .endAdmin()
                                 .withNewBroker()
-                                    .withNewResources("512Mi", "2Gi")
+                                    .editOrNewResources()
+                                    .withMemory("512Mi")
+                                    .withStorage("2Gi")
+                                    .endResources()
                                     .withAddressFullPolicy("FAIL")
                                     .withStorageClassName("mysc")
                                     .withUpdatePersistentVolumeClaim(false)
                                     .withPodTemplate(createTemplateSpec(Collections.singletonMap("key", "value"), "myaff", "mykey", "prioclass"))
                                     .endBroker()
                                 .withNewRouter()
-                                    .withNewResources("512Mi")
+                                    .editOrNewResources()
+                                    .withMemory("512Mi")
+                                    .endResources()
                                     .withMinReplicas(1)
                                     .withLinkCapacity(500)
                                     .endRouter()

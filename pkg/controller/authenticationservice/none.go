@@ -77,6 +77,12 @@ func applyNoneAuthServiceDeployment(authservice *adminv1beta1.AuthenticationServ
 			},
 		}
 
+		if authservice.Spec.None.Resources != nil {
+			container.Resources = *authservice.Spec.None.Resources
+		} else {
+			container.Resources = corev1.ResourceRequirements{}
+		}
+
 		install.ApplyVolumeMountSimple(container, "none-authservice-cert", "/opt/none-authservice/cert", true)
 
 		return nil

@@ -144,11 +144,6 @@ objects:
               - -c
               - $ARTEMIS_HOME/custom/bin/probe.sh
             initialDelaySeconds: 10
-          resources:
-            limits:
-              memory: ${BROKER_MEMORY_LIMIT}
-            requests:
-              memory: ${BROKER_MEMORY_LIMIT}
           volumeMounts:
           - mountPath: /var/run/artemis
             name: data
@@ -313,11 +308,8 @@ parameters:
 - description: Broker Java Options
   name: BROKER_JAVA_OPTS
   value: ""
-- description: Memory limits for container
-  name: BROKER_MEMORY_LIMIT
-  value: 512Mi
 - description: Global max size for all addresses in broker. Cannot be larger than
-    a quarter of BROKER_MEMORY_LIMIT
+    1/4 of JVM size
   name: BROKER_GLOBAL_MAX_SIZE
   value: "-1"
 - name: BROKER_CONNECTOR_NETTY_THREADS

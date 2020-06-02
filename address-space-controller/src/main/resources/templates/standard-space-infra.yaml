@@ -132,11 +132,6 @@ objects:
               port: http
               scheme: HTTP
           name: router
-          resources:
-            limits:
-              memory: ${ROUTER_MEMORY_LIMIT}
-            requests:
-              memory: ${ROUTER_MEMORY_LIMIT}
           ports:
           - containerPort: 5672
             name: amqp
@@ -326,11 +321,6 @@ objects:
               port: http
               scheme: HTTP
             initialDelaySeconds: 30
-          resources:
-            limits:
-              memory: ${ADMIN_MEMORY_LIMIT}
-            requests:
-              memory: ${ADMIN_MEMORY_LIMIT}
           volumeMounts:
           - mountPath: /etc/enmasse-certs
             name: admin-internal-cert
@@ -392,11 +382,6 @@ objects:
               scheme: HTTP
             periodSeconds: 30
             timeoutSeconds: 5
-          resources:
-            limits:
-              memory: ${ADMIN_MEMORY_LIMIT}
-            requests:
-              memory: ${ADMIN_MEMORY_LIMIT}
           volumeMounts:
           - mountPath: /opt/agent/authservice-ca
             name: authservice-ca
@@ -569,12 +554,6 @@ parameters:
 - description: The service account with address space admin privileges
   name: ADDRESS_SPACE_ADMIN_SA
   value: address-space-admin
-- description: Memory limits for admin
-  name: ADMIN_MEMORY_LIMIT
-  value: 512Mi
-- description: Memory limits for router
-  name: ROUTER_MEMORY_LIMIT
-  value: 512Mi
 - name: IMAGE_PULL_POLICY
   description: Image Pull Policy
   value: ${env.IMAGE_PULL_POLICY}

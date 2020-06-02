@@ -19,16 +19,32 @@ import io.sundr.builder.annotations.Inline;
         builderPackage = "io.fabric8.kubernetes.api.builder",
         inline = @Inline(type = Doneable.class, prefix = "Doneable", value = "done")
 )
-@JsonPropertyOrder({"memory"})
+@JsonPropertyOrder({"cpu", "memory"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class StandardInfraConfigSpecRouterResources extends AbstractWithAdditionalProperties {
     private String memory;
+    private String cpu;
 
-    public StandardInfraConfigSpecRouterResources() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StandardInfraConfigSpecRouterResources that = (StandardInfraConfigSpecRouterResources) o;
+        return Objects.equals(memory, that.memory) &&
+                Objects.equals(cpu, that.cpu);
     }
 
-    public StandardInfraConfigSpecRouterResources(final String memory) {
-        setMemory(memory);
+    @Override
+    public int hashCode() {
+        return Objects.hash(memory, cpu);
+    }
+
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecRouterResources{" +
+                "memory='" + memory + '\'' +
+                ", cpu='" + cpu + '\'' +
+                '}';
     }
 
     public void setMemory(String memory) {
@@ -39,23 +55,12 @@ public class StandardInfraConfigSpecRouterResources extends AbstractWithAddition
         return memory;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StandardInfraConfigSpecRouterResources that = (StandardInfraConfigSpecRouterResources) o;
-        return Objects.equals(memory, that.memory);
+    public String getCpu() {
+        return cpu;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(memory);
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
     }
 
-    @Override
-    public String toString() {
-        return "StandardInfraConfigSpecRouterResources{" +
-                "memory='" + memory + '\'' +
-                '}';
-    }
 }

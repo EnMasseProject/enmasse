@@ -47,6 +47,8 @@ spec:
                   properties:
                     memory:
                       type: string
+                    cpu:
+                      type: string
                 podTemplate:
                   type: object
                   properties:
@@ -110,6 +112,8 @@ spec:
                 resources:
                   type: object
                   properties:
+                    cpu:
+                      type: string
                     memory:
                       type: string
                     storage:
@@ -162,6 +166,8 @@ spec:
                 resources:
                   type: object
                   properties:
+                    cpu:
+                      type: string
                     memory:
                       type: string
                 minReplicas:

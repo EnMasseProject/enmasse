@@ -25,6 +25,7 @@
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
 * #4650: Install uncaught exception handler in address-space-controller and standard-controller
 * #4656: Defining a connector before its referenced secret exists results in NPE and permanently unready address space
+* #4631: Allow configuring CPU limits for infra
 
 ## 0.31.2
 * #4098: Added alert for high broker address memory usage

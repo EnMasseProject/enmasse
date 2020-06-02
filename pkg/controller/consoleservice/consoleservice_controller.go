@@ -911,6 +911,8 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 
 		if consoleServer != nil && consoleServer.Resources != nil {
 			container.Resources = *consoleServer.Resources
+		} else {
+			container.Resources = corev1.ResourceRequirements{}
 		}
 
 		if consoleServer != nil && consoleServer.Session != nil && consoleServer.Session.Lifetime != nil && *consoleServer.Session.Lifetime != "" {
@@ -996,6 +998,8 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 	if consoleservice.Spec.OauthProxy != nil {
 		if consoleservice.Spec.OauthProxy.Resources != nil {
 			container.Resources = *consoleservice.Spec.OauthProxy.Resources
+		} else {
+			container.Resources = corev1.ResourceRequirements{}
 		}
 		container.Args = append(container.Args, consoleservice.Spec.OauthProxy.ExtraArgs...)
 	}
