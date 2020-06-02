@@ -39,17 +39,14 @@ metadata:
   name: default
 spec:
   logging:
-    level: info # <1>
-    loggers: # <2>
-      io.enmasse: debug # <3>
-      io.netty: error # <4>
+    level: info <1>
+    loggers: <2>
+      io.enmasse: debug <3>
+      io.netty: error <4>
 ----
 <1> The default global log level. If omitted, `info` is used.
-+
 <2> The section for log channel specific entries.
-+
 <3> Lowers the filtering to `debug` level for messages in the channel `io.enmasse`.
-+
 <4> Raises the filtering to `error` level for messages in the channel `io.netty`.
 
 . The operator applies the logging configuration and re-deploys all
@@ -93,22 +90,19 @@ spec:
       containers:
         adapter:
           logback:
-            level: info # <1>
-            loggers: # <2>
-              io.enmasse: debug # <3>
-              io.netty: error # <4>
+            level: info <1>
+            loggers: <2>
+              io.enmasse: debug <3>
+              io.netty: error <4>
 ----
 <1> The application global log level. If omitted, the default global level is used.
-+
 <2> The section for log channel specific entries. If omitted and the
     application global log level is also omitted, the
     default log channel configuration of the infrastructure
     is used. If the application global log level
     is set, it is considered an empty set, and no log channel
     specific configuration is applied.
-+
 <3> Lowers the filtering to `debug` level for messages in the channel `io.enmasse`.
-+
 <4> Raises the filtering to `error` level for messages in the channel `io.netty`.
 
 . The operator applies the logging configuration and re-deploys all
@@ -128,7 +122,7 @@ For more information about configuring Logback, see http://logback.qos.ch/manual
 
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-messaging-iot-iot-iot[The IoT services are installed].
-* Create the content of an XML-based logback configuration file
+* Create the content of an XML-based logback configuration file.
 
 === Using the `IoTConfig` resource
 
@@ -157,7 +151,7 @@ spec:
       containers:
         adapter:
           logback:
-            logback: | # <1>
+            logback: | <1>
               <configuration>
                 <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
                   <encoder>
@@ -198,9 +192,9 @@ metadata:
   namespace: enmasse-infra
   name: iot-http-adapter-config
 data:
-  application.yaml: … # <1>
-  logback-spring.xml: … # <2>
-  logback-custom.xml: | # <3>
+  application.yaml: … <1>
+  logback-spring.xml: … <2>
+  logback-custom.xml: | <3>
     <configuration>
       <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -213,10 +207,8 @@ data:
     </configuration>
 ----
 <1> The application specific configuration file. The operator generates this file and overwrites any changes.
-+
 <2> The effective logback configuration, applied by the system. Do not
     change this, as it will be overwritten by the operator.
-+
 <3> The full XML-based logback configuration.
 
 . The operator detects changes on the `ConfigMap` resource, applies
