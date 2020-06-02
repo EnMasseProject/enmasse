@@ -5,26 +5,26 @@
 
 import React, { useState } from "react";
 import {
-  ProjectCertificateToolbar,
+  IoTCertificateToolbar,
   CertificateForm,
-  ProjectCertificate
+  IoTCertificate
 } from "modules/iot-certificates";
 import { GridItem, Grid } from "@patternfly/react-core";
 
-export interface IProjectCertificate {
-  "subject-dn": string;
-  "public-key": string;
-  "auto-provisioning-enabled": boolean;
-  algorithm: string;
-  "not-before": string;
-  "not-after": string;
+export interface IIoTCertificate {
+  "subject-dn"?: string | null;
+  "public-key"?: string | null;
+  "auto-provisioning-enabled"?: boolean | null;
+  algorithm?: string | null;
+  "not-before"?: string | null;
+  "not-after"?: string | null;
 }
 
-export interface IProjectCertificateListProps {
-  certificates: IProjectCertificate[];
+export interface IIoTCertificateListProps {
+  certificates: IIoTCertificate[];
 }
 
-export const ProjectCertificateList: React.FunctionComponent<IProjectCertificateListProps> = ({
+export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProps> = ({
   certificates
 }) => {
   const [showCertificateForm, setShowCertificateForm] = useState<boolean>(
@@ -41,7 +41,7 @@ export const ProjectCertificateList: React.FunctionComponent<IProjectCertificate
   return (
     <Grid key={"iiid"}>
       <GridItem span={6}>
-        <ProjectCertificateToolbar
+        <IoTCertificateToolbar
           handleJsonViewChange={handleJsonViewChange}
           isJsonView={isJsonView}
           setShowCertificateForm={setShowCertificateForm}
@@ -56,8 +56,8 @@ export const ProjectCertificateList: React.FunctionComponent<IProjectCertificate
             <br />
           </>
         )}
-        {certificates.map((certificate: IProjectCertificate, index: number) => (
-          <ProjectCertificate
+        {certificates.map((certificate: IIoTCertificate, index: number) => (
+          <IoTCertificate
             key={`certificate-${index}`}
             id={`certificate-${index}`}
             certificate={certificate}
