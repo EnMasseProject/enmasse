@@ -42,6 +42,7 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
     @NotNull
     private String plan;
     private String topic;
+    private Ttl ttl;
 
     private SubscriptionSpec subscription;
 
@@ -108,6 +109,14 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
         this.subscription = subscription;
     }
 
+    public Ttl getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(Ttl ttl) {
+        this.ttl = ttl;
+    }
+
     @Override
     public String toString() {
 
@@ -123,6 +132,7 @@ public class AddressSpec extends AbstractWithAdditionalProperties {
              sb.append(",forwarders=").append(forwarders);
          }
          sb.append(",subscription=").append(subscription);
+         sb.append(",ttl=").append(ttl);
          sb.append("}");
 
          return sb.toString();

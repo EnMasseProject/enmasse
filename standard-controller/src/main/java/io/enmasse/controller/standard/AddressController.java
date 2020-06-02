@@ -27,29 +27,12 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import io.enmasse.address.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
-import io.enmasse.address.model.AddressResolver;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceResolver;
-import io.enmasse.address.model.AddressSpaceSpecConnector;
-import io.enmasse.address.model.AddressSpaceType;
-import io.enmasse.address.model.AddressSpecForwarder;
-import io.enmasse.address.model.AddressSpecForwarderDirection;
-import io.enmasse.address.model.AddressStatus;
-import io.enmasse.address.model.AddressStatusBuilder;
-import io.enmasse.address.model.AddressStatusForwarder;
-import io.enmasse.address.model.AddressStatusForwarderBuilder;
-import io.enmasse.address.model.AddressType;
-import io.enmasse.address.model.BrokerState;
-import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.Schema;
 import io.enmasse.admin.model.AddressPlan;
 import io.enmasse.admin.model.AddressSpacePlan;
 import io.enmasse.admin.model.v1.InfraConfig;
@@ -779,6 +762,7 @@ public class AddressController implements Watcher<Address> {
                     }
                     ok += RouterStatus.checkActiveAutoLink(address, routerStatusList);
                     ok += RouterStatus.checkForwarderLinks(address, routerStatusList);
+                    updateMessageTtlStatus(addressPlan, address);
                     break;
                 case "subscription":
                     ok += checkBrokerStatus(brokerStatusCollector, address, clusterOk, clusterAddresses, clusterQueues);
@@ -822,6 +806,7 @@ public class AddressController implements Watcher<Address> {
                             SubserveStatusCollector.checkTopicRegistration(subserveTopics, address, addressPlan);
                         }
                     }
+                    updateMessageTtlStatus(addressPlan, address);
                     break;
                 case "anycast":
                 case "multicast":
@@ -834,6 +819,45 @@ public class AddressController implements Watcher<Address> {
         }
 
         return numOk;
+    }
+
+    private void updateMessageTtlStatus(AddressPlan addressPlan, Address address) {
+        TtlBuilder status = new TtlBuilder();
+
+        Ttl planTtl = addressPlan.getTtl();
+        if (planTtl != null) {
+            Integer min = sanitizeTtlValue(planTtl.getMinimum());
+            Integer max = sanitizeTtlValue(planTtl.getMaximum());
+
+            boolean maxGtMin = min == null || max == null || max > min;
+            if (max != null && maxGtMin) {
+                status.withMaximum(max);
+            }
+            if (min != null && maxGtMin) {
+                status.withMinimum(min);
+            }
+        }
+
+        Ttl addrTtl = address.getSpec().getTtl();
+        if (addrTtl != null) {
+            Integer min = sanitizeTtlValue(addrTtl.getMinimum());
+            Integer max = sanitizeTtlValue(addrTtl.getMaximum());
+
+            boolean maxGtMin = min == null || max == null || max > min;
+            if (max != null && maxGtMin && (!status.hasMaximum() || status.getMaximum() > max)) {
+                status.withMaximum(max);
+            }
+            if (min != null && maxGtMin && (!status.hasMinimum() || status.getMinimum() < min)) {
+                status.withMinimum(min);
+            }
+        }
+
+        address.getStatus().setTtl(status.hasMaximum() || status.hasMinimum() ? status.build() : null);
+
+    }
+
+    private Integer sanitizeTtlValue(Integer ttl) {
+        return ttl != null && ttl < 1 ? null : ttl;
     }
 
     private int checkBrokerStatus(BrokerStatusCollector brokerStatusCollector, Address address, Map<String, Integer> clusterOk, Map<String, Set<String>> clusterAddresses, Map<String, Set<String>> clusterQueues) throws Exception {

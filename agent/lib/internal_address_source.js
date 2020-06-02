@@ -232,6 +232,10 @@ AddressSource.prototype.updated = function (objects) {
 AddressSource.prototype.update_status = function (record, ready) {
     var self = this;
 
+    function sanitizeTtlValue(ttl) {
+        return ttl && ttl < 1 ? undefined : ttl;
+    }
+
     function update(address) {
         var updated = 0;
         var messages = [];
@@ -267,6 +271,45 @@ AddressSource.prototype.update_status = function (record, ready) {
                 delete address.status.planStatus.resources;
                 updated++;
             }
+
+            var minimumTtl;
+            var maximumTtl;
+            if (planDef.spec && planDef.spec.ttl && planDef.spec.ttl.minimum) {
+                minimumTtl = sanitizeTtlValue(planDef.spec.ttl.minimum);
+            }
+            if (planDef.spec && planDef.spec.ttl && planDef.spec.ttl.maximum) {
+                maximumTtl = sanitizeTtlValue(planDef.spec.ttl.maximum);
+            }
+            if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
+                maximumTtl = undefined;
+                minimumTtl = undefined;
+            }
+
+            if (address.spec.ttl && address.spec.ttl.minimum && (minimumTtl === undefined || address.spec.ttl.minimum > minimumTtl)) {
+                minimumTtl = address.spec.ttl.minimum;
+            }
+            if (address.spec.ttl && address.spec.ttl.maximum && (maximumTtl === undefined || address.spec.ttl.maximum < maximumTtl)) {
+                maximumTtl = address.spec.ttl.maximum;
+            }
+            if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
+                maximumTtl = undefined;
+                minimumTtl = undefined;
+            }
+
+            if (minimumTtl || maximumTtl) {
+                address.status.ttl = {};
+                if (address.status.ttl.minimum !== minimumTtl) {
+                    address.status.ttl.minimum = minimumTtl;
+                    updated++;
+                }
+                if (address.status.ttl.maximum !== maximumTtl) {
+                    address.status.ttl.maximum = maximumTtl;
+                    updated++;
+                }
+            } else {
+                delete address.status.ttl;
+                updated++;
+            }
         } else {
             ready = false;
             messages.push("Unknown address plan '" + address.spec.plan + "'");
@@ -294,7 +337,6 @@ AddressSource.prototype.update_status = function (record, ready) {
             address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
             updated++;
         }
-
         return updated ? address : undefined;
     }
     var options = {namespace: this.config.ADDRESS_SPACE_NAMESPACE};

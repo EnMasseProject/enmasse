@@ -79,7 +79,7 @@ function same_addressplan_definition_and_status(a, b) {
 }
 
 function same_addressplan_definition(a, b) {
-    return a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources);
+    return a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources) && same_ttl(a.ttl, b.ttl);
 }
 
 function same_addressplan_resources(a, b) {
@@ -87,10 +87,17 @@ function same_addressplan_resources(a, b) {
     return a.broker === b.broker && a.router === b.router;
 }
 
+function same_ttl(a, b) {
+    if (a === undefined) return b === undefined;
+    if (a.minimum === undefined) return b.minimum === undefined;
+    if (a.maximum === undefined) return b.maximum === undefined;
+    return a.minimum === b.minimum && a.maximum === b.maximum;
+}
+
 function same_addressplan_status(a, b) {
     if (a === undefined) return b === undefined;
     if (a === null) return b === null;
-    return b && a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
+    return b && a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages) && same_ttl(a.ttl, b.ttl);
 }
 
 function addressplan_compare(a, b) {

@@ -269,6 +269,80 @@ describe('address source', function() {
             });
         });
     });
+    it('updates status - ttl from plan', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                addressType: 'queue',
+                ttl: {
+                    minimum: 1000,
+                    maximum: 2000
+                },
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.ttl.minimum, 1000);
+                assert.equal(address.status.ttl.maximum, 2000);
+                done();
+            });
+        });
+    });
+    it('updates status - ttl from address', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', ttl: {minimum: 1000, maximum: 2000}});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                addressType: 'queue'
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.ttl.minimum, 1000);
+                assert.equal(address.status.ttl.maximum, 2000);
+                done();
+            });
+        });
+    });
+    it('updates status - ttl address overrides plan', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan', ttl: {minimum: 500, maximum: 750}});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                addressType: 'queue',
+                ttl: {
+                    minimum: 600,
+                    maximum: 2000
+                },
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.ttl.minimum, 600);
+                assert.equal(address.status.ttl.maximum, 750);
+                done();
+            });
+        });
+    });
 
     function equal_properties (a, b) {
         for (let k in a) {

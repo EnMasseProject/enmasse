@@ -54,6 +54,8 @@ public class StandardControllerSchema implements SchemaProvider {
                 .withAddressPlans(Arrays.asList(
                         "small-anycast",
                         "small-queue",
+                        "small-queue-with-maxttl",
+                        "small-queue-with-minttl",
                         "pooled-queue-larger",
                         "pooled-queue-small",
                         "pooled-queue-tiny",
@@ -110,6 +112,20 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withRequiredResources(Arrays.asList(
                                                         new ResourceRequest("router", 0.2),
                                                         new ResourceRequest("broker", 0.4)))
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-maxttl").build())
+                                                .withSpec(new AddressPlanSpecBuilder()
+                                                        .withAddressType("queue")
+                                                        .withResources(Map.of("router", 0.2, "broker", 0.4))
+                                                        .withTtl(new TtlBuilder().withMaximum(30000).build()).build())
+                                                .build(),
+                                        new AddressPlanBuilder()
+                                                .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-minttl").build())
+                                                .withSpec(new AddressPlanSpecBuilder()
+                                                        .withAddressType("queue")
+                                                        .withResources(Map.of("router", 0.2, "broker", 0.4))
+                                                        .withTtl(new TtlBuilder().withMinimum(10000).build()).build())
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-sharded-queue").build())

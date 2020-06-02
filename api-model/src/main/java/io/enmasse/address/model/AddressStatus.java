@@ -48,6 +48,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     private List<@Valid BrokerStatus> brokerStatuses = new ArrayList<>();
     private AddressPlanStatus planStatus;
     private SubscriptionStatus subscription;
+    private Ttl ttl;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<@Valid AddressStatusForwarder> forwarders;
@@ -122,7 +123,8 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 Objects.equals(brokerStatuses, status.brokerStatuses) &&
                 Objects.equals(planStatus, status.planStatus) &&
                 Objects.equals(forwarders, status.forwarders) &&
-                Objects.equals(subscription, status.subscription);
+                Objects.equals(subscription, status.subscription) &&
+                Objects.equals(ttl, status.ttl);
     }
 
     @Override
@@ -141,6 +143,7 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
                 .append(",").append("planStatus=").append(planStatus)
                 .append(",").append("forwarders=").append(forwarders)
                 .append(",").append("subscription=").append(subscription)
+                .append(",").append("ttl=").append(ttl)
                 .append("}")
                 .toString();
     }
@@ -171,5 +174,13 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
 
     public void setSubscription(SubscriptionStatus subscription) {
         this.subscription = subscription;
+    }
+
+    public Ttl getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(Ttl ttl) {
+        this.ttl = ttl;
     }
 }

@@ -92,8 +92,7 @@ describe('addressplan source', function() {
             });
         });
     });
-
-    it('watches for changes - redefined plan', function(done) {
+    it('watches for changes - redefined plan - resources', function(done) {
 
         address_server.add_address_plan({plan_name:'small', address_type:'queue', resources: {broker: 0.4}});
 
@@ -110,6 +109,32 @@ describe('addressplan source', function() {
             assert.equal(addressplans.length, 1);
             process.nextTick(() => {
                 address_server.update_address_plan({plan_name:'small', address_type:'queue', resources: {broker: 0.5}});
+            });
+
+            source.on('addressplans_defined', (update) => {
+                source.watcher.close();
+                assert.equal(update.length, 1);
+                done();
+            });
+        });
+    });
+    it('watches for changes - redefined plan - ttl', function(done) {
+
+        address_server.add_address_plan({plan_name:'small', address_type:'queue', ttl: {minimum: 1000, maximum: 2000}});
+
+        var source = new AddressPlanSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space', ADDRESS_SPACE_PREFIX: 's1.'});
+        source.start(address_space_plan_source);
+        address_space_plan_source.emit("addressspaceplan_defined", {
+            kind: 'AddressPlan',
+            metadata: {name: 'spaceplan'},
+            spec: {
+                addressPlans: ['small'],
+            }
+        });
+        source.once('addressplans_defined', (addressplans) => {
+            assert.equal(addressplans.length, 1);
+            process.nextTick(() => {
+                    address_server.update_address_plan({plan_name:'small', address_type:'queue', ttl: {minimum: 1001, maximum: 1999}});
             });
 
             source.on('addressplans_defined', (update) => {
