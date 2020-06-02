@@ -23,6 +23,9 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.ContainerState;
+import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
+import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -897,23 +900,21 @@ public class SystemtestsKubernetesApps {
 
         createPodRetrying(kubeClient, CONTAINER_BUILDS_PROJECT, pod);
 
-        Function<Pod, String> containerReasonGetter = p -> {
-            return Optional.ofNullable(p)
-                .map(c -> c.getStatus())
-                .map(c -> c.getContainerStatuses())
-                .filter(c -> !c.isEmpty())
-                .map(c -> c.get(0))
-                .map(c -> c.getState())
-                .map(c -> c.getTerminated())
-                .map(c -> c.getReason())
-                .orElse("");
-        };
+        Function<Pod, String> containerReasonGetter = p -> Optional.ofNullable(p)
+            .map(Pod::getStatus)
+            .map(PodStatus::getContainerStatuses)
+            .filter(c -> !c.isEmpty())
+            .map(c -> c.get(0))
+            .map(ContainerStatus::getState)
+            .map(ContainerState::getTerminated)
+            .map(ContainerStateTerminated::getReason)
+            .orElse("");
 
         try {
             TestUtils.waitUntilCondition("Pod is created", waitPhase -> {
                 try {
                     return Kubernetes.getInstance().listPods(CONTAINER_BUILDS_PROJECT)
-                            .stream().filter(p -> p.getMetadata().getName().contains(pod.getMetadata().getName())).findFirst().isPresent();
+                            .stream().anyMatch(p -> p.getMetadata().getName().contains(pod.getMetadata().getName()));
                 } catch (Exception ex) {
                     return false;
                 }
@@ -955,9 +956,7 @@ public class SystemtestsKubernetesApps {
                 }
             }
         } while (retries > 0);
-        if (error != null) {
-            Assertions.fail(error);
-        }
+        Assertions.fail(error);
     }
 
     private static void collectContainerBuildLogs(Kubernetes kubeClient) {

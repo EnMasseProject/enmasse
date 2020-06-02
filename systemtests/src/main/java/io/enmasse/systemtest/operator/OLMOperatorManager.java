@@ -122,26 +122,28 @@ public class OLMOperatorManager {
 
         log.info("Going to build and push image {}", customRegistryImageToPush);
 
-        if (Kubernetes.isOpenShiftCompatible()) {
-            SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
-        } else {
-            String volume = System.getProperty("user.dir") + "/custom-operator-registry/workspace:/workspace";
-            String kanikoImage = "gcr.io/kaniko-project/executor:v0.19.0";
-            List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
-                    "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
-                    "--insecure-registry=true",
-                    "--skip-tls-verify=true",
-                    "--force");
-            var result = Exec.execute(command);
-            if (!result.getRetCode()) {
-                if (saysDoingNothing(result.getStdErr()) || saysDoingNothing(result.getStdOut())) {
-                    log.info("Ignoring command error, as image building should have succeeded");
-                    return; //it went ok
+        TestUtils.runUntilPass(5, () -> {
+            if (Kubernetes.isOpenShiftCompatible()) {
+                SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
+            } else {
+                String volume = System.getProperty("user.dir") + "/custom-operator-registry/workspace:/workspace";
+                String kanikoImage = "gcr.io/kaniko-project/executor:v0.19.0";
+                List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
+                        "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
+                        "--insecure-registry=true",
+                        "--skip-tls-verify=true",
+                        "--force");
+                var result = Exec.execute(command);
+                if (!result.getRetCode()) {
+                    if (saysDoingNothing(result.getStdErr()) || saysDoingNothing(result.getStdOut())) {
+                        log.info("Ignoring command error, as image building should have succeeded");
+                        return; //it went ok
+                    }
+                    log.error("Throwing error, image building failed");
+                    throw new IllegalStateException("Image build failed");
                 }
-                log.error("Throwing error, image building failed");
-                throw new IllegalStateException("Image build failed");
             }
-        }
+        });
     }
 
     private boolean saysDoingNothing(String text) {
