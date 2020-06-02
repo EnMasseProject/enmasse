@@ -1,0 +1,59 @@
+// Module included in the following assemblies:
+//
+// assembly-using-console.adoc
+
+[id='ref-view-endpoint-info-{context}']
+
+= Viewing endpoint information using the {ConsoleName}
+
+You can use the {ConsoleName} to view information about the endpoints configured for a given address space. You need this information to connect your messaging application to {ProductName}.
+
+.Prerequisites
+* You must be logged into the {ConsoleName}. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#logging-into-console-messaging[Accessing the {ConsoleName}].
+
+ifdef::Asciidoctor[]
+image::console-screenshot-endpoints.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+ifndef::Asciidoctor[]
+image::{imagesdir}/console-screenshot-endpoints.png[{ConsoleName}]
+endif::Asciidoctor[]
+
+.Messaging endpoint information reference table
+[cols="50%a,50%a",options="header"]
+|===
+|Column |Description
+|Name |Displays the name of the endpoint.
+|Type |Displays the type of endpoint. Valid values include:
+
+`cluster`:: An endpoint accessible on the {KubePlatform} cluster through a cluster IP address.
+
+ifeval::["{cmdcli}" =="oc"]
+`route`:: An {KubePlatform} route available outside the cluster.
+endif::[]
+
+`loadbalancer`:: A `LoadBalancer` service integrating with an external load balancer.
+
+ifeval::["{cmdcli}" == "oc"]
+For more information, see the following {KubePlatform} documentation:
+
+* link:{OCPBookUrlBase}{OCPProductVersion}/networking/routes/route-configuration.html[Route Configuration]
+* link:{OCPBookUrlBase}{OCPProductVersion}/networking/configuring_ingress_cluster_traffic/configuring-ingress-cluster-traffic-load-balancer.html[Configuring ingress cluster traffic using a load balancer]
+endif::[]
+
+ifeval::["{cmdcli}" == "kubectl"]
+For more information, see the link:https://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/[{KubePlatform} documentation].
+endif::[]
+
+|Host |Displays the host name of the endpoint.
+|Ports |Displays the port protocol name and port number of the endpoint. Valid port names include:
+
+`AMQP`:: Advance Messaging Queuing Protocol
+
+`AMQPS`:: Advance Messaging Queuing Protocol over TLS
+
+`AMQP-WS`:: AMQP-WebSocket protocol
+
+`AMQP-WSS`:: AMQP-WebSocket protocol over TLS
+
+|===

@@ -20,6 +20,8 @@ include::../modules/proc-logging-in-console.adoc[leveloffset=+1]
 
 include::../modules/ref-view-message-conn-stats-table.adoc[leveloffset=+1]
 
+include::../modules/ref-view-endpoint-info.adoc[leveloffset=+1]
+
 include::../modules/proc-purging-queues.adoc[leveloffset=+1]
 
 include::../modules/proc-closing-connections.adoc[leveloffset=+1]
