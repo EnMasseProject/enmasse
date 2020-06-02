@@ -211,6 +211,23 @@ func (c *conditionAggregator) Aggregate(ctx context.Context, client client.Clien
 
 	}
 
+	// add reconcile error
+
+	var configErr error = nil
+	reconCond := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReconciled)
+	if me == nil {
+		reconCond.SetStatusAsBoolean(true, "AsExpected", "")
+	} else {
+		if util.OnlyNonRecoverableErrors(me) {
+			reconCond.SetStatusAsBoolean(false, "ConfigurationFailed", me.Error())
+			configErr = me
+		} else {
+			reconCond.SetStatusAsBoolean(false, "LoopFailed", me.Error())
+		}
+		nonReadyList = append(nonReadyList, "Configuration")
+		degradedList = append(degradedList, "Configuration")
+	}
+
 	// composite ready and degraded state
 
 	ready := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
@@ -219,23 +236,12 @@ func (c *conditionAggregator) Aggregate(ctx context.Context, client client.Clien
 	degraded := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeDegraded)
 	c.aggregateFromList(&degraded.CommonCondition, degradedList, false, "DegradedComponents", "degraded")
 
-	// add reconcile error
-
-	reconCond := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReconciled)
-	if reconcileError == nil {
-		reconCond.SetStatusAsBoolean(true, "AsExpected", "")
-	} else {
-		if util.OnlyNonRecoverableErrors(reconcileError) {
-			reconCond.SetStatusAsBoolean(false, "ConfigurationFailed", reconcileError.Error())
-		} else {
-			reconCond.SetStatusAsBoolean(false, "LoopFailed", reconcileError.Error())
-		}
-	}
-
 	// done
 
 	if ready.IsOk() {
 		return iotv1alpha1.ConfigPhaseActive, ""
+	} else if configErr != nil {
+		return iotv1alpha1.ConfigPhaseFailed, configErr.Error()
 	} else {
 		return iotv1alpha1.ConfigPhaseFailed, ready.Message
 	}
