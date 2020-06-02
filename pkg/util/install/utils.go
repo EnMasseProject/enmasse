@@ -536,8 +536,8 @@ func ApplyEnvOptionalSecret(container *corev1.Container, name string, secretKey 
 	})
 }
 
-func FromConfigMap(configMapName string, configMapKey string, optional *bool) *corev1.EnvVarSource {
-	return FromConfigMap(configMapName, configMapKey, nil)
+func FromConfigMap(configMapName string, configMapKey string) *corev1.EnvVarSource {
+	return FromOptionalConfigMap(configMapName, configMapKey, nil)
 }
 
 func FromOptionalConfigMap(configMapName string, configMapKey string, optional *bool) *corev1.EnvVarSource {
