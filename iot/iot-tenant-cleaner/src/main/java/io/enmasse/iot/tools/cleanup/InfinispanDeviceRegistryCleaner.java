@@ -24,9 +24,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
-import io.enmasse.iot.infinispan.cache.DeviceConnectionCacheProvider;
 import io.enmasse.iot.infinispan.cache.DeviceManagementCacheProvider;
-import io.enmasse.iot.infinispan.devcon.DeviceConnectionKey;
 import io.enmasse.iot.infinispan.device.DeviceInformation;
 import io.enmasse.iot.infinispan.device.DeviceKey;
 import io.enmasse.iot.registry.tenant.TenantHandle;
@@ -62,19 +60,13 @@ public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
 
         final LinkedList<Closer> cleanup = new LinkedList<>();
 
-        try (
-                var mgmtProvider = new DeviceManagementCacheProvider(this.config.getInfinispan());
-                var deviceconProvider = new DeviceConnectionCacheProvider(this.config.getInfinispan());) {
+        try (var mgmtProvider = new DeviceManagementCacheProvider(this.config.getInfinispan())) {
 
             mgmtProvider.start();
             final var devicesCache = mgmtProvider.getOrCreateDeviceManagementCache();
             cleanup.add(devicesCache::stop);
 
-            deviceconProvider.start();
-            final var devicesConnectionCache = deviceconProvider.getDeviceStateCache().orElse(null);
-            cleanup.add(devicesConnectionCache::stop);
-
-            performCleanup(config, devicesCache, devicesConnectionCache);
+            performCleanup(config, devicesCache);
 
         } finally {
 
@@ -98,8 +90,7 @@ public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
 
     private void performCleanup(
             final CleanerConfig config,
-            final RemoteCache<DeviceKey, DeviceInformation> devicesCache,
-            final RemoteCache<DeviceConnectionKey, String> devicesConnectionCache) {
+            final RemoteCache<DeviceKey, DeviceInformation> devicesCache) {
 
         final String tenantId = config.getTenantId();
 
@@ -117,7 +108,7 @@ public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
             measure("Delete", () -> {
                 result.forEach(entry -> {
                     log.debug("result: {}", entry);
-                    deleteDevice(devicesCache, devicesConnectionCache, tenantId, entry.getDeviceId());
+                    deleteDevice(devicesCache, tenantId, entry.getDeviceId());
                 });
                 return null;
             });
@@ -150,15 +141,7 @@ public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
 
     }
 
-    private void deleteDevice(final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final RemoteCache<DeviceConnectionKey, String> devicesConnectionCache,
-            final String tenantIdToClean, final String deviceId) {
-
-        // delete device connection entry first
-
-        if (devicesConnectionCache != null) {
-            final DeviceConnectionKey conKey = new DeviceConnectionKey(tenantIdToClean, deviceId);
-            devicesConnectionCache.remove(conKey);
-        }
+    private void deleteDevice(final RemoteCache<DeviceKey, DeviceInformation> devicesCache, final String tenantIdToClean, final String deviceId) {
 
         // delete device registration second
 
@@ -166,6 +149,7 @@ public class InfinispanDeviceRegistryCleaner implements AutoCloseable {
                 .deviceKey(TenantHandle.of(tenantIdToClean, tenantIdToClean), deviceId);
 
         devicesCache.remove(regKey);
+
     }
 
 }

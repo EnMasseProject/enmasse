@@ -208,8 +208,9 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 		case iotv1alpha1.DeviceRegistryInfinispan:
 
-			// we need to set this, although we don't need the cleaner in this case
-			install.ApplyOrRemoveEnvSimple(container, "deviceConnection.type", "infinispan")
+			// we can set this to "noop", because we don't need cleaning
+			// but if the cleaner gets called, we let it know about that
+			install.ApplyOrRemoveEnvSimple(container, "deviceConnection.type", "noop")
 
 		case iotv1alpha1.DeviceConnectionJdbc:
 

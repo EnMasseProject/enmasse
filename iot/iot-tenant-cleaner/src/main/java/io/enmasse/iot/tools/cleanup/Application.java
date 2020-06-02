@@ -26,13 +26,11 @@ public class Application {
     }
 
     private static void cleanupDeviceConnection() throws Exception {
-        String connectionType = System.getenv("deviceConnection.type");
-        if (connectionType == null) {
-            connectionType = "<missing>";
-        }
+        final String connectionType = System.getenv()
+                .getOrDefault("deviceConnection.type", "<missing>");
 
         switch (connectionType) {
-            case "infinispan":
+            case "noop":
                 // nothing to clean up
                 break;
             case "jdbc":
@@ -46,12 +44,13 @@ public class Application {
     }
 
     private static void cleanupDeviceRegistry() throws Exception {
-        String registryTpe = System.getenv("registry.type");
-        if (registryTpe == null) {
-            registryTpe = "<missing>";
-        }
+        final String registryTpe = System.getenv()
+                .getOrDefault("registry.type", "<missing>");
 
         switch (registryTpe) {
+            case "noop":
+                // nothing to clean up
+                break;
             case "infinispan":
                 try (InfinispanDeviceRegistryCleaner app = new InfinispanDeviceRegistryCleaner()) {
                     app.run();
