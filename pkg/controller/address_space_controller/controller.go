@@ -212,19 +212,24 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 			deployment.ObjectMeta.Annotations["prometheus.io/port"] = "8080"
 		}
 
-		memoryEnv := util.GetEnvOrDefault("ADDRESS_SPACE_CONTROLLER_MEMORY_LIMIT", "512Mi")
-		memoryLimit, err := resource.ParseQuantity(memoryEnv)
-		if err != nil {
-			return err
+		cpuEnv, ok := os.LookupEnv("ADDRESS_SPACE_CONTROLLER_CPU_LIMIT")
+		if ok {
+			cpuLimit, err := resource.ParseQuantity(cpuEnv)
+			if err != nil {
+				return err
+			}
+			container.Resources.Requests[corev1.ResourceCPU] = cpuLimit
+			container.Resources.Limits[corev1.ResourceCPU] = cpuLimit
 		}
 
-		container.Resources = corev1.ResourceRequirements{
-			Requests: corev1.ResourceList{
-				corev1.ResourceMemory: memoryLimit,
-			},
-			Limits: corev1.ResourceList{
-				corev1.ResourceMemory: memoryLimit,
-			},
+		memoryEnv, ok := os.LookupEnv("ADDRESS_SPACE_CONTROLLER_MEMORY_LIMIT")
+		if ok {
+			memoryLimit, err := resource.ParseQuantity(memoryEnv)
+			if err != nil {
+				return err
+			}
+			container.Resources.Requests[corev1.ResourceMemory] = memoryLimit
+			container.Resources.Limits[corev1.ResourceMemory] = memoryLimit
 		}
 		return nil
 	})
