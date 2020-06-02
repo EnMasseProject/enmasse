@@ -13,7 +13,7 @@ import {
   Radio,
   Switch
 } from "@patternfly/react-core";
-import { IMessagingProject } from "modules/address-space/dialogs";
+import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
 import { StyleSheet, css } from "@patternfly/react-styles";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
@@ -70,12 +70,23 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     if (!value) {
       setProjectDetail({
         ...projectDetail,
-        tlsTermination: undefined,
-        hostname: undefined,
+        routesConf: [],
         addRoutes: value
       });
     } else {
-      setProjectDetail({ ...projectDetail, addRoutes: value });
+      const routes: IRouteConf[] = [];
+      projectDetail.protocols?.forEach(protocol => {
+        routes.push({
+          protocol: protocol,
+          hostname: undefined,
+          tlsTermination: undefined
+        });
+      });
+      setProjectDetail({
+        ...projectDetail,
+        addRoutes: value,
+        routesConf: routes
+      });
     }
   };
   const onCertificateChange = (_: boolean, event: any) => {
@@ -100,23 +111,36 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     }
     return false;
   };
+
   const onProtocolChange = (checked: boolean, event: any) => {
     const protocolValue = event.target.value;
     let protocolList: string[] = [];
+    const routes: IRouteConf[] = projectDetail.routesConf || [];
     if (protocols) {
       protocolList = JSON.parse(JSON.stringify(protocols));
     }
     if (protocolValue) {
       if (checked) {
         protocolList.push(protocolValue);
+        if (projectDetail.addRoutes) routes.push({ protocol: protocolValue });
       } else {
         const index = protocolList.findIndex(pr => pr === protocolValue);
         if (index >= 0) {
           protocolList.splice(index, 1);
         }
+        const routeIndex = routes.findIndex(
+          route => route.protocol === protocolValue
+        );
+        if (routeIndex > -1) {
+          routes.splice(routeIndex, 1);
+        }
       }
     }
-    setProjectDetail({ ...projectDetail, protocols: protocolList });
+    setProjectDetail({
+      ...projectDetail,
+      protocols: protocolList,
+      routesConf: routes
+    });
   };
   return (
     <Grid>
@@ -129,7 +153,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
               isRequired={true}
             >
               {getProtocolOptions().map(protocol => (
-                <>
+                <div key={`key-protocol-${protocol.key}`}>
                   <br />
                   <Checkbox
                     label={protocol.label}
@@ -142,7 +166,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     name={protocol.key}
                     className={css(style.margin_left)}
                   />
-                </>
+                </div>
               ))}
             </FormGroup>
           )}
@@ -153,7 +177,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
               isRequired={true}
             >
               {getCertificateOptions().map(certificate => (
-                <>
+                <div key={`key-cert-${certificate.key}`}>
                   <br />
                   <Radio
                     isChecked={tlsCertificate === certificate.value}
@@ -165,12 +189,13 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     value={certificate.value}
                     className={css(style.margin_left)}
                   />
-                </>
+                </div>
               ))}
             </FormGroup>
           )}
 
           <FormGroup fieldId="form-group-create-routes" label="Create Routes">
+            <br />
             <br />
             <Switch
               id="switch-configure-route-btn"

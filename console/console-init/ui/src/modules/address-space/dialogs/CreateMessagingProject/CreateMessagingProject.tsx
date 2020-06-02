@@ -27,6 +27,11 @@ import { EndpointConfiguration } from "modules/address-space/components";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { useQuery } from "@apollo/react-hooks";
 
+export interface IRouteConf {
+  protocol: string;
+  hostname?: string;
+  tlsTermination?: string;
+}
 export interface IMessagingProject {
   namespace: string;
   name: string;
@@ -40,12 +45,11 @@ export interface IMessagingProject {
   tlsCertificate?: string;
   protocols?: string[];
   privateKey?: string;
-  hostname?: string;
-  tlsTermination?: string;
   addRoutes: boolean;
+  routesConf?: IRouteConf[];
 }
 
-interface IExposeEndPoint {
+export interface IExposeEndPoint {
   name?: string;
   service?: string;
   certificate?: {
@@ -55,13 +59,13 @@ interface IExposeEndPoint {
   };
   expose?: IExposeRoute;
 }
-interface IExposeRoute {
+export interface IExposeRoute {
   routeHost?: string;
   type?: string;
   routeServicePort?: string;
   routeTlsTermination?: string;
 }
-interface IExposeMessagingProject {
+export interface IExposeMessagingProject {
   as: {
     metadata: {
       name: string;
@@ -131,10 +135,9 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
       tlsCertificate,
       certValue,
       privateKey,
-      tlsTermination,
       protocols,
       addRoutes,
-      hostname
+      routesConf
     } = messagingProject;
     if (isMessagingProjectValid(messagingProject)) {
       const queryVariables: IExposeMessagingProject = {
@@ -175,18 +178,30 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
               ) {
                 endpoint.certificate = {
                   ...endpoint.certificate,
-                  tlsKey: privateKey?.trim(),
-                  tlsCert: certValue?.trim()
+                  tlsKey: btoa(privateKey?.trim()),
+                  tlsCert: btoa(certValue?.trim())
                 };
               }
             }
             if (addRoutes) {
               endpoint.expose = { type: "route", routeServicePort: protocol };
-              if (hostname && hostname.trim() !== "") {
-                endpoint.expose.routeHost = hostname.trim();
-              }
-              if (tlsTermination && tlsTermination.trim() !== "") {
-                endpoint.expose.routeTlsTermination = tlsTermination;
+              const routeConf = routesConf?.filter(
+                conf => conf.protocol === protocol
+              );
+              if (routeConf && routeConf.length > 0) {
+                if (
+                  routeConf[0].hostname &&
+                  routeConf[0].hostname.trim() !== ""
+                ) {
+                  endpoint.expose.routeHost = routeConf[0].hostname.trim();
+                }
+                if (
+                  routeConf[0].tlsTermination &&
+                  routeConf[0].tlsTermination.trim() !== ""
+                ) {
+                  endpoint.expose.routeTlsTermination =
+                    routeConf[0].tlsTermination;
+                }
               }
             }
             endpoints.push(endpoint);
@@ -250,6 +265,7 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
     ),
     enableNext:
       isMessagingProjectValid(messagingProject) &&
+      isEnabledCertificateStep(messagingProject) &&
       isRouteStepValid(messagingProject)
   };
 
@@ -287,7 +303,6 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
       onClose={onCloseDialog}
       title="Create an Instance"
       steps={steps}
-      onNext={() => {}}
       onSave={handleSave}
     />
   );

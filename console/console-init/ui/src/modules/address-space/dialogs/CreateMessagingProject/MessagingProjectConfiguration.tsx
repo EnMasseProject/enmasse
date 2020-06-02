@@ -93,7 +93,15 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     setProjectDetail({ ...projectDetail, name: value });
   };
   const handleTypeChange = (_: boolean, event: any) => {
-    setProjectDetail({ ...projectDetail, type: event?.target.value });
+    setProjectDetail({
+      ...projectDetail,
+      type: event?.target.value,
+      protocols: undefined,
+      tlsCertificate: undefined,
+      routesConf: undefined,
+      plan: undefined,
+      authService: undefined
+    });
   };
   const onPlanSelect = (value: string) => {
     setProjectDetail({ ...projectDetail, plan: value });
@@ -114,7 +122,8 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
   const handleCustomEndpointChange = (customizeSwitchCheckedValue: boolean) => {
     setProjectDetail({
       ...projectDetail,
-      customizeEndpoint: customizeSwitchCheckedValue
+      customizeEndpoint: customizeSwitchCheckedValue,
+      addRoutes: customizeSwitchCheckedValue
     });
   };
 

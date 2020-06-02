@@ -13,6 +13,7 @@ import {
 } from "@patternfly/react-table";
 import { IEndPoint } from "modules/endpoints/EndpointPage";
 import { EmptyEndpoints } from "../EmptyEndpoints";
+import { Label } from "@patternfly/react-core";
 
 interface IEndPointListProps {
   endpoints: IEndPoint[];
@@ -23,6 +24,27 @@ const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
   endpoints,
   sortBy
 }) => {
+  const getType = (type?: string) => {
+    return (
+      <Label
+        style={
+          type?.toLowerCase() === "route"
+            ? {
+                backgroundColor: "#98e8e8",
+                color: "black",
+                borderRadius: 20
+              }
+            : {
+                backgroundColor: "rgb(214, 238, 246)",
+                color: "black",
+                borderRadius: 20
+              }
+        }
+      >
+        {type}
+      </Label>
+    );
+  };
   const tableColumns = [
     { title: "Name", id: "th-name", key: "th-name" },
     { title: "Type", id: "th-type", key: "th-type" },
@@ -40,7 +62,7 @@ const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
           key: `row-name-${name && name}`
         },
         {
-          title: type,
+          title: getType(type),
           id: `row-type-${type && type}`,
           key: `row-type-${type && type}`
         },
@@ -82,19 +104,16 @@ const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
   const tableRows = endpoints.map(toTableCells);
   return (
     <>
-      {endpoints && endpoints.length > 0 ? (
-        <Table
-          cells={tableColumns}
-          rows={tableRows}
-          aria-label="Endpoint List"
-          sortBy={sortBy}
-        >
-          <TableHeader id="endpoint-list-table-bodheader" />
-          <TableBody />
-        </Table>
-      ) : (
-        <EmptyEndpoints />
-      )}
+      <Table
+        cells={tableColumns}
+        rows={tableRows}
+        aria-label="Endpoint List"
+        sortBy={sortBy}
+      >
+        <TableHeader id="endpoint-list-table-bodheader" />
+        <TableBody />
+      </Table>
+      {endpoints && endpoints.length <= 0 && <EmptyEndpoints />}
     </>
   );
 };

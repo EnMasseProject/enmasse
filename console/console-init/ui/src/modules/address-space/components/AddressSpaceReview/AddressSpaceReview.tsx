@@ -39,6 +39,9 @@ const style = StyleSheet.create({
   left_padding: {
     paddingLeft: 32
   },
+  left_padding_for_endpoints: {
+    paddingLeft: 40
+  },
   bottom_padding: {
     paddingBottom: 16
   },
@@ -78,13 +81,14 @@ const ReviewGridItem: React.FunctionComponent<IReviewGridProps> = ({
     : css(style.left_margin_gridItem);
   return (
     <>
-      {value && value.trim() !== "" && (
+      {((labelText && labelText.trim() !== "") ||
+        (value && value.trim() !== "")) && (
         <>
           <GridItem span={5} className={className}>
-            {labelText}
+            {labelText?.trim()}
           </GridItem>
           <GridItem id={valueId} span={7}>
-            {value.trim()}
+            {value?.trim()}
           </GridItem>
         </>
       )}
@@ -109,10 +113,11 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   if (protocols) {
     for (const protocol of protocols) {
       protocolOptions.push(
-        endpointProtocolOptions.find(option => option.value === protocol)
+        endpointProtocolOptions.find((option: any) => option.value === protocol)
       );
     }
   }
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title size="3xl" style={{ marginBottom: 32 }}>
@@ -151,21 +156,19 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
               value={authenticationService}
               labelText="Authentication Service"
             />
-            <br />
-            <br />
             {customizeEndpoint && (
               <>
-                <GridItem
-                  span={12}
-                  className={css(style.preview_info_gridItem)}
-                >
-                  Endpoint customization
-                </GridItem>
+                <ReviewGridItem
+                  valueId="preview-addr-cutom-endpoint"
+                  value={""}
+                  labelText="Endpoint customization"
+                />
+
                 {protocolOptions.length > 0 && (
                   <>
                     <GridItem
                       span={5}
-                      className={css(style.left_margin_gridItem)}
+                      className={css(style.left_padding_for_endpoints)}
                     >
                       Protocols
                     </GridItem>
@@ -187,7 +190,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                   <>
                     <GridItem
                       span={5}
-                      className={css(style.left_margin_gridItem)}
+                      className={css(style.left_padding_for_endpoints)}
                     >
                       TLS Certificates
                     </GridItem>
@@ -202,7 +205,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 <>
                   <GridItem
                     span={5}
-                    className={css(style.left_margin_gridItem)}
+                    className={css(style.left_padding_for_endpoints)}
                   >
                     Create Routes
                   </GridItem>
@@ -215,6 +218,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 </>
               </>
             )}
+            <br />
           </Grid>
         </GridItem>
         <GridItem span={7} className={css(style.left_padding)}>

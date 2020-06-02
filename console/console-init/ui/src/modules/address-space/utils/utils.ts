@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import { IMessagingProject } from "../dialogs";
+import { IMessagingProject } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "./constant";
 
 const getDetailForDeleteDialog = (selectedItems: any[]) => {
@@ -76,13 +76,18 @@ const isMessagingProjectValid = (messagingProject: IMessagingProject) => {
 };
 
 const isRouteStepValid = (messagingProject: IMessagingProject) => {
-  if (
-    messagingProject.tlsTermination &&
-    messagingProject.tlsTermination !== ""
-  ) {
-    return true;
+  const { routesConf } = messagingProject;
+  if (routesConf && routesConf.length > 0) {
+    let isValid = true;
+    routesConf.forEach(route => {
+      if (!route.tlsTermination || route.tlsTermination.trim() === "") {
+        isValid = false;
+      }
+    });
+    return isValid;
+  } else {
+    return false;
   }
-  return false;
 };
 
 export {

@@ -16,6 +16,7 @@ import {
 } from "@patternfly/react-core";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { IOptionForKeyValueLabel } from "modules/address-space";
+import { IDropdownOption } from "components";
 
 interface IConfiguringRoutes {
   projectDetail: IMessagingProject;
@@ -32,7 +33,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
   addressSpaceSchema,
   setProjectDetail
 }) => {
-  const { hostname, tlsTermination, type, protocols } = projectDetail;
+  const { type, protocols, routesConf } = projectDetail;
 
   const getTlsCertificateLabel = (tlsValue: string) => {
     if (tlsValue === "passthrough") {
@@ -43,7 +44,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
     return tlsValue.toUpperCase();
   };
 
-  const getTlsTerminations = () => {
+  const getTlsTerminations = (protocol?: string) => {
     let tlsTerminations: ITlsTerrmination[] = [];
     if (addressSpaceSchema?.addressSpaceSchema) {
       addressSpaceSchema.addressSpaceSchema.forEach(as => {
@@ -61,6 +62,30 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
           });
         }
       });
+    }
+    if (protocol) {
+      tlsTerminations = tlsTerminations.filter(
+        tls => tls.portName === protocol
+      );
+    }
+    if (routesConf && routesConf.length > 0) {
+      for (let tls of tlsTerminations) {
+        for (let route of routesConf) {
+          if (route.protocol === tls.portName && tls.tlsOptions?.length === 1) {
+            if (!route.tlsTermination) {
+              const routes = routesConf;
+              const index = routesConf.findIndex(
+                route => route.protocol === tls.portName
+              );
+              routes[index] = {
+                protocol: route.protocol,
+                tlsTermination: tls.tlsOptions[0]
+              };
+              setProjectDetail({ ...projectDetail, routesConf: routes });
+            }
+          }
+        }
+      }
     }
     let tlsTerminationOptions: IOptionForKeyValueLabel[] = [];
     if (
@@ -95,63 +120,131 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
     }
     return tlsTerminationOptions;
   };
-  const onChangeHostname = (value: string) => {
-    setProjectDetail({ ...projectDetail, hostname: value });
+  const onChangeHostname = (protocol: string, value?: string) => {
+    const routes = projectDetail.routesConf;
+    routes?.forEach(route => {
+      if (route.protocol === protocol) {
+        route.hostname = value;
+      }
+    });
+    setProjectDetail({ ...projectDetail, routesConf: routes });
   };
 
-  const onChangeTlsTermination = (_: boolean, event: any) => {
+  const onChangeTlsTermination = (protocol: string, event: any) => {
     const value = event.target.value;
     if (value) {
-      setProjectDetail({ ...projectDetail, tlsTermination: value });
+      const routes = projectDetail.routesConf || [];
+      routes.forEach(route => {
+        if (route.protocol === protocol) {
+          route.tlsTermination = value;
+        }
+      });
+      setProjectDetail({ ...projectDetail, routesConf: routes });
     }
   };
+
+  const getProtocolOptions = () => {
+    let protocols: IDropdownOption[] = [];
+    if (addressSpaceSchema?.addressSpaceSchema) {
+      addressSpaceSchema.addressSpaceSchema.forEach(as => {
+        if (as.metadata.name === type && as.spec.routeServicePorts) {
+          protocols = as.spec.routeServicePorts.map(port => ({
+            value: port.name || "",
+            label: port.displayName || "",
+            key: `key-${port.name}`
+          }));
+        }
+      });
+    }
+    return protocols;
+  };
+
+  const getLabelForPrototcol = (protocol: string) => {
+    const protocolOptions = getProtocolOptions();
+    if (protocolOptions && protocolOptions.length > 0) {
+      return protocolOptions.filter(prtcl => prtcl.value === protocol)[0]
+        ?.label;
+    }
+  };
+
   return (
     <>
       <Grid>
         <GridItem span={6}>
-          <Title headingLevel="h2" size="lg">
+          <Title headingLevel="h1" size="xl">
             Configure OpenShift Route
           </Title>
           <br />
           <Form>
-            <FormGroup
-              fieldId="form-group-route-hostname"
-              label="Hostname"
-              helperText="Public hostname for the route.If not specified, a hostname is generated"
-            >
-              <TextInput
-                type="text"
-                id="simple-form-name"
-                name="simple-form-name"
-                aria-describedby="simple-form-name-helper"
-                value={hostname}
-                onChange={onChangeHostname}
-              />
-            </FormGroup>
-            <br />
-            {getTlsTerminations().length > 0 && (
-              <FormGroup
-                fieldId="form-group-endpoint-tls-certs"
-                label="TLS Certificates"
-                isRequired={true}
-              >
-                {getTlsTerminations().map((termination, index) => (
-                  <div key={`key-termination-${index}`}>
+            {protocols &&
+              protocols.map(protocol => {
+                const routes = routesConf?.filter(
+                  route => route.protocol === protocol
+                );
+                let hostname: string | undefined,
+                  tlsTermination: string | undefined;
+                if (routes && routes.length > 0) {
+                  hostname = routes[0].hostname;
+                  tlsTermination = routes[0].tlsTermination;
+                }
+                return (
+                  <div key={`key-protocol-${protocol}`}>
+                    <Title headingLevel="h4" size="lg">
+                      Route for {getLabelForPrototcol(protocol)}
+                    </Title>
                     <br />
-                    <Radio
-                      isChecked={tlsTermination === termination.value}
-                      onChange={onChangeTlsTermination}
-                      name={`radio-${termination.key}`}
-                      key={termination.key}
-                      label={termination.label}
-                      id={`radio-${termination.key}`}
-                      value={termination.value}
-                      style={{ marginLeft: 20 }}
-                    />
+                    <FormGroup
+                      fieldId="form-group-route-hostname"
+                      label="Hostname"
+                      helperText="Public hostname for the route.If not specified, a hostname is generated"
+                    >
+                      <TextInput
+                        type="text"
+                        id={`text-input-hostname-${protocol}`}
+                        name="text-input-hostname"
+                        aria-describedby="text-input-hostname-helper"
+                        value={hostname}
+                        onChange={(value, _) => {
+                          onChangeHostname(protocol, value);
+                        }}
+                      />
+                    </FormGroup>
+                    {getTlsTerminations(protocol).length > 0 && (
+                      <>
+                        <br />
+                        <FormGroup
+                          fieldId="form-group-endpoint-tls-certs"
+                          label="TLS Terminations"
+                          isRequired={true}
+                        >
+                          {getTlsTerminations(protocol).map(
+                            (termination, index) => (
+                              <div key={`key-termination-${index}`}>
+                                <br />
+                                <Radio
+                                  isChecked={
+                                    tlsTermination === termination.value
+                                  }
+                                  onChange={(_, value) =>
+                                    onChangeTlsTermination(protocol, value)
+                                  }
+                                  name={`radio-${termination.key}-${protocol}`}
+                                  key={`${protocol}-${termination.key}`}
+                                  label={termination.label}
+                                  id={`radio-${termination.key}-${protocol}`}
+                                  value={termination.value}
+                                  style={{ marginLeft: 20 }}
+                                />
+                              </div>
+                            )
+                          )}
+                        </FormGroup>
+                      </>
+                    )}
+                    <br />
                   </div>
-                ))}
-              </FormGroup>
-            )}
+                );
+              })}
           </Form>
         </GridItem>
       </Grid>

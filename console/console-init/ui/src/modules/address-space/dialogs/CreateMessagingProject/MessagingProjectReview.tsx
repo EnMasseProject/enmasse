@@ -8,7 +8,11 @@ import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { AddressSpaceReview } from "modules/address-space/components";
-import { IMessagingProject } from "./CreateMessagingProject";
+import { IMessagingProject, IExposeEndPoint } from "./CreateMessagingProject";
+import {
+  EndPointProtocol,
+  TlsCertificateType
+} from "modules/address-space/utils";
 
 interface IMessagingProjectReviewProps {
   projectDetail: IMessagingProject;
@@ -28,7 +32,8 @@ export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectRe
     addRoutes,
     tlsCertificate
   } = projectDetail || {};
-  const { data, loading } = useQuery(ADDRESS_SPACE_COMMAND_REVIEW_DETAIL, {
+
+  const queryVariable = {
     variables: {
       as: {
         metadata: {
@@ -44,7 +49,65 @@ export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectRe
         }
       }
     }
-  });
+  };
+
+  if (customizeEndpoint) {
+    const { certValue, privateKey, routesConf } = projectDetail;
+    const endpoints: IExposeEndPoint[] = [];
+    if (protocols && protocols.length > 0) {
+      protocols.map((protocol: string) => {
+        const endpoint: IExposeEndPoint = { service: "messaging" };
+        if (protocol === EndPointProtocol.AMQPS) {
+          endpoint.name = "messaging";
+        } else if (protocol === EndPointProtocol.AMQP_WSS) {
+          endpoint.name = "messaging-wss";
+        }
+        if (tlsCertificate) {
+          endpoint.certificate = {
+            provider: tlsCertificate
+          };
+          if (
+            tlsCertificate === TlsCertificateType.UPLOAD_CERT &&
+            certValue &&
+            certValue.trim() !== "" &&
+            privateKey &&
+            privateKey.trim() !== ""
+          ) {
+            endpoint.certificate = {
+              ...endpoint.certificate,
+              tlsKey: privateKey?.trim(),
+              tlsCert: certValue?.trim()
+            };
+          }
+        }
+        if (addRoutes) {
+          endpoint.expose = { type: "route", routeServicePort: protocol };
+          const routeConf = routesConf?.filter(
+            conf => conf.protocol === protocol
+          );
+          if (routeConf && routeConf.length > 0) {
+            if (routeConf[0].hostname && routeConf[0].hostname.trim() !== "") {
+              endpoint.expose.routeHost = routeConf[0].hostname.trim();
+            }
+            if (
+              routeConf[0].tlsTermination &&
+              routeConf[0].tlsTermination.trim() !== ""
+            ) {
+              endpoint.expose.routeTlsTermination = routeConf[0].tlsTermination;
+            }
+          }
+        }
+        endpoints.push(endpoint);
+        return endpoint;
+      });
+    }
+    Object.assign(queryVariable.variables.as.spec, { endpoints: endpoints });
+  }
+
+  const { data, loading } = useQuery(
+    ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
+    queryVariable
+  );
 
   if (loading) return <Loading />;
 
