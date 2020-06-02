@@ -182,6 +182,8 @@ func applyStandardAuthServiceDeployment(authservice *adminv1beta1.Authentication
 		}
 		if authservice.Spec.Standard.Resources != nil {
 			container.Resources = *authservice.Spec.Standard.Resources
+		} else {
+			container.Resources = corev1.ResourceRequirements{}
 		}
 		install.ApplyVolumeMountSimple(container, "keycloak-providers", "/opt/jboss/keycloak/providers", false)
 		install.ApplyVolumeMountSimple(container, "keycloak-configuration", "/opt/jboss/keycloak/standalone/configuration", false)

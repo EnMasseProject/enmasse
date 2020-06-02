@@ -220,6 +220,9 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 			}
 			container.Resources.Requests[corev1.ResourceCPU] = cpuLimit
 			container.Resources.Limits[corev1.ResourceCPU] = cpuLimit
+		} else {
+			delete(container.Resources.Requests, corev1.ResourceCPU)
+			delete(container.Resources.Limits, corev1.ResourceCPU)
 		}
 
 		memoryEnv, ok := os.LookupEnv("ADDRESS_SPACE_CONTROLLER_MEMORY_LIMIT")
@@ -230,6 +233,9 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 			}
 			container.Resources.Requests[corev1.ResourceMemory] = memoryLimit
 			container.Resources.Limits[corev1.ResourceMemory] = memoryLimit
+		} else {
+			delete(container.Resources.Requests, corev1.ResourceMemory)
+			delete(container.Resources.Limits, corev1.ResourceMemory)
 		}
 		return nil
 	})
