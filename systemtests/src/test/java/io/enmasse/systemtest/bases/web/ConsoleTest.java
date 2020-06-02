@@ -13,9 +13,9 @@ import io.enmasse.address.model.AuthenticationServiceType;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.config.LabelKeys;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
@@ -83,7 +83,8 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.either;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -633,6 +634,93 @@ public abstract class ConsoleTest extends TestBase {
 
     }
 
+    protected void doTestFilterAddressSpaceStatus() throws Exception {
+        AddressSpace standard1 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-1-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        AddressSpace standard2 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-2-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        AddressSpace failed = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("failed-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan("unknown")
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+
+        resourcesManager.createAddressSpace(standard1, false);
+        resourcesManager.createAddressSpace(standard2, false);
+
+        selenium.waitUntilItemPresent(30, () -> consolePage.getAddressSpaceItem(standard1));
+        selenium.waitUntilItemPresent(30, () -> consolePage.getAddressSpaceItem(standard2));
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+
+        consolePage.addFilter(FilterType.STATUS, "Active");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(0));
+
+        consolePage.addFilter(FilterType.STATUS, "Configuring");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+
+        resourcesManager.waitForAddressSpaceReady(standard1);
+        resourcesManager.waitForAddressSpaceReady(standard2);
+
+        consolePage.removeAllFilters();
+
+        selenium.waitUntilItemPresent(30, () -> consolePage.getAddressSpaceItem(standard1));
+        selenium.waitUntilItemPresent(30, () -> consolePage.getAddressSpaceItem(standard2));
+
+        consolePage.addFilter(FilterType.STATUS, "Active");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+
+        resourcesManager.createAddressSpace(failed, false);
+
+        consolePage.removeAllFilters();
+
+        selenium.waitUntilItemPresent(30, () -> consolePage.getAddressSpaceItem(failed));
+
+        consolePage.addFilter(FilterType.STATUS, "Active");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+
+        consolePage.addFilter(FilterType.STATUS, "Pending");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(1));
+
+        consolePage.addFilter(FilterType.STATUS, "Terminating");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(0));
+
+    }
+
     //============================================================================================
     //============================ do test methods for address part ==============================
     //============================================================================================
@@ -758,12 +846,13 @@ public abstract class ConsoleTest extends TestBase {
 
         String nonexistentPlan = "foo-plan";
         IntStream.range(0, addressCount / 2)
-            .forEach(i -> {
-                addresses.get(i).getSpec().setPlan(nonexistentPlan);;
-            });
+                .forEach(i -> {
+                    addresses.get(i).getSpec().setPlan(nonexistentPlan);
+                    ;
+                });
         List<Address> goodAddresses = addresses.stream()
-                    .filter(a -> !a.getSpec().getPlan().equals(nonexistentPlan))
-                    .collect(Collectors.toList());
+                .filter(a -> !a.getSpec().getPlan().equals(nonexistentPlan))
+                .collect(Collectors.toList());
         List<Address> badAddresses = addresses.stream()
                 .filter(a -> a.getSpec().getPlan().equals(nonexistentPlan))
                 .collect(Collectors.toList());
@@ -1212,7 +1301,7 @@ public abstract class ConsoleTest extends TestBase {
         consolePage.awaitGoneAwayPage();
     }
 
-    protected void  doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
+    protected void doTestSortConnectionsByContainerId(AddressSpace addressSpace) throws Exception {
         doTestSortConnections(addressSpace, SortType.CONTAINER_ID,
                 this::attachClients,
                 c -> c.getContainerId() != null,
