@@ -32,6 +32,7 @@ GOOPTS          ?= -mod=vendor
 DOCKER_TARGETS   = docker_build docker_tag docker_push clean
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
+SKIP_MANIFESTS  ?= false
 MAVEN_BATCH     ?= true
 
 ifndef GOPATH
@@ -163,8 +164,13 @@ CONTROLLER_GEN:=$(shell which controller-gen)
 
 endif
 
+ifeq ($(SKIP_MANIFESTS),true)
+manifests:
+	@echo "Skipping generating manifests from source"
+else
 manifests: controller-gen
 	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1beta2 output:dir=./templates/shared-infra
+endif
 
 #endregion
 
