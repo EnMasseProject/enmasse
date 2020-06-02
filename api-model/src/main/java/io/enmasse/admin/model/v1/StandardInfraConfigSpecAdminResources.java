@@ -25,29 +25,6 @@ public class StandardInfraConfigSpecAdminResources extends AbstractWithAdditiona
     private String memory;
     private String cpu;
 
-    public StandardInfraConfigSpecAdminResources() {
-    }
-
-    public StandardInfraConfigSpecAdminResources(final String memory) {
-        setMemory(memory);
-    }
-
-    public void setMemory(String memory) {
-        this.memory = memory;
-    }
-
-    public String getMemory() {
-        return memory;
-    }
-
-    public String getCpu() {
-        return cpu;
-    }
-
-    public void setCpu(String cpu) {
-        this.cpu = cpu;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -69,4 +46,21 @@ public class StandardInfraConfigSpecAdminResources extends AbstractWithAdditiona
                 ", cpu='" + cpu + '\'' +
                 '}';
     }
+
+    public void setMemory(String memory) {
+        this.memory = memory;
+    }
+
+    public String getMemory() {
+        return memory;
+    }
+
+    public String getCpu() {
+        return cpu;
+    }
+
+    public void setCpu(String cpu) {
+        this.cpu = cpu;
+    }
+
 }

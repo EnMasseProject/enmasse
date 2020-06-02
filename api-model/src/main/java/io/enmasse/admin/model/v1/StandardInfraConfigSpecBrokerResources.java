@@ -26,6 +26,30 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
     private String storage;
     private String cpu;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        StandardInfraConfigSpecBrokerResources that = (StandardInfraConfigSpecBrokerResources) o;
+        return Objects.equals(memory, that.memory) &&
+                Objects.equals(storage, that.storage) &&
+                Objects.equals(cpu, that.cpu);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(memory, storage, cpu);
+    }
+
+    @Override
+    public String toString() {
+        return "StandardInfraConfigSpecBrokerResources{" +
+                "memory='" + memory + '\'' +
+                ", storage='" + storage + '\'' +
+                ", cpu='" + cpu + '\'' +
+                '}';
+    }
+
     public void setMemory(String memory) {
         this.memory = memory;
     }
@@ -50,27 +74,4 @@ public class StandardInfraConfigSpecBrokerResources extends AbstractWithAddition
         this.cpu = cpu;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        StandardInfraConfigSpecBrokerResources that = (StandardInfraConfigSpecBrokerResources) o;
-        return Objects.equals(memory, that.memory) &&
-                Objects.equals(storage, that.storage) &&
-                Objects.equals(cpu, that.cpu);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(memory, storage, cpu);
-    }
-
-    @Override
-    public String toString() {
-        return "StandardInfraConfigSpecBrokerResources{" +
-                "memory='" + memory + '\'' +
-                ", storage='" + storage + '\'' +
-                ", cpu='" + cpu + '\'' +
-                '}';
-    }
 }
