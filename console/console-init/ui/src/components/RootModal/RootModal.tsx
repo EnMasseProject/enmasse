@@ -11,7 +11,7 @@ import {
   CreateAddressSpace
 } from "modules/address-space/dialogs";
 import { EditAddress, CreateAddress } from "modules/address/dialogs";
-import { UpdatePassword } from "components";
+import { UpdatePassword } from "components/UpdatePassword";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateAddressSpace,

@@ -49,7 +49,7 @@ const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
   return (
     <>
       <Title size="xl" headingLevel="h2">
-        {type.toUpperCase() + " Adapter"}
+        {type && type.toUpperCase() + " Adapter"}
       </Title>
       {tlsEnabled && (
         <>

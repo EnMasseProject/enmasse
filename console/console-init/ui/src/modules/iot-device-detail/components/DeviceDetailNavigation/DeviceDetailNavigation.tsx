@@ -39,19 +39,22 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
     <Nav onSelect={onSelect}>
       <NavList variant={NavVariants.tertiary}>
         <NavItem
-          key="deviceInfo"
-          itemId="deviceInfo"
-          isActive={active === "deviceInfo"}
+          key="device-info"
+          itemId="deviceinfo"
+          isActive={active === "deviceinfo"}
         >
           <NavLink
             id="nav-device-info"
-            to={`detail`}
+            to={`deviceinfo`}
             className={css(styles.navlink)}
           >
             Device Info
           </NavLink>
         </NavItem>
-        <NavItem
+        {/**
+         * TODO: Live stream will implement later
+         */}
+        {/* <NavItem
           key="liveDataStream"
           itemId="liveDataStream"
           isActive={active === "liveDataStream"}
@@ -63,18 +66,18 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
           >
             Live Data Stream
           </NavLink>
-        </NavItem>
+        </NavItem> */}
         <NavItem
-          key="connectionInfo"
-          itemId="connectionInfo"
-          isActive={active === "connectionInfo"}
+          key="configuration-info"
+          itemId="configurationinfo"
+          isActive={active === "configurationinfo"}
         >
           <NavLink
-            id="nav-device-connection-info"
-            to={`connection-info`}
+            id="nav-device-configuration-info"
+            to={`configurationinfo`}
             className={css(styles.navlink)}
           >
-            Connection Info
+            Configuration Info
           </NavLink>
         </NavItem>
       </NavList>

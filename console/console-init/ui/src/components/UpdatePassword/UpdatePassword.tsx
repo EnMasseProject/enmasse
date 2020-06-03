@@ -16,7 +16,7 @@ import {
 import { useStoreContext, types } from "context-state-reducer";
 import { PasswordInputFieldWithToggle } from "components";
 
-export const UpdatePassword: React.FC<{}> = () => {
+export const UpdatePassword = () => {
   const [formData, setFormData] = useState({
     password: "",
     retypePassword: ""
@@ -76,6 +76,7 @@ export const UpdatePassword: React.FC<{}> = () => {
       title={"Change password"}
       isSmall={true}
       isOpen={true}
+      onClose={onCloseDialog}
       actions={[
         <Button
           key={"update-password-save-button"}
