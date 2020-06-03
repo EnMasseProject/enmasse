@@ -59,12 +59,8 @@ Artemis.prototype.sender_open = function () {
     var tmp_reply_address = 'activemq.management.tmpreply.' + amqp.generate_uuid();
     log.debug('[%s] sender ready, creating reply to address: %s', this.connection.container_id, tmp_reply_address);
     var self = this;
-    var opened = false;
-    this.sender.on('accepted', function (context) {
-        if (!opened) {
-            self.connection.open_receiver({source:{address: tmp_reply_address}});
-            opened = true;
-        }
+    this.sender.once('accepted', () => {
+        self.connection.open_receiver({source:{address: tmp_reply_address}});
     });
     this._create_temp_response_queue(tmp_reply_address);
 }
@@ -160,12 +156,14 @@ Artemis.prototype._send_pending_requests = function () {
     return this.requests.length === 0 && this.sender.sendable();
 }
 
-Artemis.prototype._send_request = function (request) {
-    request.application_properties.JMSReplyTo = this.address;
-    request.reply_to = this.address;
-    if (process.env.AGENT_CORRELATE_MGMT === 'true') {
-        // Aids debug, has no functional effect
-        request.correlation_id = amqp.generate_uuid();
+Artemis.prototype._send_request = function (request, withReply = true) {
+    if (withReply) {
+        request.application_properties.JMSReplyTo = this.address;
+        request.reply_to = this.address;
+        if (process.env.AGENT_CORRELATE_MGMT === 'true') {
+            // Aids debug, has no functional effect
+            request.correlation_id = amqp.generate_uuid();
+        }
     }
     this.sender.send(request);
     log.debug('[%s] sent: %j', this.id, request);
@@ -196,7 +194,7 @@ Artemis.prototype._request = function (resource, operation, parameters) {
 Artemis.prototype._create_temp_response_queue = function (name) {
     var request = this._create_request_message('broker', 'createQueue', [name/*address*/, 'ANYCAST', name/*queue name*/, null/*filter*/, false/*durable*/,
          1/*max consumers*/, true/*purgeOnNoConsumers*/, true/*autoCreateAddress*/]);
-    this._send_request(request);
+    this._send_request(request, false);
 }
 
 Artemis.prototype.createSubscription = function (name, address, maxConsumers) {
