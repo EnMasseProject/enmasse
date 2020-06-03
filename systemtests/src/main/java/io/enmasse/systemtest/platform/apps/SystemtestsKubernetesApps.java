@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019, EnMasse authors.
+ * Copyright 2016-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -401,7 +401,7 @@ public class SystemtestsKubernetesApps {
     }
 
     private static Endpoint getInfinispanEndpoint(final String namespace) {
-        return kube.getEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
+        return kube.getServiceEndpoint(INFINISPAN_SERVER, namespace, "infinispan");
     }
 
     public static void deleteInfinispanServer() throws Exception {
@@ -510,7 +510,7 @@ public class SystemtestsKubernetesApps {
      * Get the endpoint of the PostgreSQL server for the JDBC device registry.
      */
     private static Endpoint getPostgresqlEndpoint(final String namespace) {
-        return kube.getEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
+        return kube.getServiceEndpoint(POSTGRESQL_SERVER, namespace, "postgresql");
     }
 
     /**
@@ -607,7 +607,7 @@ public class SystemtestsKubernetesApps {
      * Get the endpoint of the H2 server for the JDBC device registry.
      */
     private static Endpoint getH2Endpoint(final String namespace) {
-        return kube.getEndpoint(H2_SERVER, namespace, "h2");
+        return kube.getServiceEndpoint(H2_SERVER, namespace, "h2");
     }
 
     /**

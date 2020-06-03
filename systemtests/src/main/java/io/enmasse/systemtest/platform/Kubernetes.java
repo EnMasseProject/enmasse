@@ -33,11 +33,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import io.enmasse.systemtest.condition.MultinodeCluster;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
-import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
-import io.fabric8.openshift.api.model.Route;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -82,6 +77,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.condition.MultinodeCluster;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
@@ -98,6 +94,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
@@ -109,6 +106,7 @@ import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.policy.PodDisruptionBudget;
@@ -119,8 +117,10 @@ import io.fabric8.kubernetes.client.VersionInfo;
 import io.fabric8.kubernetes.client.dsl.ExecListener;
 import io.fabric8.kubernetes.client.dsl.ExecWatch;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.openshift.api.model.Route;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
@@ -429,6 +429,20 @@ public abstract class Kubernetes {
         Service service = client.services().inNamespace(namespace).withName(serviceName).get();
         Objects.requireNonNull(service, () -> String.format("Unable to find service '%s' in namespace '%s'", serviceName, namespace));
         return new Endpoint(service.getSpec().getClusterIP(), getPort(service, port));
+    }
+
+    /**
+     * Get the endpoint using the service DNS hostname, not looking up any IP.
+     *
+     * @param serviceName The name of the service.
+     * @param namespace The namespace.
+     * @param port The name of the port.
+     * @return The endpoint.
+     */
+    public Endpoint getServiceEndpoint(String serviceName, String namespace, String port) {
+        Service service = client.services().inNamespace(namespace).withName(serviceName).get();
+        Objects.requireNonNull(service, () -> String.format("Unable to find service '%s' in namespace '%s'", serviceName, namespace));
+        return new Endpoint(serviceName + "." + namespace + ".svc", getPort(service, port));
     }
 
     public abstract Endpoint getMasterEndpoint();
