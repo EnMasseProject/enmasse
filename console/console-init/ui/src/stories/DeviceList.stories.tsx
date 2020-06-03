@@ -43,6 +43,19 @@ const rows: IDevice[] = [
     lastSeen: "2020-04-20T11:44:28.607Z",
     lastUpdated: "2020-04-29T11:44:28.607Z",
     creationTimeStamp: "2020-04-30T11:44:28.607Z"
+  },
+  {
+    id: "jboss20",
+    selected: true
+  },
+  {
+    id: "jboss20",
+    type: "Using gateways",
+    status: null,
+    selected: null,
+    lastSeen: "2020-04-20T11:44:28.607Z",
+    lastUpdated: null,
+    creationTimeStamp: "2020-04-30T11:44:28.607Z"
   }
 ];
 
