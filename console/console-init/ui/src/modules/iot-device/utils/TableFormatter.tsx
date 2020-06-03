@@ -11,7 +11,7 @@ import { IDevice } from "modules/iot-device/components";
 
 export const getTableCells = (row: IDevice) => {
   const tableRow: IRowData = {
-    selected: row.selected,
+    selected: row.selected || false,
     cells: [
       {
         header: "id",
@@ -23,7 +23,7 @@ export const getTableCells = (row: IDevice) => {
       },
       {
         header: "type",
-        title: <span>{row.type}</span>
+        title: row.type && <span>{row.type}</span>
       },
       {
         title: row.status ? (
@@ -39,21 +39,21 @@ export const getTableCells = (row: IDevice) => {
         )
       },
       {
-        title: (
+        title: row.lastSeen && (
           <>
             <FormatDistance date={row.lastSeen} /> ago
           </>
         )
       },
       {
-        title: (
+        title: row.lastUpdated && (
           <>
             <FormatDistance date={row.lastUpdated} /> ago
           </>
         )
       },
       {
-        title: (
+        title: row.creationTimeStamp && (
           <>
             <FormatDistance date={row.creationTimeStamp} /> ago
           </>
