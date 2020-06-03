@@ -4,6 +4,15 @@
  */
 package io.enmasse.systemtest.listener;
 
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
+import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
+import org.slf4j.Logger;
+
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.bases.ThrowableRunner;
@@ -20,15 +29,6 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.KubeClusterManager;
 import io.enmasse.systemtest.utils.TestUtils;
-
-import org.junit.jupiter.api.extension.AfterAllCallback;
-import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
-import org.junit.jupiter.api.extension.BeforeEachCallback;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
-import org.junit.jupiter.api.extension.TestExecutionExceptionHandler;
-import org.slf4j.Logger;
 
 /**
  * This class implements a variety of junit callbacks and orchestates the full lifecycle of the operator installation
@@ -143,7 +143,9 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             if (testInfo.isTestShared()) {
                 tearDownSharedResources();
             } else if (testInfo.isTestIoT()) {
-                isolatedIoTManager.tearDown(testInfo.getActualTest());
+                if (testInfo.needsIoTCleanup()) {
+                    isolatedIoTManager.tearDown(testInfo.getActualTest());
+                }
             } else {
                 tearDownCommonResources();
             }
@@ -160,8 +162,13 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
     private void tearDownSharedResources() throws Exception {
         if (testInfo.isAddressSpaceDeleteable() || testInfo.getActualTest().getExecutionException().isPresent()) {
             if (testInfo.isTestIoT()) {
-                LOGGER.info("Teardown shared IoT!");
-                sharedIoTManager.tearDown(testInfo.getActualTest());
+                if (testInfo.needsIoTCleanup()) {
+                    LOGGER.info("Teardown shared IoT!");
+                    sharedIoTManager.tearDown(testInfo.getActualTest());
+                } else {
+                    LOGGER.info("Self-cleaning IoT test");
+                    sharedIoTManager.closeAmqpFactory();
+                }
             } else {
                 LOGGER.info("Teardown shared!");
                 sharedResourcesManager.tearDown(testInfo.getActualTest());

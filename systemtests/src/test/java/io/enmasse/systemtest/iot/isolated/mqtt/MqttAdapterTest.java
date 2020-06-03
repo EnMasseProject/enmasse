@@ -1,11 +1,12 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.iot.shared.http;
+
+package io.enmasse.systemtest.iot.isolated.mqtt;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,17 +17,20 @@ import org.junit.jupiter.api.Tag;
 
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
-import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
+import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
 
+/**
+ * Testing MQTT message transmission.
+ */
 @Tag(ISOLATED_IOT)
-class HttpAdapterTest implements StandardIoTHttpTests {
+class MqttAdapterTest implements StandardIoTMqttTests {
 
     private static IoTTestSession session;
 
     @BeforeAll
     public static void setup() throws Exception {
         session = IoTTestSession.createDefault()
-                .adapters(HTTP)
+                .adapters(MQTT)
                 .deploy();
     }
 
@@ -61,4 +65,5 @@ class HttpAdapterTest implements StandardIoTHttpTests {
     public IoTTestSession getSession() {
         return session;
     }
+
 }

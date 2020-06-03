@@ -17,10 +17,13 @@ import io.enmasse.systemtest.bases.ITestSeparator;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.platform.Kubernetes;
 
+/**
+ * Marker interface for IoT tests, which provision their own IoT infrastructure.
+ */
 @ExtendWith(JunitCallbackListener.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public interface IoTTests extends ITestSeparator{
+public interface IoTTests extends ITestSeparator {
 
     @BeforeEach
     default void createNamespace() {
