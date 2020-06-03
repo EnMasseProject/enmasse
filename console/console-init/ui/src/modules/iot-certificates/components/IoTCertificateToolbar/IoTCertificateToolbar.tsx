@@ -12,13 +12,13 @@ import {
 } from "@patternfly/react-core";
 import { SwitchWithToggle } from "components";
 
-export interface IProjectCertificateToolbarProps {
+export interface IIoTCertificateToolbarProps {
   setShowCertificateForm: React.Dispatch<React.SetStateAction<boolean>>;
   isJsonView: boolean;
   handleJsonViewChange: (val: boolean) => void;
 }
 
-export const ProjectCertificateToolbar: React.FunctionComponent<IProjectCertificateToolbarProps> = ({
+export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolbarProps> = ({
   setShowCertificateForm,
   isJsonView,
   handleJsonViewChange
