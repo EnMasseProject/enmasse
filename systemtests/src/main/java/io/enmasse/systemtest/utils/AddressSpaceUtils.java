@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.utils;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -196,6 +197,7 @@ public class AddressSpaceUtils {
         waitForItems(addressSpace, budget, () -> kube.listPersistentVolumeClaims(Collections.singletonMap("infraUuid", getAddressSpaceInfraUuid(addressSpace))));
         var addressSpaceClient = kube.getAddressSpaceClient(addressSpace.getMetadata().getNamespace());
         waitForItems(addressSpace, budget, () -> Optional.ofNullable(addressSpaceClient.withName(addressSpace.getMetadata().getName()).get()).map(Arrays::asList).orElse(Collections.emptyList()));
+        log.info("Deletion of address space confirmed after {} (remaining timeout budget: {})", Duration.ofMillis(budget.timeSpent()), budget.remaining());
     }
 
     private static <T> void waitForItems(AddressSpace addressSpace, TimeoutBudget budget, Callable<List<T>> callable) throws Exception {
