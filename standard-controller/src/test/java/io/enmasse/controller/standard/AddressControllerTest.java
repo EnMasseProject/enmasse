@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -58,6 +59,7 @@ public class AddressControllerTest {
     private int id = 0;
     private BrokerIdGenerator idGenerator = () -> String.valueOf(id++);
     private StandardControllerSchema standardControllerSchema = new StandardControllerSchema();
+    private Vertx vertx;
 
     @BeforeEach
     public void setUp() throws IOException {
@@ -76,8 +78,15 @@ public class AddressControllerTest {
         options.setAddressSpacePlanName("plan1");
         options.setResyncInterval(Duration.ofSeconds(5));
         options.setVersion("1.0");
-        Vertx vertx = Vertx.vertx();
+        vertx = Vertx.vertx();
         controller = new AddressController(options, mockSpaceApi, mockApi, mockHelper, mockGenerator, eventLogger, standardControllerSchema, vertx, new Metrics(), idGenerator, new MutualTlsBrokerClientFactory(vertx, options));
+    }
+
+    @AfterEach
+    public void cleanup () {
+        if (vertx != null) {
+            vertx.close();
+        }
     }
 
     @Test
