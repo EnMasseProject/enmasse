@@ -9,6 +9,7 @@ import (
 	"context"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	corev1 "k8s.io/api/core/v1"
@@ -18,7 +19,7 @@ import (
 
 const nameDeviceConnection = "iot-device-connection"
 
-func (r *ReconcileIoTConfig) processDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processDeviceConnection(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
 
@@ -27,9 +28,9 @@ func (r *ReconcileIoTConfig) processDeviceConnection(ctx context.Context, config
 	rc.Process(func() (reconcile.Result, error) {
 		switch config.EvalDeviceConnectionImplementation() {
 		case iotv1alpha1.DeviceConnectionInfinispan:
-			return r.processInfinispanDeviceConnection(ctx, config)
+			return r.processInfinispanDeviceConnection(ctx, config, authServicePsk)
 		case iotv1alpha1.DeviceConnectionJdbc:
-			return r.processJdbcDeviceConnection(ctx, config)
+			return r.processJdbcDeviceConnection(ctx, config, authServicePsk)
 		default:
 			return reconcile.Result{}, util.NewConfigurationError("illegal device connection configuration")
 		}

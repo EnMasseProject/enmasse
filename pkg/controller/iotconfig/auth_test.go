@@ -13,7 +13,20 @@ import (
 
 func TestAdapterStatus(t *testing.T) {
 
+	FALSE := false
+
 	config := &iotv1alpha1.IoTConfig{
+		Spec: iotv1alpha1.IoTConfigSpec{
+			AdaptersConfig: iotv1alpha1.AdaptersConfig{
+				MqttAdapterConfig: iotv1alpha1.MqttAdapterConfig{
+					CommonAdapterConfig: iotv1alpha1.CommonAdapterConfig{
+						AdapterConfig: iotv1alpha1.AdapterConfig{
+							Enabled: &FALSE,
+						},
+					},
+				},
+			},
+		},
 		Status: iotv1alpha1.IoTConfigStatus{
 			Adapters: map[string]iotv1alpha1.AdapterStatus{},
 		},
@@ -23,31 +36,27 @@ func TestAdapterStatus(t *testing.T) {
 
 	as["mqtt"] = iotv1alpha1.AdapterStatus{}
 	as["lorawan"] = iotv1alpha1.AdapterStatus{}
-	as["http"] = iotv1alpha1.AdapterStatus{
-		InterServicePassword: "foobar",
-	}
+	as["http"] = iotv1alpha1.AdapterStatus{}
 
-	config.Status.Adapters = ensureAdapterStatus(as)
+	prepareAdapterStatus(config)
 	as = config.Status.Adapters
-
-	err := initConfigStatus(config)
-	if err != nil {
-		t.Fatal("initConfigStatus failed: ", err)
-		return
-	}
 
 	if len(as) != 4 {
 		t.Fatalf("Length must be 4, but was %d", len(as))
 		return
 	}
 
-	if as["mqtt"].InterServicePassword == "" {
-		t.Error("InterServicePassword for 'mqtt' is not set")
+	if as["mqtt"].Enabled {
+		t.Error("MQTT must be disabled")
 	}
-	if as["lorawan"].InterServicePassword == "" {
-		t.Error("InterServicePassword for 'lorawan' is not set")
+	if !as["lorawan"].Enabled {
+		t.Error("'lorawan' must be enabled")
 	}
-	if as["http"].InterServicePassword != "foobar" {
-		t.Error("InterServicePassword for 'http' has changed")
+	if !as["http"].Enabled {
+		t.Error("'http' must be enabled")
 	}
+	if !as["sigfox"].Enabled {
+		t.Error("'sigfox' must be enabled")
+	}
+
 }

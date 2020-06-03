@@ -25,7 +25,7 @@ import (
 
 const nameTenantService = "iot-tenant-service"
 
-func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 	change := cchange.NewRecorder()
@@ -39,7 +39,7 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	})
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameTenantService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
-			return r.reconcileTenantServiceDeployment(config, deployment, change)
+			return r.reconcileTenantServiceDeployment(config, deployment, change, authServicePsk)
 		})
 	})
 	rc.ProcessSimple(func() error {
@@ -52,7 +52,7 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, change *cchange.ConfigChangeRecorder, authServicePsk *cchange.ConfigChangeRecorder) error {
 
 	install.ApplyDeploymentDefaults(deployment, "iot", deployment.Name)
 
@@ -60,6 +60,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	deployment.Annotations[util.ConnectsTo] = "iot-auth-service"
 	deployment.Spec.Template.Spec.ServiceAccountName = "iot-tenant-service"
 	applyDefaultDeploymentConfig(deployment, service.ServiceConfig, change)
+	cchange.ApplyTo(authServicePsk, "iot.enmasse.io/auth-psk-hash", &deployment.Spec.Template.Annotations)
 
 	var tracingContainer *corev1.Container
 	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
@@ -96,7 +97,7 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", Value: *config.Status.AuthenticationServicePSK},
+			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.CommonServiceConfig)

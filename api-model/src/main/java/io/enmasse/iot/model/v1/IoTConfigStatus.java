@@ -28,7 +28,6 @@ public class IoTConfigStatus {
 
     private String phase;
     private String message;
-    private String authenticationServicePSK;
     private Map<String, AdapterStatus> adapters;
     private Map<String, ServiceStatus> services;
     private List<ConfigCondition> conditions;
@@ -47,14 +46,6 @@ public class IoTConfigStatus {
 
     public void setMessage(String message) {
         this.message = message;
-    }
-
-    public String getAuthenticationServicePSK() {
-        return authenticationServicePSK;
-    }
-
-    public void setAuthenticationServicePSK(String authenticationServicePSK) {
-        this.authenticationServicePSK = authenticationServicePSK;
     }
 
     public Map<String, AdapterStatus> getAdapters() {

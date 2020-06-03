@@ -128,23 +128,21 @@ func AppendStandardHonoJavaOptions(container *corev1.Container) {
 }
 
 func applyDefaultStatefulSetConfig(statefulSet *appsv1.StatefulSet, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
+
 	statefulSet.Spec.Replicas = serviceConfig.Replicas
 	statefulSet.Spec.UpdateStrategy.Type = appsv1.RollingUpdateStatefulSetStrategyType
-	if configCtx != nil {
-		statefulSet.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
-	} else {
-		delete(statefulSet.Spec.Template.Annotations, "iot.enmasse.io/config-hash")
-	}
+
+	cchange.ApplyTo(configCtx, "iot.enmasse.io/config-hash", &statefulSet.Spec.Template.Annotations)
+
 }
 
 func applyDefaultDeploymentConfig(deployment *appsv1.Deployment, serviceConfig iotv1alpha1.ServiceConfig, configCtx *cchange.ConfigChangeRecorder) {
+
 	deployment.Spec.Replicas = serviceConfig.Replicas
 	deployment.Spec.Strategy.Type = appsv1.RollingUpdateDeploymentStrategyType
-	if configCtx != nil {
-		deployment.Spec.Template.Annotations["iot.enmasse.io/config-hash"] = configCtx.HashString()
-	} else {
-		delete(deployment.Spec.Template.Annotations, "iot.enmasse.io/config-hash")
-	}
+
+	cchange.ApplyTo(configCtx, "iot.enmasse.io/config-hash", &deployment.Spec.Template.Annotations)
+
 }
 
 func applyContainerConfig(container *corev1.Container, config iotv1alpha1.ContainerConfig) {

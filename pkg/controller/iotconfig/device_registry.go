@@ -9,6 +9,7 @@ import (
 	"context"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	routev1 "github.com/openshift/api/route/v1"
@@ -33,7 +34,7 @@ func isSplitRegistry(config *iotv1alpha1.IoTConfig) (bool, error) {
 	}
 }
 
-func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *iotv1alpha1.IoTConfig, authServicePsk *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	// detect mode of deployment
 
@@ -49,9 +50,9 @@ func (r *ReconcileIoTConfig) processDeviceRegistry(ctx context.Context, config *
 	rc.Process(func() (reconcile.Result, error) {
 		switch config.EvalDeviceRegistryImplementation() {
 		case iotv1alpha1.DeviceRegistryInfinispan:
-			return r.processInfinispanDeviceRegistry(ctx, config)
+			return r.processInfinispanDeviceRegistry(ctx, config, authServicePsk)
 		case iotv1alpha1.DeviceRegistryJdbc:
-			return r.processJdbcDeviceRegistry(ctx, config)
+			return r.processJdbcDeviceRegistry(ctx, config, authServicePsk)
 		default:
 			return reconcile.Result{}, util.NewConfigurationError("illegal device registry configuration")
 		}

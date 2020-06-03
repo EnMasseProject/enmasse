@@ -23,17 +23,7 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdapterStatus extends CommonStatus {
 
-    private String interServicePassword;
-
     private boolean enabled;
-
-    public String getInterServicePassword() {
-        return interServicePassword;
-    }
-
-    public void setInterServicePassword(String interServicePassword) {
-        this.interServicePassword = interServicePassword;
-    }
 
     public boolean isEnabled() {
         return enabled;
