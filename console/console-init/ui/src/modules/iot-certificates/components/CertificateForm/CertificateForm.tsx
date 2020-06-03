@@ -23,7 +23,7 @@ import { css, StyleSheet } from "@patternfly/react-styles";
 import { getLabelByKey } from "utils";
 import {
   algorithmTypeOptions,
-  IProjectCertificate
+  IIoTCertificate
 } from "modules/iot-certificates";
 
 const styles = StyleSheet.create({
@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 });
 
 export interface ICertificateFormProps {
-  certificate?: IProjectCertificate;
+  certificate?: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
   id: string;
 }
@@ -49,7 +49,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
   certificate,
   id
 }) => {
-  const initialFormState: IProjectCertificate = {
+  const initialFormState: IIoTCertificate = {
     "subject-dn": "",
     "public-key": "",
     "auto-provisioning-enabled": false,
@@ -59,7 +59,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
   };
 
   const [certificateFormData, setCertificateFormData] = useState<
-    IProjectCertificate
+    IIoTCertificate
   >(initialFormState);
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               type="text"
               name="subject-dn"
               isRequired
-              value={subjectDn}
+              value={subjectDn || ""}
               onChange={onCertificateFormDataChange}
             />
           </FormGroup>
@@ -122,7 +122,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               type="text"
               name="public-key"
               isRequired
-              value={publicKey}
+              value={publicKey || ""}
               onChange={onCertificateFormDataChange}
             />
           </FormGroup>
@@ -140,7 +140,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               position={DropdownPosition.left}
               onSelectItem={onCertificateFormDataChange}
               dropdownItems={algorithmTypeOptions}
-              value={algorithm}
+              value={algorithm || ""}
             />
           </FormGroup>
           <Grid>
@@ -154,7 +154,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   id={`cf-not-before-${id}`}
                   name="not-before"
                   isRequired
-                  value={notBefore}
+                  value={notBefore || ""}
                   onChange={onCertificateFormDataChange}
                 />
               </FormGroup>
@@ -169,7 +169,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   id={`cf-not-after-${id}`}
                   name="not-after"
                   isRequired
-                  value={notAfter}
+                  value={notAfter || ""}
                   onChange={onCertificateFormDataChange}
                 />
               </FormGroup>
@@ -187,7 +187,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                 id="cf-auto-provision-switch"
                 label="Enabled"
                 labelOff="Disabled"
-                isChecked={autoProvision}
+                isChecked={autoProvision || false}
                 onChange={onCertificateFormDataChange}
               />
             </SplitItem>

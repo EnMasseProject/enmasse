@@ -5,17 +5,17 @@
 
 import React, { useState } from "react";
 import {
-  IProjectCertificate,
+  IIoTCertificate,
   CertificateForm,
   CertificateCard
 } from "modules/iot-certificates";
 
-export interface IProjectCertificateProps {
-  certificate: IProjectCertificate;
+export interface IIoTCertificateProps {
+  certificate: IIoTCertificate;
   id: string;
 }
 
-export const ProjectCertificate: React.FunctionComponent<IProjectCertificateProps> = ({
+export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
   certificate,
   id
 }) => {

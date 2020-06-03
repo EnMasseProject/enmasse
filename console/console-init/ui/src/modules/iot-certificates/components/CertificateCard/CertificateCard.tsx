@@ -18,10 +18,10 @@ import {
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithKebabToggle } from "components";
 import { getLabelByKey } from "utils";
-import { IProjectCertificate } from "modules/iot-certificates";
+import { IIoTCertificate } from "modules/iot-certificates";
 
 export interface ICertificateCardProps {
-  certificate: IProjectCertificate;
+  certificate: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
   id: string;
 }
@@ -116,7 +116,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               label="Enabled"
               labelOff="Disabled"
               readOnly
-              isChecked={certificate["auto-provisioning-enabled"]}
+              isChecked={certificate["auto-provisioning-enabled"] || false}
             />
           </GridItem>
           <GridItem span={2}>
