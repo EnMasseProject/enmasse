@@ -69,7 +69,10 @@ describe("<CertificateCard />", () => {
 
   it("should render a card for certificate with null values", () => {
     const certificate = {
+      "subject-dn": null,
+      "public-key": null,
       algorithm: "RSA",
+      "auto-provisioning-enabled": null,
       "not-before": "2019-10-03T13:4516+02:00",
       "not-after": "2021-10-03T00:00:00Z"
     };
@@ -83,6 +86,9 @@ describe("<CertificateCard />", () => {
     const { getByText } = render(<CertificateCard {...props} />);
 
     getByText(getLabelByKey("auto-provisioning-enabled"));
-    getByText("Enabled");
+    getByText("Disabled");
+
+    getByText(getLabelByKey("not-before"));
+    getByText(getLabelByKey("not-after"));
   });
 });
