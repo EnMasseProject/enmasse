@@ -42,7 +42,7 @@ export interface IProjectFilter {
 }
 export default function ProjectPage() {
   const { dispatch } = useStoreContext();
-  useDocumentTitle("Address Space List");
+  useDocumentTitle("Project List");
   useA11yRouteChange();
 
   const [filter, setFilter] = useState<IProjectFilter>(
@@ -79,7 +79,7 @@ export default function ProjectPage() {
   const onConfirmDeleteAll = async () => {
     if (selectedProjects && selectedProjects.length > 0) {
       let queryVariables: Array<{ name: string; namespace: string }> = [];
-      selectedProjects.map(
+      selectedProjects.forEach(
         (project: IProject) =>
           project.name &&
           project.namespace &&

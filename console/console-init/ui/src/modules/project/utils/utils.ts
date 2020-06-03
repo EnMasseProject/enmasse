@@ -5,6 +5,34 @@
 
 import { IMessagingProjectInput, IIoTProjectInput } from "modules/project";
 import { IProjectFilter } from "../ProjectPage";
+import { ISelectOption } from "utils";
+
+const sortMenuItems = [
+  { key: "name", value: "Name", index: 1 },
+  { key: "type/plan", value: "Type/Plan", index: 2 },
+  { key: "status", value: "Status", index: 3 },
+  { key: "creationTimestamp", value: "Time Created", index: 4 }
+];
+
+const filterMenuItems = [
+  { key: "name", value: "Name", id: "dropdown-filter-name" },
+  { key: "namespace", value: "Namespace", id: "dropdown-filter-namespace" },
+  { key: "type", value: "Type", id: "dropdown-filter-type" }
+];
+
+const typeOptions: ISelectOption[] = [
+  { key: "iot", value: "IoT Project", isDisabled: false },
+  {
+    key: "standard",
+    value: "Messaging Project - Standard",
+    isDisabled: false
+  },
+  {
+    key: "brokered",
+    value: "Messaging Project - Brokered Messaging",
+    isDisabled: false
+  }
+];
 
 const isMessagingProjectValid = (projectDetail?: IMessagingProjectInput) => {
   if (
@@ -52,5 +80,8 @@ const initialiseFilterForProject = () => {
 export {
   isMessagingProjectValid,
   isIoTProjectValid,
-  initialiseFilterForProject
+  initialiseFilterForProject,
+  sortMenuItems,
+  typeOptions,
+  filterMenuItems
 };

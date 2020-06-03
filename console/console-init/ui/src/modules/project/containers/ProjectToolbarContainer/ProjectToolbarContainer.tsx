@@ -196,7 +196,6 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
         setNamespaceSelected(undefined);
       }
     }
-
     setNameInput(undefined);
     setNameSelected(undefined);
     setNamespaceInput(undefined);

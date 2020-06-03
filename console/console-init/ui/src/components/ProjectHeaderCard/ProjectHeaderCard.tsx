@@ -4,22 +4,8 @@
  */
 
 import React from "react";
-import {
-  Card,
-  CardBody,
-  TextContent,
-  Flex,
-  FlexItem,
-  Divider,
-  Gallery,
-  CardHeader
-} from "@patternfly/react-core";
-import {
-  CheckCircleIcon,
-  PendingIcon,
-  InProgressIcon,
-  OutlinedTimesCircleIcon
-} from "@patternfly/react-icons";
+import { Card, CardBody, TextContent, Gallery } from "@patternfly/react-core";
+import { ProjectCard } from "./ProjectCard";
 
 export interface IProjectCount {
   total: number;
@@ -38,12 +24,12 @@ interface IProjectHeaderCardProps {
 const ProjectHeaderCard: React.FunctionComponent<IProjectHeaderCardProps> = ({
   totalProject,
   ioTCount,
-  msgCount
+  msgCount,
 }) => {
   return (
     <Gallery gutter="sm">
       <Card isHoverable>
-        <CardHeader>
+        <CardBody style={{ textAlign: "center", marginTop: 10 }}>
           <TextContent>
             <span style={{ fontSize: 24 }}>
               <b>{totalProject}</b>
@@ -51,226 +37,23 @@ const ProjectHeaderCard: React.FunctionComponent<IProjectHeaderCardProps> = ({
             <br />
             <span style={{ fontSize: 22 }}>Total</span>
           </TextContent>
-        </CardHeader>
+        </CardBody>
       </Card>
       {ioTCount && (
-        <Card isHoverable>
-          <CardBody>
-            <TextContent>
-              <span style={{ fontSize: 24 }}>
-                <b>{ioTCount.total}</b>
-              </span>
-              &nbsp; &nbsp;IoT Project (IoT)
-              <br />
-              <Divider />
-              <Flex>
-                {(!ioTCount.configuring || ioTCount.configuring == 0) &&
-                  (!ioTCount.failed || ioTCount.failed == 0) &&
-                  (!ioTCount.pending || ioTCount.pending == 0) && (
-                    <FlexItem>
-                      <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
-                    </FlexItem>
-                  )}
-                <FlexItem>
-                  {ioTCount.failed && ioTCount.failed > 0 ? (
-                    <>
-                      <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
-                      {ioTCount.failed}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-                <FlexItem>
-                  {ioTCount.configuring && ioTCount.configuring > 0 ? (
-                    <>
-                      <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                      {ioTCount.configuring}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-                <FlexItem>
-                  {ioTCount.pending && ioTCount.pending > 0 ? (
-                    <>
-                      <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                      {ioTCount.pending}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-              </Flex>
-            </TextContent>
-          </CardBody>
-        </Card>
-<<<<<<< HEAD
-        {ioTCount && (
-          <Card isHoverable>
-            <CardBody>
-              <TextContent>
-                <span style={{ fontSize: 24 }}>
-                  <b>{ioTCount.total}</b>
-                </span>
-                &nbsp; &nbsp;IoT Project (IoT)
-                <br />
-                <Divider />
-                <Flex>
-                  {(!ioTCount.configuring || ioTCount.configuring === 0) &&
-                    (!ioTCount.failed || ioTCount.failed === 0) &&
-                    (!ioTCount.pending || ioTCount.pending === 0) && (
-                      <FlexItem>
-                        <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
-                      </FlexItem>
-                    )}
-                  <FlexItem>
-                    {ioTCount.failed && ioTCount.failed > 0 ? (
-                      <>
-                        <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
-                        {ioTCount.failed}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                  <FlexItem>
-                    {ioTCount.configuring && ioTCount.configuring > 0 ? (
-                      <>
-                        <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                        {ioTCount.configuring}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                  <FlexItem>
-                    {ioTCount.pending && ioTCount.pending > 0 ? (
-                      <>
-                        <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                        {ioTCount.pending}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                </Flex>
-              </TextContent>
-            </CardBody>
-          </Card>
-        )}
-        {msgCount && (
-          <Card isHoverable>
-            <CardBody>
-              <TextContent>
-                <span style={{ fontSize: 24 }}>
-                  <b>{msgCount.total}</b>
-                </span>
-                &nbsp; &nbsp;Messaging Project (MSG)
-                <br />
-                <Divider />
-                <Flex>
-                  {(!msgCount.configuring || msgCount.configuring === 0) &&
-                    (!msgCount.failed || msgCount.failed === 0) &&
-                    (!msgCount.pending || msgCount.pending === 0) && (
-                      <FlexItem>
-                        <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
-                      </FlexItem>
-                    )}
-                  <FlexItem>
-                    {msgCount.failed && msgCount.failed > 0 ? (
-                      <>
-                        <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
-                        {msgCount.failed}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                  <FlexItem>
-                    {msgCount.configuring && msgCount.configuring > 0 ? (
-                      <>
-                        <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                        {msgCount.configuring}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                  <FlexItem>
-                    {msgCount.pending && msgCount.pending > 0 ? (
-                      <>
-                        <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                        {msgCount.pending}
-                      </>
-                    ) : (
-                      ""
-                    )}
-                  </FlexItem>
-                </Flex>
-              </TextContent>
-            </CardBody>
-          </Card>
-        )}
-      </Gallery>
-    </PageSection>
-=======
+        <ProjectCard
+          count={ioTCount}
+          labelShort={"IoT"}
+          label={"IoT Projects"}
+        />
       )}
       {msgCount && (
-        <Card isHoverable>
-          <CardBody>
-            <TextContent>
-              <span style={{ fontSize: 24 }}>
-                <b>{msgCount.total}</b>
-              </span>
-              &nbsp; &nbsp;Messaging Project (MSG)
-              <br />
-              <Divider />
-              <Flex>
-                {(!msgCount.configuring || msgCount.configuring == 0) &&
-                  (!msgCount.failed || msgCount.failed == 0) &&
-                  (!msgCount.pending || msgCount.pending == 0) && (
-                    <FlexItem>
-                      <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
-                    </FlexItem>
-                  )}
-                <FlexItem>
-                  {msgCount.failed && msgCount.failed > 0 ? (
-                    <>
-                      <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
-                      {msgCount.failed}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-                <FlexItem>
-                  {msgCount.configuring && msgCount.configuring > 0 ? (
-                    <>
-                      <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                      {msgCount.configuring}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-                <FlexItem>
-                  {msgCount.pending && msgCount.pending > 0 ? (
-                    <>
-                      <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                      {msgCount.pending}
-                    </>
-                  ) : (
-                    ""
-                  )}
-                </FlexItem>
-              </Flex>
-            </TextContent>
-          </CardBody>
-        </Card>
+        <ProjectCard
+          count={msgCount}
+          labelShort={"Msg"}
+          label={"Messaging Projects"}
+        />
       )}
     </Gallery>
->>>>>>> implement project page with datatoolbar
   );
 };
 export { ProjectHeaderCard };

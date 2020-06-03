@@ -241,7 +241,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   for (let project of projectList) {
     project.selected =
       selectedProjects.filter(({ name, namespace }) => {
-        console.log("com", project, name, namespace);
         const val = compareObject(
           { name, namespace },
           {
@@ -249,11 +248,9 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
             namespace: project.namespace
           }
         );
-        console.log(val);
         return val;
       }).length === 1;
   }
-  console.log(projectList);
   return (
     <>
       <ProjectList

@@ -17,6 +17,7 @@ import {
   IProjectToolbarToggleGroupProps
 } from "modules/project";
 import { SortForMobileView, useWindowDimensions } from "components";
+import { sortMenuItems } from "modules/project/utils";
 export interface IProjectToolbarProps extends IProjectToolbarToggleGroupProps {
   onNamespaceClear: () => void;
   isDeleteAllDisabled: boolean;
@@ -61,12 +62,6 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
   isAllProjectSelected
 }) => {
   const { width } = useWindowDimensions();
-  const sortMenuItems = [
-    { key: "name", value: "Name", index: 1 },
-    { key: "type/plan", value: "Type/Plan", index: 2 },
-    { key: "status", value: "Status", index: 3 },
-    { key: "creationTimestamp", value: "Time Created", index: 4 }
-  ];
   const toolbarItems = (
     <>
       <ProjectToolbarToggleGroup

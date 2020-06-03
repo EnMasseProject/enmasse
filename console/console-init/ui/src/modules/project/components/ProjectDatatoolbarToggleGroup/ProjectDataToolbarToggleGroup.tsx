@@ -18,13 +18,13 @@ import {
   DropdownPosition,
   Badge
 } from "@patternfly/react-core";
-import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
   DropdownWithToggle,
   TypeAheadSelect,
   DropdownWithBulkSelect
 } from "components";
+import { typeOptions, filterMenuItems } from "modules/project/utils";
 
 export interface IProjectToolbarToggleGroupProps {
   totalRecords: number;
@@ -82,17 +82,6 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   isAllProjectSelected,
   onSelectAllProjects
 }) => {
-  const filterMenuItems = [
-    { key: "name", value: "Name", id: "dropdown-filter-name" },
-    { key: "namespace", value: "Namespace", id: "dropdown-filter-namespace" },
-    { key: "type", value: "Type", id: "dropdown-filter-type" }
-  ];
-  const typeOptions: ISelectOption[] = [
-    { key: "iot", value: "IOT", isDisabled: false },
-    { key: "standard", value: "Standard Messaging", isDisabled: false },
-    { key: "brokered", value: "Brokered Messaging", isDisabled: false }
-  ];
-
   const checkIsFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
