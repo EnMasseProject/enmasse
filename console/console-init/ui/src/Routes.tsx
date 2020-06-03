@@ -15,6 +15,8 @@ const getAddressDetail = () =>
   import("modules/address-detail/AddressDetailPage");
 const getConnectionDetail = () =>
   import("modules/connection-detail/ConnectionDetailPage");
+const getDeviceDetailPage = () =>
+  import("modules/iot-device-detail/DeviceDetailPage");
 
 export const AppRoutes = () => (
   // <SwitchWith404>
@@ -77,6 +79,11 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/connections/:connectionname"
       getComponent={getConnectionDetail}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/:deviceid/:subList"
+      getComponent={getDeviceDetailPage}
       exact={true}
     />
   </SwitchWith404>
