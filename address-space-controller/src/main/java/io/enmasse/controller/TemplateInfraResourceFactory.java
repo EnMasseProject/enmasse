@@ -179,12 +179,14 @@ public class TemplateInfraResourceFactory implements InfraResourceFactory {
         String templateName = getAnnotation(infraAnnotations, AnnotationKeys.TEMPLATE_NAME, "standard-space-infra");
         List<HasMetadata> items = new ArrayList<>(kubernetes.processTemplate(templateName, parameters).getItems());
 
-        if (standardInfraConfig.getSpec().getRouter() != null && standardInfraConfig.getSpec().getRouter().getMinReplicas() != null) {
+        if (standardInfraConfig.getSpec().getRouter() != null) {
             // Workaround since parameterized integer fields cannot be loaded locally by fabric8 kubernetes-client
             for (HasMetadata item : items) {
                 if (item instanceof StatefulSet && "qdrouterd".equals(item.getMetadata().getLabels().get(LabelKeys.NAME))) {
                     StatefulSet router = (StatefulSet) item;
-                    router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+                    if (standardInfraConfig.getSpec().getRouter().getMinReplicas() != null) {
+                        router.getSpec().setReplicas(standardInfraConfig.getSpec().getRouter().getMinReplicas());
+                    }
                     if (standardInfraConfig.getSpec().getRouter().getResources() != null ) {
                         applyCpuMemory(router.getSpec().getTemplate(), standardInfraConfig.getSpec().getRouter().getResources().getCpu(), standardInfraConfig.getSpec().getRouter().getResources().getMemory());
                     }
