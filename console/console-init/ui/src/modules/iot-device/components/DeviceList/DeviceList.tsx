@@ -23,13 +23,13 @@ export interface IDeviceListProps
 }
 
 export interface IDevice {
-  id: string;
-  type: string;
-  status: boolean;
-  selected: boolean;
-  lastSeen: string;
-  lastUpdated: string;
-  creationTimeStamp: string;
+  id?: string | null;
+  type?: string | null;
+  status?: boolean | null;
+  selected?: boolean | null;
+  lastSeen?: string | null;
+  lastUpdated?: string | null;
+  creationTimeStamp?: string | null;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
