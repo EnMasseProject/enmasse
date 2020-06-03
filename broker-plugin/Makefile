@@ -2,6 +2,10 @@ include ../Makefile.java.mk
 GOOPTS          ?= -mod=vendor
 CMD = broker-probe
 
+
+deploy:
+	@echo "Skipping deploy"
+
 build_go: build/$(CMD)
 
 build_deps:: build/$(CMD)
