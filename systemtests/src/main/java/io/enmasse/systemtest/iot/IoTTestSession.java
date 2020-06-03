@@ -12,7 +12,6 @@ import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
 import static java.time.Duration.ofMinutes;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
 import java.nio.file.Files;
@@ -714,7 +713,9 @@ public final class IoTTestSession implements AutoCloseable {
 
         config = config.editOrNewSpec()
                 .withNewLogging()
-                .withNewLevel("debug")
+                .withNewLevel("info")
+                .addToLoggers("org.eclipse.hono", "debug")
+                .addToLoggers("io.enmasse", "debug")
                 .endLogging()
                 .endSpec();
 
