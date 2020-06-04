@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.operator;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 
 public class EnmasseOperatorManager {
 
@@ -98,7 +100,39 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void installMonitoringOperator() {
+    public void enableMonitoring() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                Enmasse enable monitoring");
+        LOGGER.info("***********************************************************");
+        if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
+            enableUserWorkloadMonitoring();
+        } else {
+            if (Kubernetes.isCRC()) {
+                deleteMonitoringOperator();
+            }
+            installMonitoringOperator();
+        }
+        LOGGER.info("***********************************************************");
+    }
+
+
+    private void enableUserWorkloadMonitoring() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                Enmasse user workload monitoring");
+        LOGGER.info("***********************************************************");
+        enableOperatorMetrics(true);
+        kube.createConfigmapFromResource("openshift-monitoring", new ConfigMapBuilder()
+                .editOrNewMetadata()
+                .withNamespace("openshift-monitoring")
+                .withName("cluster-monitoring-config")
+                .endMetadata()
+                .addToData("config.yaml", "techPreviewUserWorkload:\n  enabled: true")
+                .build());
+        TestUtils.waitForPodReady("prometheus-user-workload-0", "openshift-user-workload-monitoring");
+        LOGGER.info("***********************************************************");
+    }
+
+    private void installMonitoringOperator() throws Exception {
         LOGGER.info("***********************************************************");
         LOGGER.info("                Enmasse enmasse monitoring");
         LOGGER.info("***********************************************************");
@@ -153,17 +187,19 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("            Enmasse monitoring delete");
         LOGGER.info("***********************************************************");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
-        KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
-        kube.deleteNamespace(env.getMonitoringNamespace());
+        if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadatasources.integreatly.org");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanas.integreatly.org");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "applicationmonitorings.applicationmonitoring.integreatly.org");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "alertmanagers.monitoring.coreos.com");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "podmonitors.monitoring.coreos.com");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheuses.monitoring.coreos.com");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "prometheusrules.monitoring.coreos.com");
+            KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
+            kube.deleteNamespace(env.getMonitoringNamespace());
+        }
         LOGGER.info("***********************************************************");
     }
 
