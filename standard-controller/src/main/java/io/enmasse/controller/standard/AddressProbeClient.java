@@ -142,16 +142,20 @@ public class AddressProbeClient implements AutoCloseable {
         if (context != null) {
             CompletableFuture.allOf(
                     runOnContext(context, () -> {
-                        for (ProtonSender sender : senders) {
-                            if (sender != null) {
-                                sender.close();
+                        synchronized (senders) {
+                            for (ProtonSender sender : senders) {
+                                if (sender != null) {
+                                    sender.close();
+                                }
                             }
                         }
                     }),
                     runOnContext(context, () -> {
-                        for (ProtonReceiver receiver : receivers) {
-                            if (receiver != null) {
-                                receiver.close();
+                        synchronized (receivers) {
+                            for (ProtonReceiver receiver : receivers) {
+                                if (receiver != null) {
+                                    receiver.close();
+                                }
                             }
                         }
                     }),
