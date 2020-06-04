@@ -101,7 +101,7 @@ under the License.
             <address-full-policy>${ADDRESS_FULL_POLICY}</address-full-policy>
          </address-setting>
          <address-setting match="!!HEALTH_CHECK_BROKER_${CONTAINER_ID}">
-            <last-value-queue>true</last-value-queue>
+            <default-last-value-key>probe</default-last-value-key>
          </address-setting>
       </address-settings>
       <addresses>
