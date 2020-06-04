@@ -88,7 +88,7 @@
         <lombok.version>1.18.10</lombok.version>
 
         <!-- NOTE: jaeger-client must be aligned with Hono -->
-        <jaeger-client.version>1.2.0</jaeger-client.version>
+        <jaeger-client.version>1.1.0</jaeger-client.version>
         <!-- NOTE: opentracing must be aligned with Hono -->
         <opentracing.version>0.33.0</opentracing.version>
 
