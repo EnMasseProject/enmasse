@@ -16,11 +16,26 @@ const RETURN_IOT_DEVICE_DETAIL = (iotproject: string, deviceId: string) => {
                 deviceId
                  enabled
                 viaGateway
-                jsonData     
+                jsonData  
+                credentials   
               }   
           }
      }`;
   return IOT_DEVICE_DETAIL;
 };
 
-export { RETURN_IOT_DEVICE_DETAIL };
+const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
+  const IOT_CREDENTIALS = gql`
+    query iot_credentials{
+      credentials(
+        iotproject:"${iotproject}"
+        deviceId: "${deviceId}"
+      ) {
+        total   
+         credentials
+        }
+    }`;
+  return IOT_CREDENTIALS;
+};
+
+export { RETURN_IOT_DEVICE_DETAIL, RETURN_IOT_CREDENTIALS };

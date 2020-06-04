@@ -16,12 +16,12 @@ export const Routes = () => (
   <SwitchWith404>
     <Redirect path="/" to="/iot-project" exact={true} />
     <LazyRoute
-      path="/iot-projects/:namespace/:projectname/:deviceid/deviceinfo"
+      path="/iot-projects/:namespace/:projectname/devices/:deviceid/device-info"
       getComponent={getDeviceInfoPage}
       exact={true}
     />
     <LazyRoute
-      path="/iot-projects/:namespace/:projectname/:deviceid/configurationinfo"
+      path="/iot-projects/:namespace/:projectname/devices/:deviceid/configuration-info"
       getComponent={getConfigurationInfoPage}
       exact={true}
     />

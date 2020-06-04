@@ -31,9 +31,11 @@ export default function DeviceDetailPage() {
   const { projectname, namespace, deviceid, subList } = useParams();
   useDocumentTitle("Device Details");
   useA11yRouteChange();
-  /**
-   * TODO: change link path
-   */
+  const { loading, data } = useQuery<IDeviceDetailResponse>(
+    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+  );
+
+  const { enabled, deviceId } = data?.devices?.devices[0] || {};
 
   const breadcrumb = useMemo(
     () => (
@@ -46,7 +48,7 @@ export default function DeviceDetailPage() {
         <BreadcrumbItem>
           <Link
             id="device-detail-link"
-            to={`/iot-project/${namespace}/${projectname}/devices`}
+            to={`/iot-projects/${namespace}/${projectname}/devices`}
           >
             {projectname}
           </Link>
@@ -58,12 +60,6 @@ export default function DeviceDetailPage() {
   );
 
   useBreadcrumb(breadcrumb);
-
-  const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
-  );
-  const { devices } = data || {};
-  const { enabled, deviceId } = devices?.devices[0] || {};
 
   if (loading) return <Loading />;
 
@@ -111,7 +107,7 @@ export default function DeviceDetailPage() {
           onClone={onCloneDevice}
           deviceStatus={enabled}
         />
-        <DeviceDetailNavigation activeItem={subList || "deviceinfo"} />
+        <DeviceDetailNavigation activeItem={subList || "device-info"} />
       </PageSection>
       <PageSection>
         <Routes />

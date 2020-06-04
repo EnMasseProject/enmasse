@@ -4,15 +4,8 @@
  */
 
 import React from "react";
-import { ConfigurationInfo } from "modules/iot-device-detail/components";
-import { mock_iot_device, mock_adapters } from "mock-data";
+import { ConfigurationInfoContainer } from "modules/iot-device-detail/containers";
 
 export default function ConfigurationInfoPage() {
-  return (
-    <ConfigurationInfo
-      id="configuation-info-page"
-      adapters={mock_adapters}
-      credentials={mock_iot_device.credentials}
-    />
-  );
+  return <ConfigurationInfoContainer id="configuation-info-page" />;
 }
