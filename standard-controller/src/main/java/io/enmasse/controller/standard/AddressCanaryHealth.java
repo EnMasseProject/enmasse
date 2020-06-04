@@ -126,6 +126,8 @@ public class AddressCanaryHealth implements Runnable {
                 checkHealth(kubernetes.listClusters());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                running = false;
+                log.warn("AddressCanaryHealth interrupted, stopping.");
             } catch (Exception e) {
                 log.warn("Exception in collector task", e);
             }
