@@ -574,6 +574,7 @@ query {
     devices {
       deviceId
       jsonData
+      credentials
     }
   }
 }
@@ -1007,6 +1008,7 @@ mutation {
       enabled: true
       viaGateway: false
       jsonData: "{ext: {brand: samsung}}"
+      credentials: "[{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}]"
     }
 	) {
     deviceId
