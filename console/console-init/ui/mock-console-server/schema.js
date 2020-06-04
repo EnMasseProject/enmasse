@@ -793,6 +793,7 @@ const typeDefs = gql`
     enabled: Boolean!
     viaGateway: Boolean!
     jsonData: String! #The Json representation of this device.
+    credentials: String! #A Json array with the devices credentials.
   }
 
   type DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
@@ -825,6 +826,7 @@ const typeDefs = gql`
     enabled: Boolean!
     viaGateway: Boolean!
     jsonData: String! #The Json representation of this device.
+    credentials: String! #A Json array with the devices credentials.
   }
 
   input IotProject_iot_enmasse_io_v1alpha1_input {

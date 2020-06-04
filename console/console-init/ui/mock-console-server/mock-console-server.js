@@ -2079,7 +2079,7 @@ function createIotDevice(iotProject, newDevice) {
     throw `Iot device with deviceId  '${newDevice.deviceId} already exists in iot project ${iotProject}`;
   }
 
-  newDevice.credentials = [];
+  newDevice.credentials;
   iotdevices[devIndex].devices.push(newDevice);
   return getIotDevice(iotProject, newDevice.deviceId);
 }
