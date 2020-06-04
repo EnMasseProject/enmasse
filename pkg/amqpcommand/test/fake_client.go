@@ -28,6 +28,10 @@ func NewFakeClient() *FakeClient {
 func (c *FakeClient) Start() {
 }
 
+func (c *FakeClient) Addr() string {
+	return ""
+}
+
 func (c *FakeClient) AwaitRunning() {
 }
 

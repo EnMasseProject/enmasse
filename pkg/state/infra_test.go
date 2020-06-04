@@ -38,6 +38,7 @@ func TestUpdateRouters(t *testing.T) {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
+			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 			commandClient: bclient,
 		}
 	}, &testClock{})
@@ -67,6 +68,7 @@ func TestUpdateBrokers(t *testing.T) {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
+			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 			commandClient: bclient,
 		}
 	}, &testClock{})
@@ -117,6 +119,7 @@ func TestSyncConnectors(t *testing.T) {
 		return &BrokerState{
 			Host:          host,
 			Port:          port,
+			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 			commandClient: bclient,
 		}
 	}, &testClock{})
