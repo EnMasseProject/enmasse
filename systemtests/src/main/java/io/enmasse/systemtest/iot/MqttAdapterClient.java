@@ -8,7 +8,7 @@ package io.enmasse.systemtest.iot;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
+import java.time.Instant;
 
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -19,9 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.mqtt.MqttClientFactory;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.time.WaitPhase;
-import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.ThrowingConsumer;
 import io.vertx.core.buffer.Buffer;
 
@@ -63,11 +60,11 @@ public class MqttAdapterClient implements AutoCloseable {
         return true;
     }
 
-    public static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final PrivateKey key, final X509Certificate certificate )
+    public static MqttAdapterClient create(final Endpoint endpoint, final String deviceId, final PrivateKey key, final X509Certificate certificate)
             throws Exception {
 
         return create(endpoint, deviceId, builder -> {
-            builder.clientCertificate(KeyStoreCreator.from(key,certificate));
+            builder.clientCertificate(KeyStoreCreator.from(key, certificate));
         });
 
     }
@@ -99,29 +96,49 @@ public class MqttAdapterClient implements AutoCloseable {
 
         var adapterClient = adapterClientBuilder.createAsync();
 
-        try {
-            TestUtils.waitUntilCondition("Successfully connect to mqtt adapter", phase -> {
-                try {
-                    adapterClient.connect().waitForCompletion(10_000);
-                    return true;
-                } catch (MqttException mqttException) {
-                    if (phase == WaitPhase.LAST_TRY) {
-                        log.error("Error waiting to connect mqtt adapter", mqttException);
-                    }
-                    return false;
-                }
-            }, new TimeoutBudget(1, TimeUnit.MINUTES));
-        } catch (Exception e) {
+        // try connecting to MQTT endpoint
+
+        final Instant tryUntil = Instant.now().plus(Duration.ofMinutes(1));
+        while (true) {
+
             try {
-                adapterClient.close();
-            } catch (Exception e2) {
-                e.addSuppressed(e2);
+
+                // try connecting
+                adapterClient.connect().waitForCompletion(10_000);
+
+                // success -> return result
+                log.info("Connection to mqtt adapter succeeded");
+                return new MqttAdapterClient(adapterClient);
+
+            } catch (final MqttException mqttException) {
+
+                // something failed ...
+
+                log.info("Failed to connect to MQTT endpoint", mqttException);
+                if (Instant.now().isAfter(tryUntil)) {
+
+                    // we ran out of time ...
+
+                    try {
+                        // try to close, don't leak resources
+                        adapterClient.close();
+                    } catch (Exception e) {
+                        // add close failure to suppressed list
+                        mqttException.addSuppressed(e);
+                    }
+
+                    // throw original MQTT exception
+                    throw mqttException;
+                }
+
+                // let's wait a bit
+                Thread.sleep(5_000);
+
+                // any try once more -> goes back to start of while
+
             }
-            throw e;
+
         }
 
-        log.info("Connection to mqtt adapter succeeded");
-
-        return new MqttAdapterClient(adapterClient);
     }
 }
