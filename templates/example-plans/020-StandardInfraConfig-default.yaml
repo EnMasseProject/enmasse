@@ -9,6 +9,7 @@ spec:
     resources:
       memory: 512Mi
   broker:
+    maxUnavailable: 1
     resources:
       memory: 512Mi
       storage: 2Gi
