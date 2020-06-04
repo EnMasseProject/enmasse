@@ -6,14 +6,19 @@
 package io.enmasse.systemtest.iot.mqtt;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
+import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
@@ -30,6 +35,8 @@ import io.enmasse.systemtest.iot.StandardIoTTests;
  * test with an acceptable message loss rate of e.g. 10%.
  */
 public interface StandardIoTMqttTests extends StandardIoTTests {
+
+    final static Logger log = LoggerFactory.getLogger(StandardIoTMqttTests.class);
 
     /**
      * Single telemetry message with attached consumer. QoS 1.
@@ -174,11 +181,15 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttInvalidDevice-{0}")
     @MethodSource("getInvalidDevices")
-    default void testMqttInvalidDevice(final Device device) throws Exception {
+    default void testMqttInvalidDevice(final Device device) {
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
          * Two separate connections, and more than one message.
+         *
+         * We do expect a failure, but it must be a specific failure. We do accept
+         * an MqttSecurityException when opening the connection, or a TimeoutException
+         * when we could open the connection, but not send/receive.
          */
 
         try (MqttAdapterClient client = device.createMqttAdapterClient()) {
@@ -192,6 +203,10 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .consume(MessageSendTester.Consume.BEFORE)
                         .execute();
             });
+        } catch (Exception e) {
+            // if we get an exception, it must be an MqttSecurityException
+            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            log.info("Accepting MQTT exception", e);
         }
 
         try (MqttAdapterClient client = device.createMqttAdapterClient()) {
@@ -205,8 +220,13 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .consume(MessageSendTester.Consume.BEFORE)
                         .execute();
             });
+        } catch (Exception e) {
+            // if we get an exception, it must be an MqttSecurityException
+            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            log.info("Accepting MQTT exception", e);
         }
 
     }
 
 }
+

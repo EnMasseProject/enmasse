@@ -4,14 +4,13 @@
  */
 package io.enmasse.systemtest.info;
 
-import io.enmasse.systemtest.EnmasseInstallType;
-import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
-import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
-import io.enmasse.systemtest.condition.SupportedInstallType;
-import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
-import io.enmasse.systemtest.logs.CustomLogger;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
@@ -24,13 +23,15 @@ import org.junit.platform.launcher.TestIdentifier;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
 
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
+import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
+import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
+import io.enmasse.systemtest.condition.SupportedInstallType;
+import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
+import io.enmasse.systemtest.iot.IoTTests;
+import io.enmasse.systemtest.logs.CustomLogger;
 
 /**
  * Class for store and query information about test plan and tests
@@ -195,6 +196,19 @@ public class TestInfo {
         }
         LOGGER.info("Test is not IoT!");
         return false;
+    }
+
+    /**
+     * Checks the test framework should clean up after the test ran.
+     * @return {@code true} if the test framework should clean up, {@code false} otherwise.
+     */
+    public boolean needsIoTCleanup() {
+        return currentTestClass
+                .getTestClass()
+                // the current indicator of "self cleanup" is inheritance from "IoTTests"
+                .map(IoTTests.class::isAssignableFrom).map(b -> !b)
+                // if there is no test class, there is no need to clean up
+                .orElse(false);
     }
 
     public boolean isClassIoT() {
