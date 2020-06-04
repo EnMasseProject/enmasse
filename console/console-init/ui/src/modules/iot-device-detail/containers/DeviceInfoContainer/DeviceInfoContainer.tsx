@@ -4,27 +4,40 @@
  */
 
 import React from "react";
+import { useParams } from "react-router";
+import { useQuery } from "@apollo/react-hooks";
+import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module/queries";
+import { IDeviceDetailResponse } from "schema";
 import { DeviceInfo } from "modules/iot-device-detail/components";
-import { mock_iot_device } from "mock-data";
 
-export const DeviceInfoContainer = () => {
-  const metadataList = [
-    {
-      headers: ["Message info parameter", "Type", "Value"],
-      data: mock_iot_device.default
-    },
-    {
-      headers: ["Basic info parameter", "Type", "Value"],
-      data: mock_iot_device.ext
-    }
-  ];
+export interface IDeviceInfoContainerProps {
+  id: string;
+}
+
+export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
+  id
+}) => {
+  const { projectname, deviceid } = useParams();
+
+  const { data } = useQuery<IDeviceDetailResponse>(
+    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+  );
+
+  const { credentials, jsonData } = data?.devices?.devices[0] || {};
+  const credentialsJson = credentials && JSON.parse(credentials);
+  const deviceJson = jsonData && JSON.parse(jsonData);
+
+  const metadetaJson = {
+    default: deviceJson?.default,
+    ext: deviceJson?.ext
+  };
 
   return (
     <DeviceInfo
-      id="device-info"
-      deviceList={mock_iot_device.via}
-      metadataList={metadataList}
-      credentials={mock_iot_device.credentials}
+      id={id}
+      deviceList={deviceJson?.via}
+      metadataList={metadetaJson}
+      credentials={credentialsJson}
     />
   );
 };

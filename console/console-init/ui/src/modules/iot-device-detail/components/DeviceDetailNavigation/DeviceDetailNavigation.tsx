@@ -40,12 +40,12 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
       <NavList variant={NavVariants.tertiary}>
         <NavItem
           key="device-info"
-          itemId="deviceinfo"
-          isActive={active === "deviceinfo"}
+          itemId="device-info"
+          isActive={active === "device-info"}
         >
           <NavLink
             id="nav-device-info"
-            to={`deviceinfo`}
+            to={`device-info`}
             className={css(styles.navlink)}
           >
             Device Info
@@ -69,12 +69,12 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
         </NavItem> */}
         <NavItem
           key="configuration-info"
-          itemId="configurationinfo"
-          isActive={active === "configurationinfo"}
+          itemId="configuration-info"
+          isActive={active === "configuration-info"}
         >
           <NavLink
             id="nav-device-configuration-info"
-            to={`configurationinfo`}
+            to={`configuration-info`}
             className={css(styles.navlink)}
           >
             Configuration Info

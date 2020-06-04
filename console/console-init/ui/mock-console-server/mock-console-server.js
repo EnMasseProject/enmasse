@@ -2128,7 +2128,10 @@ createIotDevice("iotProjectFrance", {
 
 createIotDevice("iotProjectFrance", {
   deviceId: "12",
-  jsonData: JSON.stringify({ via: 11, ext: { summit: "Mt Blanc" } }),
+  jsonData: JSON.stringify({
+    via: ["device-1", "device-2"],
+    ext: { summit: "Mt Blanc" }
+  }),
   credentials: []
 });
 
@@ -2136,7 +2139,26 @@ createIotDevice("iotProjectIndia", {
   deviceId: "20",
   enabled: true,
   viaGateway: false,
-  jsonData: JSON.stringify({ ext: { ocean: "indian" } }),
+  jsonData: JSON.stringify({
+    via: ["20", "21"],
+    default: {
+      "content-type-1": "text/plain",
+      "content-type-2": "text/plain",
+      "content-type-3": "text/plain",
+      long: 12.3544
+    },
+    ext: {
+      custom: {
+        level: 0,
+        serial_id: "0000",
+        location: {
+          long: 1.234,
+          lat: 5.678
+        },
+        features: ["foo", "bar", "baz"]
+      }
+    }
+  }),
   credentials: []
 });
 
@@ -2144,7 +2166,10 @@ createIotDevice("iotProjectIndia", {
   deviceId: "21",
   enabled: true,
   viaGateway: true,
-  jsonData: JSON.stringify({ via: 20, ext: { summit: "Kanchenjunga" } }),
+  jsonData: JSON.stringify({
+    via: ["device-3", "device-4"],
+    ext: { summit: "Kanchenjunga" }
+  }),
   credentials: []
 });
 
@@ -2177,11 +2202,52 @@ setCredentials(
   "20",
   JSON.stringify([
     {
-      "auth-id": "20-id",
-      type: "psk",
-      secrets: [{ key: "verysecret", "not-after": "2027-12-24T19:00:00Z" }]
+      type: "hashed-password",
+      "auth-id": "user-1",
+      enabled: false,
+      secrets: [
+        {
+          "not-after": "2020-10-01T10:00:00Z",
+          "pwd-hash": "bjb232138d"
+        },
+        {
+          "not-before": "2020-10-01T10:00:00Z",
+          "pwd-hash": "adfhk327823"
+        }
+      ]
     },
-    { "auth-id": "20-id", type: "password" }
+    {
+      type: "hashed-password",
+      "auth-id": "alternate-user-1",
+      enabled: true,
+      secrets: [
+        {
+          comment: "was just for testing"
+        }
+      ]
+    },
+    {
+      type: "psk",
+      "auth-id": "user-1",
+      secrets: [
+        {
+          key: "123knsd8=",
+          comment: "was just for testing"
+        }
+      ]
+    },
+    {
+      type: "x509-cert",
+      "auth-id": "other-id-1",
+      enabled: false,
+      secrets: [],
+      ext: {
+        "para-1": "value-1",
+        "para-2": "value-2",
+        "para-3": "value-3",
+        "para-4": "value-4"
+      }
+    }
   ])
 );
 setCredentials(

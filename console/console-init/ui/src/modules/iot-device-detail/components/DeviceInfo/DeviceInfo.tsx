@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useParams } from "react-router";
 import {
   Page,
   PageSection,
@@ -44,13 +45,28 @@ export interface IDeviceInfoProps
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
-  metadataList,
+  metadataList: metadetaJson,
   credentials
 }) => {
+  const [isHidden, setIsHidden] = useState<boolean>(false);
+  const { projectname, namespace } = useParams();
+
   const jsonViewData = {
+    via: deviceList,
+    ...metadetaJson,
     credentials
   };
-  const [isHidden, setIsHidden] = useState<boolean>(false);
+
+  const metadataList = [
+    {
+      headers: ["Message info parameter", "Type", "Value"],
+      data: metadetaJson?.default
+    },
+    {
+      headers: ["Basic info parameter", "Type", "Value"],
+      data: metadetaJson?.ext
+    }
+  ];
 
   const onToggle = (isEnabled: boolean) => {
     setIsHidden(isEnabled);
@@ -88,11 +104,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                 <CardBody>
                   <Grid>
                     {deviceList &&
-                      deviceList.map((device: string) => {
+                      deviceList.map((deviceId: string) => {
                         return (
-                          <GridItem span={2} key={device}>
-                            {/**  TODO:add link redirect url*/}
-                            <Link to={"/"}>{device}</Link>
+                          <GridItem span={2} key={deviceId}>
+                            <Link
+                              to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
+                            >
+                              {deviceId}
+                            </Link>
                           </GridItem>
                         );
                       })}

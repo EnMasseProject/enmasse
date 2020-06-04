@@ -7,9 +7,5 @@ import React from "react";
 import { DeviceInfoContainer } from "modules/iot-device-detail/containers";
 
 export default function DeviceInfoPage() {
-  /**
-   * TODO: write graphql query to get the device info detail
-   */
-
-  return <DeviceInfoContainer />;
+  return <DeviceInfoContainer id="device-info-container" />;
 }

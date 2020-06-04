@@ -42,7 +42,7 @@ export const AppRoutes = () => (
       exact={true}
     />
     <LazyRoute
-      path="/iot-projects/:namespace/:projectname/:deviceid/:subList"
+      path="/iot-projects/:namespace/:projectname/devices/:deviceid/:subList"
       getComponent={getDeviceDetailPage}
       exact={true}
     />

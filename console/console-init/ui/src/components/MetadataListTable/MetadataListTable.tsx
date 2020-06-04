@@ -11,7 +11,7 @@ import {
   DataListItemRow,
   DataListCell,
   DataListItemCells,
-  Title,
+  Title
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { convertJsonToMetadataOptions } from "utils";
@@ -19,11 +19,11 @@ import { TableRow, IRowOption } from "./TableRow";
 
 const styles = StyleSheet.create({
   header_magin_left: {
-    marginLeft: 45,
+    marginLeft: 45
   },
   header_text_align_center: {
-    textAlign: "center",
-  },
+    textAlign: "center"
+  }
 });
 
 interface IHeaderProps {
@@ -45,14 +45,14 @@ export interface IMetadataListTablePorps {
 
 const TableHeader: React.FC<IHeaderProps> = ({
   headers,
-  "aria-labelledby": ariaLabelledby,
+  "aria-labelledby": ariaLabelledby
 }) => {
   const dataListCells = () =>
     headers &&
     headers.map((header: string, index: number) => {
       const cssClass = classNames({
         [styles.header_magin_left]: index === 0,
-        [styles.header_text_align_center]: index === 1 || index === 2,
+        [styles.header_text_align_center]: index === 1 || index === 2
       });
 
       return (
@@ -77,14 +77,14 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
   id,
   dataList,
   "aria-label": ariaLabel,
-  "aria-labelledby-header": ariaLabelledby,
+  "aria-labelledby-header": ariaLabelledby
 }) => {
   return (
     <DataList aria-label={ariaLabel} id={id}>
       {dataList &&
         dataList.map((list: IDataList) => {
           const { headers, data } = list;
-          const metadataOptions = convertJsonToMetadataOptions(data);
+          const metadataOptions = data && convertJsonToMetadataOptions(data);
           return (
             <>
               <TableHeader headers={headers} aria-labelledby={ariaLabelledby} />

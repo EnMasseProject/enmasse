@@ -11,6 +11,14 @@ export interface IDeviceDetailResponse {
       enabled?: boolean;
       viaGateway?: boolean;
       jsonData?: string;
+      credentials?: string;
     }>;
+  };
+}
+
+export interface ICredentialsReponse {
+  credentials: {
+    total?: number;
+    credentials?: string;
   };
 }
