@@ -363,8 +363,14 @@ function apply_config(desired, router, count) {
     });
 }
 
-function desired_address_config(high_level_address_definitions) {
+function desired_address_config(high_level_address_definitions, brokers) {
     var config = new RouterConfig(ID_QUALIFIER);
+    // Addresses and autolinks for broker health checks
+    for (var i in brokers) {
+        var address = "!!HEALTH_CHECK_BROKER_" + brokers[i];
+        config.add_address({prefix:address, distribution:'balanced', waypoint:true});
+        config.add_autolink_pair({address:address, containerId: brokers[i]});
+    }
     for (var i in high_level_address_definitions) {
         var def = high_level_address_definitions[i];
         if (def.type === 'queue') {
@@ -463,8 +469,8 @@ function deduce_definition(actual_config) {
 }
 
 module.exports = {
-    realise_address_definitions: function (high_level_address_definitions, router) {
-        return apply_config(desired_address_config(high_level_address_definitions), router).then(function (actual) {
+    realise_address_definitions: function (high_level_address_definitions, router, brokers) {
+        return apply_config(desired_address_config(high_level_address_definitions, brokers), router).then(function (actual) {
             return deduce_definition(actual);
         });
     }

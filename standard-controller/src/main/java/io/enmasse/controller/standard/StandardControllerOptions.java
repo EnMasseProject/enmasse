@@ -31,6 +31,8 @@ public class StandardControllerOptions {
     private Duration kubernetesApiConnectTimeout;
     private Duration kubernetesApiReadTimeout;
     private Duration kubernetesApiWriteTimeout;
+    private Duration healthProbeTimeout;
+    private Duration healthCheckInterval;
 
     public String getCertDir() {
         return certDir;
@@ -193,6 +195,14 @@ public class StandardControllerOptions {
                 .map(i -> Duration.ofSeconds(Long.parseLong(i)))
                 .orElse(Duration.ofSeconds(30)));
 
+        options.setHealthProbeTimeout(getEnv(env, "HEALTH_PROBE_TIMEOUT")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(10)));
+
+        options.setHealthCheckInterval(getEnv(env, "HEALTH_CHECK_INTERVAL")
+                .map(i -> Duration.ofSeconds(Long.parseLong(i)))
+                .orElse(Duration.ofSeconds(30)));
+
         return options;
     }
 
@@ -243,6 +253,8 @@ public class StandardControllerOptions {
                 ", kubernetesApiConnectTimeout='" + kubernetesApiConnectTimeout + '\'' +
                 ", kubernetesApiReadTimeout='" + kubernetesApiReadTimeout + '\'' +
                 ", kubernetesApiWriteTimeout='" + kubernetesApiWriteTimeout + '\'' +
+                ", healthProbeTimeout='" + healthProbeTimeout + '\'' +
+                ", healthCheckInterval='" + healthCheckInterval + '\'' +
                 '}';
     }
 
@@ -298,4 +310,19 @@ public class StandardControllerOptions {
         this.kubernetesApiWriteTimeout = kubernetesApiWriteTimeout;
     }
 
+    public Duration getHealthProbeTimeout() {
+        return healthProbeTimeout;
+    }
+
+    public void setHealthProbeTimeout(Duration healthProbeTimeout) {
+        this.healthProbeTimeout = healthProbeTimeout;
+    }
+
+    public Duration getHealthCheckInterval() {
+        return healthCheckInterval;
+    }
+
+    public void setHealthCheckInterval(Duration healthCheckInterval) {
+        this.healthCheckInterval = healthCheckInterval;
+    }
 }

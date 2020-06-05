@@ -507,6 +507,12 @@ public class RouterConfigController implements Controller {
         dlqAddress.setWaypoint(true);
         addresses.add(dlqAddress);
 
+        Address routerHealthCheckAddress = new Address();
+        routerHealthCheckAddress.setName("!!HEALTH_CHECK_ROUTER");
+        routerHealthCheckAddress.setPrefix("!!HEALTH_CHECK_ROUTER");
+        mqttAddress.setDistribution(Distribution.balanced);
+        addresses.add(routerHealthCheckAddress);
+
         // Autolinks
         List<AutoLink> autoLinks = new ArrayList<>();
         AutoLink dlqAutoLink = new AutoLink();

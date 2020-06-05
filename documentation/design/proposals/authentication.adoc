@@ -213,39 +213,39 @@ System tests will need to be able to support creation / deletion of address spac
 ==== EnMasse Authentication Service
 
 * Validate successful authentication with enmasse authentication service and valid credentials
- . create an address space `A` which uses the enmasse authentication service
- . add a user `U` with password `P` to the Keycloak domain for `A` (using Keycloak API)
- . verify that AMQP & MQTT messaging clients can establish a connection to `A` using username `U` and password `P`
+ . create an address space `HealthChecker` which uses the enmasse authentication service
+ . add a user `U` with password `P` to the Keycloak domain for `HealthChecker` (using Keycloak API)
+ . verify that AMQP & MQTT messaging clients can establish a connection to `HealthChecker` using username `U` and password `P`
  . create an address space `B` which uses the enmasse authentication service
  . add a user `U` with password `X` to the Keycloak domain for `B`
- . verify that AMQP & MQTT messaging clients can still establish a connection to `A` using username `U` and password `P`
+ . verify that AMQP & MQTT messaging clients can still establish a connection to `HealthChecker` using username `U` and password `P`
 
 * Validate unsuccessful authentication with enmasse authentication service with no credentials
- . create an address space `A` which uses the enmasse authentication service
+ . create an address space `HealthChecker` which uses the enmasse authentication service
  . verify that AMQP & MQTT messaging clients cannot establish a connection without credentials
- . add a user `U` with password `P` to the Keycloak domain for `A`
+ . add a user `U` with password `P` to the Keycloak domain for `HealthChecker`
  . verify that AMQP & MQTT messaging clients still cannot establish a connection without credentials
 
 * Validate unsuccessful authentication with enmasse authentication service with incorrect credentials
- . create an address space `A` which uses the enmasse authentication service
- . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `P`
- . add a user `U` with password `P` to the Keycloak domain for `A`
- . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `X`
- . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `V` and password `P`
+ . create an address space `HealthChecker` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `HealthChecker` using username `U` and password `P`
+ . add a user `U` with password `P` to the Keycloak domain for `HealthChecker`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `HealthChecker` using username `U` and password `X`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `HealthChecker` using username `V` and password `P`
  . create an address space `B` which uses the enmasse authentication service
  . add a user `U` with password `X` to the Keycloak domain for `B`
- . verify that AMQP & MQTT messaging clients cannot establish a connection to `A` using username `U` and password `X`
+ . verify that AMQP & MQTT messaging clients cannot establish a connection to `HealthChecker` using username `U` and password `X`
  . verify that AMQP & MQTT messaging clients cannot establish a connection to `B` using username `U` and password `P`
 
 ==== No Authentication
 
 * Validate successful authentication with no authentication
- . create an address space `A` which uses the enmasse authentication service
- . verify that AMQP & MQTT messaging clients can establish a connection to address space `A` without credentials
- . verify that AMQP & MQTT messaging clients can establish a connection to address space `A` using username `U` and password `P`
+ . create an address space `HealthChecker` which uses the enmasse authentication service
+ . verify that AMQP & MQTT messaging clients can establish a connection to address space `HealthChecker` without credentials
+ . verify that AMQP & MQTT messaging clients can establish a connection to address space `HealthChecker` using username `U` and password `P`
  . create an address space `B` which uses the enmasse authentication service
- . verify that AMQP & MQTT messaging clients can still establish a connection to address space `A` without credentials
- . verify that AMQP & MQTT messaging clients can still establish a connection to address space `A` using username `U` and password `P`
+ . verify that AMQP & MQTT messaging clients can still establish a connection to address space `HealthChecker` without credentials
+ . verify that AMQP & MQTT messaging clients can still establish a connection to address space `HealthChecker` using username `U` and password `P`
 
 === Testing Console Access
 

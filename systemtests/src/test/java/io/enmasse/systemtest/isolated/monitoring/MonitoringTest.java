@@ -165,6 +165,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
         getClientUtils().sendDurableMessages(resourcesManager, addressSpace, user, 10, queue);
 
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CANARY_HEALTH_FAILURES_TOTAL, "0"));
+
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
                 Collections.singletonMap("address", queue.getSpec().getAddress())));
     }

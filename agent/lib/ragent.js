@@ -148,7 +148,7 @@ Ragent.prototype.addresses_updated = function () {
         this.sync_broker(this.connected_brokers[b]);
     }
     for (var r in this.connected_routers) {
-        this.sync_router_addresses(this.connected_routers[r]);
+        this.sync_router_addresses(this.connected_routers[r], Object.keys(this.connected_brokers));
     }
 }
 
@@ -163,8 +163,8 @@ Ragent.prototype.sync_addresses = function (updated) {
     this.addresses_updated();
 }
 
-Ragent.prototype.sync_router_addresses = function (router) {
-    router.sync_addresses(this.addresses);
+Ragent.prototype.sync_router_addresses = function (router, brokers) {
+    router.sync_addresses(this.addresses, brokers);
 }
 
 Ragent.prototype.verify_addresses = function (expected) {
@@ -346,7 +346,7 @@ Ragent.prototype.configure_handlers = function () {
                 router.retrieve_connectors();
                 router.on('synchronized', self.on_synchronized.bind(self));
                 if (self.addresses_initialised) {
-                    router.sync_addresses(self.addresses);
+                    router.sync_addresses(self.addresses, Object.keys(self.connected_brokers));
                 }
                 router.on('listeners_updated', self.connected_routers_updated.bind(self));//advertise only once have listeners
                 router.on('connectors_updated', self.check_router_connectors.bind(self));
@@ -358,6 +358,9 @@ Ragent.prototype.configure_handlers = function () {
             log.info('broker %s connected', broker.id);
             if (self.addresses_initialised) {
                 self.sync_broker(broker);
+                for (var r in self.connected_routers) {
+                    self.sync_router_addresses(self.connected_routers[r], Object.keys(self.connected_brokers));
+                }
             }
             broker.on('synchronized', self.on_synchronized.bind(self));
             context.connection.on('disconnected', self.on_broker_disconnect.bind(self));

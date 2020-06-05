@@ -52,6 +52,8 @@ public class ResourceChecker<T> implements CacheWatcher<T>, Runnable {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
+                running = false;
+                log.warn("ResourceChecker interrupted, stopping.");
             } catch (Exception e) {
                 log.warn("Exception in checker task", e);
             }
