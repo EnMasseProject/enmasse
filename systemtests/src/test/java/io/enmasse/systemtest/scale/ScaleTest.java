@@ -207,7 +207,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
 
     void doMessagingPerformanceTest(AddressType addressType, String addressPlan) throws Exception {
-        int maxClients = 100;
+        int maxClients = 4;
 
         String batchSuffix = UUID.randomUUID().toString();
         Address[] addresses = IntStream.range(0, maxClients - 1)
@@ -243,16 +243,22 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 checkMetrics(manager.getMonitoringResult());
                 var config = new ScaleTestClientConfiguration();
                 config.setAddressesPerTenant(1);
-                config.setSendMessagePeriod(0);
+                config.setSendMessagePeriod(1);
                 config.setLinksPerConnection(2);
                 config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
                 config.setSendersPerTenant(env.getPerfSendersPerTenant());
                 manager.deployTenantClient(kubernetes, Collections.singletonList(addresses[clients]), config);
+
                 checkMetrics(manager.getMonitoringResult());
 
                 manager.sleep();
 
                 checkMetrics(manager.getMonitoringResult());
+
+                // Let clients run for a while
+                Thread.sleep(60_000);
+                manager.gatherPerformanceResults();
+                saveResultsFile(String.format("messaging_performance_%d_clients_results.json", clients), manager.getPerformanceResults());
 
                 clients++;
                 LOGGER.info("#######################################");
@@ -511,13 +517,12 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         List<AddressPlan> addressPlans = Arrays.asList(testQueuePlan, testAnycastPlan);
 
         AddressSpacePlan addressSpacePlan = PlanUtils.createAddressSpacePlanObject(addressSpacePlanName, testInfra.getMetadata().getName(), AddressSpaceType.STANDARD, resources, addressPlans);
-        getResourceManager().createAddressSpacePlan(addressSpacePlan, false);
-        Thread.sleep(120_000);
+        getResourceManager().createAddressSpacePlan(addressSpacePlan, true);
 
         LOGGER.info("Create custom auth service");
         //Custom auth service
         AuthenticationService standardAuth = AuthServiceUtils.createStandardAuthServiceObject(authServiceName, true, "5Gi", "3Gi", true, authServiceName);
-        resourcesManager.createAuthService(standardAuth, false);
+        resourcesManager.createAuthService(standardAuth, true);
         setVerboseGCAuthservice(authServiceName);
         Thread.sleep(120_000);
         resourcesManager.waitForAuthPods(standardAuth);
