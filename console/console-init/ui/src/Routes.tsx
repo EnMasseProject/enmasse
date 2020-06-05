@@ -17,6 +17,46 @@ const getConnectionDetail = () =>
   import("modules/connection-detail/ConnectionDetailPage");
 
 export const AppRoutes = () => (
+  // <SwitchWith404>
+  //   {/* Redirect route */}
+  //   <Redirect path="/" to="/projects" exact={true} />
+  //   {/* messaging project list page route */}
+  //   <LazyRoute
+  //     path="/msg-projects"
+  //     exact={true}
+  //     getComponent={getAddressSpaceListPage}
+  //   />
+  //   {/* messaging project detial page route */}
+  //   <LazyRoute
+  //     path="/msg-projects/:namespace/:projectname/:type/:subList"
+  //     exact={true}
+  //     getComponent={getAddressSpaceDetail}
+  //   />
+  //   {/* address detail page route */}
+  //   <LazyRoute
+  //     path="/msg-projects/:namespace/:projectname/:type/addresses/:addressname"
+  //     getComponent={getAddressDetail}
+  //     exact={true}
+  //   />
+  //   {/* connection detail page route */}
+  //   <LazyRoute
+  //     path="/msg-projects/:namespace/:projectname/:type/connections/:connectionname"
+  //     getComponent={getConnectionDetail}
+  //     exact={true}
+  //   />
+  //   {/* iot-project detail page route */}
+  //   <LazyRoute
+  //     path="/iot-projects/:namespace/:projectname/:sublist"
+  //     getComponent={getIoTProjectDetailPage}
+  //     exact={true}
+  //   />
+  //   {/* iot-project device detail page route */}
+  //   <LazyRoute
+  //     path="/iot-projects/:namespace/:projectname/devices/:deviceid/:sublist"
+  //     getComponent={getDeviceDEtailPage}
+  //     exact={true}
+  //   />
+  // </SwitchWith404>
   <SwitchWith404>
     <Redirect path="/" to="/address-spaces" exact={true} />
     <LazyRoute
