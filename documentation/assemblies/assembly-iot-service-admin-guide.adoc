@@ -13,6 +13,8 @@ include::../modules/con-iot-monitoring.adoc[leveloffset=+1]
 
 include::../modules/con-iot-logging.adoc[leveloffset=+1]
 
+include::../modules/con-iot-tracing.adoc[leveloffset=+1]
+
 include::../modules/con-iot-service-registry.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
@@ -20,6 +22,8 @@ include::../modules/proc-iot-installing-services.adoc[leveloffset=+1]
 include::../modules/proc-iot-service-registry-jdbc-external.adoc[leveloffset=+1]
 
 include::../modules/proc-iot-logging.adoc[leveloffset=+1]
+
+include::../modules/proc-iot-tracing.adoc[leveloffset=+1]
 
 == IoT services configuration examples
 
