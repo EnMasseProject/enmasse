@@ -28,6 +28,7 @@ import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
 import { FinishedStep } from "components";
 import { INamespaces } from "modules/address-space";
+import { ProjectType } from "modules/project/utils";
 
 const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -158,7 +159,11 @@ const CreateProject: React.FunctionComponent = () => {
         onClose={onToggle}
         success={isCreatedSuccessfully}
         routeDetail={routeDetail}
-        projectType={messagingProjectDetail ? "Messaging" : "IoT"}
+        projectType={
+          messagingProjectDetail
+            ? ProjectType.MESSAGING_PROJECT
+            : ProjectType.IOT_PROJECT
+        }
       />
     ),
     isFinishedStep: true

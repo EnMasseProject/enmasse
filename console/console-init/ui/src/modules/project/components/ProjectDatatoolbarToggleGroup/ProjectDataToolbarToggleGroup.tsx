@@ -38,12 +38,12 @@ export interface IProjectToolbarToggleGroupProps {
   typeSelected?: string | null;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   selectedNamespaces: Array<{ value: string; isExact: boolean }>;
-  onFilterSelect: (value: string) => void;
-  onNameSelect: (e: any, selection: SelectOptionObject) => void;
-  onNameClear: () => void;
-  onNamespaceSelect: (e: any, selection: SelectOptionObject) => void;
-  onNamespaceClear: () => void;
-  onTypeSelect: (selection: string) => void;
+  onSelectFilter: (value: string) => void;
+  onSelectName: (e: any, selection: SelectOptionObject) => void;
+  onClearName: () => void;
+  onSelectNamespace: (e: any, selection: SelectOptionObject) => void;
+  onClearNamespace: () => void;
+  onSelectType: (selection: string) => void;
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
@@ -67,12 +67,12 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   typeSelected,
   selectedNames,
   selectedNamespaces,
-  onFilterSelect,
-  onNameSelect,
-  onNameClear,
-  onNamespaceSelect,
-  onNamespaceClear,
-  onTypeSelect,
+  onSelectFilter,
+  onSelectName,
+  onClearName,
+  onSelectNamespace,
+  onClearNamespace,
+  onSelectType,
   onSearch,
   onDelete,
   onChangeNameInput,
@@ -82,7 +82,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   isAllProjectSelected,
   onSelectAllProjects
 }) => {
-  const checkIsFilterApplied = () => {
+  const isFilterApplied = () => {
     if (
       (selectedNames && selectedNames.length > 0) ||
       (selectedNamespaces && selectedNamespaces.length > 0) ||
@@ -92,7 +92,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     }
     return false;
   };
-  const handleSelectAll = (val: boolean) => {
+  const onSelectAll = (val: boolean) => {
     onSelectAllProjects(val);
   };
   const toggleItems = (
@@ -111,8 +111,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
                 id="al-filter-input-name"
                 ariaLabelTypeAhead={"Select name"}
                 ariaLabelledBy={"typeahead-select-id"}
-                onSelect={onNameSelect}
-                onClear={onNameClear}
+                onSelect={onSelectName}
+                onClear={onClearName}
                 selected={nameSelected}
                 inputData={nameInput || ""}
                 placeholderText={"Select name"}
@@ -145,8 +145,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
                 id="al-filter-input-namespace"
                 ariaLabelTypeAhead={"Select namespace"}
                 ariaLabelledBy={"typeahead-select-id"}
-                onSelect={onNamespaceSelect}
-                onClear={onNamespaceClear}
+                onSelect={onSelectNamespace}
+                onClear={onClearNamespace}
                 selected={namespaceSelected}
                 inputData={namespaceInput || ""}
                 placeholderText={"Select namespace"}
@@ -178,7 +178,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               id={"al-filter-dropdown-type"}
               dropdownItemIdPrefix={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
-              onSelectItem={onTypeSelect}
+              onSelectItem={onSelectType}
               dropdownItems={typeOptions}
               value={typeSelected || "Select Type"}
             />
@@ -195,7 +195,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
           position={DropdownPosition.left}
-          onSelectItem={onFilterSelect}
+          onSelectItem={onSelectFilter}
           dropdownItems={filterMenuItems}
           value={(filterSelected && filterSelected.trim()) || "Filter"}
           toggleIcon={
@@ -215,7 +215,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         toggleIcon={
           <>
             <FilterIcon />
-            {checkIsFilterApplied() && (
+            {isFilterApplied() && (
               <Badge key={1} isRead>
                 {totalRecords}
               </Badge>
@@ -236,7 +236,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             checkBoxId="device-bulk-select-checkbox"
             ariaLabel="Bulk select dropdown for device list"
             isChecked={isAllProjectSelected}
-            handleOnChange={handleSelectAll}
+            onChange={onSelectAll}
           />
         </DataToolbarItem>
         {toggleGroupItems}

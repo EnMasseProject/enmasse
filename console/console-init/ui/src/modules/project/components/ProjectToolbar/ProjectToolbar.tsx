@@ -19,7 +19,7 @@ import {
 import { SortForMobileView, useWindowDimensions } from "components";
 import { sortMenuItems } from "modules/project/utils";
 export interface IProjectToolbarProps extends IProjectToolbarToggleGroupProps {
-  onNamespaceClear: () => void;
+  onClearNamespace: () => void;
   isDeleteAllDisabled: boolean;
   onSelectDeleteAll: (event: any) => void;
   sortValue?: ISortBy;
@@ -40,12 +40,12 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
   typeSelected,
   selectedNames,
   selectedNamespaces,
-  onFilterSelect,
-  onNameSelect,
-  onNameClear,
-  onNamespaceSelect,
-  onNamespaceClear,
-  onTypeSelect,
+  onSelectFilter,
+  onSelectName,
+  onClearName,
+  onSelectNamespace,
+  onClearNamespace,
+  onSelectType,
   onDeleteAll,
   onSearch,
   onDelete,
@@ -76,12 +76,12 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
         typeSelected={typeSelected}
         selectedNames={selectedNames}
         selectedNamespaces={selectedNamespaces}
-        onFilterSelect={onFilterSelect}
-        onNameSelect={onNameSelect}
-        onNameClear={onNameClear}
-        onNamespaceSelect={onNamespaceSelect}
-        onNamespaceClear={onNamespaceClear}
-        onTypeSelect={onTypeSelect}
+        onSelectFilter={onSelectFilter}
+        onSelectName={onSelectName}
+        onClearName={onClearName}
+        onSelectNamespace={onSelectNamespace}
+        onClearNamespace={onClearNamespace}
+        onSelectType={onSelectType}
         onDeleteAll={onDeleteAll}
         onSearch={onSearch}
         onDelete={onDelete}

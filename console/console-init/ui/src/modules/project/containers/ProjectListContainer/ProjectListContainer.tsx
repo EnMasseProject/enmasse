@@ -25,7 +25,7 @@ export interface IProjectListContainerProps {
     isSelected: boolean,
     isAllSelected?: boolean
   ) => void;
-  selectedProjects: Array<IProject>;
+  selectedProjects: IProject[];
   isAllProjectSelected: boolean;
   selectAllProjects: (projects: IProject[]) => void;
 }
@@ -215,40 +215,42 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   if (isAllProjectSelected && selectedProjects.length !== projectList.length) {
     selectAllProjects(projectList);
   }
-  const handleOnSelectProject = (data: IProject, isSelected: boolean) => {
+
+  const handleOnSelectProject = (project: IProject, isSelected: boolean) => {
     if (!isAllProjectSelected && isSelected) {
       if (selectedProjects.length === projectList.length - 1) {
         let allSelected = true;
-        for (let project of projectList) {
+        for (let prj of projectList) {
           for (let selectedProject of selectedProjects) {
-            if (compareObject(project.name, selectedProject.name)) {
-              if (data.name === project.name) {
+            if (compareObject(prj.name, selectedProject.name)) {
+              if (project.name === prj.name) {
                 allSelected = true;
-              } else if (project.selected === false) allSelected = false;
+              } else if (prj.selected === false) allSelected = false;
               break;
             }
           }
         }
 
         if (allSelected) {
-          onSelectProject(data, isSelected, true);
+          onSelectProject(project, isSelected, true);
         }
       }
     }
-    onSelectProject(data, isSelected);
+    onSelectProject(project, isSelected);
   };
+
   //TODO: logic will be removed after implementation of query
   for (let project of projectList) {
     project.selected =
       selectedProjects.filter(({ name, namespace }) => {
-        const val = compareObject(
+        const areProjectsEqual = compareObject(
           { name, namespace },
           {
             name: project.name,
             namespace: project.namespace
           }
         );
-        return val;
+        return areProjectsEqual;
       }).length === 1;
   }
   return (

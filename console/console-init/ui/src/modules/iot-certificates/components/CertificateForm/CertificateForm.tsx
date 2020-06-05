@@ -65,16 +65,15 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
   useEffect(() => {
     // code to initialize the form if it is being used for edit
     certificate && setCertificateFormData(certificate);
-  }, []);
+  }, [certificate]);
 
   const onCertificateFormDataChange = (
     value: string | boolean,
     event: React.FormEvent<HTMLInputElement>
   ) => {
-    // const cerftificateField = event?.target?.name;
-    const { name: cerftificateField } = event.currentTarget;
+    const { name: certificateField } = event.currentTarget;
     const newCertificateData = { ...certificateFormData };
-    (newCertificateData as any)[cerftificateField] = value;
+    (newCertificateData as any)[certificateField] = value;
     setCertificateFormData(newCertificateData);
   };
 

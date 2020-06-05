@@ -14,3 +14,4 @@ export * from "./ProjectList";
 export * from "./ProjectListKebab";
 export * from "./ProjectDatatoolbarToggleGroup";
 export * from "./ProjectToolbar";
+export * from "./EmptyProject";

@@ -67,17 +67,17 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     setNamespaceSelected(undefined);
   };
 
-  const onFilterSelect = (value: string) => {
+  const onSelectFilter = (value: string) => {
     setFilter({ ...filter, filterType: value });
     resettInitialState();
   };
 
-  const onNameSelect = (e: any, selection: SelectOptionObject) => {
+  const onSelectName = (e: any, selection: SelectOptionObject) => {
     setNameSelected(selection.toString());
     setNameInput(undefined);
   };
 
-  const onNameClear = () => {
+  const onClearName = () => {
     setNameSelected(undefined);
     setNameInput(undefined);
   };
@@ -124,11 +124,11 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     return getOptions(response.data, "name");
   };
 
-  const onNamespaceSelect = (e: any, selection: SelectOptionObject) => {
+  const onSelectNamespace = (e: any, selection: SelectOptionObject) => {
     setNamespaceSelected(selection.toString());
   };
 
-  const onNamespaceClear = () => {
+  const onClearNamespace = () => {
     setNamespaceSelected(undefined);
     setNamespaceInput(undefined);
   };
@@ -141,7 +141,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     return getOptions(response.data, "namespace");
   };
 
-  const onTypeSelect = (selection: string) => {
+  const onSelectType = (selection: string) => {
     setFilter({ ...filter, type: selection });
   };
 
@@ -242,12 +242,12 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
       typeSelected={filter.type}
       selectedNames={filter.names}
       selectedNamespaces={filter.namespaces}
-      onFilterSelect={onFilterSelect}
-      onNameSelect={onNameSelect}
-      onNameClear={onNameClear}
-      onNamespaceSelect={onNamespaceSelect}
-      onNamespaceClear={onNamespaceClear}
-      onTypeSelect={onTypeSelect}
+      onSelectFilter={onSelectFilter}
+      onSelectName={onSelectName}
+      onClearName={onClearName}
+      onSelectNamespace={onSelectNamespace}
+      onClearNamespace={onClearNamespace}
+      onSelectType={onSelectType}
       onDeleteAll={onDeleteAll}
       onSearch={onSearch}
       onDelete={onDelete}

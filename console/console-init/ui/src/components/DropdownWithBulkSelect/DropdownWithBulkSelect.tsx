@@ -17,10 +17,10 @@ export interface IDropdownWithBulkSelectProps {
   ariaLabel: string;
   isChecked: boolean;
   isOpen?: boolean;
-  handleOnToggle?: (val: boolean) => void;
+  onToggle?: (val: boolean) => void;
   items?: React.ReactNode[];
-  handleOnSelect?: () => void;
-  handleOnChange: (val: boolean) => void;
+  onSelect?: () => void;
+  onChange: (val: boolean) => void;
 }
 
 export const DropdownWithBulkSelect: React.FunctionComponent<IDropdownWithBulkSelectProps> = ({
@@ -31,14 +31,14 @@ export const DropdownWithBulkSelect: React.FunctionComponent<IDropdownWithBulkSe
   isChecked,
   isOpen,
   items,
-  handleOnChange,
-  handleOnSelect,
-  handleOnToggle
+  onChange,
+  onSelect,
+  onToggle
 }) => {
   return (
     <Dropdown
       id={dropdownId}
-      onSelect={handleOnSelect}
+      onSelect={onSelect}
       toggle={
         <DropdownToggle
           id={dropdownToggleId}
@@ -47,11 +47,11 @@ export const DropdownWithBulkSelect: React.FunctionComponent<IDropdownWithBulkSe
               id={checkBoxId}
               key="bulk-select-checkbox"
               aria-label={ariaLabel}
-              onChange={handleOnChange}
+              onChange={onChange}
               isChecked={isChecked}
             />
           ]}
-          onToggle={handleOnToggle}
+          onToggle={onToggle}
         />
       }
       isOpen={isOpen}

@@ -25,7 +25,7 @@ export * from "./FinishedStep";
 export * from "./Editor";
 export * from "./FormAndJson";
 export * from "./InputText";
-export * from "./ProjectHeaderCard";
+export * from "../modules/project/components/ProjectHeaderCard";
 export * from "./JsonEditor";
 export * from "./StatusLabelWithIcon";
 export * from "./NoResultFound";

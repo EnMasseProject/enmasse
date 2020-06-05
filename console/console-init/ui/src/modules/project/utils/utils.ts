@@ -4,8 +4,13 @@
  */
 
 import { IMessagingProjectInput, IIoTProjectInput } from "modules/project";
-import { IProjectFilter } from "../ProjectPage";
+import { IProjectFilter } from "modules/project/ProjectPage";
 import { ISelectOption } from "utils";
+
+enum ProjectType {
+  IOT_PROJECT = "IoT",
+  MESSAGING_PROJECT = "Messaging"
+}
 
 const sortMenuItems = [
   { key: "name", value: "Name", index: 1 },
@@ -83,5 +88,6 @@ export {
   initialiseFilterForProject,
   sortMenuItems,
   typeOptions,
-  filterMenuItems
+  filterMenuItems,
+  ProjectType
 };
