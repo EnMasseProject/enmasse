@@ -31,6 +31,7 @@ import org.eclipse.hono.service.management.credentials.X509CertificateCredential
 import org.eclipse.hono.service.management.credentials.X509CertificateSecret;
 
 import io.enmasse.systemtest.Endpoint;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 
@@ -39,8 +40,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
     private static final String CREDENTIALS_PATH = "v1/credentials";
     private static final Random rnd = new SecureRandom();
 
-    public CredentialsRegistryClient(final Endpoint endpoint) {
-        super(() -> endpoint, getManagementToken());
+    public CredentialsRegistryClient(final Vertx vertx, final Endpoint endpoint) {
+        super(vertx, () -> endpoint, getManagementToken());
     }
 
     @Override
