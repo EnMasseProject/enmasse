@@ -84,6 +84,7 @@ import static io.enmasse.systemtest.TestTag.SCALE;
 import static io.enmasse.systemtest.utils.AssertionPredicate.isNotPresent;
 import static io.enmasse.systemtest.utils.AssertionPredicate.isPresent;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.any;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -194,66 +195,68 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
     @Test
     @Order(2)
-    void testMessagingPerformance() throws Exception {
-        final int initialAddresses = env.getPerfInitialAddresses();
-        final int addressesPerGroupIncrease = env.getPerfAddressesPerGroupIncrease();
-        final int anycastLinksPerConnIncrease = env.getPerfAnycastLinksPerConnIncrease();
-        final int queueLinksPerConnIncrease = env.getPerfQueueLinksPerConnIncrease();
+    void testMessagingPerformanceAnycast() throws Exception {
+        doMessagingPerformanceTest(AddressType.ANYCAST, anycastPlanName);
+    }
 
-        int anycastLinksPerConnection = env.getPerfInitialAnycastLinksPerConn();
-        int queueLinksPerConnection = env.getPerfInitialQueueLinksPerConn();
-        int addressesPerGroup = env.getPerfInitialAddressesPerGroup();
+    @Test
+    @Order(3)
+    void testMessagingPerformanceQueue() throws Exception {
+        doMessagingPerformanceTest(AddressType.QUEUE, queuePlanName);
+    }
 
-        var addresses = createInitialAddresses(initialAddresses);
+
+    void doMessagingPerformanceTest(AddressType addressType, String addressPlan) throws Exception {
+        int maxClients = 100;
+
+        String batchSuffix = UUID.randomUUID().toString();
+        Address[] addresses = IntStream.range(0, maxClients - 1)
+                .mapToObj(i -> new AddressBuilder()
+                    .withNewMetadata()
+                    .withNamespace(addressSpace.getMetadata().getNamespace())
+                    .withName(AddressUtils.generateAddressMetadataName(addressSpace, String.format("test-%s-%d-%s", addressType.toString(), i, batchSuffix)))
+                    .endMetadata()
+                    .withNewSpec()
+                    .withType(addressType.toString())
+                    .withAddress(String.format("test-%s-%d-%s", addressType.toString(), i, batchSuffix))
+                    .withPlan(addressPlan)
+                    .endSpec()
+                    .build())
+                .toArray(Address[]::new);
+
+
+        appendAddress(addresses);
+        AddressUtils.waitForDestinationsReady(addresses);
 
         var endpoint = AddressSpaceUtils.getMessagingRoute(addressSpace);
         ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
-        manager.getPerformanceResults().setTotalAddressesCreated(addresses.size());
-
+        manager.getPerformanceResults().setTotalAddressesCreated(addresses.length);
+        int clients = 0;
         try {
 
             Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
 
-            while (true) {
+            while (clients < addresses.length) {
                 //determine load
-                List<List<Address>> addressesGroups = new ArrayList<>();
-                for (int i = 0; i < addresses.size() / addressesPerGroup; i++) {
-                    addressesGroups.add(addresses.subList(i * addressesPerGroup, (i + 1) * addressesPerGroup));
-                }
-
                 //deploy clients and start messaging
-                for (var groupOfAddresses : addressesGroups) {
-                    checkMetrics(manager.getMonitoringResult());
-                    var config = new ScaleTestClientConfiguration();
-                    config.setAddressesPerTenant(addressesPerTenant);
-                    config.setSendMessagePeriod(env.getPerfSendMessagesPeriod());
-                    config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
-                    config.setSendersPerTenant(env.getPerfSendersPerTenant());
-                    manager.deployTenantClient(kubernetes, groupOfAddresses, config);
-                    checkMetrics(manager.getMonitoringResult());
-                }
+                checkMetrics(manager.getMonitoringResult());
+                var config = new ScaleTestClientConfiguration();
+                config.setAddressesPerTenant(1);
+                config.setSendMessagePeriod(0);
+                config.setLinksPerConnection(2);
+                config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
+                config.setSendersPerTenant(env.getPerfSendersPerTenant());
+                manager.deployTenantClient(kubernetes, Collections.singletonList(addresses[clients]), config);
+                checkMetrics(manager.getMonitoringResult());
 
                 manager.sleep();
 
                 checkMetrics(manager.getMonitoringResult());
 
-                //increase load
-                if (anycastLinksPerConnection % 2 == 0) {
-                    queueLinksPerConnection += queueLinksPerConnIncrease;
-                }
-                anycastLinksPerConnection += anycastLinksPerConnIncrease;
-
-                int tenantsPerGroup = addressesPerGroup / addressesPerTenant;
-                //because of messaging-client grouping algorithm linksPerConnection cannot be bigger than addresses passed to client
-                //and because one tenant has one queue, in every address group we will have the same number of tenants and queues
-                //this limit is likely to always apply before to queues than anycast addresses, because anycast addresses are 4 and queues only 1
-                if (queueLinksPerConnection > tenantsPerGroup) {
-                    addressesPerGroup += addressesPerGroupIncrease;
-                }
+                clients++;
                 LOGGER.info("#######################################");
-                LOGGER.info("Increasing load, creating groups of {} addresses, anycast addresses links per connection {}"
-                        + ", queues links per connection {}", addressesPerGroup, anycastLinksPerConnection, queueLinksPerConnection);
+                LOGGER.info("Increasing load to {} clients", clients);
                 LOGGER.info("#######################################");
             }
 
@@ -264,28 +267,21 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             manager.gatherPerformanceResults();
             saveResultsFile("messaging_performance_results.json", manager.getPerformanceResults());
             Map<String, Object> data = new HashMap<>();
-            data.put("addresses", addresses.size());
+            data.put("addresses", addresses.length);
             data.put("connections", manager.getConnections());
-            data.put("anycastLinksPerConnection", anycastLinksPerConnection);
-            data.put("queueLinksPerConnection", queueLinksPerConnection);
-            data.put("anycastSenderMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
-            data.put("anycastReceiverMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
-            data.put("queueSenderMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.QUEUE.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
-            data.put("queueReceiverMedianThroughput", manager.getPerformanceResults().getAddresses().get(AddressType.QUEUE.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
+            data.put(String.format("%sSenderMedianThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
+            data.put(String.format("%sReceiverMedianThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
             savePlotCSV("messaging_performance.csv", data);
             LOGGER.info("#######################################");
-            LOGGER.info("Total addresses created {}", addresses.size());
+            LOGGER.info("Total addresses created {}", addresses.length);
             LOGGER.info("Total connections created {}", manager.getConnections());
             LOGGER.info("Total clients deployed {}", manager.getClients());
-            LOGGER.info("Final addresses per group {}", addressesPerGroup);
-            LOGGER.info("Final anycast links per connection {}", anycastLinksPerConnection);
-            LOGGER.info("Final queue links per connection {}", queueLinksPerConnection);
             LOGGER.info("#######################################");
         }
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     void testNumberOfSupportedAddresses() throws Exception {
         int operableAddresses;
         int iterator = 0;
@@ -338,7 +334,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     public void testFailureRecovery() throws Exception {
         int addressesToCreate = env.getFaultToleranceInitialAddresses();
         int addressesPerGroup = env.getFaultToleranceAddressesPerGroup();
