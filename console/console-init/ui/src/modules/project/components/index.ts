@@ -15,3 +15,4 @@ export * from "./ProjectListKebab";
 export * from "./ProjectDatatoolbarToggleGroup";
 export * from "./ProjectToolbar";
 export * from "./EmptyProject";
+export * from "./ProjectHeaderCard";

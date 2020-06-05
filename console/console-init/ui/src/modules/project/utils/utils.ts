@@ -3,9 +3,15 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import { IMessagingProjectInput, IIoTProjectInput } from "modules/project";
+import {
+  IMessagingProjectInput,
+  IIoTProjectInput,
+  IProjectCount,
+  IProject
+} from "modules/project";
 import { IProjectFilter } from "modules/project/ProjectPage";
 import { ISelectOption } from "utils";
+import { ProjectTypes, StatusTypes } from "./constant";
 
 enum ProjectType {
   IOT_PROJECT = "IoT",
@@ -82,6 +88,33 @@ const initialiseFilterForProject = () => {
   return filter;
 };
 
+const setInitialProjcetCount = () => {
+  const count: IProjectCount = {
+    total: 0,
+    active: 0,
+    pending: 0,
+    configuring: 0,
+    failed: 0
+  };
+  return count;
+};
+const getFilteredProjectsCount = (
+  type: ProjectTypes,
+  projectList: IProject[],
+  status?: StatusTypes
+) => {
+  let list: IProject[] = [];
+  if (!status) {
+    list = projectList.filter(project => project.projectType === type);
+  } else {
+    list = projectList.filter(
+      project => project.projectType === type && project.status === status
+    );
+  }
+  console.log(type, list);
+  return list.length;
+};
+
 export {
   isMessagingProjectValid,
   isIoTProjectValid,
@@ -89,5 +122,7 @@ export {
   sortMenuItems,
   typeOptions,
   filterMenuItems,
-  ProjectType
+  ProjectType,
+  setInitialProjcetCount,
+  getFilteredProjectsCount
 };

@@ -18,15 +18,20 @@ import { ISortBy } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { TablePagination, IProjectCount, ProjectHeaderCard } from "components";
+import { TablePagination } from "components";
+import { IProjectCount, ProjectHeaderCard } from "./components";
 import { useMutationQuery } from "hooks";
 import { IProject } from "./components";
 import {
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog
 } from "modules/address-space";
-import { ProjectListContainer, ProjectToolbarContainer } from "./containers";
-import { initialiseFilterForProject } from "./utils";
+import {
+  initialiseFilterForProject,
+  setInitialProjcetCount,
+  ProjectType
+} from "./utils";
+import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
 
 export interface ISelectSearchOption {
   value: string;
@@ -49,6 +54,12 @@ export default function ProjectPage() {
     initialiseFilterForProject()
   );
   const [totalProjects, setTotalProjects] = useState<number>(0);
+  const [msgCount, setMsgCount] = useState<IProjectCount>(
+    setInitialProjcetCount()
+  );
+  const [ioTCount, setIoTCount] = useState<IProjectCount>(
+    setInitialProjcetCount()
+  );
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -161,19 +172,15 @@ export default function ProjectPage() {
     );
   };
 
-  const ioTCount: IProjectCount = {
-    total: 13,
-    failed: 0,
-    active: 0,
-    pending: 0,
-    configuring: 0
-  };
-  const msgCount: IProjectCount = {
-    total: 12,
-    failed: 1,
-    active: 8,
-    pending: 2,
-    configuring: 1
+  const setCount = (count: IProjectCount, type: ProjectType) => {
+    if (type === ProjectType.IOT_PROJECT && !compareObject(ioTCount, count)) {
+      setIoTCount(count);
+    } else if (
+      type === ProjectType.MESSAGING_PROJECT &&
+      !compareObject(msgCount, count)
+    ) {
+      setMsgCount(count);
+    }
   };
 
   return (
@@ -215,6 +222,7 @@ export default function ProjectPage() {
             onSelectProject={onSelectProject}
             selectAllProjects={selectAllProjects}
             isAllProjectSelected={isAllSelected}
+            setCount={setCount}
           />
           {renderPagination()}
         </PageSection>

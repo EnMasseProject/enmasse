@@ -4,14 +4,21 @@
  */
 
 import React, { useState } from "react";
-// import { useApolloClient } from "@apollo/react-hooks";
 import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
 import { ISortBy, SortByDirection } from "@patternfly/react-table";
-// import { useStoreContext } from "context-state-reducer";
 import { compareObject } from "utils";
-import { IProject, ProjectList } from "modules/project/components";
+import {
+  IProject,
+  ProjectList,
+  IProjectCount
+} from "modules/project/components";
 import { IProjectFilter } from "modules/project/ProjectPage";
-import { ProjectTypes, StatusTypes } from "modules/project/utils";
+import {
+  ProjectTypes,
+  StatusTypes,
+  ProjectType,
+  getFilteredProjectsCount
+} from "modules/project/utils";
 
 export interface IProjectListContainerProps {
   page: number;
@@ -28,6 +35,7 @@ export interface IProjectListContainerProps {
   selectedProjects: IProject[];
   isAllProjectSelected: boolean;
   selectAllProjects: (projects: IProject[]) => void;
+  setCount: (count: IProjectCount, type: ProjectType) => void;
 }
 
 export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
@@ -40,7 +48,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   onSelectProject,
   selectedProjects,
   isAllProjectSelected,
-  selectAllProjects
+  selectAllProjects,
+  setCount
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
@@ -184,7 +193,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       name: "namespace_test1.k8s_iot2",
       displayName: "k8s_iot",
       namespace: "namespace_test1",
-      status: StatusTypes.CONFIGURING,
+      status: StatusTypes.ACTIVE,
       creationTimestamp: "2020-01-20T05:44:28.607Z",
       addressCount: 27,
       connectionCount: 3,
@@ -202,10 +211,74 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       connectionCount: 3,
       errorMessageRate: 98,
       errorMessages: ["error message", "issue with operator"]
+    },
+    {
+      projectType: ProjectTypes.MESSAGING,
+      name: "namespace_test1.new_space4",
+      displayName: "new_space",
+      namespace: "namespace_test1",
+      plan: "Brokered",
+      status: StatusTypes.CONFIGURING,
+      creationTimestamp: "2020-05-21T08:44:28.607Z",
+      addressCount: 27,
+      connectionCount: 3,
+      errorMessageRate: 98,
+      errorMessages: ["error message", "issue with operator"]
     }
   ];
 
   setTotalProjects(projectList.length);
+
+  const ioTCount: IProjectCount = {
+    total: getFilteredProjectsCount(ProjectTypes.IOT, projectList),
+    failed: getFilteredProjectsCount(
+      ProjectTypes.IOT,
+      projectList,
+      StatusTypes.FAILED
+    ),
+    active: getFilteredProjectsCount(
+      ProjectTypes.IOT,
+      projectList,
+      StatusTypes.ACTIVE
+    ),
+    pending: getFilteredProjectsCount(
+      ProjectTypes.IOT,
+      projectList,
+      StatusTypes.PENDING
+    ),
+    configuring: getFilteredProjectsCount(
+      ProjectTypes.IOT,
+      projectList,
+      StatusTypes.CONFIGURING
+    )
+  };
+
+  const msgCount: IProjectCount = {
+    total: getFilteredProjectsCount(ProjectTypes.MESSAGING, projectList),
+    failed: getFilteredProjectsCount(
+      ProjectTypes.MESSAGING,
+      projectList,
+      StatusTypes.FAILED
+    ),
+    active: getFilteredProjectsCount(
+      ProjectTypes.MESSAGING,
+      projectList,
+      StatusTypes.ACTIVE
+    ),
+    pending: getFilteredProjectsCount(
+      ProjectTypes.MESSAGING,
+      projectList,
+      StatusTypes.PENDING
+    ),
+    configuring: getFilteredProjectsCount(
+      ProjectTypes.MESSAGING,
+      projectList,
+      StatusTypes.CONFIGURING
+    )
+  };
+
+  setCount(ioTCount, ProjectType.IOT_PROJECT);
+  setCount(msgCount, ProjectType.MESSAGING_PROJECT);
 
   const onSort = (_event: any, index: number, direction: SortByDirection) => {
     setSortBy({ index: index, direction: direction });
@@ -230,7 +303,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
             }
           }
         }
-
         if (allSelected) {
           onSelectProject(project, isSelected, true);
         }
@@ -264,7 +336,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         onDownload={onDownloadCertificate}
         onSelectProject={handleOnSelectProject}
       />
-      {/* {(addressSpaces && addressSpaces.total) > 0 ? "" : <EmptyProject />} */}
     </>
   );
 };

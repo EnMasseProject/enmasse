@@ -51,36 +51,30 @@ const ProjectCard: React.FunctionComponent<IProjectCardProps> = ({
                   <CheckCircleIcon color="var(--pf-global--palette--green-400)" />
                 </FlexItem>
               )}
-            <FlexItem>
-              {failed && failed > 0 ? (
-                <>
-                  <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
-                  {failed}
-                </>
-              ) : (
-                ""
-              )}
-            </FlexItem>
-            <FlexItem>
-              {configuring && configuring > 0 ? (
-                <>
-                  <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                  {configuring}
-                </>
-              ) : (
-                ""
-              )}
-            </FlexItem>
-            <FlexItem>
-              {pending && pending > 0 ? (
-                <>
-                  <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
-                  {pending}
-                </>
-              ) : (
-                ""
-              )}
-            </FlexItem>
+            {failed && failed > 0 ? (
+              <FlexItem>
+                <OutlinedTimesCircleIcon color="var(--pf-global--danger-color--100)" />{" "}
+                {failed}
+              </FlexItem>
+            ) : (
+              <></>
+            )}
+            {configuring && configuring > 0 ? (
+              <FlexItem>
+                <InProgressIcon color="var(--pf-global--icon--Color--light)" />{" "}
+                {configuring}
+              </FlexItem>
+            ) : (
+              <></>
+            )}
+            {pending && pending > 0 ? (
+              <FlexItem>
+                <PendingIcon color="var(--pf-global--icon--Color--light)" />{" "}
+                {pending}
+              </FlexItem>
+            ) : (
+              <></>
+            )}
           </Flex>
         </TextContent>
       </CardBody>
