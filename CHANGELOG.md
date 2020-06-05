@@ -3,9 +3,12 @@
 
 ## 0.32.0
 
+* #3839: [IoT] Implement a JDBC based device registry
+* #3922: [IoT] Allow to enable tracing
 * #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections
 * #4076: Avoid memory leak if connected router is disconnected
 * #4117: Add support for configuring console to use impersonation
+* #4142: [IoT] Refactor device registry, split-up connection and services
 * #4172: [Kubernetes] Use headers for oauth-proxy to populate user information (for console/audit).
 * #4224: oauth2_proxy is now hosted by a new organisation (https://oauth2-proxy.github.io/oauth2-proxy/)
 * #4232: Allow configuring standard authentication service in HA mode
