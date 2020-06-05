@@ -38,7 +38,8 @@ public interface StandardX509Cases extends StandardIoTTests {
 
         return Arrays.asList(
                 notOurCaDevice(),
-                expiredCertificate());
+                expiredCertificate(),
+                futureCertificate());
 
     }
 
