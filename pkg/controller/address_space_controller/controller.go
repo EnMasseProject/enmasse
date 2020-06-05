@@ -212,6 +212,14 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 			deployment.ObjectMeta.Annotations["prometheus.io/port"] = "8080"
 		}
 
+		if container.Resources.Requests == nil {
+			container.Resources.Requests = make(map[corev1.ResourceName]resource.Quantity, 0)
+		}
+
+		if container.Resources.Limits == nil {
+			container.Resources.Limits = make(map[corev1.ResourceName]resource.Quantity, 0)
+		}
+
 		cpuEnv, ok := os.LookupEnv("ADDRESS_SPACE_CONTROLLER_CPU_LIMIT")
 		if ok {
 			cpuLimit, err := resource.ParseQuantity(cpuEnv)
