@@ -230,6 +230,16 @@
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressSpecQueue": {
       "type": "object",
       "description": "",
+      "properties": {
+        "deadLetterQueue": {
+          "type": "string",
+          "description": ""
+        },
+        "expiryQueue": {
+          "type": "string",
+          "description": ""
+        }
+      },
       "additionalProperties": true,
       "javaType": "MessagingAddressSpecQueue",
       "javaInterfaces": [
@@ -239,6 +249,12 @@
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressSpecSubscription": {
       "type": "object",
       "description": "",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": ""
+        }
+      },
       "additionalProperties": true,
       "javaType": "MessagingAddressSpecSubscription",
       "javaInterfaces": [

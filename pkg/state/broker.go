@@ -63,8 +63,9 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	log.Printf("[Broker %s] Initializing...", b.Host)
 
+	b.reconnectCount = b.commandClient.ReconnectCount()
 	totalEntities := 0
-	entityTypes := []BrokerEntityType{BrokerQueueEntity, BrokerAddressEntity}
+	entityTypes := []BrokerEntityType{BrokerQueueEntity, BrokerAddressEntity, BrokerDivertEntity}
 	for _, t := range entityTypes {
 		list, err := b.readEntities(t)
 		if err != nil {
@@ -153,6 +154,40 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 				}
 			}
 			log.Printf("[broker %s] Found addresses: %+v", b.Host, entities)
+			return entities, nil
+		default:
+			return nil, fmt.Errorf("unexpected value with type %T", v)
+		}
+	case BrokerDivertEntity:
+		message, err := newManagementMessage("broker", "getDivertNames", "")
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := doRequest(b.commandClient, message)
+		if err != nil {
+			return nil, err
+		}
+		if !success(result) {
+			return nil, fmt.Errorf("error reading diverts: %+v", result.Value)
+		}
+
+		switch v := result.Value.(type) {
+		case string:
+			entities := make(map[string]BrokerEntity, 0)
+			var list [][]string
+			err := json.Unmarshal([]byte(result.Value.(string)), &list)
+			if err != nil {
+				return nil, err
+			}
+			for _, entry := range list {
+				for _, name := range entry {
+					entities[name] = &BrokerDivert{
+						Name: name,
+					}
+				}
+			}
+			log.Printf("[broker %s] Found diverts: %+v", b.Host, entities)
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -428,5 +463,66 @@ func (b *BrokerAddress) Delete(client amqpcommand.Client) error {
 	}
 
 	log.Printf("Address %s deleted successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+/**
+ * Broker Diverts
+ */
+func (b *BrokerDivert) Type() BrokerEntityType {
+	return BrokerDivertEntity
+}
+
+func (b *BrokerDivert) GetName() string {
+	return b.Name
+}
+
+func (b *BrokerDivert) Order() int {
+	return 0
+}
+
+// Updates not allowed for addresses: they are the same if they have the same type and name.
+func (b *BrokerDivert) Equals(other BrokerEntity) bool {
+	return b.Type() == other.Type() &&
+		b.Name == other.GetName()
+}
+
+func (b *BrokerDivert) Create(client amqpcommand.Client) error {
+	log.Printf("[Broker %s] creating divert: '%s'", client.Addr(), b.Name)
+
+	message, err := newManagementMessage("broker", "createDivert", "", b.Name, b.RoutingName, b.Address, b.ForwardingAddress, b.Exclusive, b.FilterString, nil)
+	if err != nil {
+		return err
+	}
+	log.Printf("Creating divert %s on %s: %+v", b.Name, client.Addr(), message)
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+	if !success(response) {
+		return fmt.Errorf("error creating divert %s: %+v", b.Name, response.Value)
+	}
+	log.Printf("Divert %s created successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+func (b *BrokerDivert) Delete(client amqpcommand.Client) error {
+	message, err := newManagementMessage("broker", "destroyDivert", "", b.Name)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Destroying divert %s on %s", b.Name, client.Addr())
+
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+
+	if !success(response) {
+		return fmt.Errorf("error destroying divert %s: %+v", b.Name, response.Value)
+	}
+
+	log.Printf("Divert %s destroyed successfully on %s", b.Name, client.Addr())
 	return nil
 }

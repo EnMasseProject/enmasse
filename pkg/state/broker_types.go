@@ -54,9 +54,21 @@ type BrokerAddress struct {
 	RoutingType RoutingType `json:"routing-type"`
 }
 
+type BrokerDivert struct {
+	Name                 string `json:"name"`
+	RoutingName          string `json:"routingName"`
+	Address              string `json:"address"`
+	ForwardingAddress    string `json:"forwardingAddress"`
+	Exclusive            bool   `json:"exclusive"`
+	FilterString         string `json:"filterString,omitempty"`
+	TransformerClassName string `json:"transformerClassName,omitempty"`
+}
+
 type RoutingType string
 
 const (
 	RoutingTypeAnycast   RoutingType = "ANYCAST"
 	RoutingTypeMulticast RoutingType = "MULTICAST"
+	RoutingTypePass      RoutingType = "PASS"
+	RoutingTypeStrip     RoutingType = "STRIP"
 )

@@ -53,12 +53,18 @@ type MessagingAddressSpecMulticast struct {
 }
 
 type MessagingAddressSpecQueue struct {
+	// Dead letter address (must be address with type deadLetter)
+	DeadLetterAddress string `json:"deadLetterAddress,omitempty"`
+	// Expiry queue address (must be address with type deadLetter)
+	ExpiryAddress string `json:"expiryAddress,omitempty"`
 }
 
 type MessagingAddressSpecTopic struct {
 }
 
 type MessagingAddressSpecSubscription struct {
+	// Topic address this subscription should be subscribed to.
+	Topic string `json:"topic"`
 }
 
 type MessagingAddressSpecDeadLetter struct {
@@ -108,6 +114,7 @@ type MessagingAddressConditionType string
 
 const (
 	MessagingAddressFoundTenant MessagingAddressConditionType = "FoundTenant"
+	MessagingAddressValidated   MessagingAddressConditionType = "Validated"
 	MessagingAddressScheduled   MessagingAddressConditionType = "Scheduled"
 	MessagingAddressCreated     MessagingAddressConditionType = "Created"
 	MessagingAddressReady       MessagingAddressConditionType = "Ready"
