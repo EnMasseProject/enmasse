@@ -289,7 +289,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     selectAllProjects(projectList);
   }
 
-  const handleOnSelectProject = (project: IProject, isSelected: boolean) => {
+  const onSelect = (project: IProject, isSelected: boolean) => {
     if (!isAllProjectSelected && isSelected) {
       if (selectedProjects.length === projectList.length - 1) {
         let allSelected = true;
@@ -334,7 +334,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         onEdit={onChangeEdit}
         onDelete={onChangeDelete}
         onDownload={onDownloadCertificate}
-        onSelectProject={handleOnSelectProject}
+        onSelectProject={onSelect}
       />
     </>
   );

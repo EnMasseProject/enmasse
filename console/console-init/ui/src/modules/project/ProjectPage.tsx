@@ -11,17 +11,16 @@ import {
   PageSectionVariants,
   Grid,
   GridItem,
-  Page
+  Page,
+  Divider
 } from "@patternfly/react-core";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { TablePagination } from "components";
-import { IProjectCount, ProjectHeaderCard } from "./components";
+import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
 import { useMutationQuery } from "hooks";
-import { IProject } from "./components";
 import {
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog

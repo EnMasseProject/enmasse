@@ -50,8 +50,8 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   }, [percent, isCompleted]);
 
   const projectDetailUrl = () => {
-    if (routeDetail && projectType === "IoT") {
-      return `/`;
+    if (routeDetail && projectType === ProjectType.IOT_PROJECT) {
+      return `/iot-projects/${routeDetail?.namespace}/${routeDetail?.name}`;
     } else {
       return `/address-spaces/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
     }

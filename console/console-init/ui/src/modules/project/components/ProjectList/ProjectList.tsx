@@ -25,7 +25,7 @@ import {
   ProjectTypePlan,
   ProjectTypes
 } from "modules/project/utils";
-import { EmptyProject } from "../EmptyProject";
+import { EmptyProject } from "modules/project";
 
 export const StyleForTable = StyleSheet.create({
   scroll_overflow: {
