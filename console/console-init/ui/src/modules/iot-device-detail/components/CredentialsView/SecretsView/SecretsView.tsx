@@ -41,7 +41,7 @@ const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
     dispatch &&
       dispatch({
         type: types.SHOW_MODAL,
-        modaltype: MODAL_TYPES.UPDATE_PASSWORD
+        modalType: MODAL_TYPES.UPDATE_PASSWORD
       });
   };
   const renderGridItemValue = (value: string, key: string) => {

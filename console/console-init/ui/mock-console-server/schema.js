@@ -799,7 +799,7 @@ const typeDefs = gql`
 
   type CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
     total: Int!
-    credentials: [String!]! #The Json representation of the credentials for device.
+    credentials: String! #The Json representation of the credentials for device.
   }
 
   type AddressSpaceAndIotProjectsQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
