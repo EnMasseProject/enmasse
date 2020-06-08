@@ -19,12 +19,10 @@ import {
   ProjectType,
   getFilteredProjectsCount
 } from "modules/project/utils";
-import { useApolloClient } from "@apollo/react-hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { DELETE_ADDRESS_SPACE } from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
-import { type } from "os";
 
 export interface IProjectListContainerProps {
   page: number;
