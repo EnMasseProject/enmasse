@@ -21,16 +21,22 @@ import {
   MessagingConfigurationStep,
   isMessagingProjectValid,
   isIoTProjectValid,
-  MessagingReviewStep
+  MessagingReviewStep,
+  IMessagingProjectInput
 } from "modules/project";
-import { IMessagingProjectInput } from "modules/project/components/MessagingConfigurationStep";
 import { useMutationQuery } from "hooks";
 import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
 import { FinishedStep } from "components";
 import { INamespaces } from "modules/address-space";
+import { ProjectType } from "modules/project/utils";
 
-const CreateProjectContainer: React.FunctionComponent = () => {
+const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [routeDetail, setRouteDetail] = useState<{
+    name: string;
+    namespace: string;
+    type?: string;
+  }>();
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProjectInput
   >({ isNameValid: true });
@@ -92,6 +98,11 @@ const CreateProjectContainer: React.FunctionComponent = () => {
         }
       };
       setMessagingVariables(variables);
+      setRouteDetail({
+        name: messagingProjectDetail.messagingProjectName || "",
+        namespace: messagingProjectDetail.namespace || "",
+        type: messagingProjectDetail.messagingProjectType
+      });
       resetForm();
     }
   };
@@ -147,7 +158,12 @@ const CreateProjectContainer: React.FunctionComponent = () => {
       <FinishedStep
         onClose={onToggle}
         success={isCreatedSuccessfully}
-        projectType={messagingProjectDetail ? "Messaging" : "IoT"}
+        routeDetail={routeDetail}
+        projectType={
+          messagingProjectDetail
+            ? ProjectType.MESSAGING_PROJECT
+            : ProjectType.IOT_PROJECT
+        }
       />
     ),
     isFinishedStep: true
@@ -289,4 +305,4 @@ const CreateProjectContainer: React.FunctionComponent = () => {
   );
 };
 
-export { CreateProjectContainer };
+export { CreateProject };

@@ -98,12 +98,16 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
             <br />
             <span>
               Click here to{" "}
-              <a onClick={() => setIsExpanded(!isExpanded)}>
+              <Button
+                variant={ButtonVariant.link}
+                isInline
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
                 {" "}
                 {!isExpanded
                   ? "show equivalent command"
                   : "hide the command"}{" "}
-              </a>
+              </Button>
             </span>
           </Grid>
         </GridItem>
@@ -148,7 +152,8 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               mode="xml"
               theme="github"
               fontSize={14}
-              onChange={() => {}}
+              width={"auto"}
+              // onChange={() => {}}
               value={"data"}
               name="UNIQUE_ID_OF_DIV"
               editorProps={{ $blockScrolling: true }}
