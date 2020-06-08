@@ -12,14 +12,14 @@ const getAddresses = () => import("modules/address/AddressPage");
 
 export const Routes = () => (
   <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
+    <Redirect path="/" to="/messaging-projects" exact={true} />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/addresses/"
+      path="/messaging-projects/:namespace/:name/:type/addresses/"
       getComponent={getAddresses}
       exact={true}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/connections/"
+      path="/messaging-projects/:namespace/:name/:type/connections/"
       getComponent={getConnections}
       exact={true}
     />

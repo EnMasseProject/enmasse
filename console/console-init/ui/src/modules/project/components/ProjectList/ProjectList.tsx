@@ -152,7 +152,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
             <Link
               to={
                 projectType === ProjectTypes.MESSAGING
-                  ? `address-spaces/${namespace}/${name}/${type}/addresses`
+                  ? `messaging-projects/${namespace}/${name}/${type}/addresses`
                   : `iot-projects/${namespace}/${name}/detail`
               }
             >

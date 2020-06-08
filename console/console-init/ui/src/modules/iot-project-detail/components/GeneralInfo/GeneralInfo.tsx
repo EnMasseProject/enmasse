@@ -59,7 +59,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Address space</b>
           <Link
             //TODO:=modify route
-            to={`/address-spaces/${namespace}/${addressSpace}/standard/addresses`}
+            to={`/messaging-projects/${namespace}/${addressSpace}/standard/addresses`}
             className="pf-c-nav__link"
             id={`navlink-as-${addressSpace}`}
           >

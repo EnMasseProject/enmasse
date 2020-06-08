@@ -53,7 +53,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
     if (routeDetail && projectType === ProjectType.IOT_PROJECT) {
       return `/iot-projects/${routeDetail?.namespace}/${routeDetail?.name}`;
     } else {
-      return `/address-spaces/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
+      return `/messaging-projects/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
     }
   };
   return (
