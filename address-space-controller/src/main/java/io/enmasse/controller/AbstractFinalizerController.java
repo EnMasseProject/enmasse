@@ -104,7 +104,7 @@ public abstract class AbstractFinalizerController implements Controller {
         // if we finished finalizing ...
         if (result == null || result.isFinalized()) {
             // ... remove ourselves from the list.
-            return ReconcileResult.create(removeFinalizer(result.getAddressSpace()));
+            return ReconcileResult.createRequeued(removeFinalizer(result == null ? addressSpace : result.getAddressSpace()), true);
         }
 
         // we still need to wait and will try again.
