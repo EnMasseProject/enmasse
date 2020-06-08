@@ -94,6 +94,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
             });
         } catch (Exception ex) {
             beforeAllException = ex; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
+            operatorManager.deleteEnmasseOlm();
         }
     }
 
