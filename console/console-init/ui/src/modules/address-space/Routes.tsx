@@ -7,7 +7,7 @@ import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
-const getConnections = () => import("../connection/ConnectionPage");
+const getConnections = () => import("modules/connection/ConnectionPage");
 const getAddresses = () => import("modules/address/AddressPage");
 const getEndpoints = () => import("modules/endpoints/EndpointPage");
 

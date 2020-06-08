@@ -5,7 +5,7 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { text, boolean } from "@storybook/addon-knobs";
+import { text } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
 import { DeviceDetailHeader } from "modules/iot-device-detail";
 
@@ -20,7 +20,8 @@ export const deviceDetailHeader = () => (
       lastTimeSeen="2019-11-25T05:24:05.755Z"
       onChange={action("onEnableChange Clicked")}
       onDelete={action("onDelete Clicked")}
-      onEdit={action("onEdit Clicked")}
+      onEditMetadata={action("onEdit Clicked")}
+      onEditDeviceInJson={action("onEdit Clicked")}
       onClone={action("onClone Clicked")}
     />
   </MemoryRouter>
