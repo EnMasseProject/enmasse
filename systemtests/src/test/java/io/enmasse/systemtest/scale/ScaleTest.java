@@ -207,10 +207,10 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
 
     void doMessagingPerformanceTest(AddressType addressType, String addressPlan) throws Exception {
-        int maxClients = 4;
+        int maxClients = 2;
 
         String batchSuffix = UUID.randomUUID().toString();
-        Address[] addresses = IntStream.range(0, maxClients - 1)
+        Address[] addresses = IntStream.range(0, maxClients)
                 .mapToObj(i -> new AddressBuilder()
                     .withNewMetadata()
                     .withNamespace(addressSpace.getMetadata().getNamespace())
@@ -232,12 +232,12 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
         ScaleTestManager manager = new ScaleTestManager(endpoint, userCredentials);
 
         manager.getPerformanceResults().setTotalAddressesCreated(addresses.length);
-        int clients = 0;
+        int clients = 1;
         try {
 
             Executors.newSingleThreadExecutor().execute(manager::monitorMetrics);
 
-            while (clients < addresses.length) {
+            while (clients <= addresses.length) {
                 //determine load
                 //deploy clients and start messaging
                 checkMetrics(manager.getMonitoringResult());
@@ -247,16 +247,16 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 config.setLinksPerConnection(2);
                 config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
                 config.setSendersPerTenant(env.getPerfSendersPerTenant());
-                manager.deployTenantClient(kubernetes, Collections.singletonList(addresses[clients]), config);
+                manager.deployTenantClient(kubernetes, Collections.singletonList(addresses[clients - 1]), config);
 
                 checkMetrics(manager.getMonitoringResult());
 
                 manager.sleep();
+                Thread.sleep(60_000);
 
                 checkMetrics(manager.getMonitoringResult());
 
                 // Let clients run for a while
-                Thread.sleep(60_000);
                 manager.gatherPerformanceResults();
                 saveResultsFile(String.format("messaging_performance_%d_clients_results.json", clients), manager.getPerformanceResults());
 
@@ -275,8 +275,8 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
             Map<String, Object> data = new HashMap<>();
             data.put("addresses", addresses.length);
             data.put("connections", manager.getConnections());
-            data.put(String.format("%sSenderMedianThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalSenders().getEstimateTotalThroughputMedian());
-            data.put(String.format("%sReceiverMedianThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalReceivers().getEstimateTotalThroughputMedian());
+            data.put(String.format("%sSenderTotalThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalSenders().getTotalThroughput());
+            data.put(String.format("%sReceiverTotalThroughput", addressType.toString()), manager.getPerformanceResults().getAddresses().get(AddressType.ANYCAST.toString()).getGlobalReceivers().getTotalThroughput());
             savePlotCSV("messaging_performance.csv", data);
             LOGGER.info("#######################################");
             LOGGER.info("Total addresses created {}", addresses.length);

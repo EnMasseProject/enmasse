@@ -8,6 +8,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -39,17 +40,17 @@ public class ScaleTestManagerTest {
 
 
         ScaleTestManager manager = new ScaleTestManager(new Endpoint("host", 9999), new UserCredentials("foo"));
-        DoubleHistogram histogram = new DoubleHistogram(20000, 4);
+        List<Double> throughputValues = new ArrayList<>();
 
-        var data = manager.gatherPerformanceData("aaa", records, start, histogram);
+        var data = manager.gatherPerformanceData("aaa", records, start, throughputValues);
 
         for (String r : data.getMsgPerSecond()) {
             assertThat(r, equalTo("1.0 msg/sec"));
         }
 
-        var global = manager.gatherGlobalPerformanceData(histogram, 1);
-        assertThat(global.getPerClientThroughput99p(), equalTo("1.0 msg/sec"));
-        assertThat(global.getPerClientThroughputMedian(), equalTo("1.0 msg/sec"));
+        var global = manager.gatherGlobalPerformanceData(Collections.singletonMap("aaa", throughputValues));
+        assertThat(global.getAverageThroughput(), equalTo("1.00 msg/sec"));
+        assertThat(global.getTotalThroughput(), equalTo("1.00 msg/sec"));
 
     }
 
@@ -71,17 +72,17 @@ public class ScaleTestManagerTest {
             });
 
         ScaleTestManager manager = new ScaleTestManager(new Endpoint("host", 9999), new UserCredentials("foo"));
-        DoubleHistogram histogram = new DoubleHistogram(20000, 4);
+        List<Double> throughputValues = new ArrayList<>();
 
-        var data = manager.gatherPerformanceData("aaa", records, start, histogram);
+        var data = manager.gatherPerformanceData("aaa", records, start, throughputValues);
 
         for (String r : data.getMsgPerSecond()) {
             assertThat(r, equalTo("1.5 msg/sec"));
         }
 
-        var global = manager.gatherGlobalPerformanceData(histogram, 1);
-        assertThat(global.getPerClientThroughput99p(), equalTo("1.5 msg/sec"));
-        assertThat(global.getPerClientThroughputMedian(), equalTo("1.5 msg/sec"));
+        var global = manager.gatherGlobalPerformanceData(Collections.singletonMap("aaa", throughputValues));
+        assertThat(global.getAverageThroughput(), equalTo("1.50 msg/sec"));
+        assertThat(global.getTotalThroughput(), equalTo("1.50 msg/sec"));
 
     }
 
@@ -94,18 +95,17 @@ public class ScaleTestManagerTest {
         records.add(new MessagesCountRecord(4000, 5));
 
         ScaleTestManager manager = new ScaleTestManager(new Endpoint("host", 9999), new UserCredentials("foo"));
-        DoubleHistogram histogram = new DoubleHistogram(20000, 4);
+        List<Double> throughputValues = new ArrayList<>();
 
-        var data = manager.gatherPerformanceData("aaa", records, start, histogram);
+        var data = manager.gatherPerformanceData("aaa", records, start, throughputValues);
 
         for (String r : data.getMsgPerSecond()) {
             assertThat(r, equalTo("1.25 msg/sec"));
         }
 
-        var global = manager.gatherGlobalPerformanceData(histogram, 1);
-        assertThat(global.getPerClientThroughput99p(), equalTo("1.25 msg/sec"));
-        assertThat(global.getPerClientThroughputMedian(), equalTo("1.25 msg/sec"));
-
+        var global = manager.gatherGlobalPerformanceData(Collections.singletonMap("aaa", throughputValues));
+        assertThat(global.getAverageThroughput(), equalTo("1.25 msg/sec"));
+        assertThat(global.getTotalThroughput(), equalTo("1.25 msg/sec"));
     }
 
     @Test
@@ -117,17 +117,16 @@ public class ScaleTestManagerTest {
         records.add(new MessagesCountRecord(3000, 10));
 
         ScaleTestManager manager = new ScaleTestManager(new Endpoint("host", 9999), new UserCredentials("foo"));
-        DoubleHistogram histogram = new DoubleHistogram(20000, 4);
+        List<Double> throughputValues = new ArrayList<>();
 
-
-        var data = manager.gatherPerformanceData("aaa", records, start, histogram);
+        var data = manager.gatherPerformanceData("aaa", records, start, throughputValues);
         for (String r : data.getMsgPerSecond()) {
             assertThat(r, equalTo("3.33 msg/sec"));
         }
 
-        var global = manager.gatherGlobalPerformanceData(histogram, 1);
-        assertThat(global.getPerClientThroughput99p(), equalTo("3.33 msg/sec"));
-        assertThat(global.getPerClientThroughputMedian(), equalTo("3.33 msg/sec"));
+        var global = manager.gatherGlobalPerformanceData(Collections.singletonMap("aaa", throughputValues));
+        assertThat(global.getAverageThroughput(), equalTo("3.33 msg/sec"));
+        assertThat(global.getTotalThroughput(), equalTo("3.33 msg/sec"));
 
     }
 
@@ -149,18 +148,16 @@ public class ScaleTestManagerTest {
             });
 
         ScaleTestManager manager = new ScaleTestManager(new Endpoint("host", 9999), new UserCredentials("foo"));
-        DoubleHistogram histogram = new DoubleHistogram(20000, 4);
+        List<Double> throughputValues = new ArrayList<>();
 
-        var data = manager.gatherPerformanceData("aaa", records, start, histogram);
+        var data = manager.gatherPerformanceData("aaa", records, start, throughputValues);
 
         for (String r : data.getMsgPerSecond()) {
             assertThat(r, equalTo("0.67 msg/sec"));
         }
 
-        var global = manager.gatherGlobalPerformanceData(histogram, 1);
-        assertThat(global.getPerClientThroughput99p(), equalTo("0.67 msg/sec"));
-        assertThat(global.getPerClientThroughputMedian(), equalTo("0.67 msg/sec"));
-
+        var global = manager.gatherGlobalPerformanceData(Collections.singletonMap("aaa", throughputValues));
+        assertThat(global.getAverageThroughput(), equalTo("0.67 msg/sec"));
+        assertThat(global.getTotalThroughput(), equalTo("0.67 msg/sec"));
     }
-
 }

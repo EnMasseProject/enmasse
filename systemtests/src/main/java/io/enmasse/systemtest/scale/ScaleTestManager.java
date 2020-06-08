@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,6 +26,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.HdrHistogram.DoubleHistogram;
+import org.HdrHistogram.Histogram;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
 import org.hawkular.agent.prometheus.types.Counter;
 import org.slf4j.Logger;
@@ -216,13 +218,14 @@ public class ScaleTestManager {
                         }
 
                         AssertingConsumer<AddressType> deliveriesPredicate = type -> {
-                            Double rejected = metricsClient.getRejectedDeliveries(type).map(Counter::getValue).orElse(0d);
-                            Double modified = metricsClient.getModifiedDeliveries(type).map(Counter::getValue).orElse(0d);
-                            Double accepted = metricsClient.getAcceptedDeliveries(type).map(Counter::getValue).orElse(0d);
-                            int totalNoAcceptedDeliveries = (int) (rejected + modified);
-                            double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
-
-                            assertThat("Deliveries in client "+clientId+" accepted:"+accepted+" rejected:"+rejected+" modified:"+modified, noAcceptedDeliveriesRatio, lessThan(notAcceptedDeliveriesRatioThreshold));
+                            double rejected = metricsClient.getRejectedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            double modified = metricsClient.getModifiedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            double accepted = metricsClient.getAcceptedDeliveries(type).map(Counter::getValue).orElse(0d);
+                            if (accepted > 0) {
+                                int totalNoAcceptedDeliveries = (int) (rejected + modified);
+                                double noAcceptedDeliveriesRatio = totalNoAcceptedDeliveries / (totalNoAcceptedDeliveries + accepted);
+                                assertThat("Deliveries in client "+clientId+" accepted:"+accepted+" rejected:"+rejected+" modified:"+modified, noAcceptedDeliveriesRatio, lessThan(notAcceptedDeliveriesRatioThreshold));
+                            }
                         };
                         if (client.getAddressesType() == null) {
                             deliveriesPredicate.accept(AddressType.ANYCAST);
@@ -362,58 +365,70 @@ public class ScaleTestManager {
             var addressTypeResults = new AddressTypePerformanceResults();
             performanceResults.getAddresses().put(type.toString(), addressTypeResults);
 
-            DoubleHistogram acceptedMsgsPerSecHistogram = new DoubleHistogram(20000, 4);
-            DoubleHistogram receivedMsgsPerSecHistogram = new DoubleHistogram(20000, 4);
 
+            Map<String, List<Double>> acceptedThroughput = new HashMap<>();
+            Map<String, List<Double>> receivedThroughput = new HashMap<>();
 
             for (var client : clientsMap.values()) {
                 var metrics = client.getMetricsClient();
 
+                List<Double> throughputValues = new ArrayList<>();
+
                 var data = gatherPerformanceData(client.getClientId(), metrics.getAcceptedMessages().get(type.toString()),
-                        metrics.getStartTimeMillis(), acceptedMsgsPerSecHistogram);
+                        metrics.getStartTimeMillis(), throughputValues);
                 if (data != null) {
                     addressTypeResults.getSenders().add(data);
                 } else {
                     logger.warn("Sender {} , address {} , messaging records is empty", client.getClientId(), type.toString());
                 }
+                acceptedThroughput.put(client.getClientId(), throughputValues);
 
+                throughputValues = new ArrayList<>();
                 data = gatherPerformanceData(client.getClientId(), metrics.getReceivedMessages().get(type.toString()),
-                        metrics.getStartTimeMillis(), receivedMsgsPerSecHistogram);
+                        metrics.getStartTimeMillis(), throughputValues);
                 if (data != null) {
                     addressTypeResults.getReceivers().add(data);
                 } else {
                     logger.warn("Receiver {} , address {} , messaging records is empty", client.getClientId(), type.toString());
                 }
+                receivedThroughput.put(client.getClientId(), throughputValues);
             }
 
-            addressTypeResults.setGlobalSenders(gatherGlobalPerformanceData(acceptedMsgsPerSecHistogram, addressTypeResults.getSenders().size()));
-            addressTypeResults.setGlobalReceivers(gatherGlobalPerformanceData(receivedMsgsPerSecHistogram, addressTypeResults.getReceivers().size()));
+            addressTypeResults.setGlobalSenders(gatherGlobalPerformanceData(acceptedThroughput));
+            addressTypeResults.setGlobalReceivers(gatherGlobalPerformanceData(receivedThroughput));
 
         }
 
     }
 
-    ThroughputData gatherGlobalPerformanceData(DoubleHistogram histogram, int numberOfClients) {
+    ThroughputData gatherGlobalPerformanceData(Map<String, List<Double>> clients) {
         ThroughputData global = new ThroughputData();
+        if (clients.size() == 0) {
+            return global;
+        }
 
-        BigDecimal perClientThroughput99pBD = BigDecimal.valueOf(histogram.getValueAtPercentile(0.99));
-        perClientThroughput99pBD = perClientThroughput99pBD.setScale(2, RoundingMode.HALF_UP);
-        double perClientThroughput99p = perClientThroughput99pBD.doubleValue();
-        global.setPerClientThroughput99p(perClientThroughput99p+MSG_PER_SEC_SUFFIX);
-        double estimateTotalThroughput99p = perClientThroughput99p * numberOfClients;
-        global.setEstimateTotalThroughput99p(estimateTotalThroughput99p + MSG_PER_SEC_SUFFIX);
+        double totalThroughput = 0;
+        for (Map.Entry<String, List<Double>> entry : clients.entrySet()) {
+            if (entry.getValue().isEmpty()) {
+                continue;
+            }
 
-        BigDecimal perClientThroughputMedianBD = BigDecimal.valueOf(histogram.getValueAtPercentile(0.5));
-        perClientThroughputMedianBD = perClientThroughputMedianBD.setScale(2, RoundingMode.HALF_UP);
-        double perClientThroughputMedian = perClientThroughputMedianBD.doubleValue();
-        global.setPerClientThroughputMedian(perClientThroughputMedian+MSG_PER_SEC_SUFFIX);
-        double estimateTotalThroughputMedian = perClientThroughputMedian * numberOfClients;
-        global.setEstimateTotalThroughputMedian(estimateTotalThroughputMedian + MSG_PER_SEC_SUFFIX);
+            double totalClientThroughput = 0;
+            for (double throughput : entry.getValue()) {
+                totalClientThroughput += throughput;
+            }
+            double averageClientThroughput = totalClientThroughput / entry.getValue().size();
+            totalThroughput += averageClientThroughput;
+        }
+
+        double averageThroughput = totalThroughput / clients.size();
+        global.setTotalThroughput(String.format("%.2f%s", totalThroughput, MSG_PER_SEC_SUFFIX));
+        global.setAverageThroughput(String.format("%.2f%s", averageThroughput, MSG_PER_SEC_SUFFIX));
 
         return global;
     }
 
-    ThroughputData gatherPerformanceData(String clientId, List<MessagesCountRecord> messagesRecords, long clientStartTimeMillis, DoubleHistogram histogram) {
+    ThroughputData gatherPerformanceData(String clientId, List<MessagesCountRecord> messagesRecords, long clientStartTimeMillis, List<Double> throughputValues) {
         if (messagesRecords != null && !messagesRecords.isEmpty()) {
             ThroughputData client = new ThroughputData();
             client.setName(clientId);
@@ -439,7 +454,7 @@ public class ScaleTestManager {
 
                 client.getMsgPerSecond().add(msgPerSec+MSG_PER_SEC_SUFFIX);
 
-                histogram.recordValue(msgPerSec);
+                throughputValues.add(msgPerSec);
 
                 lastTimeMillis = record.getTimestamp();
                 lastMessages = record.getMessages();
