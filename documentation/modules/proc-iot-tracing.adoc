@@ -9,9 +9,9 @@
 
 .Prerequisites
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-messaging-iot-iot-iot[The IoT services are installed].
-* "Jaeger Operator" from OperatorHub is installed into the {ProductName} namespace
-* An instance of Jaeger is deployed using the operator in the {ProductName} namespace
-* Know of the Jaeger instance was deployed using the "sidecar" or "daemonset" agent
+* The "Jaeger Operator" from OperatorHub is installed in the {ProductName} namespace.
+* An instance of Jaeger is deployed using the operator in the {ProductName} namespace.
+* Know whether the Jaeger instance was deployed using the "sidecar" or "daemonset" agent.
 
 .Procedure
 
@@ -21,7 +21,7 @@
 ----
 {cmdcli} edit iotconfig default
 ----
-. Modify the configuration accoring to your Jaeger agent configuration:
+. Modify the configuration according to your Jaeger agent configuration:
 .. If the Jaeger instance is deployed with the "sidecar" agent, add the following
 configuration:
 +
@@ -58,6 +58,6 @@ spec:
 <1> The field to select the strategy. Only one strategy must be configured.
 <2> Enables the "daemonset" strategy. The use of an empty empty object (`{}`) is intentional.
 
-. Save and exit the editor
+. Save and exit the editor.
 . The operator applies the tracing configuration and re-deploys all
   required components.

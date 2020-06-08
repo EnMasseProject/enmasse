@@ -5,10 +5,10 @@
 [id='con-iot-tracing-{context}']
 = IoT tracing
 
-{ProductName} allows to enable application level tracing in the IoT infrastructure
-using Jaeger tracing. This is a feature to allow service admins gain insights on the
-inner workings of the IoT services in order to analyze performance and issues in the system.
+{ProductName} allows application-level tracing in the IoT infrastructure
+using Jaeger. This feature allows service administrators to gain insight into the
+inner workings of the IoT services to analyze system performance and issues.
 
-By default, tracing support is not enabled and needs to be activated manually. Learn how to link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-tracing-messaging-iot-iot-iot[Configuring tracing].
+By default, tracing support is not enabled and needs to be activated manually. For more information, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-tracing-messaging-iot-iot-iot[Configuring tracing].
 
 For more information about Jaeger tracing, see: https://www.jaegertracing.io/.
