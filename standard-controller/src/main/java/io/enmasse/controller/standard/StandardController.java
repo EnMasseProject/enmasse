@@ -146,7 +146,7 @@ public class StandardController {
 
         if (options.getHealthCheckInterval().getSeconds() > 0) {
             AddressProber probeRunner = AddressProber.withCertsInDir(vertx, "standard-controller-healthcheck", options.getHealthProbeTimeout(), options.getCertDir());
-            addressCanaryHealth = new AddressCanaryHealth(kubernetes, options.getHealthCheckInterval(), probeRunner, metrics);
+            addressCanaryHealth = new AddressCanaryHealth(kubernetes, options.getHealthCheckInterval(), probeRunner, metrics, options.getAddressSpace());
 
             log.info("Starting health checker for " + options.getAddressSpace());
             addressCanaryHealth.start();
