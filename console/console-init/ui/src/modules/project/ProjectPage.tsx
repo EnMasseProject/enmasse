@@ -79,7 +79,9 @@ export default function ProjectPage() {
         selectedItems: selectedProjects.map(as => as.name),
         option: "Delete",
         detail: getDetailForDeleteDialog(selectedProjects),
-        header: getHeaderForDeleteDialog(selectedProjects)
+        header: getHeaderForDeleteDialog(selectedProjects),
+        iconType: "danger",
+        confirmButtonLabel: "Delete"
       }
     });
   };

@@ -163,7 +163,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           onConfirm: onDeleteProject,
           option: "Delete",
           detail: `Are you sure you want to delete this messaging project: ${project.name} ?`,
-          header: "Delete this Address Space ?"
+          header: "Delete this Messaging Project ?",
+          confirmButtonLabel: "Delete"
         }
       });
     } else if (project.projectType === ProjectTypes.IOT) {
@@ -176,7 +177,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           onConfirm: onDeleteProject,
           option: "Delete",
           detail: `Are you sure you want to delete this iot project: ${project.name} ?`,
-          header: "Delete this IoT Project ?"
+          header: "Delete this IoT Project ?",
+          confirmButtonLabel: "Delete"
         }
       });
     }
@@ -208,6 +210,14 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     // if (link.parentNode) link.parentNode.removeChild(link);
   };
 
+  const onEnable = (project: IProject) => {
+    console.log("enable the project", project);
+  };
+
+  const onDisable = (project: IProject) => {
+    console.log("disable the project", project);
+  };
+
   const projectList: IProject[] = [
     {
       projectType: ProjectTypes.MESSAGING,
@@ -226,6 +236,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     },
     {
       projectType: ProjectTypes.IOT,
+      isEnabled: true,
       name: "devops_jbosstest1.k8s_iot1",
       displayName: "k8s_iot",
       namespace: "devops_jbosstest1",
@@ -251,6 +262,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     },
     {
       projectType: ProjectTypes.IOT,
+      isEnabled: false,
       name: "namespace_test1.k8s_iot2",
       displayName: "k8s_iot",
       namespace: "namespace_test1",
@@ -402,6 +414,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         onEdit={onChangeEdit}
         onDelete={onChangeDelete}
         onDownload={onDownloadCertificate}
+        onEnable={onEnable}
+        onDisable={onDisable}
         onSelectProject={onSelect}
       />
     </>

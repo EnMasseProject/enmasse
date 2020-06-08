@@ -44,6 +44,7 @@ export interface IProject {
   plan?: string;
   status?: StatusTypes;
   isReady?: boolean;
+  isEnabled?: boolean;
   creationTimestamp?: string;
   errorMessageRate?: number;
   addressCount?: number;
@@ -59,6 +60,8 @@ export interface IProjectListProps extends Pick<TableProps, "sortBy"> {
   projects: IProject[];
   onEdit: (project: IProject) => void;
   onDelete: (project: IProject) => void;
+  onEnable: (project: IProject) => void;
+  onDisable: (project: IProject) => void;
   onDownload: (project: IProject) => void;
   onSelectProject: (project: IProject, isSelected: boolean) => void;
 }
@@ -70,21 +73,38 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
   onEdit,
   onDelete,
   onDownload,
+  onEnable,
+  onDisable,
   onSelectProject
 }) => {
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IProject;
-
+    let actions = [];
     if (originalData.projectType === ProjectTypes.IOT) {
-      return [
+      actions = [
         {
           id: "delete-project",
           title: "Delete",
           onClick: () => onDelete(originalData)
         }
       ];
+      if (originalData.isEnabled !== undefined) {
+        if (originalData.isEnabled) {
+          actions.push({
+            id: "disable-project",
+            title: "Disable",
+            onClick: () => onDisable(originalData)
+          });
+        } else {
+          actions.push({
+            id: "enable-project",
+            title: "Enable",
+            onClick: () => onEnable(originalData)
+          });
+        }
+      }
     } else if (originalData.projectType === ProjectTypes.MESSAGING) {
-      return [
+      actions = [
         {
           id: "edit-project",
           title: "Edit",
@@ -104,6 +124,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
     } else {
       return [];
     }
+    return actions;
   };
 
   const toTableCells = (row: IProject) => {
