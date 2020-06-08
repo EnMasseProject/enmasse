@@ -2127,6 +2127,8 @@ createIotDevice("iotProjectFrance", {
 
 createIotDevice("iotProjectFrance", {
   deviceId: "12",
+  enabled: true,
+  viaGateway: true,
   jsonData: JSON.stringify({
     via: ["device-1", "device-2"],
     ext: { summit: "Mt Blanc" }
