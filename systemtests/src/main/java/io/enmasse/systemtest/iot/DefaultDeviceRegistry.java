@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest.iot;
 
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+
 import io.enmasse.iot.model.v1.DeviceConnectionServiceConfig;
 import io.enmasse.iot.model.v1.DeviceConnectionServiceConfigBuilder;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
@@ -20,6 +22,7 @@ import io.enmasse.iot.model.v1.ExternalJdbcRegistryServerBuilder;
 import io.enmasse.iot.model.v1.ServicesConfig;
 import io.enmasse.iot.model.v1.ServicesConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 
 public final class DefaultDeviceRegistry {
@@ -143,6 +146,21 @@ public final class DefaultDeviceRegistry {
         SystemtestsKubernetesApps.deleteInfinispanServer();
     }
 
+    public static DeviceRegistryServiceConfigBuilder applyDeviceRegistryEndpoint(final DeviceRegistryServiceConfigBuilder registry) {
+
+        if (!Kubernetes.isOpenShiftCompatible(OCP4)) {
+            return registry
+                    .editOrNewManagement()
+                    .withNewEndpoint()
+                    .withNewSecretNameStrategy("systemtests-iot-device-registry-tls")
+                    .endEndpoint()
+                    .endManagement();
+        } else {
+            return registry;
+        }
+
+    }
+
     public static ServicesConfig newPostgresBased(final boolean split) throws Exception {
         var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
 
@@ -193,39 +211,47 @@ public final class DefaultDeviceRegistry {
     }
 
     public static DeviceRegistryServiceConfig newInfinispanDeviceRegistryService(final Endpoint infinispanEndpoint) {
-        return new DeviceRegistryServiceConfigBuilder()
+
+        var builder = new DeviceRegistryServiceConfigBuilder()
                 .withNewInfinispan()
                 .withNewServer()
 
                 .withExternal(externalInfinispanRegistryServer(infinispanEndpoint))
 
                 .endServer()
-                .endInfinispan()
-                .build();
+                .endInfinispan();
+
+        return applyDeviceRegistryEndpoint(builder).build();
+
     }
 
     public static DeviceRegistryServiceConfig newPostgresBasedRegistry(final Endpoint jdbcEndpoint, final boolean split) throws Exception {
-        return new DeviceRegistryServiceConfigBuilder()
+
+        var builder = new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
                 .withExternal(externalPostgresRegistryServer(jdbcEndpoint, split))
 
                 .endServer()
-                .endJdbc()
-                .build();
+                .endJdbc();
+
+        return applyDeviceRegistryEndpoint(builder).build();
+
     }
 
     public static DeviceRegistryServiceConfig newH2BasedRegistry(final Endpoint jdbcEndpoint) throws Exception {
-        return new DeviceRegistryServiceConfigBuilder()
+
+        var builder = new DeviceRegistryServiceConfigBuilder()
                 .withNewJdbc()
                 .withNewServer()
 
                 .withExternal(externalH2RegistryServer(jdbcEndpoint))
 
                 .endServer()
-                .endJdbc()
-                .build();
+                .endJdbc();
+
+        return applyDeviceRegistryEndpoint(builder).build();
     }
 
     private static ExternalJdbcDeviceConnectionServer externalPostgresConnectionServer(final Endpoint jdbcEndpoint) {

@@ -480,7 +480,7 @@ func applyEndpointService(endpoint iotv1alpha1.EndpointConfig, service *corev1.S
 	} else {
 
 		if !util.IsOpenshift() {
-			return util.NewConfigurationError("not running in OpenShift, unable to use service CA, you need to provide a protocol adapter endpoint key/certificate")
+			return util.NewConfigurationError("not running in OpenShift, unable to use service CA, you need to provide an endpoint key/certificate for: %s", endpointSecretName)
 		}
 
 		// use service CA as fallback

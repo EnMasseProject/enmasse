@@ -744,6 +744,8 @@ public final class IoTTestSession implements AutoCloseable {
             secrets.put("iot-tenant-service", "systemtests-iot-tenant-service-tls");
             secrets.put("iot-device-connection", "systemtests-iot-device-connection-tls");
             secrets.put("iot-device-registry", "systemtests-iot-device-registry-tls");
+            secrets.put("iot-mesh-inter", "systemtests-iot-mesh-inter-tls");
+            secrets.put("iot-command-mesh", "systemtests-iot-command-mesh-tls");
 
             config = config
                     .editOrNewSpec()
