@@ -19,6 +19,12 @@ import {
   ProjectType,
   getFilteredProjectsCount
 } from "modules/project/utils";
+import { useApolloClient } from "@apollo/react-hooks";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { useMutationQuery } from "hooks";
+import { DELETE_ADDRESS_SPACE } from "graphql-module";
+import { IAddressSpace } from "modules/address-space";
+import { type } from "os";
 
 export interface IProjectListContainerProps {
   page: number;
@@ -53,14 +59,13 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
-  // const client = useApolloClient();
-  // const { dispatch } = useStoreContext();
+  const { dispatch } = useStoreContext();
   const [sortBy, setSortBy] = useState<ISortBy>();
-  // const refetchQueries: string[] = ["all_address_spaces"];
-  // const [setDeleteProjectQueryVariables] = useMutationQuery(
-  //   DELETE_ADDRESS_SPACE,
-  //   refetchQueries
-  // );
+  const refetchQueries: string[] = ["all_address_spaces"];
+  const [setDeleteProjectQueryVariables] = useMutationQuery(
+    DELETE_ADDRESS_SPACE,
+    refetchQueries
+  );
 
   // const { loading, data } = useQuery<IProjectsResponse>(
   //   RETURN_ALL_ADDRESS_SPACES(
@@ -89,42 +94,92 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   }
 
   const onChangeEdit = (project: IProject) => {
-    // dispatch({
-    //   type: types.SHOW_MODAL,
-    //   modalType: MODAL_TYPES.EDIT_ADDRESS_SPACE,
-    //   modalProps: {
-    //     project,
-    //   },
-    // });
+    const {
+      name,
+      namespace,
+      type,
+      isReady,
+      authService,
+      plan,
+      displayName,
+      status
+    } = project;
+    if (
+      name &&
+      namespace &&
+      type &&
+      isReady !== undefined &&
+      authService &&
+      plan &&
+      displayName &&
+      status
+    ) {
+      const addressSpace: IAddressSpace = {
+        name: name,
+        nameSpace: namespace,
+        type: type,
+        isReady: false,
+        authenticationService: authService,
+        creationTimestamp: "",
+        planValue: plan,
+        displayName: displayName,
+        messages: [],
+        phase: status
+      };
+      dispatch({
+        type: types.SHOW_MODAL,
+        modalType: MODAL_TYPES.EDIT_ADDRESS_SPACE,
+        modalProps: {
+          addressSpace
+        }
+      });
+    }
   };
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
-      //   const queryVariable = {
-      //     as: [
-      //       {
-      //         name: project.name,
-      //         namespace: project.namespace,
-      //       },
-      //     ],
-      //   };
-      //   setDeleteProjectQueryVariables(queryVariable);
+      if (project.projectType === ProjectTypes.MESSAGING) {
+        const queryVariable = {
+          as: [
+            {
+              name: project.name,
+              namespace: project.namespace
+            }
+          ]
+        };
+        setDeleteProjectQueryVariables(queryVariable);
+      }
     }
   };
 
   const onChangeDelete = (project: IProject) => {
-    // dispatch({
-    //   type: types.SHOW_MODAL,
-    //   modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
-    //   modalProps: {
-    //     selectedItems: [project.name],
-    //     data: project,
-    //     onConfirm: onDeleteProject,
-    //     option: "Delete",
-    //     detail: `Are you sure you want to delete this addressspace: ${project.name} ?`,
-    //     header: "Delete this Address Space ?",
-    //   },
-    // });
+    if (project.projectType === ProjectTypes.MESSAGING) {
+      dispatch({
+        type: types.SHOW_MODAL,
+        modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+        modalProps: {
+          selectedItems: [project.name],
+          data: project,
+          onConfirm: onDeleteProject,
+          option: "Delete",
+          detail: `Are you sure you want to delete this messaging project: ${project.name} ?`,
+          header: "Delete this Address Space ?"
+        }
+      });
+    } else if (project.projectType === ProjectTypes.IOT) {
+      dispatch({
+        type: types.SHOW_MODAL,
+        modalType: MODAL_TYPES.DELETE_PROJECT,
+        modalProps: {
+          selectedItems: [project.name],
+          data: project,
+          onConfirm: onDeleteProject,
+          option: "Delete",
+          detail: `Are you sure you want to delete this iot project: ${project.name} ?`,
+          header: "Delete this IoT Project ?"
+        }
+      });
+    }
   };
 
   //Download the certificate function
@@ -158,9 +213,12 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       projectType: ProjectTypes.MESSAGING,
       name: "namespace_test1.new_space1",
       displayName: "new_space",
+      type: "standard",
       namespace: "namespace_test1",
-      plan: "Standard",
+      plan: "standard-medium",
       status: StatusTypes.FAILED,
+      authService: "none",
+      isReady: true,
       creationTimestamp: "2020-01-20T11:44:28.607Z",
       errorMessageRate: 3,
       addressCount: 15,
@@ -181,8 +239,11 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       projectType: ProjectTypes.MESSAGING,
       name: "namespace_test1.new_space2",
       displayName: "new_space",
+      type: "brokered",
       namespace: "namespace_test1",
-      plan: "Brokered",
+      authService: "none",
+      isReady: true,
+      plan: "brokered-small",
       status: StatusTypes.PENDING,
       creationTimestamp: "2020-01-20T05:44:28.607Z",
       addressCount: 27,
@@ -203,8 +264,11 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       projectType: ProjectTypes.MESSAGING,
       name: "namespace_test1.new_space3",
       displayName: "new_space",
+      type: "brokered",
       namespace: "namespace_test1",
-      plan: "Brokered",
+      plan: "brokered-medium",
+      authService: "none",
+      isReady: true,
       status: StatusTypes.FAILED,
       creationTimestamp: "2020-05-21T08:44:28.607Z",
       addressCount: 27,
@@ -217,7 +281,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       name: "namespace_test1.new_space4",
       displayName: "new_space",
       namespace: "namespace_test1",
-      plan: "Brokered",
+      plan: "standard-small",
+      type: "standard",
+      authService: "none",
+      isReady: true,
       status: StatusTypes.CONFIGURING,
       creationTimestamp: "2020-05-21T08:44:28.607Z",
       addressCount: 27,
@@ -298,7 +365,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
             if (compareObject(prj.name, selectedProject.name)) {
               if (project.name === prj.name) {
                 allSelected = true;
-              } else if (prj.selected === false) allSelected = false;
+              } else if (!prj.selected) allSelected = false;
               break;
             }
           }
@@ -325,6 +392,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         return areProjectsEqual;
       }).length === 1;
   }
+
   return (
     <>
       <ProjectList

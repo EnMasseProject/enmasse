@@ -39,8 +39,11 @@ export interface IProject {
   name?: string;
   displayName?: string;
   namespace?: string;
+  type?: string;
+  authService?: string;
   plan?: string;
   status?: StatusTypes;
+  isReady?: boolean;
   creationTimestamp?: string;
   errorMessageRate?: number;
   addressCount?: number;
@@ -71,23 +74,36 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
 }) => {
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IProject;
-    return [
-      {
-        id: "edit-project",
-        title: "Edit",
-        onClick: () => onEdit(originalData)
-      },
-      {
-        id: "delete-project",
-        title: "Delete",
-        onClick: () => onDelete(originalData)
-      },
-      {
-        id: "download-certificate-project",
-        title: "Download Certificate",
-        onClick: () => onDownload(originalData)
-      }
-    ];
+
+    if (originalData.projectType === ProjectTypes.IOT) {
+      return [
+        {
+          id: "delete-project",
+          title: "Delete",
+          onClick: () => onDelete(originalData)
+        }
+      ];
+    } else if (originalData.projectType === ProjectTypes.MESSAGING) {
+      return [
+        {
+          id: "edit-project",
+          title: "Edit",
+          onClick: () => onEdit(originalData)
+        },
+        {
+          id: "delete-project",
+          title: "Delete",
+          onClick: () => onDelete(originalData)
+        },
+        {
+          id: "download-certificate-project",
+          title: "Download Certificate",
+          onClick: () => onDownload(originalData)
+        }
+      ];
+    } else {
+      return [];
+    }
   };
 
   const toTableCells = (row: IProject) => {
@@ -96,7 +112,6 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       name,
       displayName,
       namespace,
-      plan,
       status,
       creationTimestamp,
       errorMessageRate,
@@ -105,7 +120,8 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       deviceCount,
       activeCount,
       selected,
-      errorMessages
+      errorMessages,
+      type
     } = row;
     const tableRow: IRowData = {
       selected: selected,
@@ -115,8 +131,8 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
             <Link
               to={
                 projectType === ProjectTypes.MESSAGING
-                  ? `address-space/${namespace}/${name}/addresses`
-                  : `iot/${namespace}/${name}`
+                  ? `address-spaces/${namespace}/${name}/${type}/addresses`
+                  : `iot-projects/${namespace}/${name}/detail`
               }
             >
               {displayName}
@@ -125,7 +141,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           key: displayName
         },
         {
-          title: <ProjectTypePlan type={projectType} plan={plan} />,
+          title: <ProjectTypePlan projectType={projectType} msgType={type} />,
           key: displayName + "-" + projectType
         },
         {

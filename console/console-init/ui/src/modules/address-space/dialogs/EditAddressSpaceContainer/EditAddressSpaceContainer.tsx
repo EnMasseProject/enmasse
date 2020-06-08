@@ -55,14 +55,13 @@ export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
     if (addressSpace.type) {
       planOptions =
         addressSpacePlans
-          .map(plan => {
-            if (plan.spec.addressSpaceType === addressSpace.type) {
-              return {
+          .map(
+            plan =>
+              plan.spec.addressSpaceType === addressSpace.type && {
                 value: plan.metadata.name,
                 label: plan.metadata.name
-              };
-            }
-          })
+              }
+          )
           .filter(plan => plan !== undefined) || [];
     }
     return planOptions;

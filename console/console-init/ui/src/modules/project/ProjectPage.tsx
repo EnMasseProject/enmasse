@@ -22,13 +22,11 @@ import { TablePagination } from "components";
 import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
 import { useMutationQuery } from "hooks";
 import {
-  getDetailForDeleteDialog,
-  getHeaderForDeleteDialog
-} from "modules/address-space";
-import {
   initialiseFilterForProject,
   setInitialProjcetCount,
-  ProjectType
+  ProjectType,
+  getDetailForDeleteDialog,
+  getHeaderForDeleteDialog
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
 

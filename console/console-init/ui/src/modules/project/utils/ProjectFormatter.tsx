@@ -21,8 +21,8 @@ const style = StyleSheet.create({
   }
 });
 interface IProjectTypePlanProps {
-  type: string;
-  plan?: string;
+  projectType: string;
+  msgType?: string;
 }
 
 interface IProjectStatusProps {
@@ -69,14 +69,20 @@ const getStatusIconByPhase = (phase: string) => {
     </span>
   );
 };
-
+const formatString = (string?: string) => {
+  if (string) {
+    const formattedString =
+      string[0].toUpperCase() + "" + string.substring(1, string.length);
+    return formattedString;
+  }
+};
 const ProjectTypePlan: React.FunctionComponent<IProjectTypePlanProps> = ({
-  type,
-  plan
+  projectType,
+  msgType
 }) => {
   return (
     <>
-      {type} {plan}
+      {projectType} {formatString(msgType)}
     </>
   );
 };
