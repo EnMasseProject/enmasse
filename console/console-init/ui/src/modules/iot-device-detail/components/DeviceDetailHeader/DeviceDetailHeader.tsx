@@ -21,16 +21,18 @@ import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 
 interface IDeviceDetailHeaderProps {
-  deviceName: string;
+  deviceName?: string;
   addedDate: string;
   lastTimeSeen: string;
-  onEdit: () => void;
+  deviceStatus?: boolean;
+  onEditMetadata: () => void;
+  onEditDeviceInJson: () => void;
   onChange: (enabled: boolean) => void;
   onDelete: () => void;
   onClone: () => void;
 }
 
-export const project_header_styles = StyleSheet.create({
+const styles = StyleSheet.create({
   flex_left_border: {
     paddingLeft: "1em",
     borderLeft: "0.05em solid",
@@ -54,10 +56,12 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceName,
   addedDate,
   lastTimeSeen,
-  onEdit,
+  onEditMetadata,
+  onEditDeviceInJson,
   onDelete,
   onChange,
-  onClone
+  onClone,
+  deviceStatus
 }) => {
   const DeviceDetailLayout = () => (
     <>
@@ -69,7 +73,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
             </Title>
           </SplitItem>
         </Split>
-        <Flex className={css(project_header_styles.namespace_info_margin)}>
+        <Flex className={css(styles.namespace_info_margin)}>
           <FlexItem id="flex-item-device-added-date">
             Added Date :
             <b>
@@ -78,7 +82,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           </FlexItem>
           <FlexItem
             id="flex-item-device-last-seen-time"
-            className={css(project_header_styles.flex_left_border)}
+            className={css(styles.flex_left_border)}
           >
             Last time seen :{" "}
             <b>
@@ -96,7 +100,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-edit-metadata"
         key="edit-metadata"
         aria-label="edit metadata"
-        onClick={() => onEdit()}
+        onClick={onEditMetadata}
       >
         Edit metadata
       </DropdownItem>,
@@ -104,7 +108,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-edit-json"
         key="edit-in-json"
         aria-label="edit device in json"
-        onClick={() => onEdit()}
+        onClick={onEditDeviceInJson}
       >
         Edit device in JSON
       </DropdownItem>,
@@ -113,7 +117,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-delete"
         key="delete-device"
         aria-label="delete device"
-        onClick={() => onDelete()}
+        onClick={onDelete}
       >
         Delete Device
       </DropdownItem>,
@@ -121,7 +125,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-clone"
         key="clone-device"
         aria-label="clone"
-        onClick={() => onClone()}
+        onClick={onClone}
       >
         Clone Device
       </DropdownItem>
@@ -140,18 +144,21 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(project_header_styles.no_bottom_padding)}
+      className={css(styles.no_bottom_padding)}
     >
       <Split>
         <DeviceDetailLayout />
         <SplitItem isFilled />
-        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
           <SwitchWithToggle
             id="switch-device-header-enable-btn"
+            label="Enabled"
+            labelOff="Disabled"
             onChange={onChange}
+            isChecked={deviceStatus}
           />
         </SplitItem>
-        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
           <KebabOptionsLayout />
         </SplitItem>
       </Split>
