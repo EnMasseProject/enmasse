@@ -21,17 +21,17 @@ import {
   ICreateDeviceButtonProps
 } from "modules/iot-device/components";
 
-export interface IDeviceListToolbarProps
-  extends ICreateDeviceButtonProps,
-    PaginationProps,
-    Omit<
-      IDropdownWithBulkSelectProps,
-      "dropdownId" | "dropdownToggleId" | "checkBoxId" | "ariaLabel"
-    > {
+interface IDeviceListToolbarProps
+  extends Omit<
+    IDropdownWithBulkSelectProps,
+    "dropdownId" | "dropdownToggleId" | "checkBoxId" | "ariaLabel"
+  > {
   kebabItems: React.ReactNode[];
 }
 
-export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps> = ({
+export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps &
+  PaginationProps &
+  ICreateDeviceButtonProps> = ({
   itemCount,
   perPage,
   page,
@@ -40,11 +40,11 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps>
   handleInputDeviceInfo,
   handleJSONUpload,
   isOpen,
-  handleOnSelect,
-  handleOnToggle,
+  onSelect,
+  onToggle,
   isChecked,
   items,
-  handleOnChange,
+  onChange,
   kebabItems
 }) => {
   return (
@@ -62,11 +62,11 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps>
             checkBoxId="device-bulk-select-checkbox"
             ariaLabel="Bulk select dropdown for device list"
             isOpen={isOpen}
-            handleOnSelect={handleOnSelect}
-            handleOnToggle={handleOnToggle}
+            onSelect={onSelect}
+            onToggle={onToggle}
             isChecked={isChecked}
             items={items}
-            handleOnChange={handleOnChange}
+            onChange={onChange}
           />
         </DataToolbarItem>
         <DataToolbarItem
