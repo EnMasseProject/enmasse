@@ -34,16 +34,18 @@ public class AddressCanaryHealth implements Runnable {
 
     private volatile List<AddressCanaryResult> latestResult = Collections.emptyList();
     private final AtomicInteger healthCheckFailures = new AtomicInteger(0);
+    private final String addressSpace;
 
-    AddressCanaryHealth(Kubernetes kubernetes, Duration checkInterval, AddressProber runner, Metrics metrics)
-    {
+    AddressCanaryHealth(Kubernetes kubernetes, Duration checkInterval, AddressProber runner, Metrics metrics, String addressSpace) {
         this.kubernetes = kubernetes;
         this.checkInterval = checkInterval;
         this.runner = runner;
+        this.addressSpace = addressSpace;
         registerMetrics(metrics);
     }
 
     private void registerMetrics(Metrics metrics) {
+        MetricLabel staticLabel = new MetricLabel("addressspace", this.addressSpace);
         metrics.registerMetric(new ScalarMetric(
                 "address_canary_health_failures_total",
                 "Total number of health check failures due to failure to send and receive messages to probe addresses.",
@@ -51,13 +53,13 @@ public class AddressCanaryHealth implements Runnable {
                 () -> latestResult.stream().flatMap(
                         result -> {
                             List<MetricValue> values = new ArrayList<>();
-                            values.add(new MetricValue(result.getFailed().size(), new MetricLabel("router", result.getRouterId())));
+                            values.add(new MetricValue(result.getFailed().size(), staticLabel, new MetricLabel("router", result.getRouterId())));
                             for (String failed : result.getFailed()) {
-                                values.add(new MetricValue(1, new MetricLabel("router", result.getRouterId()), new MetricLabel("address", failed)));
+                                values.add(new MetricValue(1, staticLabel, new MetricLabel("router", result.getRouterId()), new MetricLabel("address", failed)));
                             }
 
                             for (String passed : result.getPassed()) {
-                                values.add(new MetricValue(0, new MetricLabel("router", result.getRouterId()), new MetricLabel("address", passed)));
+                                values.add(new MetricValue(0, staticLabel, new MetricLabel("router", result.getRouterId()), new MetricLabel("address", passed)));
                             }
                             return values.stream();
                         }).collect(Collectors.toList())));

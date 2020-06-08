@@ -112,4 +112,16 @@ Description::: Provides the total number of address forwarders, regardless of wh
 Example:::
 `enmasse_addresses_forwarders_total{addressspace="myspace"} 2`
 
+`enmasse_address_canary_health_failures_total`::
+Type::: Gauge
+Description::: Total number of health check failures due to failure to send and receive messages to
+probe addresses.
+Example:::
+`enmasse_address_canary_health_failures_total{addressspace="myspace"} 2`
+
+`enmasse_address_canary_health_check_failures_total`::
+Type::: Gauge
+Description:::  Total number of attempted health check runs that failed due to controller errors.
+Example:::
+`enmasse_address_canary_health_check_failures_total{addressspace="myspace"} 1`
 
