@@ -164,7 +164,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           option: "Delete",
           detail: `Are you sure you want to delete this messaging project: ${project.name} ?`,
           header: "Delete this Messaging Project ?",
-          confirmButtonLabel: "Delete"
+          confirmButtonLabel: "Delete",
+          iconType: "danger"
         }
       });
     } else if (project.projectType === ProjectTypes.IOT) {
@@ -178,7 +179,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           option: "Delete",
           detail: `Are you sure you want to delete this iot project: ${project.name} ?`,
           header: "Delete this IoT Project ?",
-          confirmButtonLabel: "Delete"
+          confirmButtonLabel: "Delete",
+          iconType: "danger"
         }
       });
     }
