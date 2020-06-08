@@ -2137,6 +2137,7 @@ createIotDevice("iotProjectFrance", {
 createIotDevice("iotProjectIndia", {
   deviceId: "20",
   enabled: true,
+  viaGateway: true,
   jsonData: JSON.stringify({
     via: ["20", "21"],
     default: {
@@ -2163,8 +2164,9 @@ createIotDevice("iotProjectIndia", {
 createIotDevice("iotProjectIndia", {
   deviceId: "21",
   enabled: true,
-  viaGateway: true,
+  viaGateway: false,
   jsonData: JSON.stringify({
+    via: [],
     ext: { summit: "Kanchenjunga" }
   }),
   credentials: []

@@ -31,7 +31,8 @@ const styles = StyleSheet.create({
   card_body: {
     paddingLeft: 0,
     paddingRight: 0,
-    paddingBottom: 0
+    paddingBottom: 0,
+    minHeight: 336
   }
 });
 
