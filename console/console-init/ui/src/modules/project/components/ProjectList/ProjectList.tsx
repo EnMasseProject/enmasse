@@ -25,6 +25,7 @@ import {
   ProjectTypePlan,
   ProjectTypes
 } from "modules/project/utils";
+import { EmptyProject } from "modules/project";
 
 export const StyleForTable = StyleSheet.create({
   scroll_overflow: {
@@ -210,6 +211,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           <TableBody />
         </Table>
       </div>
+      {projects.length <= 0 && <EmptyProject />}
     </>
   );
 };
