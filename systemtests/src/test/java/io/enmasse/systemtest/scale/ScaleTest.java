@@ -247,12 +247,13 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 config.setLinksPerConnection(2);
                 config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
                 config.setSendersPerTenant(env.getPerfSendersPerTenant());
+                config.setAddressesType(addressType);
                 manager.deployTenantClient(kubernetes, Collections.singletonList(addresses[clients - 1]), config);
 
                 checkMetrics(manager.getMonitoringResult());
 
                 manager.sleep();
-                Thread.sleep(60_000);
+                Thread.sleep(120_000);
 
                 checkMetrics(manager.getMonitoringResult());
 
