@@ -243,7 +243,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
                 checkMetrics(manager.getMonitoringResult());
                 var config = new ScaleTestClientConfiguration();
                 config.setAddressesPerTenant(1);
-                config.setSendMessagePeriod(1);
+                config.setSendMessagePeriod(0);
                 config.setLinksPerConnection(2);
                 config.setReceiversPerTenant(env.getPerfReceiversPerTenant());
                 config.setSendersPerTenant(env.getPerfSendersPerTenant());
