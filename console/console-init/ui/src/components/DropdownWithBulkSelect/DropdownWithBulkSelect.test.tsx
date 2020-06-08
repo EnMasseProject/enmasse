@@ -31,10 +31,10 @@ describe("<DropdownWithBulkSelect />", () => {
     ariaLabel: "Select multiple items",
     isChecked: false,
     isOpen: false,
-    handleOnToggle: jest.fn(),
+    onToggle: jest.fn(),
     items,
-    handleOnChange: jest.fn(),
-    handleOnSelect: jest.fn()
+    onChange: jest.fn(),
+    onSelect: jest.fn()
   };
 
   it("should render the dropdown items when opened", () => {

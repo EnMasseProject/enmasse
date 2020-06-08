@@ -6,9 +6,8 @@
 import React from "react";
 import { MemoryRouter } from "react-router";
 
-import { text, number, select } from "@storybook/addon-knobs";
-import { action } from "@storybook/addon-actions";
-import { ProjectHeaderCard, IProjectCount } from "components";
+import { number } from "@storybook/addon-knobs";
+import { ProjectHeaderCard, IProjectCount } from "modules/project";
 import { Page } from "@patternfly/react-core";
 
 export default {
