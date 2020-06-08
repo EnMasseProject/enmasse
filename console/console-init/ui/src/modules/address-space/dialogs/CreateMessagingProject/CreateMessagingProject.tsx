@@ -19,7 +19,8 @@ import {
   isRouteStepValid,
   isEnabledCertificateStep,
   TlsCertificateType,
-  EndPointProtocol
+  EndPointProtocol,
+  getQueryVariableForCreateAddressSpace
 } from "modules/address-space/utils";
 import { ConfiguringCertificates } from "./ConfiguringCertificates";
 import { ConfiguringRoutes } from "./ConfiguringRoutes";
@@ -125,92 +126,10 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
   };
 
   const handleSave = async () => {
-    const {
-      name,
-      namespace,
-      type,
-      plan,
-      authService,
-      customizeEndpoint,
-      tlsCertificate,
-      certValue,
-      privateKey,
-      protocols,
-      addRoutes,
-      routesConf
-    } = messagingProject;
     if (isMessagingProjectValid(messagingProject)) {
-      const queryVariables: IExposeMessagingProject = {
-        as: {
-          metadata: {
-            name: name,
-            namespace: namespace
-          },
-          spec: {
-            type: type?.toLowerCase(),
-            plan: plan?.toLowerCase(),
-            authenticationService: {
-              name: authService
-            }
-          }
-        }
-      };
-      if (customizeEndpoint) {
-        const endpoints: IExposeEndPoint[] = [];
-        if (protocols && protocols.length > 0) {
-          protocols.map((protocol: string) => {
-            const endpoint: IExposeEndPoint = { service: "messaging" };
-            if (protocol === EndPointProtocol.AMQPS) {
-              endpoint.name = "messaging";
-            } else if (protocol === EndPointProtocol.AMQP_WSS) {
-              endpoint.name = "messaging-wss";
-            }
-            if (tlsCertificate) {
-              endpoint.certificate = {
-                provider: tlsCertificate
-              };
-              if (
-                tlsCertificate === TlsCertificateType.UPLOAD_CERT &&
-                certValue &&
-                certValue.trim() !== "" &&
-                privateKey &&
-                privateKey.trim() !== ""
-              ) {
-                endpoint.certificate = {
-                  ...endpoint.certificate,
-                  tlsKey: btoa(privateKey?.trim()),
-                  tlsCert: btoa(certValue?.trim())
-                };
-              }
-            }
-            if (addRoutes) {
-              endpoint.expose = { type: "route", routeServicePort: protocol };
-              const routeConf = routesConf?.filter(
-                conf => conf.protocol === protocol
-              );
-              if (routeConf && routeConf.length > 0) {
-                if (
-                  routeConf[0].hostname &&
-                  routeConf[0].hostname.trim() !== ""
-                ) {
-                  endpoint.expose.routeHost = routeConf[0].hostname.trim();
-                }
-                if (
-                  routeConf[0].tlsTermination &&
-                  routeConf[0].tlsTermination.trim() !== ""
-                ) {
-                  endpoint.expose.routeTlsTermination =
-                    routeConf[0].tlsTermination;
-                }
-              }
-            }
-            endpoints.push(endpoint);
-            return endpoint;
-          });
-        }
-        Object.assign(queryVariables.as.spec, { endpoints: endpoints });
-      }
-      await setQueryVariables(queryVariables);
+      await setQueryVariables(
+        getQueryVariableForCreateAddressSpace(messagingProject)
+      );
 
       onCloseDialog();
       if (onConfirm) {

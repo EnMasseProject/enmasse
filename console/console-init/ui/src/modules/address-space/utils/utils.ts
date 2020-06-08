@@ -3,8 +3,12 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import { IMessagingProject } from "modules/address-space/dialogs";
-import { TlsCertificateType } from "./constant";
+import {
+  IMessagingProject,
+  IExposeMessagingProject,
+  IExposeEndPoint
+} from "modules/address-space/dialogs/CreateMessagingProject";
+import { TlsCertificateType, EndPointProtocol } from "./constant";
 
 const getDetailForDeleteDialog = (selectedItems: any[]) => {
   const detail =
@@ -90,11 +94,99 @@ const isRouteStepValid = (messagingProject: IMessagingProject) => {
   }
 };
 
+const getQueryVariableForCreateAddressSpace = (
+  messagingProject: IMessagingProject
+) => {
+  const {
+    name,
+    namespace,
+    type,
+    plan,
+    authService,
+    customizeEndpoint,
+    tlsCertificate,
+    certValue,
+    privateKey,
+    protocols,
+    addRoutes,
+    routesConf
+  } = messagingProject;
+
+  const queryVariables: IExposeMessagingProject = {
+    as: {
+      metadata: {
+        name: name,
+        namespace: namespace
+      },
+      spec: {
+        type: type?.toLowerCase(),
+        plan: plan?.toLowerCase(),
+        authenticationService: {
+          name: authService
+        }
+      }
+    }
+  };
+  if (customizeEndpoint) {
+    const endpoints: IExposeEndPoint[] = [];
+    if (protocols && protocols.length > 0) {
+      protocols.map((protocol: string) => {
+        const endpoint: IExposeEndPoint = { service: "messaging" };
+        if (protocol === EndPointProtocol.AMQPS) {
+          endpoint.name = "messaging";
+        } else if (protocol === EndPointProtocol.AMQP_WSS) {
+          endpoint.name = "messaging-wss";
+        }
+        if (tlsCertificate) {
+          endpoint.certificate = {
+            provider: tlsCertificate
+          };
+          if (
+            tlsCertificate === TlsCertificateType.UPLOAD_CERT &&
+            certValue &&
+            certValue.trim() !== "" &&
+            privateKey &&
+            privateKey.trim() !== ""
+          ) {
+            endpoint.certificate = {
+              ...endpoint.certificate,
+              tlsKey: btoa(privateKey?.trim()),
+              tlsCert: btoa(certValue?.trim())
+            };
+          }
+        }
+        if (addRoutes) {
+          endpoint.expose = { type: "route", routeServicePort: protocol };
+          const routeConf = routesConf?.filter(
+            conf => conf.protocol === protocol
+          );
+          if (routeConf && routeConf.length > 0) {
+            if (routeConf[0].hostname && routeConf[0].hostname.trim() !== "") {
+              endpoint.expose.routeHost = routeConf[0].hostname.trim();
+            }
+            if (
+              routeConf[0].tlsTermination &&
+              routeConf[0].tlsTermination.trim() !== ""
+            ) {
+              endpoint.expose.routeTlsTermination = routeConf[0].tlsTermination;
+            }
+          }
+        }
+        endpoints.push(endpoint);
+        return endpoint;
+      });
+    }
+    Object.assign(queryVariables.as.spec, { endpoints: endpoints });
+  }
+  return queryVariables;
+};
+
 export {
   getDetailForDeleteDialog,
   getHeaderForDeleteDialog,
   isMessagingProjectValid,
   isMessagingProjectConfigurationValid,
   isEnabledCertificateStep,
-  isRouteStepValid
+  isRouteStepValid,
+  getQueryVariableForCreateAddressSpace
 };
