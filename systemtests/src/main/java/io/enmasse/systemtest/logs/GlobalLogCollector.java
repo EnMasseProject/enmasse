@@ -340,7 +340,7 @@ public class GlobalLogCollector {
             //resource specific logs
             Files.writeString(path.resolve("describe_addressspaces.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addressspaces", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_addresses.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addresses", "--all-namespaces").getStdOut());
-            Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addressspaces", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("catalogsources.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "catalogsources", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("csvs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "csvs", "-o", "yaml", "--all-namespaces").getStdOut());
