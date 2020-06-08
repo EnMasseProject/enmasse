@@ -1,0 +1,63 @@
+// Module included in the following assemblies:
+//
+// assembly-installing-manual-steps.adoc
+// assembly-installing-kubernetes.adoc
+
+[id='proc-iot-tracing-{context}']
+
+= Configuring tracing
+
+.Prerequisites
+* link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#iot-installing-services-messaging-iot-iot-iot[The IoT services are installed].
+* The "Jaeger Operator" from OperatorHub is installed in the {ProductName} namespace.
+* An instance of Jaeger is deployed using the operator in the {ProductName} namespace.
+* Know whether the Jaeger instance was deployed using the "sidecar" or "daemonset" agent.
+
+.Procedure
+
+. Edit the `IoTConfig` instance named `default`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} edit iotconfig default
+----
+. Modify the configuration according to your Jaeger agent configuration:
+.. If the Jaeger instance is deployed with the "sidecar" agent, add the following
+configuration:
++
+[source,yaml,options="nowrap",subs=attributes+]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  namespace: {ProductNamespace}
+  name: default
+spec:
+  tracing:
+    strategy: <1>
+      sidecar: {} <2>
+----
+<1> The field to select the strategy. Only one strategy must be configured.
+<2> Enables the "sidecar" strategy. The use of an empty empty object (`{}`) is intentional.
+
+.. If the Jaeger instance is deployed with the "sidecar" agent, add the following
+configuration:
++
+[source,yaml,options="nowrap",subs=attributes+]
+----
+apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTConfig
+metadata:
+  namespace: {ProductNamespace}
+  name: default
+spec:
+  tracing:
+    strategy: <1>
+      daemonset: {} <2>
+----
+<1> The field to select the strategy. Only one strategy must be configured.
+<2> Enables the "daemonset" strategy. The use of an empty empty object (`{}`) is intentional.
+
+. Save and exit the editor.
+. The operator applies the tracing configuration and re-deploys all
+  required components.
