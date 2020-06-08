@@ -38,4 +38,10 @@ const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
   return IOT_CREDENTIALS;
 };
 
-export { RETURN_IOT_DEVICE_DETAIL, RETURN_IOT_CREDENTIALS };
+const DELETE_IOT_DEVICE = gql`
+  mutation deleteIotDevice($iotproject: String!, $deviceId: String!) {
+    deleteIotDevice(iotproject: $iotproject, deviceId: $deviceId)
+  }
+`;
+
+export { RETURN_IOT_DEVICE_DETAIL, RETURN_IOT_CREDENTIALS, DELETE_IOT_DEVICE };

@@ -2079,7 +2079,6 @@ function createIotDevice(iotProject, newDevice) {
     throw `Iot device with deviceId  '${newDevice.deviceId} already exists in iot project ${iotProject}`;
   }
 
-  newDevice.credentials;
   iotdevices[devIndex].devices.push(newDevice);
   return getIotDevice(iotProject, newDevice.deviceId);
 }
@@ -2138,7 +2137,6 @@ createIotDevice("iotProjectFrance", {
 createIotDevice("iotProjectIndia", {
   deviceId: "20",
   enabled: true,
-  viaGateway: false,
   jsonData: JSON.stringify({
     via: ["20", "21"],
     default: {
@@ -2167,7 +2165,6 @@ createIotDevice("iotProjectIndia", {
   enabled: true,
   viaGateway: true,
   jsonData: JSON.stringify({
-    via: ["device-3", "device-4"],
     ext: { summit: "Kanchenjunga" }
   }),
   credentials: []
@@ -2222,6 +2219,7 @@ setCredentials(
       enabled: true,
       secrets: [
         {
+          "pwd-hash": "pwd-test",
           comment: "was just for testing"
         }
       ]

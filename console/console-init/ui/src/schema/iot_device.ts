@@ -5,7 +5,7 @@
 
 export interface IDeviceDetailResponse {
   devices: {
-    total?: number;
+    total: number;
     devices: Array<{
       deviceId?: string;
       enabled?: boolean;
