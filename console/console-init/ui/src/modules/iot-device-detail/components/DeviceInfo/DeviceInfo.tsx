@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useParams } from "react-router";
 import {
   Page,
   PageSection,
@@ -30,7 +31,8 @@ const styles = StyleSheet.create({
   card_body: {
     paddingLeft: 0,
     paddingRight: 0,
-    paddingBottom: 0
+    paddingBottom: 0,
+    minHeight: 336
   }
 });
 
@@ -44,13 +46,34 @@ export interface IDeviceInfoProps
 export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
-  metadataList,
+  metadataList: metadetaJson,
   credentials
 }) => {
+  const [isHidden, setIsHidden] = useState<boolean>(false);
+  const { projectname, namespace } = useParams();
+
   const jsonViewData = {
+    via: deviceList,
+    ...metadetaJson,
     credentials
   };
-  const [isHidden, setIsHidden] = useState<boolean>(false);
+
+  const prepareMetadataList = () => {
+    const metadataList = [];
+    if (metadetaJson?.default) {
+      metadataList.push({
+        headers: ["Message info parameter", "Type", "Value"],
+        data: metadetaJson?.default
+      });
+    }
+    if (metadetaJson?.ext) {
+      metadataList.push({
+        headers: ["Basic info parameter", "Type", "Value"],
+        data: metadetaJson?.ext
+      });
+    }
+    return metadataList;
+  };
 
   const onToggle = (isEnabled: boolean) => {
     setIsHidden(isEnabled);
@@ -88,11 +111,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                 <CardBody>
                   <Grid>
                     {deviceList &&
-                      deviceList.map((device: string) => {
+                      deviceList.map((deviceId: string) => {
                         return (
-                          <GridItem span={2} key={device}>
-                            {/**  TODO:add link redirect url*/}
-                            <Link to={"/"}>{device}</Link>
+                          <GridItem span={2} key={deviceId}>
+                            <Link
+                              to={`/iot-projects/${namespace}/${projectname}/devices/${deviceId}/device-info`}
+                            >
+                              {deviceId}
+                            </Link>
                           </GridItem>
                         );
                       })}
@@ -120,7 +146,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                 </CardHeader>
                 <CardBody className={css(styles.card_body)}>
                   <MetadataListTable
-                    dataList={metadataList}
+                    dataList={prepareMetadataList()}
                     id={"divice-info-metadata-table"}
                     aria-label={"device info metadata"}
                     aria-labelledby-header={"device info metadata header"}
