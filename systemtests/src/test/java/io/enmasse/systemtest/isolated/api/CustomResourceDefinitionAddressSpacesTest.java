@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 
 import java.util.Collections;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
@@ -108,7 +109,14 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
                 .editMetadata().withResourceVersion(null).endMetadata()
                 .editSpec().withPlan(AddressSpacePlans.STANDARD_UNLIMITED).endSpec()
                 .done();
-        assertTrue(updateCR(AddressSpaceUtils.addressSpaceToJson(standard).toString()).getRetCode());
+        AddressSpace finalStandard = standard;
+        TestUtils.runUntilPass(10, () -> {
+            ExecutionResultData result = updateCR(AddressSpaceUtils.addressSpaceToJson(finalStandard).toString());
+            if (!result.getRetCode()) {
+                throw new RuntimeException(String.format("Error applying address space update. Stdout: %s. Stderr: %s", result.getStdOut(), result.getStdErr()));
+            }
+            return true;
+        });
         AddressSpaceUtils.waitForAddressSpaceConfigurationApplied(standard, currentConfig);
         assertThat(resourcesManager.getAddressSpace(standard.getMetadata().getName()).getSpec().getPlan(), is(AddressSpacePlans.STANDARD_UNLIMITED));
         currentConfig = resourcesManager.getAddressSpace(kubernetes.getInfraNamespace(), standard.getMetadata().getName()).getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
