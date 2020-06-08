@@ -9,6 +9,7 @@ import { Redirect } from "react-router";
 
 const getAddressSpaceListPage = () =>
   import("modules/address-space/AddressSpacePage");
+const getProjectListPage = () => import("modules/project/ProjectPage");
 const getAddressSpaceDetail = () =>
   import("modules/address-space/AddressSpaceDetailPage");
 const getAddressDetail = () =>
@@ -63,6 +64,11 @@ export const AppRoutes = () => (
       path="/address-spaces"
       exact={true}
       getComponent={getAddressSpaceListPage}
+    />
+    <LazyRoute
+      path="/projects"
+      exact={true}
+      getComponent={getProjectListPage}
     />
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/:subList"
