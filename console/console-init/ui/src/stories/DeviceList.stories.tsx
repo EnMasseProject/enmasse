@@ -142,11 +142,11 @@ export const deviceToolbar = () => {
         handleInputDeviceInfo={action("input device info handler clicked")}
         handleJSONUpload={action("json upload handler clicked")}
         isOpen={boolean("is Open", true)}
-        handleOnSelect={action("On select handler for bulk select component")}
-        handleOnToggle={action("On toggle handler for bulk select component")}
+        onSelect={action("On select handler for bulk select component")}
+        onToggle={action("On toggle handler for bulk select component")}
         isChecked={boolean("isChecked", false)}
         items={bulkSelectItems}
-        handleOnChange={action("checkbox dropdown changed")}
+        onChange={action("checkbox dropdown changed")}
       />
     </MemoryRouter>
   );

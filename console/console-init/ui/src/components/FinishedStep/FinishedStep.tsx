@@ -12,10 +12,13 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "@patternfly/react-styles";
+import { Link } from "react-router-dom";
+import { ProjectType } from "modules/project";
 interface IFinishedStepProps {
   onClose: () => void;
+  routeDetail?: { name: string; namespace: string; type?: string };
   success: boolean;
-  projectType?: "IoT" | "Messaging";
+  projectType?: ProjectType.IOT_PROJECT | ProjectType.MESSAGING_PROJECT;
 }
 
 const styles = StyleSheet.create({
@@ -26,25 +29,33 @@ const styles = StyleSheet.create({
 
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   onClose,
+  routeDetail,
   success,
   projectType
 }) => {
   const [percent, setPercent] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
-  const tick = () => {
-    if (percent < 100) {
-      setPercent(percent + 20);
-    } else {
-      if (!isCompleted) {
-        setIsCompleted(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (percent < 100) {
+        setPercent(percent + 20);
+      } else {
+        if (!isCompleted) {
+          setIsCompleted(true);
+        }
       }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [percent, isCompleted]);
+
+  const projectDetailUrl = () => {
+    if (routeDetail && projectType === ProjectType.IOT_PROJECT) {
+      return `/iot-projects/${routeDetail?.namespace}/${routeDetail?.name}`;
+    } else {
+      return `/address-spaces/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
     }
   };
-  useEffect(() => {
-    const interval = setInterval(() => tick(), 500);
-    return () => clearInterval(interval);
-  }, [percent]);
-
   return (
     <>
       {!isCompleted || !success ? (
@@ -92,9 +103,11 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
             Enter your {projectType} Project for management, or return to
             homepage to view all projects.
           </EmptyStateBody>
-          <Button variant={ButtonVariant.primary} component="a" href="/">
-            View the project
-          </Button>
+          <Link to={projectDetailUrl()}>
+            <Button variant={ButtonVariant.primary} component="a">
+              View the project
+            </Button>
+          </Link>
           <br />
           <br />
           <Button variant="link" onClick={onClose}>
