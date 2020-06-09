@@ -122,7 +122,7 @@ public class OLMOperatorManager {
 
         log.info("Going to build and push image {}", customRegistryImageToPush);
 
-        TestUtils.runUntilPass(5, () -> {
+        TestUtils.runUntilPass(10, () -> {
             if (Kubernetes.isOpenShiftCompatible()) {
                 SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
             } else {
