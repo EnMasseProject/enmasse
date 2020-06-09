@@ -5,7 +5,6 @@
 
 import React, { useState } from "react";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { useParams } from "react-router";
 import { IIoTCertificate, IoTCertificateList } from "./components";
 
 const defaultCertificates = [
@@ -31,6 +30,7 @@ const defaultCertificates = [
   }
 ];
 export default function IoTCertificates() {
+  console.log(":ASFSAFA");
   useDocumentTitle("IoT Certificates");
   useA11yRouteChange();
   //   const { name, namespace } = useParams();
@@ -44,15 +44,18 @@ export default function IoTCertificates() {
   const onCreate = (certificate: IIoTCertificate) => {
     //Query to edit certificate
   };
+
   const onDelete = (certificate: IIoTCertificate) => {
     // Query to delete certificate
   };
+
   const onEnableOrDisable = (
     certificate: IIoTCertificate,
     isEnabled: boolean
   ) => {
     // Query for enable certificate
   };
+
   return (
     <>
       <IoTCertificateList
