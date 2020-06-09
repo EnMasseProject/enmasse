@@ -26,6 +26,7 @@ const (
 )
 
 type Client interface {
+	Addr() string
 	Start()
 	Stop()
 	ReconnectCount() int64
@@ -69,6 +70,10 @@ func NewCommandClient(addr string, commandAddress string, commandResponseAddress
 		connectOptions:         opts,
 		lastError:              nil,
 	}
+}
+
+func (c *CommandClient) Addr() string {
+	return c.addr
 }
 
 func (c *CommandClient) Start() {

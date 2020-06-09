@@ -20,8 +20,10 @@ import (
 	"pack.ag/amqp"
 )
 
-const brokerCommandAddress = "activemq.management"
-const brokerCommandResponseAddress = "activemq.management_broker_command_response"
+const (
+	brokerCommandAddress         = "activemq.management"
+	brokerCommandResponseAddress = "activemq.management_broker_command_response"
+)
 
 func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
 	opts := make([]amqp.ConnOption, 0)
@@ -37,7 +39,7 @@ func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
 		Host:        host,
 		Port:        port,
 		initialized: false,
-		queues:      make(map[string]bool),
+		entities:    make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
 			brokerCommandAddress,
 			brokerCommandResponseAddress,
@@ -61,13 +63,17 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	log.Printf("[Broker %s] Initializing...", b.Host)
 
-	queues, err := b.readQueues()
-	if err != nil {
-		log.Printf("[Broker %s] Error initializing: %+v", b.Host, err)
-		return err
+	totalEntities := 0
+	entityTypes := []BrokerEntityType{BrokerQueueEntity, BrokerAddressEntity}
+	for _, t := range entityTypes {
+		list, err := b.readEntities(t)
+		if err != nil {
+			return err
+		}
+		b.entities[t] = list
+		totalEntities += len(list)
 	}
-	b.queues = queues
-	log.Printf("[Broker %s] Initialized controller state with %d queues", b.Host, len(queues))
+	log.Printf("[Broker %s] Initialized controller state with %d entities", b.Host, totalEntities)
 	b.initialized = true
 	return nil
 }
@@ -75,160 +81,163 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 /**
  * Perform management request against this broker.
  */
-func (b *BrokerState) doRequest(request *amqp.Message) (*amqp.Message, error) {
+func doRequest(client amqpcommand.Client, request *amqp.Message) (*amqp.Message, error) {
 	// If by chance we got disconnected while waiting for the request
-	response, err := b.commandClient.RequestWithTimeout(request, 10*time.Second)
+	response, err := client.RequestWithTimeout(request, 10*time.Second)
 	return response, err
 }
 
-func (b *BrokerState) readQueues() (map[string]bool, error) {
-	message, err := newManagementMessage("broker", "getQueueNames", "", "ANYCAST")
-	if err != nil {
-		return nil, err
-	}
-
-	result, err := b.doRequest(message)
-	if err != nil {
-		return nil, err
-	}
-	if !success(result) {
-		return nil, fmt.Errorf("error reading queues: %+v", result.Value)
-	}
-
-	switch v := result.Value.(type) {
-	case string:
-		queues := make(map[string]bool, 0)
-		var list [][]string
-		err := json.Unmarshal([]byte(result.Value.(string)), &list)
+func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity, error) {
+	switch t {
+	case BrokerQueueEntity:
+		message, err := newManagementMessage("broker", "getQueueNames", "")
 		if err != nil {
 			return nil, err
 		}
-		for _, entry := range list {
-			for _, name := range entry {
-				queues[name] = true
+
+		result, err := doRequest(b.commandClient, message)
+		if err != nil {
+			return nil, err
+		}
+		if !success(result) {
+			return nil, fmt.Errorf("error reading queues: %+v", result.Value)
+		}
+
+		switch v := result.Value.(type) {
+		case string:
+			entities := make(map[string]BrokerEntity, 0)
+			var list [][]string
+			err := json.Unmarshal([]byte(result.Value.(string)), &list)
+			if err != nil {
+				return nil, err
+			}
+			for _, entry := range list {
+				for _, name := range entry {
+					entities[name] = &BrokerQueue{
+						Name: name,
+					}
+				}
+			}
+			log.Printf("[broker %s] Found queues: %+v", b.Host, entities)
+			return entities, nil
+		default:
+			return nil, fmt.Errorf("unexpected value with type %T", v)
+		}
+	case BrokerAddressEntity:
+		message, err := newManagementMessage("broker", "getAddressNames", "")
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := doRequest(b.commandClient, message)
+		if err != nil {
+			return nil, err
+		}
+		if !success(result) {
+			return nil, fmt.Errorf("error reading addresses: %+v", result.Value)
+		}
+
+		switch v := result.Value.(type) {
+		case string:
+			entities := make(map[string]BrokerEntity, 0)
+			var list [][]string
+			err := json.Unmarshal([]byte(result.Value.(string)), &list)
+			if err != nil {
+				return nil, err
+			}
+			for _, entry := range list {
+				for _, name := range entry {
+					entities[name] = &BrokerAddress{
+						Name: name,
+					}
+				}
+			}
+			log.Printf("[broker %s] Found addresses: %+v", b.Host, entities)
+			return entities, nil
+		default:
+			return nil, fmt.Errorf("unexpected value with type %T", v)
+		}
+	default:
+		return nil, fmt.Errorf("Unsupported entity type %s", t)
+	}
+}
+
+func (b *BrokerState) EnsureEntities(ctx context.Context, entities []BrokerEntity) error {
+	if !b.initialized {
+		return NotInitializedError
+	}
+
+	toCreate := make([]BrokerEntity, 0, len(entities))
+	for _, entity := range entities {
+		typeMap := b.entities[entity.Type()]
+		existing, ok := typeMap[entity.GetName()]
+		if ok {
+			if !existing.Equals(entity) {
+				log.Printf("Changing from '%+v' to '%+v'\n", existing, entity)
+				return fmt.Errorf("broker entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
+			}
+		} else {
+			toCreate = append(toCreate, entity)
+		}
+
+	}
+
+	completed := make(chan BrokerEntity, len(toCreate))
+	var err error
+	for order := 0; order < maxOrder; order++ {
+		g, _ := errgroup.WithContext(ctx)
+		for _, entity := range toCreate {
+			e := entity
+			if e.Order() == order {
+				if _, ok := b.entities[e.Type()][e.GetName()]; !ok {
+					g.Go(func() error {
+						err := e.Create(b.commandClient)
+						if err != nil {
+							return err
+						}
+
+						completed <- e
+						return nil
+					})
+				}
 			}
 		}
-		return queues, nil
-	default:
-		return nil, fmt.Errorf("unexpected value with type %T", v)
-	}
-}
 
-func (b *BrokerState) EnsureConfiguredQueue(ctx context.Context, queue *QueueConfiguration) error {
-	if !b.initialized {
-		return NotInitializedError
-	}
-
-	if _, ok := b.queues[queue.Name]; !ok {
-		err := b.createQueue(queue)
-		if isConnectionError(err) {
-			b.Reset()
-		}
+		err = g.Wait()
 		if err != nil {
-			log.Printf("[Broker %s] EnsureConfiguredQueue error: %+v", b.Host, err)
-			return err
-		}
-		b.queues[queue.Name] = true
-	}
-	return nil
-}
-
-func (b *BrokerState) createQueue(queue *QueueConfiguration) error {
-	config, err := json.Marshal(queue)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("[Broker %s] creating queue json: '%s'", b.Host, string(config))
-
-	message, err := newManagementMessage("broker", "createQueue", "", queue.Name, queue.RoutingType, queue.Address, nil, queue.Durable, queue.MaxConsumers, queue.PurgeOnNoConsumers, queue.AutoCreateAddress)
-	// TODO: Artemis 2.12.0 newManagementMessage("broker", "createQueue", "", string(config))
-	if err != nil {
-		return err
-	}
-	log.Printf("Creating queue %s on %s: %+v", queue.Name, b.Host, message)
-	response, err := b.doRequest(message)
-	if err != nil {
-		return err
-	}
-	if !success(response) {
-		return fmt.Errorf("error creating queue %s: %+v", queue.Name, response.Value)
-	}
-	log.Printf("Queue %s created successfully on %s", queue.Name, b.Host)
-	return nil
-}
-
-func (b *BrokerState) EnsureQueues(ctx context.Context, queues []string) error {
-	if !b.initialized {
-		return NotInitializedError
-	}
-	g, _ := errgroup.WithContext(ctx)
-	completed := make(chan string, len(queues))
-	for _, queue := range queues {
-		q := queue
-		if _, ok := b.queues[q]; !ok {
-			g.Go(func() error {
-				config := &QueueConfiguration{
-					Name:               q,
-					Address:            q,
-					RoutingType:        RoutingTypeAnycast,
-					MaxConsumers:       -1,
-					Durable:            true,
-					PurgeOnNoConsumers: false,
-					AutoCreateAddress:  true,
-				}
-				err := b.createQueue(config)
-				if err != nil {
-					return err
-				}
-
-				completed <- q
-				return nil
-			})
+			break
 		}
 	}
-	err := g.Wait()
+
 	close(completed)
+
 	if isConnectionError(err) {
 		b.Reset()
 	}
 	if err != nil {
 		log.Printf("[Broker %s] EnsureQueues error: %+v", b.Host, err)
 	}
-	for queue := range completed {
-		b.queues[queue] = true
+	for entity := range completed {
+		b.entities[entity.Type()][entity.GetName()] = entity
 	}
 	return err
 }
 
-func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
+func (b *BrokerState) DeleteEntities(ctx context.Context, entities []BrokerEntity) error {
 	if !b.initialized {
 		return NotInitializedError
 	}
 	g, _ := errgroup.WithContext(ctx)
-	completed := make(chan string, len(queues))
-	for _, queue := range queues {
-		q := queue
-		if _, ok := b.queues[q]; ok {
+	completed := make(chan BrokerEntity, len(entities))
+	for _, entity := range entities {
+		e := entity
+		if _, ok := b.entities[e.Type()][e.GetName()]; ok {
 			g.Go(func() error {
-				message, err := newManagementMessage("broker", "destroyQueue", "", q, true, true)
+				err := e.Delete(b.commandClient)
 				if err != nil {
 					return err
 				}
-
-				log.Printf("Destroying queue %s on %s", q, b.Host)
-
-				response, err := b.doRequest(message)
-				if err != nil {
-					return err
-				}
-
-				if !success(response) {
-					return fmt.Errorf("error deleting queue %s: %+v", q, response.Value)
-				}
-
-				log.Printf("Queue %s destroyed successfully on %s", q, b.Host)
-				completed <- q
+				completed <- e
 				return nil
 			})
 		}
@@ -240,10 +249,10 @@ func (b *BrokerState) DeleteQueues(ctx context.Context, queues []string) error {
 		b.Reset()
 	}
 	if err != nil {
-		log.Printf("[Broker %s] DeleteQueues error: %+v", b.Host, err)
+		log.Printf("[Broker %s] DeleteEntities error: %+v", b.Host, err)
 	}
-	for queue := range completed {
-		delete(b.queues, queue)
+	for entity := range completed {
+		delete(b.entities[entity.Type()], entity.GetName())
 	}
 	return err
 }
@@ -266,14 +275,20 @@ func newManagementMessage(resource string, operation string, attribute string, p
 		properties["_AMQ_Attribute"] = attribute
 	}
 
-	encoded, err := json.Marshal(parameters)
-	if err != nil {
-		return nil, err
+	var value string
+	if len(parameters) > 0 {
+		encoded, err := json.Marshal(parameters)
+		if err != nil {
+			return nil, err
+		}
+		value = string(encoded)
+	} else {
+		value = "[]"
 	}
 	return &amqp.Message{
 		Properties:            &amqp.MessageProperties{},
 		ApplicationProperties: properties,
-		Value:                 string(encoded),
+		Value:                 value,
 	}, nil
 }
 
@@ -293,4 +308,125 @@ func (b *BrokerState) Shutdown() {
 	if b.commandClient != nil {
 		b.commandClient.Stop()
 	}
+}
+
+func (b *BrokerQueue) Type() BrokerEntityType {
+	return BrokerQueueEntity
+}
+
+func (b *BrokerQueue) GetName() string {
+	return b.Name
+}
+
+func (b *BrokerQueue) Order() int {
+	return 1
+}
+
+// Updates not allowed for queues: they are the same if they have the same type and name.
+func (b *BrokerQueue) Equals(other BrokerEntity) bool {
+	return b.Type() == other.Type() &&
+		b.Name == other.GetName()
+}
+
+func (b *BrokerQueue) Create(client amqpcommand.Client) error {
+	config, err := json.Marshal(b)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("[Broker %s] creating queue json: '%s'", client.Addr(), string(config))
+
+	message, err := newManagementMessage("broker", "createQueue", "", string(config))
+	if err != nil {
+		return err
+	}
+	log.Printf("Creating queue %s on %s: %+v", b.Name, client.Addr(), message)
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+	if !success(response) {
+		return fmt.Errorf("error creating queue %s: %+v", b.Name, response.Value)
+	}
+	log.Printf("Queue %s created successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+func (b *BrokerQueue) Delete(client amqpcommand.Client) error {
+	message, err := newManagementMessage("broker", "destroyQueue", "", b.Name, true, true)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Destroying queue %s on %s", b.Name, client.Addr())
+
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+
+	if !success(response) {
+		return fmt.Errorf("error deleting queue %s: %+v", b.Name, response.Value)
+	}
+
+	log.Printf("Queue %s destroyed successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+func (b *BrokerAddress) Type() BrokerEntityType {
+	return BrokerAddressEntity
+}
+
+func (b *BrokerAddress) GetName() string {
+	return b.Name
+}
+
+func (b *BrokerAddress) Order() int {
+	return 0
+}
+
+// Updates not allowed for addresses: they are the same if they have the same type and name.
+func (b *BrokerAddress) Equals(other BrokerEntity) bool {
+	return b.Type() == other.Type() &&
+		b.Name == other.GetName()
+}
+
+func (b *BrokerAddress) Create(client amqpcommand.Client) error {
+	log.Printf("[Broker %s] creating address: '%s'", client.Addr(), b.Name)
+
+	message, err := newManagementMessage("broker", "createAddress", "", b.Name, b.RoutingType)
+	if err != nil {
+		return err
+	}
+	log.Printf("Creating address %s on %s: %+v", b.Name, client.Addr(), message)
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+	if !success(response) {
+		return fmt.Errorf("error creating address %s: %+v", b.Name, response.Value)
+	}
+	log.Printf("Address %s created successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+func (b *BrokerAddress) Delete(client amqpcommand.Client) error {
+	message, err := newManagementMessage("broker", "deleteAddress", "", b.Name, true)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Deleting address %s on %s", b.Name, client.Addr())
+
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+
+	if !success(response) {
+		return fmt.Errorf("error deleting address %s: %+v", b.Name, response.Value)
+	}
+
+	log.Printf("Address %s deleted successfully on %s", b.Name, client.Addr())
+	return nil
 }

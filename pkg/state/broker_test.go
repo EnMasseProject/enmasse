@@ -24,6 +24,7 @@ func TestInitializeBroker(t *testing.T) {
 		Port:          0,
 		initialized:   false,
 		commandClient: client,
+		entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 	}
 
 	client.Handler = func(req *amqp.Message) (*amqp.Message, error) {
@@ -35,8 +36,8 @@ func TestInitializeBroker(t *testing.T) {
 
 	err := state.Initialize(time.Time{})
 	assert.Nil(t, err)
-	assert.NotNil(t, state.queues)
-	assert.Equal(t, 2, len(state.queues))
-	assert.True(t, state.queues["queue1"])
-	assert.True(t, state.queues["queue2"])
+	assert.NotNil(t, state.entities)
+	assert.Equal(t, 2, len(state.entities[BrokerQueueEntity]))
+	assert.NotNil(t, state.entities[BrokerQueueEntity]["queue1"])
+	assert.NotNil(t, state.entities[BrokerQueueEntity]["queue2"])
 }

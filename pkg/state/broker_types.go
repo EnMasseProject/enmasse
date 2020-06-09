@@ -17,11 +17,29 @@ type BrokerState struct {
 	initialized    bool
 	nextResync     time.Time
 	commandClient  amqpcommand.Client
-	queues         map[string]bool
+	entities       map[BrokerEntityType]map[string]BrokerEntity
 	reconnectCount int64
 }
 
-type QueueConfiguration struct {
+type BrokerEntityType string
+
+const (
+	BrokerQueueEntity          BrokerEntityType = "queue"
+	BrokerAddressEntity        BrokerEntityType = "address"
+	BrokerDivertEntity         BrokerEntityType = "divert"
+	BrokerAddressSettingEntity BrokerEntityType = "address-setting"
+)
+
+type BrokerEntity interface {
+	Type() BrokerEntityType
+	GetName() string
+	Order() int
+	Equals(_ BrokerEntity) bool
+	Create(_ amqpcommand.Client) error
+	Delete(_ amqpcommand.Client) error
+}
+
+type BrokerQueue struct {
 	Name               string      `json:"name"`
 	Address            string      `json:"address"`
 	RoutingType        RoutingType `json:"routing-type"`
@@ -29,6 +47,11 @@ type QueueConfiguration struct {
 	Durable            bool        `json:"durable"`
 	AutoCreateAddress  bool        `json:"auto-create-address"`
 	PurgeOnNoConsumers bool        `json:"purge-on-no-consumers"`
+}
+
+type BrokerAddress struct {
+	Name        string      `json:"name"`
+	RoutingType RoutingType `json:"routing-type"`
 }
 
 type RoutingType string
