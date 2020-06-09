@@ -32,9 +32,12 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.user.model.v1.User;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -50,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.TestTag.UPGRADE;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -75,6 +79,31 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
             assertTrue(OperatorManager.getInstance().clean());
         } else {
             OperatorManager.getInstance().deleteEnmasseAnsible();
+        }
+    }
+
+    @Test
+    public void testAnsiblePrecheck() {
+        this.type = EnmasseInstallType.ANSIBLE;
+        this.infraNamespace = kubernetes.getInfraNamespace();
+        Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
+        Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "precheck.yml");
+        List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
+                "--extra-vars", String.format("namespace=%s", kubernetes.getInfraNamespace()));
+        String configname = "doesnotexist.myspace";
+        try {
+            assertTrue(Exec.execute(cmd, 60_000, true).getRetCode());
+            kubernetes.createNamespace(kubernetes.getInfraNamespace());
+            kubernetes.createConfigmapFromResource(kubernetes.getInfraNamespace(), new ConfigMapBuilder()
+                    .editOrNewMetadata()
+                    .withNamespace(kubernetes.getInfraNamespace())
+                    .withName(configname)
+                    .addToLabels("type", "address-space")
+                    .endMetadata()
+                    .build());
+            assertFalse(Exec.execute(cmd, 60_000, true).getRetCode());
+        } finally {
+            kubernetes.deleteConfigmap(kubernetes.getInfraNamespace(), configname);
         }
     }
 
