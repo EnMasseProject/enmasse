@@ -153,6 +153,7 @@ public class ScaleTestManager {
         var clientConfig = clientProvider.get();
         clientConfig.setClientType(ScaleTestClientType.tenant);
         clientConfig.setAddresses(addr);
+        clientConfig.setAddressesType(params.getAddressesType());
         clientConfig.setAddressesPerTenant(params.getAddressesPerTenant());
         clientConfig.setSendMessagePeriod(params.getSendMessagePeriod());
         clientConfig.setReceiversPerTenant(params.getReceiversPerTenant());
