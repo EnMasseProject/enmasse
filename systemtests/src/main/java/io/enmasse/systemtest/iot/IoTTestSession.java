@@ -827,7 +827,12 @@ public final class IoTTestSession implements AutoCloseable {
             return;
         }
 
-        GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()));
+        var test = TestInfo.getInstance().getActualTest();
+        if ( test != null ) {
+            GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()));
+        } else {
+            log.error("Unable to log system test failure, failed in test setup", error);
+        }
     }
 
     /**

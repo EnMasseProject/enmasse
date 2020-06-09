@@ -46,7 +46,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.platform.Minikube;
 import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
 import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -379,10 +378,12 @@ public class SystemtestsKubernetesApps {
 
         // apply "common" and "manual" folders
 
-        if (Minikube.getInstance().getCluster() instanceof Minikube) {
+        if (!Kubernetes.isOpenShiftCompatible()) {
+            log.info("Installing Infinispan for Kubernetes");
             kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
                     resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
         } else {
+            log.info("Installing Infinispan for OpenShift");
             kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
                     resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT));
         }
