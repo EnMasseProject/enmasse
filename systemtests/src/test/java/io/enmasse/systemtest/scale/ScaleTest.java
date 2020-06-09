@@ -207,7 +207,7 @@ class ScaleTest extends TestBase implements ITestBaseIsolated {
 
 
     void doMessagingPerformanceTest(AddressType addressType, String addressPlan) throws Exception {
-        int maxClients = 30;
+        int maxClients = 200;
 
         String batchSuffix = UUID.randomUUID().toString();
         Address[] addresses = IntStream.range(0, maxClients)
