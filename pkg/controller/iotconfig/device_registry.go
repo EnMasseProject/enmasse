@@ -179,14 +179,16 @@ func (r *ReconcileIoTConfig) reconcileDeviceRegistryManagementServiceExternal(co
 
 	service.Spec.Type = corev1.ServiceTypeLoadBalancer
 
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Name:       "https",
-			Port:       31443,
-			TargetPort: intstr.FromInt(8443),
-			Protocol:   corev1.ProtocolTCP,
-		},
+	// set a single port, but don't overwrite the NodePort
+
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
 	}
+
+	service.Spec.Ports[0].Name = "https"
+	service.Spec.Ports[0].Port = 31443
+	service.Spec.Ports[0].TargetPort = intstr.FromInt(8443)
+	service.Spec.Ports[0].Protocol = corev1.ProtocolTCP
 
 	if service.Annotations == nil {
 		service.Annotations = make(map[string]string)
