@@ -8,6 +8,7 @@ package install
 import (
 	"context"
 	"fmt"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"reflect"
 
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -119,16 +120,32 @@ func ProcessOwnedByObject(owner runtime.Object, obj interface{}, controller bool
 
 }
 
-// Delete object, ignore if it is already gone.
+// Delete object, ignore if it is already gone or the kind is unknown.
 func DeleteIgnoreNotFound(ctx context.Context, client client.Client, obj runtime.Object, opts ...client.DeleteOption) error {
 
 	err := client.Delete(ctx, obj, opts...)
 
-	if err == nil || errors.IsNotFound(err) {
+	// check errors ...
+
+	if err == nil {
+		// ... all good
 		return nil
-	} else {
-		return err
 	}
+
+	if errors.IsNotFound(err) {
+		// ... instance not found, no problem, we had to delete it anyway
+		return nil
+	}
+
+	switch err.(type) {
+	case *meta.NoKindMatchError:
+		// ... kind not registered, no problem, we had to delete it anyway
+		return nil
+	}
+
+	// everything else is an error we report
+
+	return err
 
 }
 

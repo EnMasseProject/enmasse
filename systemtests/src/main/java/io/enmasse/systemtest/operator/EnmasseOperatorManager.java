@@ -4,6 +4,21 @@
  */
 package io.enmasse.systemtest.operator;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+
 import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceSpec;
 import io.enmasse.systemtest.Environment;
@@ -18,20 +33,6 @@ import io.enmasse.systemtest.platform.OpenShift;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.EnvVar;
-import org.slf4j.Logger;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnmasseOperatorManager {
 
@@ -197,6 +198,8 @@ public class EnmasseOperatorManager {
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", productName));
+        // by default metrics should be disabled, otherwise reconciliation will fail due to missing prometheus CRDs
+        enableOperatorMetrics(false);
     }
 
     public void installExamplePlans(String namespace) {
