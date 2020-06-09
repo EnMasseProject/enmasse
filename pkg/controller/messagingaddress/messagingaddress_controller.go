@@ -216,7 +216,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 							return reconcile.Result{}, err
 						}
 						if foundSub {
-							err := fmt.Errorf("subscriptions referencing this topic address exists")
+							err := fmt.Errorf("subscriptions referencing this topic address exist")
 							address.Status.Message = err.Error()
 							return reconcile.Result{Requeue: true}, nil
 						}
@@ -230,7 +230,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 							return reconcile.Result{}, err
 						}
 						if foundQueue {
-							err := fmt.Errorf("queues referencing this deadletter address exists")
+							err := fmt.Errorf("queues referencing this deadletter address exist")
 							address.Status.Message = err.Error()
 							return reconcile.Result{Requeue: true}, nil
 						}
