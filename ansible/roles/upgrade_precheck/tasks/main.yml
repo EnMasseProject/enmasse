@@ -1,0 +1,17 @@
+---
+- name: Check that no address space with invalid namespace exists
+  shell: |
+    missing=""
+    for ns in $(oc get configmap -n {{ namespace }} -l type=address-space -o jsonpath={.items[*].metadata.name} | cut -f 1 -d '.')
+    do
+        oc get namespace ${ns}
+        if [ $? -gt 0 ]; then
+            missing="${ns} ${missing}"
+        fi
+    done
+    if [ "${missing}" != "" ]; then
+        echo "ERROR, missing namespaces detected: ${missing}"
+        exit 1
+    else
+        echo "OK"
+    fi
