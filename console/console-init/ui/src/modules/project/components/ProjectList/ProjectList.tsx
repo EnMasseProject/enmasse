@@ -79,8 +79,9 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
 }) => {
   const actionResolver = (rowData: IRowData) => {
     const originalData = rowData.originalData as IProject;
-    let actions = [];
-    if (originalData.projectType === ProjectTypes.IOT) {
+    let actions: { id: string; title: string; onClick: () => void }[] = [];
+    const { projectType, isEnabled } = originalData;
+    if (projectType === ProjectTypes.IOT) {
       actions = [
         {
           id: "delete-project",
@@ -88,22 +89,16 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           onClick: () => onDelete(originalData)
         }
       ];
-      if (originalData.isEnabled !== undefined) {
-        if (originalData.isEnabled) {
-          actions.push({
-            id: "disable-project",
-            title: "Disable",
-            onClick: () => onDisable(originalData)
-          });
-        } else {
-          actions.push({
-            id: "enable-project",
-            title: "Enable",
-            onClick: () => onEnable(originalData)
-          });
-        }
+      if (isEnabled !== undefined) {
+        actions.push({
+          id: isEnabled ? "disable-project" : "enable-project",
+          title: isEnabled ? "Disable" : "Enable",
+          onClick: () => {
+            isEnabled ? onDisable(originalData) : onEnable(originalData);
+          }
+        });
       }
-    } else if (originalData.projectType === ProjectTypes.MESSAGING) {
+    } else if (projectType === ProjectTypes.MESSAGING) {
       actions = [
         {
           id: "edit-project",
@@ -121,8 +116,6 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           onClick: () => onDownload(originalData)
         }
       ];
-    } else {
-      return [];
     }
     return actions;
   };

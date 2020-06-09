@@ -36,6 +36,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   const [percent, setPercent] = useState<number>(0);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
+  const { namespace, name, type } = routeDetail || {};
   useEffect(() => {
     const interval = setInterval(() => {
       if (percent < 100) {
@@ -51,9 +52,9 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
 
   const projectDetailUrl = () => {
     if (routeDetail && projectType === ProjectType.IOT_PROJECT) {
-      return `/iot-projects/${routeDetail?.namespace}/${routeDetail?.name}`;
+      return `/iot-projects/${namespace}/${name}`;
     } else {
-      return `/messaging-projects/${routeDetail?.namespace}/${routeDetail?.name}/${routeDetail?.type}/addresses`;
+      return `/messaging-projects/${namespace}/${name}/${type}/addresses`;
     }
   };
   return (
