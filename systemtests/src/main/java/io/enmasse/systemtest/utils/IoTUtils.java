@@ -25,15 +25,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
 import io.enmasse.address.model.AddressSpace;
-import io.enmasse.iot.model.v1.AdapterConfig;
-import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTCrd;
@@ -45,6 +42,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageType;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -61,10 +59,6 @@ import io.vertx.ext.web.client.HttpResponse;
 
 public class IoTUtils {
 
-    private static final String IOT_SIGFOX_ADAPTER = "iot-sigfox-adapter";
-    private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
-    private static final String IOT_LORAWAN_ADAPTER = "iot-lorawan-adapter";
-    private static final String IOT_HTTP_ADAPTER = "iot-http-adapter";
     private static final String IOT_AUTH_SERVICE = "iot-auth-service";
     private static final String IOT_DEVICE_REGISTRY = "iot-device-registry";
     private static final String IOT_DEVICE_REGISTRY_MANAGEMENT = "iot-device-registry-management";
@@ -149,10 +143,15 @@ public class IoTUtils {
 
         // protocol adapters
 
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
+        for (var adapter : Adapter.values()) {
+            var name = adapter.getResourceName();
+            if (adapter.isEnabled(config)) {
+                expectedDeployments.add(name);
+                log.info("{} is enabled", name);
+            } else {
+                log.info("{} is disabled", name);
+            }
+        }
 
         // device registry
 
@@ -167,7 +166,7 @@ public class IoTUtils {
                 config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal() != null) {
 
             var external = config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal();
-            if ( external.getManagement() != null && external.getAdapter() != null ) {
+            if (external.getManagement() != null && external.getAdapter() != null) {
                 expectedDeployments.add(IOT_DEVICE_REGISTRY_MANAGEMENT);
             }
         }
@@ -177,16 +176,6 @@ public class IoTUtils {
         expectedDeployments.addAll(Arrays.asList(IOT_AUTH_SERVICE, IOT_DEVICE_CONNECTION, IOT_TENANT_SERVICE));
 
         return expectedDeployments.toArray(String[]::new);
-    }
-
-    private static void addIfEnabled(Collection<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
-        Optional<Boolean> enabled = Optional.ofNullable(config.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
-        if (enabled.orElse(true)) {
-            adapters.add(name);
-            log.info("{} is enabled", name);
-        } else {
-            log.info("{} is disabled", name);
-        }
     }
 
     public static void waitForIoTProjectReady(Kubernetes kubernetes, IoTProject project) throws Exception {
