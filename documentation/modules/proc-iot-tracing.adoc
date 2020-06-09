@@ -22,8 +22,7 @@
 {cmdcli} edit iotconfig default
 ----
 . Modify the configuration according to your Jaeger agent configuration:
-.. If the Jaeger instance is deployed with the "sidecar" agent, add the following
-configuration:
+.. If the Jaeger instance is deployed with the "sidecar" agent, add the following configuration:
 +
 [source,yaml,options="nowrap",subs=attributes+]
 ----
@@ -40,8 +39,7 @@ spec:
 <1> The field to select the strategy. Only one strategy must be configured.
 <2> Enables the "sidecar" strategy. The use of an empty empty object (`{}`) is intentional.
 
-.. If the Jaeger instance is deployed with the "sidecar" agent, add the following
-configuration:
+.. If the Jaeger instance is deployed with the "daemonset" agent, add the following configuration:
 +
 [source,yaml,options="nowrap",subs=attributes+]
 ----
