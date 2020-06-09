@@ -35,6 +35,7 @@ func NewTemplateHelper(extraParams map[string]string) *TemplateHelper {
 	templatePath := "/templates"
 	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 		// ENV VAR should be set for local deployments
+		// in the repository at 'controller-manager/src/main/resources/templates'
 		templatePath = os.Getenv("TEMPLATE_DIR")
 		if _, err := os.Stat(templatePath); os.IsNotExist(err) {
 			panic("cannot find templates")

@@ -10,10 +10,13 @@ import (
 	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/monitoring"
+	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"time"
 )
 
 type MonitoringTarget struct {
@@ -30,8 +33,16 @@ func (r *ReconcileIoTConfig) processMonitoring(ctx context.Context, config *iotv
 
 	rc := &recon.ReconcileContext{}
 
-	rc.ProcessSimple(func() error {
-		return r.processPrometheusRule(ctx, "enmasse-iot", config, !monitoring.IsEnabled(), r.reconcilePrometheusRule)
+	rc.Process(func() (reconcile.Result, error) {
+		err := r.processPrometheusRule(ctx, "enmasse-iot", config, !monitoring.IsEnabled(), r.reconcilePrometheusRule)
+
+		switch err.(type) {
+		case *meta.NoKindMatchError:
+			// Prometheus CRDs missing, mark as non-recoverable and re-try in 5 minutes
+			return reconcile.Result{RequeueAfter: 5 * time.Minute}, util.WrapAsNonRecoverable(err)
+		}
+
+		return reconcile.Result{}, err
 	})
 
 	return rc.Result()
