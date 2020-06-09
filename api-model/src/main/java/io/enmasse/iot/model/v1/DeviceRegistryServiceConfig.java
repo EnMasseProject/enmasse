@@ -23,6 +23,7 @@ import io.sundr.builder.annotations.Inline;
 public class DeviceRegistryServiceConfig {
     private InfinispanDeviceRegistry infinispan;
     private JdbcDeviceRegistry jdbc;
+    private ManagementConfig management;
 
     public InfinispanDeviceRegistry getInfinispan() {
         return infinispan;
@@ -38,6 +39,14 @@ public class DeviceRegistryServiceConfig {
 
     public JdbcDeviceRegistry getJdbc() {
         return jdbc;
+    }
+
+    public void setManagement(ManagementConfig management) {
+        this.management = management;
+    }
+
+    public ManagementConfig getManagement() {
+        return management;
     }
 
 }

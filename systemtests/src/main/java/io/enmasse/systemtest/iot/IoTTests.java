@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.TestInstance;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.bases.ITestSeparator;
+import io.enmasse.systemtest.bases.JUnitWorkaround;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.platform.Kubernetes;
 
@@ -23,7 +25,14 @@ import io.enmasse.systemtest.platform.Kubernetes;
 @ExtendWith(JunitCallbackListener.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public interface IoTTests extends ITestSeparator {
+public interface IoTTests extends ITestSeparator, JUnitWorkaround {
+
+    @BeforeAll
+    public static void deployDefaultCerts() throws Exception {
+        JUnitWorkaround.wrapBeforeAll( () -> {
+            IoTTestSession.deployDefaultCerts();
+        });
+    }
 
     @BeforeEach
     default void createNamespace() {
