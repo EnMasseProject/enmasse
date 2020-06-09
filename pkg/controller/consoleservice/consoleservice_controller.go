@@ -804,6 +804,7 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			container.Args = []string{
 				"-config=/apps/cfg/oauth-proxy-openshift.cfg",
 				"-openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+				"-openshift-ca=/etc/ssl/certs/ca-bundle.crt",
 			}
 
 			for _, key := range caBundleKeys {
