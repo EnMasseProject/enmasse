@@ -888,21 +888,29 @@ public final class IoTTestSession implements AutoCloseable {
 
     private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
 
-        log.info("Cleaning up resources...");
+        if (!Environment.getInstance().skipCleanup()) {
 
-        for (ThrowingCallable f : Lists.reverse(cleanup)) {
-            try {
-                f.call();
-            } catch (Throwable e) {
-                if (initialException == null) {
-                    initialException = e;
-                } else {
-                    initialException.addSuppressed(e);
+            log.info("Cleaning up resources...");
+
+            for (ThrowingCallable f : Lists.reverse(cleanup)) {
+                try {
+                    f.call();
+                } catch (Throwable e) {
+                    if (initialException == null) {
+                        initialException = e;
+                    } else {
+                        initialException.addSuppressed(e);
+                    }
                 }
             }
-        }
 
-        log.info("Cleaning up resources... done!");
+            log.info("Cleaning up resources... done!");
+
+        } else {
+
+            log.warn("Skipping resource cleanup!");
+
+        }
 
         if (initialException == null || initialException instanceof Exception) {
             // return the Exception (or null)
