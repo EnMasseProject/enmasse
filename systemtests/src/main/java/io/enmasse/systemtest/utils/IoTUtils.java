@@ -43,6 +43,7 @@ import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.ServiceConfig;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageType;
@@ -109,10 +110,10 @@ public class IoTUtils {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_IOT_CONFIG);
         kubernetes
-            .getIoTConfigClient(config.getMetadata().getNamespace())
-            .withName(config.getMetadata().getName())
-            .withPropagationPolicy("Background")
-            .delete();
+                .getIoTConfigClient(config.getMetadata().getNamespace())
+                .withName(config.getMetadata().getName())
+                .withPropagationPolicy("Background")
+                .delete();
         TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         TimeMeasuringSystem.stopOperation(operationID);
     }
@@ -196,7 +197,8 @@ public class IoTUtils {
             project = iotProjectClient.withName(project.getMetadata().getName()).get();
             isReady = project.getStatus() != null && "Active".equals(project.getStatus().getPhase());
             if (!isReady) {
-                log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), project.getStatus() != null ? project.getStatus().getPhase() : null);
+                log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(),
+                        project.getStatus() != null ? project.getStatus().getPhase() : null);
                 Thread.sleep(10000);
             }
         }
@@ -212,8 +214,7 @@ public class IoTUtils {
         if (project.getSpec().getDownstreamStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy() != null
                 && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace() != null
-                && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null
-        ) {
+                && project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName() != null) {
             var addressSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
             var addressSpace = Kubernetes.getInstance().getAddressSpaceClient(project.getMetadata().getNamespace()).withName(addressSpaceName).get();
             Objects.requireNonNull(addressSpace, () -> String.format("Unable to find addressSpace: %s", addressSpaceName));
@@ -452,18 +453,21 @@ public class IoTUtils {
     }
 
     public static void assertCorrectDeviceConnectionType(final String type) {
-        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-connection").get();
+        final Deployment deployment =
+                Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-connection").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/deviceConnection.type"));
     }
 
     public static void assertCorrectRegistryType(final String type) {
-        final Deployment deployment = Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
+        final Deployment deployment =
+                Kubernetes.getInstance().getClient().apps().deployments().inNamespace(Kubernetes.getInstance().getInfraNamespace()).withName("iot-device-registry").get();
         assertNotNull(deployment);
         assertEquals(type, deployment.getMetadata().getAnnotations().get("iot.enmasse.io/registry.type"));
     }
 
-    public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject) throws Exception {
+    public static void checkCredentials(String authId, String password, boolean authFail, Endpoint httpAdapterEndpoint, AmqpClient iotAmqpClient, IoTProject ioTProject)
+            throws Exception {
         String tenantID = getTenantId(ioTProject);
         try (var httpAdapterClient = new HttpAdapterClient(httpAdapterEndpoint, authId, tenantID, password)) {
 
@@ -499,6 +503,16 @@ public class IoTUtils {
                 }
             }
 
+        }
+    }
+
+    public static Endpoint getDeviceRegistryManagementEndpoint() {
+        if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
+            // openshift router
+            return Kubernetes.getInstance().getExternalEndpoint("device-registry");
+        } else {
+            // load balancer service
+            return Kubernetes.getInstance().getExternalEndpoint("iot-device-registry-external");
         }
     }
 }

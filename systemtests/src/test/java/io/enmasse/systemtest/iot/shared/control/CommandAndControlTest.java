@@ -81,7 +81,7 @@ class CommandAndControlTest extends TestBase implements ITestIoTShared {
     @BeforeEach
     void init() throws Exception {
 
-        this.deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        this.deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
         this.httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
         this.registryClient = new DeviceRegistryClient(this.deviceRegistryEndpoint);
         this.credentialsClient = new CredentialsRegistryClient(this.deviceRegistryEndpoint);

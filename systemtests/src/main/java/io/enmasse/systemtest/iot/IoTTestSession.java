@@ -558,7 +558,7 @@ public final class IoTTestSession implements AutoCloseable {
                     cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(Kubernetes.getInstance(), project));
                 }
 
-                final Endpoint deviceRegistryEndpoint = Kubernetes.getInstance().getExternalEndpoint("device-registry");
+                final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
                 final DeviceRegistryClient registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
                 cleanup.add(() -> registryClient.close());
                 final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
@@ -710,6 +710,14 @@ public final class IoTTestSession implements AutoCloseable {
                 .withName("default")
                 .withNamespace(namespace)
                 .endMetadata();
+
+        // enable routes / load balancers by default
+
+        config = config.editOrNewSpec()
+                .withEnableDefaultRoutes(true)
+                .endSpec();
+
+        // configure logging
 
         config = config.editOrNewSpec()
                 .withNewLogging()

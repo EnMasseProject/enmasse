@@ -69,7 +69,7 @@ class MultipleProjectsTest extends TestBase implements ITestIoTIsolated {
                 .build();
         isolatedIoTManager.createIoTConfig(iotConfig);
 
-        Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
         registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
         credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
 
