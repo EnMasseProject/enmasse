@@ -11,7 +11,7 @@ metadata:
     categories: "Streaming & Messaging"
     certified: "false"
     description: ${olm.csv.name.long} provides messaging as a managed service on ${olm.csv.platform}
-    containerImage: ${CONTROLLER_MANAGER_IMAGE}
+    containerImage: ${env.CONTROLLER_MANAGER_IMAGE}
     createdAt: 2019-02-19T00:00:00Z
     capabilities: Seamless Upgrades
     repository: ${olm.csv.repository}
@@ -635,7 +635,7 @@ spec:
               serviceAccountName: enmasse-operator
               containers:
               - name: controller
-                image: ${CONTROLLER_MANAGER_IMAGE}
+                image: ${env.CONTROLLER_MANAGER_IMAGE}
                 imagePullPolicy: ${env.IMAGE_PULL_POLICY}
                 env:
                 - name: POD_NAME
@@ -669,65 +669,65 @@ spec:
                 - name: CONTROLLER_ENABLE_MESSAGING_USER
                   value: "true"
                 - name: RELATED_IMAGE_ADDRESS_SPACE_CONTROLLER
-                  value: ${ADDRESS_SPACE_CONTROLLER_IMAGE}
+                  value: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
                 - name: RELATED_IMAGE_CONTROLLER_MANAGER
-                  value: ${CONTROLLER_MANAGER_IMAGE}
+                  value: ${env.CONTROLLER_MANAGER_IMAGE}
                 - name: RELATED_IMAGE_IOT_AUTH_SERVICE
-                  value: ${IOT_AUTH_SERVICE_IMAGE}
+                  value: ${env.IOT_AUTH_SERVICE_IMAGE}
                 - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_INFINISPAN
-                  value: ${IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
+                  value: ${env.IOT_DEVICE_CONNECTION_INFINISPAN_IMAGE}
                 - name: RELATED_IMAGE_IOT_DEVICE_CONNECTION_JDBC
-                  value: ${IOT_DEVICE_CONNECTION_JDBC_IMAGE}
+                  value: ${env.IOT_DEVICE_CONNECTION_JDBC_IMAGE}
                 - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_INFINISPAN
-                  value: ${IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
+                  value: ${env.IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
                 - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_JDBC
-                  value: ${IOT_DEVICE_REGISTRY_JDBC_IMAGE}
+                  value: ${env.IOT_DEVICE_REGISTRY_JDBC_IMAGE}
                 - name: RELATED_IMAGE_IOT_HTTP_ADAPTER
-                  value: ${IOT_HTTP_ADAPTER_IMAGE}
+                  value: ${env.IOT_HTTP_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_MQTT_ADAPTER
-                  value: ${IOT_MQTT_ADAPTER_IMAGE}
+                  value: ${env.IOT_MQTT_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_LORAWAN_ADAPTER
-                  value: ${IOT_LORAWAN_ADAPTER_IMAGE}
+                  value: ${env.IOT_LORAWAN_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_SIGFOX_ADAPTER
-                  value: ${IOT_SIGFOX_ADAPTER_IMAGE}
+                  value: ${env.IOT_SIGFOX_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_TENANT_CLEANER
-                  value: ${IOT_TENANT_CLEANER_IMAGE}
+                  value: ${env.IOT_TENANT_CLEANER_IMAGE}
                 - name: RELATED_IMAGE_IOT_TENANT_SERVICE
-                  value: ${IOT_TENANT_SERVICE_IMAGE}
+                  value: ${env.IOT_TENANT_SERVICE_IMAGE}
                 - name: RELATED_IMAGE_IOT_PROXY_CONFIGURATOR
-                  value: ${IOT_PROXY_CONFIGURATOR_IMAGE}
+                  value: ${env.IOT_PROXY_CONFIGURATOR_IMAGE}
                 - name: RELATED_IMAGE_ROUTER
-                  value: ${ROUTER_IMAGE}
+                  value: ${env.ROUTER_IMAGE}
                 - name: RELATED_IMAGE_STANDARD_CONTROLLER
-                  value: ${STANDARD_CONTROLLER_IMAGE}
+                  value: ${env.STANDARD_CONTROLLER_IMAGE}
                 - name: RELATED_IMAGE_AGENT
-                  value: ${AGENT_IMAGE}
+                  value: ${env.AGENT_IMAGE}
                 - name: RELATED_IMAGE_BROKER
-                  value: ${BROKER_IMAGE}
+                  value: ${env.BROKER_IMAGE}
                 - name: RELATED_IMAGE_BROKER_PLUGIN
-                  value: ${BROKER_PLUGIN_IMAGE}
+                  value: ${env.BROKER_PLUGIN_IMAGE}
                 - name: RELATED_IMAGE_TOPIC_FORWARDER
-                  value: ${TOPIC_FORWARDER_IMAGE}
+                  value: ${env.TOPIC_FORWARDER_IMAGE}
                 - name: RELATED_IMAGE_MQTT_GATEWAY
-                  value: ${MQTT_GATEWAY_IMAGE}
+                  value: ${env.MQTT_GATEWAY_IMAGE}
                 - name: RELATED_IMAGE_MQTT_LWT
-                  value: ${MQTT_LWT_IMAGE}
+                  value: ${env.MQTT_LWT_IMAGE}
                 - name: RELATED_IMAGE_NONE_AUTHSERVICE
-                  value: ${NONE_AUTHSERVICE_IMAGE}
+                  value: ${env.NONE_AUTHSERVICE_IMAGE}
                 - name: RELATED_IMAGE_KEYCLOAK
-                  value: ${KEYCLOAK_IMAGE}
+                  value: ${env.KEYCLOAK_IMAGE}
                 - name: RELATED_IMAGE_KEYCLOAK_PLUGIN
-                  value: ${KEYCLOAK_PLUGIN_IMAGE}
+                  value: ${env.KEYCLOAK_PLUGIN_IMAGE}
                 - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
                   value: "true"
                 - name: RELATED_IMAGE_CONSOLE_INIT
-                  value: "${CONSOLE_INIT_IMAGE}"
+                  value: "${env.CONSOLE_INIT_IMAGE}"
                 - name: RELATED_IMAGE_CONSOLE_SERVER
-                  value: "${CONSOLE_SERVER_IMAGE}"
+                  value: "${env.CONSOLE_SERVER_IMAGE}"
                 - name: RELATED_IMAGE_CONSOLE_PROXY_OPENSHIFT
-                  value: "${CONSOLE_PROXY_OPENSHIFT_IMAGE}"
+                  value: "${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}"
                 - name: RELATED_IMAGE_CONSOLE_PROXY_KUBERNETES
-                  value: "${CONSOLE_PROXY_KUBERNETES_IMAGE}"
+                  value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{}"
                 - name: ENABLE_MONITORING

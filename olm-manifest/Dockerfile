@@ -11,4 +11,3 @@ ARG maven_version
 ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
 
 ADD target/olm-manifest-${maven_version}-dist.tar.gz /
-RUN /bin/replace-images.sh
