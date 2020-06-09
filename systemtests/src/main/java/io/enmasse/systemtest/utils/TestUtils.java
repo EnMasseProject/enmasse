@@ -350,7 +350,7 @@ public class TestUtils {
             try {
                 log.debug("Running command, attempt: {}", i);
                 return fn.call();
-            } catch (Exception ex) {
+            } catch (Exception | AssertionError ex) {
                 log.warn("Command failed", ex);
             }
             Thread.sleep(1000);
