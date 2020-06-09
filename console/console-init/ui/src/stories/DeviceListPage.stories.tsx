@@ -15,7 +15,7 @@ import {
 } from "modules/iot-device";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
-import { getTableCells } from "modules/iot-device/utils";
+import { getTableCells, getInitialFilter } from "modules/iot-device/utils";
 import {
   PageSection,
   Page,
@@ -35,18 +35,18 @@ export default {
 
 const rows: IDevice[] = [
   {
-    id: "littlesensor1",
-    type: "Using gateways",
-    status: true,
+    deviceId: "littlesensor1",
+    viaGateway: true,
+    enabled: true,
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
     lastUpdated: "2020-01-20T11:44:28.607Z",
     creationTimeStamp: "2020-01-20T11:44:28.607Z"
   },
   ...new Array(15).fill({
-    id: "jboss20",
-    type: "Using gateways",
-    status: false,
+    deviceId: "jboss20",
+    type: false,
+    enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
     lastUpdated: "2020-04-29T11:44:28.607Z",
@@ -90,7 +90,7 @@ const Data = (
     <GridItem span={3}>
       <Card>
         <CardBody>
-          <DeviceFilter />
+          <DeviceFilter filter={getInitialFilter()} setFilter={() => {}} />
         </CardBody>
       </Card>
     </GridItem>
@@ -120,12 +120,13 @@ const Data = (
         onToggle={action("On toggle handler for bulk select component")}
         isChecked={boolean("isChecked", false)}
         items={bulkSelectItems}
+        onSelectAllDevices={action("All devices selected")}
         onChange={action("checkbox dropdown changed")}
       />
       <Divider />
       <DeviceList
-        rows={rows.map(getTableCells)}
-        onSelect={async () => {}}
+        tableRows={rows.map(getTableCells)}
+        onSelectDevice={async () => {}}
         actionResolver={actionResolver}
       />
       <DeviceListFooterToolbar itemCount={100} perPage={10} page={1} />

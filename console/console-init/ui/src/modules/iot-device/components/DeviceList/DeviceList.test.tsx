@@ -11,11 +11,11 @@ import { getTableCells } from "modules/iot-device/utils";
 import { IRowData } from "@patternfly/react-table";
 
 describe("<DeviceList />", () => {
-  const rows: IRowData[] = [
+  const tableRows: IRowData[] = [
     {
       id: "littlesensor1",
-      type: "Using gateways",
-      status: true,
+      viaGateway: true,
+      enabled: true,
       selected: true,
       lastSeen: "2020-01-20T11:44:28.607Z",
       lastUpdated: "2020-01-20T11:44:28.607Z",
@@ -23,8 +23,8 @@ describe("<DeviceList />", () => {
     },
     {
       id: "jboss20",
-      type: "Using gateways",
-      status: false,
+      viaGateway: true,
+      enabled: false,
       selected: false,
       lastSeen: "2020-04-20T11:44:28.607Z",
       lastUpdated: "2020-04-29T11:44:28.607Z",
@@ -32,15 +32,15 @@ describe("<DeviceList />", () => {
     },
     {
       id: "jboss20",
-      type: "Using gateways",
+      viaGateway: true,
       lastSeen: "2020-04-20T11:44:28.607Z",
       lastUpdated: null,
       creationTimeStamp: "2020-04-30T11:44:28.607Z"
     },
     {
       id: null,
-      type: null,
-      status: false,
+      viaGateway: null,
+      enabled: false,
       selected: null,
       lastSeen: undefined,
       lastUpdated: null,
@@ -59,12 +59,12 @@ describe("<DeviceList />", () => {
     }
   ];
 
-  const onSelect = async () => {};
+  const onSelectDevice = jest.fn();
 
   const props: IDeviceListProps = {
-    rows,
+    tableRows,
     actionResolver,
-    onSelect
+    onSelectDevice
   };
 
   const { getByText } = render(

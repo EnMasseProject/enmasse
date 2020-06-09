@@ -17,16 +17,18 @@ export const getTableCells = (row: IDevice) => {
         header: "id",
         title: (
           <span>
-            <Link to={"/"}>{row.id}</Link>
+            <Link to={`devices/${row.deviceId}/device-info`}>
+              {row.deviceId}
+            </Link>
           </span>
         )
       },
       {
         header: "type",
-        title: row.type && <span>{row.type}</span>
+        title: row.viaGateway ? <span>Using gateways</span> : <span>N/A</span>
       },
       {
-        title: row.status ? (
+        title: row.enabled ? (
           <span>
             <CheckCircleIcon color="green" />
             &nbsp;Enabled
