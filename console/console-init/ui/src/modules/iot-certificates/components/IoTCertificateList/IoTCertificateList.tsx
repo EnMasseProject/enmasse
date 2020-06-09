@@ -9,7 +9,12 @@ import {
   CertificateForm,
   IoTCertificate
 } from "modules/iot-certificates";
-import { GridItem, Grid } from "@patternfly/react-core";
+import {
+  GridItem,
+  Grid,
+  PageSection,
+  PageSectionVariants
+} from "@patternfly/react-core";
 
 export interface IIoTCertificate {
   "subject-dn"?: string | null;
@@ -22,10 +27,18 @@ export interface IIoTCertificate {
 
 export interface IIoTCertificateListProps {
   certificates: IIoTCertificate[];
+  onSave: (certificate: IIoTCertificate) => void;
+  onCreate: (certificate: IIoTCertificate) => void;
+  onDelete: (certificate: IIoTCertificate) => void;
+  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
 }
 
 export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProps> = ({
-  certificates
+  certificates,
+  onSave,
+  onCreate,
+  onDelete,
+  onEnableOrDisable
 }) => {
   const [showCertificateForm, setShowCertificateForm] = useState<boolean>(
     false
@@ -39,31 +52,39 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
   };
 
   return (
-    <Grid key={"iiid"}>
-      <GridItem span={6}>
-        <IoTCertificateToolbar
-          handleJsonViewChange={handleJsonViewChange}
-          isJsonView={isJsonView}
-          setShowCertificateForm={setShowCertificateForm}
-        />
-        <br />
-        {showCertificateForm && (
-          <>
-            <CertificateForm
-              id="pcl-add-certificate-form"
-              setOnEditMode={setShowCertificateForm}
+    <PageSection variant={PageSectionVariants.default}>
+      <Grid key={"iiid"}>
+        <GridItem span={8}>
+          <PageSection style={{ paddingBottom: 0, paddingTop: 0 }}>
+            <IoTCertificateToolbar
+              handleJsonViewChange={handleJsonViewChange}
+              isJsonView={isJsonView}
+              setShowCertificateForm={setShowCertificateForm}
             />
-            <br />
-          </>
-        )}
-        {certificates.map((certificate: IIoTCertificate, index: number) => (
-          <IoTCertificate
-            key={`certificate-${index}`}
-            id={`certificate-${index}`}
-            certificate={certificate}
-          />
-        ))}
-      </GridItem>
-    </Grid>
+          </PageSection>
+          {showCertificateForm && (
+            <PageSection style={{ paddingBottom: 0 }}>
+              <CertificateForm
+                id="pcl-add-certificate-form"
+                setOnEditMode={setShowCertificateForm}
+                onSave={onCreate}
+              />
+              <br />
+            </PageSection>
+          )}
+          {certificates.map((certificate: IIoTCertificate, index: number) => (
+            <IoTCertificate
+              key={`certificate-${index}`}
+              id={`certificate-${index}`}
+              certificate={certificate}
+              onEdit={onSave}
+              onEnableOrDisable={onEnableOrDisable}
+              onDelete={onDelete}
+            />
+          ))}
+        </GridItem>
+        <GridItem span={4}> </GridItem>
+      </Grid>
+    </PageSection>
   );
 };

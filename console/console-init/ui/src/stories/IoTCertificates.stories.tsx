@@ -43,6 +43,8 @@ export const iotCertificate = () => (
       setOnEditMode={action("Edit mode for card clicked")}
       id="test-id"
       certificate={certificates[0]}
+      onDelete={action("onDelete click")}
+      onEnableOrDisable={action("onEnableOrDisable click")}
     />
   </>
 );
@@ -50,7 +52,13 @@ export const iotCertificate = () => (
 export const iotCertificatePage = () => (
   <MemoryRouter>
     <Page>
-      <IoTCertificateList certificates={certificates} />
+      <IoTCertificateList
+        certificates={certificates}
+        onSave={action("onSave click")}
+        onCreate={action("onCreate click")}
+        onDelete={action("onDelete click")}
+        onEnableOrDisable={action("onEnableOrDisable click")}
+      />
     </Page>
   </MemoryRouter>
 );

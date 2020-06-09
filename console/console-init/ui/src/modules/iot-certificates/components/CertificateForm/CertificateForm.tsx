@@ -41,12 +41,14 @@ const styles = StyleSheet.create({
 export interface ICertificateFormProps {
   certificate?: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  onSave?: (certificate: IIoTCertificate) => void;
   id: string;
 }
 
 export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = ({
   setOnEditMode,
   certificate,
+  onSave,
   id
 }) => {
   const initialFormState: IIoTCertificate = {
@@ -77,19 +79,33 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     setCertificateFormData(newCertificateData);
   };
 
+  const onAlgorithmChange = (value: string) => {
+    setCertificateFormData({ ...certificateFormData, algorithm: value });
+  };
+
   const cancelEdit = () => {
     setOnEditMode(false);
   };
 
   const saveCertificate = () => {
-    // TODO: A mutation to save the certificate and hide form on success
+    onSave && onSave(certificateFormData);
+  };
+
+  const onEnableChange = (
+    value: boolean,
+    _: React.FormEvent<HTMLInputElement>
+  ) => {
+    setCertificateFormData({
+      ...certificateFormData,
+      "auto-provisioning-enabled": value
+    });
   };
 
   const {
     ["subject-dn"]: subjectDn,
     ["public-key"]: publicKey,
     ["auto-provisioning-enabled"]: autoProvision,
-    algorithm,
+    algorithm: algorithm,
     ["not-before"]: notBefore,
     ["not-after"]: notAfter
   } = certificateFormData;
@@ -138,7 +154,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               className={css(styles.dropdown_align)}
               toggleClass={css(styles.dropdown_toggle_align)}
               position={DropdownPosition.left}
-              onSelectItem={onCertificateFormDataChange}
+              onSelectItem={onAlgorithmChange}
               dropdownItems={algorithmTypeOptions}
               value={algorithm || ""}
             />
@@ -188,7 +204,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                 label="Enabled"
                 labelOff="Disabled"
                 isChecked={autoProvision || false}
-                onChange={onCertificateFormDataChange}
+                onChange={onEnableChange}
               />
             </SplitItem>
           </Split>

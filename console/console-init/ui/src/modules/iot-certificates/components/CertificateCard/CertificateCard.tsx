@@ -12,17 +12,18 @@ import {
   CardBody,
   Grid,
   Title,
-  Switch,
   DropdownItem
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithKebabToggle } from "components";
+import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { getLabelByKey } from "utils";
 import { IIoTCertificate } from "modules/iot-certificates";
 
 export interface ICertificateCardProps {
   certificate: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
+  onDelete: (certifiacte: IIoTCertificate) => void;
   id: string;
 }
 
@@ -41,6 +42,8 @@ const styles = StyleSheet.create({
 export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = ({
   certificate,
   setOnEditMode,
+  onDelete,
+  onEnableOrDisable,
   id
 }) => {
   const handleEditCertificate = () => {
@@ -48,7 +51,13 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
   };
 
   const handleDeleteCertificate = () => {
-    // TODO: Mutation to delete the certificate
+    onDelete(certificate);
+  };
+  const onEnableChange = (
+    value: boolean,
+    _: React.FormEvent<HTMLInputElement>
+  ) => {
+    onEnableOrDisable(certificate, value);
   };
 
   const dropdownItems = [
@@ -111,12 +120,12 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             </Title>
           </GridItem>
           <GridItem span={10} className={rowMargin}>
-            <Switch
-              id={`cc-auto-provision-switch-${id}`}
+            <SwitchWithToggle
+              id={`cf-auto-provision-switch-${id}`}
               label="Enabled"
               labelOff="Disabled"
-              readOnly
               isChecked={certificate["auto-provisioning-enabled"] || false}
+              onChange={onEnableChange}
             />
           </GridItem>
           <GridItem span={2}>

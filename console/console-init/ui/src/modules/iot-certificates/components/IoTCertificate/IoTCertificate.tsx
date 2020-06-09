@@ -9,33 +9,43 @@ import {
   CertificateForm,
   CertificateCard
 } from "modules/iot-certificates";
+import { PageSection } from "@patternfly/react-core";
 
 export interface IIoTCertificateProps {
   certificate: IIoTCertificate;
+  onEdit: (certificate: IIoTCertificate) => void;
+  onDelete: (certificate: IIoTCertificate) => void;
+  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
   id: string;
 }
 
 export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
   certificate,
+  onEdit,
+  onDelete,
+  onEnableOrDisable,
   id
 }) => {
   const [onEditMode, setOnEditMode] = useState<boolean>(false);
 
   return (
-    <>
+    <PageSection style={{ paddingBottom: 0 }}>
       {onEditMode ? (
         <CertificateForm
           id={id}
           setOnEditMode={setOnEditMode}
           certificate={certificate}
+          onSave={onEdit}
         />
       ) : (
         <CertificateCard
           id={id}
           setOnEditMode={setOnEditMode}
           certificate={certificate}
+          onDelete={onDelete}
+          onEnableOrDisable={onEnableOrDisable}
         />
       )}
-    </>
+    </PageSection>
   );
 };
