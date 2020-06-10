@@ -1,0 +1,103 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
+package iotproject
+
+import (
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/util"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+	"testing"
+)
+
+const EC_CA_PEM = `-----BEGIN CERTIFICATE-----
+MIIBlzCCATygAwIBAgIBADAKBggqhkjOPQQDAjAqMQwwCgYDVQQDDANmb28xDDAK
+BgNVBAsMA2JhcjEMMAoGA1UECgwDYmF6MB4XDTIwMDYxMDEzMjQwMVoXDTIxMDYx
+MDEzMjQwMVowKjEMMAoGA1UEAwwDZm9vMQwwCgYDVQQLDANiYXIxDDAKBgNVBAoM
+A2JhejBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABNX8QhvVNIkF1GRSIv9zjDVM
+xPtG8EkIEN9ARW7YB3Y4l/wv4AJSPLFoWQQgfamErFcfB9zO2c/ryvfTVY4i6wKj
+UzBRMB0GA1UdDgQWBBQASe3I4LZRilRaJqlomFPeBUOURzAfBgNVHSMEGDAWgBQA
+Se3I4LZRilRaJqlomFPeBUOURzAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMC
+A0kAMEYCIQDMaLN9bJZkxi4Z8M41XKgXDxH0sEcuus9rBDfZW98toQIhAIE7OZNr
+vvC2C0U0wwb/Q72yIYU+nm5RbT5XqkXAW6Fi
+-----END CERTIFICATE-----
+`
+
+func setup(t *testing.T) *ReconcileIoTProject {
+	s := scheme.Scheme
+
+	s.AddKnownTypes(iotv1alpha1.SchemeGroupVersion, &iotv1alpha1.IoTProject{})
+	s.AddKnownTypes(iotv1alpha1.SchemeGroupVersion, &iotv1alpha1.IoTConfig{})
+
+	var objs []runtime.Object
+
+	c := fake.NewFakeClientWithScheme(s, objs...)
+
+	return &ReconcileIoTProject{
+		client:   c,
+		reader:   c,
+		scheme:   s,
+		recorder: record.NewFakeRecorder(100),
+	}
+
+}
+
+func TestEcCertClaim(t *testing.T) {
+
+	r := setup(t)
+
+	// dummy project
+
+	project := iotv1alpha1.IoTProject{}
+
+	// EC based trust anchor
+
+	trustAnchor := iotv1alpha1.TrustAnchor{
+		Certificate: EC_CA_PEM,
+	}
+
+	// result
+
+	accepted := make(map[string]bool)
+	duplicate := make(map[string]bool)
+
+	// setup namespace for testing
+
+	util.SetInfrastructureNamespaceForTesting("enmasse-infra")
+
+	// call method
+
+	ata, err := r.acceptTrustAnchor(&project, trustAnchor, accepted, duplicate)
+
+	// expect no error
+
+	assert.Nil(t, err, "Failed to accept trust anchor")
+
+	// expected PEM to be parsed
+
+	assert.Equal(t, "EC", ata.Algorithm)
+	assert.Equal(t, "CN=foo,OU=bar,O=baz", ata.SubjectDN)
+	assert.Equal(t, "2020-06-10 13:24:01 +0000 UTC", ata.NotBefore.String())
+	assert.Equal(t, "2021-06-10 13:24:01 +0000 UTC", ata.NotAfter.String())
+
+	// expect to set claim
+
+	cm := corev1.ConfigMap{}
+	err = r.client.Get(context.Background(), client.ObjectKey{
+		Namespace: "enmasse-infra",
+		Name:      lockMapForSubjectDn(ata.SubjectDN),
+	}, &cm)
+	assert.Nil(t, err, "Failed to get trust anchor claim")
+
+	assert.True(t, isLockMapOwnedByProject(&cm, &project))
+
+}
