@@ -45,7 +45,7 @@ export default function AddressDetailPage() {
         <BreadcrumbItem>
           <Link
             id="ad-page-link-addresses"
-            to={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+            to={`/messaging-projects/${namespace}/${name}/${type}/addresses`}
           >
             {name}
           </Link>
@@ -79,7 +79,9 @@ export default function AddressDetailPage() {
   const resetDeleteFormState = (data: any) => {
     const deleteAddress = data && data.deleteAddress;
     if (deleteAddress) {
-      history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
+      history.push(
+        `/messaging-projects/${namespace}/${name}/${type}/addresses`
+      );
     }
   };
 
@@ -105,7 +107,7 @@ export default function AddressDetailPage() {
       <NoDataFound
         type={"Address"}
         name={addressname || ""}
-        routeLink={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+        routeLink={`/messaging-projects/${namespace}/${name}/${type}/addresses`}
       />
     );
   }

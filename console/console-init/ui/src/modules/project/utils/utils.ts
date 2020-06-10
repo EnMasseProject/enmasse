@@ -111,8 +111,38 @@ const getFilteredProjectsCount = (
       project => project.projectType === type && project.status === status
     );
   }
-  console.log(type, list);
   return list.length;
+};
+
+const getDetailForDeleteDialog = (selectedItems: IProject[]) => {
+  const iotProjects = getFilteredProjectsCount(ProjectTypes.IOT, selectedItems);
+  const msgProjects = getFilteredProjectsCount(
+    ProjectTypes.MESSAGING,
+    selectedItems
+  );
+  let projectTypeValue = "";
+  if (iotProjects > 0 && msgProjects > 0) {
+    projectTypeValue = "IoT and Messaging";
+  } else if (iotProjects === 0 && msgProjects > 0) {
+    projectTypeValue = "Messaging";
+  } else {
+    projectTypeValue = "IoT";
+  }
+  const detail =
+    selectedItems.length > 1
+      ? `Are you sure you want to delete all of these ${projectTypeValue} projects: ${selectedItems.map(
+          as => " " + as.name
+        )} ?`
+      : `Are you sure you want to delete this ${projectTypeValue} project: ${selectedItems[0].name} ?`;
+  return detail;
+};
+
+const getHeaderForDeleteDialog = (selectedItems: any[]) => {
+  const header =
+    selectedItems.length > 1
+      ? "Delete these Projects ?"
+      : "Delete this Project ?";
+  return header;
 };
 
 export {
@@ -124,5 +154,7 @@ export {
   filterMenuItems,
   ProjectType,
   setInitialProjcetCount,
-  getFilteredProjectsCount
+  getFilteredProjectsCount,
+  getDetailForDeleteDialog,
+  getHeaderForDeleteDialog
 };

@@ -17,7 +17,7 @@ import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
 import { IProjectFilter } from "modules/project/ProjectPage";
 import { initialiseFilterForProject } from "modules/project/utils";
-import { ProjectToolbar } from "modules/project/components/ProjectToolbar";
+import { ProjectToolbar } from "modules/project/components";
 
 export interface IProjectToolbarContainerProps {
   filter: IProjectFilter;
@@ -82,7 +82,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     setNameInput(undefined);
   };
 
-  const getAddressSpaceForNameORNameSpace = async (
+  const getAddressSpaceForNameOrNameSpace = async (
     value: string,
     propertyName: string
   ) => {
@@ -120,7 +120,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   };
 
   const onChangeNameInput = async (value: string) => {
-    const response = await getAddressSpaceForNameORNameSpace(value, "name");
+    const response = await getAddressSpaceForNameOrNameSpace(value, "name");
     return getOptions(response.data, "name");
   };
 
@@ -134,7 +134,7 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   };
 
   const onChangeNamespaceInput = async (value: string) => {
-    const response = await getAddressSpaceForNameORNameSpace(
+    const response = await getAddressSpaceForNameOrNameSpace(
       value,
       "namespace"
     );
