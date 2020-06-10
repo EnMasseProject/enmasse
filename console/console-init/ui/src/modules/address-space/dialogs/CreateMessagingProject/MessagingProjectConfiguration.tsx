@@ -132,16 +132,14 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     if (type) {
       planOptions =
         addressSpacePlans
+          .filter(plan => plan.spec.addressSpaceType === type)
           .map(plan => {
-            if (plan.spec.addressSpaceType === type) {
-              return {
-                value: plan.metadata.name,
-                label: plan.spec.displayName || plan.metadata.name,
-                key: plan.spec.displayName || plan.metadata.name,
-                description:
-                  plan.spec.shortDescription || plan.spec.longDescription
-              };
-            }
+            return {
+              value: plan.metadata.name,
+              label: plan.spec.displayName || plan.metadata.name,
+              description:
+                plan.spec.shortDescription || plan.spec.longDescription
+            };
           })
           .filter(plan => plan !== undefined) || [];
     }

@@ -18,8 +18,6 @@ import {
   isMessagingProjectConfigurationValid,
   isRouteStepValid,
   isEnabledCertificateStep,
-  TlsCertificateType,
-  EndPointProtocol,
   getQueryVariableForCreateAddressSpace
 } from "modules/address-space/utils";
 import { ConfiguringCertificates } from "./ConfiguringCertificates";
