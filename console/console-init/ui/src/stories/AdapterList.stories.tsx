@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Grid, GridItem } from "@patternfly/react-core";
+import { Grid, GridItem, Card, CardBody } from "@patternfly/react-core";
 import { AdapterList } from "components";
 
 export default {
@@ -35,7 +35,11 @@ const adapters: any = [
 export const AdapterListPage = () => (
   <Grid gutter="sm">
     <GridItem span={6}>
-      <AdapterList id="adapter-list" adapters={adapters} />
+      <Card>
+        <CardBody>
+          <AdapterList id="adapter-list" adapters={adapters} />
+        </CardBody>
+      </Card>
     </GridItem>
   </Grid>
 );
