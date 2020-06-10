@@ -69,7 +69,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     certificate && setCertificateFormData(certificate);
   }, [certificate]);
 
-  const onCertificateFormDataChange = (
+  const onChangeCertificateFormData = (
     value: string | boolean,
     event: React.FormEvent<HTMLInputElement>
   ) => {
@@ -87,11 +87,11 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     setOnEditMode(false);
   };
 
-  const saveCertificate = () => {
+  const onSaveCertificate = () => {
     onSave && onSave(certificateFormData);
   };
 
-  const onEnableChange = (
+  const onChangeStatus = (
     value: boolean,
     _: React.FormEvent<HTMLInputElement>
   ) => {
@@ -125,7 +125,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               name="subject-dn"
               isRequired
               value={subjectDn || ""}
-              onChange={onCertificateFormDataChange}
+              onChange={onChangeCertificateFormData}
             />
           </FormGroup>
           <FormGroup
@@ -139,7 +139,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               name="public-key"
               isRequired
               value={publicKey || ""}
-              onChange={onCertificateFormDataChange}
+              onChange={onChangeCertificateFormData}
             />
           </FormGroup>
           <FormGroup
@@ -171,7 +171,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   name="not-before"
                   isRequired
                   value={notBefore || ""}
-                  onChange={onCertificateFormDataChange}
+                  onChange={onChangeCertificateFormData}
                 />
               </FormGroup>
             </GridItem>
@@ -186,7 +186,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   name="not-after"
                   isRequired
                   value={notAfter || ""}
-                  onChange={onCertificateFormDataChange}
+                  onChange={onChangeCertificateFormData}
                 />
               </FormGroup>
             </GridItem>
@@ -204,14 +204,14 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                 label="Enabled"
                 labelOff="Disabled"
                 isChecked={autoProvision || false}
-                onChange={onEnableChange}
+                onChange={onChangeStatus}
               />
             </SplitItem>
           </Split>
           <ActionGroup>
             <Button
               variant="primary"
-              onClick={saveCertificate}
+              onClick={onSaveCertificate}
               id="cf-save-button"
             >
               Save

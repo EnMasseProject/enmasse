@@ -121,7 +121,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
           </GridItem>
           <GridItem span={10} className={rowMargin}>
             <SwitchWithToggle
-              id={`cf-auto-provision-switch-${id}`}
+              id={`cc-auto-provision-switch-${id}`}
               label="Enabled"
               labelOff="Disabled"
               isChecked={certificate["auto-provisioning-enabled"] || false}

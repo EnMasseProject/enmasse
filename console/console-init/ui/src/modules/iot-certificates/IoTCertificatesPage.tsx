@@ -54,14 +54,12 @@ export default function IoTCertificates() {
   };
 
   return (
-    <>
-      <IoTCertificateList
-        certificates={certificates}
-        onSave={onSave}
-        onCreate={onCreate}
-        onDelete={onDelete}
-        onChangeStatus={onChangeStatus}
-      />
-    </>
+    <IoTCertificateList
+      certificates={certificates}
+      onSave={onSave}
+      onCreate={onCreate}
+      onDelete={onDelete}
+      onChangeStatus={onChangeStatus}
+    />
   );
 }
