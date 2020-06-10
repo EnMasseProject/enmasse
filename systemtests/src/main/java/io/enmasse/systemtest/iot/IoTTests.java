@@ -30,9 +30,7 @@ public interface IoTTests extends ITestSeparator {
 
     @BeforeAll
     public static void deployDefaultCerts() throws Exception {
-        JUnitWorkaround.wrapBeforeAll( () -> {
-            IoTTestSession.deployDefaultCerts();
-        });
+        IoTTestSession.deployDefaultCerts();
     }
 
     @BeforeEach

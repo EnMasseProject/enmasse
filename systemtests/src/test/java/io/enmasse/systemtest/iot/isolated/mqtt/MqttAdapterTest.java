@@ -15,9 +15,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.systemtest.bases.JUnitWorkaround;
+import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
 
 /**
@@ -30,11 +29,9 @@ class MqttAdapterTest implements StandardIoTMqttTests {
 
     @BeforeAll
     public static void setup() throws Exception {
-        JUnitWorkaround.wrapBeforeAll(() -> {
-            session = IoTTestSession.createDefault()
-                    .adapters(MQTT)
-                    .deploy();
-        });
+        session = IoTTestSession.createDefault()
+                .adapters(MQTT)
+                .deploy();
     }
 
     @AfterAll
@@ -46,18 +43,18 @@ class MqttAdapterTest implements StandardIoTMqttTests {
     }
 
     @Override
-    public List<Device> getDevices() throws Exception {
+    public List<DeviceSupplier> getDevices() {
         return Arrays.asList(
-                session.newDevice()
+                () -> session.newDevice()
                         .named("default")
                         .register()
                         .setPassword());
     }
 
     @Override
-    public List<Device> getInvalidDevices() throws Exception {
+    public List<DeviceSupplier> getInvalidDevices() {
         return Arrays.asList(
-                session.newDevice()
+                () -> session.newDevice()
                         .named("invalidPassword")
                         .register()
                         .setPassword()

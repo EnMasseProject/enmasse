@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.LifecycleMethodExecutionExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,38 +24,18 @@ import org.slf4j.LoggerFactory;
  * To use this you need to:
  * <ul>
  * <li>Add {@link JUnitWorkaround} as a JUnit extension.
- * <li>Wrap all code in {@code @BeforeAll} methods using {@link #wrapBeforeAll(ThrowableRunner)}.
  * </ul>
  */
-public class JUnitWorkaround implements BeforeEachCallback, AfterAllCallback {
+public class JUnitWorkaround implements BeforeEachCallback, AfterAllCallback, LifecycleMethodExecutionExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(JUnitWorkaround.class);
 
-    /**
-     * Hold the internal global state.
-     */
-    static final class State {
-        private static final State INSTANCE = new State();
+    private List<Throwable> exceptions;
 
-        private List<Throwable> exceptions;
-
-        private State() {}
-    }
-
-    /**
-     * Run some code and record the exception.
-     * <p>
-     * This is intended to be used in methods annotated with {@link BeforeAll}.
-     *
-     * @param runner The code to run.
-     */
-    public static void wrapBeforeAll(final ThrowableRunner runner) {
-        try {
-            runner.run();
-        } catch (Throwable e) {
-            logger.info("Exception caught - recording");
-            addBeforeAllException(e);
-        }
+    @Override
+    public void handleBeforeAllMethodExecutionException(final ExtensionContext context, final Throwable throwable) throws Throwable {
+        logger.info("Exception caught - recording");
+        addBeforeAllException(throwable);
     }
 
     /**
@@ -62,11 +43,11 @@ public class JUnitWorkaround implements BeforeEachCallback, AfterAllCallback {
      *
      * @param e The exception to store.
      */
-    private static void addBeforeAllException(final Throwable e) {
-        if (State.INSTANCE.exceptions == null) {
-            State.INSTANCE.exceptions = new LinkedList<>();
+    private void addBeforeAllException(final Throwable e) {
+        if (this.exceptions == null) {
+            this.exceptions = new LinkedList<>();
         }
-        State.INSTANCE.exceptions.add(e);
+        this.exceptions.add(e);
     }
 
     /**
@@ -74,15 +55,15 @@ public class JUnitWorkaround implements BeforeEachCallback, AfterAllCallback {
      *
      * @return All exception that had been recorded. May be {@code null}.
      */
-    private static List<Throwable> getBeforeAllExceptions() {
-        return State.INSTANCE.exceptions;
+    private List<Throwable> getBeforeAllExceptions() {
+        return this.exceptions;
     }
 
     /**
      * Clear all stored exceptions.
      */
-    private static void clearBeforeAllExceptions() {
-        State.INSTANCE.exceptions = null;
+    private void clearBeforeAllExceptions() {
+        this.exceptions = null;
     }
 
     /**

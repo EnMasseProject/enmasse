@@ -15,7 +15,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.systemtest.bases.JUnitWorkaround;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import io.enmasse.systemtest.iot.IoTTestSession;
@@ -31,20 +30,18 @@ public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIo
     @BeforeAll
     public static void setup() throws Exception {
 
-        JUnitWorkaround.wrapBeforeAll(() -> {
-            certificateManager = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        certificateManager = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
-            session = IoTTestSession.createDefault()
-                    .project(project -> project.editOrNewSpec()
-                            .editOrNewConfiguration()
-                            .addNewTrustAnchor()
-                            .withCertificate(toPem(certificateManager.getCertificate()))
-                            .endTrustAnchor()
-                            .endConfiguration()
-                            .endSpec())
-                    .adapters(MQTT, HTTP)
-                    .deploy();
-        });
+        session = IoTTestSession.createDefault()
+                .project(project -> project.editOrNewSpec()
+                        .editOrNewConfiguration()
+                        .addNewTrustAnchor()
+                        .withCertificate(toPem(certificateManager.getCertificate()))
+                        .endTrustAnchor()
+                        .endConfiguration()
+                        .endSpec())
+                .adapters(MQTT, HTTP)
+                .deploy();
 
     }
 

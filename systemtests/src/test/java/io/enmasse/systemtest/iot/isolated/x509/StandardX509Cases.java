@@ -15,6 +15,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.StandardIoTTests;
 
@@ -23,10 +24,10 @@ public interface StandardX509Cases extends StandardIoTTests {
     DeviceCertificateManager getCertificateManager();
 
     @Override
-    default List<Device> getDevices() throws Exception {
+    default List<DeviceSupplier> getDevices() {
 
         return Arrays.asList(
-                getSession().newDevice()
+                () -> getSession().newDevice()
                         .named("default")
                         .register()
                         .enableX509(getCertificateManager().createDevice()));
@@ -34,12 +35,12 @@ public interface StandardX509Cases extends StandardIoTTests {
     }
 
     @Override
-    default List<Device> getInvalidDevices() throws Exception {
+    default List<DeviceSupplier> getInvalidDevices() {
 
         return Arrays.asList(
-                notOurCaDevice(),
-                expiredCertificate(),
-                futureCertificate());
+                () -> notOurCaDevice(),
+                () -> expiredCertificate(),
+                () -> futureCertificate());
 
     }
 

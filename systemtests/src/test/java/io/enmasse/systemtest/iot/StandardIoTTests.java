@@ -7,8 +7,6 @@ package io.enmasse.systemtest.iot;
 
 import java.util.List;
 
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
-
 public interface StandardIoTTests extends IoTTests {
 
     /**
@@ -19,11 +17,11 @@ public interface StandardIoTTests extends IoTTests {
     /**
      * Get a list of devices which must succeed.
      */
-    public List<Device> getDevices() throws Exception;
+    public List<DeviceSupplier> getDevices();
 
     /**
      * Get a list of devices which must fail.
      */
-    public List<Device> getInvalidDevices() throws Exception;
+    public List<DeviceSupplier> getInvalidDevices();
 
 }
