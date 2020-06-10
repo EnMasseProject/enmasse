@@ -8,3 +8,4 @@ export * from "./Address";
 export * from "./AddressSpace";
 export * from "./Connection";
 export * from "./NameSpace";
+export * from "./Endpoints";

@@ -9,6 +9,7 @@ import { Redirect } from "react-router";
 
 const getConnections = () => import("../connection/ConnectionPage");
 const getAddresses = () => import("modules/address/AddressPage");
+const getEndpoints = () => import("modules/endpoints/EndpointPage");
 
 export const Routes = () => (
   <SwitchWith404>
@@ -21,6 +22,11 @@ export const Routes = () => (
     <LazyRoute
       path="/address-spaces/:namespace/:name/:type/connections/"
       getComponent={getConnections}
+      exact={true}
+    />
+    <LazyRoute
+      path="/address-spaces/:namespace/:name/:type/endpoints/"
+      getComponent={getEndpoints}
       exact={true}
     />
   </SwitchWith404>

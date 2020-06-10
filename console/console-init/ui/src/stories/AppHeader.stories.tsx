@@ -4,11 +4,10 @@
  */
 
 import React from "react";
-import { withKnobs, boolean } from "@storybook/addon-knobs";
+import { boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
 import { AppLayout } from "use-patternfly";
 import {
-  Avatar,
   Brand,
   Text,
   TextVariants,
@@ -18,7 +17,7 @@ import {
   DropdownItem
 } from "@patternfly/react-core";
 import { CogIcon } from "@patternfly/react-icons";
-import brandImg from "../brand_logo.svg";
+import brandImg from "assets/images/logo.svg";
 
 export default {
   title: "AppHeader"

@@ -11,7 +11,8 @@ import {
   FormGroup,
   TextInput,
   DropdownPosition,
-  Radio
+  Radio,
+  Switch
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithToggle, IDropdownOption } from "components";
@@ -37,21 +38,20 @@ export interface IAuthenticationServiceOptions {
 export interface IAddressSpaceConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
   handleNameChange: (name: string) => void;
-  handleBrokeredChange: () => void;
+  handleTypeChange: (checked: boolean, event: any) => void;
   onPlanSelect: (event: any) => void;
-  handleStandardChange: () => void;
   onAuthenticationServiceSelect: (event: any) => void;
   namespaceOptions: IDropdownOption[];
   namespace: string;
   name: string;
   isNameValid: boolean;
-  isStandardChecked: boolean;
-  isBrokeredChecked: boolean;
   type: string;
   plan: string;
   planOptions: IPlanOption[];
   authenticationService: string;
   authenticationServiceOptions: IAuthenticationServiceOptions[];
+  customizeEndpoint?: boolean;
+  handleCustomEndpointChange: (value: boolean) => void;
 }
 
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
@@ -61,9 +61,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   name,
   isNameValid,
   handleNameChange,
-  handleStandardChange,
-  isBrokeredChecked,
-  handleBrokeredChange,
+  handleTypeChange,
   onPlanSelect,
   type,
   plan,
@@ -71,7 +69,8 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
   onAuthenticationServiceSelect,
   authenticationService,
   authenticationServiceOptions,
-  isStandardChecked
+  customizeEndpoint,
+  handleCustomEndpointChange
 }) => {
   const getHelperText = () => {
     return name.trim() !== "" && !isNameValid ? (
@@ -125,16 +124,18 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               isRequired={true}
             >
               <Radio
-                isChecked={isStandardChecked}
-                onChange={handleStandardChange}
+                isChecked={type === "standard"}
+                onChange={handleTypeChange}
+                value={"standard"}
                 id="cas-standard-radio"
                 label="Standard"
                 name="radio-5"
               />
               <Radio
-                isChecked={isBrokeredChecked}
-                onChange={handleBrokeredChange}
+                isChecked={type === "brokered"}
+                onChange={handleTypeChange}
                 id="cas-brokered-radio"
+                value={"brokered"}
                 label="Brokered"
                 name="radio-6"
               />
@@ -173,6 +174,16 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 dropdownItems={authenticationServiceOptions}
                 isDisabled={type.trim() === ""}
                 value={authenticationService}
+              />
+            </FormGroup>
+
+            <FormGroup fieldId="customize-endpoint">
+              <br />
+              <Switch
+                id="asc-switch-customize-endpoint"
+                label={"Customize Endpoint"}
+                isChecked={customizeEndpoint}
+                onChange={handleCustomEndpointChange}
               />
             </FormGroup>
           </Form>

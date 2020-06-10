@@ -235,6 +235,34 @@ const RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE = (
     `;
   return all_address_spaces;
 };
+const RETURN_ADDRESS_SPACE_SCHEMAS = gql`
+  query adddress_space_schemas {
+    addressSpaceSchema {
+      metadata {
+        name
+      }
+      spec {
+        description
+        authenticationServices
+        certificateProviderTypes {
+          name
+          displayName
+          description
+        }
+        routeServicePorts {
+          name
+          displayName
+          routeTlsTerminations
+        }
+        endpointExposeTypes {
+          name
+          displayName
+          description
+        }
+      }
+    }
+  }
+`;
 
 export {
   DELETE_ADDRESS_SPACE,
@@ -243,5 +271,6 @@ export {
   CREATE_ADDRESS_SPACE,
   EDIT_ADDRESS_SPACE,
   ADDRESS_SPACE_COMMAND_REVIEW_DETAIL,
+  RETURN_ADDRESS_SPACE_SCHEMAS,
   RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE
 };

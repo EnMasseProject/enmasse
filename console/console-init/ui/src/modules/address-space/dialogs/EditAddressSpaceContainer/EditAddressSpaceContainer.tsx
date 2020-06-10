@@ -9,15 +9,16 @@ import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_FILTERED_AUTHENTICATION_SERVICES
 } from "graphql-module/queries";
-import {
-  IAddressSpacePlans,
-  IAddressSpaceAuthServiceResponse,
-  EditAddressSpace
-} from "modules/address-space";
+import { IAddressSpacePlans, EditAddressSpace } from "modules/address-space";
 import { Loading } from "use-patternfly";
 import { useStoreContext, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { EDIT_ADDRESS_SPACE } from "graphql-module/queries";
+import { IAddressSpaceAuthService } from "modules/address-space/dialogs";
+
+export interface IAddressSpaceAuthServiceResponse {
+  addressSpaceSchema_v2: IAddressSpaceAuthService[];
+}
 
 export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
   const { state, dispatch } = useStoreContext();

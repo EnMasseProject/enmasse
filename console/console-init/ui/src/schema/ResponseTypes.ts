@@ -86,10 +86,6 @@ export interface IConnectionListResponse {
   };
 }
 
-enum eLinkRole {
-  "sender",
-  "receiver"
-}
 export interface IAddressDetailResponse {
   addresses: {
     total: number;
@@ -353,8 +349,78 @@ export interface IAddressSpaceDetailResponse {
       status: {
         isReady: boolean;
         phase: string;
-        messages: Array<string>;
+        messages: string[];
       };
     }>;
+  };
+}
+
+export enum MessagingEndpointProtocol {
+  amqp,
+  amqps,
+  amqp_ws,
+  amqp_wss
+}
+
+export enum MessagingEndpointType {
+  cluster,
+  nodePort,
+  loadBalancer,
+  route,
+  ingress
+}
+export interface IAddressSpaceSchema {
+  addressSpaceSchema: Array<{
+    metadata: {
+      name?: string;
+    };
+    spec: {
+      description?: string;
+      authenticationServices?: string[];
+      certificateProviderTypes: Array<{
+        name?: string;
+        displayName?: string;
+        description?: string;
+      }>;
+      routeServicePorts: Array<{
+        name?: string;
+        displayName?: string;
+        routeTlsTerminations?: string[];
+      }>;
+      endpointExposeTypes: Array<{
+        name?: string;
+        displayName?: string;
+        description?: string;
+      }>;
+    };
+  }>;
+}
+
+export interface IEndpointProtocol {
+  name?: string;
+  protocol?: string;
+  port?: number;
+}
+export interface IEndpointResponse {
+  metadata: {
+    name: string;
+    namespace: string;
+    creationTimestamp: string;
+  };
+  spec: {
+    protocols: string[];
+  };
+  status: {
+    phase: string;
+    type: string;
+    message: string;
+    host: string;
+    ports: IEndpointProtocol[];
+  };
+}
+export interface IEndpointListResponse {
+  total: number;
+  messagingEndpoints: {
+    messagingEndpoints: IEndpointResponse[];
   };
 }
