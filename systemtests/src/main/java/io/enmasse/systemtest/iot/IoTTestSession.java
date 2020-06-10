@@ -543,20 +543,30 @@ public final class IoTTestSession implements AutoCloseable {
                 var config = this.config.build();
                 var project = this.project.build();
 
-                // create resources
+                // create resources, in order to properly clean up, register cleanups first
 
-                IoTUtils.createIoTConfig(config);
+                // create IoT config
+
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(Kubernetes.getInstance(), config));
                 }
+                IoTUtils.createIoTConfig(config);
 
-                //create namespace if not created
+                // create namespace if not created
+
+                if (!Environment.getInstance().skipCleanup()) {
+                    cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(project.getMetadata().getNamespace()));
+                }
                 Kubernetes.getInstance().createNamespace(project.getMetadata().getNamespace());
 
-                IoTUtils.createIoTProject(project);
+                // create IoT project
+
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(Kubernetes.getInstance(), project));
                 }
+                IoTUtils.createIoTProject(project);
+
+                // create endpoints
 
                 final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
                 final DeviceRegistryClient registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
