@@ -132,6 +132,12 @@ func GetInfrastructureNamespace() (string, error) {
 	return infraNamespace, infraNamespaceError
 }
 
+// Allows to set the infrastructure namespace when doing tests
+func SetInfrastructureNamespaceForTesting(value string) {
+	infraNamespace = value
+	infraNamespaceError = nil
+}
+
 // Get the name of th infrastructure namespace, panics if 'NAMESPACE' is unset
 func MustGetInfrastructureNamespace() string {
 	namespace, err := GetInfrastructureNamespace()
