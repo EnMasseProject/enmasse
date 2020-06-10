@@ -623,7 +623,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 return new IoTTestSession(config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
 
                 if (log.isDebugEnabled()) {
                     log.debug("Caught exception during deployment", e);
@@ -813,7 +813,7 @@ public final class IoTTestSession implements AutoCloseable {
         log.info("Cleaning up resources... done!");
 
         if (initialException == null || initialException instanceof Exception) {
-            // return the Exception
+            // return the Exception (or null)
             return (Exception) initialException;
         } else {
             // return Throwable wrapped in exception
@@ -848,10 +848,14 @@ public final class IoTTestSession implements AutoCloseable {
         }
 
         var test = TestInfo.getInstance().getActualTest();
-        if ( test != null ) {
-            GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()));
+        if (test == null) {
+            test = TestInfo.getInstance().getActualTestClass();
+        }
+
+        if (test != null) {
+            GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(test));
         } else {
-            log.error("Unable to log system test failure, failed in test setup", error);
+            log.error("Unable to log system test failure, no TestInfo details", error);
         }
     }
 

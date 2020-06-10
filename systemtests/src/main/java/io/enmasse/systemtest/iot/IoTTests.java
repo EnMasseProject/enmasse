@@ -23,9 +23,10 @@ import io.enmasse.systemtest.platform.Kubernetes;
  * Marker interface for IoT tests, which provision their own IoT infrastructure.
  */
 @ExtendWith(JunitCallbackListener.class)
+@ExtendWith(JUnitWorkaround.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public interface IoTTests extends ITestSeparator, JUnitWorkaround {
+public interface IoTTests extends ITestSeparator {
 
     @BeforeAll
     public static void deployDefaultCerts() throws Exception {

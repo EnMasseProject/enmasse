@@ -49,6 +49,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
+        LOGGER.info("running - beforeAll");
+
         testInfo.setCurrentTestClass(context);
         ResourceManager.getInstance().setClassResources();
         KubeClusterManager.getInstance().setClassConfigurations();
@@ -100,6 +102,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
 
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
+        LOGGER.info("running - afterAll");
+
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (!env.skipCleanup()) {
