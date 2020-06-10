@@ -31,7 +31,6 @@ import org.apache.qpid.proton.amqp.Symbol;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.stream.Collectors;
 
@@ -135,7 +134,7 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
          ActiveMQAMQPLogger.LOGGER.infof("Creating connector host %s port %s", configuration.get(TransportConstants.HOST_PROP_NAME), configuration.get(TransportConstants.PORT_PROP_NAME));
       }
 
-      ExecutorService nettyThreadPool = Executors.newFixedThreadPool(nettyThreads, new DefaultThreadFactory("connector-" + connectorName));
+      ExecutorService nettyThreadPool = ThreadPoolExecutor.newFixedThreadPool(nettyThreads, new DefaultThreadFactory("connector-" + connectorName));
       return new AMQPConnectorService(connectorName,
               connectorConfig,
               containerId,
@@ -156,4 +155,6 @@ public class AMQPConnectorServiceFactory implements ConnectorServiceFactory {
    public Set<String> getRequiredProperties() {
       return requiredProperties;
    }
+
+
 }

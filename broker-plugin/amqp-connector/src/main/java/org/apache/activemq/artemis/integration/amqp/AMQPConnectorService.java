@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.*;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.core.remoting.impl.netty.NettyConnector;
 import org.apache.activemq.artemis.core.remoting.impl.netty.TransportConstants;
@@ -52,7 +53,7 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    private final String name;
    private final ActiveMQServer server;
    private volatile RemotingConnection connection;
-   private final ExecutorService closeExecutor = Executors.newSingleThreadExecutor();
+   private final ExecutorService closeExecutor = ThreadPoolExecutor.newSingleThreadExecutor(new DefaultThreadFactory(AMQPConnectorService.class));
    private final ExecutorService nettyThreadPool;
    private final ScheduledExecutorService scheduledExecutorService;
    private final ProtonClientConnectionManager lifecycleHandler;
@@ -103,18 +104,25 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    public void start() throws Exception {
 
       scheduledExecutorService.submit(() -> {
-         ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
-         ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
+         Connection connection;
+         try {
+            ActiveMQAMQPLogger.LOGGER.infov("Starting connector {0}", name);
+            ProtonClientProtocolManager protocolManager = new ProtonClientProtocolManager(new ProtonProtocolManagerFactory(), server);
 
-         // These settings have the desired semantics when working in a cloud environment and for the built-in message
-         // forwarding.
-         protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(true);
-         protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(true);
-         protocolManager.setAmqpMinLargeMessageSize(-1);
+            // These settings have the desired semantics when working in a cloud environment and for the built-in message
+            // forwarding.
+            protocolManager.setAmqpTreatRejectAsUnmodifiedDeliveryFailed(true);
+            protocolManager.setAmqpUseModifiedForTransientDeliveryErrors(true);
+            protocolManager.setAmqpMinLargeMessageSize(-1);
 
-         NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
-         connector.start();
-         Connection connection = connector.createConnection();
+            NettyConnector connector = new NettyConnector(connectorConfig, lifecycleHandler, AMQPConnectorService.this, closeExecutor, nettyThreadPool, server.getScheduledPool(), protocolManager);
+            connector.start();
+            connection = connector.createConnection();
+         } catch (Throwable t) {
+            // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
+            ActiveMQAMQPLogger.LOGGER.errorv(t, "Error starting connector {0}", name);
+            throw t;
+         }
 
          if (connection != null) {
             started = true;
@@ -131,14 +139,20 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
    @Override
    public void stop() throws Exception {
       scheduledExecutorService.submit(() -> {
-         started = false;
-         ActiveMQAMQPLogger.LOGGER.infov("Stopping connector {0}", name);
-         if (connection != null) {
-            lifecycleHandler.stop();
+         try {
+            started = false;
+            ActiveMQAMQPLogger.LOGGER.infov("Stopping connector {0}", name);
+            if (connection != null) {
+               lifecycleHandler.stop();
+            }
+            closeExecutor.shutdown();
+            nettyThreadPool.shutdown();
+            ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
+         } catch (Throwable t) {
+            // Note - the scheduledExecutorService supplied by Artemis ignores exceptions.  Ensure the cause of the failure is logged..
+            ActiveMQAMQPLogger.LOGGER.errorv(t, "Error stopping connector {0}", name);
+            throw t;
          }
-         closeExecutor.shutdown();
-         nettyThreadPool.shutdown();
-         ActiveMQAMQPLogger.LOGGER.infov("Stopped connector {0}", name);
       });
    }
 
@@ -164,12 +178,9 @@ public class AMQPConnectorService implements ConnectorService, BaseConnectionLif
       lifecycleHandler.connectionDestroyed(connectionID);
       ActiveMQAMQPLogger.LOGGER.infov("connectionDestroyed for connector {0}", name);
       if (started) {
-         scheduledExecutorService.schedule(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-               start();
-               return true;
-            }
+         scheduledExecutorService.schedule(() -> {
+            start();
+            return true;
          }, 5, TimeUnit.SECONDS);
       }
    }
