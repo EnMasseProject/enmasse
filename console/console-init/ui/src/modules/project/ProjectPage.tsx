@@ -22,13 +22,11 @@ import { TablePagination } from "components";
 import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
 import { useMutationQuery } from "hooks";
 import {
-  getDetailForDeleteDialog,
-  getHeaderForDeleteDialog
-} from "modules/address-space";
-import {
   initialiseFilterForProject,
   setInitialProjcetCount,
-  ProjectType
+  ProjectType,
+  getDetailForDeleteDialog,
+  getHeaderForDeleteDialog
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
 
@@ -81,7 +79,9 @@ export default function ProjectPage() {
         selectedItems: selectedProjects.map(as => as.name),
         option: "Delete",
         detail: getDetailForDeleteDialog(selectedProjects),
-        header: getHeaderForDeleteDialog(selectedProjects)
+        header: getHeaderForDeleteDialog(selectedProjects),
+        iconType: "danger",
+        confirmButtonLabel: "Delete"
       }
     });
   };

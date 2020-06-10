@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React from "react";
 import {
   Card,
   CardBody,
@@ -59,7 +59,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Address space</b>
           <Link
             //TODO:=modify route
-            to={`/address-spaces/${namespace}/${addressSpace}/standard/addresses`}
+            to={`/messaging-projects/${namespace}/${addressSpace}/standard/addresses`}
             className="pf-c-nav__link"
             id={`navlink-as-${addressSpace}`}
           >

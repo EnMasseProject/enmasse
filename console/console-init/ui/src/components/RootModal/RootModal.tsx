@@ -24,7 +24,8 @@ const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CLOSE_CONNECTIONS]: DialogPrompt,
   [MODAL_TYPES.LEAVE_CREATE_DEVICE]: DialogPrompt,
   [MODAL_TYPES.UPDATE_PASSWORD]: UpdatePassword,
-  [MODAL_TYPES.DELETE_IOT_DEVICE]: DialogPrompt
+  [MODAL_TYPES.DELETE_PROJECT]: DialogPrompt,
+  [MODAL_TYPES.DELETE_IOT_DEVICE]: DialogPrompt,
 };
 
 export const RootModal: React.FC<{}> = () => {

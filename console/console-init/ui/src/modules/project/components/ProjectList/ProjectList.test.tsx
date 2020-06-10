@@ -19,7 +19,8 @@ describe("<ProjectList/>", () => {
       name: "namespace_test1.new_space",
       displayName: "new_space",
       namespace: "namespace_test1",
-      plan: "Standard",
+      plan: "standard-medium",
+      type: "standard",
       status: StatusTypes.FAILED,
       creationTimestamp: "2020-01-20T11:44:28.607Z",
       errorMessageRate: 3,
@@ -52,6 +53,8 @@ describe("<ProjectList/>", () => {
           onEdit={jest.fn()}
           onDelete={jest.fn()}
           onDownload={jest.fn()}
+          onEnable={jest.fn()}
+          onDisable={jest.fn()}
         />
       </MemoryRouter>,
       div
@@ -66,6 +69,8 @@ describe("<ProjectList/>", () => {
           onEdit={jest.fn()}
           onDelete={jest.fn()}
           onDownload={jest.fn()}
+          onEnable={jest.fn()}
+          onDisable={jest.fn()}
         />
       </MemoryRouter>
     );
@@ -77,9 +82,18 @@ describe("<ProjectList/>", () => {
     getByText("Error messages");
     getByText("Entities");
 
+    const getProjectPlan = () => {
+      const project: IProject = projects[0];
+      if (project && project.type) {
+        return (
+          project.type[0].toUpperCase() +
+          project.type.substring(1, project.type.length)
+        );
+      }
+    };
     //first row's data
     getByText(projects[0].displayName || "");
-    getByText(projects[0].projectType + " " + projects[0].plan);
+    getByText(projects[0].projectType + " " + getProjectPlan());
     //second row's data
     getByText(projects[1].displayName || "");
   });

@@ -85,6 +85,8 @@ export const deviceTable = () => (
       onSort={action("sort column")}
       onEdit={action("on Edit projects")}
       onDelete={action("on Delete projects")}
+      onEnable={action("on Enable projects")}
+      onDisable={action("on DisbonDisable projects")}
       onDownload={action("on Download certificate projects")}
       onSelectProject={action("on Select poject")}
     />
