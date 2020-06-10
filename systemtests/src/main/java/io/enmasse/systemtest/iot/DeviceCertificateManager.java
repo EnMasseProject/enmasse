@@ -79,7 +79,7 @@ public class DeviceCertificateManager {
         EC("EC", "SHA256withECDSA") {
             @Override
             public AlgorithmParameterSpec getSpec() {
-                return new ECGenParameterSpec("secp256k1");
+                return new ECGenParameterSpec("secp256r1");
             }
         },
         ;
