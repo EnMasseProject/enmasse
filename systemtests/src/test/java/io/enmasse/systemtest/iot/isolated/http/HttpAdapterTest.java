@@ -14,6 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
+import io.enmasse.systemtest.bases.JUnitWorkaround;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
@@ -25,9 +26,11 @@ class HttpAdapterTest implements StandardIoTHttpTests {
 
     @BeforeAll
     public static void setup() throws Exception {
-        session = IoTTestSession.createDefault()
-                .adapters(HTTP)
-                .deploy();
+        JUnitWorkaround.wrapBeforeAll(() -> {
+            session = IoTTestSession.createDefault()
+                    .adapters(HTTP)
+                    .deploy();
+        });
     }
 
     @AfterAll

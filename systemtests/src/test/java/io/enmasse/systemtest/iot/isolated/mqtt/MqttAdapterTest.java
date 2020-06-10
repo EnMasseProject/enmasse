@@ -15,6 +15,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
+import io.enmasse.systemtest.bases.JUnitWorkaround;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
@@ -29,9 +30,11 @@ class MqttAdapterTest implements StandardIoTMqttTests {
 
     @BeforeAll
     public static void setup() throws Exception {
-        session = IoTTestSession.createDefault()
-                .adapters(MQTT)
-                .deploy();
+        JUnitWorkaround.wrapBeforeAll(() -> {
+            session = IoTTestSession.createDefault()
+                    .adapters(MQTT)
+                    .deploy();
+        });
     }
 
     @AfterAll
