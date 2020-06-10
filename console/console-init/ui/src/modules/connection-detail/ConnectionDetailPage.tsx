@@ -46,7 +46,7 @@ export default function ConnectionDetailPage() {
         <BreadcrumbItem>
           <Link
             id="cdetail-link-connections"
-            to={`/address-spaces/${namespace}/${name}/${type}/connections`}
+            to={`/messaging-projects/${namespace}/${name}/${type}/connections`}
           >
             {name}
           </Link>
@@ -75,7 +75,7 @@ export default function ConnectionDetailPage() {
       <NoDataFound
         type={"Connection"}
         name={connectionname || ""}
-        routeLink={`/address-spaces/${namespace}/${name}/${type}/connections`}
+        routeLink={`/messaging-projects/${namespace}/${name}/${type}/connections`}
       />
     );
   };
