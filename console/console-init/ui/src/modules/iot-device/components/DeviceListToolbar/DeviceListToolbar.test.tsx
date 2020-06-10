@@ -74,6 +74,7 @@ describe("<DeviceListToolbar />", () => {
     getByText("Upload a JSON file");
   });
 
+  // ToDo: Modify after bulk select is finalized
   xit("should render appropriate options for BulkSelect", () => {
     const { getByText } = render(
       <MemoryRouter>

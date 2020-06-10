@@ -125,7 +125,7 @@ const Data = (
       />
       <Divider />
       <DeviceList
-        tableRows={rows.map(getTableCells)}
+        deviceRows={rows.map(getTableCells)}
         onSelectDevice={async () => {}}
         actionResolver={actionResolver}
       />

@@ -83,22 +83,56 @@ export default function DeviceListPage() {
     setSelectedDevices(devices);
   };
 
-  const enableSelectedDevices = () => {
+  const onSelectEnableDevices = () => {
     // TO BE DONE AFTER BACKEND IS READY
   };
 
-  const disableSelectedDevices = () => {
+  const onSelectDisableDevice = () => {
     // TO BE DONE AFTER BACKEND IS READY
   };
 
-  const deleteSelectedDevices = () => {
+  const onSelectDeleteDevice = () => {
     // TO BE DONE AFTER BACKEND IS READY
+  };
+
+  const isDeleteDevicesOptionDisabled = () => {
+    if (selectedDevices.length > 0) {
+      return false;
+    }
+    return true;
+  };
+
+  const isEnableDevicesOptionDisabled = () => {
+    return selectedDevices.every((device: IDevice) => {
+      return device?.enabled === true;
+    });
+  };
+
+  const isDisableDevicesOptionDisabled = () => {
+    return selectedDevices.every((device: IDevice) => {
+      return device?.enabled === false;
+    });
   };
 
   const kebabItems: React.ReactNode[] = [
-    <DropdownItem onClick={enableSelectedDevices}>Enable</DropdownItem>,
-    <DropdownItem onClick={disableSelectedDevices}>Disable</DropdownItem>,
-    <DropdownItem onClick={deleteSelectedDevices}>Delete</DropdownItem>
+    <DropdownItem
+      onClick={onSelectEnableDevices}
+      isDisabled={isEnableDevicesOptionDisabled()}
+    >
+      Enable
+    </DropdownItem>,
+    <DropdownItem
+      onClick={onSelectDisableDevice}
+      isDisabled={isDisableDevicesOptionDisabled()}
+    >
+      Disable
+    </DropdownItem>,
+    <DropdownItem
+      onClick={onSelectDeleteDevice}
+      isDisabled={isDeleteDevicesOptionDisabled()}
+    >
+      Delete
+    </DropdownItem>
   ];
 
   return (

@@ -10,6 +10,20 @@ import { IRowData } from "@patternfly/react-table";
 import { IDevice } from "modules/iot-device/components";
 
 export const getTableCells = (row: IDevice) => {
+  const { jsonData = "{}", deviceId, enabled } = row;
+
+  const { gateways, credentials } = JSON.parse(jsonData);
+
+  let deviceType: string;
+
+  if (!gateways?.length === !credentials?.length) {
+    deviceType = "N/A";
+  } else if (gateways) {
+    deviceType = "Using gateways";
+  } else {
+    deviceType = "Using credentials";
+  }
+
   const tableRow: IRowData = {
     selected: row.selected || false,
     cells: [
@@ -25,10 +39,10 @@ export const getTableCells = (row: IDevice) => {
       },
       {
         header: "type",
-        title: row.viaGateway ? <span>Using gateways</span> : <span>N/A</span>
+        title: <span>{deviceType}</span>
       },
       {
-        title: row.enabled ? (
+        title: enabled ? (
           <span>
             <CheckCircleIcon color="green" />
             &nbsp;Enabled
@@ -40,6 +54,7 @@ export const getTableCells = (row: IDevice) => {
           </span>
         )
       },
+      // TODO: The timestamps are subjected to change, the following lines of code will be changed accordingly
       {
         title: row.lastSeen && (
           <>

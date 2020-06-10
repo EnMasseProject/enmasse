@@ -46,12 +46,10 @@ const DELETE_IOT_DEVICE = gql`
   }
 `;
 
-const RETURN_ALL_DEVICES_FOR_IOT_PROJECT_SORT = (sortBy?: ISortBy) => {
+const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
   let orderBy = "";
   if (sortBy) {
     switch (sortBy.index) {
-      case 0:
-        break;
       case 1:
         orderBy = "`$.deviceId` ";
         break;
@@ -71,15 +69,17 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT_SORT = (sortBy?: ISortBy) => {
   return orderBy;
 };
 
-const RETURN_ALL_DEVICES_FOR_IOT_PROJECT_FILTER = (
+const FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   filterObject: IDeviceFilter
 ) => {
   const { deviceId } = filterObject;
-  let filter = "";
+  let filter: string = "";
 
-  if (deviceId) {
+  if (deviceId && deviceId.trim() !== "") {
     filter += "`$.deviceId` = '" + deviceId + "'";
   }
+
+  // TODO: Needs to handle more parameters once the mock supports it.
 
   return filter;
 };
@@ -89,11 +89,11 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   sortBy?: ISortBy,
   filterObj?: IDeviceFilter
 ) => {
-  let filter = RETURN_ALL_DEVICES_FOR_IOT_PROJECT_FILTER(
+  let filter = FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
     filterObj || getInitialFilter()
   );
 
-  let orderBy = RETURN_ALL_DEVICES_FOR_IOT_PROJECT_SORT(sortBy);
+  let orderBy = SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT(sortBy);
 
   const ALL_DEVICE_LIST = gql(
     `query devices_for_iot_project {

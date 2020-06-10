@@ -110,14 +110,19 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       title: "Delete",
       onClick: () => deleteDevice(rowData)
     },
-    {
-      title: "Disable",
-      onClick: () => disableDevice(rowData)
-    },
-    {
-      title: "Enable",
-      onClick: () => enableDevice(rowData)
-    }
+    ...(rowData.originalData.enabled
+      ? [
+          {
+            title: "Disable",
+            onClick: () => disableDevice(rowData)
+          }
+        ]
+      : [
+          {
+            title: "Enable",
+            onClick: () => enableDevice(rowData)
+          }
+        ])
   ];
 
   if (sortValue && sortBy !== sortValue) {
@@ -154,7 +159,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
 
   return (
     <DeviceList
-      tableRows={rows.map(getTableCells)}
+      deviceRows={rows.map(getTableCells)}
       onSelectDevice={onSelectDevice}
       actionResolver={actionResolver}
       onSort={onSort}

@@ -11,7 +11,7 @@ import { getTableCells } from "modules/iot-device/utils";
 import { IRowData } from "@patternfly/react-table";
 
 describe("<DeviceList />", () => {
-  const tableRows: IRowData[] = [
+  const deviceRows: IRowData[] = [
     {
       id: "littlesensor1",
       viaGateway: true,
@@ -26,6 +26,7 @@ describe("<DeviceList />", () => {
       viaGateway: true,
       enabled: false,
       selected: false,
+      jsonData: '{"ext":{"ocean":"atlantic"}}',
       lastSeen: "2020-04-20T11:44:28.607Z",
       lastUpdated: "2020-04-29T11:44:28.607Z",
       creationTimeStamp: "2020-04-30T11:44:28.607Z"
@@ -62,7 +63,7 @@ describe("<DeviceList />", () => {
   const onSelectDevice = jest.fn();
 
   const props: IDeviceListProps = {
-    tableRows,
+    deviceRows,
     actionResolver,
     onSelectDevice
   };

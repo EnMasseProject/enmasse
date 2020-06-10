@@ -19,7 +19,7 @@ import { css, StyleSheet } from "@patternfly/react-styles";
 
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
-  tableRows: IRowData[];
+  deviceRows: IRowData[];
   onSelectDevice: (device: IDevice, isSelected: boolean) => void;
   onSort?: (_event: any, index: number, direction: SortByDirection) => void;
 }
@@ -32,6 +32,7 @@ export interface IDevice {
   lastSeen?: string | null;
   lastUpdated?: string | null;
   creationTimeStamp?: string | null;
+  jsonData?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
@@ -41,7 +42,7 @@ export const StyleForFooteredTable = StyleSheet.create({
 });
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
-  tableRows,
+  deviceRows,
   sortBy,
   onSort,
   actionResolver,
@@ -61,7 +62,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     isSelected: boolean,
     rowIndex: number
   ) => {
-    const rows = [...tableRows];
+    const rows = [...deviceRows];
     rows[rowIndex].selected = isSelected;
     onSelectDevice(rows[rowIndex].originalData, isSelected);
   };
@@ -76,7 +77,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         canSelectAll={false}
         onSelect={onSelect}
         cells={tableColumns}
-        rows={tableRows}
+        rows={deviceRows}
         aria-label="device list"
         sortBy={sortBy}
         onSort={onSort}

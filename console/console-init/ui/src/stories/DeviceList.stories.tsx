@@ -104,7 +104,7 @@ export const deviceAlert = () => (
 export const deviceTable = () => (
   <MemoryRouter>
     <DeviceList
-      tableRows={rows.map(getTableCells)}
+      deviceRows={rows.map(getTableCells)}
       onSelectDevice={action("Device selected")}
       actionResolver={actionResolver}
     />
