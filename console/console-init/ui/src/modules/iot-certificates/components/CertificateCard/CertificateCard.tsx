@@ -22,7 +22,7 @@ import { IIoTCertificate } from "modules/iot-certificates";
 export interface ICertificateCardProps {
   certificate: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
-  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
+  onChangeStatus: (certificate: IIoTCertificate, isEnabled: boolean) => void;
   onDelete: (certifiacte: IIoTCertificate) => void;
   id: string;
 }
@@ -43,21 +43,21 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
   certificate,
   setOnEditMode,
   onDelete,
-  onEnableOrDisable,
+  onChangeStatus,
   id
 }) => {
-  const handleEditCertificate = () => {
+  const onEditCertificate = () => {
     setOnEditMode(true);
   };
 
-  const handleDeleteCertificate = () => {
+  const onDeleteCertificate = () => {
     onDelete(certificate);
   };
   const onEnableChange = (
     value: boolean,
     _: React.FormEvent<HTMLInputElement>
   ) => {
-    onEnableOrDisable(certificate, value);
+    onChangeStatus(certificate, value);
   };
 
   const dropdownItems = [
@@ -65,7 +65,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       id={`cc-dropdown-edit-${id}`}
       key="edit"
       aria-label="Edit certificate"
-      onClick={handleEditCertificate}
+      onClick={onEditCertificate}
     >
       Edit
     </DropdownItem>,
@@ -73,7 +73,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       id={`cc-dropdown-delete-${id}`}
       key="delete"
       aria-label="delete"
-      onClick={handleDeleteCertificate}
+      onClick={onDeleteCertificate}
     >
       Delete
     </DropdownItem>

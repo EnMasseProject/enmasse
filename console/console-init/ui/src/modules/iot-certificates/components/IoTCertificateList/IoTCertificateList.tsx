@@ -15,6 +15,7 @@ import {
   PageSection,
   PageSectionVariants
 } from "@patternfly/react-core";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
 export interface IIoTCertificate {
   "subject-dn"?: string | null;
@@ -30,15 +31,24 @@ export interface IIoTCertificateListProps {
   onSave: (certificate: IIoTCertificate) => void;
   onCreate: (certificate: IIoTCertificate) => void;
   onDelete: (certificate: IIoTCertificate) => void;
-  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
+  onChangeStatus: (certificate: IIoTCertificate, isEnabled: boolean) => void;
 }
 
+const style = StyleSheet.create({
+  no_top_bottom_padding: {
+    paddingBottom: 0,
+    paddingTop: 0
+  },
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProps> = ({
   certificates,
   onSave,
   onCreate,
   onDelete,
-  onEnableOrDisable
+  onChangeStatus
 }) => {
   const [showCertificateForm, setShowCertificateForm] = useState<boolean>(
     false
@@ -52,10 +62,10 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
   };
 
   return (
-    <PageSection variant={PageSectionVariants.default}>
+    <PageSection noPadding variant={PageSectionVariants.default}>
       <Grid key={"iiid"}>
-        <GridItem span={8}>
-          <PageSection style={{ paddingBottom: 0, paddingTop: 0 }}>
+        <GridItem span={7}>
+          <PageSection className={css(style.no_top_bottom_padding)}>
             <IoTCertificateToolbar
               handleJsonViewChange={handleJsonViewChange}
               isJsonView={isJsonView}
@@ -63,7 +73,7 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
             />
           </PageSection>
           {showCertificateForm && (
-            <PageSection style={{ paddingBottom: 0 }}>
+            <PageSection className={css(style.no_bottom_padding)}>
               <CertificateForm
                 id="pcl-add-certificate-form"
                 setOnEditMode={setShowCertificateForm}
@@ -78,12 +88,11 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
               id={`certificate-${index}`}
               certificate={certificate}
               onEdit={onSave}
-              onEnableOrDisable={onEnableOrDisable}
+              onChangeStatus={onChangeStatus}
               onDelete={onDelete}
             />
           ))}
         </GridItem>
-        <GridItem span={4}> </GridItem>
       </Grid>
     </PageSection>
   );

@@ -25,7 +25,7 @@ const breadcrumb = (
     <BreadcrumbItem isActive={true}>IoT Project</BreadcrumbItem>
   </Breadcrumb>
 );
-export default function ConnectionDetailPage() {
+export default function IoTProjectDetailPage() {
   useBreadcrumb(breadcrumb);
   useDocumentTitle("IoT Project Detail");
   const { sublist } = useParams();

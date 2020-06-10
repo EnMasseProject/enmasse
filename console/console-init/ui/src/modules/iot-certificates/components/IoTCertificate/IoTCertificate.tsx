@@ -10,26 +10,32 @@ import {
   CertificateCard
 } from "modules/iot-certificates";
 import { PageSection } from "@patternfly/react-core";
+import { ICertificateCardProps } from "../CertificateCard";
+import { StyleSheet, css } from "@patternfly/react-styles";
 
-export interface IIoTCertificateProps {
-  certificate: IIoTCertificate;
+export interface IIoTCertificateProps
+  extends Pick<
+    ICertificateCardProps,
+    "certificate" | "onDelete" | "onChangeStatus" | "id"
+  > {
   onEdit: (certificate: IIoTCertificate) => void;
-  onDelete: (certificate: IIoTCertificate) => void;
-  onEnableOrDisable: (certificate: IIoTCertificate, isEnabled: boolean) => void;
-  id: string;
 }
-
+const style = StyleSheet.create({
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
   certificate,
   onEdit,
   onDelete,
-  onEnableOrDisable,
+  onChangeStatus,
   id
 }) => {
   const [onEditMode, setOnEditMode] = useState<boolean>(false);
 
   return (
-    <PageSection style={{ paddingBottom: 0 }}>
+    <PageSection className={css(style.no_bottom_padding)}>
       {onEditMode ? (
         <CertificateForm
           id={id}
@@ -43,7 +49,7 @@ export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
           setOnEditMode={setOnEditMode}
           certificate={certificate}
           onDelete={onDelete}
-          onEnableOrDisable={onEnableOrDisable}
+          onChangeStatus={onChangeStatus}
         />
       )}
     </PageSection>

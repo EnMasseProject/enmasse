@@ -44,7 +44,7 @@ export const iotCertificate = () => (
       id="test-id"
       certificate={certificates[0]}
       onDelete={action("onDelete click")}
-      onEnableOrDisable={action("onEnableOrDisable click")}
+      onChangeStatus={action("onChangeStatus click")}
     />
   </>
 );
@@ -57,7 +57,7 @@ export const iotCertificatePage = () => (
         onSave={action("onSave click")}
         onCreate={action("onCreate click")}
         onDelete={action("onDelete click")}
-        onEnableOrDisable={action("onEnableOrDisable click")}
+        onChangeStatus={action("onChangeStatus click")}
       />
     </Page>
   </MemoryRouter>

@@ -79,11 +79,11 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     setCertificateFormData(newCertificateData);
   };
 
-  const onAlgorithmChange = (value: string) => {
+  const onSelectAlgorithm = (value: string) => {
     setCertificateFormData({ ...certificateFormData, algorithm: value });
   };
 
-  const cancelEdit = () => {
+  const onCancelEdit = () => {
     setOnEditMode(false);
   };
 
@@ -154,7 +154,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               className={css(styles.dropdown_align)}
               toggleClass={css(styles.dropdown_toggle_align)}
               position={DropdownPosition.left}
-              onSelectItem={onAlgorithmChange}
+              onSelectItem={onSelectAlgorithm}
               dropdownItems={algorithmTypeOptions}
               value={algorithm || ""}
             />
@@ -216,7 +216,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             >
               Save
             </Button>
-            <Button variant="link" onClick={cancelEdit} id="cf-cancel-button">
+            <Button variant="link" onClick={onCancelEdit} id="cf-cancel-button">
               Cancel
             </Button>
           </ActionGroup>

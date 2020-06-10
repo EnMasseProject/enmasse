@@ -49,10 +49,7 @@ export default function IoTCertificates() {
     // Query to delete certificate
   };
 
-  const onEnableOrDisable = (
-    certificate: IIoTCertificate,
-    isEnabled: boolean
-  ) => {
+  const onChangeStatus = (certificate: IIoTCertificate, isEnabled: boolean) => {
     // Query for enable certificate
   };
 
@@ -63,7 +60,7 @@ export default function IoTCertificates() {
         onSave={onSave}
         onCreate={onCreate}
         onDelete={onDelete}
-        onEnableOrDisable={onEnableOrDisable}
+        onChangeStatus={onChangeStatus}
       />
     </>
   );
