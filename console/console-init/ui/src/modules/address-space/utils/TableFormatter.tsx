@@ -21,7 +21,7 @@ const getTableCells = (row: IAddressSpace) => {
         title: (
           <span>
             <Link
-              to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
+              to={`messaging-projects/${row.nameSpace}/${row.name}/${row.type}/addresses`}
             >
               {row.name}
             </Link>
