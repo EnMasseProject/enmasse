@@ -165,37 +165,37 @@ describe("<AddressSpaceListContainer/>", () => {
     );
   });
 
-  //TODO: Fix Warning: You seem to have overlapping act() calls
+  // TODO: Fix Warning: You seem to have overlapping act() calls
 
-  // it("should render list of spaces", async () => {
-  //   const mocks = [
-  //     {
-  //       request: {
-  //         query: RETURN_ALL_ADDRESS_SPACES(
-  //           1,
-  //           10,
-  //           ["jupiter_as1"],
-  //           ["app1_ns"],
-  //           "standard"
-  //         ),
-  //       },
-  //       result: {
-  //         data: addressSpaces
-  //       },
-  //     },
-  //   ];
+  xit("should render list of spaces", async () => {
+    const mocks = [
+      {
+        request: {
+          query: RETURN_ALL_ADDRESS_SPACES(
+            1,
+            10,
+            ["jupiter_as1"],
+            ["app1_ns"],
+            "standard"
+          )
+        },
+        result: {
+          data: addressSpaces
+        }
+      }
+    ];
 
-  //   const { findByText } = setup(mocks, props);
+    const { findByText } = setup(mocks, props);
 
-  //   cleanup();
-  //   // await wait(0);
-  //   await wait(() =>
-  //     expect(
-  //       findByText(addressSpaces.addressSpaces[0].metadata.name)
-  //     ).toBeDefined()
-  //   );
-  //   expect(
-  //     findByText(addressSpaces.addressSpaces[0].metadata.namespace)
-  //   ).toBeDefined();
-  // });
+    cleanup();
+    // await wait(0);
+    await wait(() =>
+      expect(
+        findByText(addressSpaces.addressSpaces[0].metadata.name)
+      ).toBeDefined()
+    );
+    expect(
+      findByText(addressSpaces.addressSpaces[0].metadata.namespace)
+    ).toBeDefined();
+  });
 });
