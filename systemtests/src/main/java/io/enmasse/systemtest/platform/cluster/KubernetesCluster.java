@@ -14,7 +14,8 @@ public class KubernetesCluster implements KubeCluster {
 
     @Override
     public boolean isAvailable() {
-        return Exec.isExecutableOnPath(IDENTIFIER);
+        return Exec.isExecutableOnPath(getKubeCmd()) &&
+                !Exec.execute(Arrays.asList(getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
     }
 
     @Override
