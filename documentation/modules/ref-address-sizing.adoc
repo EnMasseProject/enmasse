@@ -1,0 +1,10 @@
+// This assembly is included in the following assemblies:
+//
+// assembly-configuration-sizing-guide.adoc
+
+[id='ref-address-sizing-{context}']
+= Address sizing
+
+Per address broker memory limits are calculated from the address plan configuration. {ProductName} determines the maximum size allowed for each queue by multiplying the broker configuration `globalMaxSize` (specified in the `standardinfraconfig` or `brokeredinfraconfig`) by the address plan’s broker resource limit. The behavior when the queue reaches its memory limit is governed by the address full policy. For more information on the address full policy, see link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#broker-component-sizing-messaging[Broker component sizing].
+
+For example, if the broker's configuration specifies `globalMaxSize` = 124 MB and the address plan configuration specifies `addressplan.spec.resources.broker` = 0.2, the maximum size allowed for each queue is 25 MB (`124 * 0.2 = 25 MB`).
