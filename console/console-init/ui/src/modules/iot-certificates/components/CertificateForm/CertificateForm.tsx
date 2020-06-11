@@ -41,12 +41,14 @@ const styles = StyleSheet.create({
 export interface ICertificateFormProps {
   certificate?: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  onSave?: (certificate: IIoTCertificate) => void;
   id: string;
 }
 
 export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = ({
   setOnEditMode,
   certificate,
+  onSave,
   id
 }) => {
   const initialFormState: IIoTCertificate = {
@@ -67,7 +69,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     certificate && setCertificateFormData(certificate);
   }, [certificate]);
 
-  const onCertificateFormDataChange = (
+  const onChangeCertificateFormData = (
     value: string | boolean,
     event: React.FormEvent<HTMLInputElement>
   ) => {
@@ -77,19 +79,33 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
     setCertificateFormData(newCertificateData);
   };
 
-  const cancelEdit = () => {
+  const onSelectAlgorithm = (value: string) => {
+    setCertificateFormData({ ...certificateFormData, algorithm: value });
+  };
+
+  const onCancelEdit = () => {
     setOnEditMode(false);
   };
 
-  const saveCertificate = () => {
-    // TODO: A mutation to save the certificate and hide form on success
+  const onSaveCertificate = () => {
+    onSave && onSave(certificateFormData);
+  };
+
+  const onChangeStatus = (
+    value: boolean,
+    _: React.FormEvent<HTMLInputElement>
+  ) => {
+    setCertificateFormData({
+      ...certificateFormData,
+      "auto-provisioning-enabled": value
+    });
   };
 
   const {
     ["subject-dn"]: subjectDn,
     ["public-key"]: publicKey,
     ["auto-provisioning-enabled"]: autoProvision,
-    algorithm,
+    algorithm: algorithm,
     ["not-before"]: notBefore,
     ["not-after"]: notAfter
   } = certificateFormData;
@@ -109,7 +125,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               name="subject-dn"
               isRequired
               value={subjectDn || ""}
-              onChange={onCertificateFormDataChange}
+              onChange={onChangeCertificateFormData}
             />
           </FormGroup>
           <FormGroup
@@ -123,7 +139,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               name="public-key"
               isRequired
               value={publicKey || ""}
-              onChange={onCertificateFormDataChange}
+              onChange={onChangeCertificateFormData}
             />
           </FormGroup>
           <FormGroup
@@ -138,7 +154,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
               className={css(styles.dropdown_align)}
               toggleClass={css(styles.dropdown_toggle_align)}
               position={DropdownPosition.left}
-              onSelectItem={onCertificateFormDataChange}
+              onSelectItem={onSelectAlgorithm}
               dropdownItems={algorithmTypeOptions}
               value={algorithm || ""}
             />
@@ -155,7 +171,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   name="not-before"
                   isRequired
                   value={notBefore || ""}
-                  onChange={onCertificateFormDataChange}
+                  onChange={onChangeCertificateFormData}
                 />
               </FormGroup>
             </GridItem>
@@ -170,7 +186,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                   name="not-after"
                   isRequired
                   value={notAfter || ""}
-                  onChange={onCertificateFormDataChange}
+                  onChange={onChangeCertificateFormData}
                 />
               </FormGroup>
             </GridItem>
@@ -188,19 +204,19 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                 label="Enabled"
                 labelOff="Disabled"
                 isChecked={autoProvision || false}
-                onChange={onCertificateFormDataChange}
+                onChange={onChangeStatus}
               />
             </SplitItem>
           </Split>
           <ActionGroup>
             <Button
               variant="primary"
-              onClick={saveCertificate}
+              onClick={onSaveCertificate}
               id="cf-save-button"
             >
               Save
             </Button>
-            <Button variant="link" onClick={cancelEdit} id="cf-cancel-button">
+            <Button variant="link" onClick={onCancelEdit} id="cf-cancel-button">
               Cancel
             </Button>
           </ActionGroup>
