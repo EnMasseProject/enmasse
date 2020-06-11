@@ -7,7 +7,6 @@ import React from "react";
 import { ProjectNavigation } from "./components";
 import { Routes } from "./Routes";
 import {
-  Page,
   PageSectionVariants,
   PageSection,
   Breadcrumb,
