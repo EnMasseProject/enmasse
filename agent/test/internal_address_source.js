@@ -41,7 +41,7 @@ describe('configmap backed address source', function() {
         address_server.close(done);
     });
 
-    it('retrieves all addresses', function(done) {
+    it('retrieves all addresses - event addresses_defined', function(done) {
         address_server.add_address_definition({address:'s1.foo', type:'queue'}, undefined, '1234');
         address_server.add_address_definition({address:'s1.bar', type:'topic'}, undefined, '1234');
         address_server.add_address_definition({address:'s2.baz', type:'queue'}, undefined, "4321");
@@ -49,6 +49,25 @@ describe('configmap backed address source', function() {
         source.start();
         source.watcher.close();//prevents watching
         source.on('addresses_defined', function (addresses) {
+            assert.equal(addresses.length, 2);
+            //relies on sorted order (TODO: avoid relying on any order)
+            assert.equal(addresses[0].address, 's1.bar');
+            assert.equal(addresses[0].type, 'topic');
+            assert.equal(addresses[1].address, 's1.foo');
+            assert.equal(addresses[1].type, 'queue');
+            done();
+        });
+    });
+    it('retrieves all addresses - addresses_ready', function(done) {
+        address_server.add_address_definition({address:'s1.foo', type:'queue'}, undefined, '1234');
+        address_server.add_address_definition({address:'s1.bar', type:'topic'}, undefined, '1234');
+        address_server.add_address_definition({address:'s1.pending', type:'anycast'}, undefined, '1234', {}, {phase: 'Pending'});
+        address_server.add_address_definition({address:'s1.terminating', type:'anycast'}, undefined, '1234', {}, {phase: 'Terminating'});
+        address_server.add_address_definition({address:'s2.baz', type:'queue'}, undefined, "4321");
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PREFIX: 's1.'});
+        source.start();
+        source.watcher.close();//prevents watching
+        source.on('addresses_ready', function (addresses) {
             assert.equal(addresses.length, 2);
             //relies on sorted order (TODO: avoid relying on any order)
             assert.equal(addresses[0].address, 's1.bar');

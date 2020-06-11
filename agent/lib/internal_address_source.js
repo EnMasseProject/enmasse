@@ -193,7 +193,7 @@ AddressSource.prototype.updated = function (objects) {
     if (changes) {
         this.update_readiness(changes);
         this.dispatch('addresses_defined', addresses, changes.description);
-        this.dispatch_if_changed('addresses_ready', objects.filter(ready).map(extract_spec), same_address_definition);
+        this.dispatch_if_changed('addresses_ready', addresses.filter(ready), same_address_definition);
     }
 };
 
