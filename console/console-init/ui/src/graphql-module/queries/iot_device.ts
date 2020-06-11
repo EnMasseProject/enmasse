@@ -41,8 +41,17 @@ const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
 };
 
 const DELETE_IOT_DEVICE = gql`
-  mutation deleteIotDevice($iotproject: String!, $deviceId: String!) {
+  mutation delete_iot_device($iotproject: String!, $deviceId: String!) {
     deleteIotDevice(iotproject: $iotproject, deviceId: $deviceId)
+  }
+`;
+
+const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql`
+  mutation delete_credentials_for_device(
+    $iotproject: String!
+    $deviceId: String!
+  ) {
+    deleteCredentialsForDevice(iotproject: $iotproject, deviceId: $deviceId)
   }
 `;
 
@@ -128,5 +137,6 @@ export {
   RETURN_IOT_CREDENTIALS,
   DELETE_IOT_DEVICE,
   UPDATE_IOT_DEVICE,
-  RETURN_ALL_DEVICES_FOR_IOT_PROJECT
+  RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
+  DELETE_CREDENTIALS_FOR_IOT_DEVICE
 };

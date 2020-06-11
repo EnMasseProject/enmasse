@@ -13,7 +13,7 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { MetaData } from "./MetaData";
+import { CreateMetadata } from "modules/iot-device/components";
 import { IDeviceInfo } from ".";
 import { SwitchWithToggle } from "components/SwitchWithToggle/SwitchWithToggle";
 
@@ -66,7 +66,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           </FormGroup>
           <Divider />
           Metadata
-          <MetaData onChangePropertyInput={onChangePropertyInput} />
+          <CreateMetadata onChangePropertyInput={onChangePropertyInput} />
         </Form>
       </GridItem>
     </Grid>

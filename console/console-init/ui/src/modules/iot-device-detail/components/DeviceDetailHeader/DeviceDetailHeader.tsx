@@ -12,21 +12,19 @@ import {
   FlexItem,
   DropdownItem,
   DropdownPosition,
-  PageSection,
-  PageSectionVariants,
   DropdownSeparator
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
+import { useStoreContext, types } from "context-state-reducer";
+import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 interface IDeviceDetailHeaderProps {
   deviceName?: string;
   addedDate: string;
   lastTimeSeen: string;
   deviceStatus?: boolean;
-  onEditMetadata: () => void;
-  onEditDeviceInJson: () => void;
   onChange: (enabled: boolean) => void;
   onDelete: () => void;
   onClone: () => void;
@@ -56,13 +54,27 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceName,
   addedDate,
   lastTimeSeen,
-  onEditMetadata,
-  onEditDeviceInJson,
   onDelete,
   onChange,
   onClone,
   deviceStatus
 }) => {
+  const { dispatch } = useStoreContext();
+
+  const onSelectEditMetadata = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_METADATA }
+    });
+  };
+
+  const onSelectEditDeviceInJson = () => {
+    /**
+     * TODO: add edit device in json actionType
+     */
+    //dispatch({type:types.SET_DEVICE_ACTION_TYPE,payload:{actionType:DeviceActionType.EDIT_METADATA}});
+  };
+
   const DeviceDetailLayout = () => (
     <>
       <SplitItem>
@@ -100,7 +112,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-edit-metadata"
         key="edit-metadata"
         aria-label="edit metadata"
-        onClick={onEditMetadata}
+        onClick={onSelectEditMetadata}
       >
         Edit metadata
       </DropdownItem>,
@@ -108,7 +120,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-option-edit-json"
         key="edit-in-json"
         aria-label="edit device in json"
-        onClick={onEditDeviceInJson}
+        onClick={onSelectEditDeviceInJson}
       >
         Edit device in JSON
       </DropdownItem>,
@@ -142,27 +154,22 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   };
 
   return (
-    <PageSection
-      variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}
-    >
-      <Split>
-        <DeviceDetailLayout />
-        <SplitItem isFilled />
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <SwitchWithToggle
-            id="switch-device-header-enable-btn"
-            label="Enabled"
-            labelOff="Disabled"
-            onChange={onChange}
-            isChecked={deviceStatus}
-          />
-        </SplitItem>
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <KebabOptionsLayout />
-        </SplitItem>
-      </Split>
-    </PageSection>
+    <Split>
+      <DeviceDetailLayout />
+      <SplitItem isFilled />
+      <SplitItem className={css(styles.kebab_toggle_margin)}>
+        <SwitchWithToggle
+          id="switch-device-header-enable-btn"
+          label="Enabled"
+          labelOff="Disabled"
+          onChange={onChange}
+          isChecked={deviceStatus}
+        />
+      </SplitItem>
+      <SplitItem className={css(styles.kebab_toggle_margin)}>
+        <KebabOptionsLayout />
+      </SplitItem>
+    </Split>
   );
 };
 

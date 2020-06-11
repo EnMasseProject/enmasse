@@ -9,6 +9,10 @@ import { useQuery } from "@apollo/react-hooks";
 import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module/queries";
 import { IDeviceDetailResponse } from "schema";
 import { DeviceInfo } from "modules/iot-device-detail/components";
+//import { useStoreContext } from "context-state-reducer";
+import { ErrorState } from "modules/iot-device-detail/components";
+import { useMutationQuery } from "hooks";
+import { DELETE_CREDENTIALS_FOR_IOT_DEVICE } from "graphql-module/queries";
 
 export interface IDeviceInfoContainerProps {
   id: string;
@@ -17,13 +21,22 @@ export interface IDeviceInfoContainerProps {
 export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   id
 }) => {
+  // const { dispatch } = useStoreContext();
   const { projectname, deviceid } = useParams();
 
   const { data } = useQuery<IDeviceDetailResponse>(
     RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
   );
 
-  const { credentials, jsonData } = data?.devices?.devices[0] || {};
+  //const [setCredentialStatusQueryVaribles]=useMutationQuery();
+  //const [setUpdatePasswordQueryVaribles]=useMutationQuery();
+  const refetchQueries = ["iot_device_detail"];
+  const [setDeleteCredentialsQueryVariables] = useMutationQuery(
+    DELETE_CREDENTIALS_FOR_IOT_DEVICE,
+    refetchQueries
+  );
+
+  const { credentials, jsonData, viaGateway } = data?.devices?.devices[0] || {};
   const credentialsJson = credentials && JSON.parse(credentials);
   const deviceJson = jsonData && JSON.parse(jsonData);
 
@@ -32,12 +45,68 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     ext: deviceJson?.ext
   };
 
+  const onChangeCredentialStatus = async (authId: string) => {
+    /**
+     * TODO: add query for update credential status i.e. enabled/disabled
+     */
+    //await setCredentialStatusQueryVaribles("");
+  };
+
+  const onConfirmSecretPassword = async (formdata: any, secretId: string) => {
+    /**
+     * TODO: add query for update password
+     */
+    //await setUpdatePasswordQueryVaribles("");
+  };
+
+  const addGateways = () => {};
+
+  const addCredentials = () => {};
+
+  const deleteGateways = () => {
+    /**
+     * TODO: add delete gataways query
+     */
+  };
+
+  const deleteCredentials = async () => {
+    const variable = {
+      iotproject: projectname,
+      deviceId: deviceid
+    };
+    await setDeleteCredentialsQueryVariables(variable);
+  };
+
+  const getErrorState = () => {
+    let errorState = "";
+    if (
+      Array.isArray(credentialsJson) &&
+      credentialsJson?.length > 0 &&
+      viaGateway
+    ) {
+      errorState = ErrorState.CONFLICTING;
+    } else if (
+      (!credentialsJson || credentialsJson?.length <= 0) &&
+      !viaGateway
+    ) {
+      errorState = ErrorState.MISSING;
+    }
+    return errorState;
+  };
+
   return (
     <DeviceInfo
       id={id}
       deviceList={deviceJson?.via}
       metadataList={metadetaJson}
       credentials={credentialsJson}
+      onChangeStatus={onChangeCredentialStatus}
+      onConfirmPassword={onConfirmSecretPassword}
+      errorState={getErrorState()}
+      addGateways={addGateways}
+      addCredentials={addCredentials}
+      deleteGateways={deleteGateways}
+      deleteCredentials={deleteCredentials}
     />
   );
 };

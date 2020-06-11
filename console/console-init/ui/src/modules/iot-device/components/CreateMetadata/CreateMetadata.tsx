@@ -10,13 +10,15 @@ import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
 import { deviceRegistrationTypeOptions } from "modules/iot-device";
 
-export interface IMetaData {
+export interface ICreateMetadataProps {
   onChangePropertyInput?: (value: string) => Promise<any>;
 }
 
 const defaultType = deviceRegistrationTypeOptions[0].value;
 
-export const MetaData: React.FC<IMetaData> = ({ onChangePropertyInput }) => {
+export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
+  onChangePropertyInput
+}) => {
   const [metadataList, setMetadataList] = useState([
     { key: "", value: [], type: defaultType }
   ]);
@@ -29,28 +31,30 @@ export const MetaData: React.FC<IMetaData> = ({ onChangePropertyInput }) => {
   };
 
   return (
-    <>
-      <MetaDataHeader sectionName="Default properties" />
-      {metadataList.map((matadataRow, index: number) => (
-        <MetaDataRow
-          key={index}
-          metadataList={metadataList}
-          setMetadataList={setMetadataList}
-          rowIndex={index}
-        />
-      ))}
-      <Grid>
-        <GridItem span={3}>
-          <Button
-            id="cd-metadata-buttom-Add-More"
-            variant="link"
-            icon={<PlusCircleIcon />}
-            onClick={handleAddParentRow}
-          >
-            Add More
-          </Button>
-        </GridItem>
-      </Grid>
-    </>
+    <Grid>
+      <GridItem span={12}>
+        <MetaDataHeader sectionName="Default properties" />
+        {metadataList.map((matadataRow, index: number) => (
+          <MetaDataRow
+            key={index}
+            metadataList={metadataList}
+            setMetadataList={setMetadataList}
+            rowIndex={index}
+          />
+        ))}
+        <Grid>
+          <GridItem span={3}>
+            <Button
+              id="cd-metadata-buttom-Add-More"
+              variant="link"
+              icon={<PlusCircleIcon />}
+              onClick={handleAddParentRow}
+            >
+              Add More
+            </Button>
+          </GridItem>
+        </Grid>
+      </GridItem>
+    </Grid>
   );
 };

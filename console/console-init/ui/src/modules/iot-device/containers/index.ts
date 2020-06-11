@@ -4,3 +4,4 @@
  */
 
 export * from "./DeviceListContainer";
+export * from "./EditMetadataContainer";
