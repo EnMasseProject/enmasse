@@ -22,7 +22,6 @@ import { TablePagination } from "components";
 import { IConnection } from "./components";
 import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
-import { getFilteredAdressNames } from "modules/address";
 import {
   getFilteredConnectionNames,
   getHeaderTextForCloseAll,
@@ -101,12 +100,13 @@ export default function ConnectionPage() {
       name: string;
       namespace: string;
     }> = [];
-    selectedConnections.map((connection: IConnection) =>
-      queryConnectionVariable.push({
-        name: connection.name,
-        namespace: namespace
-      })
-    );
+    namespace &&
+      selectedConnections.map((connection: IConnection) =>
+        queryConnectionVariable.push({
+          name: connection.name,
+          namespace: namespace
+        })
+      );
     if (queryConnectionVariable.length > 0) {
       setCloseConnectionQueryVariables({ cons: queryConnectionVariable });
     }

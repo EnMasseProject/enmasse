@@ -35,7 +35,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   id
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
-  const [options, setOptions] = useState<any>(initalSelectOption);
+  const [options, setOptions] = useState<any[]>([initalSelectOption]);
 
   const onToggle = (isExpanded: boolean) => {
     setIsExpanded(isExpanded);

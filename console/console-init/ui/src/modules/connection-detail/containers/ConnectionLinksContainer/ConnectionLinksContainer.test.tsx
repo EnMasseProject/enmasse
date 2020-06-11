@@ -5,9 +5,8 @@
 
 import React from "react";
 import ReactDom from "react-dom";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, wait } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
-import wait from "waait";
 import { ConnectionLinksContainer } from "./ConnectionLinksContainer";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
 
@@ -94,7 +93,7 @@ describe("<ConnectionLinksContainer/>", () => {
 
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
-    expect(container).toHaveTextContent("Loading");
+    wait(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -121,8 +120,7 @@ describe("<ConnectionLinksContainer/>", () => {
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(0);
-    expect(container).not.toHaveTextContent("Loading");
+    wait(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <ConnectionLinksList/> component if loading is false", async () => {
@@ -149,9 +147,8 @@ describe("<ConnectionLinksContainer/>", () => {
 
     const { container, getByText } = setup(mocks, props);
     //wait for response
-    await wait(0);
     //check table headers
-    expect(container).toHaveTextContent("Role");
+    await wait(() => expect(container).toHaveTextContent("Role"));
     expect(container).toHaveTextContent("Name");
     expect(container).toHaveTextContent("Address");
   });
@@ -179,8 +176,9 @@ describe("<ConnectionLinksContainer/>", () => {
     ];
 
     const { container } = setup(mocks, props);
-    await wait(0);
-    expect(container).toHaveTextContent("You currently don't have any links");
+    await wait(() =>
+      expect(container).toHaveTextContent("You currently don't have any links")
+    );
   });
 
   it("should not render <EmptyConnectionLinks/> if total links is greater than zero (0)", async () => {
@@ -207,9 +205,10 @@ describe("<ConnectionLinksContainer/>", () => {
 
     const { container } = setup(mocks, props);
     cleanup();
-    await wait(0);
-    expect(container).not.toHaveTextContent(
-      "You currently don't have any links"
+    await wait(() =>
+      expect(container).not.toHaveTextContent(
+        "You currently don't have any links"
+      )
     );
   });
 });

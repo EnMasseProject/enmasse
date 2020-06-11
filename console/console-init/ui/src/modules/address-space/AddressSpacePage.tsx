@@ -14,7 +14,6 @@ import {
 } from "@patternfly/react-core";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
 import { ISortBy } from "@patternfly/react-table";
-import { useMutation } from "@apollo/react-hooks";
 import { IAddressSpace } from "./components";
 import {
   AddressSpaceListContainer,
@@ -31,7 +30,6 @@ export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
   useDocumentTitle("Address Space List");
   useA11yRouteChange();
-  let deleteAddressSpaceErrors: any = [];
 
   const [filterNames, setFilterNames] = useState<string[]>([]);
   const [filterNamespaces, setFilterNamespaces] = useState<string[]>([]);

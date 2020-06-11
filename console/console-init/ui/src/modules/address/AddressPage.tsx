@@ -14,7 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+import { useQuery } from "@apollo/react-hooks";
 import { StyleSheet } from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
 import { AddressListContainer } from "./containers";

@@ -5,7 +5,6 @@
 
 import React from "react";
 import {
-  SelectVariant,
   SelectOptionObject,
   DataToolbarToggleGroup,
   DataToolbarGroup,
