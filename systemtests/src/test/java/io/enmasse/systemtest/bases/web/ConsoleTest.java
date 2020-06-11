@@ -721,6 +721,30 @@ public abstract class ConsoleTest extends TestBase {
 
     }
 
+    protected void doTestListEndpoints() throws Exception {
+        AddressSpace standard1 = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-1-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(standard1);
+
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.openEndpointList(standard1);
+        consolePage.getEndpointItems();
+        log.info("pepa");
+    }
+
     //============================================================================================
     //============================ do test methods for address part ==============================
     //============================================================================================

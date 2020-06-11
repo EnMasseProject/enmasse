@@ -145,5 +145,10 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     void testFilterAddressSpaceStatus() throws Exception {
         doTestFilterAddressSpaceStatus();
     }
+
+    @Test
+    void testListEndpoints() throws Exception {
+        doTestListEndpoints();
+    }
 }
 
