@@ -12,17 +12,18 @@ import {
   CardBody,
   Grid,
   Title,
-  Switch,
   DropdownItem
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
-import { DropdownWithKebabToggle } from "components";
+import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { getLabelByKey } from "utils";
 import { IIoTCertificate } from "modules/iot-certificates";
 
 export interface ICertificateCardProps {
   certificate: IIoTCertificate;
   setOnEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  onChangeStatus: (certificate: IIoTCertificate, isEnabled: boolean) => void;
+  onDelete: (certifiacte: IIoTCertificate) => void;
   id: string;
 }
 
@@ -41,14 +42,22 @@ const styles = StyleSheet.create({
 export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = ({
   certificate,
   setOnEditMode,
+  onDelete,
+  onChangeStatus,
   id
 }) => {
-  const handleEditCertificate = () => {
+  const onEditCertificate = () => {
     setOnEditMode(true);
   };
 
-  const handleDeleteCertificate = () => {
-    // TODO: Mutation to delete the certificate
+  const onDeleteCertificate = () => {
+    onDelete(certificate);
+  };
+  const onEnableChange = (
+    value: boolean,
+    _: React.FormEvent<HTMLInputElement>
+  ) => {
+    onChangeStatus(certificate, value);
   };
 
   const dropdownItems = [
@@ -56,7 +65,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       id={`cc-dropdown-edit-${id}`}
       key="edit"
       aria-label="Edit certificate"
-      onClick={handleEditCertificate}
+      onClick={onEditCertificate}
     >
       Edit
     </DropdownItem>,
@@ -64,7 +73,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       id={`cc-dropdown-delete-${id}`}
       key="delete"
       aria-label="delete"
-      onClick={handleDeleteCertificate}
+      onClick={onDeleteCertificate}
     >
       Delete
     </DropdownItem>
@@ -111,12 +120,12 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             </Title>
           </GridItem>
           <GridItem span={10} className={rowMargin}>
-            <Switch
+            <SwitchWithToggle
               id={`cc-auto-provision-switch-${id}`}
               label="Enabled"
               labelOff="Disabled"
-              readOnly
               isChecked={certificate["auto-provisioning-enabled"] || false}
+              onChange={onEnableChange}
             />
           </GridItem>
           <GridItem span={2}>
