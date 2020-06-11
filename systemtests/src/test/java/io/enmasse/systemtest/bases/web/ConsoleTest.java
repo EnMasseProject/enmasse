@@ -10,6 +10,7 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.CertSpecBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AuthenticationService;
@@ -19,6 +20,8 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.certs.CertBundle;
+import io.enmasse.systemtest.certs.CertProvider;
 import io.enmasse.systemtest.certs.openssl.CertPair;
 import io.enmasse.systemtest.certs.openssl.CertSigningRequest;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
@@ -73,6 +76,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -722,27 +726,150 @@ public abstract class ConsoleTest extends TestBase {
     }
 
     protected void doTestListEndpoints() throws Exception {
-        AddressSpace standard1 = new AddressSpaceBuilder()
+        AddressSpace addrSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("standard-1-test-addr-space")
                 .withNamespace(kubernetes.getInfraNamespace())
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressSpaceType.BROKERED.toString())
-                .withPlan(AddressSpacePlans.BROKERED)
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
                 .withNewAuthenticationService()
                 .withName("standard-authservice")
                 .endAuthenticationService()
                 .endSpec()
                 .build();
 
-        resourcesManager.createAddressSpace(standard1);
-
+        resourcesManager.addToAddressSpaces(addrSpace);
         consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
         consolePage.openConsolePage();
-        consolePage.openEndpointList(standard1);
+        consolePage.createAddressSpace(addrSpace);
+        consolePage.openEndpointList(addrSpace);
         consolePage.getEndpointItems();
-        log.info("pepa");
+
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging")).getHost());
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging-wss").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging-wss")).getHost());
+    }
+
+    protected void doTestEndpointSystemProvided() throws Exception {
+        AddressSpace addrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-2-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .withEndpoints(AddressSpaceUtils.createEndpoint("messaging", new CertSpecBuilder()
+                        .withProvider(CertProvider.selfsigned.name())
+                        .build(), null, "amqps"))
+                .endSpec()
+                .build();
+
+        resourcesManager.addToAddressSpaces(addrSpace);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addrSpace);
+        consolePage.openEndpointList(addrSpace);
+        consolePage.getEndpointItems();
+
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging")).getHost());
+    }
+
+    protected void doTestEndpointOpenshiftProvided() throws Exception {
+        UserCredentials user = new UserCredentials("pepa", "kornys");
+        AddressSpace addrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-3-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .withEndpoints(
+                        AddressSpaceUtils.createEndpoint("messaging", new CertSpecBuilder()
+                                .withProvider(CertProvider.openshift.name())
+                                .build(), null, "amqps"),
+                        AddressSpaceUtils.createEndpoint("messaging-wss", new CertSpecBuilder()
+                                .withProvider(CertProvider.openshift.name())
+                                .build(), null, "https"))
+                .endSpec()
+                .build();
+
+        Address queue = new AddressBuilder()
+                .withNewMetadata()
+                .withNamespace(addrSpace.getMetadata().getNamespace())
+                .withName(AddressUtils.generateAddressMetadataName(addrSpace, "test-queue"))
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressType.QUEUE.toString())
+                .withAddress("test-queue")
+                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .endSpec()
+                .build();
+
+        resourcesManager.addToAddressSpaces(addrSpace);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addrSpace);
+
+        resourcesManager.createOrUpdateUser(addrSpace, user);
+
+        consolePage.openAddressList(addrSpace);
+        consolePage.createAddress(queue);
+
+        consolePage.switchToEndpointTab();
+        consolePage.getEndpointItems();
+
+        getClientUtils().assertCanConnect(addrSpace, user, Collections.singletonList(queue), resourcesManager);
+
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging-wss").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging-wss")).getHost());
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging")).getHost());
+    }
+
+    protected void doTestEndpointCustomCertsProvided() throws Exception {
+        CertBundle bundle = OpenSSLUtil.createCertBundle("kornys");
+
+        AddressSpace addrSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("standard-4-test-addr-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.STANDARD.toString())
+                .withPlan(AddressSpacePlans.STANDARD_SMALL)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .withEndpoints(
+                        AddressSpaceUtils.createEndpoint("messaging", new CertSpecBuilder()
+                                .withProvider(CertProvider.certBundle.name())
+                                .withTlsCert(bundle.getCertB64())
+                                .withTlsKey(bundle.getKeyB64())
+                                .build(), null, "amqps"))
+                .endSpec()
+                .build();
+
+        resourcesManager.addToAddressSpaces(addrSpace);
+        consolePage = new ConsoleWebPage(selenium, TestUtils.getGlobalConsoleRoute(), clusterUser);
+        consolePage.openConsolePage();
+        consolePage.createAddressSpace(addrSpace);
+        consolePage.openEndpointList(addrSpace);
+        consolePage.getEndpointItems();
+
+        assertEquals(consolePage.getEndpointItem(addrSpace.getMetadata().getName() + "." + "messaging").getHost(),
+                Objects.requireNonNull(AddressSpaceUtils.getEndpointByName(addrSpace, "messaging")).getHost());
     }
 
     //============================================================================================

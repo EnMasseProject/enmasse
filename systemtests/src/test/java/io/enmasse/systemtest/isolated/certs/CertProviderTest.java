@@ -62,7 +62,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
                 .build();
 
         createTestEnv(
-                createEndpoint("messaging", spec, null, "amqps"));
+                AddressSpaceUtils.createEndpoint("messaging", spec, null, "amqps"));
 
         String caCert = new String(Base64.getDecoder().decode(resourcesManager.getAddressSpace(addressSpace.getMetadata().getName()).getStatus().getCaCert()));
 
@@ -77,7 +77,7 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
         CertBundle messagingCert = OpenSSLUtil.createCertBundle(messagingHost);
 
         createTestEnv(
-                createEndpoint("messaging", new CertSpecBuilder()
+                AddressSpaceUtils.createEndpoint("messaging", new CertSpecBuilder()
                                 .withProvider(CertProvider.certBundle.name())
                                 .withTlsKey(messagingCert.getKeyB64())
                                 .withTlsCert(messagingCert.getCertB64())
@@ -209,22 +209,6 @@ class CertProviderTest extends TestBase implements ITestIsolatedStandard {
 
         QueueTest.runQueueTest(amqpClient, queue, 5);
         TopicTest.runTopicTest(amqpClient, topic, 5);
-    }
-
-    private static EndpointSpec createEndpoint(String name, CertSpec certSpec, String host, String servicePort) {
-        EndpointSpecBuilder builder = new EndpointSpecBuilder()
-                .withName(name)
-                .withService(name)
-                .withCert(certSpec)
-                .withNewExpose()
-                .withType(ExposeType.route)
-                .withRouteTlsTermination(TlsTermination.passthrough)
-                .withRouteServicePort(servicePort)
-                .endExpose();
-        if (host != null) {
-            builder.editExpose().withRouteHost(host).endExpose();
-        }
-        return builder.build();
     }
 
 

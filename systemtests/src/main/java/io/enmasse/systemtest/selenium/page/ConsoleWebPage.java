@@ -7,8 +7,10 @@ package io.enmasse.systemtest.selenium.page;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
-import io.enmasse.systemtest.Endpoint;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.ExposeType;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.certs.CertProvider;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -24,6 +26,7 @@ import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.By;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
@@ -366,6 +369,18 @@ public class ConsoleWebPage implements IWebPage {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("radio-key-" + type)));
     }
 
+    private WebElement getTslTerminations(Protocol protocol, TlsTerminationType type) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("radio-key-" + type.toString().toLowerCase() + "-" + protocol.toString().toLowerCase())));
+    }
+
+    private WebElement getCertAreaInput() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("text-file-upload-certificate")));
+    }
+
+    private WebElement getKeyAreaInput() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("text-file-uplod-private-key")));
+    }
+
     private WebElement getEnableRoutesSwitch() throws Exception {
         return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("switch-configure-route-btn")));
     }
@@ -670,7 +685,38 @@ public class ConsoleWebPage implements IWebPage {
                 addressSpace.getSpec().getType());
         selectPlan(addressSpace.getSpec().getPlan());
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
+        if (addressSpace.getSpec().getEndpoints().size() > 0) {
+            enableEndpointCustomization();
+        }
         selenium.clickOnItem(getNextButton());
+        if (addressSpace.getSpec().getEndpoints().size() > 0) {
+            boolean expose = true;
+            boolean customCert = false;
+            for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                selectProtocols(Protocol.valueOf(serviceName2protocol(endpoint.getService()).toUpperCase()));
+                selectTls(endpoint.getCert().getProvider());
+                if (!endpoint.getExpose().getType().equals(ExposeType.route)) {
+                    disableDefaultRoutes();
+                    expose = false;
+                }
+                customCert = endpoint.getCert().getProvider().equals(CertProvider.certBundle.name());
+            }
+            selenium.clickOnItem(getNextButton());
+            if (customCert) {
+                for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                    insertCertificate(new String(Base64.decodeBase64(endpoint.getCert().getTlsCert())));
+                    insertPrivateKey(new String(Base64.decodeBase64(endpoint.getCert().getTlsKey())));
+                }
+                selenium.clickOnItem(getNextButton());
+            }
+            if (expose) {
+                for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                    selectTlsTermination(Protocol.valueOf(serviceName2protocol(endpoint.getService()).toUpperCase()),
+                            TlsTerminationType.valueOf(endpoint.getExpose().getRouteTlsTermination().toString().toUpperCase()));
+                }
+                selenium.clickOnItem(getNextButton());
+            }
+        }
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -679,6 +725,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.takeScreenShot();
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         selenium.refreshPage();
     }
 
@@ -731,11 +778,11 @@ public class ConsoleWebPage implements IWebPage {
     }
 
     public void enableEndpointCustomization() throws Exception {
-        selenium.clickOnItem(getCustomizeEndpointSwitch(), "Customize endpoints");
+        selenium.switchCheckBox(getCustomizeEndpointSwitch(), "Customize endpoints");
     }
 
     public void disableDefaultRoutes() throws Exception {
-        selenium.clickOnItem(getEnableRoutesSwitch(), "Disable default routes");
+        selenium.switchCheckBox(getEnableRoutesSwitch(), "Disable default routes");
     }
 
     public void selectProtocols(Protocol... protocols) throws Exception {
@@ -746,6 +793,18 @@ public class ConsoleWebPage implements IWebPage {
 
     public void selectTls(String tls) throws Exception {
         selenium.clickOnItem(getTlsCertificatesCheckBox(tls), tls);
+    }
+
+    public void selectTlsTermination(Protocol protocol, TlsTerminationType type) throws Exception {
+        selenium.clickOnItem(getTslTerminations(protocol, type), String.format("%s:%s", protocol.toString().toLowerCase(), type.toString().toLowerCase()));
+    }
+
+    public void insertCertificate(String certificate) throws Exception {
+        selenium.fillInputItem(getCertAreaInput(), certificate);
+    }
+
+    public void insertPrivateKey(String privateKey) throws Exception {
+        selenium.fillInputItem(getKeyAreaInput(), privateKey);
     }
 
     public void prepareAddressCreation(Address address) throws Exception {
@@ -1117,9 +1176,16 @@ public class ConsoleWebPage implements IWebPage {
         HTTPS
     }
 
-    public interface TlsType {
-        String CERT_BUNDLE = "certBundle";
-        String SELFSIGNED = "selfsigned";
-        String OPENSHIFT = "openshift";
+    public enum TlsTerminationType {
+        PASSTHROUGH,
+        REENCRYPT
+    }
+
+    private String serviceName2protocol(String serviceName) {
+        if (serviceName.equals("messaging")) {
+            return "amqps";
+        } else if (serviceName.equals("messaging-wss")) {
+            return "https";
+        } else return "amqps";
     }
 }

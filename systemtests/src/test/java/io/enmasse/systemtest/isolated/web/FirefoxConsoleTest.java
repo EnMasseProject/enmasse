@@ -150,5 +150,20 @@ class FirefoxConsoleTest extends ConsoleTest implements ITestIsolatedStandard {
     void testListEndpoints() throws Exception {
         doTestListEndpoints();
     }
+
+    @Test
+    void testAddressSpaceEndpointSelfsignedCert() throws Exception {
+        doTestEndpointSystemProvided();
+    }
+
+    @Test
+    void testAddressSpaceEndpointOpenshiftProvided() throws Exception {
+        doTestEndpointOpenshiftProvided();
+    }
+
+    @Test
+    void testEndpointCustomCertsProvided() throws Exception {
+        doTestEndpointCustomCertsProvided();
+    }
 }
 
