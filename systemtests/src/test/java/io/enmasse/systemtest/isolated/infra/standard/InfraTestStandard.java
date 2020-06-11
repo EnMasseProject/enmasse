@@ -21,6 +21,7 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -141,20 +142,26 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build());
 
-        assertInfra("512Mi", "1Gi", brokerTemplateSpec, 1, "256Mi", routerTemplateSpec, "512Mi", adminTemplateSpec, "-Dsystemtest=property");
+        assertInfra(InfraConfiguration.broker(null, "512Mi", brokerTemplateSpec, "1Gi", "-Dsystemtest=property"),
+                InfraConfiguration.router(null, "256Mi", routerTemplateSpec, 1),
+                InfraConfiguration.admin(null, "512Mi", adminTemplateSpec));
     }
 
     @Test
     void testIncrementInfra() throws Exception {
-        testReplaceInfra("1Gi", "2Gi", 3, "512Mi", "768Mi");
+        testReplaceInfra(InfraConfiguration.broker("500m", "1Gi", null, "2Gi", null),
+                InfraConfiguration.router("500m", "512Mi", null, 3),
+                InfraConfiguration.admin("500m", "768Mi", null));
     }
 
     @Test
     void testDecrementInfra() throws Exception {
-        testReplaceInfra("256Mi", "512Mi", 1, "128Mi", "256Mi");
+        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "512Mi", null),
+                InfraConfiguration.router("250m", "128Mi", null, 1),
+                InfraConfiguration.admin("250m", "256Mi", null));
     }
 
-    void testReplaceInfra(String brokerMemory, String brokerStorage, int routerReplicas, String routerMemory, String adminMemory) throws Exception {
+    void testReplaceInfra(InfraConfiguration brokerConfig, InfraConfiguration routerConfig, InfraConfiguration adminConfig) throws Exception {
         testCreateInfra();
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
@@ -169,14 +176,15 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withAddressFullPolicy("FAIL")
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
                         .withNewResources()
-                        .withMemory(brokerMemory)
-                        .withStorage(brokerStorage)
-                        .endResources()
-                        .build())
-                .withRouter(PlanUtils.createStandardRouterResourceObject(routerMemory, 200, routerReplicas))
+                        .withMemory(brokerConfig.getMemory())
+                        .withStorage(brokerConfig.getBrokerStorage())
+                        .withCpu(brokerConfig.getCpu())
+                        .endResources().build())
+                .withRouter(PlanUtils.createStandardRouterResourceObject(routerConfig.getCpu(), routerConfig.getMemory(), 200, routerConfig.getRouterReplicas()))
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources()
-                        .withMemory(adminMemory)
+                        .withMemory(adminConfig.getMemory())
+                        .withCpu(adminConfig.getCpu())
                         .endResources()
                         .build())
                 .endSpec()
@@ -205,16 +213,12 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
+        if (!updatePersistentVolumeClaim) {
+            brokerConfig.setBrokerStorage(null);
+        }
+
         waitUntilInfraReady(
-                () -> assertInfra(brokerMemory,
-                        updatePersistentVolumeClaim ? brokerStorage : null,
-                        null,
-                        routerReplicas,
-                        routerMemory,
-                        null,
-                        adminMemory,
-                        null,
-                        null),
+                () -> assertInfra(brokerConfig, routerConfig, adminConfig),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
     }
@@ -234,7 +238,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withStorage("1Gi")
                         .endResources()
                         .build())
-                .withRouter(PlanUtils.createStandardRouterResourceObject("256Mi", 200, 2))
+                .withRouter(PlanUtils.createStandardRouterResourceObject(null, "256Mi", 200, 2))
                 .withAdmin(new StandardInfraConfigSpecAdminBuilder()
                         .withNewResources()
                         .withMemory("512Mi")
@@ -443,10 +447,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, int routerReplicas, String routermemory, PodTemplateSpec routerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec, String javaOpts) {
+    private boolean assertInfra(InfraConfiguration brokerConfig, InfraConfiguration routerConfiguration, InfraConfiguration adminConfig) {
         log.info("Checking router infra");
         List<Pod> routerPods = TestUtils.listRouterPods(kubernetes, exampleAddressSpace);
-        assertEquals(routerReplicas, routerPods.size(), "incorrect number of routers");
+        assertEquals(routerConfiguration.getRouterReplicas(), routerPods.size(), "incorrect number of routers");
 
         for (Pod router : routerPods) {
             ResourceRequirements resources = router.getSpec().getContainers().stream()
@@ -454,16 +458,24 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                     .findFirst()
                     .map(Container::getResources)
                     .get();
-            assertEquals(routermemory, resources.getLimits().get("memory").getAmount(),
+            assertEquals(routerConfiguration.getMemory(), resources.getLimits().get("memory").getAmount(),
                     "Router memory limit incorrect");
-            assertEquals(routermemory, resources.getRequests().get("memory").getAmount(),
+            assertEquals(routerConfiguration.getMemory(), resources.getRequests().get("memory").getAmount(),
                     "Router memory requests incorrect");
-            if (routerTemplateSpec != null) {
-                assertTemplateSpec(router, routerTemplateSpec);
+            if (routerConfiguration.getCpu() != null) {
+                assertEquals(routerConfiguration.getCpu(), resources.getLimits().get("cpu").getAmount(),
+                        "Router cpu limit incorrect");
+                assertEquals(routerConfiguration.getCpu(), resources.getRequests().get("cpu").getAmount(),
+                        "Router cpu requests incorrect");
+            }
+            if (routerConfiguration.getTemplateSpec() != null) {
+                assertTemplateSpec(router, routerConfiguration.getTemplateSpec());
             }
         }
-        assertAdminConsole(adminMemory, adminTemplateSpec);
-        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec, javaOpts);
+        log.info("Checking admin infra");
+        assertAdminConsole(adminConfig);
+        log.info("Checking broker infra");
+        assertBroker(brokerConfig);
         return true;
     }
 
