@@ -19,12 +19,12 @@ The service administrator configures {ProductName} by creating Custom Resources 
 
 When created, these Custom Resources define the configuration that is available to the messaging tenants.
 
-The following diagram illustrates the relationship between the different service configuration resources (green) and how they are referenced by the messaging tenant resources (blue).
+The following diagram illustrates the relationship between the different service configuration resources and how they are referenced by the messaging tenant resources.
 
 ifdef::Asciidoctor[]
-image::enmasse-entities.svg[{ProductName} entities]
+image::config_relationships.png[{ProductName} entities]
 endif::Asciidoctor[]
 
 ifndef::Asciidoctor[]
-image::{imagesdir}/enmasse-entities.svg[{ProductName} entities]
+image::{imagesdir}/config_relationships.png[{ProductName} entities]
 endif::Asciidoctor[]
