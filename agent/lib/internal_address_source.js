@@ -21,6 +21,7 @@ var events = require('events');
 var kubernetes = require('./kubernetes.js');
 var log = require('./log.js').logger();
 var myutils = require('./utils.js');
+var clone = require('clone');
 
 function extract_spec(def, env) {
     if (def.spec === undefined) {
@@ -33,7 +34,7 @@ function extract_spec(def, env) {
     o.addressSpaceNamespace = def.metadata ? def.metadata.namespace : process.env.ADDRESS_SPACE_NAMESPACE;
 
     if (def.status && def.status.brokerStatuses) {
-        o.allocated_to = def.status.brokerStatuses;
+        o.allocated_to = clone(def.status.brokerStatuses);
     }
     return o;
 }
@@ -131,13 +132,13 @@ AddressSource.prototype.start = function () {
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
     this.last = {};
-}
+};
 
 util.inherits(AddressSource, events.EventEmitter);
 
 AddressSource.prototype.get_changes = function (name, addresses, unchanged) {
     var c = myutils.changes(this.last[name], addresses, address_compare, unchanged, description);
-    this.last[name] = addresses;
+    this.last[name] = clone(addresses);
     return c;
 };
 
