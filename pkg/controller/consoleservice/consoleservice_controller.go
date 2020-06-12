@@ -804,14 +804,15 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 			container.Args = []string{
 				"-config=/apps/cfg/oauth-proxy-openshift.cfg",
 				"-openshift-ca=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
+				"-openshift-ca=/etc/ssl/certs/ca-bundle.crt",
 			}
 
 			for _, key := range caBundleKeys {
-				container.Args = append(container.Args, fmt.Sprintf("-openshift-ca=/etc/pki/ca-trust/%s", key))
+				container.Args = append(container.Args, fmt.Sprintf("-openshift-ca=/etc/pki/trusted-ca-bundle/%s", key))
 			}
 			applyOauthProxyContainer(container, consoleservice, "/oauth/healthz")
 
-			install.ApplyVolumeMountSimple(container, "trusted-ca-bundle", "/etc/pki/ca-trust/", true)
+			install.ApplyVolumeMountSimple(container, "trusted-ca-bundle", "/etc/pki/trusted-ca-bundle/", true)
 			return nil
 		}); err != nil {
 			return err
