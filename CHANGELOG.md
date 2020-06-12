@@ -37,7 +37,8 @@
 * #4682: Avoid race when processing Artemis management responses when first connecting to broker
 
 ## 0.31.4
-* #4721:  Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
+* #4721: Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
+* #4704: [OpenShift 3.11] Console returns 500 internal error when configured with custom certificate
 
 ## 0.31.3
 * #4650: Install uncaught exception handler in address-space-controller and standard-controller

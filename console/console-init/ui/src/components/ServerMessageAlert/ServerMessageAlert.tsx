@@ -32,7 +32,7 @@ export const ServerMessageAlert: React.FC = () => {
             errors.map((error: any, index: number) => {
               const { networkError, graphQLErrors } = error;
               if (graphQLErrors && graphQLErrors.length > 0) {
-                graphQLErrors.map((err: any) => {
+                graphQLErrors.forEach((err: any) => {
                   messages.push(err.message);
                 });
               } else {

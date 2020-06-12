@@ -8,12 +8,8 @@ import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { AddressSpaceReview } from "modules/address-space/components";
-import { IMessagingProject, IExposeEndPoint } from "./CreateMessagingProject";
-import {
-  EndPointProtocol,
-  TlsCertificateType,
-  getQueryVariableForCreateAddressSpace
-} from "modules/address-space/utils";
+import { IMessagingProject } from "./CreateMessagingProject";
+import { getQueryVariableForCreateAddressSpace } from "modules/address-space/utils";
 
 interface IMessagingProjectReviewProps {
   projectDetail: IMessagingProject;

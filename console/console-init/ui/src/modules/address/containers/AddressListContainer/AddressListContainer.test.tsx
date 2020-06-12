@@ -6,9 +6,8 @@
 import React from "react";
 import ReactDom from "react-dom";
 import { MemoryRouter } from "react-router";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, wait } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
-import wait from "waait";
 import { AddressListContainer } from "./AddressListContainer";
 import { RETURN_ALL_ADDRESS_FOR_ADDRESS_SPACE } from "graphql-module/queries";
 
@@ -88,7 +87,7 @@ describe("<AddressListContainer/>", () => {
 
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
-    expect(container).toHaveTextContent("Loading");
+    wait(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -114,8 +113,7 @@ describe("<AddressListContainer/>", () => {
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(0);
-    expect(container).not.toHaveTextContent("Loading");
+    await wait(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <AddressList/> component if loading is false", async () => {
@@ -141,9 +139,8 @@ describe("<AddressListContainer/>", () => {
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(0);
     //check table headers
-    expect(container).toHaveTextContent("Address");
+    await wait(() => expect(container).toHaveTextContent("Address"));
     expect(container).toHaveTextContent("Status");
   });
 
@@ -169,8 +166,7 @@ describe("<AddressListContainer/>", () => {
     ];
 
     const { container } = setup(mocks, props);
-    await wait(0);
-    expect(container).toHaveTextContent("Create an address");
+    await wait(() => expect(container).toHaveTextContent("Create an address"));
   });
 
   it("should not render <EmptyAddress/> component if total links is greater than zero (0)", async () => {
@@ -196,7 +192,8 @@ describe("<AddressListContainer/>", () => {
 
     const { container } = setup(mocks, props);
     cleanup();
-    await wait(0);
-    expect(container).not.toHaveTextContent("Create an address");
+    await wait(() =>
+      expect(container).not.toHaveTextContent("Create an address")
+    );
   });
 });

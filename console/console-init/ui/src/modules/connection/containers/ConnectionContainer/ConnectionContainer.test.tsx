@@ -5,9 +5,8 @@
 
 import React from "react";
 import ReactDom from "react-dom";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, wait } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
-import wait from "waait";
 import { ConnectionContainer } from "./ConnectionContainer";
 import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
 
@@ -48,7 +47,7 @@ describe("<ConnectionContainer/>", () => {
 
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
-    expect(container).toHaveTextContent("Loading");
+    wait(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -66,16 +65,15 @@ describe("<ConnectionContainer/>", () => {
           )
         },
         result: {
-          data: {}
+          data: null
         }
       }
     ];
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(0);
 
-    expect(container).not.toHaveTextContent("Loading");
+    await wait(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <ConnectionList/> component if loading is false", async () => {
@@ -93,17 +91,16 @@ describe("<ConnectionContainer/>", () => {
           )
         },
         result: {
-          data: {}
+          data: null
         }
       }
     ];
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(0);
 
     //check table headers
-    expect(container).toHaveTextContent("Hostname");
+    await wait(() => expect(container).toHaveTextContent("Hostname"));
     expect(container).toHaveTextContent("Protocol");
   });
 
@@ -122,15 +119,14 @@ describe("<ConnectionContainer/>", () => {
           )
         },
         result: {
-          data: { connections: { total: 0 } }
+          data: { connections: { total: 0, connections: [] } }
         }
       }
     ];
 
     const { container } = setup(mocks, props);
-    await wait(0);
 
-    expect(container).toHaveTextContent("No connections");
+    await wait(() => expect(container).toHaveTextContent("No connections"));
     expect(container).toHaveTextContent(
       "You currently don't have any connections"
     );
@@ -158,9 +154,8 @@ describe("<ConnectionContainer/>", () => {
 
     const { container } = setup(mocks, props);
     cleanup();
-    await wait(0);
 
-    expect(container).not.toHaveTextContent("No connections");
+    await wait(() => expect(container).not.toHaveTextContent("No connections"));
     expect(container).not.toHaveTextContent(
       "You currently don't have any connections"
     );
