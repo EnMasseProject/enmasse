@@ -307,6 +307,8 @@ public class IsolatedResourcesManager extends ResourceManager {
                 spaces.add(addressSpace);
             } else {
                 LOGGER.warn("Address space '" + addressSpace + "' already exists.");
+                AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
+                currentAddressSpaces.add(addressSpace);
             }
         }
         currentAddressSpaces.addAll(spaces);

@@ -46,8 +46,11 @@ public class ExternalMessagingClient {
     }
 
     public ExternalMessagingClient withAdditionalArgument(ClientArgument argName, Object value) {
-        Objects.requireNonNull(value);
-        this.arguments.put(argName, String.valueOf(value));
+        if (value == null) {
+            this.arguments.remove(argName);
+        } else {
+            this.arguments.put(argName, String.valueOf(value));
+        }
         return this;
     }
 
@@ -140,7 +143,7 @@ public class ExternalMessagingClient {
             defaultWait.completeAsync(() -> {
                 try {
                     Thread.sleep(14000);
-                } catch(Exception e) {
+                } catch (Exception e) {
                     LOGGER.error("Error in default wait for link attached", e);
                 }
                 return null;
