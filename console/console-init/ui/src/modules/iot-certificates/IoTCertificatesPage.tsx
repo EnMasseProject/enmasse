@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
 import { IIoTCertificate, IoTCertificateList } from "./components";
 
@@ -38,6 +38,11 @@ export default function IoTCertificates() {
     // TODO: remove this default Certificates once query get fininished
     defaultCertificates
   );
+
+  useEffect(() => {
+    setCertificates(certificates);
+  }, [certificates]);
+
   //TODO: Add query to fetch certificates
   const onSave = (certificate: IIoTCertificate) => {};
 
