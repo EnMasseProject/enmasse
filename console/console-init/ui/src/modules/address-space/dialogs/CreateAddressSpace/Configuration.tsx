@@ -14,7 +14,8 @@ import { Loading } from "use-patternfly";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import {
   AddressSpaceConfiguration,
-  IAuthenticationServiceOptions
+  IAuthenticationServiceOptions,
+  IPlanOption
 } from "modules/address-space/components";
 
 export interface IConfiguration {
@@ -135,19 +136,18 @@ export const Configuration: React.FunctionComponent<IConfiguration> = ({
   };
 
   const getPlanOptions = () => {
-    let planOptions: any[] = [];
+    let planOptions: IPlanOption[] = [];
     if (type) {
       planOptions =
         addressSpacePlans
+          .filter(plan => plan.spec.addressSpaceType === type)
           .map(plan => {
-            if (plan.spec.addressSpaceType === type) {
-              return {
-                value: plan.metadata.name,
-                label: plan.spec.displayName || plan.metadata.name,
-                description:
-                  plan.spec.shortDescription || plan.spec.longDescription
-              };
-            }
+            return {
+              value: plan.metadata.name,
+              label: plan.spec.displayName || plan.metadata.name,
+              description:
+                plan.spec.shortDescription || plan.spec.longDescription
+            };
           })
           .filter(plan => plan !== undefined) || [];
     }
