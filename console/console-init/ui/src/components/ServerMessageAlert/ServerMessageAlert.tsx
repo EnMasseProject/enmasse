@@ -42,7 +42,7 @@ export const ServerMessageAlert: React.FC = () => {
                   networkError.result.errors &&
                   networkError.result.errors.length > 0
                 ) {
-                  networkError.result.errors.map((err: any) =>
+                  networkError.result.errors.forEach((err: any) =>
                     messages.push(err.message)
                   );
                 }
