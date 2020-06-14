@@ -111,7 +111,8 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
                     String.format("https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker=\"%s\"/AddressMemoryUsage", podName));
 
 
-            assertThat(jmxResponse.getRetCode(), is(true));
+            assertThat(String.format("Support tool invocation failed %s : %s", jmxResponse.getStdErr(), jmxResponse.getStdOut()),
+                    jmxResponse.getRetCode(), is(true));
             Map<String, Object> readValue = jsonResponseToMap(jmxResponse.getStdOut());
             assertThat(readValue.get("status"), is(200));
 
@@ -125,7 +126,8 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
                     "--user", supportUser,
                     "--password", supportPassword
             );
-            assertThat(artemisCmdResponse.getRetCode(), is(true));
+            assertThat(String.format("Support tool invocation failed %s : %s", jmxResponse.getStdErr(), jmxResponse.getStdOut()),
+                    artemisCmdResponse.getRetCode(), is(true));
             List<String> addresses = Arrays.asList(artemisCmdResponse.getStdOut().split("\n"));
             assertThat(addresses, hasItem(addr.getSpec().getAddress()));
 
