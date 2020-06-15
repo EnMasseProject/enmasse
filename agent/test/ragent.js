@@ -92,6 +92,7 @@ function verify_queue(name, all_addresses, all_autolinks, allocated_to) {
     assert.equal(addresses[0].prefix, name);
     assert.equal(addresses[0].distribution, 'balanced');
     assert.equal(addresses[0].waypoint, true);
+    assert.equal(addresses[0].durable, true);
 
     var autolinks = remove(all_autolinks, function (o) { return o.address === name; });
     if (allocated_to !== undefined) {

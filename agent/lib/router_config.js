@@ -374,7 +374,7 @@ function desired_address_config(high_level_address_definitions, brokers) {
     for (var i in high_level_address_definitions) {
         var def = high_level_address_definitions[i];
         if (def.type === 'queue') {
-            config.add_address({prefix:def.address, distribution:'balanced', waypoint:true});
+            config.add_address({prefix:def.address, distribution:'balanced', waypoint:true, durable:true});
             if (def.allocated_to) {
                 log.debug("Constructing config for queue %s allocated to: %j", def.address, def.allocated_to);
                 for (var j in def.allocated_to) {
