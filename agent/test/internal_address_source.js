@@ -180,6 +180,7 @@ describe('address source', function() {
         address_plans_source.emit("addressplans_defined", [{
             kind: 'AddressPlan',
             metadata: {name: 'myplan'},
+            spec: {addressType: 'queue'}
         }]);
         source.watcher.close();
         source.on('addresses_defined', function (addresses) {
@@ -200,6 +201,7 @@ describe('address source', function() {
         address_plans_source.emit("addressplans_defined", [{
             kind: 'AddressPlan',
             metadata: {name: 'myplan'},
+            spec: {addressType: 'queue'}
         }]);
         source.once('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
@@ -245,6 +247,7 @@ describe('address source', function() {
             kind: 'AddressPlan',
             metadata: {name: 'myplan'},
             spec: {
+                addressType: 'queue',
                 resources: {
                     broker: 0.01
                 }
