@@ -25,7 +25,6 @@ var http = require('http');
 var rhea = require('rhea');
 
 var Ragent = require('../lib/ragent.js');
-var BrokerAddressSettings = require('../lib/broker_address_settings.js');
 var tls_options = require('../lib/tls_options.js');
 var MockBroker = require('../testlib/mock_broker.js');
 var MockRouter = require('../testlib/mock_router.js');

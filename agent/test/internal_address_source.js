@@ -16,23 +16,17 @@
 'use strict';
 
 var assert = require('assert');
-var fs = require('fs');
-var https = require('https');
-var path = require('path');
-var url = require('url');
-var myutils = require('../lib/utils.js');
+var EventEmitter = require('events');
 
 var AddressSource = require('../lib/internal_address_source');
 var AddressServer = require('../testlib/mock_resource_server.js').AddressServer;
 
-function broker_state(id) {
-    return {clusterId: id, containerId: id, state: 'Active'};
-}
-
-describe('configmap backed address source', function() {
+describe('address source', function() {
     var address_server;
+    var address_plans_source;
 
     beforeEach(function(done) {
+        address_plans_source = new EventEmitter();
         address_server = new AddressServer();
         address_server.listen(0, done);
     });
@@ -124,6 +118,26 @@ describe('configmap backed address source', function() {
             }, 200);
         });
     });
+    it('watches for changes - address updated', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan1' }, undefined, '1234');
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
+        source.start();
+        source.once('addresses_defined', (addresses) => {
+            assert.equal(addresses.length, 1);
+            process.nextTick(() => {
+                source.on('addresses_defined', (updates) => {
+                    assert.equal(updates.length, 1);
+                    assert.equal(updates[0].address, 'foo');
+                    assert.equal(updates[0].type, 'queue');
+                    assert.equal(updates[0].plan, 'myplan2');
+                    source.watcher.close().then(() => {
+                        done();
+                    });
+                });
+                address_server.update_address_definition({address:'foo', type:'queue', plan: 'myplan2' }, undefined, '1234');
+            });
+        });
+    });
     it('watches for changes even on error', function(done) {
         var count = 0;
         address_server.failure_injector = {
@@ -158,30 +172,40 @@ describe('configmap backed address source', function() {
             }, 200);
         });
     });
-    it('updates readiness', function(done) {
-        address_server.add_address_definition({address:'foo', type:'queue'}, undefined, '1234');
+    it('updates status readiness', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'}, undefined, '1234');
         address_server.add_address_definition({address:'bar', type:'topic'}, undefined, '1234');
         var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', INFRA_UUID: '1234'});
-        source.start();
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+        }]);
         source.watcher.close();
         source.on('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
                 var address = address_server.find_resource('addresses', 'foo');
                 assert.equal(address.status.isReady, true);
+                assert.equal(address.status.phase, 'Active');
+
                 done();
             }).catch(done);
         });
     });
     it('updates readiness after recreation', function(done) {
-        address_server.add_address_definition({address:'foo', type:'queue'});
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'});
         address_server.add_address_definition({address:'bar', type:'topic'});
         var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
-        source.start();
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+        }]);
         source.once('addresses_defined', function (addresses) {
             source.check_status({foo:{propagated:100}}).then(function () {
                 address_server.remove_resource_by_name('addresses', 'foo');
                 source.once('addresses_defined', function (addresses) {
-                    address_server.add_address_definition({address:'foo', type:'queue'});
+                    address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'});
                     source.once('addresses_defined', function (addresses) {
                         source.watcher.close();
                         source.check_status({foo:{propagated:100}}).then(function () {
@@ -194,204 +218,51 @@ describe('configmap backed address source', function() {
             });
         });
     });
-    function remove_by_name (list, name) {
-        function f(o) { return o.name === name}
-        var results = list.filter(f);
-        myutils.remove(list, f);
-        return results[0];
-    }
-    function assert_equal_set(actual, expected) {
-        assert.deepEqual(actual.sort(), expected.sort());
-    }
-    function plan_name (o) {
-        return o.name;
-    }
-    it('retrieves address types from plans', function(done) {
-        address_server.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
-        address_server.add_address_plan({plan_name:'small', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'medium', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'large', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'foo', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'bar', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'standard', address_type:'anycast', display_name:'display me', shortDescription:'abcdefg', longDescription:'hijklmn'});
-        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
-        source.start();
-        source.watcher.close();
-        source.get_address_types().then(function (types) {
-            var queue = remove_by_name(types, 'queue');
-            assert(queue);
-            assert.equal(queue.plans.length, 3);
-            assert_equal_set(queue.plans.map(plan_name), ['small', 'medium', 'large']);
-            var topic = remove_by_name(types, 'topic');
-            assert(topic);
-            assert.equal(topic.plans.length, 2);
-            assert_equal_set(topic.plans.map(plan_name), ['foo', 'bar']);
-            var anycast = remove_by_name(types, 'anycast');
-            assert(anycast);
-            assert.equal(anycast.plans.length, 1);
-            assert.equal(anycast.plans[0].name, 'standard');
-            assert.equal(anycast.plans[0].displayName, 'display me');
-            assert.equal(anycast.plans[0].shortDescription, 'abcdefg');
-            assert.equal(anycast.plans[0].longDescription, 'hijklmn');
-            assert.equal(types.length, 0);
-            done();
-        }).catch(function (error) {
-            done(error);
-        });
-    });
-    it('retrieves address types in order', function(done) {
-        address_server.add_address_space_plan({plan_name:'space', address_plans:['bar', 'medium', 'foo', 'standard', 'non-standard', 'large', 'small']});
-        address_server.add_address_plan({plan_name:'bar', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'medium', address_type:'queue', displayOrder:11});
-        address_server.add_address_plan({plan_name:'foo', address_type:'topic', displayOrder:20});
-        address_server.add_address_plan({plan_name:'standard', address_type:'anycast'});
-        address_server.add_address_plan({plan_name:'non-standard', address_type:'anycast', displayOrder:30});
-        address_server.add_address_plan({plan_name:'large', address_type:'queue', displayOrder:12});
-        address_server.add_address_plan({plan_name:'small', address_type:'queue', displayOrder:10});
-        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
-        source.start();
-        source.watcher.close();
-        source.get_address_types().then(function (types) {
-            assert.equal(types[0].name, 'queue');
-            assert.equal(types[0].plans[0].name, 'small');
-            assert.equal(types[0].plans[1].name, 'medium');
-            assert.equal(types[0].plans[2].name, 'large');
-            assert.equal(types[1].name, 'topic');
-            assert.equal(types[1].plans[0].name, 'foo');
-            assert.equal(types[1].plans[1].name, 'bar');
-            assert.equal(types[2].name, 'anycast');
-            assert.equal(types[2].plans[0].name, 'non-standard');
-            assert.equal(types[2].plans[1].name, 'standard');
-            done();
-        }).catch(function (error) {
-            done(error);
-        });
-    });
-    it('treats 0 correctly as value for displayOrder', function(done) {
-        address_server.add_address_space_plan({plan_name:'space', address_plans:['bar', 'medium', 'foo', 'standard', 'non-standard', 'large', 'small']});
-        address_server.add_address_plan({plan_name:'bar', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'medium', address_type:'queue', displayOrder:11});
-        address_server.add_address_plan({plan_name:'foo', address_type:'topic', displayOrder:20});
-        address_server.add_address_plan({plan_name:'standard', address_type:'anycast'});
-        address_server.add_address_plan({plan_name:'non-standard', address_type:'anycast', displayOrder:30});
-        address_server.add_address_plan({plan_name:'large', address_type:'queue', displayOrder:12});
-        address_server.add_address_plan({plan_name:'small', address_type:'queue', displayOrder:0});
-        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
-        source.start();
-        source.watcher.close();
-        source.get_address_types().then(function (types) {
-            assert.equal(types[0].name, 'queue');
-            assert.equal(types[0].plans[0].name, 'small');
-            assert.equal(types[0].plans[1].name, 'medium');
-            assert.equal(types[0].plans[2].name, 'large');
-            assert.equal(types[1].name, 'topic');
-            assert.equal(types[1].plans[0].name, 'foo');
-            assert.equal(types[1].plans[1].name, 'bar');
-            assert.equal(types[2].name, 'anycast');
-            assert.equal(types[2].plans[0].name, 'non-standard');
-            assert.equal(types[2].plans[1].name, 'standard');
-            done();
-        }).catch(function (error) {
-            done(error);
-        });
-    });
-    // internal_address_source now creates address objects, rather than the underlying configmap.
-    // it('creates an address', function(done) {
-    //     var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE: 'foo'});
-    //     source.once('addresses_defined', function () {
-    //         source.create_address({address:'myqueue', type:'queue', plan:'clever'}).then(
-    //             function () {
-    //                 source.once('addresses_defined', function (addresses) {
-    //                     assert.equal(addresses.length, 1);
-    //                     assert.equal(addresses[0].name.substring(0,4), 'foo.');
-    //                     assert.equal(addresses[0].address, 'myqueue');
-    //                     assert.equal(addresses[0].type, 'queue');
-    //                     assert.equal(addresses[0].plan, 'clever');
-    //                     source.watcher.close().then(function () {
-    //                         done();
-    //                     });
-    //                 });
-    //             }
-    //         ).catch(done);
-    //     });
-    // });
-    // it('deletes an address', function(done) {
-    //     address_server.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
-    //     address_server.add_address_definition({address:'bar', type:'topic'}, 'address-config-bar');
-    //     var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
-    //     source.on('addresses_defined', function () {
-    //         source.delete_address({address:'foo', type:'queue', name:'address-config-foo'}).then(
-    //             function () {
-    //                 source.on('addresses_defined', function (addresses) {
-    //                     assert.equal(addresses.length, 1);
-    //                     assert.equal(addresses[0].address, 'bar');
-    //                     assert.equal(addresses[0].type, 'topic');
-    //                     source.watcher.close().then(function () {
-    //                         done();
-    //                     });
-    //                 });
-    //             }
-    //         ).catch(done);
-    //     });
-    // });
-    //it('handles invalid address syntax', function(done) {
-    //    address_server.add_address_definition({address:'foo', type:'queue'});
-    //    address_server.add_config_map('baz', {type:'address-config'}, {'config.json': '{bad:x[!'});
-    //    address_server.add_address_definition({address:'bar', type:'topic'});
-    //    var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
-    //    source.start();
-    //    source.watcher.close();//prevents watching
-    //    source.on('addresses_defined', function (addresses) {
-    //        assert.equal(addresses.length, 2);
-    //        assert.equal(addresses[0].address, 'bar');
-    //        assert.equal(addresses[0].type, 'topic');
-    //        assert.equal(addresses[1].address, 'foo');
-    //        assert.equal(addresses[1].type, 'queue');
-    //        done();
-    //    });
-    //});
-    it('retrieves plans concurrently with addresses', function(done) {
-        this.timeout(5000);
-        address_server.add_address_space_plan({plan_name:'space', address_plans:['small', 'medium', 'large', 'foo', 'bar', 'standard']});
-        address_server.add_address_plan({plan_name:'small', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'medium', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'large', address_type:'queue'});
-        address_server.add_address_plan({plan_name:'foo', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'bar', address_type:'topic'});
-        address_server.add_address_plan({plan_name:'standard', address_type:'anycast', display_name:'display me', shortDescription:'abcdefg', longDescription:'hijklmn'});
-        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space'});
-        source.start();
-        var plans = source.get_address_types();
-        source.once('addresses_defined', function (addresses) {
-            address_server.add_address_definition({address:'foo', type:'queue'}, 'address-config-foo');
-            source.once('addresses_defined', function (addresses) {
-                plans.then(function (types) {
-                    var queue = remove_by_name(types, 'queue');
-                    assert(queue);
-                    assert.equal(queue.plans.length, 3);
-                    assert_equal_set(queue.plans.map(plan_name), ['small', 'medium', 'large']);
-                    var topic = remove_by_name(types, 'topic');
-                    assert(topic);
-                    assert.equal(topic.plans.length, 2);
-                    assert_equal_set(topic.plans.map(plan_name), ['foo', 'bar']);
-                    var anycast = remove_by_name(types, 'anycast');
-                    assert(anycast);
-                    assert.equal(anycast.plans.length, 1);
-                    assert.equal(anycast.plans[0].name, 'standard');
-                    assert.equal(anycast.plans[0].displayName, 'display me');
-                    assert.equal(anycast.plans[0].shortDescription, 'abcdefg');
-                    assert.equal(anycast.plans[0].longDescription, 'hijklmn');
-                    assert.equal(types.length, 0);
+    it('updates status - plan not found', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'not found'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+        }]);
 
-                    source.watcher.close().then(function () {
-                        assert.equal(addresses.length, 1);
-                        assert.equal(addresses[0].address, 'foo');
-                        assert.equal(addresses[0].type, 'queue');
-                        done();
-                    }).catch(done);
-                }).catch(function (error) {
-                    done(error);
-                });
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, false);
+                assert.equal(address.status.messages.length, 1);
+                assert.equal(address.status.messages[0], "Unknown address plan 'not found'");
+                done();
+            });
+        });
+    });
+    it('updates status - plan status', function(done) {
+        address_server.add_address_definition({address:'foo', type:'queue', plan: 'myplan'});
+        var source = new AddressSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default'});
+        source.start(address_plans_source);
+        address_plans_source.emit("addressplans_defined", [{
+            kind: 'AddressPlan',
+            metadata: {name: 'myplan'},
+            spec: {
+                resources: {
+                    broker: 0.01
+                }
+            }
+        }]);
+
+        source.once('addresses_defined', function (addresses) {
+            source.check_status({foo:{propagated:100}}).then(function (add) {
+                var address = address_server.find_resource('addresses', 'foo');
+                assert.equal(address.status.isReady, true);
+                assert.equal(address.status.messages.length, 0);
+                assert.equal(address.status.messages.length, 0);
+                assert.deepEqual(address.status.planStatus, {name: 'myplan',
+                partitions: 1,
+                resources: {
+                    broker: 0.01
+                }});
+                done();
             });
         });
     });

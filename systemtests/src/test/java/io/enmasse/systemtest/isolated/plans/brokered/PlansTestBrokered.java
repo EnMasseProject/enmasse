@@ -14,18 +14,25 @@ import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
+import io.enmasse.systemtest.bases.plans.PlansTestBase;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
+import io.enmasse.systemtest.model.addressplan.DestinationPlan;
+import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
-public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered {
+public class PlansTestBrokered extends PlansTestBase implements ITestIsolatedBrokered {
+    private static Logger log = CustomLogger.getLogger();
 
     @Test
     void testReplaceAddressSpacePlanBrokered() throws Exception {
@@ -108,4 +115,38 @@ public class PlansTestBrokered extends TestBase implements ITestIsolatedBrokered
 
         getClientUtils().assertCanConnect(addressSpace, user, Arrays.asList(afterQueue, queue), resourcesManager);
     }
+
+    @Test
+    void testUnknownAddressPlan() throws Exception {
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-brokered-space")
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(AddressSpaceType.BROKERED.toString())
+                .withPlan(AddressSpacePlans.BROKERED)
+                .withNewAuthenticationService()
+                .withName("standard-authservice")
+                .endAuthenticationService()
+                .endSpec()
+                .build();
+
+        String unknownPlan = "unknown-plan";
+        String unknownPlanMessages = String.format("Unknown address plan '%s'", unknownPlan);
+        List<StageHolder> stageHolders = new ArrayList<>();
+        stageHolders.add(new StageHolder(addressSpace, "initial-unknown-plan")
+                .addStage(unknownPlan, assertAddressStatusNotReady(unknownPlanMessages)));
+        stageHolders.add(new StageHolder(addressSpace, "becomes-unknown-plan")
+                .addStage(DestinationPlan.BROKERED_QUEUE, assertAddressStatusReady(DestinationPlan.BROKERED_QUEUE))
+                .addStage(unknownPlan, assertAddressStatusNotReady(unknownPlanMessages)));
+        stageHolders.add(new StageHolder(addressSpace, "initial-unknown-plan-for-type")
+                .addStage(DestinationPlan.BROKERED_TOPIC, assertAddressStatusNotReady(String.format("Unknown address plan '%s'", DestinationPlan.BROKERED_TOPIC)))
+                .addStage(DestinationPlan.BROKERED_QUEUE, assertAddressStatusReady(DestinationPlan.BROKERED_QUEUE)));
+        stageHolders.add(new StageHolder(addressSpace,"good").addStage(DestinationPlan.BROKERED_QUEUE,
+                assertAddressStatusReady(DestinationPlan.BROKERED_QUEUE)));
+
+        doTestUnknownAddressPlan(addressSpace, stageHolders);
+    }
+
 }

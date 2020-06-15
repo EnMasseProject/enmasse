@@ -87,15 +87,19 @@ function get_path(base, resource, options, timeout) {
     return path;
 }
 
+function build_api_from_resource(resource) {
+    return resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/' : '/api/v1/';
+}
+
 function list_options(resource, baseOptions) {
-    var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/namespaces/' : '/api/v1/namespaces/';
+    let base = ("api" in baseOptions ?  baseOptions.api : build_api_from_resource(resource)) + "namespaces/";
     let path = get_path(base, resource, baseOptions);
     var options = get_options(baseOptions, path);
     return myutils.merge({requestTimeout: baseOptions.requestTimeout || process.env.REQUEST_TIMEOUT || 120}, options);
 }
 
 function watch_options(resource, baseOptions) {
-    var base = resource.startsWith("address") ? '/apis/enmasse.io/v1beta1/watch/namespaces/' : '/api/v1/watch/namespaces/';
+    var base = ("api" in baseOptions ?  baseOptions.api : build_api_from_resource(resource)) + "watch/namespaces/";
     var timeout = baseOptions.requestTimeout || process.env.RESYNC_INTERVAL;
     var options = get_options(baseOptions, get_path(base, resource, baseOptions, timeout));
     return myutils.merge({requestTimeout: timeout}, options);

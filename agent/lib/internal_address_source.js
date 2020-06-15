@@ -39,10 +39,6 @@ function extract_spec(def, env) {
     return o;
 }
 
-function extract_address_field(def) {
-    return def && def.spec ? def.spec.address : undefined;
-}
-
 function is_defined (addr) {
     return addr !== undefined;
 }
@@ -100,7 +96,11 @@ function same_address_status(a, b) {
 }
 
 function same_address_definition_and_status(a, b) {
-    return same_address_definition(a, b) && same_address_status(a.status, b.status);
+    return same_address_definition(a, b) && same_address_status(a.status, b.status) && same_address_plan(a, b);
+}
+
+function same_address_plan(a, b) {
+    return a.plan === b.plan;
 }
 
 function address_compare(a, b) {
@@ -126,12 +126,17 @@ function AddressSource(config) {
     events.EventEmitter.call(this);
 }
 
-AddressSource.prototype.start = function () {
+AddressSource.prototype.start = function (addressplanssource) {
     var options = myutils.merge({selector: this.selector, namespace: this.config.ADDRESS_SPACE_NAMESPACE}, this.config);
+    if (addressplanssource) {
+        addressplanssource.on('addressplans_defined', this.updated_plans.bind(this))
+    }
+
     this.watcher = kubernetes.watch('addresses', options);
     this.watcher.on('updated', this.updated.bind(this));
     this.readiness = {};
     this.last = {};
+    this.plans = [];
 };
 
 util.inherits(AddressSource, events.EventEmitter);
@@ -164,7 +169,7 @@ AddressSource.prototype.add_readiness_record = function (definition) {
 
 AddressSource.prototype.update_readiness_record = function (definition) {
     if (this.readiness[definition.address] !== undefined) {
-        this.readiness[definition.address].ready = definition.status.isReady;
+        this.readiness[definition.address].ready = false;
     }
 };
 
@@ -184,6 +189,10 @@ AddressSource.prototype.update_readiness = function (changes) {
     }
 };
 
+AddressSource.prototype.updated_plans = function (plans) {
+    this.plans = plans;
+};
+
 AddressSource.prototype.updated = function (objects) {
     log.debug('addresses updated: %j', objects);
     var self = this;
@@ -200,18 +209,71 @@ AddressSource.prototype.updated = function (objects) {
 
 AddressSource.prototype.update_status = function (record, ready) {
     var self = this;
+
     function update(address) {
+        var updated = 0;
+        var messages = [];
         if (address.status === undefined) {
             address.status = {};
         }
-        if (address.status.isReady !== ready) {
-            address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
-            address.status.isReady = ready;
-            address.status.phase = ready ? 'Active' : 'Pending';
-            return address;
-        } else {
-            return undefined;
+
+        var planDef;
+        for (var p in self.plans) {
+            if (self.plans[p].metadata.name === address.spec.plan) {
+                planDef = self.plans[p];
+                break
+            }
         }
+        if (planDef && planDef.spec && planDef.spec.addressType === address.spec.type) {
+            if (address.status.planStatus === undefined) {
+                address.status.planStatus = {};
+            }
+            if (planDef.metadata.name !== address.status.planStatus.name) {
+                address.status.planStatus.name = planDef.metadata.name;
+                updated++;
+            }
+
+            planDef.spec.partitions = 1; // Always 1 for brokered
+            if (planDef.spec.partitions !== address.status.planStatus.partitions) {
+                address.status.planStatus.partitions = planDef.spec.partitions;
+                updated++;
+            }
+            if (planDef.spec.resources) {
+                address.status.planStatus.resources = clone(planDef.spec.resources);
+                updated++;
+            } else if (address.status.planStatus.resources) {
+                delete address.status.planStatus.resources;
+                updated++;
+            }
+        } else {
+            ready = false;
+            messages.push("Unknown address plan '" + address.spec.plan + "'");
+            delete address.status.planStatus;
+            updated++;
+        }
+
+        if (address.status.isReady !== ready) {
+            address.status.isReady = ready;
+            updated++;
+        }
+
+        var phase = ready ? 'Active' : 'Pending';
+        if (address.status.phase  !== phase) {
+            address.status.phase = phase;
+            updated++;
+        }
+
+        if (!same_messages(address.status.messages, messages)) {
+            address.status.messages = messages;
+            updated++;
+        }
+
+        if (!("annotations" in address.metadata) || !("enmasse.io/version" in address.metadata.annotations) || (address.metadata.annotations['enmasse.io/version'] !== self.config.VERSION)) {
+            address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
+            updated++;
+        }
+
+        return updated ? address : undefined;
     }
     var options = {namespace: this.config.ADDRESS_SPACE_NAMESPACE};
     Object.assign(options, this.config);
@@ -234,7 +296,6 @@ AddressSource.prototype.check_status = function (address_stats) {
     var results = [];
     for (var address in this.readiness) {
         var record = this.readiness[address];
-        console.log("Check status record: " + JSON.stringify(record));
         var stats = address_stats[address];
         if (stats === undefined) {
             log.info('no stats supplied for %s (%s)', address, record.ready);
@@ -255,6 +316,14 @@ AddressSource.prototype.check_status = function (address_stats) {
     return Promise.all(results);
 };
 
+AddressSource.prototype.check_address_plans = function () {
+    log.info('Address space plan or address plan(s) updated');
+    // Change the readiness to false so the next check_status will cause the status to be updated.
+    for (var address in this.readiness) {
+        var record = this.readiness[address];
+        record.ready = false;
+    }
+};
 
 AddressSource.prototype.create_address = function (definition, access_token) {
     var address_name = this.config.ADDRESS_SPACE + "." + myutils.kubernetes_name(definition.address);
@@ -295,76 +364,6 @@ AddressSource.prototype.delete_address = function (definition, access_token) {
                    namespace: this.config.ADDRESS_SPACE_NAMESPACE};
     Object.assign(options, this.config);
     return kubernetes.delete_resource('addresses/' + address_name, options);
-};
-
-function display_order (plan_a, plan_b) {
-    // explicitly ordered plans always come before those with undefined order
-    var a = plan_a.displayOrder === undefined ? Number.MAX_VALUE : plan_a.displayOrder;
-    if (plan_a.spec !== undefined) {
-        a = plan_a.spec.displayOrder === undefined ? Number.MAX_VALUE : plan_a.spec.displayOrder;
-    }
-    var b = plan_b.displayOrder === undefined ? Number.MAX_VALUE : plan_b.displayOrder;
-    if (plan_b.spec !== undefined) {
-        b = plan_b.spec.displayOrder === undefined ? Number.MAX_VALUE : plan_b.spec.displayOrder;
-    }
-    return a - b;
-}
-
-function extract_plan_details (plan) {
-    if (plan.spec !== undefined) {
-        return {
-            name: plan.metadata.name,
-            displayName: plan.spec.displayName || plan.metadata.name,
-            shortDescription: plan.spec.shortDescription,
-            longDescription: plan.spec.longDescription,
-        };
-    } else {
-        return {
-            name: plan.metadata.name,
-            displayName: plan.displayName || plan.metadata.name,
-            shortDescription: plan.shortDescription,
-            longDescription: plan.longDescription,
-        };
-    }
-}
-
-AddressSource.prototype.get_address_types = function () {
-    var options = this.config;
-    var address_space_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta2/namespaces/', 'addressspaceplans/' + this.config.ADDRESS_SPACE_PLAN, options);
-    var address_plan_path = kubernetes.get_path('/apis/admin.enmasse.io/v1beta2/namespaces/', 'addressplans', options);
-    return kubernetes.get_raw(address_space_plan_path, options).then(function (address_space_plan) {
-            if (address_space_plan.spec !== undefined) {
-                return address_space_plan.spec.addressPlans;
-            } else {
-                return address_space_plan.addressPlans;
-            }
-        }).then(function (supported_plans) {
-            return kubernetes.get_raw(address_plan_path, options).then(function (address_plans) {
-                // remove plans not part of address space plan
-                var plans = address_plans.items.filter(function (p) {
-                    return supported_plans.includes(p.metadata.name)
-                });
-                plans.sort(display_order);
-                //group by addressType
-                var types = [];
-                var by_type = plans.reduce(function (map, plan) {
-                    var addressType = plan.spec !== undefined ? plan.spec.addressType : plan.addressType;
-                    var list = map[addressType];
-                    if (list === undefined) {
-                        list = [];
-                        map[addressType] = list;
-                        types.push(addressType);
-                    }
-                    list.push(plan);
-                    return map;
-                }, {});
-                var results = [];
-                types.forEach(function (type) {
-                    results.push({name:type, plans:by_type[type].map(extract_plan_details)});
-                });
-                return results;
-            });
-        });
 };
 
 module.exports = AddressSource;
