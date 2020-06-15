@@ -102,6 +102,12 @@ const getInitialStateCreateMetadata = (defaultType: string) => {
   return initialState;
 };
 
+enum DialogTypes {
+  ENABLE = "Enable",
+  DISABLE = "Disable",
+  DELETE = "Delete"
+}
+
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -111,5 +117,6 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getLabelByValue,
-  getInitialStateCreateMetadata
+  getInitialStateCreateMetadata,
+  DialogTypes
 };

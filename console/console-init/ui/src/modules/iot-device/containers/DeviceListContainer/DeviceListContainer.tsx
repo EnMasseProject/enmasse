@@ -15,14 +15,23 @@ import {
 import {
   DeviceList,
   IDevice,
-  IDeviceFilter
+  IDeviceFilter,
+  EmptyDeviceList
 } from "modules/iot-device/components";
+import {
+  getHeaderForDialog,
+  getDetailForDialog,
+  DialogTypes,
+  getInitialFilter
+} from "modules/iot-device/utils";
 import { IRowData, SortByDirection, ISortBy } from "@patternfly/react-table";
 import { getTableCells } from "modules/iot-device";
 import { compareObject } from "utils";
 import { useParams } from "react-router";
 import { useMutationQuery } from "hooks";
 import { Loading } from "use-patternfly";
+import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
+import { NoResultFound } from "components";
 
 export interface IDeviceListContainerProps {
   setTotalDevices: (val: number) => void;
@@ -37,6 +46,7 @@ export interface IDeviceListContainerProps {
   sortValue?: ISortBy;
   setSortValue: (value: ISortBy) => void;
   appliedFilter: IDeviceFilter;
+  resetFilter: () => void;
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
@@ -47,16 +57,23 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   selectAllDevices,
   sortValue,
   setSortValue,
-  appliedFilter
+  appliedFilter,
+  resetFilter
 }) => {
   const { projectname } = useParams();
 
   const [sortBy, setSortBy] = useState<ISortBy>();
 
+  const { dispatch } = useStoreContext();
+
   const { loading, data } = useQuery<IIoTDevicesResponse>(
     RETURN_ALL_DEVICES_FOR_IOT_PROJECT(projectname, sortBy, appliedFilter),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
+
+  const { total, devices } = data?.devices || {};
+
+  setTotalDevices(total || 0);
 
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
@@ -66,14 +83,35 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     "devices_for_iot_project"
   ]);
 
-  const { total, devices } = data?.devices || {};
-  setTotalDevices(total || 0);
+  if (loading) {
+    return <Loading />;
+  }
+
+  if (total === 0 && !compareObject(appliedFilter, getInitialFilter())) {
+    return <NoResultFound clearFilters={resetFilter} />;
+  }
+
+  const onConfirmDeleteDevice = async (deviceId: string) => {
+    const variable = {
+      deviceId,
+      iotproject: projectname
+    };
+    await setDeleteDeviceQueryVariables(variable);
+  };
 
   const deleteDevice = (row: any) => {
     const { deviceId } = row.originalData;
-    setDeleteDeviceQueryVariables({
-      deviceId,
-      iotproject: projectname
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_IOT_DEVICE,
+      modalProps: {
+        onConfirm: onConfirmDeleteDevice,
+        selectedItems: [deviceId],
+        option: "Delete",
+        data: deviceId,
+        detail: getDetailForDialog([{ deviceId }], DialogTypes.DELETE),
+        header: getHeaderForDialog([{ deviceId }], DialogTypes.DELETE)
+      }
     });
   };
 
@@ -121,10 +159,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
 
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
-  }
-
-  if (loading) {
-    return <Loading />;
   }
 
   const onSort = (_event: any, index: number, direction: SortByDirection) => {

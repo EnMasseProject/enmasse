@@ -21,14 +21,20 @@ import {
   IDevice,
   IDeviceFilter
 } from "modules/iot-device/components";
+import {
+  getHeaderForDialog,
+  getDetailForDialog,
+  DialogTypes
+} from "modules/iot-device/utils";
 import { DeviceListContainer } from "modules/iot-device/containers";
 import { compareObject } from "utils";
 import { getInitialFilter } from "modules/iot-device/utils";
+import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 
 export default function DeviceListPage() {
   useDocumentTitle("Device List");
 
-  const [totalDevices, setTotalDevices] = useState<number>(0);
+  const [totalDevices, setTotalDevices] = useState<number>();
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
   const [perPage, setPerPage] = useState<number>(10);
   const [selectedDevices, setSelectedDevices] = useState<IDevice[]>([]);
@@ -36,6 +42,8 @@ export default function DeviceListPage() {
   const [appliedFilter, setAppliedFilter] = useState<IDeviceFilter>(
     getInitialFilter()
   );
+
+  const { dispatch } = useStoreContext();
 
   const onSelectDevice = (
     data: IDevice,
@@ -83,16 +91,61 @@ export default function DeviceListPage() {
     setSelectedDevices(devices);
   };
 
+  const onConfirmDeleteSelectedDevices = () => {
+    // TODO: TO BE DONE AFTER BACKEND IS READY
+  };
+
+  const onConfirmEnableSelectedDevices = () => {
+    // TODO: TO BE DONE AFTER BACKEND IS READY
+  };
+
+  const onConfirmDisableSelectedDevices = () => {
+    // TODO: TO BE DONE AFTER BACKEND IS READY
+  };
+
   const onSelectEnableDevices = () => {
-    // TO BE DONE AFTER BACKEND IS READY
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
+      modalProps: {
+        onConfirm: onConfirmEnableSelectedDevices,
+        selectedItems: selectedDevices.map(device => device.deviceId),
+        option: "Enable",
+        data: selectedDevices,
+        detail: getDetailForDialog(selectedDevices, DialogTypes.ENABLE),
+        header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE)
+      }
+    });
   };
 
   const onSelectDisableDevice = () => {
-    // TO BE DONE AFTER BACKEND IS READY
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
+      modalProps: {
+        onConfirm: onConfirmDisableSelectedDevices,
+        selectedItems: selectedDevices.map(device => device.deviceId),
+        option: "Disable",
+        data: selectedDevices,
+        detail: getDetailForDialog(selectedDevices, DialogTypes.DISABLE),
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE)
+      }
+    });
   };
 
   const onSelectDeleteDevice = () => {
-    // TO BE DONE AFTER BACKEND IS READY
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_IOT_DEVICE,
+      modalProps: {
+        onConfirm: onConfirmDeleteSelectedDevices,
+        selectedItems: selectedDevices.map(device => device.deviceId),
+        option: "Delete",
+        data: selectedDevices,
+        detail: getDetailForDialog(selectedDevices, DialogTypes.DELETE),
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DELETE)
+      }
+    });
   };
 
   const isDeleteDevicesOptionDisabled = () => {
@@ -135,6 +188,30 @@ export default function DeviceListPage() {
     </DropdownItem>
   ];
 
+  const resetFilter = () => {
+    setFilter(getInitialFilter());
+    setAppliedFilter(getInitialFilter());
+  };
+
+  const handleInputDeviceInfo = () => {
+    // TODO: After create device is ready
+  };
+
+  const handleJSONUpload = () => {
+    // TODO: After create device is ready
+  };
+
+  // TODO: the fetch devices needs to be moved to devicelistpage for the empty
+  // device list to be shown properly.
+  // if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
+  //   return (
+  //     <EmptyDeviceList
+  //       handleInputDeviceInfo={handleInputDeviceInfo}
+  //       handleJSONUpload={handleJSONUpload}
+  //     />
+  //   );
+  // }
+
   return (
     <Grid gutter="md">
       <GridItem span={3}>
@@ -158,14 +235,14 @@ export default function DeviceListPage() {
         />
         <br />
         <DeviceListToolbar
-          itemCount={totalDevices}
+          itemCount={totalDevices || 0}
           perPage={perPage}
           page={0}
           kebabItems={kebabItems}
           onSetPage={() => {}}
           onPerPageSelect={() => {}}
-          handleInputDeviceInfo={() => {}}
-          handleJSONUpload={() => {}}
+          handleInputDeviceInfo={handleInputDeviceInfo}
+          handleJSONUpload={handleJSONUpload}
           isOpen={isAllSelected}
           isChecked={isAllSelected}
           items={[]}
@@ -181,12 +258,13 @@ export default function DeviceListPage() {
           sortValue={sortDropDownValue}
           setSortValue={setSortDropdownValue}
           appliedFilter={appliedFilter}
+          resetFilter={resetFilter}
         />
         <br />
         <DeviceListFooterToolbar
-          itemCount={totalDevices}
-          perPage={100}
-          page={1}
+          itemCount={totalDevices || 0}
+          perPage={perPage}
+          page={0}
         />
       </GridItem>
     </Grid>
