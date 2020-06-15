@@ -231,11 +231,11 @@
       "type": "object",
       "description": "",
       "properties": {
-        "deadLetterQueue": {
+        "deadLetterAddress": {
           "type": "string",
           "description": ""
         },
-        "expiryQueue": {
+        "expiryAddress": {
           "type": "string",
           "description": ""
         }

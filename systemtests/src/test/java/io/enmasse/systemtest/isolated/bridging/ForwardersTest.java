@@ -13,8 +13,12 @@ import io.enmasse.address.model.AddressSpecForwarderBuilder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.bridging.BridgingBase;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -30,6 +34,7 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -37,7 +42,9 @@ import java.util.stream.Stream;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExternalClients
 class ForwardersTest extends BridgingBase {
 
     private static Logger log = CustomLogger.getLogger();
@@ -101,10 +108,14 @@ class ForwardersTest extends BridgingBase {
 
         //send to forwarder
         int messagesBatch = 20;
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withAddress(forwarder.getSpec().getAddress())
+                .withCredentials(localUser);
 
-        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
+        assertTrue(localClient.run());
 
         //wake up the broker
         scaleUpBroker();
@@ -115,11 +126,12 @@ class ForwardersTest extends BridgingBase {
         AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
 
         //check messages where automatically forwarded once broker is back up again
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
+                .withAddress(REMOTE_QUEUE1);
 
-        var receivedInRemote = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesBatch);
+        var receivedInRemote = clientToRemote.run();
 
-        assertThat("Wrong count of messages received from remote queue: " + REMOTE_QUEUE1, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertTrue(receivedInRemote, "Wrong count of messages received from remote queue: " + REMOTE_QUEUE1);
     }
 
     @Test
@@ -188,11 +200,15 @@ class ForwardersTest extends BridgingBase {
 
         int messagesBatch = 20;
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withAddress(forwarder.getSpec().getAddress())
+                .withCredentials(localUser);
 
         //send to address with forwarder wich will retry forwarding indefinetly until remote broker is available
-        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
+        assertTrue(localClient.run());
 
         //receive messages that was causing remote broker to block, and check that we also get the forwarded messages
         var receivedInDLQ = clientToRemote.recvMessages(REMOTE_QUEUE1, messagesSent + messagesBatch);
@@ -261,35 +277,45 @@ class ForwardersTest extends BridgingBase {
     private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to address with forwarder
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withAddress(forwarder.getSpec().getAddress())
+                .withCredentials(localUser);
 
-        localClient.sendMessages(forwarder.getSpec().getAddress(), TestUtils.generateMessages(messagesBatch));
+        assertTrue(localClient.run());
 
         //receive in remote broker
 
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
+                .withAddress(remoteAddress);
 
-        var receivedInRemote = clientToRemote.recvMessages(remoteAddress, messagesBatch);
+        var receivedInRemote = clientToRemote.run();
 
-        assertThat("Wrong count of messages received from remote queue: " + remoteAddress, receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertTrue(receivedInRemote, "Wrong count of messages received from remote queue: " + remoteAddress);
     }
 
     private void doTestReceiveInForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to remote broker
 
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch)
+                .withAddress(remoteAddress);
 
-        clientToRemote.sendMessages(remoteAddress, TestUtils.generateMessages(messagesBatch));
+        assertTrue(clientToRemote.run());
 
         //receive in address with forwarder
 
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withAddress(forwarder.getSpec().getAddress())
+                .withCredentials(localUser);
 
-        var receivedInRemote = localClient.recvMessages(forwarder.getSpec().getAddress(), messagesBatch);
+        var receivedInRemote = localClient.run();
 
-        assertThat("Wrong count of messages received in local address: " + forwarder.getSpec().getAddress(), receivedInRemote.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+        assertTrue(receivedInRemote, "Wrong count of messages received in local address: " + forwarder.getSpec().getAddress());
     }
 
 

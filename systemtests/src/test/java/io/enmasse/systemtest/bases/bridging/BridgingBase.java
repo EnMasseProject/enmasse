@@ -23,9 +23,11 @@ import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.AbstractClient;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -65,7 +67,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         remoteBrokerEndpoint = new Endpoint(serviceName, 5672);
         remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);
         remoteBrokerEndpointMutualTLS = new Endpoint(serviceName, 55671);
-        clientBrokerEndpoint = Kubernetes.getInstance().getExternalEndpoint(remoteBrokerName, remoteBrokerNamespace);
+        clientBrokerEndpoint = remoteBrokerEndpoint;
         log.info("Broker endpoint: {}", remoteBrokerEndpoint);
         log.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
         log.info("Client broker endpoint: {}", clientBrokerEndpoint);
@@ -132,7 +134,6 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     }
 
     protected AmqpClient createClientToRemoteBroker() {
-
         ProtonClientOptions clientOptions = new ProtonClientOptions();
         clientOptions.setSsl(true);
         clientOptions.setTrustAll(true);
@@ -145,8 +146,17 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setUsername(remoteBrokerUsername)
                 .setPassword(remoteBrokerPassword);
-
         return getAmqpClientFactory().createClient(connectOptions);
+    }
+
+    protected ExternalMessagingClient createOnClusterClientToRemoteBroker(AbstractClient client, int messageCount) {
+        return new ExternalMessagingClient(false)
+                .withMessagingRoute(clientBrokerEndpoint)
+                .withMessageBody("msg no. %d")
+                .withCount(messageCount)
+                .withClientEngine(client)
+                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN")
+                .withCredentials(remoteBrokerUsername, remoteBrokerPassword);
     }
 
     protected AddressSpaceSpecConnectorCredentials defaultCredentials() {

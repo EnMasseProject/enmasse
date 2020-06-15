@@ -11,25 +11,28 @@ import io.enmasse.address.model.AddressSpaceSpecConnectorBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorCredentialsBuilder;
 import io.enmasse.address.model.AddressSpaceSpecConnectorEndpointBuilder;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.bridging.BridgingBase;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExternalClients
 class ConnectorsTest extends BridgingBase {
 
     private static final String BASIC_QUEUE1 = "basic1";
@@ -245,39 +248,49 @@ class ConnectorsTest extends BridgingBase {
 
     private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send through connector
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {
             String connectorQueue = getRemoteName(remoteQueue);
-            localClient.sendMessages(connectorQueue, TestUtils.generateMessages(messagesBatch));
+            localClient.withAddress(connectorQueue);
+            assertTrue(localClient.run());
         }
 
         //receive in remote broker
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch);
 
         for(String remoteQueue : remoteQueues) {
-            var receivedFromQueue = clientToRemote.recvMessages(remoteQueue, messagesBatch);
-            assertThat("Wrong count of messages received from queue: "+remoteQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+            clientToRemote.withAddress(remoteQueue);
+            var receivedFromQueue = clientToRemote.run();
+            assertTrue(receivedFromQueue, "Wrong count of messages received from queue: " + remoteQueue);
         }
     }
 
     private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send to remote broker
-        AmqpClient clientToRemote = createClientToRemoteBroker();
+        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch);
 
         for(String remoteQueue : remoteQueues) {
-            clientToRemote.sendMessages(remoteQueue, TestUtils.generateMessages(messagesBatch));
+            clientToRemote.withAddress(remoteQueue);
+            assertTrue(clientToRemote.run());
         }
 
         //receive through connector
-        AmqpClient localClient = getAmqpClientFactory().createQueueClient(space);
-        localClient.getConnectOptions().setCredentials(localUser);
+        ExternalMessagingClient localClient = new ExternalMessagingClient(true)
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withCount(messagesBatch)
+                .withCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {
             String connectorQueue = getRemoteName(remoteQueue);
-            var receivedFromQueue = localClient.recvMessages(connectorQueue, messagesBatch);
-            assertThat("Wrong count of messages received from connector queue: "+connectorQueue, receivedFromQueue.get(1, TimeUnit.MINUTES).size(), is(messagesBatch));
+            localClient.withAddress(connectorQueue);
+            var receivedFromQueue = localClient.run();
+            assertTrue(receivedFromQueue, "Wrong count of messages received from connector queue: " + connectorQueue);
         }
     }
 
