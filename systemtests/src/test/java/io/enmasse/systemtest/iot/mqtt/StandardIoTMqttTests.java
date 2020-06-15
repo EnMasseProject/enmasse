@@ -6,19 +6,22 @@
 package io.enmasse.systemtest.iot.mqtt;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 
 import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.MessageSendTester;
@@ -204,8 +207,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .execute();
             });
         } catch (Exception e) {
-            // if we get an exception, it must be an MqttSecurityException
-            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            assertConnectionException(e);
             log.info("Accepting MQTT exception", e);
         }
 
@@ -221,12 +223,27 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .execute();
             });
         } catch (Exception e) {
-            // if we get an exception, it must be an MqttSecurityException
-            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            assertConnectionException(e);
             log.info("Accepting MQTT exception", e);
         }
 
     }
 
-}
+    public static void assertConnectionException(final Throwable e) {
 
+        // if we get an exception, it must be an MqttSecurityException or SSLHandshakeException
+
+        if (e instanceof MqttSecurityException) {
+            return;
+        }
+
+        final Throwable cause = Throwables.getRootCause(e);
+        if (cause instanceof SSLHandshakeException) {
+            return;
+        }
+
+        fail("Failed to connect with non-permitted exception", e);
+
+    }
+
+}

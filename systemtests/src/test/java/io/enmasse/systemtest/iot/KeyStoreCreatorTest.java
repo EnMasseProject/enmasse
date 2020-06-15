@@ -10,7 +10,8 @@ import static org.junit.Assert.assertNotNull;
 import java.time.Duration;
 import java.time.Instant;
 
-import org.bouncycastle.asn1.x500.X500Name;
+import javax.security.auth.x500.X500Principal;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,14 +25,14 @@ public class KeyStoreCreatorTest {
 
     @Test
     public void testBasicRsa() throws Exception {
-        var mgr = new DeviceCertificateManager(Mode.RSA, new X500Name("O=EnMasse,C=IO"));
+        var mgr = new DeviceCertificateManager(Mode.RSA, new X500Principal("O=EnMasse,C=IO"));
         var device = mgr.createDevice("foo", Instant.now(), Duration.ofDays(90));
         KeyStoreCreator.from(device.getKey().getPrivate(), device.getCertificate());
     }
 
     @Test
     public void testBasicEc() throws Exception {
-        var mgr = new DeviceCertificateManager(Mode.EC, new X500Name("O=EnMasse,C=IO"));
+        var mgr = new DeviceCertificateManager(Mode.EC, new X500Principal("O=EnMasse,C=IO"));
         var device = mgr.createDevice("foo", Instant.now(), Duration.ofDays(90));
         KeyStoreCreator.from(device.getKey().getPrivate(), device.getCertificate());
     }
@@ -39,7 +40,7 @@ public class KeyStoreCreatorTest {
     @ParameterizedTest(name = "testToByteArray-{0}")
     @EnumSource(Mode.class)
     public void testToByteArray(final Mode mode) throws Exception {
-        var mgr = new DeviceCertificateManager(mode, new X500Name("O=EnMasse,C=IO"));
+        var mgr = new DeviceCertificateManager(mode, new X500Principal("O=EnMasse,C=IO"));
         var device = mgr.createDevice("foo", Instant.now(), Duration.ofDays(90));
 
         byte[] bytes = KeyStoreCreator.toByteArray(device.getKey().getPrivate(), device.getCertificate());

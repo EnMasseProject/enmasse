@@ -203,7 +203,10 @@ func (r *ReconcileIoTProject) acceptTrustAnchor(project *iotv1alpha1.IoTProject,
 
 	// ensure the subjectDN is unique
 
-	subjectDn := cert.Subject.String()
+	subjectDn, err := util.ToX500Name(cert.RawSubject)
+	if err != nil {
+		return iotv1alpha1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to decode subject DN"))
+	}
 	if err := r.ensureSubjectDnIsUnique(project, cert); err != nil {
 		duplicate[subjectDn] = true
 		return iotv1alpha1.AcceptedTrustAnchor{}, err
@@ -229,7 +232,11 @@ func (r *ReconcileIoTProject) acceptTrustAnchor(project *iotv1alpha1.IoTProject,
 func (r *ReconcileIoTProject) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTProject, cert *x509.Certificate) error {
 
 	ctx := context.Background()
-	subjectDn := cert.Subject.String()
+	subjectDn, err := util.ToX500Name(cert.RawSubject)
+
+	if err != nil {
+		return util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to decode subject DN"))
+	}
 
 	cm := &corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -238,7 +245,7 @@ func (r *ReconcileIoTProject) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTPr
 		},
 	}
 
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, cm, func() error {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, cm, func() error {
 
 		// assign our self as owner, using labels, because we need a cross-namespace reference
 
@@ -261,7 +268,7 @@ func (r *ReconcileIoTProject) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTPr
 				return nil
 			} else {
 				// different owner, already claimed
-				return util.NewConfigurationError("SubjectDN of trust anchor is already claimed by another tenant: %s", cert.Subject.String())
+				return util.NewConfigurationError("SubjectDN of trust anchor is already claimed by another tenant: %s", subjectDn)
 			}
 
 		}

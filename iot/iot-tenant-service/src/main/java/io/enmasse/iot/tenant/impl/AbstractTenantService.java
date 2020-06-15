@@ -76,6 +76,7 @@ public abstract class AbstractTenantService extends AbstractProjectBasedService 
 
             if (project.getStatus() == null || project.getStatus().getAccepted() == null) {
                 // controller has not yet processed the configuration ... handle as "not found"
+                log.info("IoTProject is missing '.status.accepted' section");
                 TracingHelper.logError(span, "IoTProject is missing '.status.accepted' section");
                 HTTP_STATUS.set(span, RESULT_NOT_FOUND.getStatus());
                 return RESULT_NOT_FOUND;
@@ -83,6 +84,7 @@ public abstract class AbstractTenantService extends AbstractProjectBasedService 
 
             if (project.getStatus().getAccepted().getConfiguration() == null) {
                 // controller processed the configuration, but rejected it ... handle as "not found"
+                log.info("IoTProject rejected the tenant configuration");
                 TracingHelper.logError(span, "IoTProject rejected the tenant configuration");
                 HTTP_STATUS.set(span, RESULT_NOT_FOUND.getStatus());
                 return RESULT_NOT_FOUND;

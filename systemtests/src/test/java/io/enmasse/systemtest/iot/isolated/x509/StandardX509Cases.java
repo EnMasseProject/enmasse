@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-import org.bouncycastle.asn1.x500.X500Name;
+import javax.security.auth.x500.X500Principal;
 
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
@@ -51,7 +51,7 @@ public interface StandardX509Cases extends StandardIoTTests {
     default DeviceSupplier notOurCaDevice() {
 
         return named("notOurCa", () -> {
-            var otherMgr = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+            var otherMgr = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
             return getSession().newDevice()
                     .register()

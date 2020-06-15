@@ -19,7 +19,7 @@ import (
 	"testing"
 )
 
-const EC_CA_PEM = `-----BEGIN CERTIFICATE-----
+const EC_CA_PEM_1 = `-----BEGIN CERTIFICATE-----
 MIIBlzCCATygAwIBAgIBADAKBggqhkjOPQQDAjAqMQwwCgYDVQQDDANmb28xDDAK
 BgNVBAsMA2JhcjEMMAoGA1UECgwDYmF6MB4XDTIwMDYxMDEzMjQwMVoXDTIxMDYx
 MDEzMjQwMVowKjEMMAoGA1UEAwwDZm9vMQwwCgYDVQQLDANiYXIxDDAKBgNVBAoM
@@ -29,6 +29,20 @@ UzBRMB0GA1UdDgQWBBQASe3I4LZRilRaJqlomFPeBUOURzAfBgNVHSMEGDAWgBQA
 Se3I4LZRilRaJqlomFPeBUOURzAPBgNVHRMBAf8EBTADAQH/MAoGCCqGSM49BAMC
 A0kAMEYCIQDMaLN9bJZkxi4Z8M41XKgXDxH0sEcuus9rBDfZW98toQIhAIE7OZNr
 vvC2C0U0wwb/Q72yIYU+nm5RbT5XqkXAW6Fi
+-----END CERTIFICATE-----
+`
+
+const EC_CA_PEM_2 = `-----BEGIN CERTIFICATE-----
+MIIBwTCCAWigAwIBAgIBADAKBggqhkjOPQQDAjBAMQswCQYDVQQGEwJJTzEQMA4G
+A1UEChMHRW5NYXNzZTEMMAoGA1UECxMDSW9UMREwDwYDVQQLEwhUZW5hbnQgMTAe
+Fw0yMDA2MTYwOTAxNTNaFw0yMTA2MTYwOTAxNTNaMEAxCzAJBgNVBAYTAklPMRAw
+DgYDVQQKEwdFbk1hc3NlMQwwCgYDVQQLEwNJb1QxETAPBgNVBAsTCFRlbmFudCAx
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE4tyVux5bOdKPD/eWTj8NGV6hr4AL
+KX6eB84pyGMTOvmRZkGZPrwVEGwPCtnh/lZ3TJHGNbBYX8BIg91pUtACpaNTMFEw
+HQYDVR0OBBYEFGtqAWo7c2bc9FsMunL3qW/2wJCQMB8GA1UdIwQYMBaAFGtqAWo7
+c2bc9FsMunL3qW/2wJCQMA8GA1UdEwEB/wQFMAMBAf8wCgYIKoZIzj0EAwIDRwAw
+RAIgHyi3rI1nx/14sXQMFxnQmfKL0MXna+KqPgGFcATU1wICIAodp3lwO2OO5zPB
+c0/MYxV/W7QNg/WV/Om7uqmTXQO3
 -----END CERTIFICATE-----
 `
 
@@ -51,6 +65,7 @@ func setup(t *testing.T) *ReconcileIoTProject {
 
 }
 
+// ensure that assigning a trust anchor, claims the name
 func TestEcCertClaim(t *testing.T) {
 
 	r := setup(t)
@@ -62,7 +77,7 @@ func TestEcCertClaim(t *testing.T) {
 	// EC based trust anchor
 
 	trustAnchor := iotv1alpha1.TrustAnchor{
-		Certificate: EC_CA_PEM,
+		Certificate: EC_CA_PEM_1,
 	}
 
 	// result
@@ -85,9 +100,61 @@ func TestEcCertClaim(t *testing.T) {
 	// expected PEM to be parsed
 
 	assert.Equal(t, "EC", ata.Algorithm)
-	assert.Equal(t, "CN=foo,OU=bar,O=baz", ata.SubjectDN)
+	assert.Equal(t, "O=baz,OU=bar,CN=foo", ata.SubjectDN)
 	assert.Equal(t, "2020-06-10 13:24:01 +0000 UTC", ata.NotBefore.String())
 	assert.Equal(t, "2021-06-10 13:24:01 +0000 UTC", ata.NotAfter.String())
+
+	// expect to set claim
+
+	cm := corev1.ConfigMap{}
+	err = r.client.Get(context.Background(), client.ObjectKey{
+		Namespace: "enmasse-infra",
+		Name:      lockMapForSubjectDn(ata.SubjectDN),
+	}, &cm)
+	assert.Nil(t, err, "Failed to get trust anchor claim")
+
+	assert.True(t, isLockMapOwnedByProject(&cm, &project))
+
+}
+
+// ensure that the naming between Java and Go is consistent
+func TestEcCertName(t *testing.T) {
+
+	r := setup(t)
+
+	// dummy project
+
+	project := iotv1alpha1.IoTProject{}
+
+	// EC based trust anchor
+
+	trustAnchor := iotv1alpha1.TrustAnchor{
+		Certificate: EC_CA_PEM_2,
+	}
+
+	// result
+
+	accepted := make(map[string]bool)
+	duplicate := make(map[string]bool)
+
+	// setup namespace for testing
+
+	util.SetInfrastructureNamespaceForTesting("enmasse-infra")
+
+	// call method
+
+	ata, err := r.acceptTrustAnchor(&project, trustAnchor, accepted, duplicate)
+
+	// expect no error
+
+	assert.Nil(t, err, "Failed to accept trust anchor")
+
+	// expected PEM to be parsed
+
+	assert.Equal(t, "EC", ata.Algorithm)
+	assert.Equal(t, "OU=Tenant 1,OU=IoT,O=EnMasse,C=IO", ata.SubjectDN)
+	assert.Equal(t, "2020-06-16 09:01:53 +0000 UTC", ata.NotBefore.String())
+	assert.Equal(t, "2021-06-16 09:01:53 +0000 UTC", ata.NotAfter.String())
 
 	// expect to set claim
 

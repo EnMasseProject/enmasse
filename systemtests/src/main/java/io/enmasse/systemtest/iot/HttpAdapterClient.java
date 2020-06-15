@@ -166,7 +166,7 @@ public class HttpAdapterClient extends ApiClient {
             final CompletableFuture<Buffer> nf = new CompletableFuture<>();
             log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
             if (ar.failed()) {
-                log.debug("Request failed", ar.cause());
+                log.info("Request failed", ar.cause());
                 nf.completeExceptionally(ar.cause());
             } else {
                 var response = ar.result();

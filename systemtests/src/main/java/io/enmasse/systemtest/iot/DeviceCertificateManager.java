@@ -21,6 +21,8 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
+import javax.security.auth.x500.X500Principal;
+
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -106,13 +108,13 @@ public class DeviceCertificateManager {
     private final AtomicLong serialNumber = new AtomicLong();
 
     private final Mode mode;
-    private final X500Name baseName;
+    private final X500Principal baseName;
 
     private final KeyPairGenerator keyPairGenerator;
     private final KeyPair keyPair;
     private final X509Certificate certificate;
 
-    public DeviceCertificateManager(final Mode mode, final X500Name baseName) throws Exception {
+    public DeviceCertificateManager(final Mode mode, final X500Principal baseName) throws Exception {
 
         this.mode = mode;
         this.baseName = baseName;
@@ -193,10 +195,10 @@ public class DeviceCertificateManager {
 
         final X500NameBuilder builder = new X500NameBuilder(RFC4519Style.INSTANCE);
         Arrays
-                .asList(this.baseName.getRDNs())
+                .asList(new X500Name(this.baseName.getName()).getRDNs())
                 .forEach(e -> builder.addMultiValuedRDN(e.getTypesAndValues()));
         builder.addRDN(RFC4519Style.cn, deviceName);
-        final X500Name name = builder.build();
+        final X500Principal name = new X500Principal(builder.build().toString());
 
         // create a new key pair for the device
 
