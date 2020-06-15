@@ -9,13 +9,14 @@ import (
 	"crypto/tls"
 
 	"github.com/enmasseproject/enmasse/pkg/state"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 )
 
 type FakeClient struct {
-	Routers []state.Host
-	Brokers []state.Host
+	Routers []Host
+	Brokers []Host
 }
 
 var _ state.InfraClient = &FakeClient{}
@@ -35,8 +36,8 @@ func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfrastructure) state.In
 	client, exists := m.Clients[infra.Name]
 	if !exists {
 		client = &FakeClient{
-			Routers: make([]state.Host, 0),
-			Brokers: make([]state.Host, 0),
+			Routers: make([]Host, 0),
+			Brokers: make([]Host, 0),
 		}
 		m.Clients[infra.Name] = client
 	}
@@ -51,7 +52,7 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error
 func (i *FakeClient) Start() {
 }
 
-func (i *FakeClient) SyncAll(routers []state.Host, brokers []state.Host, tlsConfig *tls.Config) ([]state.ConnectorStatus, error) {
+func (i *FakeClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers
 	return nil, nil

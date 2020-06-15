@@ -17,6 +17,8 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/state"
+	"github.com/enmasseproject/enmasse/pkg/state/broker"
+	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	utilerrors "github.com/enmasseproject/enmasse/pkg/util/errors"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
@@ -106,12 +108,12 @@ type DummyScheduler struct {
 
 var _ state.Scheduler = &DummyScheduler{}
 
-func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*state.BrokerState) error {
+func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*broker.BrokerState) error {
 	if len(brokers) > 0 {
 		broker := brokers[0]
 		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
 			State: v1beta2.MessagingAddressBrokerScheduled,
-			Host:  broker.Host.Hostname,
+			Host:  broker.Host().Hostname,
 		})
 	} else {
 		return fmt.Errorf("no available broker")
@@ -373,7 +375,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			scheduled.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) {
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
@@ -394,7 +396,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) || errors.Is(err, state.NoEndpointsError) {
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) || errors.Is(err, stateerrors.NoEndpointsError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 		} else {

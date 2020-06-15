@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package state
+package broker
 
 import (
 	"testing"
@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	fakecommand "github.com/enmasseproject/enmasse/pkg/amqpcommand/test"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 
 	"pack.ag/amqp"
 )
@@ -20,8 +21,8 @@ func TestInitializeBroker(t *testing.T) {
 	client := fakecommand.NewFakeClient()
 
 	state := &BrokerState{
-		Host:          Host{},
-		Port:          0,
+		host:          Host{},
+		port:          0,
 		initialized:   false,
 		commandClient: client,
 		entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package state
+package broker
 
 import (
 	"context"
@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
+	. "github.com/enmasseproject/enmasse/pkg/state/errors"
 
 	"golang.org/x/sync/errgroup"
 
@@ -23,6 +25,7 @@ import (
 const (
 	brokerCommandAddress         = "activemq.management"
 	brokerCommandResponseAddress = "activemq.management_broker_command_response"
+	maxOrder                     = 2
 )
 
 func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
@@ -36,8 +39,8 @@ func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
 		opts = append(opts, amqp.ConnTLSConfig(tlsConfig))
 	}
 	state := &BrokerState{
-		Host:        host,
-		Port:        port,
+		host:        host,
+		port:        port,
 		initialized: false,
 		entities:    make(map[BrokerEntityType]map[string]BrokerEntity, 0),
 		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
@@ -48,6 +51,15 @@ func NewBrokerState(host Host, port int32, tlsConfig *tls.Config) *BrokerState {
 	state.commandClient.Start()
 	state.reconnectCount = state.commandClient.ReconnectCount()
 	return state
+}
+
+func NewTestBrokerState(host Host, port int32, client amqpcommand.Client) *BrokerState {
+	return &BrokerState{
+		host:          host,
+		port:          port,
+		commandClient: client,
+		entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
+	}
 }
 
 func (b *BrokerState) Initialize(nextResync time.Time) error {
@@ -61,7 +73,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	b.nextResync = nextResync
 
-	log.Printf("[Broker %s] Initializing...", b.Host)
+	log.Printf("[Broker %s] Initializing...", b.host)
 
 	b.reconnectCount = b.commandClient.ReconnectCount()
 	totalEntities := 0
@@ -74,9 +86,21 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 		b.entities[t] = list
 		totalEntities += len(list)
 	}
-	log.Printf("[Broker %s] Initialized controller state with %d entities", b.Host, totalEntities)
+	log.Printf("[Broker %s] Initialized controller state with %d entities", b.host, totalEntities)
 	b.initialized = true
 	return nil
+}
+
+func (b *BrokerState) Host() Host {
+	return b.host
+}
+
+func (b *BrokerState) Port() int32 {
+	return b.port
+}
+
+func (b *BrokerState) NextResync() time.Time {
+	return b.nextResync
 }
 
 /**
@@ -119,7 +143,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found queues: %+v", b.Host, entities)
+			log.Printf("[broker %s] Found queues: %+v", b.host, entities)
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -153,7 +177,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found addresses: %+v", b.Host, entities)
+			log.Printf("[broker %s] Found addresses: %+v", b.host, entities)
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -187,7 +211,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found diverts: %+v", b.Host, entities)
+			log.Printf("[broker %s] Found diverts: %+v", b.host, entities)
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -250,7 +274,7 @@ func (b *BrokerState) EnsureEntities(ctx context.Context, entities []BrokerEntit
 		b.Reset()
 	}
 	if err != nil {
-		log.Printf("[Broker %s] EnsureQueues error: %+v", b.Host, err)
+		log.Printf("[Broker %s] EnsureQueues error: %+v", b.host, err)
 	}
 	for entity := range completed {
 		b.entities[entity.Type()][entity.GetName()] = entity
@@ -284,7 +308,7 @@ func (b *BrokerState) DeleteEntities(ctx context.Context, entities []BrokerEntit
 		b.Reset()
 	}
 	if err != nil {
-		log.Printf("[Broker %s] DeleteEntities error: %+v", b.Host, err)
+		log.Printf("[Broker %s] DeleteEntities error: %+v", b.host, err)
 	}
 	for entity := range completed {
 		delete(b.entities[entity.Type()], entity.GetName())
@@ -332,11 +356,16 @@ func newManagementMessage(resource string, operation string, attribute string, p
  */
 func (b *BrokerState) Reset() {
 	if b.commandClient != nil && b.initialized {
-		log.Printf("[Broker %s] Resetting connection", b.Host)
+		log.Printf("[Broker %s] Resetting connection", b.host)
 		b.commandClient.Stop()
 		b.initialized = false
 		b.commandClient.Start()
 	}
+}
+
+func isConnectionError(err error) bool {
+	// TODO: Handle errors that are not strictly connection-related potentially with retries
+	return err != nil
 }
 
 func (b *BrokerState) Shutdown() {

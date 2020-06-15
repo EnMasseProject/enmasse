@@ -15,6 +15,10 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	. "github.com/enmasseproject/enmasse/pkg/state/broker"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
+	. "github.com/enmasseproject/enmasse/pkg/state/errors"
+	. "github.com/enmasseproject/enmasse/pkg/state/router"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"golang.org/x/sync/errgroup"
@@ -143,13 +147,13 @@ func (i *infraClient) randomResync(now time.Time) time.Time {
 func (i *infraClient) checkResync() {
 	now := i.clock.Now()
 	for _, router := range i.routers {
-		if router.nextResync.Before(now) {
+		if router.NextResync().Before(now) {
 			router.Reset()
 		}
 	}
 
 	for _, broker := range i.brokers {
-		if broker.nextResync.Before(now) {
+		if broker.NextResync().Before(now) {
 			broker.Reset()
 		}
 	}
@@ -316,8 +320,8 @@ func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Con
 	for _, broker := range i.brokers {
 		connectors = append(connectors, &RouterConnector{
 			Name:               connectorName(broker),
-			Host:               broker.Host.Hostname,
-			Port:               fmt.Sprintf("%d", broker.Port),
+			Host:               broker.Host().Hostname,
+			Port:               fmt.Sprintf("%d", broker.Port()),
 			Role:               "route-container",
 			SslProfile:         "infra_tls",
 			SaslMechanisms:     "EXTERNAL",
@@ -344,7 +348,7 @@ func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Con
 		}
 
 		for _, c := range readConnectors {
-			connectorStatuses <- connectorToStatus(router.host.Hostname, c.(*RouterConnector))
+			connectorStatuses <- connectorToStatus(router.Host().Hostname, c.(*RouterConnector))
 		}
 		return nil
 	})
@@ -678,8 +682,8 @@ func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity,
 	var err error
 	if len(brokerEntities) > 0 {
 		err = i.applyBrokers(ctx, func(broker *BrokerState) error {
-			if len(brokerEntities[broker.Host]) > 0 {
-				return broker.EnsureEntities(ctx, brokerEntities[broker.Host])
+			if len(brokerEntities[broker.Host()]) > 0 {
+				return broker.EnsureEntities(ctx, brokerEntities[broker.Host()])
 			}
 			return nil
 		})
@@ -706,7 +710,7 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 	routerEntities = make([]RouterEntity, 0, len(requests))
 	brokerEntities = make(map[Host][]BrokerEntity, len(i.brokers))
 	for _, broker := range i.brokers {
-		brokerEntities[broker.Host] = make([]BrokerEntity, 0)
+		brokerEntities[broker.Host()] = make([]BrokerEntity, 0)
 	}
 
 	built = make([]*request, 0, len(requests))
@@ -900,7 +904,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 		for _, brokerState := range i.brokers {
 			connector := connectorName(brokerState)
 			routerEntities = append(routerEntities, &RouterAutoLink{
-				Name:            autoLinkName(tenantId, address, brokerState.Host.Hostname, "in"),
+				Name:            autoLinkName(tenantId, address, brokerState.Host().Hostname, "in"),
 				Address:         fullAddress,
 				Direction:       "in",
 				Connection:      connector,
@@ -954,7 +958,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 			}
 			connector := connectorName(brokerState)
 			routerEntities = append(routerEntities, &RouterAutoLink{
-				Name:            autoLinkName(tenantId, address, brokerState.Host.Hostname, "in"),
+				Name:            autoLinkName(tenantId, address, brokerState.Host().Hostname, "in"),
 				Address:         fullAddress,
 				Direction:       "in",
 				Connection:      connector,
@@ -1006,7 +1010,7 @@ func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndp
 		}
 	} else if address.Spec.DeadLetter != nil {
 		for _, brokerState := range i.brokers {
-			host := brokerState.Host
+			host := brokerState.Host()
 			if len(brokerEntities[host]) == 0 {
 				brokerEntities[host] = make([]BrokerEntity, 0)
 			}
@@ -1196,7 +1200,7 @@ func (i *infraClient) deleteEntities(ctx context.Context, routerEntities []Route
 
 	// Delete from brokers
 	return i.applyBrokers(ctx, func(brokerState *BrokerState) error {
-		return brokerState.DeleteEntities(ctx, brokerEntities[brokerState.Host])
+		return brokerState.DeleteEntities(ctx, brokerEntities[brokerState.Host()])
 	})
 }
 
@@ -1246,7 +1250,7 @@ func qualifiedAddress(tenantId string, address string) string {
 }
 
 func connectorName(broker *BrokerState) string {
-	return fmt.Sprintf("connector-%s-%d", broker.Host.Hostname, broker.Port)
+	return fmt.Sprintf("connector-%s-%d", broker.Host().Hostname, broker.Port())
 }
 
 func portName(endpoint *v1beta2.MessagingEndpoint, protocol v1beta2.MessagingEndpointProtocol) string {

@@ -7,8 +7,9 @@ package state
 
 import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	"github.com/enmasseproject/enmasse/pkg/state/broker"
 )
 
 type Scheduler interface {
-	ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*BrokerState) error
+	ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*broker.BrokerState) error
 }

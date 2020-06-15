@@ -12,6 +12,9 @@ import (
 	"time"
 
 	fakecommand "github.com/enmasseproject/enmasse/pkg/amqpcommand/test"
+	. "github.com/enmasseproject/enmasse/pkg/state/broker"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
+	. "github.com/enmasseproject/enmasse/pkg/state/router"
 	"github.com/stretchr/testify/assert"
 	"pack.ag/amqp"
 )
@@ -28,28 +31,18 @@ func TestUpdateRouters(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
 	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
-		return &RouterState{
-			host:          host,
-			port:          port,
-			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
-			commandClient: rclient,
-		}
+		return NewTestRouterState(host, port, rclient)
 	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
-		return &BrokerState{
-			Host:          host,
-			Port:          port,
-			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
-			commandClient: bclient,
-		}
+		return NewTestBrokerState(host, port, bclient)
 	}, &testClock{})
 	assert.NotNil(t, i)
 
-	i.updateRouters([]Host{{"r1.example.com", "10.0.0.1"}, {"r2.example.com", "10.0.0.2"}})
+	i.updateRouters([]Host{{Hostname: "r1.example.com", Ip: "10.0.0.1"}, {Hostname: "r2.example.com", Ip: "10.0.0.2"}})
 	assert.Equal(t, 2, len(i.routers))
 	assertRouter(t, i, "r1.example.com", "10.0.0.1")
 	assertRouter(t, i, "r2.example.com", "10.0.0.2")
 
-	i.updateRouters([]Host{{"r1.example.com", "10.0.0.3"}, {"r2.example.com", "10.0.0.2"}})
+	i.updateRouters([]Host{{Hostname: "r1.example.com", Ip: "10.0.0.3"}, {Hostname: "r2.example.com", Ip: "10.0.0.2"}})
 	assertRouter(t, i, "r1.example.com", "10.0.0.3")
 	assertRouter(t, i, "r2.example.com", "10.0.0.2")
 }
@@ -58,30 +51,20 @@ func TestUpdateBrokers(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
 	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
-		return &RouterState{
-			host:          host,
-			port:          port,
-			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
-			commandClient: rclient,
-		}
+		return NewTestRouterState(host, port, rclient)
 	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
-		return &BrokerState{
-			Host:          host,
-			Port:          port,
-			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
-			commandClient: bclient,
-		}
+		return NewTestBrokerState(host, port, bclient)
 	}, &testClock{})
 	assert.NotNil(t, i)
 
-	err := i.updateBrokers(context.TODO(), []Host{{"b1.example.com", "10.0.0.1"}, {"b2.example.com", "10.0.0.2"}})
+	err := i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.1"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}})
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(i.brokers))
 	assert.Equal(t, 2, len(i.hostMap))
 	assertBroker(t, i, "b1.example.com", "10.0.0.1")
 	assertBroker(t, i, "b2.example.com", "10.0.0.2")
 
-	err = i.updateBrokers(context.TODO(), []Host{{"b1.example.com", "10.0.0.3"}, {"b2.example.com", "10.0.0.2"}})
+	err = i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.3"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}})
 	assert.Nil(t, err)
 	assertBroker(t, i, "b1.example.com", "10.0.0.3")
 	assertBroker(t, i, "b2.example.com", "10.0.0.2")
@@ -109,19 +92,9 @@ func TestSyncConnectors(t *testing.T) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
 	i := NewInfra(func(host Host, port int32, _ *tls.Config) *RouterState {
-		return &RouterState{
-			host:          host,
-			port:          port,
-			entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
-			commandClient: rclient,
-		}
+		return NewTestRouterState(host, port, rclient)
 	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
-		return &BrokerState{
-			Host:          host,
-			Port:          port,
-			entities:      make(map[BrokerEntityType]map[string]BrokerEntity, 0),
-			commandClient: bclient,
-		}
+		return NewTestBrokerState(host, port, bclient)
 	}, &testClock{})
 	assert.NotNil(t, i)
 
@@ -146,10 +119,10 @@ func TestSyncConnectors(t *testing.T) {
 	}
 
 	statuses, err := i.SyncAll(
-		[]Host{{"r1.example.com", "10.0.0.1"}, {"r2.example.com", "10.0.0.2"}},
-		[]Host{{"b1.example.com", "10.0.0.3"}, {"b2.example.com", "10.0.0.4"}}, nil)
+		[]Host{{Hostname: "r1.example.com", Ip: "10.0.0.1"}, {Hostname: "r2.example.com", Ip: "10.0.0.2"}},
+		[]Host{{Hostname: "b1.example.com", Ip: "10.0.0.3"}, {Hostname: "b2.example.com", Ip: "10.0.0.4"}}, nil)
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(i.routers[Host{"r1.example.com", "10.0.0.1"}].entities[RouterConnectorEntity]))
-	assert.Equal(t, 2, len(i.routers[Host{"r2.example.com", "10.0.0.2"}].entities[RouterConnectorEntity]))
+	assert.Equal(t, 2, len(i.routers[Host{Hostname: "r1.example.com", Ip: "10.0.0.1"}].Entities()[RouterConnectorEntity]))
+	assert.Equal(t, 2, len(i.routers[Host{Hostname: "r2.example.com", Ip: "10.0.0.2"}].Entities()[RouterConnectorEntity]))
 	assert.Equal(t, 4, len(statuses))
 }

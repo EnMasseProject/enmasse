@@ -18,7 +18,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
-	"github.com/enmasseproject/enmasse/pkg/state"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -50,7 +50,7 @@ func NewRouterController(client client.Client, scheme *runtime.Scheme, certContr
 /*
  * Reconciles the router instances for an instance of shared infrastructure.
  */
-func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]state.Host, error) {
+func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]Host, error) {
 
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
@@ -279,7 +279,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 	// Update expected routers
 	expectedPods := int(*statefulset.Spec.Replicas)
-	allHosts := make([]state.Host, 0)
+	allHosts := make([]Host, 0)
 	for i := 0; i < expectedPods; i++ {
 		podIp := ""
 		expectedHost := fmt.Sprintf("%s-%d.%s.%s.svc", statefulset.Name, i, statefulset.Name, statefulset.Namespace)
@@ -292,7 +292,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 				}
 			}
 		}
-		allHosts = append(allHosts, state.Host{Hostname: expectedHost, Ip: podIp})
+		allHosts = append(allHosts, Host{Hostname: expectedHost, Ip: podIp})
 	}
 
 	return allHosts, nil

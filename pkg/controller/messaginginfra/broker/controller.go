@@ -15,7 +15,7 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
-	"github.com/enmasseproject/enmasse/pkg/state"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -58,7 +58,7 @@ func getBrokerLabels(infra *v1beta2.MessagingInfrastructure) map[string]string {
  *
  * Each instance of a broker is created as a statefulset. If we want to support HA in the future, each statefulset can use replicas to configure HA.
  */
-func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]state.Host, error) {
+func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]Host, error) {
 	setDefaultBrokerScalingStrategy(&infra.Spec.Broker)
 	logger.Info("Reconciling brokers", "broker", infra.Spec.Broker)
 
@@ -116,7 +116,7 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 		return nil, err
 	}
 
-	allHosts := make([]state.Host, 0)
+	allHosts := make([]Host, 0)
 	for expectedHost, _ := range hosts {
 		podIp := ""
 		for _, pod := range brokerPods.Items {
@@ -130,7 +130,7 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 				}
 			}
 		}
-		allHosts = append(allHosts, state.Host{Hostname: expectedHost, Ip: podIp})
+		allHosts = append(allHosts, Host{Hostname: expectedHost, Ip: podIp})
 	}
 
 	return allHosts, nil
