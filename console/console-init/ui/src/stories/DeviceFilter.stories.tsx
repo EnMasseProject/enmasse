@@ -5,7 +5,7 @@
 
 import React from "react";
 import { MemoryRouter } from "react-router";
-import { DeviceFilter } from "modules/iot-device";
+import { DeviceFilter, getInitialFilter } from "modules/iot-device";
 import {
   Grid,
   GridItem,
@@ -25,7 +25,7 @@ export const deviceFilter = () => {
         <PageSection variant={PageSectionVariants.light}>
           <Grid>
             <GridItem span={3}>
-              <DeviceFilter />
+              <DeviceFilter filter={getInitialFilter()} setFilter={() => {}} />
             </GridItem>
           </Grid>
         </PageSection>
