@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Review } from "modules/address-space";
+// import { Review } from "modules/address-space";
 import {
   IMessagingProjectInput,
   isMessagingProjectValid
@@ -22,15 +22,16 @@ const MessagingReviewStep = (projectDetail?: IMessagingProjectInput) => {
     name: "Review",
     isDisabled: true,
     component: (
-      <Review
-        name={projectDetail && projectDetail.messagingProjectName}
-        namespace={(projectDetail && projectDetail.namespace) || ""}
-        type={(projectDetail && projectDetail.messagingProjectType) || ""}
-        plan={(projectDetail && projectDetail.messagingProjectPlan) || ""}
-        authenticationService={
-          (projectDetail && projectDetail.authenticationService) || ""
-        }
-      />
+      <></>
+      // <Review
+      //   name={projectDetail && projectDetail.messagingProjectName}
+      //   namespace={(projectDetail && projectDetail.namespace) || ""}
+      //   type={(projectDetail && projectDetail.messagingProjectType) || ""}
+      //   plan={(projectDetail && projectDetail.messagingProjectPlan) || ""}
+      //   authenticationService={
+      //     (projectDetail && projectDetail.authenticationService) || ""
+      //   }
+      // />
     ),
     enableNext: isFinishEnabled(),
     canJumpTo: isReviewEnabled(),
