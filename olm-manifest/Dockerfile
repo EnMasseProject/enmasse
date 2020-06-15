@@ -6,8 +6,8 @@
 FROM quay.io/enmasse/fedora-minimal:31
 
 ARG version
-ARG commit
+ARG revision
 ARG maven_version
-ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
+ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 
 ADD target/olm-manifest-${maven_version}-dist.tar.gz /

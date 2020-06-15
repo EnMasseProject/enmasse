@@ -6,9 +6,9 @@
 FROM centos:7
 
 ARG version
-ARG commit
+ARG revision
 ARG maven_version
-ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit} 
+ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 
 ADD target/console-server-${maven_version}-dist.tar.gz /
 

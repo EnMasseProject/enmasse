@@ -7,8 +7,8 @@ FROM ${ROUTER_IMAGE}
 
 ARG version
 ARG maven_version
-ARG commit
-ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit}
+ARG revision
+ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 
 ADD target/iot-proxy-configurator-${maven_version}-dist.tar.gz /
 

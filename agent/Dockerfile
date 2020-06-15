@@ -5,8 +5,8 @@ WORKDIR /opt/app-root/src/
 
 ARG version
 ARG maven_version
-ARG commit
-ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
+ARG revision
+ENV VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 
 ADD target/agent-${maven_version}-dist.tar.gz /opt/app-root/src/
 
