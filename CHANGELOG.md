@@ -35,9 +35,9 @@
 * #4600: [IoT] Allow configuring Pod affinities
 * #4631: Allow configuring CPU limits for infra
 * #4682: Avoid race when processing Artemis management responses when first connecting to broker
+* #4721: Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
 
 ## 0.31.4
-* #4721: Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
 * #4704: [OpenShift 3.11] Console returns 500 internal error when configured with custom certificate
 
 ## 0.31.3
