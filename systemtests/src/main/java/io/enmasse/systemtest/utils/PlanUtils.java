@@ -66,7 +66,7 @@ public class PlanUtils {
     // Resources standard
     //////////////////////////////////////////////////////////////////////////////
 
-    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String memory, int linkCapacity, int minReplicas) {
+    public static StandardInfraConfigSpecRouter createStandardRouterResourceObject(String cpu, String memory, int linkCapacity, int minReplicas) {
         return new StandardInfraConfigSpecRouterBuilder()
                 .withMinReplicas(minReplicas)
                 .withLinkCapacity(linkCapacity)
@@ -78,6 +78,7 @@ public class PlanUtils {
                 .endPolicy()
                 .withNewResources()
                 .withMemory(memory)
+                .withCpu(cpu)
                 .endResources()
                 .build();
     }

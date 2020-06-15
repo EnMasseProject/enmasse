@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -41,37 +42,47 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
 
-    protected void assertBroker(String brokerMemory, String brokerStorage, PodTemplateSpec templateSpec, String javaOpts) {
+    protected void assertBroker(InfraConfiguration brokerConfig) {
         log.info("Checking broker infra");
         List<Pod> brokerPods = TestUtils.listBrokerPods(kubernetes, exampleAddressSpace);
         assertEquals(1, brokerPods.size());
 
         Pod broker = brokerPods.stream().findFirst().get();
-        String actualBrokerMemory = broker.getSpec().getContainers().stream()
-                .filter(container -> container.getName().equals("broker")).findFirst()
-                .map(Container::getResources)
-                .map(ResourceRequirements::getLimits)
-                .get().get("memory").getAmount();
-        assertEquals(brokerMemory, actualBrokerMemory, "Broker memory limit incorrect");
 
-        if (brokerStorage != null) {
+        ResourceRequirements resources = broker.getSpec().getContainers().stream()
+                .filter(container -> container.getName().equals("broker"))
+                .findFirst()
+                .map(Container::getResources)
+                .get();
+        assertEquals(brokerConfig.getMemory(), resources.getLimits().get("memory").getAmount(),
+                "Broker memory limit incorrect");
+        assertEquals(brokerConfig.getMemory(), resources.getRequests().get("memory").getAmount(),
+                "Broker memory requests incorrect");
+        if (brokerConfig.getCpu() != null) {
+            assertEquals(brokerConfig.getCpu(), resources.getLimits().get("cpu").getAmount(),
+                    "Broker cpu limit incorrect");
+            assertEquals(brokerConfig.getCpu(), resources.getRequests().get("cpu").getAmount(),
+                    "Broker cpu requests incorrect");
+        }
+
+        if (brokerConfig.getBrokerStorage() != null) {
             PersistentVolumeClaim brokerVolumeClaim = getBrokerPVCData(broker);
-            assertEquals(brokerStorage, brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
+            assertEquals(brokerConfig.getBrokerStorage(), brokerVolumeClaim.getSpec().getResources().getRequests().get("storage").getAmount(),
                     "Broker data storage request incorrect");
         }
 
-        if (javaOpts != null) {
+        if (brokerConfig.getBrokerJavaOpts() != null) {
             brokerPods.forEach(pod -> {
                 ExecutionResultData result = KubeCMDClient.runOnCluster("exec", pod.getMetadata().getName(), "-n",
                         pod.getMetadata().getNamespace(), "ps", "auxww");
                 assertTrue(result.getRetCode(), result.getStdOut());
-                assertTrue(result.getStdOut().contains(javaOpts),
+                assertTrue(result.getStdOut().contains(brokerConfig.getBrokerJavaOpts()),
                         "Unable to find expected java opts in process argument list: " + result.getStdOut());
             });
         }
 
-        if (templateSpec != null) {
-            assertTemplateSpec(broker, templateSpec);
+        if (brokerConfig.getTemplateSpec() != null) {
+            assertTemplateSpec(broker, brokerConfig.getTemplateSpec());
         }
     }
 
@@ -112,7 +123,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
         }
     }
 
-    protected void assertAdminConsole(String adminMemory, PodTemplateSpec templateSpec) {
+    protected void assertAdminConsole(InfraConfiguration adminConfig) {
         log.info("Checking admin console infra");
         List<Pod> adminPods = TestUtils.listAdminConsolePods(kubernetes, exampleAddressSpace);
         assertEquals(1, adminPods.size());
@@ -121,14 +132,20 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
                 .stream().map(Container::getResources).collect(Collectors.toList());
 
         for (ResourceRequirements requirements : adminResources) {
-            assertEquals(adminMemory, requirements.getLimits().get("memory").getAmount(),
+            assertEquals(adminConfig.getMemory(), requirements.getLimits().get("memory").getAmount(),
                     "Admin console memory limit incorrect");
-            assertEquals(adminMemory, requirements.getRequests().get("memory").getAmount(),
+            assertEquals(adminConfig.getMemory(), requirements.getRequests().get("memory").getAmount(),
                     "Admin console memory requests incorrect");
+            if (adminConfig.getCpu() != null) {
+                assertEquals(adminConfig.getCpu(), requirements.getLimits().get("cpu").getAmount(),
+                        "Admin console cpu limit incorrect");
+                assertEquals(adminConfig.getCpu(), requirements.getRequests().get("cpu").getAmount(),
+                        "Admin console cpu requests incorrect");
+            }
         }
 
-        if (templateSpec != null) {
-            assertTemplateSpec(adminPods.get(0), templateSpec);
+        if (adminConfig.getTemplateSpec() != null) {
+            assertTemplateSpec(adminPods.get(0), adminConfig.getTemplateSpec());
         }
     }
 

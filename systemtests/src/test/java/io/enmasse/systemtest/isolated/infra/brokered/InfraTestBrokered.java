@@ -19,6 +19,7 @@ import io.enmasse.admin.model.v1.ResourceAllowance;
 import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
+import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -114,20 +115,23 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                 .endSpec()
                 .build());
 
-        assertInfra("512Mi", "1Gi", brokerTemplateSpec, "512Mi", adminTemplateSpec, "-Dsystemtest=property");
+        assertInfra(InfraConfiguration.broker(null, "512Mi", brokerTemplateSpec, "1Gi", "-Dsystemtest=property"),
+                InfraConfiguration.admin(null, "512Mi", adminTemplateSpec));
     }
 
     @Test
     void testIncrementInfra() throws Exception {
-        testReplaceInfra("1Gi", "2Gi", "768Mi");
+        testReplaceInfra(InfraConfiguration.broker("500m", "1Gi", null, "2Gi", null),
+                InfraConfiguration.admin("500m", "768Mi", null));
     }
 
     @Test
     void testDecrementInfra() throws Exception {
-        testReplaceInfra("256Mi", "512Mi", "256Mi");
+        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "512Mi", null),
+                InfraConfiguration.admin("250m", "256Mi", null));
     }
 
-    void testReplaceInfra(String brokerMemory, String brokerStorage, String adminMemory) throws Exception {
+    void testReplaceInfra(InfraConfiguration brokerConfig, InfraConfiguration adminConfig) throws Exception {
         testCreateInfra();
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
@@ -142,13 +146,15 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
                         .withAddressFullPolicy("FAIL")
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
                         .withNewResources()
-                        .withMemory(brokerMemory)
-                        .withStorage(brokerStorage)
+                        .withCpu(brokerConfig.getCpu())
+                        .withMemory(brokerConfig.getMemory())
+                        .withStorage(brokerConfig.getBrokerStorage())
                         .endResources()
                         .build())
                 .withAdmin(new BrokeredInfraConfigSpecAdminBuilder()
                         .withNewResources()
-                        .withMemory(adminMemory)
+                        .withCpu(adminConfig.getCpu())
+                        .withMemory(adminConfig.getMemory())
                         .endResources()
                         .build())
                 .endSpec()
@@ -175,8 +181,12 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
         exampleAddressSpace = new DoneableAddressSpace(exampleAddressSpace).editSpec().withPlan(exampleSpacePlan.getMetadata().getName()).endSpec().done();
         isolatedResourcesManager.replaceAddressSpace(exampleAddressSpace);
 
+        if (!updatePersistentVolumeClaim) {
+            brokerConfig.setBrokerStorage(null);
+        }
+
         waitUntilInfraReady(
-            () -> assertInfra(brokerMemory, updatePersistentVolumeClaim ? brokerStorage : null, null, adminMemory, null, null),
+            () -> assertInfra(brokerConfig, adminConfig),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
     }
 
@@ -221,9 +231,9 @@ class InfraTestBrokered extends InfraTestBase implements ITestIsolatedBrokered {
 
     }
 
-    private boolean assertInfra(String brokerMemory, String brokerStorage, PodTemplateSpec brokerTemplateSpec, String adminMemory, PodTemplateSpec adminTemplateSpec, String javaOpts) {
-        assertAdminConsole(adminMemory, adminTemplateSpec);
-        assertBroker(brokerMemory, brokerStorage, brokerTemplateSpec, javaOpts);
+    private boolean assertInfra(InfraConfiguration brokerConfig, InfraConfiguration adminConfig) {
+        assertAdminConsole(adminConfig);
+        assertBroker(brokerConfig);
         return true;
     }
 
