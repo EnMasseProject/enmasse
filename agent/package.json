@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "debug": "^3.1.*",
+        "clone": "^2.1.2",
         "p-limit": "^2.2.0",
         "rhea": "^1.0.13",
         "uuid": "^3.3.3"
