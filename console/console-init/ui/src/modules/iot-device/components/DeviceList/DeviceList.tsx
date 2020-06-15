@@ -12,24 +12,27 @@ import {
   TableBody,
   sortable,
   TableProps,
-  IRowData
+  IRowData,
+  SortByDirection
 } from "@patternfly/react-table";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
 export interface IDeviceListProps
-  extends Pick<TableProps, "actionResolver" | "sortBy" | "onSelect"> {
-  rows: IRowData[];
-  onSort?: (_event: any, index: number, direction: string) => void;
+  extends Pick<TableProps, "actionResolver" | "sortBy"> {
+  deviceRows: IRowData[];
+  onSelectDevice: (device: IDevice, isSelected: boolean) => void;
+  onSort?: (_event: any, index: number, direction: SortByDirection) => void;
 }
 
 export interface IDevice {
-  id?: string | null;
-  type?: string | null;
-  status?: boolean | null;
+  deviceId?: string | null;
+  viaGateway?: boolean | null;
+  enabled?: boolean | null;
   selected?: boolean | null;
   lastSeen?: string | null;
   lastUpdated?: string | null;
   creationTimeStamp?: string | null;
+  jsonData?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({
@@ -39,11 +42,11 @@ export const StyleForFooteredTable = StyleSheet.create({
 });
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
-  rows,
+  deviceRows,
   sortBy,
   onSort,
   actionResolver,
-  onSelect
+  onSelectDevice
 }) => {
   const tableColumns = [
     { title: "Device ID", transforms: [sortable] },
@@ -53,6 +56,16 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
     { title: "Last updated", transforms: [sortable] },
     { title: "Added date", transforms: [sortable] }
   ];
+
+  const onSelect = (
+    _: React.MouseEvent,
+    isSelected: boolean,
+    rowIndex: number
+  ) => {
+    const rows = [...deviceRows];
+    rows[rowIndex].selected = isSelected;
+    onSelectDevice(rows[rowIndex].originalData, isSelected);
+  };
 
   return (
     <div
@@ -64,7 +77,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         canSelectAll={false}
         onSelect={onSelect}
         cells={tableColumns}
-        rows={rows}
+        rows={deviceRows}
         aria-label="device list"
         sortBy={sortBy}
         onSort={onSort}

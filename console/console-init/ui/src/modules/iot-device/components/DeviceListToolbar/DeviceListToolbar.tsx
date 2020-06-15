@@ -21,12 +21,14 @@ import {
   ICreateDeviceButtonProps
 } from "modules/iot-device/components";
 
-interface IDeviceListToolbarProps
+export interface IDeviceListToolbarProps
   extends Omit<
     IDropdownWithBulkSelectProps,
     "dropdownId" | "dropdownToggleId" | "checkBoxId" | "ariaLabel"
   > {
   kebabItems: React.ReactNode[];
+  onSelectAllDevices: (val: boolean) => void;
+  onChange: (val: boolean) => void;
 }
 
 export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps &
@@ -41,12 +43,12 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
   handleJSONUpload,
   isOpen,
   onSelect,
-  onToggle,
+  onSelectAllDevices,
   isChecked,
   items,
-  onChange,
   kebabItems
 }) => {
+
   return (
     <DataToolbar id="device-data-toolbar">
       <DataToolbarContent id="device-data-toolbar-content">
@@ -61,12 +63,8 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             dropdownToggleId="device-bulk-select-toggle"
             checkBoxId="device-bulk-select-checkbox"
             ariaLabel="Bulk select dropdown for device list"
-            isOpen={isOpen}
-            onSelect={onSelect}
-            onToggle={onToggle}
             isChecked={isChecked}
-            items={items}
-            onChange={onChange}
+            onChange={onSelectAllDevices}
           />
         </DataToolbarItem>
         <DataToolbarItem

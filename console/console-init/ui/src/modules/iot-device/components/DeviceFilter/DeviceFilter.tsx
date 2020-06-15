@@ -61,17 +61,16 @@ export interface IDeviceFilter {
 }
 
 export interface IDeviceFilterProps {
-  filter?: IDeviceFilter;
-  setFilter?: (filter: IDeviceFilter) => void;
+  filter: IDeviceFilter;
+  setFilter: (filter: IDeviceFilter) => void;
   runFilter?: (filter: IDeviceFilter) => void;
 }
 
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
-  // filter,
-  // setFilter,
+  filter,
+  setFilter,
   runFilter
 }) => {
-  const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
     getInitialFilter()
   ]);

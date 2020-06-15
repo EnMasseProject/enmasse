@@ -27,31 +27,31 @@ export default {
 
 const rows: IDevice[] = [
   {
-    id: "littlesensor1",
-    type: "Using gateways",
-    status: true,
+    deviceId: "littlesensor1",
+    viaGateway: true,
+    enabled: true,
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
     lastUpdated: "2020-01-20T11:44:28.607Z",
     creationTimeStamp: "2020-01-20T11:44:28.607Z"
   },
   {
-    id: "jboss20",
-    type: "Using gateways",
-    status: false,
+    deviceId: "jboss20",
+    viaGateway: false,
+    enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
     lastUpdated: "2020-04-29T11:44:28.607Z",
     creationTimeStamp: "2020-04-30T11:44:28.607Z"
   },
   {
-    id: "jboss20",
+    deviceId: "jboss20",
     selected: true
   },
   {
-    id: "jboss20",
-    type: "Using gateways",
-    status: null,
+    deviceId: "jboss20",
+    viaGateway: false,
+    enabled: null,
     selected: null,
     lastSeen: "2020-04-20T11:44:28.607Z",
     lastUpdated: null,
@@ -104,8 +104,8 @@ export const deviceAlert = () => (
 export const deviceTable = () => (
   <MemoryRouter>
     <DeviceList
-      rows={rows.map(getTableCells)}
-      onSelect={async () => {}}
+      deviceRows={rows.map(getTableCells)}
+      onSelectDevice={action("Device selected")}
       actionResolver={actionResolver}
     />
   </MemoryRouter>
@@ -147,6 +147,7 @@ export const deviceToolbar = () => {
         isChecked={boolean("isChecked", false)}
         items={bulkSelectItems}
         onChange={action("checkbox dropdown changed")}
+        onSelectAllDevices={action("All devices selected")}
       />
     </MemoryRouter>
   );
