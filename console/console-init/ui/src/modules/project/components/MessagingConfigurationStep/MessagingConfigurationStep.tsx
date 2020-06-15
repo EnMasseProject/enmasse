@@ -5,7 +5,7 @@
 
 import React from "react";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
-import { Configuration } from "modules/address-space";
+// import { Configuration } from "modules/address-space/components";
 import { isMessagingProjectValid } from "modules/project/utils";
 
 export interface IMessagingProjectInput {
@@ -71,20 +71,21 @@ const MessagingConfigurationStep = (
   const steps = {
     name: "Configuration",
     component: (
-      <Configuration
-        name={projectDetail.messagingProjectName || ""}
-        setName={setName}
-        namespace={projectDetail.namespace || ""}
-        setNamespace={setNamespace}
-        type={projectDetail.messagingProjectType || ""}
-        setType={setType}
-        plan={projectDetail.messagingProjectPlan || ""}
-        setPlan={setPlan}
-        authenticationService={projectDetail.authenticationService || ""}
-        setAuthenticationService={setAuthenticationService}
-        isNameValid={projectDetail.isNameValid}
-        setIsNameValid={setIsNameValid}
-      />
+      <></>
+      // <Configuration
+      //   name={projectDetail.messagingProjectName || ""}
+      //   setName={setName}
+      //   namespace={projectDetail.namespace || ""}
+      //   setNamespace={setNamespace}
+      //   type={projectDetail.messagingProjectType || ""}
+      //   setType={setType}
+      //   plan={projectDetail.messagingProjectPlan || ""}
+      //   setPlan={setPlan}
+      //   authenticationService={projectDetail.authenticationService || ""}
+      //   setAuthenticationService={setAuthenticationService}
+      //   isNameValid={projectDetail.isNameValid}
+      //   setIsNameValid={setIsNameValid}
+      // />
     ),
     enableNext: isReviewEnabled(),
     backButton: "hide"

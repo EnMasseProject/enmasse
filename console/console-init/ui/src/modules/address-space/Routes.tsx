@@ -25,7 +25,7 @@ export const Routes = () => (
       exact={true}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/endpoints/"
+      path="/messaging-projects/:namespace/:name/:type/endpoints/"
       getComponent={getEndpoints}
       exact={true}
     />
