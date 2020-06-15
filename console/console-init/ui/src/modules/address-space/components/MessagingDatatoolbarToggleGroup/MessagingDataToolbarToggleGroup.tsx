@@ -214,7 +214,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "status" && (
             <DropdownWithToggle
               id={"al-filter-dropdown-status"}
-              dropdownItemId={"al-filter-dropdown-item-status"}
+              dropdownItemIdPrefix={"al-filter-dropdown-item-status"}
               position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
               dropdownItems={statusOptions}
