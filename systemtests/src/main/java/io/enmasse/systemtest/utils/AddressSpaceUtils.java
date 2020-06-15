@@ -237,6 +237,24 @@ public class AddressSpaceUtils {
                 endpoint, getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getName()));
     }
 
+    public static Endpoint getInternalEndpointByName(AddressSpace addressSpace, String endpoint, String protocol) {
+        for (EndpointSpec addrSpaceEndpoint : addressSpace.getSpec().getEndpoints()) {
+            if (addrSpaceEndpoint.getName().equals(endpoint)) {
+                EndpointStatus status = getEndpointByName(addrSpaceEndpoint.getName(), addressSpace.getStatus().getEndpointStatuses());
+                log.debug("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
+                        addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), status.getServiceHost(),
+                        status.getServicePorts().get(protocol));
+                if (status.getServiceHost() == null || status.getServicePorts().get(protocol) == null) {
+                    return null;
+                } else {
+                    return new Endpoint(String.format("%s.cluster.local", status.getServiceHost()), status.getServicePorts().get(protocol));
+                }
+            }
+        }
+        throw new IllegalStateException(String.format("Endpoint wih name '%s-%s' doesn't exist in address space '%s'",
+                endpoint, getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getName()));
+    }
+
     public static Endpoint getEndpointByServiceName(AddressSpace addressSpace, String endpointService) {
         for (EndpointSpec addrSpaceEndpoint : addressSpace.getSpec().getEndpoints()) {
             if (addrSpaceEndpoint.getService().equals(endpointService)) {
@@ -336,7 +354,7 @@ public class AddressSpaceUtils {
         int expectedConnectors = addressSpace.getSpec().getConnectors().size();
         return addressSpace.getStatus().getConnectors().size() == expectedConnectors &&
                 addressSpace.getStatus().getConnectors().stream()
-                .allMatch(AddressSpaceStatusConnector::isReady);
+                        .allMatch(AddressSpaceStatusConnector::isReady);
     }
 
     public static String getConnectorStatuses(AddressSpace addressSpace) {
@@ -347,6 +365,14 @@ public class AddressSpaceUtils {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList())
                 .toString();
+    }
+
+    public static Endpoint getInternalMessagingRoute(AddressSpace addressSpace, String prototol) {
+        return getInternalEndpointByName(addressSpace, "messaging", prototol);
+    }
+
+    public static Endpoint getInternalMessagingWssRoute(AddressSpace addressSpace, String prototol) {
+        return getInternalEndpointByName(addressSpace, "messaging-wss", prototol);
     }
 
     public static Endpoint getMessagingRoute(AddressSpace addressSpace) throws Exception {

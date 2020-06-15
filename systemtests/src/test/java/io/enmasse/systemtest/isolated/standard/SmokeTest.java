@@ -8,22 +8,25 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
+import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.shared.standard.QueueTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -31,9 +34,6 @@ import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @Tag(NON_PR)
 @Tag(SMOKE)
 @Tag(ACCEPTANCE)
+@ExternalClients
 class SmokeTest extends TestBase implements ITestIsolatedStandard {
 
     private Address queue;
@@ -51,6 +52,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
     private Address multicast;
     private AddressSpace addressSpace;
     private UserCredentials cred;
+    private Endpoint route;
 
     @Test
     void smoketest() throws Exception {
@@ -115,6 +117,8 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
         resourcesManager.setAddresses(queue, topic, anycast, multicast);
         Thread.sleep(60_000);
 
+        route = AddressSpaceUtils.getInternalMessagingRoute(addressSpace, "amqps");
+
         cred = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(addressSpace, cred);
 
@@ -125,78 +129,54 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
     }
 
     private void testQueue() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(cred);
-
-        QueueTest.runQueueTest(client, queue);
+        testSmokeMessaging(queue, 1);
     }
 
     private void testTopic() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createTopicClient(addressSpace);
-        client.getConnectOptions().setCredentials(cred);
-        List<String> msgs = TestUtils.generateMessages(500);
-
-        List<Future<List<Message>>> recvResults = Arrays.asList(
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(topic.getSpec().getAddress(), msgs.size()));
-
-        Thread.sleep(10_000);
-        assertThat("Wrong count of messages sent",
-                client.sendMessages(topic.getSpec().getAddress(), msgs).get(3, TimeUnit.MINUTES), is(msgs.size()));
-
-        assertAll("Every subscriber should receive all messages",
-                () -> assertThat("Wrong count of messages received: receiver0",
-                        recvResults.get(0).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
-                () -> assertThat("Wrong count of messages received: receiver1",
-                        recvResults.get(1).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
-                () -> assertThat("Wrong count of messages received: receiver2",
-                        recvResults.get(2).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
-                () -> assertThat("Wrong count of messages received: receiver3",
-                        recvResults.get(3).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
-                () -> assertThat("Wrong count of messages received: receiver4",
-                        recvResults.get(4).get(3, TimeUnit.MINUTES).size(), is(msgs.size())),
-                () -> assertThat("Wrong count of messages received: receiver5",
-                        recvResults.get(5).get(3, TimeUnit.MINUTES).size(), is(msgs.size()))
-        );
+        testSmokeMessaging(topic, 3);
     }
 
     private void testAnycast() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace);
-        client.getConnectOptions().setCredentials(cred);
-
-        List<String> msgs = Arrays.asList("foo", "bar", "baz");
-
-        Future<List<Message>> recvResult = client.recvMessages(anycast.getSpec().getAddress(), msgs.size());
-        Future<Integer> sendResult = client.sendMessages(anycast.getSpec().getAddress(), msgs);
-
-        assertThat("Wrong count of messages sent", sendResult.get(1, TimeUnit.MINUTES), is(msgs.size()));
-        assertThat("Wrong count of messages received", recvResult.get(1, TimeUnit.MINUTES).size(), is(msgs.size()));
+        testSmokeMessaging(anycast, 1);
     }
 
     private void testMulticast() throws Exception {
-        AmqpClient client = getAmqpClientFactory().createBroadcastClient(addressSpace);
-        client.getConnectOptions().setCredentials(cred);
-        List<String> msgs = Collections.singletonList("foo");
+        testSmokeMessaging(multicast, 3);
+    }
 
-        List<Future<List<Message>>> recvResults = Arrays.asList(
-                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()),
-                client.recvMessages(multicast.getSpec().getAddress(), msgs.size()));
+    private void testSmokeMessaging(Address address, int receiverCount) throws Exception {
+        ExternalMessagingClient sender = new ExternalMessagingClient()
+                .withClientEngine(new RheaClientSender())
+                .withAddress(address)
+                .withCredentials(cred)
+                .withMessagingRoute(route)
+                .withMessageBody("{'data': '1525154', 'test': '6598959565', 'test2': '989898###RRRRASADS'}")
+                .withAdditionalArgument(ClientArgument.LINK_AT_LEAST_ONCE, "true")
+                .withCount(10);
+
+        List<ExternalMessagingClient> receivers = new LinkedList<>();
+        List<Future<Boolean>> recvResults = new LinkedList<>();
+        for (int i = 0; i < receiverCount; i++) {
+            receivers.add(new ExternalMessagingClient()
+                    .withClientEngine(new RheaClientReceiver())
+                    .withAddress(address)
+                    .withCredentials(cred)
+                    .withMessagingRoute(route)
+                    .withTimeout(120_000)
+                    .withAdditionalArgument(
+                            address.getSpec().getType().equals(AddressType.MULTICAST.toString().toLowerCase()) ? ClientArgument.LINK_AT_MOST_ONCE : ClientArgument.LINK_AT_LEAST_ONCE, "true")
+                    .withCount(10));
+        }
+
+        receivers.forEach(receiver -> recvResults.add(receiver.runAsync()));
+        for (ExternalMessagingClient rcv : receivers) {
+            rcv.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
+        }
         Thread.sleep(10_000);
-        assertThat("Wrong count of messages sent",
-                client.sendMessages(multicast.getSpec().getAddress(), msgs).get(1, TimeUnit.MINUTES), is(msgs.size()));
 
-        assertAll("All receivers should receive all messages",
-                () -> assertTrue(recvResults.get(0).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                        "Wrong count of messages received: receiver0"),
-                () -> assertTrue(recvResults.get(1).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                        "Wrong count of messages received: receiver1"),
-                () -> assertTrue(recvResults.get(2).get(30, TimeUnit.SECONDS).size() >= msgs.size(),
-                        "Wrong count of messages received: receiver2")
-        );
+        assertTrue(sender.run(), "Sender failed, expected return code 0");
+        for (Future<Boolean> rcvr : recvResults) {
+            assertTrue(rcvr.get(), "Receiver failed, expected return code 0");
+        }
     }
 }

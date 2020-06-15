@@ -8,39 +8,38 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedBrokered;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
-import io.enmasse.systemtest.shared.standard.QueueTest;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
-import io.enmasse.systemtest.utils.TestUtils;
-import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.NON_PR;
 import static io.enmasse.systemtest.TestTag.SMOKE;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Tag(NON_PR)
 @Tag(SMOKE)
 @Tag(ACCEPTANCE)
+@ExternalClients
 class SmokeTest extends TestBase implements ITestIsolatedBrokered {
 
     @Test
     void testAddressTypes() throws Exception {
+        int messagesCount = 10;
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-brokered")
@@ -66,15 +65,6 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withPlan(getDefaultPlan(AddressType.QUEUE))
                 .endSpec()
                 .build();
-        resourcesManager.createAddressSpace(addressSpace);
-        resourcesManager.setAddresses(queueA);
-        UserCredentials cred = new UserCredentials("test", "test");
-        resourcesManager.createOrUpdateUser(addressSpace, cred);
-
-        AmqpClient amqpQueueCli = getAmqpClientFactory().createQueueClient(addressSpace);
-        amqpQueueCli.getConnectOptions().setCredentials(cred);
-        QueueTest.runQueueTest(amqpQueueCli, queueA);
-        amqpQueueCli.close();
 
         Address topicB = new AddressBuilder()
                 .withNewMetadata()
@@ -87,33 +77,47 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
                 .withPlan(getDefaultPlan(AddressType.TOPIC))
                 .endSpec()
                 .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+        resourcesManager.setAddresses(queueA);
+        UserCredentials cred = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(addressSpace, cred);
+
+        Endpoint route = AddressSpaceUtils.getInternalMessagingRoute(addressSpace, "amqps");
+
+        ExternalMessagingClient sender = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withAddress(queueA)
+                .withCredentials(cred)
+                .withMessagingRoute(route)
+                .withCount(messagesCount);
+
+        ExternalMessagingClient receiver = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withAddress(queueA)
+                .withCredentials(cred)
+                .withMessagingRoute(route)
+                .withCount(messagesCount);
+
+        assertTrue(sender.run());
+        assertTrue(receiver.run());
+
         resourcesManager.setAddresses(topicB);
 
-        AmqpClient amqpTopicCli = getAmqpClientFactory().createTopicClient(addressSpace);
-        amqpTopicCli.getConnectOptions().setCredentials(cred);
-        List<Future<List<Message>>> recvResults = Arrays.asList(
-                amqpTopicCli.recvMessages(topicB.getSpec().getAddress(), 1000),
-                amqpTopicCli.recvMessages(topicB.getSpec().getAddress(), 1000));
+        sender.withAddress(topicB);
+        receiver.withAddress(topicB);
 
-        List<String> msgsBatch = TestUtils.generateMessages(600);
-        List<String> msgsBatch2 = TestUtils.generateMessages(400);
+        Future<Boolean> recResult = receiver.runAsync();
+        receiver.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
 
-        assertAll("All senders should send all messages",
-                () -> assertThat("Wrong count of messages sent: batch1",
-                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch).get(3, TimeUnit.MINUTES), is(msgsBatch.size())),
-                () -> assertThat("Wrong count of messages sent: batch2",
-                        amqpTopicCli.sendMessages(topicB.getSpec().getAddress(), msgsBatch2).get(3, TimeUnit.MINUTES), is(msgsBatch2.size())));
-
-        assertAll("All receivers should receive all messages",
-                () -> assertThat("Wrong count of messages received",
-                        recvResults.get(0).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())),
-                () -> assertThat("Wrong count of messages received",
-                        recvResults.get(1).get(3, TimeUnit.MINUTES).size(), is(msgsBatch.size() + msgsBatch2.size())));
+        assertTrue(sender.run(), "Sender failed, expected return code 0");
+        assertTrue(recResult.get(), "Receiver failed, expected return code 0");
     }
 
     @Test
     @Tag(ACCEPTANCE)
     void testCreateDeleteAddressSpace() throws Exception {
+        int messagesCount = 10;
         AddressSpace addressSpaceA = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("smoke-space-brokered-a")
@@ -169,21 +173,39 @@ class SmokeTest extends TestBase implements ITestIsolatedBrokered {
         resourcesManager.setAddresses(queueA, queueB);
         UserCredentials user = new UserCredentials("test", "test");
         resourcesManager.createOrUpdateUser(addressSpaceA, user);
-
-        AmqpClient amqpQueueCliA = getAmqpClientFactory().createQueueClient(addressSpaceA);
-        amqpQueueCliA.getConnectOptions().setCredentials(user);
-        QueueTest.runQueueTest(amqpQueueCliA, queueA);
-        amqpQueueCliA.close();
-
         resourcesManager.createOrUpdateUser(addressSpaceB, user);
 
-        AmqpClient amqpQueueCliC = getAmqpClientFactory().createQueueClient(addressSpaceB);
-        amqpQueueCliC.getConnectOptions().setCredentials(user);
-        QueueTest.runQueueTest(amqpQueueCliC, queueB);
-        amqpQueueCliC.close();
+        Endpoint routeAddressSpaceA = AddressSpaceUtils.getInternalMessagingRoute(addressSpaceA, "amqps");
+        Endpoint routeAddressSpaceB = AddressSpaceUtils.getInternalMessagingRoute(addressSpaceB, "amqps");
+
+        ExternalMessagingClient sender = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withAddress(queueA)
+                .withCredentials(user)
+                .withMessageBody("{'data': '1525154', 'test': '6598959565', 'test2': '989898###RRRRASADS'}")
+                .withMessagingRoute(routeAddressSpaceA)
+                .withCount(messagesCount);
+
+        ExternalMessagingClient receiver = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withAddress(queueA)
+                .withCredentials(user)
+                .withMessagingRoute(routeAddressSpaceA)
+                .withCount(messagesCount);
+
+        assertTrue(sender.run());
+        assertTrue(receiver.run());
+
+
+        sender.withMessagingRoute(routeAddressSpaceB).withAddress(queueB);
+        receiver.withMessagingRoute(routeAddressSpaceB).withAddress(queueB);
+
+        assertTrue(sender.run());
+        assertTrue(receiver.run());
 
         resourcesManager.deleteAddressSpace(addressSpaceA);
 
-        QueueTest.runQueueTest(amqpQueueCliC, queueB);
+        assertTrue(sender.run());
+        assertTrue(receiver.run());
     }
 }
