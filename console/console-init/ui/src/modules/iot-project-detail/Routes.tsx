@@ -9,6 +9,7 @@ import { Redirect } from "react-router";
 
 const getCertificates = () =>
   import("modules/iot-certificates/IoTCertificatesPage");
+const getDevices = () => import("modules/iot-device/DeviceListPage");
 
 export const Routes = () => (
   <SwitchWith404>
@@ -16,6 +17,11 @@ export const Routes = () => (
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/certificates"
       getComponent={getCertificates}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/devices"
+      getComponent={getDevices}
       exact={true}
     />
   </SwitchWith404>
