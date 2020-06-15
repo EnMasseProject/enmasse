@@ -61,6 +61,8 @@ objects:
           address: ${ADDRESS}
           addressSpace: ${ADDRESS_SPACE}
           cluster_id: ${CLUSTER_ID}
+          enmasse.io/version: "${env.VERSION}"
+          enmasse.io/revision: "${env.REVISION}"
         labels:
           addresstype: topic
           app: enmasse
