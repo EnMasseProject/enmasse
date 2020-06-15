@@ -33,6 +33,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -154,7 +155,7 @@ public abstract class Kubernetes {
                 throw new RuntimeException(ex);
             }
             Environment env = Environment.getInstance();
-            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
+            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER) || cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
                 instance = new Minikube(env);
             } else {
                 instance = new OpenShift(env);
