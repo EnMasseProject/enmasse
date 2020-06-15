@@ -78,7 +78,7 @@ public class AddressProbeClient implements AutoCloseable {
         }
 
         String payload = String.format("PING %s", UUID.randomUUID().toString());
-        Map<String, Object> properties = Collections.singletonMap("probe", true);
+        Map<String, Object> properties = Collections.singletonMap("probe", "true");
         Message message = Proton.message();
         message.setBody(new AmqpValue(payload));
         message.setApplicationProperties(new ApplicationProperties(properties));
