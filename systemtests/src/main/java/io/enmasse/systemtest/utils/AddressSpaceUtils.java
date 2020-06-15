@@ -244,7 +244,7 @@ public class AddressSpaceUtils {
                 log.debug("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
                         addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(), status.getServiceHost(),
                         status.getServicePorts().get(protocol));
-                if (status.getServiceHost() == null) {
+                if (status.getServiceHost() == null || status.getServicePorts().get(protocol) == null) {
                     return null;
                 } else {
                     return new Endpoint(String.format("%s.cluster.local", status.getServiceHost()), status.getServicePorts().get(protocol));
