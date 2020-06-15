@@ -67,6 +67,18 @@ This can be run at the top level or within each module. You can also run the `bu
 *Note*: If you are using OKD and `oc cluster up`, you can push images directly to the built-in registry
 by setting `DOCKER_ORG=myproject` and `DOCKER_REGISTRY=172.30.1.1:5000` instead.
 
+#### Full build and load images in a local [KIND](https://kind.sigs.k8s.io/) instance
+
+    IMAGE_PULL_POLICY=IfNotPresent make buildpushkind
+
+*Note*: Using the IfNotPresent policy prevents KIND from attempting to pull the images from the
+external registries.
+
+#### Build a single component and load image in a local [KIND](https://kind.sigs.k8s.io/) instance
+
+    make -C <component> buildpushkind
+    kubectl delete pod <component pod>
+
 #### Deploying to a Kubernetes instance assuming already logged in with cluster-admin permissions
 
     kubectl create namespace enmasse-infra
