@@ -16,10 +16,8 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
     private List<String> msgPerSecond;
 
-    private String perClientThroughput99p;
-    private String perClientThroughputMedian;
-    private String estimateTotalThroughput99p;
-    private String estimateTotalThroughputMedian;
+    private String averageThroughput;
+    private String totalThroughput;
 
     public String getName() {
         return name;
@@ -37,36 +35,19 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
         this.msgPerSecond = msgPerSecond;
     }
 
-    public String getPerClientThroughput99p() {
-        return perClientThroughput99p;
+    public String getTotalThroughput() {
+        return totalThroughput;
     }
 
-    public void setPerClientThroughput99p(String perClientThroughput99p) {
-        this.perClientThroughput99p = perClientThroughput99p;
+    public void setTotalThroughput(String totalThroughput) {
+        this.totalThroughput = totalThroughput;
     }
 
-    public String getPerClientThroughputMedian() {
-        return perClientThroughputMedian;
+    public String getAverageThroughput() {
+        return averageThroughput;
     }
 
-    public void setPerClientThroughputMedian(String perClientThroughputMedian) {
-        this.perClientThroughputMedian = perClientThroughputMedian;
+    public void setAverageThroughput(String averageThroughput) {
+        this.averageThroughput = averageThroughput;
     }
-
-    public String getEstimateTotalThroughput99p() {
-        return estimateTotalThroughput99p;
-    }
-
-    public void setEstimateTotalThroughput99p(String estimateTotalThroughput99p) {
-        this.estimateTotalThroughput99p = estimateTotalThroughput99p;
-    }
-
-    public String getEstimateTotalThroughputMedian() {
-        return estimateTotalThroughputMedian;
-    }
-
-    public void setEstimateTotalThroughputMedian(String estimateTotalThroughputMedian) {
-        this.estimateTotalThroughputMedian = estimateTotalThroughputMedian;
-    }
-
 }
