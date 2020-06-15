@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot.isolated.mqtt;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 
 import java.util.Arrays;
@@ -45,20 +46,18 @@ class MqttAdapterTest implements StandardIoTMqttTests {
     @Override
     public List<DeviceSupplier> getDevices() {
         return Arrays.asList(
-                () -> session.newDevice()
-                        .named("default")
+                named("default", () -> session.newDevice()
                         .register()
-                        .setPassword());
+                        .setPassword()));
     }
 
     @Override
     public List<DeviceSupplier> getInvalidDevices() {
         return Arrays.asList(
-                () -> session.newDevice()
-                        .named("invalidPassword")
+                named("invalidPassword", () -> session.newDevice()
                         .register()
                         .setPassword()
-                        .overridePassword());
+                        .overridePassword()));
     }
 
     @Override

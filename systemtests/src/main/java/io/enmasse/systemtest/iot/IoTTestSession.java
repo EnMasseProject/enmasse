@@ -172,19 +172,6 @@ public final class IoTTestSession implements AutoCloseable {
             return this;
         }
 
-        /**
-         * Allows to override the output of the {@link #toString()} method.
-         * <p>
-         * This may be used to provide a stable name for parameterized test.
-         *
-         * @param name The value to report from {@link #toString()}.
-         * @return This instance, for chained method calls.
-         */
-        public Device named(final String name) {
-            this.name = name;
-            return this;
-        }
-
         @Override
         public String toString() {
             if (this.name != null) {

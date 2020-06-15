@@ -1,10 +1,12 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
+
 package io.enmasse.systemtest.iot.isolated.http;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED_IOT;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 
 import java.util.Arrays;
@@ -41,20 +43,18 @@ class HttpAdapterTest implements StandardIoTHttpTests {
     @Override
     public List<DeviceSupplier> getDevices() {
         return Arrays.asList(
-                () -> session.newDevice()
-                        .named("default")
+                named("default", () -> session.newDevice()
                         .register()
-                        .setPassword());
+                        .setPassword()));
     }
 
     @Override
     public List<DeviceSupplier> getInvalidDevices() {
         return Arrays.asList(
-                () -> session.newDevice()
-                        .named("invalidPassword")
+                named("invalidPassword", () -> session.newDevice()
                         .register()
                         .setPassword()
-                        .overridePassword());
+                        .overridePassword()));
     }
 
     @Override
