@@ -22,3 +22,15 @@ export interface ICredentialsReponse {
     credentials?: string;
   };
 }
+
+export interface IIoTDevicesResponse {
+  devices: {
+    total: number;
+    devices: Array<{
+      deviceId: string;
+      jsonData: string;
+      enabled: boolean;
+      viaGateway: boolean;
+    }>;
+  };
+}
