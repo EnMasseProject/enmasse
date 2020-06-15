@@ -75,7 +75,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       deviceId,
       iotproject: projectname
     });
-    console.log(setDeleteDeviceQueryVariables);
   };
 
   const disableDevice = (row: any) => {
@@ -92,7 +91,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   };
 
   const enableDevice = (row: any) => {
-    // todo: viaGateway to be added
+    // TODO: to be changed according to the backend query of mock
     const { deviceId, jsonData } = row.originalData;
     setUpdateDeviceQueryVariables({
       project: projectname,
@@ -105,25 +104,20 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     });
   };
 
-  const actionResolver = (rowData: IRowData) => [
-    {
-      title: "Delete",
-      onClick: () => deleteDevice(rowData)
-    },
-    ...(rowData.originalData.enabled
-      ? [
-          {
-            title: "Disable",
-            onClick: () => disableDevice(rowData)
-          }
-        ]
-      : [
-          {
-            title: "Enable",
-            onClick: () => enableDevice(rowData)
-          }
-        ])
-  ];
+  const actionResolver = (rowData: IRowData) => {
+    const enabled = rowData?.originalData?.enabled;
+    return [
+      {
+        title: "Delete",
+        onClick: () => deleteDevice(rowData)
+      },
+      {
+        title: enabled ? "Disable" : "Enable",
+        onClick: () =>
+          enabled ? disableDevice(rowData) : enableDevice(rowData)
+      }
+    ];
+  };
 
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
