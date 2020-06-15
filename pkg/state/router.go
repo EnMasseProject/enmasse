@@ -48,6 +48,7 @@ func NewRouterState(host Host, port int32, tlsConfig *tls.Config) *RouterState {
 			RouterListenerEntity:   make(map[string]RouterEntity, 0),
 			RouterAddressEntity:    make(map[string]RouterEntity, 0),
 			RouterAutoLinkEntity:   make(map[string]RouterEntity, 0),
+			RouterLinkRouteEntity:  make(map[string]RouterEntity, 0),
 			RouterSslProfileEntity: make(map[string]RouterEntity, 0),
 		},
 		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
@@ -72,8 +73,9 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 	r.nextResync = nextResync
 
 	log.Printf("[Router %s] Initializing...", r.host)
+	r.reconnectCount = r.commandClient.ReconnectCount()
 	totalEntities := 0
-	entityTypes := []RouterEntityType{RouterConnectorEntity, RouterListenerEntity, RouterAddressEntity, RouterAutoLinkEntity, RouterSslProfileEntity}
+	entityTypes := []RouterEntityType{RouterConnectorEntity, RouterListenerEntity, RouterAddressEntity, RouterAutoLinkEntity, RouterLinkRouteEntity, RouterSslProfileEntity}
 	for _, t := range entityTypes {
 		list, err := r.readEntities(t)
 		if err != nil {
@@ -533,6 +535,22 @@ func (e *RouterAutoLink) Order() int {
 	return 0
 }
 
+func (e *RouterLinkRoute) Type() RouterEntityType {
+	return RouterLinkRouteEntity
+}
+
+func (e *RouterLinkRoute) GetName() string {
+	return e.Name
+}
+
+func (e *RouterLinkRoute) Equals(other RouterEntity) bool {
+	return reflect.DeepEqual(e, other)
+}
+
+func (e *RouterLinkRoute) Order() int {
+	return 0
+}
+
 func (e *NamedEntity) Type() RouterEntityType {
 	return e.EntityType
 }
@@ -573,6 +591,9 @@ func (c *RouterEntityType) Decode(data map[string]interface{}) (entity RouterEnt
 		err = mapToEntity(data, entity)
 	case RouterAutoLinkEntity:
 		entity = &RouterAutoLink{}
+		err = mapToEntity(data, entity)
+	case RouterLinkRouteEntity:
+		entity = &RouterLinkRoute{}
 		err = mapToEntity(data, entity)
 	case RouterSslProfileEntity:
 		entity = &RouterSslProfile{}

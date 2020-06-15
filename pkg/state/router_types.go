@@ -28,6 +28,7 @@ const (
 	RouterListenerEntity   RouterEntityType = "org.apache.qpid.dispatch.listener"
 	RouterConnectorEntity  RouterEntityType = "org.apache.qpid.dispatch.connector"
 	RouterAutoLinkEntity   RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
+	RouterLinkRouteEntity  RouterEntityType = "org.apache.qpid.dispatch.router.config.linkRoute"
 	RouterSslProfileEntity RouterEntityType = "org.apache.qpid.dispatch.sslProfile"
 )
 
@@ -105,8 +106,10 @@ type RouterAutoLink struct {
 }
 
 type RouterLinkRoute struct {
-	Prefix      string `json:"string"`
-	ContainerId string `json:"containerId"`
+	Name       string `json:"name"`
+	Prefix     string `json:"prefix"`
+	Direction  string `json:"direction"`
+	Connection string `json:"connection,omitempty"`
 }
 
 type RouterSslProfile struct {

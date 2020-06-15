@@ -56,10 +56,7 @@ func Add(mgr manager.Manager) error {
 }
 
 /**
- * TODO - Add support for topic addresses
  * TODO - Add support for scheduling based on broker load
- * TODO - Add support for subscription addresses
- * TODO - Add support for deadLetter addresses
  * TODO - Add support for per-address limits based on MessagingAddressPlan
  * TODO - Add support for migrating queues to different brokers based on scheduling decision
  */
@@ -150,6 +147,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	// Initialize phase and conditions and type
 	var foundTenant *v1beta2.MessagingAddressCondition
+	var validated *v1beta2.MessagingAddressCondition
 	var scheduled *v1beta2.MessagingAddressCondition
 	var created *v1beta2.MessagingAddressCondition
 	var ready *v1beta2.MessagingAddressCondition
@@ -171,6 +169,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 			address.Status.Type = v1beta2.MessagingAddressTypeDeadLetter
 		}
 		foundTenant = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressFoundTenant)
+		validated = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressValidated)
 		scheduled = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressScheduled)
 		created = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressCreated)
 		ready = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
@@ -207,8 +206,40 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 						logger.Info("[Finalizer] Error looking up infra")
 						return reconcile.Result{}, err
 					}
+
+					if address.Spec.Topic != nil {
+						// For topics, make sure no subscriptions referencing this topic exists.
+						foundSub, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+							return a.Spec.Subscription != nil && a.Spec.Subscription.Topic == address.GetAddress()
+						})
+						if err != nil {
+							return reconcile.Result{}, err
+						}
+						if foundSub {
+							err := fmt.Errorf("subscriptions referencing this topic address exist")
+							address.Status.Message = err.Error()
+							return reconcile.Result{Requeue: true}, nil
+						}
+					} else if address.Spec.DeadLetter != nil {
+						// For deadLetter addresses, make sure no queues are referencing it.
+						// For topics, make sure no subscriptions referencing this topic exists.
+						foundQueue, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+							return a.Spec.Queue != nil && (a.Spec.Queue.DeadLetterAddress == address.GetAddress() || a.Spec.Queue.ExpiryAddress == address.GetAddress())
+						})
+						if err != nil {
+							return reconcile.Result{}, err
+						}
+						if foundQueue {
+							err := fmt.Errorf("queues referencing this deadletter address exist")
+							address.Status.Message = err.Error()
+							return reconcile.Result{Requeue: true}, nil
+						}
+					}
 					client := r.clientManager.GetClient(infra)
 					err = client.DeleteAddress(address)
+
+					// TODO: Notify Terminating deadLetter or topics referenced by this queue to speed up reconcile
+
 					logger.Info("[Finalizer] Deleted address", "err", err)
 					return reconcile.Result{}, err
 				},
@@ -221,6 +252,10 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		if result.Requeue {
 			// Update and requeue if changed
 			if !reflect.DeepEqual(original, address) {
+				if !reflect.DeepEqual(original.Status, address.Status) {
+					err := r.client.Status().Update(ctx, address)
+					return processorResult{Requeue: true}, err
+				}
 				err := r.client.Update(ctx, address)
 				return processorResult{Return: true}, err
 			}
@@ -249,13 +284,79 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result.Result(), err
 	}
 
-	// Schedule address. Scheduling and creation of addresses are separated and each step is persisted. This is to avoid
-	// the case where a scheduled address is forgotten if the operator crashes. Once persisted, the operator will
-	// be able to reconcile the broker state as specified in the address status.
+	// Perform validation of address
+	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+		if address.Spec.Queue != nil &&
+			// Ensure any deadletter or expiry address exists
+			(address.Spec.Queue.DeadLetterAddress != "" || address.Spec.Queue.ExpiryAddress != "") {
+
+			deadLetterAddress := address.Spec.Queue.DeadLetterAddress
+			if deadLetterAddress != "" {
+				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+					return a.Spec.DeadLetter != nil && a.GetAddress() == deadLetterAddress
+				})
+				if err != nil {
+					return processorResult{}, err
+				}
+				if !found {
+					err := fmt.Errorf("unable to find deadLetterAddress %s", deadLetterAddress)
+					validated.SetStatus(corev1.ConditionFalse, "", err.Error())
+					address.Status.Message = err.Error()
+					return processorResult{RequeueAfter: 10 * time.Second}, nil
+				}
+			}
+
+			expiryAddress := address.Spec.Queue.ExpiryAddress
+			if expiryAddress != "" {
+				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+					return a.Spec.DeadLetter != nil && a.GetAddress() == expiryAddress
+				})
+				if err != nil {
+					return processorResult{}, err
+				}
+				if !found {
+					err := fmt.Errorf("unable to find expiryAddress %s", expiryAddress)
+					validated.SetStatus(corev1.ConditionFalse, "", err.Error())
+					address.Status.Message = err.Error()
+					return processorResult{RequeueAfter: 10 * time.Second}, nil
+				}
+			}
+		} else if address.Spec.Subscription != nil {
+			// Ensure our topic exists
+			topic := address.Spec.Subscription.Topic
+			if topic == "" {
+				err := fmt.Errorf("topic referenced by subscription must be non-empty")
+				validated.SetStatus(corev1.ConditionFalse, "", err.Error())
+				address.Status.Message = err.Error()
+				return processorResult{RequeueAfter: 10 * time.Second}, nil
+			}
+			found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+				return a.Spec.Topic != nil && a.GetAddress() == topic
+			})
+			if err != nil {
+				return processorResult{}, err
+			}
+
+			if !found {
+				err := fmt.Errorf("unable to find address for topic %s, required by subscription", topic)
+				validated.SetStatus(corev1.ConditionFalse, "", err.Error())
+				address.Status.Message = err.Error()
+				return processorResult{RequeueAfter: 10 * time.Second}, nil
+			}
+
+		}
+		validated.SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
 	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
 		// TODO: Handle changes to partitions etc.
 		if len(address.Status.Brokers) > 0 {
 			// We're already scheduled so don't change
+			scheduled.SetStatus(corev1.ConditionTrue, "", "")
 			return processorResult{}, nil
 		}
 
@@ -324,6 +425,23 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		}
 	})
 	return result.Result(), err
+}
+
+type FilterFunc func(*v1beta2.MessagingAddress) bool
+
+func matchAnyAddress(ctx context.Context, c client.Client, namespace string, filter FilterFunc) (bool, error) {
+	list := &v1beta2.MessagingAddressList{}
+	err := c.List(ctx, list, client.InNamespace(namespace))
+	if err != nil {
+		return false, err
+	}
+
+	for _, address := range list.Items {
+		if filter(&address) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 /*

@@ -79,8 +79,8 @@ under the License.
 
       <security-settings>
          <security-setting match="#">
-            <permission type="createNonDurableQueue" roles="manage"/>
-            <permission type="deleteNonDurableQueue" roles="manage"/>
+            <permission type="createNonDurableQueue" roles="manage,router"/>
+            <permission type="deleteNonDurableQueue" roles="manage,router"/>
             <permission type="createDurableQueue" roles="manage"/>
             <permission type="deleteDurableQueue" roles="manage"/>
             <permission type="createAddress" roles="manage"/>
@@ -99,10 +99,6 @@ under the License.
       <address-settings>
          <!--default for catch all-->
          <address-setting match="#">
-            <max-delivery-attempts>-1</max-delivery-attempts>
-            <redelivery-delay>1</redelivery-delay>
-            <redelivery-delay-multiplier>1.5</redelivery-delay-multiplier>
-            <max-redelivery-delay>10000</max-redelivery-delay>
             <!-- with -1 only the global-max-size is in use for limiting -->
             <max-size-bytes>-1</max-size-bytes>
             <message-counter-history-day-limit>10</message-counter-history-day-limit>

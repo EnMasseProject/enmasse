@@ -74,10 +74,24 @@ spec:
             queue:
               description: Queue addresses are addresses where messages are persisted
                 on a broker.
+              properties:
+                deadLetterAddress:
+                  description: Dead letter address (must be address with type deadLetter)
+                  type: string
+                expiryAddress:
+                  description: Expiry queue address (must be address with type deadLetter)
+                  type: string
               type: object
             subscription:
               description: Subscription addresses are durable subscription on a topic
                 stored on a broker.
+              properties:
+                topic:
+                  description: Topic address this subscription should be subscribed
+                    to.
+                  type: string
+              required:
+              - topic
               type: object
             topic:
               description: Topic addresses are fan-out addresses with messages persisted

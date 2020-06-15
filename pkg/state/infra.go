@@ -842,7 +842,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 
 	// Build desired state
 	addressName := addressName(tenantId, address)
-	fullAddress := fullAddress(tenantId, address)
+	fullAddress := qualifiedAddress(tenantId, address.GetAddress())
 	if address.Spec.Anycast != nil {
 		routerEntities = append(routerEntities, &RouterAddress{
 			Name:         addressName,
@@ -889,14 +889,78 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 			})
 		}
 	} else if address.Spec.DeadLetter != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'deadLetter'")
+		// Deadletter addresses should be read-only and consumable from all known brokers
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "balanced",
+			Waypoint:     true,
+		})
+
+		for _, brokerState := range i.brokers {
+			connector := connectorName(brokerState)
+			routerEntities = append(routerEntities, &RouterAutoLink{
+				Name:            autoLinkName(tenantId, address, brokerState.Host.Hostname, "in"),
+				Address:         fullAddress,
+				Direction:       "in",
+				Connection:      connector,
+				ExternalAddress: fullAddress,
+			})
+		}
 	} else if address.Spec.Topic != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'topic'")
+		// Topic addresses are link routed to a single broker, and they can only be present on one broker. However, the following
+		// logic relies on the scheduler to make the decision on which broker they are located.
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "balanced",
+			Waypoint:     true,
+		})
+
+		for _, broker := range address.Status.Brokers {
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure address linkRoute (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			connector := connectorName(brokerState)
+			routerEntities = append(routerEntities, &RouterLinkRoute{
+				Name:       linkRouteName(tenantId, address, broker.Host, "out"),
+				Prefix:     fullAddress,
+				Direction:  "out",
+				Connection: connector,
+			})
+			routerEntities = append(routerEntities, &RouterLinkRoute{
+				Name:       linkRouteName(tenantId, address, broker.Host, "in"),
+				Prefix:     fullAddress,
+				Direction:  "in",
+				Connection: connector,
+			})
+		}
 	} else if address.Spec.Subscription != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'subscription'")
+		// Subscription addresses are read only and consumable from only the broker where the subscription is scheduled (same as topic).
+		routerEntities = append(routerEntities, &RouterAddress{
+			Name:         addressName,
+			Prefix:       fullAddress,
+			Distribution: "balanced",
+			Waypoint:     true,
+		})
+
+		for _, broker := range address.Status.Brokers {
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure address autoLink (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			connector := connectorName(brokerState)
+			routerEntities = append(routerEntities, &RouterAutoLink{
+				Name:            autoLinkName(tenantId, address, brokerState.Host.Hostname, "in"),
+				Address:         fullAddress,
+				Direction:       "in",
+				Connection:      connector,
+				ExternalAddress: fmt.Sprintf("%s::%s", qualifiedAddress(tenantId, address.Spec.Subscription.Topic), fullAddress),
+			})
+		}
 	}
 	return routerEntities, nil
 }
@@ -914,7 +978,7 @@ func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndp
 	tenantId := endpoint.Status.Host
 
 	// Build desired state
-	fullAddress := fullAddress(tenantId, address)
+	fullAddress := qualifiedAddress(tenantId, address.GetAddress())
 	if address.Spec.Queue != nil {
 		for _, broker := range address.Status.Brokers {
 			host := i.hostMap[broker.Host]
@@ -922,6 +986,27 @@ func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndp
 			if brokerState == nil {
 				return nil, fmt.Errorf("unable to configure queue (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
 			}
+			if len(brokerEntities[host]) == 0 {
+				brokerEntities[host] = make([]BrokerEntity, 0)
+			}
+			brokerEntities[host] = append(brokerEntities[host], &BrokerAddress{
+				Name:        fullAddress,
+				RoutingType: RoutingTypeAnycast,
+			})
+			// TODO: Influence setting based on properties and plans
+			brokerEntities[host] = append(brokerEntities[host], &BrokerQueue{
+				Name:               fullAddress,
+				Address:            fullAddress,
+				RoutingType:        RoutingTypeAnycast,
+				MaxConsumers:       -1,
+				Durable:            true,
+				PurgeOnNoConsumers: false,
+				AutoCreateAddress:  false,
+			})
+		}
+	} else if address.Spec.DeadLetter != nil {
+		for _, brokerState := range i.brokers {
+			host := brokerState.Host
 			if len(brokerEntities[host]) == 0 {
 				brokerEntities[host] = make([]BrokerEntity, 0)
 			}
@@ -939,15 +1024,43 @@ func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndp
 				AutoCreateAddress:  false,
 			})
 		}
-	} else if address.Spec.DeadLetter != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'deadLetter'")
 	} else if address.Spec.Topic != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'topic'")
+		// TODO: Influence setting based on properties and plans
+		for _, broker := range address.Status.Brokers {
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure topic (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			if len(brokerEntities[host]) == 0 {
+				brokerEntities[host] = make([]BrokerEntity, 0)
+			}
+			brokerEntities[host] = append(brokerEntities[host], &BrokerAddress{
+				Name:        fullAddress,
+				RoutingType: RoutingTypeMulticast,
+			})
+		}
 	} else if address.Spec.Subscription != nil {
-		// TODO
-		return nil, fmt.Errorf("unsupported address type 'subscription'")
+		// TODO: Influence setting based on properties and plans
+		for _, broker := range address.Status.Brokers {
+			host := i.hostMap[broker.Host]
+			brokerState := i.brokers[host]
+			if brokerState == nil {
+				return nil, fmt.Errorf("unable to configure subscription (tenant %s address %s) for unknown broker %s", tenantId, address.GetAddress(), broker.Host)
+			}
+			if len(brokerEntities[host]) == 0 {
+				brokerEntities[host] = make([]BrokerEntity, 0)
+			}
+			brokerEntities[host] = append(brokerEntities[host], &BrokerQueue{
+				Name:               fullAddress,
+				Address:            qualifiedAddress(tenantId, address.Spec.Subscription.Topic),
+				RoutingType:        RoutingTypeMulticast,
+				MaxConsumers:       1,
+				Durable:            true,
+				PurgeOnNoConsumers: false,
+				AutoCreateAddress:  false,
+			})
+		}
 	}
 	return brokerEntities, nil
 }
@@ -1120,12 +1233,16 @@ func autoLinkName(tenantId string, address *v1beta2.MessagingAddress, host strin
 	return fmt.Sprintf("autoLink-%s-%s-%s-%s", tenantId, address.Name, host, direction)
 }
 
+func linkRouteName(tenantId string, address *v1beta2.MessagingAddress, host string, direction string) string {
+	return fmt.Sprintf("autoLink-%s-%s-%s-%s", tenantId, address.Name, host, direction)
+}
+
 func addressName(tenantId string, address *v1beta2.MessagingAddress) string {
 	return fmt.Sprintf("address-%s-%s", tenantId, address.Name)
 }
 
-func fullAddress(tenantId string, address *v1beta2.MessagingAddress) string {
-	return fmt.Sprintf("%s/%s", tenantId, address.GetAddress())
+func qualifiedAddress(tenantId string, address string) string {
+	return fmt.Sprintf("%s/%s", tenantId, address)
 }
 
 func connectorName(broker *BrokerState) string {
