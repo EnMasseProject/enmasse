@@ -110,7 +110,8 @@ public class HttpAdapterClient extends ApiClient {
         if (keyStoreBuffer != null) {
             options.setKeyCertOptions(
                     new PfxOptions()
-                            .setValue(this.keyStoreBuffer));
+                            .setValue(this.keyStoreBuffer)
+                            .setPassword(KeyStoreCreator.KEY_PASSWORD));
         }
 
         return WebClient.create(vertx, options);

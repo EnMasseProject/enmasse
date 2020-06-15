@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
+import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MqttAdapterClient;
@@ -46,9 +46,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
     @Tag(ACCEPTANCE)
     @ParameterizedTest(name = "testMqttTelemetrySingleQos1-{0}")
     @MethodSource("getDevices")
-    default void testMqttTelemetrySingleQos1(final Device device) throws Exception {
+    default void testMqttTelemetrySingleQos1(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
@@ -68,9 +68,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttEventSingle-{0}")
     @MethodSource("getDevices")
-    default void testMqttEventSingle(final Device device) throws Exception {
+    default void testMqttEventSingle(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofSeconds(1))
@@ -90,9 +90,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttTelemetryBatch50Qos0-{0}")
     @MethodSource("getDevices")
-    default void testMqttTelemetryBatch50Qos0(final Device device) throws Exception {
+    default void testMqttTelemetryBatch50Qos0(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
@@ -113,9 +113,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttTelemetryBatch50Qos1-{0}")
     @MethodSource("getDevices")
-    default void testMqttTelemetryBatch50Qos1(final Device device) throws Exception {
+    default void testMqttTelemetryBatch50Qos1(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
@@ -136,9 +136,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttEventBatch5After-{0}")
     @MethodSource("getDevices")
-    default void testMqttEventBatch5After(final Device device) throws Exception {
+    default void testMqttEventBatch5After(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofMillis(100))
@@ -159,9 +159,9 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttEventBatch5Before-{0}")
     @MethodSource("getDevices")
-    default void testMqttEventBatch5Before(final Device device) throws Exception {
+    default void testMqttEventBatch5Before(final DeviceSupplier device) throws Exception {
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofSeconds(1))
@@ -181,7 +181,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttInvalidDevice-{0}")
     @MethodSource("getInvalidDevices")
-    default void testMqttInvalidDevice(final Device device) {
+    default void testMqttInvalidDevice(final DeviceSupplier device) {
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
@@ -192,7 +192,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
          * when we could open the connection, but not send/receive.
          */
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -209,7 +209,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
             log.info("Accepting MQTT exception", e);
         }
 
-        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)

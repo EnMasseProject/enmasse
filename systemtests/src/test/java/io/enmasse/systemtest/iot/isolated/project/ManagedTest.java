@@ -79,7 +79,7 @@ public class ManagedTest extends TestBase implements ITestIoTIsolated {
 
         isolatedIoTManager.createIoTConfig(iotConfig);
 
-        final Endpoint deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
         this.registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
         this.credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
         this.client = kubernetes.getIoTProjectClient(IOT_PROJECT_NAMESPACE);

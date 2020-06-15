@@ -73,6 +73,8 @@ public class TestInfo {
                                     } else {
                                         tests.add(test);
                                     }
+                                } else {
+                                    LOGGER.error("Missing method: {}#{}",testSource.getClassName(), testSource.getMethodName() );
                                 }
                             } catch (ClassNotFoundException e) {
                                 throw new IllegalArgumentException(e);

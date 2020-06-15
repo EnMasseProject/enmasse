@@ -170,6 +170,7 @@ public class MqttClientFactory {
 
             final TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
             tmf.init(trustAnchors);
+
             this.trustManagerFactory = tmf;
 
             return this;
@@ -209,6 +210,8 @@ public class MqttClientFactory {
             TrustManager[] tms = null;
             if (this.trustManagerFactory != null) {
                 tms = this.trustManagerFactory.getTrustManagers();
+            } else {
+                tms = new TrustManager[] {new MyX509TrustManager()};
             }
 
             final SSLContext context = tryGetDefaultSSLContext();

@@ -20,6 +20,7 @@ public final class KeyStoreCreator {
 
     public static final String CERTIFICATE_ALIAS = "cert";
     public static final String KEY_ALIAS = "key";
+    public static final String KEY_PASSWORD = "123456";
 
     private KeyStoreCreator() {}
 
@@ -33,7 +34,7 @@ public final class KeyStoreCreator {
     }
 
     public static void writeTo (final OutputStream stream, final PrivateKey key, final Certificate ...certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-        from(key, certificate).store(stream, null);
+        from(key, certificate).store(stream, KEY_ALIAS.toCharArray());
     }
 
     public static byte[] toByteArray(final PrivateKey key, final X509Certificate certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {

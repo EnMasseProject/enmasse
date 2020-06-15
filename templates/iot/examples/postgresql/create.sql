@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS device_credentials (
 	device_id varchar(256) NOT NULL,
 
 	type varchar(64) NOT NULL,
-	auth_id varchar(64) NOT NULL,
+	auth_id varchar(256) NOT NULL,
 
 	data json,
 

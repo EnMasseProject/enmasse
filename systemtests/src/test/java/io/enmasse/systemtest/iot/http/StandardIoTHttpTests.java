@@ -15,8 +15,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.StandardIoTTests;
@@ -29,9 +29,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
     @Tag(ACCEPTANCE)
     @ParameterizedTest(name = "testHttpTelemetrySingle-{0}")
     @MethodSource("getDevices")
-    default void testHttpTelemetrySingle(final Device device) throws Exception {
+    default void testHttpTelemetrySingle(final DeviceSupplier device) throws Exception {
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
@@ -52,9 +52,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventSingle-{0}")
     @MethodSource("getDevices")
-    default void testHttpEventSingle(final Device device) throws Exception {
+    default void testHttpEventSingle(final DeviceSupplier device) throws Exception {
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofSeconds(1))
@@ -74,9 +74,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpTelemetryBatch50-{0}")
     @MethodSource("getDevices")
-    default void testHttpTelemetryBatch50(final Device device) throws Exception {
+    default void testHttpTelemetryBatch50(final DeviceSupplier device) throws Exception {
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.TELEMETRY)
                     .delay(Duration.ofSeconds(1))
@@ -98,9 +98,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5After-{0}")
     @MethodSource("getDevices")
-    default void testHttpEventBatch5After(final Device device) throws Exception {
+    default void testHttpEventBatch5After(final DeviceSupplier device) throws Exception {
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ofMillis(100))
@@ -122,9 +122,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5Before-{0}")
     @MethodSource("getDevices")
-    default void testHttpEventBatch5Before(final Device device) throws Exception {
+    default void testHttpEventBatch5Before(final DeviceSupplier device) throws Exception {
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
                     .delay(Duration.ZERO)
@@ -145,14 +145,14 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpDeviceFails-{0}")
     @MethodSource("getInvalidDevices")
-    default void testHttpDeviceFails(final Device device) throws Exception {
+    default void testHttpDeviceFails(final DeviceSupplier device) throws Exception {
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
          * Two separate connections, and more than one message.
          */
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -165,7 +165,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
             });
         }
 
-        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)

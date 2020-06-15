@@ -172,19 +172,6 @@ public final class IoTTestSession implements AutoCloseable {
             return this;
         }
 
-        /**
-         * Allows to override the output of the {@link #toString()} method.
-         * <p>
-         * This may be used to provide a stable name for parameterized test.
-         *
-         * @param name The value to report from {@link #toString()}.
-         * @return This instance, for chained method calls.
-         */
-        public Device named(final String name) {
-            this.name = name;
-            return this;
-        }
-
         @Override
         public String toString() {
             if (this.name != null) {
@@ -543,22 +530,32 @@ public final class IoTTestSession implements AutoCloseable {
                 var config = this.config.build();
                 var project = this.project.build();
 
-                // create resources
+                // create resources, in order to properly clean up, register cleanups first
 
-                IoTUtils.createIoTConfig(config);
+                // create IoT config
+
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(Kubernetes.getInstance(), config));
                 }
+                IoTUtils.createIoTConfig(config);
 
-                //create namespace if not created
+                // create namespace if not created
+
+                if (!Environment.getInstance().skipCleanup()) {
+                    cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(project.getMetadata().getNamespace()));
+                }
                 Kubernetes.getInstance().createNamespace(project.getMetadata().getNamespace());
 
-                IoTUtils.createIoTProject(project);
+                // create IoT project
+
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(Kubernetes.getInstance(), project));
                 }
+                IoTUtils.createIoTProject(project);
 
-                final Endpoint deviceRegistryEndpoint = Kubernetes.getInstance().getExternalEndpoint("device-registry");
+                // create endpoints
+
+                final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
                 final DeviceRegistryClient registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
                 cleanup.add(() -> registryClient.close());
                 final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
@@ -613,7 +610,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 return new IoTTestSession(config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
 
-            } catch (Exception e) {
+            } catch (Throwable e) {
 
                 if (log.isDebugEnabled()) {
                     log.debug("Caught exception during deployment", e);
@@ -711,6 +708,14 @@ public final class IoTTestSession implements AutoCloseable {
                 .withNamespace(namespace)
                 .endMetadata();
 
+        // enable routes / load balancers by default
+
+        config = config.editOrNewSpec()
+                .withEnableDefaultRoutes(true)
+                .endSpec();
+
+        // configure logging
+
         config = config.editOrNewSpec()
                 .withNewLogging()
                 .withNewLevel("info")
@@ -795,7 +800,7 @@ public final class IoTTestSession implements AutoCloseable {
         log.info("Cleaning up resources... done!");
 
         if (initialException == null || initialException instanceof Exception) {
-            // return the Exception
+            // return the Exception (or null)
             return (Exception) initialException;
         } else {
             // return Throwable wrapped in exception
@@ -830,10 +835,14 @@ public final class IoTTestSession implements AutoCloseable {
         }
 
         var test = TestInfo.getInstance().getActualTest();
-        if ( test != null ) {
-            GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTest()));
+        if (test == null) {
+            test = TestInfo.getInstance().getActualTestClass();
+        }
+
+        if (test != null) {
+            GlobalLogCollector.saveInfraState(TestUtils.getFailedTestLogsPath(test));
         } else {
-            log.error("Unable to log system test failure, failed in test setup", error);
+            log.error("Unable to log system test failure, no TestInfo details", error);
         }
     }
 

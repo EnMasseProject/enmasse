@@ -29,6 +29,7 @@ public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIo
 
     @BeforeAll
     public static void setup() throws Exception {
+
         certificateManager = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         session = IoTTestSession.createDefault()
@@ -41,6 +42,7 @@ public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIo
                         .endSpec())
                 .adapters(MQTT, HTTP)
                 .deploy();
+
     }
 
     @AfterAll

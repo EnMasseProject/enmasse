@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.bases;
 
+@FunctionalInterface
 public interface ThrowableRunner {
     void run() throws Exception;
 }

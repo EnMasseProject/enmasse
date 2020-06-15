@@ -29,6 +29,7 @@ public class X509EcAuthenticationTests implements StandardX509Cases, StandardIoT
 
     @BeforeAll
     public static void setup() throws Exception {
+
         certificateManager = new DeviceCertificateManager(Mode.EC, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         session = IoTTestSession.createDefault()
@@ -41,6 +42,7 @@ public class X509EcAuthenticationTests implements StandardX509Cases, StandardIoT
                         .endSpec())
                 .adapters(MQTT, HTTP)
                 .deploy();
+
     }
 
     @AfterAll

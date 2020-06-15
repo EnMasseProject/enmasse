@@ -88,7 +88,7 @@ abstract class DeviceRegistryTest extends TestBase implements ITestIoTIsolated {
                 DEVICE_REGISTRY_TEST_ADDRESSSPACE, IOT_PROJECT_NAMESPACE, getDefaultAddressSpacePlan());
         isolatedIoTManager.createIoTProject(iotProject);
 
-        deviceRegistryEndpoint = kubernetes.getExternalEndpoint("device-registry");
+        deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
 
         httpAdapterEndpoint = kubernetes.getExternalEndpoint("iot-http-adapter");
 
