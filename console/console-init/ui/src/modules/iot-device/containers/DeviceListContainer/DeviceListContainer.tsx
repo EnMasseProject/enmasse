@@ -99,6 +99,24 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     await setDeleteDeviceQueryVariables(variable);
   };
 
+  const onConfirmEnableDevice = async (device: any) => {
+    // TODO: to be changed according to the backend query of mock
+    const variable = {
+      iotproject: projectname,
+      device
+    };
+    await setUpdateDeviceQueryVariables(variable);
+  };
+
+  const onConfirmDisableDevice = async (device: any) => {
+    // TODO: to be changed according to the backend query of mock
+    const variable = {
+      iotproject: projectname,
+      device
+    };
+    await setDeleteDeviceQueryVariables(variable);
+  };
+
   const deleteDevice = (row: any) => {
     const { deviceId } = row.originalData;
     dispatch({
@@ -107,7 +125,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       modalProps: {
         onConfirm: onConfirmDeleteDevice,
         selectedItems: [deviceId],
-        option: "Delete",
+        option: DialogTypes.DELETE,
         data: deviceId,
         detail: getDetailForDialog([{ deviceId }], DialogTypes.DELETE),
         header: getHeaderForDialog([{ deviceId }], DialogTypes.DELETE)
@@ -117,27 +135,44 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
 
   const disableDevice = (row: any) => {
     const { deviceId, jsonData, viaGateway } = row.originalData;
-    setUpdateDeviceQueryVariables({
-      project: projectname,
-      device: {
-        deviceId,
-        jsonData,
-        viaGateway,
-        enabled: false
+    const device = {
+      deviceId,
+      jsonData,
+      viaGateway,
+      enabled: false
+    };
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
+      modalProps: {
+        onConfirm: onConfirmDisableDevice,
+        selectedItems: [deviceId],
+        option: DialogTypes.DISABLE,
+        data: device,
+        detail: getDetailForDialog([{ deviceId }], DialogTypes.DISABLE),
+        header: getHeaderForDialog([{ deviceId }], DialogTypes.DISABLE)
       }
     });
   };
 
   const enableDevice = (row: any) => {
-    // TODO: to be changed according to the backend query of mock
-    const { deviceId, jsonData } = row.originalData;
-    setUpdateDeviceQueryVariables({
-      project: projectname,
-      device: {
-        deviceId,
-        jsonData,
-        viaGateway: true,
-        enabled: true
+    const { deviceId, jsonData, viaGateway } = row.originalData;
+    const device = {
+      deviceId,
+      jsonData,
+      viaGateway,
+      enabled: true
+    };
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
+      modalProps: {
+        onConfirm: onConfirmEnableDevice,
+        selectedItems: [deviceId],
+        option: DialogTypes.ENABLE,
+        data: device,
+        detail: getDetailForDialog([{ deviceId }], DialogTypes.ENABLE),
+        header: getHeaderForDialog([{ deviceId }], DialogTypes.ENABLE)
       }
     });
   };
