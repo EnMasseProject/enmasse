@@ -182,6 +182,14 @@ public class SeleniumProvider {
         takeScreenShot();
     }
 
+    public void switchCheckBox(WebElement element, String textToLog) {
+        takeScreenShot();
+        assertNotNull(element, "Selenium provider failed, element is null");
+        log.info("Click on element: {}", (textToLog == null ? element.getText() : textToLog));
+        element.findElement(By.xpath("..")).findElement(By.tagName("span")).click();
+        takeScreenShot();
+    }
+
     public void clickOnItem(WebElement element, String textToLog) {
         takeScreenShot();
         assertNotNull(element, "Selenium provider failed, element is null");

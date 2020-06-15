@@ -7,7 +7,10 @@ package io.enmasse.systemtest.selenium.page;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AuthenticationServiceType;
+import io.enmasse.address.model.EndpointSpec;
+import io.enmasse.address.model.ExposeType;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.certs.CertProvider;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
@@ -17,13 +20,14 @@ import io.enmasse.systemtest.selenium.resources.AddressSpaceWebItem;
 import io.enmasse.systemtest.selenium.resources.AddressWebItem;
 import io.enmasse.systemtest.selenium.resources.ClientWebItem;
 import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
+import io.enmasse.systemtest.selenium.resources.EndpointItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
+import org.apache.commons.codec.binary.Base64;
 import org.openqa.selenium.By;
-import org.openqa.selenium.NotFoundException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -43,6 +47,7 @@ public class ConsoleWebPage implements IWebPage {
     private static final Logger log = CustomLogger.getLogger();
     private static final By ADDRESS_LIST_XPATH = By.xpath("//table[@aria-label='Address List']");
     private static final By CONNECTION_LIST_XPATH = By.xpath("//table[@aria-label='connection list']");
+    private static final By ENDPOINT_LIST_XPATH = By.xpath("//table[@aria-label='Endpoint List']");
     private static final By NOT_FOUND_STATE_XPATH = By.className("pf-c-empty-state");
 
     SeleniumProvider selenium;
@@ -76,6 +81,10 @@ public class ConsoleWebPage implements IWebPage {
         return getContentElem().findElement(By.id("ad-space-nav-connections"));
     }
 
+    private WebElement getEndpointTab() {
+        return getContentElem().findElement(By.id("ad-space-nav-endpoints"));
+    }
+
     // Table selectors
     private WebElement getContentElem() {
         return selenium.getDriver().findElement(By.id("main-container"));
@@ -103,6 +112,14 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getTableAddressList() {
         return getAddressTable().findElement(By.tagName("tbody"));
+    }
+
+    private WebElement getEndpointsTable() {
+        return selenium.getDriver().findElement(ENDPOINT_LIST_XPATH);
+    }
+
+    private WebElement getEndpointsList() {
+        return getEndpointsTable().findElement(By.tagName("tbody"));
     }
 
     private WebElement getConnectionTable() {
@@ -243,6 +260,31 @@ public class ConsoleWebPage implements IWebPage {
         return returnedElement;
     }
 
+    public EndpointItem getEndpointItem(String name) {
+        EndpointItem returnedElement = null;
+        List<EndpointItem> addressWebItems = getEndpointItems();
+        for (EndpointItem item : addressWebItems) {
+            if (item.getName().equals(name))
+                returnedElement = item;
+        }
+        return returnedElement;
+    }
+
+    public List<EndpointItem> getEndpointItems() {
+        List<EndpointItem> endpoints = new ArrayList<>();
+        try {
+            List<WebElement> elements = getEndpointsList().findElements(By.tagName("tr"));
+            for (WebElement element : elements) {
+                EndpointItem endpoint = new EndpointItem(element);
+                log.info(String.format("Got endpoint: %s", endpoint.toString()));
+                endpoints.add(endpoint);
+            }
+        } catch (Exception ex) {
+            log.warn("No endpoint items found");
+        }
+        return endpoints;
+    }
+
     public List<ConnectionWebItem> getConnectionItems() {
         Supplier<List<ConnectionWebItem>> getter = () -> {
             List<WebElement> elements = getTableConnectionList().findElements(By.tagName("tr"));
@@ -313,6 +355,34 @@ public class ConsoleWebPage implements IWebPage {
 
     private WebElement getStandardRadioButton() {
         return selenium.getDriver().findElement(By.id("cas-standard-radio"));
+    }
+
+    private WebElement getCustomizeEndpointSwitch() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("asc-switch-customize-endpoint")));
+    }
+
+    private WebElement getProtocolCheckBox(Protocol protocol) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("checkbox-key-" + protocol.toString().toLowerCase())));
+    }
+
+    private WebElement getTlsCertificatesCheckBox(String type) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("radio-key-" + type)));
+    }
+
+    private WebElement getTslTerminations(Protocol protocol, TlsTerminationType type) throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("radio-key-" + type.toString().toLowerCase() + "-" + protocol.toString().toLowerCase())));
+    }
+
+    private WebElement getCertAreaInput() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("text-file-upload-certificate")));
+    }
+
+    private WebElement getKeyAreaInput() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("text-file-uplod-private-key")));
+    }
+
+    private WebElement getEnableRoutesSwitch() throws Exception {
+        return selenium.getWebElement(() -> selenium.getDriver().findElement(By.id("switch-configure-route-btn")));
     }
 
     private WebElement getPlanDropDown() {
@@ -573,6 +643,13 @@ public class ConsoleWebPage implements IWebPage {
         selenium.getWebElement(this::getConnectionTable);
     }
 
+    public void openEndpointList(AddressSpace addressSpace) throws Exception {
+        AddressSpaceWebItem item = selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
+        selenium.clickOnItem(item.getConsoleRoute());
+        switchToEndpointTab();
+        selenium.getWebElement(this::getEndpointsTable);
+    }
+
     public void openConnection(String hostname) throws Exception {
         ConnectionWebItem item = selenium.waitUntilItemPresent(30, () -> getConnectionItem(hostname));
         selenium.clickOnItem(item.getHostRoute());
@@ -608,7 +685,38 @@ public class ConsoleWebPage implements IWebPage {
                 addressSpace.getSpec().getType());
         selectPlan(addressSpace.getSpec().getPlan());
         selectAuthService(addressSpace.getSpec().getAuthenticationService().getName());
+        if (addressSpace.getSpec().getEndpoints().size() > 0) {
+            enableEndpointCustomization();
+        }
         selenium.clickOnItem(getNextButton());
+        if (addressSpace.getSpec().getEndpoints().size() > 0) {
+            boolean expose = true;
+            boolean customCert = false;
+            for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                selectProtocols(Protocol.valueOf(serviceName2protocol(endpoint.getService()).toUpperCase()));
+                selectTls(endpoint.getCert().getProvider());
+                if (!endpoint.getExpose().getType().equals(ExposeType.route)) {
+                    disableDefaultRoutes();
+                    expose = false;
+                }
+                customCert = endpoint.getCert().getProvider().equals(CertProvider.certBundle.name());
+            }
+            selenium.clickOnItem(getNextButton());
+            if (customCert) {
+                for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                    insertCertificate(new String(Base64.decodeBase64(endpoint.getCert().getTlsCert())));
+                    insertPrivateKey(new String(Base64.decodeBase64(endpoint.getCert().getTlsKey())));
+                }
+                selenium.clickOnItem(getNextButton());
+            }
+            if (expose) {
+                for (EndpointSpec endpoint : addressSpace.getSpec().getEndpoints()) {
+                    selectTlsTermination(Protocol.valueOf(serviceName2protocol(endpoint.getService()).toUpperCase()),
+                            TlsTerminationType.valueOf(endpoint.getExpose().getRouteTlsTermination().toString().toUpperCase()));
+                }
+                selenium.clickOnItem(getNextButton());
+            }
+        }
     }
 
     public void createAddressSpace(AddressSpace addressSpace) throws Exception {
@@ -617,6 +725,7 @@ public class ConsoleWebPage implements IWebPage {
         selenium.waitUntilItemPresent(30, () -> getAddressSpaceItem(addressSpace));
         selenium.takeScreenShot();
         AddressSpaceUtils.waitForAddressSpaceReady(addressSpace);
+        AddressSpaceUtils.syncAddressSpaceObject(addressSpace);
         selenium.refreshPage();
     }
 
@@ -666,6 +775,36 @@ public class ConsoleWebPage implements IWebPage {
 
     public void createAddress(Address address) throws Exception {
         createAddress(address, true);
+    }
+
+    public void enableEndpointCustomization() throws Exception {
+        selenium.switchCheckBox(getCustomizeEndpointSwitch(), "Customize endpoints");
+    }
+
+    public void disableDefaultRoutes() throws Exception {
+        selenium.switchCheckBox(getEnableRoutesSwitch(), "Disable default routes");
+    }
+
+    public void selectProtocols(Protocol... protocols) throws Exception {
+        for (Protocol protocol : protocols) {
+            selenium.clickOnItem(getProtocolCheckBox(protocol), protocol.toString());
+        }
+    }
+
+    public void selectTls(String tls) throws Exception {
+        selenium.clickOnItem(getTlsCertificatesCheckBox(tls), tls);
+    }
+
+    public void selectTlsTermination(Protocol protocol, TlsTerminationType type) throws Exception {
+        selenium.clickOnItem(getTslTerminations(protocol, type), String.format("%s:%s", protocol.toString().toLowerCase(), type.toString().toLowerCase()));
+    }
+
+    public void insertCertificate(String certificate) throws Exception {
+        selenium.fillInputItem(getCertAreaInput(), certificate);
+    }
+
+    public void insertPrivateKey(String privateKey) throws Exception {
+        selenium.fillInputItem(getKeyAreaInput(), privateKey);
     }
 
     public void prepareAddressCreation(Address address) throws Exception {
@@ -724,6 +863,12 @@ public class ConsoleWebPage implements IWebPage {
     public void switchToConnectionTab() {
         selenium.clickOnItem(getConnectionTab(), "Connections");
         selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(CONNECTION_LIST_XPATH));
+        selenium.takeScreenShot();
+    }
+
+    public void switchToEndpointTab() {
+        selenium.clickOnItem(getEndpointTab(), "Endpoints");
+        selenium.getDriverWait().withTimeout(Duration.ofSeconds(60)).until(ExpectedConditions.visibilityOfElementLocated(ENDPOINT_LIST_XPATH));
         selenium.takeScreenShot();
     }
 
@@ -1024,5 +1169,23 @@ public class ConsoleWebPage implements IWebPage {
                 ExpectedConditions.titleContains("Address Space List"),
                 ExpectedConditions.titleContains("Address List")
         ));
+    }
+
+    public enum Protocol {
+        AMQPS,
+        HTTPS
+    }
+
+    public enum TlsTerminationType {
+        PASSTHROUGH,
+        REENCRYPT
+    }
+
+    private String serviceName2protocol(String serviceName) {
+        if (serviceName.equals("messaging")) {
+            return "amqps";
+        } else if (serviceName.equals("messaging-wss")) {
+            return "https";
+        } else return "amqps";
     }
 }

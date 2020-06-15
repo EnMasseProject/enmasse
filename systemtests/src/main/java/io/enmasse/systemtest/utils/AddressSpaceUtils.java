@@ -16,6 +16,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.address.model.CertSpec;
+import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.ExposeType;
+import io.enmasse.address.model.TlsTermination;
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -370,5 +374,21 @@ public class AddressSpaceUtils {
         } else {
             return AddressSpaceUtils.getMessagingRoute(addressSpace);
         }
+    }
+
+    public static EndpointSpec createEndpoint(String name, CertSpec certSpec, String host, String servicePort) {
+        EndpointSpecBuilder builder = new EndpointSpecBuilder()
+                .withName(name)
+                .withService(name)
+                .withCert(certSpec)
+                .withNewExpose()
+                .withType(ExposeType.route)
+                .withRouteTlsTermination(TlsTermination.passthrough)
+                .withRouteServicePort(servicePort)
+                .endExpose();
+        if (host != null) {
+            builder.editExpose().withRouteHost(host).endExpose();
+        }
+        return builder.build();
     }
 }
