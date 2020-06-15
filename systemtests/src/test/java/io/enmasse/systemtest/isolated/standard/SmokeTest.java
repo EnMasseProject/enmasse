@@ -162,6 +162,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
                     .withAddress(address)
                     .withCredentials(cred)
                     .withMessagingRoute(route)
+                    .withTimeout(120_000)
                     .withAdditionalArgument(
                             address.getSpec().getType().equals(AddressType.MULTICAST.toString().toLowerCase()) ? ClientArgument.LINK_AT_MOST_ONCE : ClientArgument.LINK_AT_LEAST_ONCE, "true")
                     .withCount(10));
@@ -171,6 +172,7 @@ class SmokeTest extends TestBase implements ITestIsolatedStandard {
         for (ExternalMessagingClient rcv : receivers) {
             rcv.getLinkAttachedProbe().get(15000, TimeUnit.MILLISECONDS);
         }
+        Thread.sleep(10_000);
 
         assertTrue(sender.run(), "Sender failed, expected return code 0");
         for (Future<Boolean> rcvr : recvResults) {
