@@ -85,7 +85,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
     @Test
     public void testAnsiblePrecheck() {
         this.type = EnmasseInstallType.ANSIBLE;
-        this.infraNamespace = kubernetes.getInfraNamespace();
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kubernetes.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "precheck.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
