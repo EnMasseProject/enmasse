@@ -110,7 +110,7 @@ class ForwardersTest extends BridgingBase {
         int messagesBatch = 20;
         ExternalMessagingClient localClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
                 .withCount(messagesBatch)
                 .withAddress(forwarder.getSpec().getAddress())
                 .withCredentials(localUser);
@@ -202,7 +202,7 @@ class ForwardersTest extends BridgingBase {
 
         ExternalMessagingClient localClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
                 .withCount(messagesBatch)
                 .withAddress(forwarder.getSpec().getAddress())
                 .withCredentials(localUser);
@@ -277,45 +277,46 @@ class ForwardersTest extends BridgingBase {
     private void doTestSendToForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to address with forwarder
 
-        ExternalMessagingClient localClient = new ExternalMessagingClient()
+        try (ExternalMessagingClient localClient = new ExternalMessagingClient()
                 .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
                 .withCount(messagesBatch)
                 .withAddress(forwarder.getSpec().getAddress())
-                .withCredentials(localUser);
+                .withCredentials(localUser)) {
 
-        assertTrue(localClient.run());
+            assertTrue(localClient.run());
+        }
 
         //receive in remote broker
 
-        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
-                .withAddress(remoteAddress);
-
-        var receivedInRemote = clientToRemote.run();
-
-        assertTrue(receivedInRemote, "Wrong count of messages received from remote queue: " + remoteAddress);
+        try (ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
+                .withAddress(remoteAddress)) {
+            var receivedInRemote = clientToRemote.run();
+            assertTrue(receivedInRemote, "Wrong count of messages received from remote queue: " + remoteAddress);
+        }
     }
 
     private void doTestReceiveInForwarder(AddressSpace space, Address forwarder, UserCredentials localUser, String remoteAddress, int messagesBatch) throws Exception {
         //send to remote broker
 
-        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch)
-                .withAddress(remoteAddress);
+        try (ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch)
+                .withAddress(remoteAddress)) {
 
-        assertTrue(clientToRemote.run());
+            assertTrue(clientToRemote.run());
+        }
 
         //receive in address with forwarder
 
-        ExternalMessagingClient localClient = new ExternalMessagingClient()
-                .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
+        try (ExternalMessagingClient localClient = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientReceiver())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
                 .withCount(messagesBatch)
                 .withAddress(forwarder.getSpec().getAddress())
-                .withCredentials(localUser);
+                .withCredentials(localUser)) {
 
-        var receivedInRemote = localClient.run();
-
-        assertTrue(receivedInRemote, "Wrong count of messages received in local address: " + forwarder.getSpec().getAddress());
+            var receivedInRemote = localClient.run();
+            assertTrue(receivedInRemote, "Wrong count of messages received in local address: " + forwarder.getSpec().getAddress());
+        }
     }
 
 

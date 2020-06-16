@@ -248,49 +248,54 @@ class ConnectorsTest extends BridgingBase {
 
     private void sendToConnectorReceiveInBroker(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send through connector
-        ExternalMessagingClient localClient = new ExternalMessagingClient()
-                .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
-                .withCount(messagesBatch)
-                .withCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {
             String connectorQueue = getRemoteName(remoteQueue);
-            localClient.withAddress(connectorQueue);
-            assertTrue(localClient.run());
+            try (ExternalMessagingClient localClient = new ExternalMessagingClient()
+                    .withClientEngine(new ProtonJMSClientSender())
+                    .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
+                    .withCount(messagesBatch)
+                    .withAddress(connectorQueue)
+                    .withCredentials(localUser)) {
+                assertTrue(localClient.run());
+            }
         }
 
         //receive in remote broker
-        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch);
 
         for(String remoteQueue : remoteQueues) {
-            clientToRemote.withAddress(remoteQueue);
-            var receivedFromQueue = clientToRemote.run();
-            assertTrue(receivedFromQueue, "Wrong count of messages received from queue: " + remoteQueue);
+            try (ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientReceiver(), messagesBatch)
+                 .withAddress(remoteQueue)) {
+                var receivedFromQueue = clientToRemote.run();
+                assertTrue(receivedFromQueue, "Wrong count of messages received from queue: " + remoteQueue);
+            }
         }
     }
 
     private void sendToBrokerReceiveInConnector(AddressSpace space, UserCredentials localUser, String[] remoteQueues, int messagesBatch) throws Exception {
         //send to remote broker
-        ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch);
 
         for(String remoteQueue : remoteQueues) {
-            clientToRemote.withAddress(remoteQueue);
-            assertTrue(clientToRemote.run());
+            try (ExternalMessagingClient clientToRemote = createOnClusterClientToRemoteBroker(new ProtonJMSClientSender(), messagesBatch)
+                    .withAddress(remoteQueue)) {
+                assertTrue(clientToRemote.run());
+            }
         }
 
         //receive through connector
-        ExternalMessagingClient localClient = new ExternalMessagingClient(true)
-                .withClientEngine(new ProtonJMSClientSender())
-                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getServiceEndpointByName(space, "messaging", "amqps")))
-                .withCount(messagesBatch)
-                .withCredentials(localUser);
 
         for(String remoteQueue : remoteQueues) {
             String connectorQueue = getRemoteName(remoteQueue);
-            localClient.withAddress(connectorQueue);
-            var receivedFromQueue = localClient.run();
-            assertTrue(receivedFromQueue, "Wrong count of messages received from connector queue: " + connectorQueue);
+
+            try (ExternalMessagingClient localClient = new ExternalMessagingClient(true)
+                    .withClientEngine(new ProtonJMSClientReceiver())
+                    .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(space, "messaging", "amqps")))
+                    .withCount(messagesBatch)
+                    .withAddress(connectorQueue)
+                    .withCredentials(localUser)) {
+                var receivedFromQueue = localClient.run();
+                assertTrue(receivedFromQueue, "Wrong count of messages received from connector queue: " + connectorQueue);
+            }
         }
     }
 

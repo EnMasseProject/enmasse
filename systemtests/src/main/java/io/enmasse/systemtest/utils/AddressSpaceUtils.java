@@ -220,30 +220,6 @@ public class AddressSpaceUtils {
         }
     }
 
-    public static Endpoint getServiceEndpointByName(AddressSpace addressSpace, String endpoint, String protocol) {
-        for (EndpointSpec addrSpaceEndpoint : addressSpace.getSpec().getEndpoints()) {
-            if (addrSpaceEndpoint.getName().equals(endpoint)) {
-                EndpointStatus status = getEndpointByName(addrSpaceEndpoint.getName(), addressSpace.getStatus().getEndpointStatuses());
-                String host = status.getServiceHost();
-                Integer port = status.getServicePorts().entrySet().stream()
-                        .filter(e -> e.getKey().equals(protocol))
-                        .map(Map.Entry::getValue)
-                        .findAny()
-                        .orElse(null);
-                log.debug("Got endpoint: name: {}, service-name: {}, host: {}, port: {}",
-                        addrSpaceEndpoint.getName(), addrSpaceEndpoint.getService(),
-                        host, port);
-                if (host == null || port == null) {
-                    return null;
-                } else {
-                    return new Endpoint(host, port);
-                }
-            }
-        }
-        throw new IllegalStateException(String.format("Endpoint wih name '%s-%s' doesn't exist in address space '%s'",
-                endpoint, getAddressSpaceInfraUuid(addressSpace), addressSpace.getMetadata().getName()));
-    }
-
     public static Endpoint getEndpointByName(AddressSpace addressSpace, String endpoint) {
         for (EndpointSpec addrSpaceEndpoint : addressSpace.getSpec().getEndpoints()) {
             if (addrSpaceEndpoint.getName().equals(endpoint)) {

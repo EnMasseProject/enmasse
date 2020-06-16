@@ -18,7 +18,7 @@ import java.util.concurrent.Future;
 
 import org.slf4j.Logger;
 
-public class ExternalMessagingClient {
+public class ExternalMessagingClient implements AutoCloseable {
 
     private static Logger LOGGER = CustomLogger.getLogger();
 
@@ -184,5 +184,9 @@ public class ExternalMessagingClient {
 
     public void stop() {
         this.client.stop();
+    }
+
+    public void close() {
+        this.stop();
     }
 }
