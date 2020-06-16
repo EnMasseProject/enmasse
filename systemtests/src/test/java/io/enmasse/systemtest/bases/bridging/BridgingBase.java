@@ -28,6 +28,7 @@ import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -54,6 +55,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
     protected final String remoteBrokerUsername = "test-user";
     protected final String remoteBrokerPassword = "test-password";
     protected Endpoint clientBrokerEndpoint;
+    protected Endpoint clientBrokerEndpointExternal;
     protected Endpoint remoteBrokerEndpoint;
     protected Endpoint remoteBrokerEndpointSSL;
     protected Endpoint remoteBrokerEndpointMutualTLS;
@@ -67,6 +69,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
         remoteBrokerEndpoint = new Endpoint(serviceName, 5672);
         remoteBrokerEndpointSSL = new Endpoint(serviceName, 5671);
         remoteBrokerEndpointMutualTLS = new Endpoint(serviceName, 55671);
+        clientBrokerEndpointExternal = Kubernetes.getInstance().getExternalEndpoint(remoteBrokerName, remoteBrokerNamespace);
         clientBrokerEndpoint = remoteBrokerEndpoint;
         log.info("Broker endpoint: {}", remoteBrokerEndpoint);
         log.info("Broker SSL endpoint: {}", remoteBrokerEndpointSSL);
@@ -141,7 +144,7 @@ public abstract class BridgingBase extends TestBase implements ITestIsolatedStan
 
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(new QueueTerminusFactory())
-                .setEndpoint(clientBrokerEndpoint)
+                .setEndpoint(clientBrokerEndpointExternal)
                 .setProtonClientOptions(clientOptions)
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setUsername(remoteBrokerUsername)
