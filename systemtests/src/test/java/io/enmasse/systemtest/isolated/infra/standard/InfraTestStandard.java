@@ -178,7 +178,6 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
                         .withNewResources()
                         .withMemory(brokerConfig.getMemory())
-                        .withStorage(brokerConfig.getBrokerStorage())
                         .withCpu(brokerConfig.getCpu())
                         .endResources().build())
                 .withRouter(PlanUtils.createStandardRouterResourceObject(routerConfig.getCpu(), routerConfig.getMemory(), 200, routerConfig.getRouterReplicas()))
@@ -190,6 +189,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
+
+        if (updatePersistentVolumeClaim && brokerConfig.getBrokerStorage() != null) {
+            infra.getSpec().getBroker().getResources().setStorage(brokerConfig.getBrokerStorage());
+        }
         resourcesManager.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
