@@ -78,8 +78,6 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/version: "${env.VERSION}"
-          enmasse.io/revision: "${env.REVISION}"
         labels:
           app: enmasse
           capability: router
@@ -235,8 +233,6 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/version: "${env.VERSION}"
-          enmasse.io/revision: "${env.REVISION}"
         labels:
           app: enmasse
           name: admin

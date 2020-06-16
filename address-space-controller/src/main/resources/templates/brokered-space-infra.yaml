@@ -72,8 +72,6 @@ objects:
       metadata:
         annotations:
           addressSpace: ${ADDRESS_SPACE}
-          enmasse.io/version: "${env.VERSION}"
-          enmasse.io/revision: "${env.REVISION}"
         labels:
           app: enmasse
           name: broker
