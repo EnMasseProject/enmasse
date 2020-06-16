@@ -48,5 +48,14 @@ docker_push:
 		bash $(TOPDIR)/scripts/docker_push.sh "$(DOCKER) push $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG)" 10 10 ; \
 	fi
 
+kind_load_image:
+	if [ -f Dockerfile ]; \
+	then \
+		kind load docker-image $(DOCKER_REGISTRY)/$(DOCKER_ORG)/$(PROJECT_NAME):$(TAG) ; \
+	fi
 
-.PHONY: all init build test package clean docker_build docker_tag docker_push
+buildpushkind: all docker_build docker_tag kind_load_image
+	:
+
+
+.PHONY: all init build test package clean docker_build docker_tag docker_push kind_load_image buildpushkind buildpush

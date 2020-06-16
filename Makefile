@@ -29,7 +29,7 @@ DOCKER_DIRS = \
 FULL_BUILD       = true
 GOOPTS          ?= -mod=vendor
 
-DOCKER_TARGETS   = docker_build docker_tag docker_push clean
+DOCKER_TARGETS   = docker_build docker_tag docker_push kind_load_image clean
 INSTALLDIR       = $(CURDIR)/templates/install
 SKIP_TESTS      ?= false
 SKIP_MANIFESTS  ?= false
@@ -98,6 +98,12 @@ buildpush:
 	$(MAKE) docker_build
 	$(MAKE) docker_tag
 	$(MAKE) docker_push
+
+buildpushkind:
+	$(MAKE)
+	$(MAKE) docker_build
+	$(MAKE) docker_tag
+	$(MAKE) kind_load_image
 
 clean_java:
 	mvn -q clean $(MAVEN_ARGS)
@@ -174,6 +180,6 @@ endif
 
 #endregion
 
-.PHONY: test_go_vet test_go_plain build_go imageenv
+.PHONY: test_go_vet test_go_plain build_go imageenv buildpushkind
 .PHONY: all $(GO_DIRS) $(DOCKER_TARGETS) $(DOCKER_DIRS) build_java test_go systemtests clean_java docu_html docu_check docu_clean templates
 .PHONY: manifests
