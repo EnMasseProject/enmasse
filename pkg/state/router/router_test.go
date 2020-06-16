@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package state
+package router
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	fakecommand "github.com/enmasseproject/enmasse/pkg/amqpcommand/test"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 
 	"pack.ag/amqp"
 )

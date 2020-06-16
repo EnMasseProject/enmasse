@@ -3,19 +3,20 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package state
+package broker
 
 import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 )
 
 type BrokerState struct {
-	Host           Host
-	Port           int32
-	initialized    bool
+	host           Host
+	port           int32
 	nextResync     time.Time
+	initialized    bool
 	commandClient  amqpcommand.Client
 	entities       map[BrokerEntityType]map[string]BrokerEntity
 	reconnectCount int64

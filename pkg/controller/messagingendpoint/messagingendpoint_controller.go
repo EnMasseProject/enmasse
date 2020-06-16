@@ -19,6 +19,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
 	"github.com/enmasseproject/enmasse/pkg/state"
+	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	utilerrors "github.com/enmasseproject/enmasse/pkg/util/errors"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
@@ -208,7 +209,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		if err != nil {
 			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) {
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			client.FreePorts(endpoint)
@@ -272,7 +273,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		if err != nil {
 			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
-			if errors.Is(err, state.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, state.NotSyncedError) {
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package state
+package router
 
 import (
 	"context"
@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
+	. "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"golang.org/x/sync/errgroup"
 
 	"pack.ag/amqp"
@@ -59,6 +61,31 @@ func NewRouterState(host Host, port int32, tlsConfig *tls.Config) *RouterState {
 	state.commandClient.Start()
 	state.reconnectCount = state.commandClient.ReconnectCount()
 	return state
+}
+
+func NewTestRouterState(host Host, port int32, client amqpcommand.Client) *RouterState {
+	return &RouterState{
+		host:          host,
+		port:          port,
+		commandClient: client,
+		entities:      make(map[RouterEntityType]map[string]RouterEntity, 0),
+	}
+}
+
+func (r *RouterState) Host() Host {
+	return r.host
+}
+
+func (r *RouterState) Port() int32 {
+	return r.port
+}
+
+func (r *RouterState) NextResync() time.Time {
+	return r.nextResync
+}
+
+func (r *RouterState) Entities() map[RouterEntityType]map[string]RouterEntity {
+	return r.entities
 }
 
 func (r *RouterState) Initialize(nextResync time.Time) error {

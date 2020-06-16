@@ -22,6 +22,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/router"
 	"github.com/enmasseproject/enmasse/pkg/controller/messagingtenant"
 	"github.com/enmasseproject/enmasse/pkg/state"
+	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	utilerrors "github.com/enmasseproject/enmasse/pkg/util/errors"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
@@ -376,8 +377,8 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile Routers
-	var runningRouters []state.Host
-	var routerHosts []state.Host
+	var runningRouters []Host
+	var routerHosts []Host
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		hosts, err := r.routerController.ReconcileRouters(ctx, logger, infra)
 		if err != nil {
@@ -411,8 +412,8 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	}
 
 	// Reconcile Brokers
-	var runningBrokers []state.Host
-	var brokerHosts []state.Host
+	var runningBrokers []Host
+	var brokerHosts []Host
 	result, err = rc.Process(func(infra *v1beta2.MessagingInfrastructure) (processorResult, error) {
 		hosts, err := r.brokerController.ReconcileBrokers(ctx, logger, infra)
 		if err != nil {

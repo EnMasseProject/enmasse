@@ -10,6 +10,8 @@ import (
 	"time"
 
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	"github.com/enmasseproject/enmasse/pkg/state/broker"
+	"github.com/enmasseproject/enmasse/pkg/state/router"
 )
 
 type clientKey struct {
@@ -62,7 +64,7 @@ func (m *manager) GetClient(i *v1beta2.MessagingInfrastructure) InfraClient {
 	key := clientKey{Name: i.Name, Namespace: i.Namespace}
 	client, exists := m.clients[key]
 	if !exists {
-		client = NewInfra(NewRouterState, NewBrokerState, &systemClock{})
+		client = NewInfra(router.NewRouterState, broker.NewBrokerState, &systemClock{})
 		m.clients[key] = client
 		client.Start()
 	}
