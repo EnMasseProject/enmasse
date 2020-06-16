@@ -33,6 +33,7 @@
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
 * #4656: Defining a connector before its referenced secret exists results in NPE and permanently unready address space
 * #4600: [IoT] Allow configuring Pod affinities
+* #4612: Prevent the router from racing with the agent and thus causing addresses/queues to be autocreated with wrong args.
 * #4631: Allow configuring CPU limits for infra
 * #4682: Avoid race when processing Artemis management responses when first connecting to broker
 * #4721: Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
