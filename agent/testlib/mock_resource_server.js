@@ -288,6 +288,7 @@ ResourceServer.prototype.update_resource = function (type, name, updated) {
         var externalized = this.resources[type].map(this.externalize)[i];
         if (externalized.metadata.name === name) {
             this.update(type, i, updated);
+            this.resource_modified(type, updated);
             return true;
         }
     }
@@ -369,22 +370,18 @@ AddressServer.prototype.add_address_definitions = function (defs) {
     }
 };
 
-AddressServer.prototype.add_address_space_plan = function (params) {
-    var plan = {
-        kind: 'AddressSpacePlan',
-        metadata: {name: params.plan_name},
-        displayName: params.display_name,
-        shortDescription: params.shortDescription,
-        longDescription: params.longDescription,
-        displayOrder: params.displayOrder,
-        addressSpaceType: params.address_space_type,
-        addressPlans: params.address_plans
-    };
-    if (params.required_resources) {
-        plan.requiredResources = params.required_resources;
+AddressServer.prototype.update_address_definition = function (def, name, infra_uuid, annotations, status) {
+    var address = {kind: 'Address', metadata: {name: name || def.address}, spec:def};
+    if (annotations) {
+        address.metadata.annotations = annotations;
     }
-    this.add_resource('addressspaceplans', plan);
-}
+    address.metadata.labels = {};
+    if (infra_uuid) {
+        address.metadata.labels.infraUuid = infra_uuid;
+    }
+    address.status = status || { phase: 'Active' };
+    this.update_resource('addresses', address.metadata.name, address);
+};
 
 AddressServer.prototype.add_address_plan = function (params) {
     var plan = {
@@ -396,12 +393,67 @@ AddressServer.prototype.add_address_plan = function (params) {
             longDescription: params.longDescription,
             displayOrder: params.displayOrder,
             addressType: params.address_type,
+            ttl: params.ttl,
         }
     };
     if (params.resources) {
         plan.resources = params.resources;
     }
     this.add_resource('addressplans', plan);
+};
+
+AddressServer.prototype.update_address_plan = function (params) {
+    var plan = {
+        kind: 'AddressPlan',
+        metadata: {name: params.plan_name},
+        spec: {
+            displayName: params.display_name,
+            shortDescription: params.shortDescription,
+            longDescription: params.longDescription,
+            displayOrder: params.displayOrder,
+            addressType: params.address_type,
+            ttl: params.ttl,
+        }
+    };
+    if (params.required_resources) {
+        plan.requiredResources = params.required_resources;
+    }
+    this.update_resource('addressplans', params.plan_name, plan);
+};
+
+AddressServer.prototype.add_address_space_plan = function (params) {
+    var plan = {
+        kind: 'AddressSpacePlan',
+        metadata: {name: params.plan_name},
+        spec: {
+            displayName: params.display_name,
+            shortDescription: params.shortDescription,
+            longDescription: params.longDescription,
+            displayOrder: params.displayOrder,
+            addressSpaceType: params.address_space_type,
+            addressPlans: params.address_plans
+        }
+    };
+    if (params.required_resources) {
+        plan.requiredResources = params.required_resources;
+    }
+    this.add_resource('addressspaceplans', plan);
+};
+
+AddressServer.prototype.update_address_space_plan = function(params) {
+    var plan = {
+        kind: 'AddressSpacePlan',
+        metadata: {name: params.plan_name},
+        spec: {
+            displayName: params.display_name,
+            shortDescription: params.shortDescription,
+            longDescription: params.longDescription,
+            displayOrder: params.displayOrder,
+            addressSpaceType: params.address_space_type,
+            addressPlans: params.address_plans
+        }
+    };
+    this.update_resource('addressspaceplans', params.plan_name, plan);
 };
 
 AddressServer.prototype.resource_initialiser = function (resource) {

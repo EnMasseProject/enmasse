@@ -18,6 +18,8 @@
 var v8 = require('v8');
 var log = require("../lib/log.js").logger();
 var AddressSource = require('../lib/internal_address_source.js');
+var AddressSpacePlanSource = require('../lib/internal_addressspaceplan_source.js');
+var AddressPlansSource = require('../lib/internal_addressplan_source.js');
 var ConsoleServer = require('../lib/console_server.js');
 var kubernetes = require('../lib/kubernetes.js');
 var Ragent = require('../lib/ragent.js');
@@ -32,13 +34,14 @@ function start(env) {
         kubernetes.get_messaging_route_hostname(env).then(function (result) {
             if (result !== undefined) env.MESSAGING_ROUTE_HOSTNAME = result;
             env.ADDRESS_SPACE_PREFIX = env.ADDRESS_SPACE + ".";
+            var address_space_plan_source = new AddressSpacePlanSource(env);
+            var address_plans_source = new AddressPlansSource(env);
             var address_source = new AddressSource(env);
 
             var console_server = new ConsoleServer(env, openshift);
             bind_event(address_source, 'addresses_defined', console_server.addresses);
 
             var server_promise = console_server.listen(env);
-
             server_promise.then(() => {
                 if (env.ADDRESS_SPACE_TYPE === 'brokered') {
                     bind_event(address_source, 'addresses_defined', console_server.metrics);
@@ -47,12 +50,17 @@ function start(env) {
                     var bc = require('../lib/broker_controller.js').create_agent(event_logger);
                     bind_event(bc, 'address_stats_retrieved', console_server.addresses, 'update_existing');
                     bind_event(bc, 'connection_stats_retrieved', console_server.connections, 'set');
-                    bind_event(address_source, 'addresses_defined', bc);
                     bind_event(bc, 'address_stats_retrieved', address_source, 'check_status');
+                    bind_event(address_source, 'addresses_defined', bc);
+                    bind_event(address_plans_source, 'addressplans_defined', address_source, 'check_address_plans');
+                    bind_event(address_space_plan_source, 'addressspaceplan_defined', address_source, 'check_address_plans');
                     bc.connect(tls_options.get_client_options({
                         host: env.BROKER_SERVICE_HOST, port: env.BROKER_SERVICE_PORT, username: 'console',
                         idle_time_out: 'AMQP_IDLE_TIMEOUT' in process.env ? process.env.AMQP_IDLE_TIMEOUT : 300000
                     }));
+
+                    address_space_plan_source.start();
+                    address_plans_source.start(address_space_plan_source);
                 } else {
                     //assume standard address space for now
                     var StandardStats = require('../lib/standard_stats.js');
@@ -61,12 +69,12 @@ function start(env) {
 
                     var ragent = new Ragent();
                     ragent.disable_connectivity = true;
-                    bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses')
+                    bind_event(address_source, 'addresses_ready', ragent, 'sync_addresses');
                     ragent.start_listening(env);
                     ragent.listen_health({HEALTH_PORT:8888});
                 }
 
-                address_source.start();
+                address_source.start(address_plans_source);
 
                 process.on('SIGTERM', function () {
                     log.info('Shutdown started');
