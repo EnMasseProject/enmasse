@@ -28,10 +28,12 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
     private final List<Message> messages = new ArrayList<>();
     private final AtomicInteger messageCount = new AtomicInteger();
     private final Predicate<Message> done;
+    private final DeliveryHandler deliveryHandler;
 
-    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId) {
+    public Receiver(AmqpConnectOptions clientOptions, Predicate<Message> done, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<List<Message>> resultPromise, String containerId, DeliveryHandler deliveryHandler) {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
         this.done = done;
+        this.deliveryHandler = deliveryHandler;
     }
 
     @Override
@@ -43,10 +45,12 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver = conn.createReceiver(source.getAddress(), new ProtonLinkOptions().setLinkName(linkName));
         receiver.setSource(source);
         receiver.setPrefetch(0);
+        receiver.setAutoAccept(false);
         receiver.handler((protonDelivery, message) -> {
+            log.info("Got message, count is {}", messageCount.get());
             messages.add(message);
             messageCount.incrementAndGet();
-            protonDelivery.disposition(Accepted.getInstance(), true);
+            deliveryHandler.handle(protonDelivery);
             if (done.test(message)) {
                 resultPromise.complete(messages);
                 conn.close();

@@ -1007,6 +1007,17 @@ func (i *infraClient) buildBrokerAddressEntities(endpoint *v1beta2.MessagingEndp
 				PurgeOnNoConsumers: false,
 				AutoCreateAddress:  false,
 			})
+
+			settings := createDefaultAddressSettings(fullAddress)
+			if address.Spec.Queue.DeadLetterAddress != "" {
+				settings.DeadLetterAddress = qualifiedAddress(tenantId, address.Spec.Queue.DeadLetterAddress)
+			}
+
+			if address.Spec.Queue.ExpiryAddress != "" {
+				settings.ExpiryAddress = qualifiedAddress(tenantId, address.Spec.Queue.ExpiryAddress)
+			}
+
+			brokerEntities[host] = append(brokerEntities[host], settings)
 		}
 	} else if address.Spec.DeadLetter != nil {
 		for _, brokerState := range i.brokers {
@@ -1230,6 +1241,25 @@ func (i *infraClient) collectRequests(c chan *request) []*request {
 		case <-time.After(timeout):
 			return requests
 		}
+	}
+}
+
+func createDefaultAddressSettings(address string) *BrokerAddressSetting {
+	return &BrokerAddressSetting{
+		Name:                     address,
+		ExpiryDelay:              -1,
+		DeliveryAttempts:         10,
+		MaxSizeBytes:             -1,
+		PageSizeBytes:            10485760,
+		PageMaxCacheSize:         5,
+		RedeliveryDelay:          0,
+		RedeliveryMultiplier:     1.0,
+		MaxRedeliveryDelay:       10000,
+		RedistributionDelay:      -1,
+		AddressFullMessagePolicy: AddressFullPolicyFail,
+		SlowConsumerThreshold:    -1,
+		SlowConsumerCheckPeriod:  -1,
+		SlowConsumerPolicy:       SlowConsumerPolicyKill,
 	}
 }
 

@@ -15,6 +15,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.impl.ConcurrentHashSet;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
@@ -122,13 +123,17 @@ public class AmqpClient implements AutoCloseable {
     }
 
     public ReceiverStatus recvMessages(Source source, Predicate<Message> done, Optional<String> linkName) {
+        return recvMessages(source, done, linkName, protonDelivery -> protonDelivery.disposition(Accepted.getInstance(), true));
+    }
+
+    public ReceiverStatus recvMessages(Source source, Predicate<Message> done, Optional<String> linkName, DeliveryHandler deliveryHandler) {
         CompletableFuture<List<Message>> resultPromise = new CompletableFuture<>();
 
         Vertx vertx = VertxFactory.create();
         clients.add(vertx);
         String containerId = "systemtest-receiver-" + source.getAddress();
         CompletableFuture<Void> connectPromise = new CompletableFuture<>();
-        Receiver receiver = new Receiver(options, done, new LinkOptions(source, new Target(), linkName), connectPromise, resultPromise, containerId);
+        Receiver receiver = new Receiver(options, done, new LinkOptions(source, new Target(), linkName), connectPromise, resultPromise, containerId, deliveryHandler);
         vertx.deployVerticle(receiver);
         try {
             connectPromise.get(2, TimeUnit.MINUTES);

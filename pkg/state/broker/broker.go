@@ -77,7 +77,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	b.reconnectCount = b.commandClient.ReconnectCount()
 	totalEntities := 0
-	entityTypes := []BrokerEntityType{BrokerQueueEntity, BrokerAddressEntity, BrokerDivertEntity}
+	entityTypes := []BrokerEntityType{BrokerQueueEntity, BrokerAddressEntity, BrokerDivertEntity, BrokerAddressSettingEntity}
 	for _, t := range entityTypes {
 		list, err := b.readEntities(t)
 		if err != nil {
@@ -216,6 +216,46 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
 		}
+	case BrokerAddressSettingEntity:
+		entities := make(map[string]BrokerEntity, 0)
+		for name, _ := range b.entities[BrokerQueueEntity] {
+			message, err := newManagementMessage("broker", "getAddressSettingsAsJSON", "", name)
+			if err != nil {
+				return nil, err
+			}
+
+			result, err := doRequest(b.commandClient, message)
+			if err != nil {
+				return nil, err
+			}
+			if !success(result) {
+				return nil, fmt.Errorf("error reading address setting: %+v", result.Value)
+			}
+
+			switch v := result.Value.(type) {
+			case string:
+				var entry []string
+				err := json.Unmarshal([]byte(v), &entry)
+				if err != nil {
+					return nil, err
+				}
+
+				for _, e := range entry {
+					var setting BrokerAddressSetting
+					err := json.Unmarshal([]byte(e), &setting)
+					if err != nil {
+						return nil, err
+					}
+
+					setting.Name = name
+					entities[name] = &setting
+				}
+			default:
+				return nil, fmt.Errorf("unexpected value with type %T", v)
+			}
+		}
+		log.Printf("[broker %s] Found address settings: %+v", b.host, entities)
+		return entities, nil
 	default:
 		return nil, fmt.Errorf("Unsupported entity type %s", t)
 	}
@@ -286,23 +326,33 @@ func (b *BrokerState) DeleteEntities(ctx context.Context, entities []BrokerEntit
 	if !b.initialized {
 		return NotInitializedError
 	}
-	g, _ := errgroup.WithContext(ctx)
 	completed := make(chan BrokerEntity, len(entities))
-	for _, entity := range entities {
-		e := entity
-		if _, ok := b.entities[e.Type()][e.GetName()]; ok {
-			g.Go(func() error {
-				err := e.Delete(b.commandClient)
-				if err != nil {
-					return err
+	var err error
+	for order := maxOrder - 1; order >= 0; order-- {
+		g, _ := errgroup.WithContext(ctx)
+		for _, entity := range entities {
+			e := entity
+			if e.Order() == order {
+				if _, ok := b.entities[e.Type()][e.GetName()]; ok {
+					g.Go(func() error {
+						err := e.Delete(b.commandClient)
+						if err != nil {
+							return err
+						}
+
+						completed <- e
+						return nil
+					})
 				}
-				completed <- e
-				return nil
-			})
+			}
+		}
+
+		err = g.Wait()
+		if err != nil {
+			break
 		}
 	}
 
-	err := g.Wait()
 	close(completed)
 	if isConnectionError(err) {
 		b.Reset()
@@ -417,7 +467,7 @@ func (b *BrokerQueue) Create(client amqpcommand.Client) error {
 }
 
 func (b *BrokerQueue) Delete(client amqpcommand.Client) error {
-	message, err := newManagementMessage("broker", "destroyQueue", "", b.Name, true, true)
+	message, err := newManagementMessage("broker", "destroyQueue", "", b.Name, true)
 	if err != nil {
 		return err
 	}
@@ -553,5 +603,96 @@ func (b *BrokerDivert) Delete(client amqpcommand.Client) error {
 	}
 
 	log.Printf("Divert %s destroyed successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+/**
+ * Broker address settings
+ */
+func (b *BrokerAddressSetting) Type() BrokerEntityType {
+	return BrokerAddressSettingEntity
+}
+
+func (b *BrokerAddressSetting) GetName() string {
+	return b.Name
+}
+
+func (b *BrokerAddressSetting) Order() int {
+	return 0
+}
+
+func (b *BrokerAddressSetting) Equals(e BrokerEntity) bool {
+	if b.Type() != e.Type() {
+		return false
+	}
+	other := e.(*BrokerAddressSetting)
+	return b.Name == other.GetName()
+	// TODO: Compare more fields when we support updates
+}
+
+func (b *BrokerAddressSetting) Create(client amqpcommand.Client) error {
+	log.Printf("[Broker %s] creating address setting: '%s'", client.Addr(), b.Name)
+
+	message, err := newManagementMessage("broker", "addAddressSettings", "",
+		b.Name,
+		b.DeadLetterAddress,
+		b.ExpiryAddress,
+		b.ExpiryDelay,
+		b.LastValueQueue,
+		b.DeliveryAttempts,
+		b.MaxSizeBytes,
+		b.PageSizeBytes,
+		b.PageMaxCacheSize,
+		b.RedeliveryDelay,
+		b.RedeliveryMultiplier,
+		b.MaxRedeliveryDelay,
+		b.RedistributionDelay,
+		b.SendToDLAOnNoRoute,
+		b.AddressFullMessagePolicy,
+		b.SlowConsumerThreshold,
+		b.SlowConsumerCheckPeriod,
+		b.SlowConsumerPolicy,
+		b.AutoCreateJmsQueues,
+		b.AutoDeleteJmsQueues,
+		b.AutoCreateJmsTopics,
+		b.AutoDeleteJmsTopics,
+		b.AutoCreateQueues,
+		b.AutoDeleteQueues,
+		b.AutoCreateAddresses,
+		b.AutoDeleteAddresses)
+
+	if err != nil {
+		return err
+	}
+	log.Printf("Creating address setting %s on %s: %+v", b.Name, client.Addr(), message)
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+	if !success(response) {
+		return fmt.Errorf("error creating address setting %s: %+v", b.Name, response.Value)
+	}
+	log.Printf("Address setting %s created successfully on %s", b.Name, client.Addr())
+	return nil
+}
+
+func (b *BrokerAddressSetting) Delete(client amqpcommand.Client) error {
+	message, err := newManagementMessage("broker", "removeAddressSettings", "", b.Name)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Removing address setting %s on %s", b.Name, client.Addr())
+
+	response, err := doRequest(client, message)
+	if err != nil {
+		return err
+	}
+
+	if !success(response) {
+		return fmt.Errorf("error removing address setting %s: %+v", b.Name, response.Value)
+	}
+
+	log.Printf("Address setting %s destroyed successfully on %s", b.Name, client.Addr())
 	return nil
 }

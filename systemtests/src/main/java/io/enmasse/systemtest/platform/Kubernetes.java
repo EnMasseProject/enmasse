@@ -35,6 +35,22 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.DoneablePod;
+import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.api.model.Namespace;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import io.fabric8.kubernetes.api.model.NodeAddress;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
+import io.fabric8.kubernetes.api.model.ServicePort;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -93,20 +109,6 @@ import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserCrd;
 import io.enmasse.user.model.v1.UserList;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapList;
-import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.DoneablePod;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Namespace;
-import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
-import io.fabric8.kubernetes.api.model.ServiceAccountBuilder;
-import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
@@ -157,8 +159,10 @@ public abstract class Kubernetes {
                 throw new RuntimeException(ex);
             }
             Environment env = Environment.getInstance();
-            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER) || cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
+            if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
                 instance = new Minikube(env);
+            } else if (cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
+                instance = new GenericKubernetes(env);
             } else {
                 instance = new OpenShift(env);
             }
@@ -187,7 +191,9 @@ public abstract class Kubernetes {
     /**
      * Retrieve host or ip address of Kubernetes node.
      */
-    public abstract String getHost();
+    public String getHost() {
+        return "localhost";
+    }
 
     public List<Route> listRoutes(String namespace, Map<String, String> labels) {
         throw new UnsupportedOperationException();
@@ -1234,6 +1240,31 @@ public abstract class Kubernetes {
             }
         });
 
+    }
+
+    /**
+     * Return the external IP for the first node found in the cluster.
+     */
+    public String getNodeHost() {
+        List<NodeAddress> addresses = client.nodes().list().getItems().stream()
+                .peek(n -> CustomLogger.getLogger().info("Found node: {}", n))
+                .flatMap(n -> n.getStatus().getAddresses().stream()
+                        .peek(a -> CustomLogger.getLogger().info("Found address: {}", a))
+                        .filter(a -> a.getType().equals("InternalIP") || a.getType().equals("ExternalIP")))
+                .collect(Collectors.toList());
+        if (addresses.isEmpty()) {
+            return null;
+        }
+
+        // Return public ip if exists
+        for (NodeAddress address : addresses) {
+            if (address.getType().equals("ExternalIP")) {
+                return address.getAddress();
+            }
+        }
+
+        // Fall back to first internal ip
+        return addresses.get(0).getAddress();
     }
 
     @FunctionalInterface
