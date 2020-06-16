@@ -16,6 +16,9 @@ spec:
       labels:
         app: enmasse
         name: enmasse-operator
+      annotations:
+        enmasse.io/version: "${VERSION}"
+        enmasse.io/revision: "${REVISION}"
     spec:
       affinity:
         nodeAffinity:
@@ -41,6 +44,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.namespace
+        - name: REVISION
+          value: "${REVISION}"
+        - name: VERSION
+          value: "${VERSION}"
         - name: CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE
           value: "false"
         - name: IOT_CONFIG_NAME

@@ -4,8 +4,8 @@ RUN microdnf install which python gettext hostname iputils && microdnf clean all
 
 ARG version
 ARG maven_version
-ARG commit
-ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
+ARG revision
+ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 
 ADD ./plugin/target/plugin-${maven_version}-dist.tar.gz /
 

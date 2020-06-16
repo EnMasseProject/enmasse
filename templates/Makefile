@@ -56,6 +56,7 @@ replace_images: prepare
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
 		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
+					  -e 's,\$${REVISION},$(REVISION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
 					  -e 's,\$${CONSOLE_LINK_SECTION_NAME},$(CONSOLE_LINK_SECTION_NAME),g' \

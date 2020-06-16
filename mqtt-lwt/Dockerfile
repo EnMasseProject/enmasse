@@ -2,9 +2,9 @@ FROM quay.io/enmasse/java-base:11-5
 
 ARG version
 ARG maven_version
-ARG commit
+ARG revision
 
-ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
+ENV VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 ADD target/mqtt-lwt-${maven_version}.jar /mqtt-lwt.jar
 
 CMD ["/opt/run-java/launch_java.sh", "-jar", "/mqtt-lwt.jar"]

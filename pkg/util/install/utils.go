@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -75,6 +76,14 @@ func CreateDefaultAnnotations(annotations map[string]string) map[string]string {
 
 	if annotations == nil {
 		annotations = make(map[string]string)
+	}
+
+	if version, ok := os.LookupEnv("VERSION"); ok {
+		annotations["enmasse.io/version"] = version
+	}
+
+	if revision, ok := os.LookupEnv("REVISION"); ok {
+		annotations["enmasse.io/revision"] = revision
 	}
 
 	return annotations

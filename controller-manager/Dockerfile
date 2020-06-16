@@ -6,9 +6,9 @@
 FROM quay.io/enmasse/fedora-minimal:31
 
 ARG version
-ARG commit
+ARG revision
 ARG maven_version
-ENV VERSION=${version} MAVEN_VERSION=${maven_version} COMMIT=${commit} ENMASSE_IMAGE_MAP_FILE=/etc/operatorImageMap.yaml
+ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision} ENMASSE_IMAGE_MAP_FILE=/etc/operatorImageMap.yaml
 
 ADD target/controller-manager-${maven_version}-dist.tar.gz /
 

@@ -1,9 +1,9 @@
 FROM quay.io/enmasse/java-base:11-5
 
 ARG version
-ARG commit
+ARG revision
 ARG maven_version
-ENV VERSION=${version} COMMIT=${commit} MAVEN_VERSION=${maven_version}
+ENV VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 
 ADD target/address-space-controller-${maven_version}-dist.tar.gz /
 
