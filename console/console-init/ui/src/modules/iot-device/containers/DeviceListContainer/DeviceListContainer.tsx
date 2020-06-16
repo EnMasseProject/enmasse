@@ -15,18 +15,17 @@ import {
 import {
   DeviceList,
   IDevice,
-  IDeviceFilter,
-  EmptyDeviceList
+  IDeviceFilter
 } from "modules/iot-device/components";
 import {
   getHeaderForDialog,
   getDetailForDialog,
-  DialogTypes,
   getInitialFilter
 } from "modules/iot-device/utils";
 import { IRowData, SortByDirection, ISortBy } from "@patternfly/react-table";
 import { getTableCells } from "modules/iot-device";
 import { compareObject } from "utils";
+import { DialogTypes } from "constant";
 import { useParams } from "react-router";
 import { useMutationQuery } from "hooks";
 import { Loading } from "use-patternfly";

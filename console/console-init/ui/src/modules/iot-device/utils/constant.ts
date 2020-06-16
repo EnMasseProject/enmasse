@@ -4,7 +4,7 @@
  */
 
 import { ISelectOption } from "utils";
-import { IDeviceFilter } from "../components";
+import { IDeviceFilter } from "modules/iot-device/components";
 
 /**
  * dropdown options
@@ -102,12 +102,6 @@ const getInitialStateCreateMetadata = (defaultType: string) => {
   return initialState;
 };
 
-enum DialogTypes {
-  ENABLE = "Enable",
-  DISABLE = "Disable",
-  DELETE = "Delete"
-}
-
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -117,6 +111,5 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getLabelByValue,
-  getInitialStateCreateMetadata,
-  DialogTypes
+  getInitialStateCreateMetadata
 };

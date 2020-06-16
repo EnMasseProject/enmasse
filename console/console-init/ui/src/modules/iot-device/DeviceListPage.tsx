@@ -23,19 +23,20 @@ import {
 } from "modules/iot-device/components";
 import {
   getHeaderForDialog,
-  getDetailForDialog,
-  DialogTypes
+  getDetailForDialog
 } from "modules/iot-device/utils";
 import { DeviceListContainer } from "modules/iot-device/containers";
 import { compareObject } from "utils";
 import { getInitialFilter } from "modules/iot-device/utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
+import { DialogTypes } from "constant";
 
 export default function DeviceListPage() {
   useDocumentTitle("Device List");
 
   const [totalDevices, setTotalDevices] = useState<number>();
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
+  // TODO: Set per page to be used once backend supports pagination
   const [perPage, setPerPage] = useState<number>(10);
   const [selectedDevices, setSelectedDevices] = useState<IDevice[]>([]);
   const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());

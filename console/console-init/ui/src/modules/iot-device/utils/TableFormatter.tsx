@@ -10,7 +10,7 @@ import { IRowData } from "@patternfly/react-table";
 import { IDevice } from "modules/iot-device/components";
 
 export const getTableCells = (row: IDevice) => {
-  const { jsonData = "{}", deviceId, enabled } = row;
+  const { jsonData = "{}", enabled } = row;
 
   const { gateways, credentials } = JSON.parse(jsonData);
 
