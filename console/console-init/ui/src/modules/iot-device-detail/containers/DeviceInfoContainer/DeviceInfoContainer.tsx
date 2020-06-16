@@ -85,10 +85,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       viaGateway
     ) {
       errorState = ErrorState.CONFLICTING;
-    } else if (
-      (!credentialsJson || credentialsJson?.length <= 0) &&
-      !viaGateway
-    ) {
+    } else if (!(credentialsJson?.length > 0) && !viaGateway) {
       errorState = ErrorState.MISSING;
     }
     return errorState;

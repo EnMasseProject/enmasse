@@ -121,7 +121,6 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
           <JsonEditor
             readOnly={true}
             value={jsonViewData && JSON.stringify(jsonViewData, undefined, 2)}
-            maxLines={45}
           />
         ) : (
           <Grid gutter="sm">
@@ -146,7 +145,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                           </GridItem>
                         );
                       })}
-                    {deviceList?.length <= 0 && (
+                    {!(deviceList?.length > 0) && (
                       <Text component={TextVariants.p}>
                         There are no gateways for this device. This device is
                         connected to the cloud directly.

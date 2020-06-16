@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Title,
   TextInput,
@@ -20,25 +20,36 @@ import {
 import { DeviceListAlert } from "modules/iot-device/components";
 import { deviceIDRegExp } from "types/Configs";
 
-export interface IGatewayProps {
-  addedGateways: string[];
-  removeGateway: (id: string) => void;
-  appendGateway: (deviceId: string) => void;
+export interface IGatewaysProps {
+  header?: string;
+  gateways?: string[];
+  returnGateways?: (gateways: string[]) => void;
 }
 
-export const AddGateway: React.FunctionComponent<IGatewayProps> = ({
-  addedGateways,
-  removeGateway,
-  appendGateway
+export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
+  header = "Add permitted devices as gateways to this new device",
+  gateways: gatewayList = [],
+  returnGateways
 }) => {
   const [inputID, setInputID] = useState<string>();
   const [isValid, setIsValid] = useState<boolean>(false);
+  const [gateways, setGateways] = useState<string[]>(gatewayList);
 
-  const onClickAddGatewayBtn = () => {
+  useEffect(() => {
+    returnGateways && returnGateways(gateways);
+  }, [gateways]);
+
+  const addGateway = () => {
     if (inputID) {
-      appendGateway(inputID);
+      setGateways([...gateways, inputID]);
       setInputID("");
     }
+  };
+
+  const removeGateway = (id: string) => {
+    const idIndex = gateways.indexOf(id);
+    gateways.splice(idIndex, 1);
+    setGateways([...gateways]);
   };
 
   const alertDescription = `In AMQ IoT, any existing device directly connected to cloud can turn
@@ -53,7 +64,7 @@ export const AddGateway: React.FunctionComponent<IGatewayProps> = ({
     <Grid>
       <GridItem span={8}>
         <Title id="ag-device-info-title" headingLevel="h3" size="2xl">
-          Add permitted devices as gateways to this new device
+          {header}
         </Title>
         <br />
         <DeviceListAlert
@@ -90,7 +101,7 @@ export const AddGateway: React.FunctionComponent<IGatewayProps> = ({
                   isDisabled={!isValid}
                   id="ag-btn-add-device-gateway"
                   variant="secondary"
-                  onClick={onClickAddGatewayBtn}
+                  onClick={addGateway}
                 >
                   Add
                 </Button>
@@ -99,14 +110,14 @@ export const AddGateway: React.FunctionComponent<IGatewayProps> = ({
           </FormGroup>
         </Form>
         <br />
-        {addedGateways.length > 0 && (
+        {gateways.length > 0 && (
           <>
             <Title id="ag-title-added" headingLevel="h6" size="md">
               Added Gateways
             </Title>
             <br />
             <ChipGroup id="ag-chip-group">
-              {addedGateways.map((gateway: string) => (
+              {gateways.map((gateway: string) => (
                 <Chip
                   key={gateway}
                   id={`ag-device-chip-${gateway}`}

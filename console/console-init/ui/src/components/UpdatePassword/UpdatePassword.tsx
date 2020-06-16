@@ -14,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { PasswordInputFieldWithToggle } from "components";
+import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 export const UpdatePassword = () => {
   const [formData, setFormData] = useState({
@@ -70,9 +71,11 @@ export const UpdatePassword = () => {
   };
 
   const onClickEditCredentials = () => {
-    /**
-     * TODO: rediredt on edit credentials page
-     */
+    onCloseDialog();
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_CREDENTIALS }
+    });
   };
 
   return (

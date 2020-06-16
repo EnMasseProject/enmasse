@@ -14,7 +14,8 @@ export interface ICreateMetadataProps {
   onChangePropertyInput?: (value: string) => Promise<any>;
 }
 
-const defaultType = deviceRegistrationTypeOptions[0].value;
+const defaultType =
+  deviceRegistrationTypeOptions && deviceRegistrationTypeOptions[0]?.value;
 
 export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
   onChangePropertyInput

@@ -11,8 +11,7 @@ import {
   ButtonVariant,
   Flex,
   FlexItem,
-  Title,
-  Divider
+  Title
 } from "@patternfly/react-core";
 import { StyleSheet } from "@patternfly/react-styles";
 import { CreateMetadata } from "modules/iot-device/components";
@@ -53,16 +52,6 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
 
   return (
     <>
-      {title && (
-        <>
-          <Title size={"2xl"} className={styles.title}>
-            {title}
-          </Title>
-          <br />
-          <Divider />
-          <br />
-        </>
-      )}
       <div className={styles.header}>
         <Title size={"2xl"}>Edit device metadata</Title>
         <br />

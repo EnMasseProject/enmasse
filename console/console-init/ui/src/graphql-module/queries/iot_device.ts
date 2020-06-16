@@ -8,8 +8,8 @@ import { IDeviceFilter, getInitialFilter } from "modules/iot-device";
 import { ISortBy } from "@patternfly/react-table";
 
 const RETURN_IOT_DEVICE_DETAIL = (iotproject: string, deviceId: string) => {
-  const IOT_DEVICE_DETAIL = gql`
-     query iot_device_detail{
+  const IOT_DEVICE_DETAIL = gql(
+    `query iot_device_detail{
          devices(
              iotproject:"${iotproject}"
              filter: "\`$.deviceId\` = '${deviceId}'"){
@@ -22,13 +22,14 @@ const RETURN_IOT_DEVICE_DETAIL = (iotproject: string, deviceId: string) => {
                 credentials   
               }   
           }
-     }`;
+     }`
+  );
   return IOT_DEVICE_DETAIL;
 };
 
 const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
-  const IOT_CREDENTIALS = gql`
-    query iot_credentials{
+  const IOT_CREDENTIALS = gql(
+    `query iot_credentials{
       credentials(
         iotproject:"${iotproject}"
         deviceId: "${deviceId}"
@@ -36,24 +37,25 @@ const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
         total   
          credentials
         }
-    }`;
+    }`
+  );
   return IOT_CREDENTIALS;
 };
 
-const DELETE_IOT_DEVICE = gql`
-  mutation delete_iot_device($iotproject: String!, $deviceId: String!) {
+const DELETE_IOT_DEVICE = gql(
+  `mutation delete_iot_device($iotproject: String!, $deviceId: String!) {
     deleteIotDevice(iotproject: $iotproject, deviceId: $deviceId)
-  }
-`;
+  }`
+);
 
-const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql`
-  mutation delete_credentials_for_device(
+const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql(
+  `mutation delete_credentials_for_device(
     $iotproject: String!
     $deviceId: String!
   ) {
     deleteCredentialsForDevice(iotproject: $iotproject, deviceId: $deviceId)
-  }
-`;
+  }`
+);
 
 const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
   let orderBy = "";
@@ -121,16 +123,16 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   return ALL_DEVICE_LIST;
 };
 
-const UPDATE_IOT_DEVICE = gql`
-  mutation update_iot_device(
+const UPDATE_IOT_DEVICE = gql(
+  `mutation update_iot_device(
     $project: String!
     $device: Device_iot_console_input!
   ) {
     updateIotDevice(iotproject: $project, device: $device) {
       deviceId
     }
-  }
-`;
+  }`
+);
 
 export {
   RETURN_IOT_DEVICE_DETAIL,

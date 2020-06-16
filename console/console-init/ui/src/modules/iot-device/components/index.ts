@@ -16,3 +16,4 @@ export * from "./DeviceFilterCriteria";
 export * from "./DeviceListToolbar";
 export * from "./DeviceListFooterToolbar";
 export * from "./CreateMetadata";
+export * from "./AddGateways";

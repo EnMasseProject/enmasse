@@ -94,7 +94,7 @@ const getLabelByValue = (typeValue: string) => {
     (typeItem: ISelectOption, index: number) => (typeItem.value = typeValue)
   )[0];
 
-  return filteredType.label as string;
+  return filteredType?.label as string;
 };
 
 export {

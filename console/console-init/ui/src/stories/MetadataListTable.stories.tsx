@@ -42,7 +42,7 @@ export const MetadataTable = () => (
       id={"metadata-table"}
       dataList={metadataList}
       aria-label={"metadata table"}
-      aria-labelledby={"medata data header"}
+      aria-labelledby={"metadata data header"}
     />
   </div>
 );

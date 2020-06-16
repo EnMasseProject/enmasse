@@ -69,10 +69,10 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   };
 
   const onSelectEditDeviceInJson = () => {
-    /**
-     * TODO: add edit device in json actionType
-     */
-    //dispatch({type:types.SET_DEVICE_ACTION_TYPE,payload:{actionType:DeviceActionType.EDIT_METADATA}});
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_DEVICE_IN_JSON }
+    });
   };
 
   const DeviceDetailLayout = () => (

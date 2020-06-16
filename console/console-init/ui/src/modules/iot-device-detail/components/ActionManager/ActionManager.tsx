@@ -5,7 +5,15 @@
 
 import React from "react";
 import { useParams } from "react-router";
-import { EditMetadataContainer } from "modules/iot-device/containers";
+import { Title, Divider } from "@patternfly/react-core";
+import {
+  EditMetadataContainer,
+  EditDeviceInJsonContainer,
+  EditGatewaysContainer,
+  EditCredentialsContainer,
+  AddCredentialsContainer,
+  AddGatewaysContainer
+} from "modules/iot-device/containers";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 export interface IActionManagerProps {
@@ -17,10 +25,33 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
 }) => {
   const { deviceid } = useParams();
 
-  switch (actionType) {
-    case DeviceActionType.EDIT_METADATA:
-      return <EditMetadataContainer title={`Edit ${deviceid}`} />;
-    default:
-      return null;
-  }
+  const renderComponent = () => {
+    switch (actionType) {
+      case DeviceActionType.EDIT_METADATA:
+        return <EditMetadataContainer />;
+      case DeviceActionType.EDIT_DEVICE_IN_JSON:
+        return <EditDeviceInJsonContainer />;
+      case DeviceActionType.EDIT_GATEWAYS:
+        return <EditGatewaysContainer />;
+      case DeviceActionType.EDIT_CREDENTIALS:
+        return <EditCredentialsContainer />;
+      case DeviceActionType.ADD_CREDENTIALS:
+        return <AddCredentialsContainer />;
+      case DeviceActionType.ADD_GATEWAYS:
+        return <AddGatewaysContainer />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <Title size={"2xl"}>Edit device {deviceid}</Title>
+      <br />
+      <Divider />
+      <br />
+      <br />
+      {renderComponent()}
+    </>
+  );
 };
