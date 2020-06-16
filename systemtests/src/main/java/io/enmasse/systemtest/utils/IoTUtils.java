@@ -237,6 +237,10 @@ public class IoTUtils {
         return kubernetes.getCRD(IoTCrd.project().getMetadata().getName()) != null;
     }
 
+    public static void deleteIoTProjectAndWait(IoTProject project) throws Exception {
+        deleteIoTProjectAndWait(Kubernetes.getInstance(), project);
+    }
+
     public static void deleteIoTProjectAndWait(Kubernetes kubernetes, IoTProject project) throws Exception {
 
         log.info("Deleting IoTProject: {}", project.getMetadata().getName());

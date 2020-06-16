@@ -17,6 +17,8 @@ import java.util.UUID;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
@@ -33,6 +35,8 @@ import io.enmasse.systemtest.utils.TestUtils;
 
 @Tag(ISOLATED_IOT)
 public class TrustAnchorTests implements IoTTests {
+
+    private static final Logger log = LoggerFactory.getLogger(TrustAnchorTests.class);
 
     /**
      * Test creating duplicate "subject dn".
@@ -78,6 +82,7 @@ public class TrustAnchorTests implements IoTTests {
             // create
 
             var projectClient = Kubernetes.getInstance().getIoTProjectClient(ns2);
+            session.addCleanup(() -> IoTUtils.deleteIoTProjectAndWait(project2));
             projectClient.create(project2);
             var projectAccess = projectClient.withName(name2);
 
@@ -98,6 +103,8 @@ public class TrustAnchorTests implements IoTTests {
                         .orElse(false);
 
             }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "Conditions 'TrustAnchorsUnique' should become 'false'");
+
+            log.info("Successfully detected 'DuplicateTrustAnchors' problem on second project");
 
         }
 

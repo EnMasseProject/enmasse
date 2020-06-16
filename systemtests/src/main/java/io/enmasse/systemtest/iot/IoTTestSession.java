@@ -829,6 +829,15 @@ public final class IoTTestSession implements AutoCloseable {
                 .setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
     }
 
+    /**
+     * Add some code to the cleanup handler.
+     *
+     * @param cleanup The code to call.
+     */
+    public void addCleanup(final ThrowingCallable cleanup) {
+        this.cleanup.add(cleanup);
+    }
+
     protected static void defaultExceptionHandler(final Throwable error) {
         if (Environment.getInstance().isSkipSaveState()) {
             return;
