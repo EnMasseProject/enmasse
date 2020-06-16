@@ -862,7 +862,7 @@ public class SystemtestsKubernetesApps {
                         .build())
                 .withContainers(new ContainerBuilder()
                         .withName("kaniko")
-                        .withImage("gcr.io/kaniko-project/executor:v0.19.0")
+                        .withImage("gcr.io/kaniko-project/executor:v0.23.0")
                         .withArgs(
                                 "--context=dir:///workspace",
                                 "--destination=" + destinationImage,
@@ -937,12 +937,14 @@ public class SystemtestsKubernetesApps {
             if (reason.equals("Error")) {
                 log.error("Operator registry image build failed because of error");
                 collectContainerBuildLogs(kubeClient);
+                cleanBuiltContainerImages(kubeClient);
                 Assertions.fail("Failed to build custom operator registry because of error");
             }
             log.info("Operator registry image successfully built");
         } catch (InterruptedException e) {
             log.error("Operator registry image build failed because of timeout");
             collectContainerBuildLogs(kubeClient);
+            cleanBuiltContainerImages(kubeClient);
             Assertions.fail("Failed to build custom operator registry because of timeout");
         }
 
