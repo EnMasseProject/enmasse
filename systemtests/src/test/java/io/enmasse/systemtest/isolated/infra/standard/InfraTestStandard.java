@@ -21,14 +21,19 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -45,11 +50,13 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
@@ -157,6 +164,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @ExternalClients
     void testIncrementInfra() throws Exception {
         testReplaceInfra(InfraConfiguration.broker("500m", "1Gi", null, "2Gi", null),
                 InfraConfiguration.router("500m", "512Mi", null, 3),
@@ -165,6 +173,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     @Test
     @Tag(ACCEPTANCE)
+    @ExternalClients
     void testDecrementInfra() throws Exception {
         testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "1Gi", null),
                 InfraConfiguration.router("250m", "128Mi", null, 1),
@@ -174,10 +183,13 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     void testReplaceInfra(InfraConfiguration brokerConfig, InfraConfiguration routerConfig, InfraConfiguration adminConfig) throws Exception {
         testCreateInfra();
 
-        AmqpClient client = getAmqpClientFactory().createQueueClient(exampleAddressSpace);
-        client.getConnectOptions().setUsername(exampleUser.getUsername());
-        client.getConnectOptions().setPassword(exampleUser.getPassword());
-        QueueTest.runQueueTest(client, exampleAddress, 10);
+        try (ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                .withCount(5)
+                .withAddress(exampleAddress)) {
+            assertTrue(client.run());
+        }
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
@@ -239,7 +251,13 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 () -> assertInfra(brokerConfig, routerConfig, adminConfig),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
-        QueueTest.runQueueTest(client, exampleAddress, 10);
+        try (ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientReceiver())
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                .withCount(5)
+                .withAddress(exampleAddress)) {
+            assertTrue(client.run());
+        }
     }
 
     @Test
