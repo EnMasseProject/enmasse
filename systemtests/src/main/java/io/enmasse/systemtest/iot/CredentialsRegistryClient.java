@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest.iot;
 
+import static io.enmasse.systemtest.iot.DeviceManagementApi.getManagementToken;
+
 import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -37,8 +39,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
     private static final String CREDENTIALS_PATH = "v1/credentials";
     private static final Random rnd = new SecureRandom();
 
-    public CredentialsRegistryClient(Endpoint endpoint) {
-        super(() -> endpoint);
+    public CredentialsRegistryClient(final Endpoint endpoint) {
+        super(() -> endpoint, getManagementToken());
     }
 
     @Override

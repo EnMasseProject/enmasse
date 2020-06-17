@@ -33,6 +33,11 @@ public interface IoTTests extends ITestSeparator {
         IoTTestSession.deployDefaultCerts();
     }
 
+    @BeforeAll
+    public static void createDeviceManager() throws Exception {
+        DeviceManagementApi.createManagementServiceAccount();
+    }
+
     @BeforeEach
     default void createNamespace() {
         Kubernetes.getInstance().createNamespace(IOT_PROJECT_NAMESPACE);

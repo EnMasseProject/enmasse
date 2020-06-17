@@ -4,6 +4,22 @@
  */
 package io.enmasse.systemtest.shared.standard.api;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
@@ -15,27 +31,13 @@ import io.enmasse.systemtest.bases.shared.ITestSharedStandard;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.DoneableUser;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserApiTest extends TestBase implements ITestSharedStandard {
 
@@ -118,7 +120,7 @@ public class UserApiTest extends TestBase implements ITestSharedStandard {
         try {
             resourcesManager.createUserServiceAccount(getSharedAddressSpace(), serviceAccount);
             UserCredentials messagingUser = new UserCredentials("@@serviceaccount@@",
-                    kubernetes.getServiceaccountToken(serviceAccount.getUsername(), environment.namespace()));
+                    Kubernetes.getServiceAccountToken(environment.namespace(), serviceAccount.getUsername()));
             LOGGER.info("username: {}, password: {}", messagingUser.getUsername(), messagingUser.getPassword());
 
             getClientUtils().assertCanConnect(getSharedAddressSpace(), messagingUser, Collections.singletonList(queue), resourcesManager);
