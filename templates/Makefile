@@ -111,7 +111,7 @@ component_install: replace_images
 
 ansible_install: component_install
 	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
-	$(LN) -srf $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
+	$(LN) -srfT $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
 
 scripts_install:
 	cp -r scripts $(INSTALLDIR)/
