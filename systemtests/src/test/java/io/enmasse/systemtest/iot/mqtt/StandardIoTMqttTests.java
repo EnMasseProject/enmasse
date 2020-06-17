@@ -186,7 +186,10 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
     @MethodSource("getInvalidDevices")
     default void testMqttInvalidDevice(final DeviceSupplier deviceSupplier) throws Exception {
 
+        log.info("Testing invalid devices, the following exception may be expected");
+
         // get the device now, once, throwing out of the test method
+
         var device = deviceSupplier.get();
 
         /*
