@@ -108,7 +108,7 @@ public class HttpAdapterClient extends ApiClient {
         }
 
         if (this.keyStoreBuffer != null) {
-            options.setKeyCertOptions(
+            options.setPfxKeyCertOptions(
                     new PfxOptions()
                             .setValue(this.keyStoreBuffer)
                             .setPassword(KeyStoreCreator.KEY_PASSWORD));

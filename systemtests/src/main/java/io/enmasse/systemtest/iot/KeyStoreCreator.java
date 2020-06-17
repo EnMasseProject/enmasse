@@ -50,6 +50,15 @@ public final class KeyStoreCreator {
 
     }
 
+    /**
+     * Convert key and certificates to a {@link KeyStore}.
+     * <p>
+     * <strong>Note:</strong> The key store and entry are secured with the password stored in {@link #KEY_PASSWORD}.
+
+     * @param key The key to add to the keystore.
+     * @param certificates The certificates, matching the key.
+     * @return The keystore instance.
+     */
     public static byte[] toByteArray(final PrivateKey key, final X509Certificate... certificates)
             throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 
