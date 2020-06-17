@@ -20,8 +20,6 @@ export const deviceDetailHeader = () => (
       lastTimeSeen="2019-11-25T05:24:05.755Z"
       onChange={action("onEnableChange Clicked")}
       onDelete={action("onDelete Clicked")}
-      onEditMetadata={action("onEdit Clicked")}
-      onEditDeviceInJson={action("onEdit Clicked")}
       onClone={action("onClone Clicked")}
     />
   </MemoryRouter>
