@@ -26,6 +26,7 @@ import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
@@ -187,6 +188,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withClientEngine(new ProtonJMSClientSender())
                 .withCredentials(exampleUser)
                 .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                .withAdditionalArgument(ClientArgument.MSG_DURABLE, "true")
                 .withCount(5)
                 .withAddress(exampleAddress)) {
             assertTrue(client.run());
