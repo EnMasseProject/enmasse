@@ -87,6 +87,7 @@ export const UpdatePassword = () => {
       onClose={onCloseDialog}
       actions={[
         <Button
+          id="up-save-password-button"
           key={"update-password-save-button"}
           variant={ButtonVariant.primary}
           onClick={onConfirmDialog}
@@ -95,6 +96,7 @@ export const UpdatePassword = () => {
           Save
         </Button>,
         <Button
+          id="up-cancel-password-button"
           key="update-password-cancel-button"
           variant="link"
           onClick={onCloseDialog}
@@ -106,7 +108,11 @@ export const UpdatePassword = () => {
     >
       <Alert variant="info" isInline title="Want to update the secrets?">
         If you want to update the secrets, you can go to the
-        <Button variant={"link"} onClick={onClickEditCredentials}>
+        <Button
+          id="up-edit-credentials-button"
+          variant={"link"}
+          onClick={onClickEditCredentials}
+        >
           Edit Credentials
         </Button>
         function for advanced setting.

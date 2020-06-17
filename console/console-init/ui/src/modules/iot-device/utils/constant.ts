@@ -97,6 +97,11 @@ const getLabelByValue = (typeValue: string) => {
   return filteredType?.label as string;
 };
 
+const getInitialStateCreateMetadata = (defaultType: string) => {
+  const initialState = { key: "", value: [], type: defaultType };
+  return initialState;
+};
+
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -105,5 +110,6 @@ export {
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
-  getLabelByValue
+  getLabelByValue,
+  getInitialStateCreateMetadata
 };

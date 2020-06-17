@@ -63,12 +63,20 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
         <br />
         <Flex>
           <FlexItem>
-            <Button variant={ButtonVariant.primary} onClick={onSave}>
+            <Button
+              id="em-save-metadata-button"
+              variant={ButtonVariant.primary}
+              onClick={onSave}
+            >
               Save
             </Button>
           </FlexItem>
           <FlexItem>
-            <Button variant={ButtonVariant.link} onClick={onCancel}>
+            <Button
+              id="em-cancel-metadata-button"
+              variant={ButtonVariant.link}
+              onClick={onCancel}
+            >
               Cancel
             </Button>
           </FlexItem>

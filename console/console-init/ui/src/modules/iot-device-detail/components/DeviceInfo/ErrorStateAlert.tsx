@@ -63,11 +63,19 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
           This device has two connection types that are conflicting with each
           other. You can choose actions to fix this issue.
           <br />
-          <Button variant={ButtonVariant.link} onClick={deleteGateways}>
+          <Button
+            id="es-delete-gateway-button"
+            variant={ButtonVariant.link}
+            onClick={deleteGateways}
+          >
             Delete gateways
           </Button>{" "}
           or
-          <Button variant={ButtonVariant.link} onClick={deleteCredentials}>
+          <Button
+            id="es-delete-credentials-button"
+            variant={ButtonVariant.link}
+            onClick={deleteCredentials}
+          >
             Delete credentials
           </Button>
         </>

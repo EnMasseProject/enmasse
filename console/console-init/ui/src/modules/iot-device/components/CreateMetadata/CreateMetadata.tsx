@@ -9,6 +9,7 @@ import { PlusCircleIcon } from "@patternfly/react-icons";
 import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
 import { deviceRegistrationTypeOptions } from "modules/iot-device";
+import { getInitialStateCreateMetadata } from "modules/iot-device/utils";
 
 export interface ICreateMetadataProps {
   onChangePropertyInput?: (value: string) => Promise<any>;
@@ -21,13 +22,13 @@ export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
   onChangePropertyInput
 }) => {
   const [metadataList, setMetadataList] = useState([
-    { key: "", value: [], type: defaultType }
+    getInitialStateCreateMetadata(defaultType)
   ]);
 
   const handleAddParentRow = () => {
     setMetadataList([
       ...metadataList,
-      { key: "", value: [], type: defaultType }
+      getInitialStateCreateMetadata(defaultType)
     ]);
   };
 
