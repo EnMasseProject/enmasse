@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -45,8 +45,8 @@ public class HttpAdapterClient extends ApiClient {
     protected static final Logger log = CustomLogger.getLogger();
 
     private final Set<String> tlsVersions;
-
     private final Buffer keyStoreBuffer;
+    private final String authzString;
 
     public HttpAdapterClient(final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
         this(endpoint, null, null, null, key, certificate, tlsVersions);
@@ -227,7 +227,7 @@ public class HttpAdapterClient extends ApiClient {
         return send(EVENT, payload, expectedCodePredicate);
     }
 
-    private String getBasicAuth(final String user, final String password) {
+    private static String getBasicAuth(final String user, final String password) {
         return "Basic " + Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
     }
 

@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,14 +29,17 @@ import io.vertx.ext.web.codec.BodyCodec;
 public abstract class HonoApiClient extends ApiClient {
 
     private static final Logger log = CustomLogger.getLogger();
+    private final String authzString;
 
-    protected HonoApiClient(final Supplier<Endpoint> endpointSupplier) {
+    protected HonoApiClient(final Supplier<Endpoint> endpointSupplier, final String token) {
         super(endpointSupplier, "");
+        Objects.requireNonNull(token);
+        this.authzString = String.format("Bearer %s", token);
     }
 
     @Override
     protected WebClient createClient () {
-        return WebClient.create(vertx, new WebClientOptions()
+        return WebClient.create(this.vertx, new WebClientOptions()
                 .setSsl(true)
                 .setTrustAll(true)
                 .setVerifyHost(false));
@@ -44,11 +48,11 @@ public abstract class HonoApiClient extends ApiClient {
     protected HttpResponse<Buffer> execute (final HttpMethod method, final String requestPath, final String body) throws Exception {
         final CompletableFuture<HttpResponse<Buffer>> responsePromise = new CompletableFuture<>();
         log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
-        getClient().request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
+        getClient().request(method, this.endpoint.getPort(), this.endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+            .putHeader(HttpHeaders.AUTHORIZATION, this.authzString)
             .sendBuffer(Optional.ofNullable(body).map(Buffer::buffer).orElse(null),
                     ar -> {
                         if ( ar.succeeded() ) {
@@ -71,13 +75,13 @@ public abstract class HonoApiClient extends ApiClient {
                 result.bodyAsString());
     }
 
-    protected Buffer execute (final HttpMethod method, final String requestPath, final String body, int expectedStatusCode, String failureMessage) throws Exception {
+    protected Buffer execute (final HttpMethod method, final String requestPath, final String body, final int expectedStatusCode, final String failureMessage) throws Exception {
         final CompletableFuture<Buffer> responsePromise = new CompletableFuture<>();
         log.info("{}-{}: path {}; body {}", method, apiClientName(), requestPath, body);
-        getClient().request(method, endpoint.getPort(), endpoint.getHost(), requestPath)
+        getClient().request(method, this.endpoint.getPort(), this.endpoint.getHost(), requestPath)
             .as(BodyCodec.buffer())
             .timeout(120000)
-            .putHeader(HttpHeaders.AUTHORIZATION, authzString)
+            .putHeader(HttpHeaders.AUTHORIZATION, this.authzString)
             .putHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .sendBuffer(Optional.ofNullable(body).map(Buffer::buffer).orElse(null),
                     ar -> responseHandler(ar, responsePromise, expectedStatusCode, failureMessage, false));

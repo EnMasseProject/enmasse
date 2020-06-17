@@ -6,6 +6,7 @@ package io.enmasse.systemtest.bases.iot;
 
 import org.junit.jupiter.api.BeforeAll;
 
+import io.enmasse.systemtest.iot.DeviceManagementApi;
 import io.enmasse.systemtest.iot.IoTTestSession;
 
 public interface ITestIoTBase {
@@ -28,5 +29,10 @@ public interface ITestIoTBase {
      @BeforeAll
      public static void deployDefaultCerts() throws Exception {
          IoTTestSession.deployDefaultCerts();
+     }
+
+     @BeforeAll
+     public static void createDeviceManager() throws Exception {
+         DeviceManagementApi.createManagementServiceAccount();
      }
 }

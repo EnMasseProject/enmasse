@@ -1,9 +1,11 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
 package io.enmasse.systemtest.iot;
+
+import static io.enmasse.systemtest.iot.DeviceManagementApi.getManagementToken;
 
 import java.net.HttpURLConnection;
 
@@ -20,8 +22,8 @@ public class DeviceRegistryClient extends HonoApiClient {
 
     private static final String DEVICES_PATH = "v1/devices";
 
-    public DeviceRegistryClient(Endpoint endpoint) {
-        super(() -> endpoint);
+    public DeviceRegistryClient(final Endpoint endpoint) {
+        super(() -> endpoint, getManagementToken());
     }
 
     @Override

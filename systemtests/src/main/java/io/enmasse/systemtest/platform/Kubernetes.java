@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -23,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +35,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import org.apache.commons.io.output.CloseShieldOutputStream;
 import org.slf4j.Logger;
 
@@ -83,6 +84,7 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
+import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -1011,16 +1013,68 @@ public abstract class Kubernetes {
     }
 
     /**
-     * Returns service account token
-     *
-     * @param name      name
-     * @param namespace namespace
-     * @return token
+     * Get the token for a service account.
+     * @param namespace The namespace of the service account.
+     * @param serviceAccountName The name of the service account.
+     * @return The resolved token.
+     * @throws IllegalStateException in case any of the involved elements could not be located.
      */
-    public String getServiceaccountToken(String name, String namespace) {
-        return new String(Base64.getDecoder().decode(client.secrets().inNamespace(namespace).list().getItems().stream()
-                .filter(secret -> secret.getMetadata().getName().contains(name + "-token")).collect(Collectors.toList())
-                .get(0).getData().get("token")), StandardCharsets.UTF_8);
+    public static String getServiceAccountToken(final String namespace, final String serviceAccountName) {
+
+        var client = Kubernetes.getInstance().getClient();
+        var secretsClient = client
+                .secrets();
+
+        var serviceAccount = client
+                .serviceAccounts()
+                .inNamespace(namespace)
+                .withName(serviceAccountName)
+                .get();
+
+        // no service account ...
+        if (serviceAccount == null) {
+            // ... no token
+            throw new IllegalStateException(String.format("Service account '%s' could not be found in namespace '%s'", serviceAccountName, namespace));
+        }
+
+        var tokenSecret = serviceAccount.getSecrets().stream()
+
+                // map the object reference to an actual secret
+                .flatMap(secretRef -> Optional.ofNullable(
+
+                        // get the actual secret
+                        secretsClient
+                                .inNamespace(Optional.ofNullable(secretRef.getNamespace()).orElse(namespace))
+                                .withName(secretRef.getName())
+                                .get())
+
+                        // filter out non token secrets
+                        .filter(secret -> "kubernetes.io/service-account-token".equals(secret.getType()))
+
+                        // filter out non-matching secrets
+                        .filter(secret -> {
+                            return serviceAccount.getMetadata().getName().equals(secret.getMetadata().getAnnotations().get("kubernetes.io/service-account.name"))
+                                    && serviceAccount.getMetadata().getUid().equals(secret.getMetadata().getAnnotations().get("kubernetes.io/service-account.uid"));
+                        })
+
+                        // stream to flatMap
+                        .stream())
+
+                // find any token
+                .findAny()
+
+                // or throw
+                .orElseThrow(() -> new IllegalStateException(String.format("Unable to find service account token secret for '%s'", serviceAccountName)));
+
+        // return the token data ...
+        return Optional.ofNullable(tokenSecret.getData().get("token"))
+                // the "data" section contains everything base64 encoded, even the base64 encoded token
+                .map(Base64.getDecoder()::decode)
+                // we unwrapped one layer of base64, so this is token, which we return as a string
+                .map(token -> StandardCharsets.UTF_8.decode(ByteBuffer.wrap(token)).toString())
+                // ... or throw
+                .orElseThrow(() -> new IllegalStateException(String.format("Token secret for service account '%s' is missing the 'token' entry", serviceAccountName)));
+
     }
 
     /**
@@ -1278,4 +1332,5 @@ public abstract class Kubernetes {
         log.info("Output: {}", stdoutString);
         return stdoutString;
     }
+
 }
