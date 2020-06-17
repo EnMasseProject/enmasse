@@ -206,9 +206,6 @@ export const AddCredential: React.FC<{}> = () => {
         addMoreItem={addMoreItem}
         onDeleteItem={onDeleteItem}
       />
-
-      {/* below line of code will remove later */}
-      <pre>{JSON.stringify(credentials, null, 2)}</pre>
     </PageSection>
   );
 };

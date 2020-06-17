@@ -28,7 +28,8 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   height,
   width,
   setDetail,
-  tooltipKey = ""
+  tooltipKey = "",
+  className
 }) => {
   const onChange = (value: string) => {
     setDetail && setDetail(value.trim());
@@ -76,6 +77,7 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
         name={name}
         height={height}
         width={width || "auto"}
+        className={className}
       />
     </>
   );

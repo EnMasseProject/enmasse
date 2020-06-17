@@ -26,6 +26,7 @@ import {
   ICredentialsViewProps
 } from "modules/iot-device-detail/components";
 import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
+import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
 
 const styles = StyleSheet.create({
   card_body: {
@@ -37,7 +38,11 @@ const styles = StyleSheet.create({
 });
 
 export interface IDeviceInfoProps
-  extends Pick<ICredentialsViewProps, "credentials"> {
+  extends Pick<
+      ICredentialsViewProps,
+      "credentials" | "onChangeStatus" | "onConfirmPassword"
+    >,
+    IErrorStateAlertProps {
   id: string;
   deviceList?: any;
   metadataList?: any;
@@ -47,7 +52,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   id,
   deviceList,
   metadataList: metadetaJson,
-  credentials
+  credentials,
+  onChangeStatus,
+  onConfirmPassword,
+  errorState,
+  addGateways,
+  addCredentials,
+  deleteGateways,
+  deleteCredentials
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
@@ -81,7 +93,19 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
 
   return (
     <Page id={id}>
-      <PageSection>
+      <PageSection noPadding>
+        {errorState && (
+          <>
+            <ErrorStateAlert
+              errorState={errorState}
+              addGateways={addGateways}
+              addCredentials={addCredentials}
+              deleteGateways={deleteGateways}
+              deleteCredentials={deleteCredentials}
+            />
+            <br />
+          </>
+        )}
         <Split>
           <SplitItem isFilled />
           <SplitItem>
@@ -97,7 +121,6 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
           <JsonEditor
             readOnly={true}
             value={jsonViewData && JSON.stringify(jsonViewData, undefined, 2)}
-            maxLines={45}
           />
         ) : (
           <Grid gutter="sm">
@@ -122,7 +145,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                           </GridItem>
                         );
                       })}
-                    {!(deviceList && deviceList.length > 0) && (
+                    {!(deviceList?.length > 0) && (
                       <Text component={TextVariants.p}>
                         There are no gateways for this device. This device is
                         connected to the cloud directly.
@@ -135,6 +158,8 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               <CredentialsView
                 id={"credentials-view"}
                 credentials={credentials}
+                onChangeStatus={onChangeStatus}
+                onConfirmPassword={onConfirmPassword}
               />
             </GridItem>
             <GridItem span={7}>
@@ -149,7 +174,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                     dataList={prepareMetadataList()}
                     id={"divice-info-metadata-table"}
                     aria-label={"device info metadata"}
-                    aria-labelledby-header={"device info metadata header"}
+                    aria-labelledby={"device info metadata header"}
                   />
                 </CardBody>
               </Card>
