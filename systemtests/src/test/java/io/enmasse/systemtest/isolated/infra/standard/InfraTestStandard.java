@@ -157,7 +157,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     @Test
     @Tag(ACCEPTANCE)
     void testDecrementInfra() throws Exception {
-        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "512Mi", null),
+        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "1Gi", null),
                 InfraConfiguration.router("250m", "128Mi", null, 1),
                 InfraConfiguration.admin("250m", "256Mi", null));
     }
