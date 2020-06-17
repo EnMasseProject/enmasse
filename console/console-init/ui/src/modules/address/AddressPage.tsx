@@ -29,7 +29,7 @@ import {
   getFilteredAdressNames,
   getHeaderTextForPurgeAll,
   getDetailTextForPurgeAll,
-  getHeaderTextForDelateAll,
+  getHeaderTextForDeleteAll,
   getDetailTextForDeleteAll,
   getFilteredAddressesByType,
   IFilterValue
@@ -116,7 +116,7 @@ export default function AddressPage() {
       modalType: MODAL_TYPES.DELETE_ADDRESS,
       modalProps: {
         option: "Delete",
-        header: getHeaderTextForDelateAll(selectedAddresses),
+        header: getHeaderTextForDeleteAll(selectedAddresses),
         detail: getDetailTextForDeleteAll(selectedAddresses),
         onConfirm: onConfirmDeleteAll,
         selectedItems: selectedAddresses.map(as => as.name)

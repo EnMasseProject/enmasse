@@ -54,6 +54,12 @@ enum Protocols {
   COAP = "coap"
 }
 
+enum DialogTypes {
+  ENABLE = "Enable",
+  DISABLE = "Disable",
+  DELETE = "Delete"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -68,5 +74,6 @@ export {
   AddressTypes,
   TemplateType,
   DataType,
-  Protocols
+  Protocols,
+  DialogTypes
 };
