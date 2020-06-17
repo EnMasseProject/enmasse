@@ -4,7 +4,6 @@
  */
 
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
 import {
   Modal,
   Button,
@@ -15,6 +14,7 @@ import {
 } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { PasswordInputFieldWithToggle } from "components";
+import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 export const UpdatePassword = () => {
   const [formData, setFormData] = useState({
@@ -70,6 +70,14 @@ export const UpdatePassword = () => {
     }
   };
 
+  const onClickEditCredentials = () => {
+    onCloseDialog();
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_CREDENTIALS }
+    });
+  };
+
   return (
     <Modal
       id="update-password-dialog"
@@ -79,6 +87,7 @@ export const UpdatePassword = () => {
       onClose={onCloseDialog}
       actions={[
         <Button
+          id="up-save-password-button"
           key={"update-password-save-button"}
           variant={ButtonVariant.primary}
           onClick={onConfirmDialog}
@@ -87,6 +96,7 @@ export const UpdatePassword = () => {
           Save
         </Button>,
         <Button
+          id="up-cancel-password-button"
           key="update-password-cancel-button"
           variant="link"
           onClick={onCloseDialog}
@@ -98,13 +108,13 @@ export const UpdatePassword = () => {
     >
       <Alert variant="info" isInline title="Want to update the secrets?">
         If you want to update the secrets, you can go to the
-        {/**
-         * TODO: add link path
-         */}
-        <NavLink id="update-password-edit-credentials-navlink" to="/">
-          {" "}
-          Edit Credentials{" "}
-        </NavLink>
+        <Button
+          id="up-edit-credentials-button"
+          variant={"link"}
+          onClick={onClickEditCredentials}
+        >
+          Edit Credentials
+        </Button>
         function for advanced setting.
       </Alert>
       <br />

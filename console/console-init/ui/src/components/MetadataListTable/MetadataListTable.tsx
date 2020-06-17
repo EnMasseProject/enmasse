@@ -41,7 +41,7 @@ export interface IMetadataListTablePorps {
   id: string;
   dataList: IDataList[];
   ["aria-label"]: string;
-  ["aria-labelledby-header"]: string;
+  ["aria-labelledby"]: string;
 }
 
 const TableHeader: React.FC<IHeaderProps> = ({
@@ -78,7 +78,7 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
   id,
   dataList,
   "aria-label": ariaLabel,
-  "aria-labelledby-header": ariaLabelledby
+  "aria-labelledby": ariaLabelledby
 }) => {
   const addMetadata = () => {
     /**

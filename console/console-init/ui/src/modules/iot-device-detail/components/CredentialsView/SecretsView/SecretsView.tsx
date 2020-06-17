@@ -29,21 +29,42 @@ const styles = StyleSheet.create({
   }
 });
 
-export interface ISecretsViewProps {
+export interface ISecretsViewProps
+  extends Pick<ISecretRowProps, "onConfirmPassword"> {
   id: string;
   secrets: Omit<ISecret, "id">[];
   heading: string;
 }
 
-const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
+interface ISecretRowProps {
+  secret: ISecret;
+  onConfirmPassword?: (formdata: any, secretId: string) => void;
+}
+
+const SecretRow: React.FC<ISecretRowProps> = ({
+  secret,
+  onConfirmPassword
+}) => {
   const { dispatch } = useStoreContext();
-  const onOpenChangePassword = () => {
+  const onClickChangePassword = () => {
     dispatch &&
       dispatch({
         type: types.SHOW_MODAL,
-        modalType: MODAL_TYPES.UPDATE_PASSWORD
+        modalType: MODAL_TYPES.UPDATE_PASSWORD,
+        modalProps: {
+          onConfirm
+        }
       });
   };
+
+  const onConfirm = (formdata: any) => {
+    /**
+     * TODOD: get secretId
+     */
+    const { id = "" } = secret;
+    onConfirmPassword && onConfirmPassword(formdata, id);
+  };
+
   const renderGridItemValue = (value: string, key: string) => {
     if (key === "pwd-hash") {
       return (
@@ -54,7 +75,7 @@ const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
             styles.c_button_PaddingLeft,
             styles.c_button_PaddingBottom
           ])}
-          onClick={onOpenChangePassword}
+          onClick={onClickChangePassword}
         >
           Change password
         </Button>
@@ -92,7 +113,8 @@ const SecretRow: React.FC<{ secret: ISecret }> = ({ secret }) => {
 export const SecretsView: React.FC<ISecretsViewProps> = ({
   id,
   secrets,
-  heading
+  heading,
+  onConfirmPassword
 }) => {
   return (
     <>
@@ -103,7 +125,10 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
           </GridItem>
           {secrets.map((secret: ISecret, index: number) => (
             <>
-              <SecretRow secret={secret} />
+              <SecretRow
+                secret={secret}
+                onConfirmPassword={onConfirmPassword}
+              />
               {index < secrets.length - 1 && <br />}
             </>
           ))}
