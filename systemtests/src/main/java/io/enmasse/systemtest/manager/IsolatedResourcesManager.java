@@ -95,24 +95,32 @@ public class IsolatedResourcesManager extends ResourceManager {
         if (!environment.skipCleanup() && !reuseAddressSpace) {
             for (AddressSpacePlan addressSpacePlan : addressSpacePlans) {
                 Kubernetes.getInstance().getAddressSpacePlanClient().withName(addressSpacePlan.getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitUntilCondition("Delete addressspace plan", waitPhase -> Kubernetes.getInstance().getAddressSpacePlanClient().list().getItems().stream().noneMatch(plan -> plan.getMetadata().getName().equals(addressSpacePlan.getMetadata().getName())),
+                        new TimeoutBudget(1, TimeUnit.MINUTES));
                 LOGGER.info("AddressSpace plan {} deleted", addressSpacePlan.getMetadata().getName());
             }
             addressSpacePlans.clear();
 
             for (AddressPlan addressPlan : addressPlans) {
                 Kubernetes.getInstance().getAddressPlanClient().withName(addressPlan.getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitUntilCondition("Delete address plan", waitPhase -> Kubernetes.getInstance().getAddressPlanClient().list().getItems().stream().noneMatch(plan -> plan.getMetadata().getName().equals(addressPlan.getMetadata().getName())),
+                        new TimeoutBudget(1, TimeUnit.MINUTES));
                 LOGGER.info("Address plan {} deleted", addressPlan.getMetadata().getName());
             }
             addressPlans.clear();
 
             for (StandardInfraConfig infraConfigDefinition : standardInfraConfigs) {
                 Kubernetes.getInstance().getStandardInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitUntilCondition("Delete infraConfig plan", waitPhase -> Kubernetes.getInstance().getStandardInfraConfigClient().list().getItems().stream().noneMatch(plan -> plan.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName())),
+                        new TimeoutBudget(1, TimeUnit.MINUTES));
                 LOGGER.info("Standardinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
             standardInfraConfigs.clear();
 
             for (BrokeredInfraConfig infraConfigDefinition : brokeredInfraConfigs) {
                 Kubernetes.getInstance().getBrokeredInfraConfigClient().withName(infraConfigDefinition.getMetadata().getName()).cascading(true).delete();
+                TestUtils.waitUntilCondition("Delete infraConfig plan", waitPhase -> Kubernetes.getInstance().getBrokeredInfraConfigClient().list().getItems().stream().noneMatch(plan -> plan.getMetadata().getName().equals(infraConfigDefinition.getMetadata().getName())),
+                        new TimeoutBudget(1, TimeUnit.MINUTES));
                 LOGGER.info("Brokeredinfraconfig {} deleted", infraConfigDefinition.getMetadata().getName());
             }
             brokeredInfraConfigs.clear();
