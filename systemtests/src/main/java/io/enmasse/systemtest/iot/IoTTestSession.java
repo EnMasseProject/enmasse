@@ -873,7 +873,7 @@ public final class IoTTestSession implements AutoCloseable {
                 }
 
                 if (!Environment.getInstance().skipUninstall()) {
-                    context.addCleanup(() -> DefaultDeviceRegistry.deleteDefaultServer());
+                    context.addCleanup(DefaultDeviceRegistry::deleteDefaultServer);
                 }
 
             } catch (Exception e) {
@@ -896,6 +896,7 @@ public final class IoTTestSession implements AutoCloseable {
                 60_000, true, true,
                 Map.of(
                         "CLI", KubeCMDClient.getCMD(),
-                        "PREFIX", "systemtests-"));
+                        "PREFIX", "systemtests-",
+                        "NAMESPACE", Kubernetes.getInstance().getInfraNamespace()));
     }
 }
