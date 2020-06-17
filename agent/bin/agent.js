@@ -54,7 +54,6 @@ function start(env) {
                     bind_event(address_source, 'addresses_defined', bc);
                     bind_event(address_plans_source, 'addressplans_defined', address_source, 'check_address_plans');
                     bind_event(address_space_plan_source, 'addressspaceplan_defined', address_source, 'check_address_plans');
-
                     bc.connect(tls_options.get_client_options({
                         host: env.BROKER_SERVICE_HOST, port: env.BROKER_SERVICE_PORT, username: 'console',
                         idle_time_out: 'AMQP_IDLE_TIMEOUT' in process.env ? process.env.AMQP_IDLE_TIMEOUT : 300000

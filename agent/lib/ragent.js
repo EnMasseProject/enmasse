@@ -167,12 +167,6 @@ Ragent.prototype.sync_router_addresses = function (router, brokers) {
     router.sync_addresses(this.addresses, brokers);
 }
 
-Ragent.prototype.sync_address_addressplan= function (updated) {
-    for (var b in this.connected_brokers) {
-        this.connected_brokers[b].sync_address_addressplan(updated);
-    }
-}
-
 Ragent.prototype.verify_addresses = function (expected) {
     for (var r in this.connected_routers) {
         if (!this.connected_routers[r].verify_addresses(expected)) {

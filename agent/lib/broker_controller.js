@@ -71,10 +71,10 @@ BrokerController.prototype.on_connection_open = function (context) {
     var self = this;
     this.broker = new artemis.Artemis(context.connection);
     this.id = context.connection.container_id;
-    log.info('[%s] broker controller ready', this.id);
-    this.check_broker_addresses().then(function () {
-            self.emit('ready');
-        });
+    this.check_broker_addresses().then(() => {
+        log.info('[%s] broker controller ready', this.id);
+        self.emit('ready');
+    });
 };
 
 BrokerController.prototype.set_connection = function (connection) {
@@ -440,7 +440,6 @@ BrokerController.prototype.update_address_setting = function (a) {
 
 BrokerController.prototype.delete_address = function (a) {
     var self = this;
-
     if (a.type === 'queue') {
         log.info('[%s] Deleting queue "%s"...', self.id, a.address);
         return self.broker.destroyQueue(a.address).then(function () {
@@ -530,9 +529,8 @@ BrokerController.prototype.create_address = function (a) {
 };
 
 BrokerController.prototype.create_addresses = function (addresses) {
-    var self = this;
     var limit = plimit(250);
-    let create_fn = limit.bind(null, self.create_address.bind(this));
+    let create_fn = limit.bind(null, this.create_address.bind(this));
     return Promise.all(addresses.map(create_fn));
 };
 
@@ -592,7 +590,7 @@ BrokerController.prototype._sync_broker_addresses = function (retry) {
         var actual = translate(results, excluded_addresses, self.excluded_types);
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
-        log.info('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
+        log.debug('[%s] checking addresses, desired=%j, actual=%j => delete %j and create %j', self.id, values(self.addresses).map(address_and_type), values(actual),
             stale.map(address_and_type), missing.map(address_and_type));
         self._set_sync_status(stale.length, missing.length);
         return addrSettings.then(() => {
@@ -622,7 +620,7 @@ BrokerController.prototype._sync_broker_addresses = function (retry) {
 BrokerController.prototype.destroy_connector = function (connector) {
     var self = this;
     log.info('[%s] Deleting connector for "%s"...', self.id, connector.name);
-    return self.broker.destroyConnectorService(connector.name).then(function () {
+    return self.broker.destroyConnectorService(connector.name).then(function() {
         log.info('[%s] Deleted connector for "%s"', self.id, connector.name);
     }).catch(function (error) {
         log.error('[%s] Failed to delete connector for "%s": %s', self.id, connector.name, error);
