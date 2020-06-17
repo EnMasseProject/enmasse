@@ -34,7 +34,7 @@ public final class KeyStoreCreator {
     }
 
     public static void writeTo (final OutputStream stream, final PrivateKey key, final Certificate ...certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-        from(key, certificate).store(stream, KEY_ALIAS.toCharArray());
+        from(key, certificate).store(stream, KEY_PASSWORD.toCharArray());
     }
 
     public static byte[] toByteArray(final PrivateKey key, final X509Certificate certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {

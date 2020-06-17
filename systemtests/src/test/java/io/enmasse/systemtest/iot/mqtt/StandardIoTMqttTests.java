@@ -184,7 +184,10 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttInvalidDevice-{0}")
     @MethodSource("getInvalidDevices")
-    default void testMqttInvalidDevice(final DeviceSupplier device) {
+    default void testMqttInvalidDevice(final DeviceSupplier deviceSupplier) throws Exception {
+
+        // get the device now, once, throwing out of the test method
+        var device = deviceSupplier.get();
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
@@ -195,7 +198,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
          * when we could open the connection, but not send/receive.
          */
 
-        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -211,7 +214,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
             log.info("Accepting MQTT exception", e);
         }
 
-        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)
