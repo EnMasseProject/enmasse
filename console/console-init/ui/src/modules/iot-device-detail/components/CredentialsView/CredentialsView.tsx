@@ -37,22 +37,37 @@ const styles = StyleSheet.create({
 });
 
 interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
-  "auth-id"?: string;
+  "auth-id": string;
   type?: string;
   ext?: any;
   enabled?: boolean;
 }
 
-export interface ICredentialsViewProps {
+export interface ICredentialsViewProps
+  extends Pick<ICredentialProps, "onChangeStatus">,
+    Pick<ISecretsViewProps, "onConfirmPassword"> {
   id: string;
   credentials: ICredentialView[];
 }
 
-export const Credential: React.FC<{ credential: ICredentialView }> = ({
-  credential
+export interface ICredentialProps
+  extends Pick<ISecretsViewProps, "onConfirmPassword"> {
+  credential: ICredentialView;
+  onChangeStatus?: (authId: string) => void;
+}
+
+export const Credential: React.FC<ICredentialProps> = ({
+  credential,
+  onChangeStatus,
+  onConfirmPassword
 }) => {
   const { secrets = [], ext = [], type, enabled, "auth-id": authId } =
     credential || {};
+
+  const onChange = () => {
+    onChangeStatus && onChangeStatus(authId);
+  };
+
   return (
     <>
       <Grid>
@@ -76,6 +91,7 @@ export const Credential: React.FC<{ credential: ICredentialView }> = ({
           secrets={secrets}
           id={"credetials-view-secrets-" + authId}
           heading={"Secrets"}
+          onConfirmPassword={onConfirmPassword}
         />
         <ExtensionsView
           id={"credetials-view-extensions-" + authId}
@@ -98,6 +114,7 @@ export const Credential: React.FC<{ credential: ICredentialView }> = ({
                 label={"On"}
                 labelOff={"Off"}
                 isChecked={enabled}
+                onChange={onChange}
               />
             </GridItem>
           </>
@@ -109,7 +126,9 @@ export const Credential: React.FC<{ credential: ICredentialView }> = ({
 
 export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   id,
-  credentials
+  credentials,
+  onChangeStatus,
+  onConfirmPassword
 }) => {
   const CredentialsNotFound = () => (
     <Text component={TextVariants.p}>
@@ -131,7 +150,12 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
             const { "auth-id": authId } = credential;
             return (
               <>
-                <Credential credential={credential} key={authId} />
+                <Credential
+                  credential={credential}
+                  key={authId}
+                  onChangeStatus={onChangeStatus}
+                  onConfirmPassword={onConfirmPassword}
+                />
                 {index < credentials.length - 1 && (
                   <Divider className={styles.devider_margin} />
                 )}
