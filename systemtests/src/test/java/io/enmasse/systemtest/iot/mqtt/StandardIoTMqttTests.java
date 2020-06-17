@@ -6,19 +6,22 @@
 package io.enmasse.systemtest.iot.mqtt;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static org.junit.Assert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import javax.net.ssl.SSLHandshakeException;
+
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Throwables;
 
 import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.MessageSendTester;
@@ -181,7 +184,13 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testMqttInvalidDevice-{0}")
     @MethodSource("getInvalidDevices")
-    default void testMqttInvalidDevice(final DeviceSupplier device) {
+    default void testMqttInvalidDevice(final DeviceSupplier deviceSupplier) throws Exception {
+
+        log.info("Testing invalid devices, the following exception may be expected");
+
+        // get the device now, once, throwing out of the test method
+
+        var device = deviceSupplier.get();
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
@@ -192,7 +201,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
          * when we could open the connection, but not send/receive.
          */
 
-        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -204,12 +213,11 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .execute();
             });
         } catch (Exception e) {
-            // if we get an exception, it must be an MqttSecurityException
-            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            assertConnectionException(e);
             log.info("Accepting MQTT exception", e);
         }
 
-        try (MqttAdapterClient client = device.get().createMqttAdapterClient()) {
+        try (MqttAdapterClient client = device.createMqttAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)
@@ -221,12 +229,27 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
                         .execute();
             });
         } catch (Exception e) {
-            // if we get an exception, it must be an MqttSecurityException
-            assertThat(e, IsInstanceOf.instanceOf(MqttSecurityException.class));
+            assertConnectionException(e);
             log.info("Accepting MQTT exception", e);
         }
 
     }
 
-}
+    public static void assertConnectionException(final Throwable e) {
 
+        // if we get an exception, it must be an MqttSecurityException or SSLHandshakeException
+
+        if (e instanceof MqttSecurityException) {
+            return;
+        }
+
+        final Throwable cause = Throwables.getRootCause(e);
+        if (cause instanceof SSLHandshakeException) {
+            return;
+        }
+
+        fail("Failed to connect with non-permitted exception", e);
+
+    }
+
+}

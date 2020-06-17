@@ -14,7 +14,8 @@ import java.time.Duration;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.bouncycastle.asn1.x500.X500Name;
+import javax.security.auth.x500.X500Principal;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -44,8 +45,8 @@ public class TrustAnchorTests implements IoTTests {
     @Test
     @Tag(ACCEPTANCE)
     public void testDuplicateSubjectDn() throws Exception {
-        var mgr1 = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
-        var mgr2 = new DeviceCertificateManager(Mode.RSA, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        var mgr1 = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        var mgr2 = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         final String name2 = UUID.randomUUID().toString();
         final String ns2 = UUID.randomUUID().toString();

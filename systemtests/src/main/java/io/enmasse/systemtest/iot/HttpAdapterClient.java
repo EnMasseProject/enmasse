@@ -107,8 +107,8 @@ public class HttpAdapterClient extends ApiClient {
             this.tlsVersions.forEach(options::addEnabledSecureTransportProtocol);
         }
 
-        if (keyStoreBuffer != null) {
-            options.setKeyCertOptions(
+        if (this.keyStoreBuffer != null) {
+            options.setPfxKeyCertOptions(
                     new PfxOptions()
                             .setValue(this.keyStoreBuffer)
                             .setPassword(KeyStoreCreator.KEY_PASSWORD));
@@ -125,7 +125,7 @@ public class HttpAdapterClient extends ApiClient {
     public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
             Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
-        CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
+        final CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
         var ms = responseTimeout.toMillis();
 
         log.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
@@ -157,41 +157,29 @@ public class HttpAdapterClient extends ApiClient {
         request.sendBuffer(payload, ar -> {
 
             // if the request failed ...
-            if (!ar.succeeded()) {
+            if (ar.failed()) {
+                log.info("Request failed", ar.cause());
                 // ... fail the response promise
                 responsePromise.completeExceptionally(ar.cause());
                 return;
             }
 
-            final CompletableFuture<Buffer> nf = new CompletableFuture<>();
             log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
-            if (ar.failed()) {
-                log.debug("Request failed", ar.cause());
-                nf.completeExceptionally(ar.cause());
+
+            var response = ar.result();
+            var code = response.statusCode();
+
+            log.info("POST: code {} -> {}", code, response.bodyAsString());
+            if (!expectedCodePredicate.test(code)) {
+                responsePromise.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
             } else {
-                var response = ar.result();
-                var code = response.statusCode();
-                log.info("POST: code {} -> {}", code, response.bodyAsString());
-                if (!expectedCodePredicate.test(code)) {
-                    nf.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
-                } else {
-                    nf.complete(response.body());
-                }
+                responsePromise.complete(ar.result());
             }
 
-            // use the result from the responseHandler
-            // and map it to the responsePromise
-            nf.whenComplete((res, err) -> {
-                if (err != null) {
-                    responsePromise.completeExceptionally(err);
-                } else {
-                    responsePromise.complete(ar.result());
-                }
-            });
         });
 
-        // the next line gives the timeout a bit extra, as the HTTP timeout should
-        // kick in, we would prefer the timeout via the future.
+        // the next line gives the timeout a bit of extra time, as the HTTP timeout should
+        // kick in, we would prefer that over the timeout via the future.
         return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
     }
 
@@ -207,6 +195,7 @@ public class HttpAdapterClient extends ApiClient {
             send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
             return true;
         } catch (Exception e) {
+            log.info("Failed to send message", e);
             return false;
         }
     }

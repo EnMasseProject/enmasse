@@ -14,6 +14,8 @@ import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
@@ -22,6 +24,8 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.StandardIoTTests;
 
 public interface StandardIoTHttpTests extends StandardIoTTests {
+
+    static final Logger log = LoggerFactory.getLogger(StandardIoTHttpTests.class);
 
     /**
      * Single telemetry message with attached consumer.
@@ -145,14 +149,17 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpDeviceFails-{0}")
     @MethodSource("getInvalidDevices")
-    default void testHttpDeviceFails(final DeviceSupplier device) throws Exception {
+    default void testHttpDeviceFails(final DeviceSupplier deviceSupplier) throws Exception {
+
+        log.info("Testing invalid devices, the following exception may be expected");
+        var device = deviceSupplier.get();
 
         /*
          * We test an invalid device by trying to send either telemetry or event messages.
          * Two separate connections, and more than one message.
          */
 
-        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -165,7 +172,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
             });
         }
 
-        try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
+        try (HttpAdapterClient client = device.createHttpAdapterClient()) {
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)

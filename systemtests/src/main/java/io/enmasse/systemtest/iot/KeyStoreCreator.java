@@ -15,6 +15,7 @@ import java.security.PrivateKey;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Optional;
 
 public final class KeyStoreCreator {
 
@@ -24,23 +25,47 @@ public final class KeyStoreCreator {
 
     private KeyStoreCreator() {}
 
-    public static KeyStore from(final PrivateKey key, final Certificate ...certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException  {
+    public static KeyStore from(final PrivateKey key, final Certificate... certificates) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+        return from(Optional.empty(), key, certificates);
+    }
+
+    public static KeyStore from(final Optional<String> entryPassword, final PrivateKey key, final Certificate... certificates) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
 
         final KeyStore result = KeyStore.getInstance("PKCS12");
         result.load(null, null);
-        result.setKeyEntry(KEY_ALIAS, key, null, certificate);
+        result.setKeyEntry(KEY_ALIAS, key, entryPassword.map(String::toCharArray).orElse(null), certificates);
         return result;
 
     }
 
-    public static void writeTo (final OutputStream stream, final PrivateKey key, final Certificate ...certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-        from(key, certificate).store(stream, KEY_ALIAS.toCharArray());
+    public static void writeTo(final OutputStream stream, final PrivateKey key, final Certificate... certificates)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+
+        // we set both the entry and the keystore password here
+        // the keystore password is required by the keystore implementation
+        // the entry password is required due to: https://github.com/eclipse-vertx/vert.x/issues/3452
+
+        from(Optional.of(KEY_PASSWORD), key, certificates)
+                .store(stream, KEY_PASSWORD.toCharArray());
+
     }
 
-    public static byte[] toByteArray(final PrivateKey key, final X509Certificate certificate) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        writeTo(out, key, certificate);
+    /**
+     * Convert key and certificates to a {@link KeyStore}.
+     * <p>
+     * <strong>Note:</strong> The key store and entry are secured with the password stored in {@link #KEY_PASSWORD}.
+
+     * @param key The key to add to the keystore.
+     * @param certificates The certificates, matching the key.
+     * @return The keystore instance.
+     */
+    public static byte[] toByteArray(final PrivateKey key, final X509Certificate... certificates)
+            throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
+
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        writeTo(out, key, certificates);
         return out.toByteArray();
+
     }
 
 }

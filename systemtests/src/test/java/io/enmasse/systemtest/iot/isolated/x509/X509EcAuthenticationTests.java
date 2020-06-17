@@ -10,7 +10,8 @@ import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
-import org.bouncycastle.asn1.x500.X500Name;
+import javax.security.auth.x500.X500Principal;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -30,7 +31,7 @@ public class X509EcAuthenticationTests implements StandardX509Cases, StandardIoT
     @BeforeAll
     public static void setup() throws Exception {
 
-        certificateManager = new DeviceCertificateManager(Mode.EC, new X500Name("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        certificateManager = new DeviceCertificateManager(Mode.EC, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         session = IoTTestSession.createDefault()
                 .project(project -> project.editOrNewSpec()

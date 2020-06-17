@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot;
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_EVENT;
 import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_TELEMETRY;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
@@ -737,8 +738,10 @@ public final class IoTTestSession implements AutoCloseable {
                     .endSpec();
 
             // switch to provided key/cert for adapters that needs it
+            // MQTT: needs passthrough routes because MQTT is not HTTP
+            // HTTP: needs passthrough routes because X.509 client certs are being used
 
-            config = useSystemtestKeys(config, MQTT);
+            config = useSystemtestKeys(config, HTTP, MQTT);
 
         } else {
 

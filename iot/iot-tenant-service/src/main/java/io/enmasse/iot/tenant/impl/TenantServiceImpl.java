@@ -43,8 +43,8 @@ public class TenantServiceImpl extends AbstractTenantService {
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Map<String, IoTProject> projectsByTrustAnchor = new HashMap<>();
-    private final Map<String, Set<String>> projectToTrustAnchors = new HashMap<>();
+    private final Map<X500Principal, IoTProject> projectsByTrustAnchor = new HashMap<>();
+    private final Map<String, Set<X500Principal>> projectToTrustAnchors = new HashMap<>();
 
     @Override
     public Future<TenantResult<JsonObject>> get(final String tenantName, final Span span) {
@@ -69,13 +69,13 @@ public class TenantServiceImpl extends AbstractTenantService {
         super.onAdd(project);
 
         final String key = key(project);
-        final Set<String> trustAnchors = anchors(project);
+        final Set<X500Principal> trustAnchors = anchors(project);
 
         writing(() -> {
 
             // we add a mapping for each subject dn to the project
 
-            for (String subjectDn : trustAnchors) {
+            for (X500Principal subjectDn : trustAnchors) {
                 this.projectsByTrustAnchor.put(subjectDn, project);
             }
 
@@ -102,7 +102,7 @@ public class TenantServiceImpl extends AbstractTenantService {
 
             // we remove and get the mapped trust anchors for this project
 
-            final Set<String> trustAnchors = this.projectToTrustAnchors.remove(key);
+            final Set<X500Principal> trustAnchors = this.projectToTrustAnchors.remove(key);
 
             logger.info("Unmapped {} <- {}", key, trustAnchors);
 
@@ -123,13 +123,13 @@ public class TenantServiceImpl extends AbstractTenantService {
 
         // the project content might already be gone, so only use the key and the new trust anchors
         final String key = key(project);
-        final Set<String> newTrustAnchors = anchors(project);
+        final Set<X500Principal> newTrustAnchors = anchors(project);
 
         writing(() -> {
 
             // we remove and get the mapped trust anchors for this project
 
-            final Set<String> oldTrustAnchors = this.projectToTrustAnchors.remove(key);
+            final Set<X500Principal> oldTrustAnchors = this.projectToTrustAnchors.remove(key);
 
             // and delete all old trust anchors
 
@@ -139,7 +139,7 @@ public class TenantServiceImpl extends AbstractTenantService {
 
             // now we re-add all new trust anchor mappings to the project
 
-            for (String subjectDn : newTrustAnchors) {
+            for (X500Principal subjectDn : newTrustAnchors) {
                 this.projectsByTrustAnchor.put(subjectDn, project);
             }
 
@@ -147,13 +147,22 @@ public class TenantServiceImpl extends AbstractTenantService {
 
             this.projectToTrustAnchors.put(key, newTrustAnchors);
 
-            logger.info("Re-mapped {} -> {} -> ", key, oldTrustAnchors, newTrustAnchors);
+            logger.info("Re-mapped {} -> {} -> {}", key, oldTrustAnchors, newTrustAnchors);
 
         });
 
     }
 
-    private Set<String> anchors(final IoTProject project) {
+    private Set<X500Principal> anchors(final IoTProject project) {
+
+        if (project != null && project.getStatus() == null
+                || project.getStatus().getAccepted() == null
+                || project.getStatus().getAccepted().getConfiguration() == null) {
+
+            // no configuration yet
+            return Collections.emptySet();
+
+        }
 
         final JsonObject config = JsonObject.mapFrom(project.getStatus().getAccepted().getConfiguration());
         final JsonArray trustAnchors = config.getJsonArray(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA);
@@ -161,7 +170,7 @@ public class TenantServiceImpl extends AbstractTenantService {
             return Collections.emptySet();
         }
 
-        final Set<String> result = new HashSet<>();
+        final Set<X500Principal> result = new HashSet<>();
 
         for (Object value : trustAnchors) {
             if (!(value instanceof JsonObject)) {
@@ -176,7 +185,7 @@ public class TenantServiceImpl extends AbstractTenantService {
                 continue;
             }
 
-            result.add(subjectDn);
+            result.add(new X500Principal(subjectDn));
         }
 
         return result;
@@ -195,7 +204,8 @@ public class TenantServiceImpl extends AbstractTenantService {
         // get the project
 
         final Optional<IoTProject> project =
-                reading(() -> ofNullable(this.projectsByTrustAnchor.get(subjectDn.getName())));
+                reading(() -> ofNullable(this.projectsByTrustAnchor.get(subjectDn)));
+        logger.debug("Result of get: {}", project);
 
         // convert and return the result
 

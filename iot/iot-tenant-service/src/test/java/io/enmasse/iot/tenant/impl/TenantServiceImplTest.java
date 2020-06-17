@@ -5,8 +5,14 @@
 
 package io.enmasse.iot.tenant.impl;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.net.HttpURLConnection;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 import javax.security.auth.x500.X500Principal;
 
@@ -34,7 +40,7 @@ public class TenantServiceImplTest {
     }
 
     @Test
-    public void testInvalidTrustAnchor () throws Exception {
+    public void testInvalidTrustAnchor() throws Exception {
 
         final X500Principal name = new X500Principal("CN=Foo,O=Bar,C=Baz");
 
@@ -42,9 +48,8 @@ public class TenantServiceImplTest {
         final JsonObject configuration = new JsonObject()
                 .put(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA,
                         new JsonArray()
-                        .add(new JsonObject()
-                                .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())
-                        ));
+                                .add(new JsonObject()
+                                        .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())));
 
         final IoTProject project = new IoTProjectBuilder()
                 .withNewMetadata()
@@ -74,6 +79,108 @@ public class TenantServiceImplTest {
         final TenantObject tenant = r.getPayload().mapTo(TenantObject.class);
         assertNotNull(tenant);
         assertTrue(tenant.getTrustAnchors().isEmpty());
+
     }
+
+    @Test
+    public void testSimpleValidTrustAnchor() throws Exception {
+
+        final X500Principal name = new X500Principal("CN=Foo,O=Bar,C=Baz 2");
+        final Instant now = Instant.now();
+
+        final JsonObject configuration = new JsonObject()
+                .put(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA,
+                        new JsonArray()
+                                .add(new JsonObject()
+                                        .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())
+                                        .put(TenantConstants.FIELD_PAYLOAD_KEY_ALGORITHM, "RSA")
+                                        .put("not-before", DateTimeFormatter.ISO_INSTANT.format(now))
+                                        .put("not-after", DateTimeFormatter.ISO_INSTANT.format(now.plus(Duration.ofDays(90))))
+                                        ));
+
+        final IoTProject project = new IoTProjectBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("iot")
+                .endMetadata()
+                .withNewStatus()
+                .withNewAccepted()
+                .withConfiguration(configuration)
+                .endAccepted()
+                .endStatus()
+                .build();
+
+        // mock discovery of project
+
+        this.service.onAdd(project);
+
+        // call service method
+
+        final Future<TenantResult<JsonObject>> result = this.service.get(name);
+
+        // assert result
+
+        final TenantResult<JsonObject> r = MoreFutures.get(result);
+
+        // there must be a result
+
+        assertNotNull(r);
+
+        // but there is no tenant found
+
+        assertNotNull(r.getPayload());
+        assertEquals(HttpURLConnection.HTTP_OK, r.getStatus());
+    }
+
+    @Test
+    public void testDoubleValidTrustAnchor() throws Exception {
+
+        final X500Principal name = new X500Principal("CN=Foo,OU=Part 1,OU=Part2,O=Bar,C=Baz 2");
+        final Instant now = Instant.now();
+
+        final JsonObject configuration = new JsonObject()
+                .put(TenantConstants.FIELD_PAYLOAD_TRUSTED_CA,
+                        new JsonArray()
+                                .add(new JsonObject()
+                                        .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())
+                                        .put(TenantConstants.FIELD_PAYLOAD_KEY_ALGORITHM, "RSA")
+                                        .put("not-before", DateTimeFormatter.ISO_INSTANT.format(now))
+                                        .put("not-after", DateTimeFormatter.ISO_INSTANT.format(now.plus(Duration.ofDays(90))))
+                                        ));
+
+        final IoTProject project = new IoTProjectBuilder()
+                .withNewMetadata()
+                .withNamespace("ns")
+                .withName("iot")
+                .endMetadata()
+                .withNewStatus()
+                .withNewAccepted()
+                .withConfiguration(configuration)
+                .endAccepted()
+                .endStatus()
+                .build();
+
+        // mock discovery of project
+
+        this.service.onAdd(project);
+
+        // call service method
+
+        final Future<TenantResult<JsonObject>> result = this.service.get(name);
+
+        // assert result
+
+        final TenantResult<JsonObject> r = MoreFutures.get(result);
+
+        // there must be a result
+
+        assertNotNull(r);
+
+        // but there is no tenant found
+
+        assertNotNull(r.getPayload());
+        assertEquals(HttpURLConnection.HTTP_OK, r.getStatus());
+    }
+
 
 }
