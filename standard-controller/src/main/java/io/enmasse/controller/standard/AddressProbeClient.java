@@ -144,32 +144,36 @@ public class AddressProbeClient implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        CountDownLatch latch = new CountDownLatch((connection != null ? 1 : 0) + senders.size() + receivers.size());
         if (context != null) {
-            CompletableFuture.allOf(
-                    runOnContext(context, () -> {
-                        synchronized (senders) {
-                            for (ProtonSender sender : senders) {
-                                if (sender != null) {
-                                    sender.close();
-                                }
-                            }
+            runOnContext(context, () -> {
+                synchronized (senders) {
+                    for (ProtonSender sender : senders) {
+                        if (sender != null) {
+                            sender.close();
                         }
-                    }),
-                    runOnContext(context, () -> {
-                        synchronized (receivers) {
-                            for (ProtonReceiver receiver : receivers) {
-                                if (receiver != null) {
-                                    receiver.close();
-                                }
-                            }
+                        latch.countDown();
+                    }
+                }
+            });
+            runOnContext(context, () -> {
+                synchronized (receivers) {
+                    for (ProtonReceiver receiver : receivers) {
+                        if (receiver != null) {
+                            receiver.close();
                         }
-                    }),
-                    runOnContext(context, () -> {
-                        if (connection != null) {
-                            connection.close();
-                        }
-                    })).get(1, TimeUnit.MINUTES);
+                        latch.countDown();
+                    }
+                }
+            });
+            runOnContext(context, () -> {
+                if (connection != null) {
+                    connection.close();
+                }
+                latch.countDown();
+            });
         }
+        latch.await(1, TimeUnit.MINUTES);
         senders.clear();
         receivers.clear();
         connection = null;
