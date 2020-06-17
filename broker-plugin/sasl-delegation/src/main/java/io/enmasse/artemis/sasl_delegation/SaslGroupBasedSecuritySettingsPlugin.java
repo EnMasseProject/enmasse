@@ -27,7 +27,6 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
     private static final String NAME = "name";
     private static final String USE_GROUPS_FROM_SASL_DELEGATION = "useGroupsFromSaslDelegation";
     private static final String ADMIN_GROUP = "admin";
-    private static final String ROUTER_GROUP = "router";
     private static final String MANAGE_GROUP = "manage";
     private static final String ALL_GROUP = "all";
     private String name;
@@ -47,7 +46,6 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
 
         // "admin" (console or other internal process) can do anything
         roles.add(new Role(ADMIN_GROUP, true, true, true, true, true, true, true, true, true, true));
-        roles.add(new Role(ROUTER_GROUP, true, true, false, false, true, true, false, false, false, false));
 
         if(!useGroupsFromSaslDelegation) {
             // "all" users can create/delete queues (but not addresses)
@@ -104,13 +102,13 @@ public class SaslGroupBasedSecuritySettingsPlugin implements SecuritySettingPlug
             if (parts.length == 2) {
                 char singleWord = DEFAULT_SINGLE_WORD;
                 char anyWords = DEFAULT_ANY_WORDS;
-                char delimiter = DEFAULT_DELIMITER;
+                char delimeter = DEFAULT_DELIMITER;
                 try {
                     String address = parts[1].replace('*', '#');
                     if(knownAddresses.add(address)) {
 
                         String singleWordString = String.valueOf(singleWord);
-                        String delimeterString = String.valueOf(delimiter);
+                        String delimeterString = String.valueOf(delimeter);
                         String anyWordsString = String.valueOf(anyWords);
 
                         Set<Role> roles = new HashSet<>();

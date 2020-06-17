@@ -400,9 +400,6 @@ function translate(addresses_in, excluded_names, excluded_types) {
             continue;
         }
         if (a.name) {
-            if ((a.type === 'queue' || a.type === "subscription") && !a.durable) {
-                log.error("Address %s (type: %s) is unexpectedly not durable: %j", a.name, a.type, a);
-            }
             addresses_out[name] = {address:a.name, type: a.type};
         } else {
             log.warn('Skipping address with no name: %j', a);
@@ -584,7 +581,6 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 
 BrokerController.prototype._sync_broker_addresses = function (retry) {
     var self = this;
-
     return this.broker.listAddresses().then(function (results) {
         var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue'));
         var actual = translate(results, excluded_addresses, self.excluded_types);
