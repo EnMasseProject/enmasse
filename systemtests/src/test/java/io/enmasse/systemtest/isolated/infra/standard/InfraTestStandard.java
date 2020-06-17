@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.isolated.infra.standard;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
@@ -19,12 +20,14 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBroker;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
@@ -51,6 +54,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
+
+    private Address exampleAddress;
 
     @Test
     @Tag(ACCEPTANCE)
@@ -130,7 +135,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
-        resourcesManager.setAddresses(new AddressBuilder()
+        exampleAddress = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -140,7 +145,11 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withAddress("example-queue")
                 .withPlan(exampleAddressPlan.getMetadata().getName())
                 .endSpec()
-                .build());
+                .build();
+
+        resourcesManager.setAddresses(exampleAddress);
+
+        resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
 
         assertInfra(InfraConfiguration.broker(null, "512Mi", brokerTemplateSpec, "1Gi", "-Dsystemtest=property"),
                 InfraConfiguration.router(null, "256Mi", routerTemplateSpec, 1),
@@ -164,6 +173,11 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     void testReplaceInfra(InfraConfiguration brokerConfig, InfraConfiguration routerConfig, InfraConfiguration adminConfig) throws Exception {
         testCreateInfra();
+
+        AmqpClient client = getAmqpClientFactory().createQueueClient(exampleAddressSpace);
+        client.getConnectOptions().setUsername(exampleUser.getUsername());
+        client.getConnectOptions().setPassword(exampleUser.getPassword());
+        QueueTest.runQueueTest(client, exampleAddress, 10);
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
@@ -225,6 +239,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 () -> assertInfra(brokerConfig, routerConfig, adminConfig),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
+        QueueTest.runQueueTest(client, exampleAddress, 10);
     }
 
     @Test

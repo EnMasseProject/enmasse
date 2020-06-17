@@ -6,6 +6,7 @@ package io.enmasse.systemtest.bases.infra;
 
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.executor.ExecutionResultData;
@@ -14,6 +15,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.user.model.v1.User;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -41,6 +43,7 @@ public abstract class InfraTestBase extends TestBase implements ITestBase {
     private static Logger log = CustomLogger.getLogger();
     protected AddressPlan exampleAddressPlan;
     protected AddressSpace exampleAddressSpace;
+    protected UserCredentials exampleUser = new UserCredentials("test", "test");
 
     protected void assertBroker(InfraConfiguration brokerConfig) {
         log.info("Checking broker infra");
