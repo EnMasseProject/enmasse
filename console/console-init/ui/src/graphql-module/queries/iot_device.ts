@@ -134,11 +134,24 @@ const UPDATE_IOT_DEVICE = gql(
   }`
 );
 
+const RETURN_ALL_DEVICES_COUNT_FOR_IOT_PROJECT = (iotproject: string) => {
+  const ALL_DEVICE_LIST_COUNT = gql(
+    `query devices_for_iot_project {
+      devices(iotproject: "${iotproject}") {
+        total
+      }
+    }`
+  );
+
+  return ALL_DEVICE_LIST_COUNT;
+};
+
 export {
   RETURN_IOT_DEVICE_DETAIL,
   RETURN_IOT_CREDENTIALS,
   DELETE_IOT_DEVICE,
   UPDATE_IOT_DEVICE,
   RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
-  DELETE_CREDENTIALS_FOR_IOT_DEVICE
+  DELETE_CREDENTIALS_FOR_IOT_DEVICE,
+  RETURN_ALL_DEVICES_COUNT_FOR_IOT_PROJECT
 };
