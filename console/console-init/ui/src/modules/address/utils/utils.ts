@@ -72,7 +72,7 @@ const getFilteredAdressNames = (addresses: any[]) => {
   );
 };
 
-const getHeaderTextForDelateAll = (addresses: any[]) => {
+const getHeaderTextForDeleteAll = (addresses: any[]) => {
   return addresses && addresses.length > 1
     ? "Delete these Addresses ?"
     : "Delete this Address ?";
@@ -121,7 +121,7 @@ export {
   getDetailTextForPurgeAll,
   getFilteredAddressDisplayName,
   getFilteredAdressNames,
-  getHeaderTextForDelateAll,
+  getHeaderTextForDeleteAll,
   getDetailTextForDeleteAll,
   AddressStatus,
   getPlanAndTypeForAddressEdit
