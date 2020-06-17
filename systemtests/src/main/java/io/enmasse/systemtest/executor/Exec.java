@@ -270,6 +270,14 @@ public class Exec {
         return results;
     }
 
+    public static ExecutionResultData executeAndCheck(List<String> command, int timeout, boolean logToOutput, boolean appendLineSeparator, Map<String, String> env) {
+        ExecutionResultData results = execute(command, timeout, logToOutput, appendLineSeparator, env, null);
+        if (!results.getRetCode()) {
+            throw new IllegalStateException(results.getStdErr());
+        }
+        return results;
+    }
+
     public static ExecutionResultData execute(List<String> command) {
         return execute(command, 60_000, true, true);
     }
