@@ -4,7 +4,6 @@
  */
 
 import * as React from "react";
-
 import {
   DataToolbar,
   DataToolbarItem,
@@ -12,9 +11,6 @@ import {
 } from "@patternfly/react-core/dist/js/experimental";
 import { CreateAddressPage } from "pages/CreateAddress/CreateAddressPage";
 import { useParams } from "react-router";
-import { useApolloClient } from "@apollo/react-hooks";
-import { RETURN_ADDRESS_SPACE_DETAIL } from "queries";
-import { IAddressSpacesResponse } from "types/ResponseTypes";
 import {
   AddressListFilter,
   AddressListKebab
@@ -22,8 +18,6 @@ import {
 import useWindowDimensions from "components/common/WindowDimension";
 import { SortForMobileView } from "components/common/SortForMobileView";
 import { ISortBy } from "@patternfly/react-table";
-import { FetchPolicy } from "constants/constants";
-import { Loading } from "use-patternfly";
 
 interface AddressListFilterProps {
   filterValue: string | null;
@@ -40,10 +34,12 @@ interface AddressListFilterProps {
   totalAddresses: number;
   isCreateWizardOpen: boolean;
   setIsCreateWizardOpen: (value: boolean) => void;
+  createAddressOnClick: () => void;
   onDeleteAllAddress: () => void;
   onPurgeAllAddress: () => void;
   isDeleteAllDisabled: boolean;
   isPurgeAllDisabled: boolean;
+  addressSpacePlan: string | null;
 }
 export const AddressListFilterPage: React.FunctionComponent<AddressListFilterProps> = ({
   filterValue,
@@ -63,13 +59,12 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
   onDeleteAllAddress,
   onPurgeAllAddress,
   isDeleteAllDisabled,
-  isPurgeAllDisabled
+  isPurgeAllDisabled,
+  createAddressOnClick,
+  addressSpacePlan
 }) => {
   const { name, namespace, type } = useParams();
-  const [addressSpacePlan, setAddressSpacePlan] = React.useState<string | null>(
-    null
-  );
-  const client = useApolloClient();
+
   const { width } = useWindowDimensions();
 
   const onDeleteAll = () => {
@@ -87,30 +82,6 @@ export const AddressListFilterPage: React.FunctionComponent<AddressListFilterPro
     { key: "senders", value: "Senders", index: 8 },
     { key: "receivers", value: "Receivers", index: 9 }
   ];
-
-  const createAddressOnClick = async () => {
-    if (name && namespace) {
-      const { data, loading } = await client.query<IAddressSpacesResponse>({
-        query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
-        fetchPolicy: FetchPolicy.NETWORK_ONLY
-      });
-      if (loading) {
-        return <Loading />;
-      }
-      if (
-        data &&
-        data.addressSpaces &&
-        data.addressSpaces.addressSpaces.length > 0
-      ) {
-        const plan =
-          data.addressSpaces.addressSpaces[0].spec.plan.metadata.name;
-        if (plan) {
-          setAddressSpacePlan(plan);
-        }
-      }
-    }
-    setIsCreateWizardOpen(!isCreateWizardOpen);
-  };
 
   const toolbarItems = (
     <>

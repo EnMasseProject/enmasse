@@ -13,21 +13,24 @@ import {
   GridItem,
   Grid
 } from "@patternfly/react-core";
-import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
+import { useDocumentTitle, useA11yRouteChange, Loading } from "use-patternfly";
 import { StyleSheet } from "@patternfly/react-styles";
 import { AddressListFilterPage } from "./AddressListFilterPage";
 import { AddressListPage, compareTwoAddress } from "./AddressListPage";
 import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { useQuery, useMutation } from "@apollo/react-hooks";
+import { useQuery, useMutation, useApolloClient } from "@apollo/react-hooks";
 import {
   CURRENT_ADDRESS_SPACE_PLAN,
   DELETE_ADDRESS,
-  PURGE_ADDRESS
+  PURGE_ADDRESS,
+  RETURN_ADDRESS_SPACE_DETAIL
 } from "queries";
 import { ISortBy } from "@patternfly/react-table";
 import { IAddress } from "components/AddressSpace/Address/AddressList";
 import { DialoguePrompt } from "components/common/DialoguePrompt";
 import { useErrorContext, types } from "context-state-reducer";
+import { IAddressSpacesResponse } from "types/ResponseTypes";
+import { FetchPolicy } from "constants/constants";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -73,6 +76,7 @@ export default function AddressesList() {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+  const client = useApolloClient();
 
   const [sortDropDownValue, setSortDropdownValue] = React.useState<ISortBy>();
   const [isCreateWizardOpen, setIsCreateWizardOpen] = React.useState(false);
@@ -311,6 +315,30 @@ export default function AddressesList() {
     }
   };
 
+  const createAddressOnClick = async () => {
+    if (name && namespace) {
+      const { data, loading } = await client.query<IAddressSpacesResponse>({
+        query: RETURN_ADDRESS_SPACE_DETAIL(name, namespace),
+        fetchPolicy: FetchPolicy.NETWORK_ONLY
+      });
+      if (loading) {
+        return <Loading />;
+      }
+      if (
+        data &&
+        data.addressSpaces &&
+        data.addressSpaces.addressSpaces.length > 0
+      ) {
+        const plan =
+          data.addressSpaces.addressSpaces[0].spec.plan.metadata.name;
+        if (plan) {
+          setAddressSpacePlan(plan);
+        }
+      }
+    }
+    setIsCreateWizardOpen(!isCreateWizardOpen);
+  };
+
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Grid>
@@ -334,6 +362,8 @@ export default function AddressesList() {
             onPurgeAllAddress={onPurgeAll}
             isDeleteAllDisabled={isDeleteAllDisabled}
             isPurgeAllDisabled={isPurgeAllDisabled}
+            createAddressOnClick={createAddressOnClick}
+            addressSpacePlan={addressSpacePlan}
           />
         </GridItem>
         <GridItem span={5}>
