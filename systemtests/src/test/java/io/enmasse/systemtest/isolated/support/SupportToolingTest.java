@@ -15,6 +15,7 @@ import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.broker.ArtemisUtils;
 import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -85,14 +86,7 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
         brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(space));
         brokerLabels.put(LabelKeys.ROLE, "broker");
 
-        Map<String, String> secretLabels = new HashMap<>();
-        secretLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(space));
-        secretLabels.put(LabelKeys.ROLE, "support-credentials");
-
-        Secret supportSecret = kubernetes.listSecrets(secretLabels).get(0);
-        Map<String, String> data = supportSecret.getData();
-        String supportUser = new String(Base64.getDecoder().decode(data.get("username")), StandardCharsets.UTF_8);
-        String supportPassword = new String(Base64.getDecoder().decode(data.get("password")), StandardCharsets.UTF_8);
+        UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(space);
 
         // Workaround - addresses may report ready before the broker pod backing the address report ready=true.  This happens because broker liveness/readiness is judged on a
         // Jolokia based probe. As jolokia becomes available after AMQP management, address can be ready when the broker is not. See https://github.com/EnMasseProject/enmasse/issues/2979
@@ -106,7 +100,7 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
             ExecutionResultData jmxResponse = KubeCMDClient.runOnPod(kubernetes.getInfraNamespace(), podName, Optional.of("broker"),
                     "curl",
                     "--silent", "--insecure",
-                    "--user", String.format("%s:%s", supportUser, supportPassword),
+                    "--user", String.format("%s:%s", supportCredentials.getUsername(), supportCredentials.getPassword()),
                     "-H", "Origin: https://localhost:8161",
                     String.format("https://localhost:8161/console/jolokia/read/org.apache.activemq.artemis:broker=\"%s\"/AddressMemoryUsage", podName));
 
@@ -123,8 +117,8 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
                     "./bin/artemis",
                     "address",
                     "show",
-                    "--user", supportUser,
-                    "--password", supportPassword
+                    "--user", supportCredentials.getUsername(),
+                    "--password", supportCredentials.getPassword()
             );
             assertThat(String.format("Support tool invocation failed %s : %s", jmxResponse.getStdErr(), jmxResponse.getStdOut()),
                     artemisCmdResponse.getRetCode(), is(true));
@@ -134,7 +128,7 @@ class SupportToolingTest extends TestBase implements ITestBaseIsolated {
             if (AddressSpaceType.STANDARD.toString().equals(type)) {
                 // FIXME: can't protect the brokered address space owing to #4295
                 Assertions.assertThrows(AuthenticationException.class,
-                        () -> new ClientUtils().connectAddressSpace(resourcesManager, space, new UserCredentials(supportUser, supportPassword)),
+                        () -> new ClientUtils().connectAddressSpace(resourcesManager, space, new UserCredentials(supportCredentials.getUsername(), supportCredentials.getPassword())),
                         "Must not be able to connect to the address space for messaging using support credentials");
             }
         });

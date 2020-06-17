@@ -338,6 +338,8 @@ objects:
             value: standard
           - name: ADDRESS_SPACE_PLAN
             value: ${ADDRESS_SPACE_PLAN}
+          - name: BROKER_GLOBAL_MAX_SIZE
+            value: ${BROKER_GLOBAL_MAX_SIZE}
           - name: CERT_DIR
             value: /etc/enmasse-certs
           - name: RESYNC_INTERVAL
@@ -581,3 +583,5 @@ parameters:
   name: BROKER_SUPPORT_USER
 - description: Password for broker support access
   name: BROKER_SUPPORT_PWD
+- description: Global max size for all addresses in broker. Cannot be larger than a 1/4 of JVM size
+  name: BROKER_GLOBAL_MAX_SIZE

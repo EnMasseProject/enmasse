@@ -47,6 +47,14 @@ function ready (addr) {
     return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
+function same_plan_status_resources(a, b) {
+
+    if (a === undefined || a.planStatus === undefined || a.planStatus.resources === undefined ||  a.planStatus.resources.broker === undefined) {
+        return (b === undefined &&  b.planStatus === undefined && b.planStatus.resources === undefined &&  b.planStatus.resources.broker === undefined);
+    }
+    return a.planStatus.resources.broker === b.planStatus.resources.broker && a.planStatus.name === b.planStatus.name;
+}
+
 function same_allocation(a, b) {
     if (a === b) {
         return true;
@@ -87,12 +95,15 @@ function same_address_definition(a, b) {
     if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
-    return a.address === b.address && a.type === b.type && same_allocation(a.allocated_to, b.allocated_to);
+    return a.address === b.address
+        && a.type === b.type
+        && same_allocation(a.allocated_to, b.allocated_to)
+        && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined);
 }
 
 function same_address_status(a, b) {
     if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
+    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages) && same_plan_status(a.planStatus, b.planStatus);
 }
 
 function same_address_definition_and_status(a, b) {
@@ -100,7 +111,18 @@ function same_address_definition_and_status(a, b) {
 }
 
 function same_address_plan(a, b) {
+    if (a === undefined) return b === undefined;
     return a.plan === b.plan;
+}
+
+function same_plan_status(a, b) {
+    if (a === undefined) return b === undefined;
+    return b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
+}
+
+function same_addressplan_resources(a, b) {
+    if (a === b) return true;
+    return a && b && a.broker === b.broker && a.router === b.router;
 }
 
 function address_compare(a, b) {

@@ -168,7 +168,6 @@ Ragent.prototype.sync_router_addresses = function (router, brokers) {
 }
 
 Ragent.prototype.verify_addresses = function (expected) {
-    log.debug('verifying addresses to match: %j', expected);
     for (var r in this.connected_routers) {
         if (!this.connected_routers[r].verify_addresses(expected)) {
             return false;

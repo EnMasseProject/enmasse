@@ -169,6 +169,10 @@ function MockBroker (name) {
                 throw new Error('error deleting address settings ' + match);
             }
         },
+        getAddressSettingsAsJSON : function (match) {
+            var items = self.get('address_settings');
+            return JSON.stringify({data:items, count:items.length});
+        },
         listAddresses : function () {
             var items = self.get('address');
             return JSON.stringify({data:items, count:items.length});
@@ -373,11 +377,6 @@ MockBroker.prototype.list_queues = function () {
 MockBroker.prototype.list_addresses = function () {
     return this.get('address');
 };
-
-MockBroker.prototype.list_address_settings = function () {
-    return this.get('address_settings');
-};
-
 
 MockBroker.prototype.get_pod_descriptor = function () {
     return {

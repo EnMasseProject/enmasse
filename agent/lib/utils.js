@@ -286,3 +286,31 @@ module.exports.get = function (object, fields, default_value) {
     }
     return o || default_value;
 };
+
+var multipliers = {};
+multipliers.B = 1;
+multipliers.KB = ( multipliers.B * 1024 );
+multipliers.MB = ( multipliers.KB * 1024 );
+multipliers.GB = ( multipliers.MB * 1024 );
+multipliers.TB = ( multipliers.GB * 1024 );
+multipliers.PB = ( multipliers.TB * 1024 );
+multipliers.EB = ( multipliers.PB * 1024 );
+multipliers.ZB = ( multipliers.EB * 1024 );
+
+module.exports.parseToBytes = function (input) {
+    var unit = input.toUpperCase().match(/([KMGTPEZ]I?)?B$/);
+
+    if (!unit) {
+        log.warn( "parseToBytes input does not contain a supported unit of measurement.  Using 'B': %s", input );
+        unit = "B";
+    }
+    unit = unit[ 0 ].replace( /i/i, "" );
+
+    var value = parseFloat(input);
+    if (isNaN(value)) {
+        log.error( "parseToBytes input does not contain a numeric value: %s",input );
+        return 0;
+    }
+
+    return( value * multipliers[unit] );
+};

@@ -364,3 +364,20 @@ describe('coalesce', function () {
         }, 100);
     });
 });
+
+describe('parseToBytes', function () {
+    it ('parses size to bytes', function (done) {
+        assert.strictEqual( myutils.parseToBytes("1024B"), 1024);
+        assert.strictEqual( myutils.parseToBytes("256.5 B"), 256.5);
+        assert.strictEqual( myutils.parseToBytes("400 KB"), 409600);
+        assert.strictEqual( myutils.parseToBytes("10.5Mib"), 11010048);
+        assert.strictEqual( myutils.parseToBytes("10.5Mb"), 11010048);
+        assert.strictEqual( myutils.parseToBytes("4Gb"), 4294967296);
+        assert.strictEqual( myutils.parseToBytes("1024" ), 1024);
+
+        assert.strictEqual( myutils.parseToBytes("35 XYZ"), 35);
+        assert.strictEqual( myutils.parseToBytes("OnlyUnits"), 0);
+        assert.strictEqual( myutils.parseToBytes("MB"), 0);
+       done();
+    });
+});

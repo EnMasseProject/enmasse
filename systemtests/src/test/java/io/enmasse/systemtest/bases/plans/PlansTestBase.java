@@ -8,11 +8,23 @@ package io.enmasse.systemtest.bases.plans;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.broker.ArtemisUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.apache.qpid.proton.amqp.Binary;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.amqp.transport.DeliveryState;
+import org.apache.qpid.proton.message.Message;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
@@ -20,12 +32,13 @@ import org.hamcrest.TypeSafeMatcher;
 import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PlansTestBase extends TestBase {
@@ -129,6 +142,65 @@ public class PlansTestBase extends TestBase {
                 assertTrue(rv, String.format("address %s did not reach desired state : %s", s.getAddress().getMetadata().getName(), lastMatch));
             });
         } while(true);
+    }
+
+    public void doTestUpdatePlanBrokerCreditChangesPerAddressMaxSize(AddressSpace addressSpace, Address queueDest, AddressPlan phase1, AddressPlan phase2, AddressPlan redefinedPhase2, AmqpClientFactory amqpClientFactory) throws Exception {
+        //get destination
+        Address queue = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(queueDest.getMetadata().getName()).get();
+
+        String assertMessage = "Queue plan wasn't set properly";
+        assertEquals(queue.getSpec().getPlan(),
+                phase1.getMetadata().getName(), assertMessage);
+
+        //Send messages to ensure queue fills up
+        UserCredentials user = new UserCredentials("test-newplan-name", "test_newplan_password");
+        resourcesManager.createOrUpdateUser(addressSpace, user);
+
+        AmqpClient client = amqpClientFactory.createQueueClient(addressSpace);
+        client.getConnectOptions().setCredentials(user);
+        byte[] bytes = new byte[1024 * 100];
+        Random random = new Random();
+        Message message = Message.Factory.create();
+        random.nextBytes(bytes);
+        message.setBody(new AmqpValue(new Data(new Binary(bytes))));
+        message.setAddress(queue.getSpec().getAddress());
+        message.setDurable(true);
+
+        Stream<Message> messageStream = Stream.generate(() -> message);
+        int messagesSent = client.sendMessagesCheckDelivery(queue.getSpec().getAddress(), messageStream::iterator,
+                protonDelivery -> protonDelivery.remotelySettled() && protonDelivery.getRemoteState().getType().equals(DeliveryState.DeliveryStateType.Rejected))
+                .get(5, TimeUnit.MINUTES);
+
+        assertTrue(messagesSent > 0, "Verify a few messages were sent before queue fills up");
+
+        //Verify maxSizeBytes are set
+        assertMaxSizeBytes(addressSpace, queue, 524288);
+
+        //Redefine address to use next plan
+        Address largeQueue = new AddressBuilder(queue).editSpec().withPlan(phase2.getMetadata().getName()).endSpec().build();
+        ITestBaseIsolated.isolatedResourcesManager.replaceAddress(largeQueue);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), largeQueue);
+        awaitPlanStatusResourceSync(addressSpace, largeQueue, phase2);
+        assertMaxSizeBytes(addressSpace, queue, 734003);
+
+        //Redefine plan to to have more credit
+        ITestBaseIsolated.isolatedResourcesManager.replaceAddressPlan(redefinedPhase2);
+        AddressUtils.waitForDestinationsReady(new TimeoutBudget(5, TimeUnit.MINUTES), largeQueue);
+        awaitPlanStatusResourceSync(addressSpace, largeQueue, redefinedPhase2);
+        assertMaxSizeBytes(addressSpace, queue, 943718);
+    }
+
+    public void awaitPlanStatusResourceSync(AddressSpace addressSpace, Address dest, AddressPlan plan) {
+        TestUtils.waitUntilCondition(() -> {
+            Address a = kubernetes.getAddressClient(addressSpace.getMetadata().getNamespace()).withName(dest.getMetadata().getName()).get();
+            return a.getStatus().getPlanStatus() != null && a.getStatus().getPlanStatus().getResources().containsKey("broker") &&
+                    a.getStatus().getPlanStatus().getResources().get("broker").equals(plan.getResources().get("broker"));
+        }, Duration.ofMinutes(1),  Duration.ofSeconds(1));
+    }
+
+    public void assertMaxSizeBytes(AddressSpace addressSpace, Address queue, Integer expected) throws Exception {
+        Map<String, Object> addressSettings = ArtemisUtils.getAddressSettings(kubernetes, addressSpace, queue.getSpec().getAddress());
+        assertEquals(expected, (Integer) addressSettings.get("maxSizeBytes"), "maxSizeBytes should be set");
     }
 
     public class StageHolder {

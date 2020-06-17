@@ -159,4 +159,34 @@ describe('broker controller', function() {
             done();
         }).catch(done);
     });
+
+    var config = { BROKER_GLOBAL_MAX_SIZE: "64MB" };
+
+    it('get address settings async - returns setting maxSizeBytes calculated from infra', function(done) {
+        config.BROKER_GLOBAL_MAX_SIZE="64MB";
+        var brokerAddressSettings = new broker_controller.BrokerController(undefined, config);
+        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.2}}}}).then(function (result) {
+            assert.equal(13421773, result.maxSizeBytes);
+            done();
+        });
+    });
+
+    it('get address settings async - returns setting maxSizeBytes calculated from infra with partitions', function(done) {
+        config.BROKER_GLOBAL_MAX_SIZE="64MB";
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config)
+        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", partitions: 2, resources: {broker: 0.2}}}}).then(function (result) {
+            assert.equal(6710886, result.maxSizeBytes);
+            done();
+        });
+    });
+
+    it('get address settings async - returns setting maxSizeBytes calculated from broker', function(done) {
+        config.BROKER_GLOBAL_MAX_SIZE=undefined;
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config)
+        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.1}}}}, Promise.resolve(1000000)).then(function (result) {
+            assert.equal(100000, result.maxSizeBytes);
+            done();
+        });
+    });
+
 });
