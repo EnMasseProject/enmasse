@@ -5,3 +5,4 @@
 
 export * from "./TableFormatter";
 export * from "./constant";
+export * from "./utils";

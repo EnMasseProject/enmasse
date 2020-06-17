@@ -102,12 +102,12 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
   };
 
   const {
-    ["subject-dn"]: subjectDn,
-    ["public-key"]: publicKey,
-    ["auto-provisioning-enabled"]: autoProvision,
-    algorithm: algorithm,
-    ["not-before"]: notBefore,
-    ["not-after"]: notAfter
+    "subject-dn": subjectDn,
+    "public-key": publicKey,
+    "auto-provisioning-enabled": autoProvision,
+    algorithm,
+    "not-before": notBefore,
+    "not-after": notAfter
   } = certificateFormData;
 
   return (

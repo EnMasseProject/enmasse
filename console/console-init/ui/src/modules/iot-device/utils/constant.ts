@@ -4,7 +4,7 @@
  */
 
 import { ISelectOption } from "utils";
-import { IDeviceFilter } from "../components";
+import { IDeviceFilter } from "modules/iot-device/components";
 
 /**
  * dropdown options
