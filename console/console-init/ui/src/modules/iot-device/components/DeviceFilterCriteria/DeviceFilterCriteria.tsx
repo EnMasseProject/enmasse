@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, ReactElement } from "react";
+import React, { useState } from "react";
 import { IDropdownOption, DropdownWithToggle } from "components";
 import {
   InputGroup,

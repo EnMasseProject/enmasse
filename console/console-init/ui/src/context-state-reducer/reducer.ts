@@ -4,7 +4,11 @@
  */
 
 import { types } from "./actions";
-import { initialState, initialStateModal } from "./initialState";
+import {
+  initialState,
+  initialStateModal,
+  initialDeviceState
+} from "./initialState";
 import { combineReducers } from "./combineReducers";
 
 export interface IActionType {
@@ -14,7 +18,18 @@ export interface IActionType {
   hasNetworkError?: boolean;
 }
 
-export const errorReducer = (state = initialState, action: IActionType) => {
+export interface IModalActionType {
+  type: string;
+  modalType: string;
+  modalProps: any;
+}
+
+interface IDeviceActionType {
+  payload?: any;
+  type: string;
+}
+
+const errorReducer = (state = initialState, action: IActionType) => {
   const { errors, statusCode } = action.payload || {};
   switch (action.type) {
     case types.SET_SERVER_ERROR:
@@ -37,16 +52,7 @@ export const errorReducer = (state = initialState, action: IActionType) => {
   }
 };
 
-export interface IModalActionType {
-  type: string;
-  modalType: string;
-  modalProps: any;
-}
-
-export const modalReducer = (
-  state = initialStateModal,
-  action: IModalActionType
-) => {
+const modalReducer = (state = initialStateModal, action: IModalActionType) => {
   switch (action.type) {
     case types.SHOW_MODAL:
       return {
@@ -60,7 +66,26 @@ export const modalReducer = (
   }
 };
 
+const deviceReducer = (
+  state = initialDeviceState,
+  action: IDeviceActionType
+) => {
+  const { actionType } = action?.payload || {};
+  switch (action.type) {
+    case types.SET_DEVICE_ACTION_TYPE:
+      return {
+        ...state,
+        actionType: actionType
+      };
+    case types.RESET_DEVICE_ACTION_TYPE:
+      return initialState;
+    default:
+      return state;
+  }
+};
+
 export const rootReducer = combineReducers({
   error: errorReducer,
-  modal: modalReducer
+  modal: modalReducer,
+  device: deviceReducer
 });
