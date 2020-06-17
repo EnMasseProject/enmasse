@@ -4,3 +4,9 @@
  */
 
 export * from "./DeviceListContainer";
+export * from "./EditMetadataContainer";
+export * from "./EditDeviceInJsonContainer";
+export * from "./EditGatewaysContainer";
+export * from "./EditCredentialsContainer";
+export * from "./AddCredentialsContainer";
+export * from "./AddGatewaysContainer";

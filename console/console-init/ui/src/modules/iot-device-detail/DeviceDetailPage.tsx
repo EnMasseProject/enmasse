@@ -33,11 +33,13 @@ import { Routes } from "./Routes";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { NoDataFound } from "components";
+import { ActionManager } from "modules/iot-device-detail/components";
 
 export default function DeviceDetailPage() {
   const { projectname, namespace, deviceid, subList } = useParams();
   const routeLink = `/iot-projects/${namespace}/${projectname}/devices`;
-  const { dispatch } = useStoreContext();
+  const { dispatch, state } = useStoreContext();
+  const { actionType } = state?.device || {};
   const history = useHistory();
   useDocumentTitle("Device Details");
   useA11yRouteChange();
@@ -106,14 +108,6 @@ export default function DeviceDetailPage() {
     return <NoRecordFound />;
   }
 
-  const onEditMetadata = () => {
-    /**
-     * TODO: implement edit metadata logic
-     */
-  };
-
-  const onEditDeviceInJson = () => {};
-
   const onConfirmDeleteDevice = async () => {
     const variable = {
       iotproject: projectname,
@@ -150,23 +144,29 @@ export default function DeviceDetailPage() {
 
   return (
     <>
-      <PageSection variant={PageSectionVariants.light}>
-        <DeviceDetailHeader
-          deviceName={deviceId}
-          addedDate="2019-11-25T05:24:05.755Z"
-          lastTimeSeen="2019-11-25T05:24:05.755Z"
-          onEditMetadata={onEditMetadata}
-          onEditDeviceInJson={onEditDeviceInJson}
-          onChange={onChangeDeviceStatus}
-          onDelete={onDeleteDevice}
-          onClone={onCloneDevice}
-          deviceStatus={enabled}
-        />
-        <DeviceDetailNavigation activeItem={subList || "device-info"} />
-      </PageSection>
-      <PageSection>
-        <Routes />
-      </PageSection>
+      {actionType ? (
+        <PageSection variant={PageSectionVariants.light}>
+          <ActionManager actionType={actionType} />
+        </PageSection>
+      ) : (
+        <>
+          <PageSection variant={PageSectionVariants.light}>
+            <DeviceDetailHeader
+              deviceName={deviceId}
+              addedDate="2019-11-25T05:24:05.755Z"
+              lastTimeSeen="2019-11-25T05:24:05.755Z"
+              onChange={onChangeDeviceStatus}
+              onDelete={onDeleteDevice}
+              onClone={onCloneDevice}
+              deviceStatus={enabled}
+            />
+            <DeviceDetailNavigation activeItem={subList || "device-info"} />
+          </PageSection>
+          <PageSection>
+            <Routes />
+          </PageSection>
+        </>
+      )}
     </>
   );
 }
