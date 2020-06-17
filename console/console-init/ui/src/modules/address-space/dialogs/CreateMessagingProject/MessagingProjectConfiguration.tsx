@@ -17,6 +17,7 @@ import {
 } from "graphql-module/queries";
 import { Loading } from "use-patternfly";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
+import { dnsSubDomainRfc1123NameRegexp } from "utils";
 
 export interface IMessagingProjectConfigurationProps {
   projectDetail: IMessagingProject;
@@ -90,7 +91,11 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     setProjectDetail({ ...projectDetail, namespace: value });
   };
   const handleNameChange = (value: string) => {
-    setProjectDetail({ ...projectDetail, name: value });
+    setProjectDetail({
+      ...projectDetail,
+      isNameValid: dnsSubDomainRfc1123NameRegexp.test(value),
+      name: value
+    });
   };
   const handleTypeChange = (_: boolean, event: any) => {
     setProjectDetail({
@@ -110,6 +115,7 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     setProjectDetail({ ...projectDetail, authService: value });
   };
 
+  console.log("as", projectDetail);
   const getNameSpaceOptions = () => {
     let nameSpaceOptions: IOptionForKeyValueLabel[];
     nameSpaceOptions = namespaces.map(namespace => ({
