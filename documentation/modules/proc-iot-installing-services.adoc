@@ -43,6 +43,16 @@ ifeval::["{cmdcli}" == "oc"]
 endif::[]
 
 +
+You can override the namespace the `deploy` script installs the keys and certificates to, by
+setting the environment variable `NAMESPACE` when calling the script. For example:
+
++
+[options="nowrap"]
+----
+NAMESPACE=my-namespace ./install/components/iot/examples/k8s-tls/deploy
+----
+
++
 [NOTE]
 ====
 If your cluster is not running on `localhost`, you need to specify the cluster host name when creating certificates to allow external clients (like MQTT) to properly connect to the appropriate services. For example:
