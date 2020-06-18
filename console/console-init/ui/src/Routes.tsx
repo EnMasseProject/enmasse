@@ -18,8 +18,8 @@ const getConnectionDetail = () =>
   import("modules/connection-detail/ConnectionDetailPage");
 const getDeviceDetailPage = () =>
   import("modules/iot-device-detail/DeviceDetailPage");
-const getIoTProjectDetailPage = () =>
-  import("modules/iot-project-detail/IoTProjectDetailPage");
+const getProjectDetailPage = () =>
+  import("modules/iot-project-detail/ProjectDetailPage");
 
 export const AppRoutes = () => (
   // <SwitchWith404>
@@ -52,7 +52,7 @@ export const AppRoutes = () => (
   //   {/* iot-project detail page route */}
   //   <LazyRoute
   //     path="/iot-projects/:namespace/:projectname/:sublist"
-  //     getComponent={getIoTProjectDetailPage}
+  //     getComponent={getProjectDetailPage}
   //     exact={true}
   //   />
   //   {/* iot-project device detail page route */}
@@ -92,10 +92,10 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/devices/:deviceid/:subList"
       getComponent={getDeviceDetailPage}
-      />
+    />
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/:sublist"
-      getComponent={getIoTProjectDetailPage}
+      getComponent={getProjectDetailPage}
       exact={true}
     />
   </SwitchWith404>

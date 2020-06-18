@@ -1,20 +1,15 @@
-/*
- * Copyright 2020, EnMasse authors.
- * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
- */
-
 import React from "react";
-import { ProjectNavigation } from "./components";
-import { Routes } from "./Routes";
 import {
-  PageSectionVariants,
   PageSection,
+  PageSectionVariants,
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
+import { IoTProjectDetailHeader, ProjectNavigation } from "./components";
+import { useParams } from "react-router";
+import { Routes } from "./Routes";
 import { Link } from "react-router-dom";
 import { useBreadcrumb, useDocumentTitle } from "use-patternfly";
-import { useParams } from "react-router";
 
 const breadcrumb = (
   <Breadcrumb>
@@ -24,13 +19,29 @@ const breadcrumb = (
     <BreadcrumbItem isActive={true}>IoT Project</BreadcrumbItem>
   </Breadcrumb>
 );
-export default function IoTProjectDetailPage() {
+export default function ProjectDetailPage() {
   useBreadcrumb(breadcrumb);
   useDocumentTitle("IoT Project Detail");
-  const { sublist } = useParams();
+  const { projectname, sublist } = useParams();
+
+  const handleChangeEnabled = (isEnabled: boolean) => {};
+
+  const handleEdit = (name: string) => {};
+
+  const handleDelete = (name: string) => {};
+
   return (
     <>
       <PageSection variant={PageSectionVariants.light}>
+        <IoTProjectDetailHeader
+          projectName={projectname}
+          type="Managed"
+          status="Ready"
+          isEnabled={true}
+          changeEnable={handleChangeEnabled}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
         <ProjectNavigation activeItem={sublist || "detail"} />
       </PageSection>
       <PageSection>
