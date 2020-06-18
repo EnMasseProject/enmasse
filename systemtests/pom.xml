@@ -104,6 +104,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <exclusions>
@@ -163,7 +168,6 @@
                     <groups>${groups}</groups>
                     <excludedGroups>${excludeGroups}</excludedGroups>
                     <skipTests>${skip.tests}</skipTests>
-                    <forkCount>0</forkCount>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                         <enmasse.docs>${application.docs}</enmasse.docs>
