@@ -27,12 +27,14 @@ import {
   getDetailForDialog,
   MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST as MAX_DEVICES
 } from "modules/iot-device/utils";
-import { DeviceListContainer } from "modules/iot-device/containers";
+import {
+  DeviceListContainer,
+  EmptyDeviceContainer
+} from "modules/iot-device/containers";
 import { compareObject } from "utils";
 import { getInitialFilter } from "modules/iot-device/utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
-import { EmptyDeviceContainer } from "./containers/EmptyDeviceContainer";
 
 export default function DeviceListPage() {
   useDocumentTitle("Device List");
@@ -55,7 +57,6 @@ export default function DeviceListPage() {
   const { dispatch } = useStoreContext();
 
   useEffect(() => {
-    console.log("use effectc alled");
     if (totalDevices && totalDevices < MAX_DEVICES) setIsAlertVisible(false);
     else if (
       totalDevices &&
