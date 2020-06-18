@@ -72,7 +72,29 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
 
   const { total, devices } = data?.devices || {};
 
-  setTotalDevices(total || 0);
+  total !== undefined && setTotalDevices(total);
+
+  const onSelect = (device: IDevice, isSelected: boolean) => {
+    if (!areAllDevicesSelected && isSelected) {
+      if (selectedDevices.length === rows.length - 1) {
+        let allSelected = true;
+        for (let row of rows) {
+          for (let selectedDevice of selectedDevices) {
+            if (compareObject(row.deviceId, selectedDevice.deviceId)) {
+              if (device.deviceId === row.deviceId) {
+                allSelected = true;
+              } else if (row.selected === false) allSelected = false;
+              break;
+            }
+          }
+        }
+        if (allSelected) {
+          onSelectDevice(device, isSelected, true);
+        }
+      }
+    }
+    onSelectDevice(device, isSelected);
+  };
 
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
@@ -222,7 +244,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   return (
     <DeviceList
       deviceRows={rows.map(getTableCells)}
-      onSelectDevice={onSelectDevice}
+      onSelectDevice={onSelect}
       actionResolver={actionResolver}
       onSort={onSort}
       sortBy={sortBy}

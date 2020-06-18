@@ -102,6 +102,8 @@ const getInitialStateCreateMetadata = (defaultType: string) => {
   return initialState;
 };
 
+const MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST = 500;
+
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -111,5 +113,6 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getLabelByValue,
-  getInitialStateCreateMetadata
+  getInitialStateCreateMetadata,
+  MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST
 };
