@@ -55,6 +55,14 @@ public class ReloadCertificatesTest extends TestBase implements ITestIoTIsolated
                         .withNewServiceCAStrategy()
                         .endServiceCAStrategy()
                         .endInterServiceCertificates()
+
+                        .editOrNewAdapters()
+                        .editOrNewHttp()
+                        // reset to use service CA endpoint secret
+                        .withNewEndpoint().endEndpoint()
+                        .endHttp()
+                        .endAdapters()
+
                         .endSpec();
                 })
                 .run((session) -> {
