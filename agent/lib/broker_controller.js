@@ -664,7 +664,7 @@ BrokerController.prototype._sync_broker_forwarders = function () {
                     var forwarder_name = address_name + "." + forwarder.name + "." + forwarder.direction;
                     // Only create forwarder for subscriptions if the direction is outward
                     if (address_type === "queue" || (address_type === "subscription" && forwarder.direction === "out")) {
-                        var sourceAddress = forwarder.direction === "out" ? address : forwarder.remoteAddress;
+                        var sourceAddress = forwarder.direction === "out" ? (address_type === "subscription" ? this.addresses[address].topic + "::" + address : address) : forwarder.remoteAddress;
                         var targetAddress = forwarder.direction === "out" ? forwarder.remoteAddress : address;
                         var forwarder_entry = {
                             name: forwarder_name,
