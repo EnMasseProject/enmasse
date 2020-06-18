@@ -27,22 +27,22 @@ import java.util.Objects;
 )
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Ttl extends AbstractWithAdditionalProperties {
-    private Integer maximum;
-    private Integer minimum;
+    private Long maximum;
+    private Long minimum;
 
-    public Integer getMaximum() {
+    public Long getMaximum() {
         return maximum;
     }
 
-    public void setMaximum(Integer maximum) {
+    public void setMaximum(Long maximum) {
         this.maximum = maximum;
     }
 
-    public Integer getMinimum() {
+    public Long getMinimum() {
         return minimum;
     }
 
-    public void setMinimum(Integer minimum) {
+    public void setMinimum(Long minimum) {
         this.minimum = minimum;
     }
 

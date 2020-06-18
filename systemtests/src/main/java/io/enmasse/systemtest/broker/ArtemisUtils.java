@@ -29,14 +29,19 @@ import static org.hamcrest.CoreMatchers.is;
 
 public class ArtemisUtils {
 
-    public static Map<String, Object> getAddressSettings(Kubernetes kubernetes, AddressSpace addressSpace, String addressName) throws Exception {
+    public static Map<String, Object> getAddressSettings(Kubernetes kubernetes, AddressSpace addressSpace, String addressName)  {
         Map<String, String> brokerLabels = new HashMap<>();
         brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         brokerLabels.put(LabelKeys.ROLE, "broker");
 
         UserCredentials credentials = getSupportCredentials(addressSpace);
 
-        kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+        try {
+            kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
 
         List<Pod> brokerPods = Kubernetes.getInstance().listPods(brokerLabels);
         assertThat(brokerPods.size(), is(1));

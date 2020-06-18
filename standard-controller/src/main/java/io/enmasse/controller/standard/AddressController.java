@@ -826,8 +826,8 @@ public class AddressController implements Watcher<Address> {
 
         Ttl planTtl = addressPlan.getTtl();
         if (planTtl != null) {
-            Integer min = sanitizeTtlValue(planTtl.getMinimum());
-            Integer max = sanitizeTtlValue(planTtl.getMaximum());
+            Long min = sanitizeTtlValue(planTtl.getMinimum());
+            Long max = sanitizeTtlValue(planTtl.getMaximum());
 
             boolean maxGtMin = min == null || max == null || max > min;
             if (max != null && maxGtMin) {
@@ -840,8 +840,8 @@ public class AddressController implements Watcher<Address> {
 
         Ttl addrTtl = address.getSpec().getTtl();
         if (addrTtl != null) {
-            Integer min = sanitizeTtlValue(addrTtl.getMinimum());
-            Integer max = sanitizeTtlValue(addrTtl.getMaximum());
+            Long min = sanitizeTtlValue(addrTtl.getMinimum());
+            Long max = sanitizeTtlValue(addrTtl.getMaximum());
 
             boolean maxGtMin = min == null || max == null || max > min;
             if (max != null && maxGtMin && (!status.hasMaximum() || status.getMaximum() > max)) {
@@ -856,7 +856,7 @@ public class AddressController implements Watcher<Address> {
 
     }
 
-    private Integer sanitizeTtlValue(Integer ttl) {
+    private Long sanitizeTtlValue(Long ttl) {
         return ttl != null && ttl < 1 ? null : ttl;
     }
 

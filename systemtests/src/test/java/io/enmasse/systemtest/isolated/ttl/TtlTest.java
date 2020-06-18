@@ -9,11 +9,12 @@ import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
 import io.enmasse.systemtest.broker.ArtemisUtils;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -21,40 +22,37 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
 
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @Tag(ISOLATED)
 class TtlTest extends TestBase implements ITestBaseIsolated {
-    private static Logger log = CustomLogger.getLogger();
 
     @ParameterizedTest(name = "tesAddressSpecified-{0}-space")
-    @ValueSource(strings = {"standard", "brokered"})
+    @ValueSource(strings = {/*"standard",*/ "brokered"})
     void tesAddressSpecified(String type) throws Exception {
-        doTestTtl(type, null, new TtlBuilder().withMinimum(500).withMaximum(5000).build(),
-                new TtlBuilder().withMinimum(500).withMaximum(5000).build());
+        doTestTtl(type, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
+                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "tesAddressPlanSpecifiedTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void tesAddressPlanSpecified(String type) throws Exception {
-        doTestTtl(type, new TtlBuilder().withMinimum(500).withMaximum(5000).build(), null,
-                new TtlBuilder().withMinimum(500).withMaximum(5000).build());
+        doTestTtl(type, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
+                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testOverriding-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testOverriding(String type) throws Exception {
-        doTestTtl(type, new TtlBuilder().withMinimum(500).withMaximum(5000).build(), new TtlBuilder().withMinimum(550).withMaximum(6000).build(),
-                new TtlBuilder().withMinimum(550 /* higher addr min takes priority */).withMaximum(5000 /* lower max plan takes priority */).build());
+        doTestTtl(type, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), new TtlBuilder().withMinimum(550L).withMaximum(6000L).build(),
+                new TtlBuilder().withMinimum(550L /* higher addr min takes priority */).withMaximum(5000L /* lower max plan takes priority */).build());
     }
 
     private void doTestTtl(String type, Ttl addrPlanTtl, Ttl addrTtl, Ttl expectedTtl) throws Exception {
@@ -156,22 +154,25 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         isolatedResourcesManager.createAddressSpace(addressSpace);
         isolatedResourcesManager.setAddresses(addrWithTtl);
 
-        addrWithTtl = resourcesManager.getAddress(addrWithTtl.getMetadata().getNamespace(), addrWithTtl);
-            assertThat(addrWithTtl.getStatus().getTtl(), notNullValue());
-        Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, addressSpace, addrWithTtl.getSpec().getAddress());
+        Address reread = resourcesManager.getAddress(addrWithTtl.getMetadata().getNamespace(), addrWithTtl);
+        assertThat(reread.getStatus().getTtl(), notNullValue());
         if (expectedTtl.getMinimum() != null) {
-            assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), is(expectedTtl.getMinimum()));
-            assertThat(((Number) actualSettings.get("minExpiryDelay")).longValue(), is(expectedTtl.getMinimum()));
+            assertThat(reread.getStatus().getTtl().getMinimum(), is(expectedTtl.getMinimum()));
         } else {
-            assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), nullValue());
+            assertThat(reread.getStatus().getTtl().getMinimum(), nullValue());
         }
         if (expectedTtl.getMaximum() != null) {
-            assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), is(expectedTtl.getMaximum()));
-            assertThat(((Number) actualSettings.get("maxExpiryDelay")).longValue(), is(expectedTtl.getMaximum()));
+            assertThat(reread.getStatus().getTtl().getMaximum(), is(expectedTtl.getMaximum()));
         } else {
-            assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), nullValue());
+            assertThat(reread.getStatus().getTtl().getMaximum(), nullValue());
         }
 
+
+        TestUtils.waitUntilCondition("", waitPhase -> {
+            Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, addressSpace, addrWithTtl.getSpec().getAddress());
+            return Objects.equals(expectedTtl.getMinimum() == null ? -1 : expectedTtl.getMinimum(), ((Number) actualSettings.get("minExpiryDelay")).longValue()) &&
+                    Objects.equals(expectedTtl.getMaximum() == null ? -1  : expectedTtl.getMaximum(), ((Number) actualSettings.get("maxExpiryDelay")).longValue());
+        }, new TimeoutBudget(1, TimeUnit.MINUTES));
 
     }
 
