@@ -65,7 +65,7 @@ class RouterStatus {
         for (List<String> autoLink : autoLinks) {
             String addr = autoLink.get(0);
 
-            if (addr.equals(addressName)) {
+            if (addressName.equals(addr)) {
                 ok++;
             }
         }
@@ -90,7 +90,7 @@ class RouterStatus {
                 String prefix = linkRoute.get(0);
 
                 // Pooled topics have active link routes
-                if (prefix.equals(addressName)) {
+                if (addressName.equals(prefix)) {
                     ok++;
                 }
             }
@@ -124,7 +124,7 @@ class RouterStatus {
 
                     log.debug("Addr: {}, Dir: {}, operStatus: {}", addr, dir, operStatus);
 
-                    if (addr.equals(addressName) && operStatus.equals("active")) {
+                    if (addressName.equals(addr) && "active".equals(operStatus)) {
                         active.add(dir);
                         log.debug("  Match!");
                     }
@@ -158,7 +158,7 @@ class RouterStatus {
                     String dir = linkRoute.get(2);
                     String operStatus = linkRoute.get(3);
 
-                    if (addr.equals(addressName) && operStatus.equals("active")) {
+                    if (addressName.equals(addr) && "active".equals(operStatus)) {
                         active.add(dir);
                     }
                 }
@@ -219,7 +219,7 @@ class RouterStatus {
             for (RouterStatus routerStatus : routerStatusList) {
                 for (List<String> entry : routerStatus.links) {
                     String linkName = entry.get(0);
-                    if (linkName.equals(address.getForwarderLinkName(forwarder))) {
+                    if (address.getForwarderLinkName(forwarder).equals(linkName)) {
                         found = true;
                         String operStatus = entry.get(1);
 
