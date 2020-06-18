@@ -34,3 +34,9 @@ export interface IIoTDevicesResponse {
     }>;
   };
 }
+
+export interface IIoTDevicesCountResponse {
+  devices: {
+    total: number;
+  };
+}

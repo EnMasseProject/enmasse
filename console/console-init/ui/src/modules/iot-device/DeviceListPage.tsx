@@ -3,14 +3,15 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDocumentTitle } from "use-patternfly";
 import {
   Grid,
   GridItem,
   Card,
   CardBody,
-  DropdownItem
+  DropdownItem,
+  AlertVariant
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
@@ -23,9 +24,13 @@ import {
 } from "modules/iot-device/components";
 import {
   getHeaderForDialog,
-  getDetailForDialog
+  getDetailForDialog,
+  MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST as MAX_DEVICES
 } from "modules/iot-device/utils";
-import { DeviceListContainer } from "modules/iot-device/containers";
+import {
+  DeviceListContainer,
+  EmptyDeviceContainer
+} from "modules/iot-device/containers";
 import { compareObject } from "utils";
 import { getInitialFilter } from "modules/iot-device/utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
@@ -44,7 +49,37 @@ export default function DeviceListPage() {
     getInitialFilter()
   );
 
+  const [isAlertVisible, setIsAlertVisible] = useState<boolean>(false);
+  const [alertVariant, setAlertVariant] = useState<AlertVariant>();
+  const [alertTitle, setAlertTitle] = useState<string>("");
+  const [alertDescription, setAlertDescription] = useState<string>("");
+
   const { dispatch } = useStoreContext();
+
+  useEffect(() => {
+    if (totalDevices && totalDevices < MAX_DEVICES) setIsAlertVisible(false);
+    else if (
+      totalDevices &&
+      totalDevices > MAX_DEVICES &&
+      compareObject(appliedFilter, getInitialFilter())
+    ) {
+      setIsAlertVisible(true);
+      setAlertVariant(AlertVariant.info);
+      setAlertTitle("Run filter to view your devices");
+      setAlertDescription(`You have a total of ${totalDevices} devices, the system lists
+                            the ${MAX_DEVICES} most recently added.`);
+    } else if (
+      totalDevices &&
+      totalDevices > MAX_DEVICES &&
+      !compareObject(appliedFilter, getInitialFilter())
+    ) {
+      setIsAlertVisible(true);
+      setAlertVariant(AlertVariant.warning);
+      setAlertTitle("Beyond search capability");
+      setAlertDescription(`There are ${totalDevices} devices matching current criteria, system
+                            returned ${MAX_DEVICES} results. Add criteria to narrow down.`);
+    }
+  }, [totalDevices]);
 
   const onSelectDevice = (
     data: IDevice,
@@ -202,16 +237,15 @@ export default function DeviceListPage() {
     // TODO: After create device is ready
   };
 
-  // TODO: the fetch devices needs to be moved to devicelistpage for the empty
-  // device list to be shown properly.
-  // if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
-  //   return (
-  //     <EmptyDeviceList
-  //       handleInputDeviceInfo={handleInputDeviceInfo}
-  //       handleJSONUpload={handleJSONUpload}
-  //     />
-  //   );
-  // }
+  if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
+    return (
+      <EmptyDeviceContainer
+        handleInputDeviceInfo={handleInputDeviceInfo}
+        handleJSONUpload={handleJSONUpload}
+        setTotalDevices={setTotalDevices}
+      />
+    );
+  }
 
   return (
     <Grid gutter="md">
@@ -228,11 +262,11 @@ export default function DeviceListPage() {
       </GridItem>
       <GridItem span={9}>
         <DeviceListAlert
-          visible={true}
-          variant={"info"}
+          visible={isAlertVisible}
+          variant={alertVariant}
           isInline={true}
-          title={"Run filter to view your devices"}
-          description={`You have a total of ${totalDevices} devices`}
+          title={alertTitle}
+          description={alertDescription}
         />
         <br />
         <DeviceListToolbar
