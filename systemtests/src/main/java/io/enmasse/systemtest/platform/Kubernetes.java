@@ -35,6 +35,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
@@ -187,13 +188,6 @@ public abstract class Kubernetes {
     public abstract void deleteExternalEndpoint(String namespace, String name);
 
     public abstract String getOlmNamespace();
-
-    /**
-     * Retrieve host or ip address of Kubernetes node.
-     */
-    public String getHost() {
-        return "localhost";
-    }
 
     public List<Route> listRoutes(String namespace, Map<String, String> labels) {
         throw new UnsupportedOperationException();
@@ -1245,7 +1239,10 @@ public abstract class Kubernetes {
     /**
      * Return the external IP for the first node found in the cluster.
      */
-    public String getNodeHost() {
+    public String getHost() {
+        if (isCRC()) {
+            return "api.crc.testing";
+        }
         List<NodeAddress> addresses = client.nodes().list().getItems().stream()
                 .peek(n -> CustomLogger.getLogger().info("Found node: {}", n))
                 .flatMap(n -> n.getStatus().getAddresses().stream()

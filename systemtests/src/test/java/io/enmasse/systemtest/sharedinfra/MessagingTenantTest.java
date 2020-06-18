@@ -13,9 +13,7 @@ import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MessagingTenantTest extends TestBase {
 
@@ -101,6 +99,4 @@ public class MessagingTenantTest extends TestBase {
                         MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus() != null &&
                         MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus().equals("False")));
     }
-
-
 }

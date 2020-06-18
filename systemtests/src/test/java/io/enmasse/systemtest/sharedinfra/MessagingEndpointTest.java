@@ -66,7 +66,7 @@ public class MessagingEndpointTest extends TestBase {
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost(kubernetes.getNodeHost())
+                .withHost(kubernetes.getHost())
                 .addToProtocols("AMQP")
                 .editOrNewNodePort()
                 .endNodePort()

@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.utils;
 
 import io.enmasse.address.model.Address;
+import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
@@ -52,6 +53,26 @@ public class JmsProvider {
         return (javax.jms.Destination) context.lookup(address);
     }
 
+    private String getAddress(MessagingAddress address) {
+        if (address.getSpec().getAddress() != null) {
+            return address.getSpec().getAddress();
+        }
+        return address.getMetadata().getName();
+    }
+
+    private HashMap<String, String> createAddressMap(MessagingAddress destination) {
+        String identification;
+        if (destination.getSpec().getQueue() != null) {
+            identification = "queue.";
+        } else {
+            identification = "topic.";
+        }
+
+        return new HashMap<>() {{
+            put(identification + getAddress(destination), getAddress(destination));
+        }};
+    }
+
     private HashMap<String, String> createAddressMap(Address destination) {
         String identification;
         if (destination.getSpec().getType().equals(AddressType.QUEUE.toString())) {
@@ -65,8 +86,14 @@ public class JmsProvider {
         }};
     }
 
+    public Context createContext(String host, int port, boolean tls, String username, String password, String clientID, MessagingAddress address) throws NamingException {
+        Hashtable env = setUpEnv(host, port, tls, username, password, clientID, createAddressMap(address));
+        context = new InitialContext(env);
+        return context;
+    }
+
     public Context createContext(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
-        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(), cliID,
+        Hashtable env = setUpEnv("amqps://" + route, 0, true, credentials.getUsername(), credentials.getPassword(), cliID,
                 createAddressMap(address));
         context = new InitialContext(env);
         return context;
@@ -94,21 +121,45 @@ public class JmsProvider {
 
 
     public Hashtable<Object, Object> setUpEnv(String url, String username, String password, Map<String, String> prop) {
-        return setUpEnv(url, username, password, "", prop);
+        return setUpEnv(url, 0, true, username, password, "", prop);
     }
 
-    public Hashtable<Object, Object> setUpEnv(String url, String username, String password, String clientID, Map<String, String> prop) {
+    public Hashtable<Object, Object> setUpEnv(String host, int port, boolean tls, String username, String password, String clientID, Map<String, String> prop) {
         Hashtable<Object, Object> env = new Hashtable<>();
         env.put(Context.INITIAL_CONTEXT_FACTORY, "org.apache.qpid.jms.jndi.JmsInitialContextFactory");
-        StringBuilder urlParam = new StringBuilder();
-        urlParam.append("?transport.trustAll=true")
-                .append("&jms.password=").append(username)
-                .append("&jms.username=").append(password)
-                .append("&transport.verifyHost=false")
-                .append("&amqp.saslMechanisms=PLAIN");
-        urlParam.append(clientID.isEmpty() ? clientID : "&jms.clientID=" + clientID);
 
-        env.put("connectionfactory.qpidConnectionFactory", url + urlParam);
+        String scheme = "amqp://";
+        List<String> params = new ArrayList<>();
+        if (tls) {
+            scheme = "amqps://";
+            params.add("?transport.trustAll=true");
+            params.add("?transport.verifyHost=false");
+        }
+
+        if (username != null && password != null) {
+            params.add("amqp.saslMechanisms=PLAIN");
+            params.add(String.format("jms.username=%s", username));
+            params.add(String.format("jms.password=%s", password));
+        } else {
+            params.add("amqp.saslMechanisms=ANONYMOUS");
+        }
+
+        if (clientID != null && !clientID.isBlank()) {
+            params.add(String.format("jms.clientID=%s", clientID));
+        }
+
+        StringBuilder url = new StringBuilder(String.format("%s%s", scheme, host));
+        if (port != 0) {
+            url.append(":").append(port);
+        }
+
+        char sep = '?';
+        for (String param : params) {
+            url.append(sep).append(param);
+            sep = '&';
+        }
+
+        env.put("connectionfactory.qpidConnectionFactory", url.toString());
         for (Map.Entry<String, String> entry : prop.entrySet()) {
             env.put(entry.getKey(), entry.getValue());
         }

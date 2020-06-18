@@ -22,6 +22,12 @@ type NamespaceSelector struct {
 	MatchNames []string `json:"matchNames,omitempty"`
 }
 
+type MessagingCapability string
+
+const (
+	MessagingCapabilityTransactional MessagingCapability = "transactional"
+)
+
 type MessagingInfrastructureReference struct {
 	// Name of referenced MessagingInfra.
 	Name string `json:"name"`

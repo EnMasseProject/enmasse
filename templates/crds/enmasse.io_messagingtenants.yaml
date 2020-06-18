@@ -4,7 +4,7 @@ apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.2.5
+    controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
   name: messagingtenants.enmasse.io
 spec:
@@ -53,6 +53,12 @@ spec:
           type: object
         spec:
           properties:
+            capabilities:
+              description: The desired capabilities common to all addresses for this
+                tenant.
+              items:
+                type: string
+              type: array
             messagingInfrastructureRef:
               description: Reference to a specific MessagingInfra to use (must be
                 available for this tenant).
@@ -69,6 +75,21 @@ spec:
           type: object
         status:
           properties:
+            broker:
+              description: For transactional tenants, the broker addresses should
+                be scheduled todo
+              properties:
+                host:
+                  type: string
+                state:
+                  type: string
+              type: object
+            capabilities:
+              description: The actual capabilities common to all addresses for this
+                tenant.
+              items:
+                type: string
+              type: array
             conditions:
               items:
                 properties:

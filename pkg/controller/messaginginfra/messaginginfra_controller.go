@@ -631,26 +631,26 @@ func (r *processorResult) Result() reconcile.Result {
 }
 
 // Find the MessagingInfra servicing a given namespace
-func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1beta2.MessagingInfrastructure, error) {
+func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1beta2.MessagingTenant, *v1beta2.MessagingInfrastructure, error) {
 	// Retrieve the MessagingTenant for this namespace
 	tenant := &v1beta2.MessagingTenant{}
 	err := c.Get(ctx, types.NamespacedName{Name: messagingtenant.TENANT_RESOURCE_NAME, Namespace: namespace}, tenant)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			return nil, utilerrors.NewNotFoundError("MessagingTenant", messagingtenant.TENANT_RESOURCE_NAME, namespace)
+			return nil, nil, utilerrors.NewNotFoundError("MessagingTenant", messagingtenant.TENANT_RESOURCE_NAME, namespace)
 		}
-		return nil, err
+		return nil, nil, err
 	}
 
 	if !tenant.IsBound() {
-		return nil, utilerrors.NewNotBoundError(namespace)
+		return tenant, nil, utilerrors.NewNotBoundError(namespace)
 	}
 
 	// Retrieve the MessagingInfra for this MessagingTenant
 	infra := &v1beta2.MessagingInfrastructure{}
 	err = c.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
 	if err != nil {
-		return nil, err
+		return tenant, nil, err
 	}
-	return infra, nil
+	return tenant, infra, nil
 }

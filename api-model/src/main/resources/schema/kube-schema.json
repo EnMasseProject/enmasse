@@ -1135,6 +1135,15 @@
       "type": "object",
       "description": "",
       "properties": {
+        "capabilities": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "type": "string",
+            "description": ""
+          }
+        },
         "messagingInfrastructureRef": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureReference",
           "javaType": "MessagingInfrastructureReference"
@@ -1150,6 +1159,19 @@
       "type": "object",
       "description": "",
       "properties": {
+        "broker": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressBroker",
+          "javaType": "MessagingAddressBroker"
+        },
+        "capabilities": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "type": "string",
+            "description": ""
+          }
+        },
         "conditions": {
           "type": "array",
           "description": "",

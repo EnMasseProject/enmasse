@@ -72,11 +72,6 @@ public class GenericKubernetes extends Kubernetes {
     }
 
     @Override
-    public String getHost() {
-        return getNodeHost();
-    }
-
-    @Override
     public String getOlmNamespace() {
         return OLM_NAMESPACE;
     }

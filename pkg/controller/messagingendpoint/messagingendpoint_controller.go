@@ -180,7 +180,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	// Retrieve the MessagingInfra for this MessagingEndpoint
 	var infra *v1beta2.MessagingInfrastructure
 	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
-		i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
+		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
 			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
@@ -330,7 +330,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingEndpoint")
 				}
 
-				infra, err := messaginginfra.LookupInfra(ctx, r.client, endpoint.Namespace)
+				_, infra, err := messaginginfra.LookupInfra(ctx, r.client, endpoint.Namespace)
 				if err != nil {
 					// Not bound - allow dropping finalizer
 					if utilerrors.IsNotBound(err) || utilerrors.IsNotFound(err) {

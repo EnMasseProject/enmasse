@@ -32,6 +32,8 @@ type MessagingTenant struct {
 type MessagingTenantSpec struct {
 	// Reference to a specific MessagingInfra to use (must be available for this tenant).
 	MessagingInfrastructureRef *MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
+	// The desired capabilities common to all addresses for this tenant.
+	Capabilities []MessagingCapability `json:"capabilities,omitempty"`
 }
 
 type MessagingTenantStatus struct {
@@ -41,6 +43,10 @@ type MessagingTenantStatus struct {
 	// MessagingInfra this tenant is bound to.
 	MessagingInfrastructureRef MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
 	Conditions                 []MessagingTenantCondition       `json:"conditions,omitempty"`
+	// The actual capabilities common to all addresses for this tenant.
+	Capabilities []MessagingCapability `json:"capabilities,omitempty"`
+	// For transactional tenants, the broker addresses should be scheduled todo
+	Broker *MessagingAddressBroker `json:"broker,omitempty"`
 }
 
 type MessagingTenantCondition struct {
@@ -56,6 +62,8 @@ type MessagingTenantConditionType string
 const (
 	MessagingTenantBound     MessagingTenantConditionType = "Bound"
 	MessagingTenantCaCreated MessagingTenantConditionType = "CaCreated"
+	MessagingTenantScheduled MessagingTenantConditionType = "Scheduled"
+	MessagingTenantCreated   MessagingTenantConditionType = "Created"
 	MessagingTenantReady     MessagingTenantConditionType = "Ready"
 )
 

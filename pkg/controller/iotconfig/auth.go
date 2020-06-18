@@ -90,7 +90,7 @@ func (r *ReconcileIoTConfig) processAdapterInfraCert(ctx context.Context, config
 
 	// for all adapters
 
-	infra, err := messaginginfra.LookupInfra(ctx, r.client, config.Namespace)
+	_, infra, err := messaginginfra.LookupInfra(ctx, r.client, config.Namespace)
 	if err != nil {
 		return reconcile.Result{}, err
 	}

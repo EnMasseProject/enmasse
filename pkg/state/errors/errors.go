@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	BrokerInUseError    error = fmt.Errorf("broker in use")
+	NotTenantError      error = fmt.Errorf("not tenant found")
 	NotInitializedError error = fmt.Errorf("not initialized")
 	NotSyncedError      error = fmt.Errorf("not synchronized")
 	NoEndpointsError    error = fmt.Errorf("no endpoints")

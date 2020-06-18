@@ -7,12 +7,16 @@ package messagingtenant
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
+	amqp "github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
+	"github.com/enmasseproject/enmasse/pkg/state"
+	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 
@@ -41,6 +45,7 @@ type ReconcileMessagingTenant struct {
 	reader         client.Reader
 	recorder       record.EventRecorder
 	certController *cert.CertController
+	clientManager  state.ClientManager
 	namespace      string
 }
 
@@ -62,12 +67,14 @@ const (
 func newReconciler(mgr manager.Manager) *ReconcileMessagingTenant {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
+	clientManager := state.GetClientManager()
 	return &ReconcileMessagingTenant{
 		client:         mgr.GetClient(),
 		reader:         mgr.GetAPIReader(),
 		recorder:       mgr.GetEventRecorderFor("messagingtenant"),
 		certController: cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour),
 		namespace:      namespace,
+		clientManager:  clientManager,
 	}
 }
 
@@ -122,8 +129,13 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		if tenant.Status.Phase == "" {
 			tenant.Status.Phase = v1beta2.MessagingTenantConfiguring
 		}
+		// TODO: Set based on plans
+		tenant.Status.Capabilities = tenant.Spec.Capabilities
+
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantBound)
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCaCreated)
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantScheduled)
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCreated)
 		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantReady)
 		return processorResult{}, nil
 	})
@@ -165,6 +177,18 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 					}
 
 					if tenant.IsBound() {
+						infra := &v1beta2.MessagingInfrastructure{}
+						err = r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
+						if err != nil {
+							return reconcile.Result{}, err
+						}
+
+						client := r.clientManager.GetClient(infra)
+						err = client.DeleteTenant(tenant)
+						if err != nil {
+							return reconcile.Result{}, err
+						}
+
 						secret := &corev1.Secret{
 							ObjectMeta: metav1.ObjectMeta{Namespace: tenant.Status.MessagingInfrastructureRef.Namespace, Name: cert.GetTenantCaSecretName(tenant.Namespace)},
 						}
@@ -242,6 +266,60 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 			tenant.Status.Message = msg
 			return processorResult{RequeueAfter: 10 * time.Second}, err
 		}
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
+	// Schedule tenant with infra
+	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
+		transactional := false
+		for _, capability := range tenant.Status.Capabilities {
+			if capability == v1beta2.MessagingCapabilityTransactional {
+				transactional = true
+				break
+			}
+		}
+
+		if !transactional {
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+			return processorResult{}, nil
+		}
+
+		// Already scheduled
+		if tenant.Status.Broker != nil {
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+			return processorResult{}, nil
+		}
+
+		client := r.clientManager.GetClient(infra)
+		err := client.ScheduleTenant(tenant)
+		if err != nil {
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantScheduled).SetStatus(corev1.ConditionFalse, "", err.Error())
+			tenant.Status.Message = err.Error()
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
+				return processorResult{RequeueAfter: 10 * time.Second}, nil
+			}
+			return processorResult{}, err
+		}
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{Requeue: true}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
+	// Sync tenant with infra
+	result, err = rc.Process(func(tenant *v1beta2.MessagingTenant) (processorResult, error) {
+		client := r.clientManager.GetClient(infra)
+		err := client.SyncTenant(tenant)
+		if err != nil {
+			tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			tenant.Status.Message = err.Error()
+			return processorResult{}, err
+		}
+		tenant.Status.GetMessagingTenantCondition(v1beta2.MessagingTenantCreated).SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err

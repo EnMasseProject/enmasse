@@ -85,7 +85,7 @@ under the License.
             <permission type="deleteNonDurableQueue" roles="manage,router"/>
             <permission type="createDurableQueue" roles="manage"/>
             <permission type="deleteDurableQueue" roles="manage"/>
-            <permission type="createAddress" roles="manage"/>
+            <permission type="createAddress" roles="manage,router"/>
             <permission type="deleteAddress" roles="manage"/>
             <permission type="consume" roles="manage,router"/>
             <permission type="browse" roles="manage"/>

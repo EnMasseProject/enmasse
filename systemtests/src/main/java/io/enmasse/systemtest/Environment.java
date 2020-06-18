@@ -65,6 +65,7 @@ public class Environment {
     private static final String OCP4_EXTERNAL_IMAGE_REGISTRY = "OCP4_EXTERNAL_IMAGE_REGISTRY";
     private static final String OCP4_INTERNAL_IMAGE_REGISTRY = "OCP4_INTERNAL_IMAGE_REGISTRY";
     private static final String OVERRIDE_CLUSTER_TYPE = "OVERRIDE_CLUSTER_TYPE";
+    private static final String IMAGE_PULL_POLICY = "IMAGE_PULL_POLICY";
 
     //Config paths
     private static final String scaleConfig = System.getenv().getOrDefault(SCALE_CONFIG, Paths.get(System.getProperty("user.dir"), "scale-config.json").toAbsolutePath().toString());
@@ -100,6 +101,7 @@ public class Environment {
     private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
     private final String clusterExternalImageRegistry = getOrDefault(jsonEnv, OCP4_EXTERNAL_IMAGE_REGISTRY, "");
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
+    private final String imagePullPolicy = getOrDefault(jsonEnv, IMAGE_PULL_POLICY, "Always");
 
     //Default values
     private final UserCredentials managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
@@ -323,6 +325,10 @@ public class Environment {
 
     public String getOverrideClusterType() {
         return overrideClusterType;
+    }
+
+    public String getImagePullPolicy() {
+        return imagePullPolicy;
     }
 
     private String getOrDefault(JsonNode jsonConfig, String varName, String defaultValue) {

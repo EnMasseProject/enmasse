@@ -19,7 +19,9 @@ import (
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	. "github.com/enmasseproject/enmasse/pkg/state/errors"
 	. "github.com/enmasseproject/enmasse/pkg/state/router"
-	"k8s.io/apimachinery/pkg/runtime"
+	sched "github.com/enmasseproject/enmasse/pkg/state/scheduler"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -38,8 +40,10 @@ const maxBatchSize int = 50
 // TODO - Unit test of address and endpoint management
 type request struct {
 	done     chan error
-	resource runtime.Object
+	resource metav1.Object
 }
+
+var defaultScheduler = sched.NewDummyScheduler()
 
 type infraClient struct {
 	// The known routers and brokers. All configuration is synchronized with these. If their connections get reset,
@@ -65,10 +69,11 @@ type infraClient struct {
 	deleterStop    chan bool
 	deleterStopped chan bool
 
-	// Endpoints and addresses known to this client. These provide a consistent view of addresses and endpoints
+	// Tenants, endpoints and addresses known to this client. These provide a consistent view of addresses and endpoints
 	// between infra, endpoint and address controllers that may attempt to modify the state at the same time.
 	addresses map[resourceKey]*v1beta2.MessagingAddress
 	endpoints map[resourceKey]*v1beta2.MessagingEndpoint
+	tenants   map[resourceKey]*v1beta2.MessagingTenant
 
 	// Factory classes to make it possible to inject alternative clients for configuring routers and brokers.
 	routerStateFactory routerStateFunc
@@ -94,6 +99,7 @@ func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, cloc
 		hostMap:            make(map[string]Host, 0),
 		addresses:          make(map[resourceKey]*v1beta2.MessagingAddress, 0),
 		endpoints:          make(map[resourceKey]*v1beta2.MessagingEndpoint, 0),
+		tenants:            make(map[resourceKey]*v1beta2.MessagingTenant, 0),
 		syncRequests:       make(chan *request, syncBufferSize),
 		syncerStop:         make(chan bool),
 		syncerStopped:      make(chan bool),
@@ -207,7 +213,7 @@ func (i *infraClient) updateRouters(hosts []Host) {
 	}
 }
 
-func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
+func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host, removeRouterConnectors bool) error {
 	toAdd := make(map[string]Host, 0)
 	for _, host := range hosts {
 		toAdd[host.Hostname] = host
@@ -235,7 +241,7 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host) error {
 		log.Printf("Removing broker %+v", host)
 		_, foundAdded := toAdd[hostname]
 		// If it was found, it means the ip changed, but the host remains stable so there is no need to delete the connector.
-		if !foundAdded {
+		if !foundAdded && removeRouterConnectors {
 			err := i.applyRouters(ctx, func(r *RouterState) error {
 				router := r
 				return router.DeleteEntities(ctx, []RouterEntity{&NamedEntity{EntityType: RouterConnectorEntity, Name: connectorName(i.brokers[host])}})
@@ -285,6 +291,42 @@ func (i *infraClient) initialize(ctx context.Context) error {
 	})
 }
 
+func (i *infraClient) DeleteBroker(host string) error {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	var state *BrokerState
+	newBrokers := make([]Host, 0)
+	for _, brokerState := range i.brokers {
+		if brokerState.Host().Hostname == host {
+			state = brokerState
+		} else {
+			newBrokers = append(newBrokers, brokerState.Host())
+		}
+	}
+	if state == nil {
+		return nil
+	}
+
+	for _, tenant := range i.tenants {
+		if tenant.Status.Broker != nil && tenant.Status.Broker.Host == host {
+			return BrokerInUseError
+		}
+	}
+
+	for _, address := range i.addresses {
+		for _, broker := range address.Status.Brokers {
+			if broker.Host == host {
+				return BrokerInUseError
+			}
+		}
+	}
+
+	// Not in use, so we can safely delete the broker
+	ctx := context.Background()
+	return i.updateBrokers(ctx, newBrokers, false)
+}
+
 func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]ConnectorStatus, error) {
 	log.Printf("Syncing with routers: %+v, and brokers: %+v", routers, brokers)
 	i.lock.Lock()
@@ -295,7 +337,7 @@ func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Con
 
 	i.updateRouters(routers)
 
-	err := i.updateBrokers(ctx, brokers)
+	err := i.updateBrokers(ctx, brokers, true)
 	if err != nil {
 		return nil, err
 	}
@@ -458,7 +500,8 @@ func (i *infraClient) syncConfiguration(ctx context.Context) error {
 	return i.syncEntities(ctx, routerEntities, brokerEntities)
 }
 
-func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress, scheduler Scheduler) error {
+func (i *infraClient) ScheduleTenant(tenant *v1beta2.MessagingTenant) error {
+
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -471,7 +514,38 @@ func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress, schedul
 		brokers = append(brokers, broker)
 	}
 
-	return scheduler.ScheduleAddress(address, brokers)
+	scheduler := defaultScheduler
+	// Use the assigned tenant broker if set
+	return scheduler.ScheduleTenant(tenant, brokers)
+}
+
+func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress) error {
+
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	if !i.initialized {
+		return NotInitializedError
+	}
+
+	tenant, ok := i.tenants[resourceKey{Name: "default", Namespace: address.GetNamespace()}]
+	if !ok {
+		return NotTenantError
+	}
+
+	brokers := make([]*BrokerState, 0)
+	for _, broker := range i.brokers {
+		brokers = append(brokers, broker)
+	}
+
+	// Use the assigned tenant broker if set
+	if tenant.Status.Broker != nil {
+		address.Status.Brokers = []v1beta2.MessagingAddressBroker{*tenant.Status.Broker}
+		return nil
+	} else {
+		scheduler := defaultScheduler
+		return scheduler.ScheduleAddress(address, brokers)
+	}
 }
 
 func (i *infraClient) applyRouters(ctx context.Context, fn func(router *RouterState) error) error {
@@ -514,12 +588,10 @@ func (i *infraClient) getActiveEndpoints() map[string][]*v1beta2.MessagingEndpoi
 	return activeEndpoints
 }
 
-func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
-
+func (i *infraClient) requestSync(object metav1.Object) error {
 	// Request sync
-	log.Printf("Syncing address %s/%s", address.Namespace, address.Name)
 	req := &request{
-		resource: address,
+		resource: object,
 		done:     make(chan error, 1),
 	}
 	select {
@@ -531,19 +603,21 @@ func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
 	}
 }
 
+func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
+
+	// Request sync
+	log.Printf("Syncing address %s/%s", address.Namespace, address.Name)
+	return i.requestSync(address)
+}
+
 func (i *infraClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
 	log.Printf("Syncing endpoint %s/%s", endpoint.Namespace, endpoint.Name)
-	req := &request{
-		resource: endpoint,
-		done:     make(chan error, 1),
-	}
-	select {
-	case i.syncRequests <- req:
-		return <-req.done
-	default:
-		close(req.done)
-		return NotSyncedError
-	}
+	return i.requestSync(endpoint)
+}
+
+func (i *infraClient) SyncTenant(tenant *v1beta2.MessagingTenant) error {
+	log.Printf("Syncing tenant %s/%s", tenant.Namespace, tenant.Name)
+	return i.requestSync(tenant)
 }
 
 func (i *infraClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error {
@@ -647,26 +721,47 @@ func (i *infraClient) doSync() {
 		return
 	}
 
-	builtRequests, routerEntities, brokerEntities := i.buildEntities(toSync)
+	valid := make([]*request, 0, len(toSync))
+	for _, req := range toSync {
+		switch req.resource.(type) {
+		case *v1beta2.MessagingAddress:
+			if _, ok := i.tenants[resourceKey{Name: "default", Namespace: req.resource.GetNamespace()}]; !ok {
+				req.done <- fmt.Errorf("tenant not synced for %s/%s", req.resource.GetNamespace(), req.resource.GetName())
+				continue
+			}
+			valid = append(valid, req)
+		case *v1beta2.MessagingEndpoint:
+			if _, ok := i.tenants[resourceKey{Name: "default", Namespace: req.resource.GetNamespace()}]; !ok {
+				req.done <- fmt.Errorf("tenant not synced for %s/%s", req.resource.GetNamespace(), req.resource.GetName())
+				continue
+			}
+			valid = append(valid, req)
+		default:
+			valid = append(valid, req)
+		}
+	}
+
+	builtRequests, routerEntities, brokerEntities := i.buildEntities(valid)
 
 	log.Printf("Syncing %d router entities", len(routerEntities))
 	ctx := context.Background()
 	err := i.syncEntities(ctx, routerEntities, brokerEntities)
 	for _, req := range builtRequests {
-		var key resourceKey
+		key := resourceKey{Name: req.resource.GetName(), Namespace: req.resource.GetNamespace()}
 		switch v := req.resource.(type) {
 		case *v1beta2.MessagingAddress:
-			address := req.resource.(*v1beta2.MessagingAddress)
-			key = resourceKey{Name: address.Name, Namespace: address.Namespace}
 			if err == nil {
-				i.addresses[key] = address
+				i.addresses[key] = v
 			}
 			req.done <- err
 		case *v1beta2.MessagingEndpoint:
-			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
-			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
 			if err == nil {
-				i.endpoints[key] = endpoint
+				i.endpoints[key] = v
+			}
+			req.done <- err
+		case *v1beta2.MessagingTenant:
+			if err == nil {
+				i.tenants[key] = v
 			}
 			req.done <- err
 		default:
@@ -717,7 +812,7 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 	for _, req := range requests {
 		switch v := req.resource.(type) {
 		case *v1beta2.MessagingAddress:
-			address := req.resource.(*v1beta2.MessagingAddress)
+			address := v
 			endpoints := activeEndpoints[address.Namespace]
 			if endpoints == nil {
 				req.done <- NoEndpointsError
@@ -755,8 +850,17 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 			}
 
 		case *v1beta2.MessagingEndpoint:
-			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
+			endpoint := v
 			result, err := i.buildRouterEndpointEntities(endpoint)
+			if err != nil {
+				req.done <- err
+				continue
+			}
+			routerEntities = append(routerEntities, result...)
+			built = append(built, req)
+		case *v1beta2.MessagingTenant:
+			tenant := v
+			result, err := i.buildRouterTenantEntities(tenant)
 			if err != nil {
 				req.done <- err
 				continue
@@ -774,6 +878,12 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 
 func isEndpointActive(endpoint *v1beta2.MessagingEndpoint) bool {
 	return endpoint.Status.Phase == v1beta2.MessagingEndpointActive && endpoint.Status.Host != ""
+}
+
+func (i *infraClient) buildRouterTenantEntities(tenant *v1beta2.MessagingTenant) ([]RouterEntity, error) {
+	routerEntities := make([]RouterEntity, 0)
+	// TODO: Create vhost policy based on status (plan settings)
+	return routerEntities, nil
 }
 
 func (i *infraClient) buildRouterEndpointEntities(endpoint *v1beta2.MessagingEndpoint) ([]RouterEntity, error) {
@@ -842,7 +952,37 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 
 	routerEntities := make([]RouterEntity, 0)
 
+	tenant := i.tenants[resourceKey{Name: "default", Namespace: address.Namespace}]
 	tenantId := endpoint.Status.Host
+
+	// If transactional, rely on link route to be created
+	// TODO: Move this to buildRouterTenantEntities once endpoint is not needed.
+	if tenant.Status.Broker != nil {
+		// Transactional means that we create a link route based on the tenant prefix,
+		// and all broker addresses go through that route.
+		log.Println("Tenant borkre set, using ")
+		broker := *tenant.Status.Broker
+		host := i.hostMap[broker.Host]
+		brokerState := i.brokers[host]
+		if brokerState == nil {
+			return nil, fmt.Errorf("unable to configure transactional linkroute (tenant %s) for unknown broker %s", tenantId, broker.Host)
+		}
+		connector := connectorName(brokerState)
+		routerEntities = append(routerEntities, &RouterLinkRoute{
+			Name:       globalLinkRouteName(tenantId, host.Hostname, "out"),
+			Prefix:     tenantId,
+			Direction:  "out",
+			Connection: connector,
+		})
+
+		routerEntities = append(routerEntities, &RouterLinkRoute{
+			Name:       globalLinkRouteName(tenantId, host.Hostname, "in"),
+			Prefix:     tenantId,
+			Direction:  "in",
+			Connection: connector,
+		})
+		return routerEntities, nil
+	}
 
 	// Build desired state
 	addressName := addressName(tenantId, address)
@@ -1130,6 +1270,22 @@ func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
 		return NotDeletedError
 	}
 }
+
+func (i *infraClient) DeleteTenant(tenant *v1beta2.MessagingTenant) error {
+	log.Printf("Deleting tenant %s/%s", tenant.Namespace, tenant.Name)
+	req := &request{
+		resource: tenant,
+		done:     make(chan error, 1),
+	}
+	select {
+	case i.deleteRequests <- req:
+		return <-req.done
+	default:
+		close(req.done)
+		return NotDeletedError
+	}
+}
+
 func (i *infraClient) doDelete() {
 	toDelete := i.collectRequests(i.deleteRequests)
 	if len(toDelete) == 0 {
@@ -1146,18 +1302,28 @@ func (i *infraClient) doDelete() {
 		return
 	}
 
+	checkDelete := func(resource metav1.Object) error {
+		var err error
+		for key, _ := range i.addresses {
+			if resource.GetNamespace() == key.Namespace {
+				err = fmt.Errorf("resource still in use by addresses")
+				break
+			}
+		}
+		return err
+	}
 	valid := make([]*request, 0, len(toDelete))
 	for _, req := range toDelete {
 		switch req.resource.(type) {
-		case *v1beta2.MessagingEndpoint:
-			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
-			var err error
-			for key, _ := range i.addresses {
-				if endpoint.Namespace == key.Namespace {
-					err = fmt.Errorf("endpoint still in use by addresses")
-					break
-				}
+		case *v1beta2.MessagingTenant:
+			err := checkDelete(req.resource)
+			if err != nil {
+				req.done <- err
+				continue
 			}
+			valid = append(valid, req)
+		case *v1beta2.MessagingEndpoint:
+			err := checkDelete(req.resource)
 			if err != nil {
 				req.done <- err
 				continue
@@ -1173,24 +1339,26 @@ func (i *infraClient) doDelete() {
 	ctx := context.Background()
 	err := i.deleteEntities(ctx, routerEntities, brokerEntities)
 	for _, req := range builtRequests {
-		var key resourceKey
+		key := resourceKey{Name: req.resource.GetName(), Namespace: req.resource.GetNamespace()}
 		switch v := req.resource.(type) {
 		case *v1beta2.MessagingAddress:
-			address := req.resource.(*v1beta2.MessagingAddress)
-			key = resourceKey{Name: address.Name, Namespace: address.Namespace}
 			if err == nil {
 				delete(i.addresses, key)
-				log.Printf("Deleted address %s/%s", address.Namespace, address.Name)
+				log.Printf("Deleted address %s/%s", key.Namespace, key.Name)
 			}
 			req.done <- err
 		case *v1beta2.MessagingEndpoint:
-			endpoint := req.resource.(*v1beta2.MessagingEndpoint)
-			key = resourceKey{Name: endpoint.Name, Namespace: endpoint.Namespace}
-
+			endpoint := v
 			if err == nil {
 				i.freePortsInternal(endpoint)
 				delete(i.endpoints, key)
 				log.Printf("Deleted endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+			}
+			req.done <- err
+		case *v1beta2.MessagingTenant:
+			if err == nil {
+				delete(i.tenants, key)
+				log.Printf("Deleted tenant %s/%s", key.Namespace, key.Name)
 			}
 			req.done <- err
 		default:
@@ -1267,8 +1435,12 @@ func autoLinkName(tenantId string, address *v1beta2.MessagingAddress, host strin
 	return fmt.Sprintf("autoLink-%s-%s-%s-%s", tenantId, address.Name, host, direction)
 }
 
+func globalLinkRouteName(tenantId string, host string, direction string) string {
+	return fmt.Sprintf("linkRoute-%s-%s-%s", tenantId, host, direction)
+}
+
 func linkRouteName(tenantId string, address *v1beta2.MessagingAddress, host string, direction string) string {
-	return fmt.Sprintf("autoLink-%s-%s-%s-%s", tenantId, address.Name, host, direction)
+	return fmt.Sprintf("linkRoute-%s-%s-%s-%s", tenantId, address.Name, host, direction)
 }
 
 func addressName(tenantId string, address *v1beta2.MessagingAddress) string {
