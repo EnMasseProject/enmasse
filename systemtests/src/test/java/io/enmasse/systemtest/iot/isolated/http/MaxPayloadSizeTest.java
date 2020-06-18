@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest.iot.isolated.http;
 
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
+
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
@@ -20,7 +22,9 @@ public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
     @SuppressWarnings("resource")
     @Override
     protected Sender sender(Device device) throws Exception {
-        return cleanup(device.createHttpAdapterClient())::send;
+        return cleanup(device
+                .createHttpAdapterClient()
+                .suppressExceptions(statusCode(413)))::send;
     }
 
 }

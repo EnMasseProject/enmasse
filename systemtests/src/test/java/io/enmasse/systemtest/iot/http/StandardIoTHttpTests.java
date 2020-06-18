@@ -6,10 +6,14 @@
 package io.enmasse.systemtest.iot.http;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+
+import javax.net.ssl.SSLHandshakeException;
 
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -160,6 +164,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
          */
 
         try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+            client.suppressExceptions(
+                    statusCode(401)
+                            .or(causedBy(SSLHandshakeException.class)));
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.TELEMETRY)
@@ -173,6 +180,9 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
         }
 
         try (HttpAdapterClient client = device.createHttpAdapterClient()) {
+            client.suppressExceptions(
+                    statusCode(401)
+                            .or(causedBy(SSLHandshakeException.class)));
             assertThrows(TimeoutException.class, () -> {
                 new MessageSendTester()
                         .type(MessageSendTester.Type.EVENT)

@@ -17,6 +17,7 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,8 @@ import javax.ws.rs.core.HttpHeaders;
 
 import org.apache.http.entity.ContentType;
 import org.slf4j.Logger;
+
+import com.google.common.base.Throwables;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
@@ -42,11 +45,43 @@ import io.vertx.ext.web.client.WebClientOptions;
 
 public class HttpAdapterClient extends ApiClient {
 
+    @SuppressWarnings("serial")
+    public static class ResponseException extends RuntimeException {
+
+        private int statusCode;
+
+        public ResponseException(final String message, final int statusCode) {
+            super(message);
+            this.statusCode = statusCode;
+        }
+
+        public int getStatusCode() {
+            return this.statusCode;
+        }
+
+        public static Predicate<Throwable> instanceOf() {
+            return t -> Throwables.getRootCause(t) instanceof ResponseException;
+        }
+
+        public static Predicate<Throwable> and(final Predicate<ResponseException> filter) {
+            return instanceOf().and(t -> filter.test((ResponseException) Throwables.getRootCause(t)));
+        }
+
+        public static Predicate<Throwable> statusCode(int code) {
+            return and(t -> t.getStatusCode() == code);
+        }
+
+    }
+
     protected static final Logger log = CustomLogger.getLogger();
+
+    private static final Predicate<? super Throwable> DEFAULT_EXCEPTION_FILTER = x -> false;
 
     private final Set<String> tlsVersions;
     private final Buffer keyStoreBuffer;
     private final String authzString;
+
+    private Predicate<? super Throwable> exceptionFilter = DEFAULT_EXCEPTION_FILTER;
 
     public HttpAdapterClient(final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
         this(endpoint, null, null, null, key, certificate, tlsVersions);
@@ -171,7 +206,7 @@ public class HttpAdapterClient extends ApiClient {
 
             log.info("POST: code {} -> {}", code, response.bodyAsString());
             if (!expectedCodePredicate.test(code)) {
-                responsePromise.completeExceptionally(new RuntimeException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code)));
+                responsePromise.completeExceptionally(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
             } else {
                 responsePromise.complete(ar.result());
             }
@@ -195,7 +230,7 @@ public class HttpAdapterClient extends ApiClient {
             send(type, payload, Predicates.is(HTTP_ACCEPTED), timeout);
             return true;
         } catch (Exception e) {
-            log.info("Failed to send message", e);
+            logException("Failed to send message", e);
             return false;
         }
     }
@@ -220,4 +255,27 @@ public class HttpAdapterClient extends ApiClient {
         return "Basic " + Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Set a filter to suppress certain (expected) exceptions.
+     *
+     * @param filter The filter to set, may be {@code null} to not suppress any exception.
+     * @return This instance, for chaining calls.
+     */
+    public HttpAdapterClient suppressExceptions(final Predicate<Throwable> filter) {
+        this.exceptionFilter = filter != null ? filter : DEFAULT_EXCEPTION_FILTER;
+        return this;
+    }
+
+    private void logException(final String message, final Throwable e) {
+        if (this.exceptionFilter.test(e)) {
+            log.debug(message, e);
+        } else {
+            log.info(message, e);
+        }
+    }
+
+    public static Predicate<Throwable> causedBy(final Class<? extends Throwable> clazz) {
+        Objects.requireNonNull(clazz);
+        return t -> clazz.isInstance(Throwables.getRootCause(t));
+    }
 }
