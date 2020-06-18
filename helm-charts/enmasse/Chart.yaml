@@ -1,0 +1,23 @@
+apiVersion: v2
+name: enmasse
+description: EnMasse - Self-service messaging on Kubernetes and OpenShift
+appVersion: 1.0.0
+version: 1.0.0
+icon: https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/_images/logo/enmasse_logo.png
+keywords:
+  - mqtt
+  - amqp
+  - messaging
+  - internet-of-things
+  - openshift
+  - enmasse
+  - kubernetes
+  - broker
+home: https://enmasse.io/
+sources:
+  - https://github.com/EnMasseProject/enmasse
+maintainers:
+  - name: lulf
+  - name: kornys
+  - name: k-wall
+  - name: ctron
