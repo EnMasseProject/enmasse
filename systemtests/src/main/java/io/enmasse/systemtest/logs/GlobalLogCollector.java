@@ -343,6 +343,11 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "messaginguser", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("addressspaceplans.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addressspaceplans", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("addressplans.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addressplans", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("standardinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "standardinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("brokeredinfraconfigs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "brokeredinfraconfigs", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("authenticationservices.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "authenticationservices", "-o", "yaml", "--all-namespaces").getStdOut());
 
             //cluster wide logs
             Files.writeString(path.resolve("pvs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "pv").getStdOut());
