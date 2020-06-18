@@ -13,14 +13,17 @@ import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.utils.AddressUtils;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,6 +62,12 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         final String baseSpacePlan;
         final String baseAddressPlan;
 
+        PodTemplateSpec brokerInfraTtlOverride = new PodTemplateSpecBuilder()
+                .withNewSpec()
+                .withInitContainers(new ContainerBuilder()
+                        .withName("broker-plugin")
+                        .withEnv(new EnvVar("MESSAGE_EXPIRY_SCAN_PERIOD", "1000", null)).build()).endSpec().build();
+
         if ("standard".equals(type)) {
             baseSpacePlan =  AddressSpacePlans.STANDARD_SMALL;
             baseAddressPlan = DestinationPlan.STANDARD_SMALL_QUEUE;
@@ -68,6 +77,9 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                     .withName(infraConfigName)
                     .endMetadata()
                     .withNewSpecLike(infraConfig.getSpec())
+                    .withNewBrokerLike(infraConfig.getSpec().getBroker())
+                    .withPodTemplate(brokerInfraTtlOverride)
+                    .endBroker()
                     .endSpec()
                     .build();
             isolatedResourcesManager.createInfraConfig(ttlInfra);
@@ -80,6 +92,9 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                     .withName(infraConfigName)
                     .endMetadata()
                     .withNewSpecLike(infraConfig.getSpec())
+                    .withNewBrokerLike(infraConfig.getSpec().getBroker())
+                    .withPodTemplate(brokerInfraTtlOverride)
+                    .endBroker()
                     .endSpec()
                     .build();
             isolatedResourcesManager.createInfraConfig(ttlInfra);
@@ -142,9 +157,13 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             assertThat(addrWithTtl.getStatus().getTtl(), notNullValue());
         if (expectedTtl.getMinimum() != null) {
             assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), is(expectedTtl.getMinimum()));
+        } else {
+            assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), nullValue());
         }
         if (expectedTtl.getMaximum() != null) {
             assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), is(expectedTtl.getMaximum()));
+        } else {
+            assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), nullValue());
         }
     }
 
