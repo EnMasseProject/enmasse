@@ -42,6 +42,11 @@
 
 ## 0.31.4
 * #4704: [OpenShift 3.11] Console returns 500 internal error when configured with custom certificate
+* #4773: Error creating topic when address space contains connectors
+* #4756: Increased severity levels on router alerts
+* #4710: Add upgrade pre-check when installing via ansible
+* #4741: Set global address space plan for create address buttons
+
 
 ## 0.31.3
 * #4650: Install uncaught exception handler in address-space-controller and standard-controller
