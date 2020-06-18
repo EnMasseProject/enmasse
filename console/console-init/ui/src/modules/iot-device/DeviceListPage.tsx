@@ -25,14 +25,15 @@ import {
 import {
   getHeaderForDialog,
   getDetailForDialog,
-  MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST as MAX_DEVICES
+  MAX_DEVICE_LIST_COUNT,
+  getInitialAlert,
+  getInitialFilter
 } from "modules/iot-device/utils";
 import {
   DeviceListContainer,
   EmptyDeviceContainer
 } from "modules/iot-device/containers";
 import { compareObject } from "utils";
-import { getInitialFilter } from "modules/iot-device/utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
 
@@ -49,36 +50,50 @@ export default function DeviceListPage() {
     getInitialFilter()
   );
 
-  const [isAlertVisible, setIsAlertVisible] = useState<boolean>(false);
-  const [alertVariant, setAlertVariant] = useState<AlertVariant>();
-  const [alertTitle, setAlertTitle] = useState<string>("");
-  const [alertDescription, setAlertDescription] = useState<string>("");
+  const [deviceAlert, setDeviceAlert] = useState<{
+    isVisible: boolean;
+    variant: AlertVariant;
+    title: string;
+    description: string;
+  }>(getInitialAlert());
 
   const { dispatch } = useStoreContext();
 
-  useEffect(() => {
-    if (totalDevices && totalDevices < MAX_DEVICES) setIsAlertVisible(false);
-    else if (
-      totalDevices &&
-      totalDevices > MAX_DEVICES &&
-      compareObject(appliedFilter, getInitialFilter())
-    ) {
-      setIsAlertVisible(true);
-      setAlertVariant(AlertVariant.info);
-      setAlertTitle("Run filter to view your devices");
-      setAlertDescription(`You have a total of ${totalDevices} devices, the system lists
-                            the ${MAX_DEVICES} most recently added.`);
+  const changeDeviceAlert = () => {
+    if (totalDevices && totalDevices < MAX_DEVICE_LIST_COUNT) {
+      setDeviceAlert({
+        ...deviceAlert,
+        isVisible: false
+      });
     } else if (
       totalDevices &&
-      totalDevices > MAX_DEVICES &&
+      totalDevices > MAX_DEVICE_LIST_COUNT &&
+      compareObject(appliedFilter, getInitialFilter())
+    ) {
+      setDeviceAlert({
+        isVisible: true,
+        variant: AlertVariant.info,
+        title: "Run filter to view your devices",
+        description: `You have a total of ${totalDevices} devices, the system lists
+                        the ${MAX_DEVICE_LIST_COUNT} most recently added.`
+      });
+    } else if (
+      totalDevices &&
+      totalDevices > MAX_DEVICE_LIST_COUNT &&
       !compareObject(appliedFilter, getInitialFilter())
     ) {
-      setIsAlertVisible(true);
-      setAlertVariant(AlertVariant.warning);
-      setAlertTitle("Beyond search capability");
-      setAlertDescription(`There are ${totalDevices} devices matching current criteria, system
-                            returned ${MAX_DEVICES} results. Add criteria to narrow down.`);
+      setDeviceAlert({
+        isVisible: true,
+        variant: AlertVariant.warning,
+        title: "Beyond search capability",
+        description: `There are ${totalDevices} devices matching current criteria, system
+                        returned ${MAX_DEVICE_LIST_COUNT} results. Add criteria to narrow down.`
+      });
     }
+  };
+
+  useEffect(() => {
+    changeDeviceAlert();
   }, [totalDevices]);
 
   const onSelectDevice = (
@@ -237,6 +252,8 @@ export default function DeviceListPage() {
     // TODO: After create device is ready
   };
 
+  const { isVisible, title, description, variant } = deviceAlert;
+
   if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
     return (
       <EmptyDeviceContainer
@@ -262,11 +279,11 @@ export default function DeviceListPage() {
       </GridItem>
       <GridItem span={9}>
         <DeviceListAlert
-          visible={isAlertVisible}
-          variant={alertVariant}
+          visible={isVisible}
+          variant={variant}
           isInline={true}
-          title={alertTitle}
-          description={alertDescription}
+          title={title}
+          description={description}
         />
         <br />
         <DeviceListToolbar
