@@ -9,6 +9,7 @@ public interface DestinationPlan {
     String BROKERED_TOPIC = "brokered-topic";
     String STANDARD_SMALL_QUEUE = "standard-small-queue";
     String STANDARD_SMALL_TOPIC = "standard-small-topic";
+    String STANDARD_MEDIUM_QUEUE = "standard-medium-queue";
     String STANDARD_LARGE_QUEUE = "standard-large-queue";
     String STANDARD_LARGE_TOPIC = "standard-large-topic";
     String STANDARD_XLARGE_QUEUE = "standard-xlarge-queue";
