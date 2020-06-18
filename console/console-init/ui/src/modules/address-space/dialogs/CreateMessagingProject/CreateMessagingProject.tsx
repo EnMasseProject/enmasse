@@ -25,7 +25,6 @@ import { ConfiguringRoutes } from "./ConfiguringRoutes";
 import { EndpointConfiguration } from "modules/address-space/components";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { useQuery } from "@apollo/react-hooks";
-
 export interface IRouteConf {
   protocol: string;
   hostname?: string;
