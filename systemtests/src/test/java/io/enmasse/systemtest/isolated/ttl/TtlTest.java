@@ -8,6 +8,7 @@ import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.broker.ArtemisUtils;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
+
+import java.util.Map;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.*;
@@ -155,16 +158,21 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
 
         addrWithTtl = resourcesManager.getAddress(addrWithTtl.getMetadata().getNamespace(), addrWithTtl);
             assertThat(addrWithTtl.getStatus().getTtl(), notNullValue());
+        Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, addressSpace, addrWithTtl.getSpec().getAddress());
         if (expectedTtl.getMinimum() != null) {
             assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), is(expectedTtl.getMinimum()));
+            assertThat(((Number) actualSettings.get("minExpiryDelay")).longValue(), is(expectedTtl.getMinimum()));
         } else {
             assertThat(addrWithTtl.getStatus().getTtl().getMinimum(), nullValue());
         }
         if (expectedTtl.getMaximum() != null) {
             assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), is(expectedTtl.getMaximum()));
+            assertThat(((Number) actualSettings.get("maxExpiryDelay")).longValue(), is(expectedTtl.getMaximum()));
         } else {
             assertThat(addrWithTtl.getStatus().getTtl().getMaximum(), nullValue());
         }
+
+
     }
 
 
