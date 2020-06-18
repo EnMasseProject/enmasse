@@ -25,6 +25,7 @@ var myutils = require('./utils.js');
 var plimit = require('p-limit');
 var crypto = require('crypto');
 var uuidv5 = require('uuid/v5');
+var clone = require('clone');
 
 function BrokerController(event_sink, config) {
     events.EventEmitter.call(this);
@@ -38,6 +39,7 @@ function BrokerController(event_sink, config) {
     this.excluded_types = undefined;
     this.config = config ? config : process.env;
     this.global_max_size = this.read_global_max_size();
+    this.root_address_settings = {};
 };
 
 util.inherits(BrokerController, events.EventEmitter);
@@ -71,17 +73,32 @@ BrokerController.prototype.on_connection_open = function (context) {
     var self = this;
     this.broker = new artemis.Artemis(context.connection);
     this.id = context.connection.container_id;
-    this.check_broker_addresses().then(() => {
-        log.info('[%s] broker controller ready', this.id);
-        self.emit('ready');
+    self.broker.getAddressSettings('#').then((root_address_settings) => {
+        self.root_address_settings = root_address_settings;
+        self.check_broker_addresses().then(() => {
+            log.info('[%s] broker controller ready', self.id);
+            self.emit('ready');
+        }).catch((e) => {
+            log.error("[%s] failed to check_broker_addresses", self.id, e);
+        });
+    }).catch((e) => {
+        log.error("[%s] failed to get root settings", self.id, e);
     });
 };
 
 BrokerController.prototype.set_connection = function (connection) {
+    var self = this;
     this.broker = new artemis.Artemis(connection);
     this.id = connection.container_id;
     log.info('[%s] broker controller ready', this.id);
-};
+
+    return new Promise((resolve, reject) => {
+        self.broker.getAddressSettings('#').then((root_address_settings) => {
+            self.root_address_settings = root_address_settings;
+            resolve();
+        }).catch(reject);
+    });
+}
 
 BrokerController.prototype.addresses_defined = function (addresses) {
     this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
@@ -710,18 +727,32 @@ BrokerController.prototype._sync_addresses_and_forwarders = function () {
 
 
 BrokerController.prototype.generate_address_settings = function (address, global_max_size) {
-    if (address.status && address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0) {
-        var planStatus = address.status.planStatus;
+    if (address.status) {
+        var addressSettings = clone(this.root_address_settings);
+        var upd = 0;
+        if (address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0) {
+            var planStatus = address.status.planStatus;
 
-        var r = planStatus.resources.broker;
-        var p = planStatus.partitions;
-        var allocation = (r && p) ? (r / p) : (r) ? r : undefined;
-        if (allocation) {
-            var maxSizeBytes = Math.round(allocation * global_max_size);
-            return {
-                maxSizeBytes: maxSizeBytes
-            };
+            var r = planStatus.resources.broker;
+            var p = planStatus.partitions;
+            var allocation = (r && p) ? (r / p) : (r) ? r : undefined;
+            if (allocation) {
+                var maxSizeBytes = Math.round(allocation * global_max_size);
+                addressSettings.maxSizeBytes = maxSizeBytes;
+                upd++;
+            }
+
+        } else if (address.status.ttl) {
+            if (address.status.ttl.minimum) {
+                addressSettings.minExpiryDelay = address.status.ttl.minimum;
+                upd++;
+            }
+            if (address.status.ttl.maximum) {
+                addressSettings.maxExpiryDelay = address.status.ttl.maximum;
+                upd++;
+            }
         }
+        return upd ? addressSettings : undefined;
     }
     log.info('no broker resource required for %s, therefore not applying address settings', address.name);
 };
@@ -759,8 +790,12 @@ module.exports.create_controller = function (connection, event_sink) {
         bc.excluded_types = type_filter(['queue', 'topic']);
         log.info('excluding types %j controller for %s (%s)', bc.excluded_types, connection.container_id, rcg);
     }
-    bc.set_connection(connection);
-    return bc;
+
+    return new Promise((resolve, reject) => {
+        bc.set_connection(connection).then(() => {
+            resolve(bc);
+        }).catch(reject);
+    });
 };
 
 module.exports.create_agent = function (event_sink, polling_frequency) {

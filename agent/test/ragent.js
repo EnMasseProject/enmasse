@@ -1194,9 +1194,9 @@ describe('broker configuration', function() {
         var broker_a = new MockBroker('broker_a');
         var broker_b = new MockBroker('broker_b');
         Promise.all([connect_broker(broker_a), connect_broker(broker_b)]).then(function () {
-            assert(ragent.connected_brokers['broker_a'] !== undefined);
-            assert(ragent.connected_brokers['broker_b'] !== undefined);
             ragent.wait_for_stable(0, 1, 2).then(function () {
+                assert(ragent.connected_brokers['broker_a'] !== undefined);
+                assert(ragent.connected_brokers['broker_b'] !== undefined);
                 connections[1].close();
                 ragent.wait_for_stable(0, 1, 1).then(function () {
                     assert(ragent.connected_brokers['broker_a'] !== undefined, 'broker-a SHOULD be in connected_broker map');

@@ -89,9 +89,7 @@ function same_addressplan_resources(a, b) {
 
 function same_ttl(a, b) {
     if (a === undefined) return b === undefined;
-    if (a.minimum === undefined) return b.minimum === undefined;
-    if (a.maximum === undefined) return b.maximum === undefined;
-    return a.minimum === b.minimum && a.maximum === b.maximum;
+    return b && a.minimum === b.minimum && a.maximum === b.maximum;
 }
 
 function same_addressplan_status(a, b) {

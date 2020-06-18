@@ -98,7 +98,13 @@ function same_address_definition(a, b) {
     return a.address === b.address
         && a.type === b.type
         && same_allocation(a.allocated_to, b.allocated_to)
+        && same_ttl(a.ttl, b.ttl)
         && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined);
+}
+
+function same_ttl(a, b) {
+    if (a === undefined) return b === undefined;
+    return b && a.minimum === b.minimum && a.maximum === b.maximum;
 }
 
 function same_address_status(a, b) {

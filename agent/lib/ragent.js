@@ -352,18 +352,22 @@ Ragent.prototype.configure_handlers = function () {
                 router.on('provisioned', self.check_router_connectors.bind(self));
             });
         } else if (product === 'apache-activemq-artemis') {
-            var broker = broker_controller.create_controller(context.connection, self.event_sink);
-            self.connected_brokers[broker.id] = broker;
-            log.info('broker %s connected', broker.id);
-            if (self.addresses_initialised) {
-                self.sync_broker(broker);
-                for (var r in self.connected_routers) {
-                    self.sync_router_addresses(self.connected_routers[r], Object.keys(self.connected_brokers));
+            broker_controller.create_controller(context.connection, self.event_sink).then((broker) => {
+                self.connected_brokers[broker.id] = broker;
+                log.info('broker %s connected', broker.id);
+                if (self.addresses_initialised) {
+                    self.sync_broker(broker);
+                    for (var r in self.connected_routers) {
+                        self.sync_router_addresses(self.connected_routers[r], Object.keys(self.connected_brokers));
+                    }
                 }
-            }
-            broker.on('synchronized', self.on_synchronized.bind(self));
-            context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
-            context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
+                broker.on('synchronized', self.on_synchronized.bind(self));
+                context.connection.on('disconnected', self.on_broker_disconnect.bind(self));
+                context.connection.on('connection_close', self.on_broker_disconnect.bind(self));
+
+            }).catch((e) => {
+                log.error("Failed to create_controller", e);
+            });
         } else {
             if (product === 'ragent') {
                 context.connection.on('disconnected', self.on_router_agent_disconnect.bind(self));
