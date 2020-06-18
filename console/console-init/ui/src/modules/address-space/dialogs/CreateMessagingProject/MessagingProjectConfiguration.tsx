@@ -115,7 +115,6 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     setProjectDetail({ ...projectDetail, authService: value });
   };
 
-  console.log("as", projectDetail);
   const getNameSpaceOptions = () => {
     let nameSpaceOptions: IOptionForKeyValueLabel[];
     nameSpaceOptions = namespaces.map(namespace => ({
