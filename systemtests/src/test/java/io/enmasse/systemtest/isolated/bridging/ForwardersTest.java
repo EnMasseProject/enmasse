@@ -52,8 +52,14 @@ class ForwardersTest extends BridgingBase {
 
     @Test
     @Tag(ACCEPTANCE)
-    void testForwardToRemoteQueue() throws Exception {
+    void testForwardFromQueueToRemoteQueue() throws Exception {
         doTestForwarderOut(null, defaultCredentials());
+    }
+
+    @Test
+    @Tag(ACCEPTANCE)
+    void testForwardFromSubscriptionToRemoteQueue() throws Exception {
+        doTestForwarderSubscriptionOut(null, defaultCredentials());
     }
 
     @Test
@@ -243,6 +249,47 @@ class ForwardersTest extends BridgingBase {
         int messagesBatch = 20;
 
         doTestSendToForwarder(space, forwarder, localUser, REMOTE_QUEUE1, messagesBatch);
+    }
+
+    private void doTestForwarderSubscriptionOut(AddressSpaceSpecConnectorTls tlsSettings, AddressSpaceSpecConnectorCredentials credentials) throws Exception {
+        AddressSpace space = createAddressSpace("forward-to-remote", "*", tlsSettings, credentials);
+        Address topic = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-topic1"))
+                .withNamespace(remoteBrokerNamespace)
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-topic1")
+                .withType(AddressType.TOPIC.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_TOPIC)
+                .endSpec()
+                .build();
+        Address forwarder = new AddressBuilder()
+                .withNewMetadata()
+                .withName(AddressUtils.generateAddressMetadataName(space, "forwarder-sub1"))
+                .withNamespace(remoteBrokerNamespace)
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("forwarder-sub1")
+                .withTopic("forwarder-topic1")
+                .withType(AddressType.SUBSCRIPTION.toString())
+                .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                .addToForwarders(new AddressSpecForwarderBuilder()
+                        .withName("forwarder1")
+                        .withRemoteAddress(REMOTE_NAME + "/" + REMOTE_QUEUE1)
+                        .withDirection(AddressSpecForwarderDirection.out)
+                        .build())
+                .endSpec()
+                .build();
+        resourcesManager.setAddresses(topic, forwarder);
+        AddressUtils.waitForForwardersReady(new TimeoutBudget(1, TimeUnit.MINUTES), forwarder);
+
+        UserCredentials localUser = new UserCredentials("test", "test");
+        resourcesManager.createOrUpdateUser(space, localUser);
+
+        int messagesBatch = 20;
+
+        doTestSendToForwarder(space, topic, localUser, REMOTE_QUEUE1, messagesBatch);
     }
 
     private void doTestForwarderIn(AddressSpaceSpecConnectorTls tlsSettings, AddressSpaceSpecConnectorCredentials credentials) throws Exception {
