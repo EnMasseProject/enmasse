@@ -214,7 +214,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
             });
         } catch (Exception e) {
             assertConnectionException(e);
-            log.info("Accepting MQTT exception", e);
+            log.debug("Accepting MQTT exception", e);
         }
 
         try (MqttAdapterClient client = device.createMqttAdapterClient()) {
@@ -230,7 +230,7 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
             });
         } catch (Exception e) {
             assertConnectionException(e);
-            log.info("Accepting MQTT exception", e);
+            log.debug("Accepting MQTT exception", e);
         }
 
     }
