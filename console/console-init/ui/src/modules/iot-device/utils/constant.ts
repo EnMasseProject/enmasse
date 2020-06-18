@@ -5,6 +5,7 @@
 
 import { ISelectOption } from "utils";
 import { IDeviceFilter } from "modules/iot-device/components";
+import { AlertVariant } from "@patternfly/react-core";
 
 /**
  * dropdown options
@@ -74,6 +75,16 @@ const getInitialFilter = () => {
   return filter;
 };
 
+const getInitialAlert = () => {
+  const alert = {
+    isVisible: false,
+    variant: AlertVariant.default,
+    title: "",
+    description: ""
+  };
+  return alert;
+};
+
 /**
  * key value constants
  */
@@ -102,17 +113,18 @@ const getInitialStateCreateMetadata = (defaultType: string) => {
   return initialState;
 };
 
-const MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST = 500;
+const MAX_DEVICE_LIST_COUNT = 500;
 
 export {
   deviceTypeOptions,
   deviceStatusOptions,
   getInitialFilter,
+  getInitialAlert,
   HIDE_ADVANCE_SETTING,
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getLabelByValue,
   getInitialStateCreateMetadata,
-  MAX_ITEM_TO_DISPLAY_IN_DEVICE_LIST
+  MAX_DEVICE_LIST_COUNT
 };

@@ -11,8 +11,8 @@ import {
 import { useQuery } from "@apollo/react-hooks";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 import { useParams } from "react-router";
-import { IIoTDevicesCountResponse } from "schema/iot_device";
-import { RETURN_ALL_DEVICES_COUNT_FOR_IOT_PROJECT } from "graphql-module/queries";
+import { IIoTDevicesResponse } from "schema/iot_device";
+import { RETURN_ALL_DEVICES_FOR_IOT_PROJECT } from "graphql-module/queries";
 
 export interface IEmptyDeviceContainerProps extends IEmptyDeviceListProps {
   setTotalDevices: (val: number) => void;
@@ -25,8 +25,13 @@ export const EmptyDeviceContainer: React.FC<IEmptyDeviceContainerProps> = ({
 }) => {
   const { projectname } = useParams();
 
-  const { data } = useQuery<IIoTDevicesCountResponse>(
-    RETURN_ALL_DEVICES_COUNT_FOR_IOT_PROJECT(projectname),
+  const { data } = useQuery<IIoTDevicesResponse>(
+    RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
+      projectname,
+      undefined,
+      undefined,
+      "total"
+    ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
