@@ -34,6 +34,7 @@ import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
+import io.vertx.proton.sasl.impl.ProtonSaslExternalImpl;
 import io.vertx.proton.sasl.impl.ProtonSaslPlainImpl;
 
 public class AmqpAdapterClient implements Sender, AutoCloseable {
@@ -43,8 +44,6 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
     private final Vertx vertx;
 
     private final Context context;
-
-    private final ProtonQoS qos;
 
     private final Endpoint endpoint;
 
@@ -58,20 +57,19 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
 
     private ProtonSender sender;
 
-    public AmqpAdapterClient(final Vertx vertx, final ProtonQoS qos, final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate,
+    public AmqpAdapterClient(final Vertx vertx, final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate,
             final Set<String> tlsVersions) throws Exception {
-        this(vertx, qos, endpoint, key, certificate, null, null, tlsVersions);
+        this(vertx, endpoint, key, certificate, null, null, tlsVersions);
     }
 
-    public AmqpAdapterClient(final Vertx vertx, final ProtonQoS qos, final Endpoint endpoint, final String authId, final String tenantId, final String password,
+    public AmqpAdapterClient(final Vertx vertx, final Endpoint endpoint, final String authId, final String tenantId, final String password,
             final Set<String> tlsVersions)
             throws Exception {
-        this(vertx, qos, endpoint, null, null, authId + "@" + tenantId, password, tlsVersions);
+        this(vertx, endpoint, null, null, authId + "@" + tenantId, password, tlsVersions);
     }
 
     private AmqpAdapterClient(
             final Vertx vertx,
-            final ProtonQoS qos,
             final Endpoint endpoint,
             final PrivateKey key,
             final X509Certificate certificate,
@@ -81,7 +79,6 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
 
         this.vertx = vertx;
         this.context = vertx.getOrCreateContext();
-        this.qos = qos;
         this.endpoint = endpoint;
 
         this.username = username;
@@ -98,7 +95,9 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
             final Buffer keyStoreBuffer = Buffer.buffer(KeyStoreCreator.toByteArray(key, certificate));
             this.options.setKeyCertOptions(
                     new PfxOptions()
-                            .setValue(keyStoreBuffer));
+                            .setValue(keyStoreBuffer)
+                            .setPassword(KeyStoreCreator.KEY_PASSWORD));
+            this.options.addEnabledSaslMechanism(ProtonSaslExternalImpl.MECH_NAME);
 
         }
 
@@ -164,7 +163,7 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
 
         final Promise<ProtonSender> result = Promise.promise();
         connection.createSender(null)
-                .setQoS(this.qos)
+                .setQoS(ProtonQoS.AT_LEAST_ONCE)
                 .closeHandler(x -> setSender(null))
                 .openHandler(result)
                 .open();
@@ -179,7 +178,7 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
         final ProtonClientOptions options = new ProtonClientOptions()
                 .setHostnameVerificationAlgorithm("")
                 .setSsl(true)
-                .setTrustAll(true)
+                .setTrustAll(true) // FIXME: use the proper CA
                 .setConnectTimeout(10_000);
         VertxUtils.applyTlsVersions(options, tlsVersions);
 
@@ -231,35 +230,24 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
 
             // send
 
-            switch (this.sender.getQoS()) {
+            this.sender.send(message, delivery -> {
 
-                case AT_MOST_ONCE:
-                    this.sender.send(message);
-                    promise.complete();
-                    break;
+                log.info("Delivery - remotelySettled: {}, remoteState: {}", delivery.remotelySettled(), delivery.getRemoteState());
 
-                case AT_LEAST_ONCE:
-                    this.sender.send(message, delivery -> {
-
-                        if (delivery.remotelySettled()) {
-                            var state = delivery.getRemoteState();
-                            switch (state.getType()) {
-                                case Accepted:
-                                    promise.complete();
-                                    break;
-                                default:
-                                    promise.fail("Failed to send message - outcome: " + state);
-                                    break;
-                            }
+                if (delivery.remotelySettled()) {
+                    var state = delivery.getRemoteState();
+                    switch (state.getType()) {
+                        case Accepted:
                             promise.complete();
-                        }
-                    });
-                    break;
+                            break;
+                        default:
+                            promise.fail("Failed to send message - outcome: " + state);
+                            break;
+                    }
+                }
 
-                default:
-                    promise.fail("Unknown QoS: " + sender.getQoS());
-                    break;
-            }
+            });
+
         });
 
         // return future
@@ -274,6 +262,7 @@ public class AmqpAdapterClient implements Sender, AutoCloseable {
         this.context.runOnContext(x -> {
             if (this.connection != null) {
                 this.connection.close();
+                this.connection = null;
             }
         });
     }

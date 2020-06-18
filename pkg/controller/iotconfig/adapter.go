@@ -757,14 +757,16 @@ func (r *ReconcileIoTConfig) reconcileStandardAdapterService(config *iotv1alpha1
 
 	install.ApplyServiceDefaults(service, "iot", service.Name)
 
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Name:       "adapter",
-			Protocol:   adapter.Port.GetProtocol(),
-			Port:       adapter.Port.GetServicePort(),
-			TargetPort: intstr.FromString("adapter"),
-		},
+	service.Spec.Type = corev1.ServiceTypeClusterIP
+
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
 	}
+
+	service.Spec.Ports[0].Name = "adapter"
+	service.Spec.Ports[0].Protocol = adapter.Port.GetProtocol()
+	service.Spec.Ports[0].Port = adapter.Port.GetServicePort()
+	service.Spec.Ports[0].TargetPort = intstr.FromString("adapter")
 
 	// annotations
 
@@ -783,17 +785,18 @@ func (r *ReconcileIoTConfig) reconcileStandardAdapterService(config *iotv1alpha1
 func (r *ReconcileIoTConfig) reconcileStandardAdapterServiceExternal(config *iotv1alpha1.IoTConfig, service *corev1.Service, adapter adapter) error {
 
 	install.ApplyServiceDefaults(service, "iot", service.Name)
+	service.Spec.Selector["name"] = adapter.FullName()
 
-	service.Spec.Type = "LoadBalancer"
+	service.Spec.Type = corev1.ServiceTypeLoadBalancer
 
-	service.Spec.Ports = []corev1.ServicePort{
-		{
-			Name:       "adapter",
-			Protocol:   adapter.Port.GetProtocol(),
-			Port:       adapter.Port.LoadBalancerPort,
-			TargetPort: intstr.FromString("adapter"),
-		},
+	if len(service.Spec.Ports) != 1 {
+		service.Spec.Ports = make([]corev1.ServicePort, 1)
 	}
+
+	service.Spec.Ports[0].Name = "adapter"
+	service.Spec.Ports[0].Protocol = adapter.Port.GetProtocol()
+	service.Spec.Ports[0].Port = adapter.Port.LoadBalancerPort
+	service.Spec.Ports[0].TargetPort = intstr.FromString("adapter")
 
 	// annotations
 

@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
@@ -74,7 +75,6 @@ import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.vertx.core.Vertx;
-import io.vertx.proton.ProtonQoS;
 
 public final class IoTTestSession implements AutoCloseable {
 
@@ -331,8 +331,8 @@ public final class IoTTestSession implements AutoCloseable {
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
          */
-        public AmqpAdapterClient createAmqpAdapterClient(final ProtonQoS qos) throws Exception {
-            return createAmqpAdapterClient(qos, null);
+        public AmqpAdapterClient createAmqpAdapterClient() throws Exception {
+            return createAmqpAdapterClient(null);
         }
 
         /**
@@ -342,11 +342,11 @@ public final class IoTTestSession implements AutoCloseable {
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
          */
-        public AmqpAdapterClient createAmqpAdapterClient(final ProtonQoS qos, final Set<String> tlsVersions) throws Exception {
+        public AmqpAdapterClient createAmqpAdapterClient(final Set<String> tlsVersions) throws Exception {
             if (this.key != null) {
-                return IoTTestSession.this.createAmqpAdapterClient(qos, this.key, this.certificate, tlsVersions);
+                return IoTTestSession.this.createAmqpAdapterClient(this.key, this.certificate, tlsVersions);
             } else {
-                return IoTTestSession.this.createAmqpAdapterClient(qos, this.authId, this.password, tlsVersions);
+                return IoTTestSession.this.createAmqpAdapterClient(this.authId, this.password, tlsVersions);
             }
         }
 
@@ -425,11 +425,11 @@ public final class IoTTestSession implements AutoCloseable {
 
     }
 
-    private AmqpAdapterClient createAmqpAdapterClient(final ProtonQoS qos, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions)
+    private AmqpAdapterClient createAmqpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions)
             throws Exception {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-amqp-adapter");
-        var result = new AmqpAdapterClient(this.vertx, qos, endpoint, key, certificate, tlsVersions);
+        var result = new AmqpAdapterClient(this.vertx, endpoint, key, certificate, tlsVersions);
         this.cleanup.add(() -> result.close());
         result.connect();
 
@@ -437,10 +437,10 @@ public final class IoTTestSession implements AutoCloseable {
 
     }
 
-    private AmqpAdapterClient createAmqpAdapterClient(final ProtonQoS qos, final String authId, final String password, final Set<String> tlsVersions) throws Exception {
+    private AmqpAdapterClient createAmqpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) throws Exception {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-amqp-adapter");
-        var result = new AmqpAdapterClient(this.vertx, qos, endpoint, authId, getTenantId(), password, tlsVersions);
+        var result = new AmqpAdapterClient(this.vertx, endpoint, authId, getTenantId(), password, tlsVersions);
         this.cleanup.add(() -> result.close());
         result.connect();
 
@@ -844,7 +844,7 @@ public final class IoTTestSession implements AutoCloseable {
             // MQTT: needs passthrough routes because MQTT is not HTTP
             // HTTP: needs passthrough routes because X.509 client certs are being used
 
-            config = useSystemtestKeys(config, HTTP, MQTT);
+            config = useSystemtestKeys(config, HTTP, MQTT, AMQP);
 
         } else {
 
