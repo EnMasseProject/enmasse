@@ -368,7 +368,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .withPlan(DestinationPlan.STANDARD_LARGE_QUEUE)
                 .endSpec()
                 .build();
-        Address small = new AddressBuilder()
+        Address medium = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(getSharedAddressSpace().getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(getSharedAddressSpace(), "scalequeue"))
@@ -376,11 +376,11 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
                 .withNewSpec()
                 .withType("queue")
                 .withAddress("scalequeue")
-                .withPlan(DestinationPlan.STANDARD_SMALL_QUEUE)
+                .withPlan(DestinationPlan.STANDARD_MEDIUM_QUEUE)
                 .endSpec()
                 .build();
 
-        testScale(small, large, true);
+        testScale(medium, large, true);
         testScale(large, xlarge, false);
     }
 
@@ -395,7 +395,7 @@ public class QueueTest extends TestBase implements ITestSharedStandard {
 
         AmqpClient client = getAmqpClientFactory().createQueueClient();
         final List<String> prefixes = Arrays.asList("foo", "bar", "baz", "quux");
-        final int numMessages = 500;
+        final int numMessages = 450;
         final int totalNumMessages = numMessages * prefixes.size();
         final int numReceiveBeforeDraining = numMessages / 2;
         final int numReceivedAfterScaled = totalNumMessages - numReceiveBeforeDraining;
