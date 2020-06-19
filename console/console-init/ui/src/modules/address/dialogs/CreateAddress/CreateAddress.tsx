@@ -14,10 +14,10 @@ import {
   RETURN_ADDRESS_SPACE_DETAIL
 } from "graphql-module/queries";
 import { IDropdownOption } from "components";
-import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { useStoreContext, types } from "context-state-reducer";
 import { IAddressSpacesResponse } from "schema/ResponseTypes";
 import { FetchPolicy } from "constant";
+import { messagingAddressNameRegexp } from "types/Configs";
 
 export const CreateAddress: React.FunctionComponent = () => {
   const { dispatch, state } = useStoreContext();
@@ -76,7 +76,7 @@ export const CreateAddress: React.FunctionComponent = () => {
 
   const handleAddressChange = (name: string) => {
     setAddressName(name);
-    !dnsSubDomainRfc1123NameRegexp.test(name)
+    !messagingAddressNameRegexp.test(name)
       ? setIsNameValid(false)
       : setIsNameValid(true);
   };
