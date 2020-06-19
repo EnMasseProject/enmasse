@@ -745,11 +745,17 @@ BrokerController.prototype.generate_address_settings = function (address, global
             var allocation = (r && p) ? (r / p) : (r) ? r : undefined;
             if (allocation) {
                 var maxSizeBytes = Math.round(allocation * global_max_size);
+                if ('PAGE' === addressSettings.addressFullMessagePolicy && addressSettings.pageSizeBytes > 0) {
+                    // Artemis business rule that maxSizeBytes >= pageSizeBytes
+                    maxSizeBytes = Math.max(maxSizeBytes, addressSettings.pageSizeBytes);
+                } else {
+                    addressSettings.pageSizeBytes = -1;
+                }
                 addressSettings.maxSizeBytes = maxSizeBytes;
                 upd++;
             }
-
-        } else if (address.status.ttl) {
+        }
+        if (address.status.ttl) {
             if (address.status.ttl.minimum) {
                 addressSettings.minExpiryDelay = address.status.ttl.minimum;
                 upd++;
@@ -761,7 +767,6 @@ BrokerController.prototype.generate_address_settings = function (address, global
         }
         return upd ? addressSettings : undefined;
     }
-    log.info('no broker resource required for %s, therefore not applying address settings', address.name);
 };
 
 BrokerController.prototype.get_address_settings = function (address) {

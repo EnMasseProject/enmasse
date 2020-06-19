@@ -42,16 +42,16 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag(ISOLATED)
 class TtlTest extends TestBase implements ITestBaseIsolated {
 
-    @ParameterizedTest(name = "tesAddressSpecified-{0}-space")
+    @ParameterizedTest(name = "testAddressSpecified-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
-    void tesAddressSpecified(String type) throws Exception {
+    void testAddressSpecified(String type) throws Exception {
         doTestTtl(type, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
                 new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
-    @ParameterizedTest(name = "tesAddressPlanSpecifiedTtl-{0}-space")
+    @ParameterizedTest(name = "testAddressPlanSpecifiedTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
-    void tesAddressPlanSpecified(String type) throws Exception {
+    void testAddressPlanSpecified(String type) throws Exception {
         doTestTtl(type, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
                 new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
@@ -176,7 +176,6 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         UserCredentials user = new UserCredentials("user", "passwd");
         isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
 
-
         try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
@@ -197,7 +196,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             CompletableFuture<Integer> sent = client.sendMessages(addrWithTtl.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
 
-            Thread.sleep(expectedTtl.getMaximum() + (messageExpiryScanPeriod * 2));
+            Thread.sleep((expectedTtl.getMaximum() + messageExpiryScanPeriod * 2));  // Give sufficient time for the expected expiration
 
             assertThrows(TimeoutException.class, () -> {
                 List<Message> received = client.recvMessages(addrWithTtl.getSpec().getAddress(), (message) -> true).get(20, TimeUnit.SECONDS);
@@ -250,7 +249,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             CompletableFuture<Integer> sent = client.sendMessages(addrWithTtl.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
 
-            Thread.sleep(messageExpiryScanPeriod * 2);  // Give sufficient time for erroneous expiration
+            Thread.sleep(messageExpiryScanPeriod * 2);  // Give sufficient time for an erroneous expiration
 
             Future<List<Message>> received = client.recvMessages(addrWithTtl.getSpec().getAddress(),1);
             assertThat("message should not have expired", received.get(20, TimeUnit.SECONDS).size(), is(1));

@@ -47,14 +47,6 @@ function ready (addr) {
     return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
-function same_plan_status_resources(a, b) {
-
-    if (a === undefined || a.planStatus === undefined || a.planStatus.resources === undefined ||  a.planStatus.resources.broker === undefined) {
-        return (b === undefined &&  b.planStatus === undefined && b.planStatus.resources === undefined &&  b.planStatus.resources.broker === undefined);
-    }
-    return a.planStatus.resources.broker === b.planStatus.resources.broker && a.planStatus.name === b.planStatus.name;
-}
-
 function same_allocation(a, b) {
     if (a === b) {
         return true;
@@ -91,19 +83,26 @@ function same_messages(a, b) {
     return true;
 }
 
-function same_address_definition(a, b) {
+function same_address_definition_and_allocation(a, b) {
     if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
+    return same_address_definition(a, b)
+        && same_allocation(a.allocated_to, b.allocated_to)
+        && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined)
+        && same_ttl(a.status ? a.status.ttl : undefined, b.status ? b.status.ttl : undefined);
+}
+
+function same_address_definition(a, b) {
     return a.address === b.address
         && a.type === b.type
-        && same_allocation(a.allocated_to, b.allocated_to)
         && same_ttl(a.ttl, b.ttl)
-        && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined);
+        && same_address_plan(a, b);
 }
 
 function same_ttl(a, b) {
     if (a === undefined) return b === undefined;
+    if (b === undefined) return false;
     return b && a.minimum === b.minimum && a.maximum === b.maximum;
 }
 
@@ -118,7 +117,7 @@ function same_address_status(a, b) {
 }
 
 function same_address_definition_and_status(a, b) {
-    return same_address_definition(a, b) && same_address_status(a.status, b.status) && same_address_plan(a, b);
+    return same_address_definition(a, b) && same_address_status(a.status, b.status);
 }
 
 function same_address_plan(a, b) {
@@ -128,6 +127,7 @@ function same_address_plan(a, b) {
 
 function same_plan_status(a, b) {
     if (a === undefined) return b === undefined;
+    if (b === undefined) return false;
     return b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
 }
 
@@ -236,7 +236,8 @@ AddressSource.prototype.updated = function (objects) {
     if (changes) {
         this.update_readiness(changes);
         this.dispatch('addresses_defined', addresses, changes.description);
-        this.dispatch_if_changed('addresses_ready', addresses.filter(ready), same_address_definition);
+        // used by standard
+        this.dispatch_if_changed('addresses_ready', addresses.filter(ready), same_address_definition_and_allocation);
     }
 };
 
