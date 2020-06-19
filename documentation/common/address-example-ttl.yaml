@@ -1,0 +1,11 @@
+apiVersion: enmasse.io/v1beta1
+kind: Address
+metadata:
+    name: myspace.myqueue
+spec:
+    address: myqueue
+    type: queue
+    plan: standard-small-queue
+    ttl: <1>
+        minimim: 30000
+        maximum: 300000

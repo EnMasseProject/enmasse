@@ -31,17 +31,23 @@ spec:
     router: 0.2
     broker: 0.3
   partitions: 1 <3>
+  ttl: <4>
+    minimim: 30000
+    maximum: 300000
 ----
 <1> The address type this plan applies to.
 <2> The resources consumed by addresses using this plan. The `router` field is optional for address plans referenced by a `brokered` address space plan.
 <3> The number of partitions that should be created for queues using this plan. Only available in the `standard` address space.
+<4> Restricts message time-to-live (TTL). Applies to address types `queue` and `topic` only. (Optional)
 
 The other fields are used by the {ConsoleName} UI.
 
 A single router can support five instances of addresses and broker can support three instances of addresses with this plan. If the number of addresses with this plan increases to four, another broker is created. If it increases further to six, another router is created as well.
 
 In the `standard` address space, address plans for the `queue` address type may contain a field
-`partitions`, which allows a queue to be sharded accross multiple brokers for HA and improved performance. Specifying an amount of `broker` resource above 1 will automatically cause a queue to be partitioned. 
+`partitions`, which allows a queue to be sharded across multiple brokers for HA and improved performance. Specifying an amount of `broker` resource above 1 will automatically cause a queue to be partitioned.
+
+include::ref-ttl.adoc[]
 
 NOTE: A sharded queue no longer guarantees message ordering.
 

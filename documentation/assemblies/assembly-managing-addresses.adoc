@@ -18,6 +18,8 @@ include::../modules/ref-address-example.adoc[leveloffset=+1]
 
 include::../modules/ref-address-example-topic-and-sub.adoc[leveloffset=+2]
 
+include::../modules/ref-address-example-ttl.adoc[leveloffset=+1]
+
 include::../modules/ref-address-example-forwarders.adoc[leveloffset=+2]
 
 include::../modules/proc-list-available-address-plans.adoc[leveloffset=+1]
