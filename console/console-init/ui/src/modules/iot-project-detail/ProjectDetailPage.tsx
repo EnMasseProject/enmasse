@@ -5,11 +5,12 @@ import {
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
-import { IoTProjectDetailHeader, ProjectNavigation } from "./components";
+import { ProjectNavigation } from "modules/iot-project-detail/components";
 import { useParams } from "react-router";
 import { Routes } from "./Routes";
 import { Link } from "react-router-dom";
 import { useBreadcrumb, useDocumentTitle } from "use-patternfly";
+import { IoTProjectDetailHeaderContainer } from "modules/iot-project-detail/containers";
 
 const breadcrumb = (
   <Breadcrumb>
@@ -24,24 +25,10 @@ export default function ProjectDetailPage() {
   useDocumentTitle("IoT Project Detail");
   const { projectname, sublist } = useParams();
 
-  const handleChangeEnabled = (isEnabled: boolean) => {};
-
-  const handleEdit = (name: string) => {};
-
-  const handleDelete = (name: string) => {};
-
   return (
     <>
       <PageSection variant={PageSectionVariants.light}>
-        <IoTProjectDetailHeader
-          projectName={projectname}
-          type="Managed"
-          status="Ready"
-          isEnabled={true}
-          changeEnable={handleChangeEnabled}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+        <IoTProjectDetailHeaderContainer projectName={projectname} />
         <ProjectNavigation activeItem={sublist || "detail"} />
       </PageSection>
       <PageSection>

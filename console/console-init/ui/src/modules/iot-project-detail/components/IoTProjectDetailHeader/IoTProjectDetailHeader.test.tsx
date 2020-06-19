@@ -9,14 +9,13 @@ import { MemoryRouter } from "react-router";
 import { IoTProjectDetailHeader } from "./IoTProjectDetailHeader";
 
 describe("<IoTProjectDetailHeader />", () => {
-  it("should renders a iot project header", () => {
+  it("should render an iot project header", () => {
     const props = {
       projectName: "iot-project-name",
       type: "iot-project-type",
       status: "Active",
       isEnabled: true,
       changeEnable: jest.fn(),
-      onEdit: jest.fn(),
       onDelete: jest.fn()
     };
     const { getByText } = render(
@@ -29,5 +28,25 @@ describe("<IoTProjectDetailHeader />", () => {
     getByText(props.projectName);
     getByText(props.type);
     getByText(props.status);
+  });
+});
+
+describe("<IoTProjectDetailHeader />", () => {
+  it("should render an iot project header with undefined prop values", () => {
+    const props = {
+      projectName: "iotProjectIndia",
+      type: undefined,
+      isEnabled: false,
+      changeEnable: jest.fn(),
+      onDelete: jest.fn()
+    };
+    const { getByText } = render(
+      <MemoryRouter>
+        <IoTProjectDetailHeader {...props} />
+      </MemoryRouter>
+    );
+    getByText("Type :");
+    getByText("Status :");
+    getByText(props.projectName);
   });
 });

@@ -124,7 +124,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   const ALL_DEVICE_LIST = gql(
     `query devices_for_iot_project {
       devices(iotproject: "${iotproject}", orderBy:"${orderBy}", filter: "${filter}") {
-        ${defaultResolver}
+        ${resolver}
       }
     }`
   );
