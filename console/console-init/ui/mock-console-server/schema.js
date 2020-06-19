@@ -496,6 +496,7 @@ const typeDefs = gql`
 
     "Returns the credentials for the given device"
     credentials(
+      filter: String
       iotproject: String!
       deviceId: String!
     ): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!

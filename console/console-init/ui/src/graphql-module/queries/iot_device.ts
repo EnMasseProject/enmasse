@@ -7,31 +7,52 @@ import gql from "graphql-tag";
 import { IDeviceFilter, getInitialFilter } from "modules/iot-device";
 import { ISortBy } from "@patternfly/react-table";
 
-const RETURN_IOT_DEVICE_DETAIL = (iotproject: string, deviceId: string) => {
+const RETURN_IOT_DEVICE_DETAIL = (
+  iotproject: string,
+  deviceId: string,
+  resolver?: string
+) => {
+  const defaultResolver = `
+        total
+        devices{
+          deviceId
+          enabled
+          viaGateway
+          jsonData  
+          credentials 
+        }`;
+
+  if (!resolver) {
+    resolver = defaultResolver;
+  }
+
   const IOT_DEVICE_DETAIL = gql(
     `query iot_device_detail{
          devices(
              iotproject:"${iotproject}"
              filter: "\`$.deviceId\` = '${deviceId}'"){
-            total
-            devices {
-                deviceId
-                 enabled
-                viaGateway
-                jsonData  
-                credentials   
-              }   
+              ${resolver}
           }
      }`
   );
   return IOT_DEVICE_DETAIL;
 };
 
-const RETURN_IOT_CREDENTIALS = (iotproject: string, deviceId: string) => {
+const RETURN_IOT_CREDENTIALS = (
+  iotproject: string,
+  deviceId: string,
+  property?: any,
+  filterValue?: any
+) => {
+  let filter = "";
+  if (filterValue && property) {
+    filter += "`$." + [property] + "` = '" + filterValue + "'";
+  }
   const IOT_CREDENTIALS = gql(
     `query iot_credentials{
       credentials(
-        iotproject:"${iotproject}"
+        filter:"${filter}",
+        iotproject:"${iotproject}",
         deviceId: "${deviceId}"
       ) {
         total   

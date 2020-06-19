@@ -60,6 +60,12 @@ enum DialogTypes {
   DELETE = "Delete"
 }
 
+enum CredentialsType {
+  PASSWORD = "hashed-password",
+  PSK = "psk",
+  X509_CERTIFICATE = "x509-cert"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -75,5 +81,6 @@ export {
   TemplateType,
   DataType,
   Protocols,
-  DialogTypes
+  DialogTypes,
+  CredentialsType
 };
