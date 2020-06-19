@@ -229,7 +229,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             try {
                 assertTtlStatus(addrWithTtl, null);
                 return true;
-            } catch (Exception e) {
+            } catch (Exception | AssertionError e) {
                 return false;
             }
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
