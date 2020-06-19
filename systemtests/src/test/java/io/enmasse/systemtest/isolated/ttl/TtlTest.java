@@ -4,8 +4,21 @@
  */
 package io.enmasse.systemtest.isolated.ttl;
 
-import io.enmasse.address.model.*;
-import io.enmasse.admin.model.v1.*;
+import io.enmasse.address.model.Address;
+import io.enmasse.address.model.AddressBuilder;
+import io.enmasse.address.model.AddressSpace;
+import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.Ttl;
+import io.enmasse.address.model.TtlBuilder;
+import io.enmasse.admin.model.v1.AddressPlan;
+import io.enmasse.admin.model.v1.AddressPlanBuilder;
+import io.enmasse.admin.model.v1.AddressSpacePlan;
+import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
+import io.enmasse.admin.model.v1.BrokeredInfraConfig;
+import io.enmasse.admin.model.v1.BrokeredInfraConfigBuilder;
+import io.enmasse.admin.model.v1.StandardInfraConfig;
+import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -44,7 +57,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.ISOLATED;
@@ -54,7 +66,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(ISOLATED)
 @Tag(ACCEPTANCE)
