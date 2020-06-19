@@ -94,21 +94,24 @@ function same_address_definition_and_allocation(a, b) {
 }
 
 function same_address_definition(a, b) {
-    return a.address === b.address
+    if (a === b) return true;
+    return a
+        && b
+        && a.address === b.address
         && a.type === b.type
-        && same_ttl(a.ttl, b.ttl)
-        && same_address_plan(a, b);
+        && a.plan === b.plan
+        && same_ttl(a.ttl, b.ttl);
 }
 
 function same_ttl(a, b) {
-    if (a === undefined) return b === undefined;
-    if (b === undefined) return false;
-    return b && a.minimum === b.minimum && a.maximum === b.maximum;
+    if (a === b) return true;
+    return a && b && a.minimum === b.minimum && a.maximum === b.maximum;
 }
 
 function same_address_status(a, b) {
-    if (a === undefined) return b === undefined;
-    return b
+    if (a === b) return true;
+    return a
+        && b
         && a.isReady === b.isReady
         && a.phase === b.phase
         && same_messages(a.messages, b.messages)
@@ -120,15 +123,9 @@ function same_address_definition_and_status(a, b) {
     return same_address_definition(a, b) && same_address_status(a.status, b.status);
 }
 
-function same_address_plan(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.plan === b.plan;
-}
-
 function same_plan_status(a, b) {
-    if (a === undefined) return b === undefined;
-    if (b === undefined) return false;
-    return b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
+    if (a === b) return true;
+    return a && b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
 }
 
 function same_addressplan_resources(a, b) {

@@ -70,8 +70,8 @@ function same_addressspaceplan_definition(a, b) {
 }
 
 function same_addressplans(a, b) {
-    if (a === undefined) return b === undefined;
-    if (a.length !== b.length) return false;
+    if (a === b) return true;
+    if (a == null || b == null || a.length !== b.length) return false;
     for (var i = 0; i < a.length; i++) {
         var found  = false;
         for (var j = 0; j < b.length; j++) {
@@ -88,8 +88,8 @@ function same_addressplans(a, b) {
 }
 
 function same_addressspaceplan_status(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
+    if (a === b) return true;
+    return a && b && a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
 }
 
 function addressspaceplan_compare(a, b) {
