@@ -8,7 +8,8 @@ import {
   WizardFooter,
   WizardContextConsumer,
   Button,
-  Wizard
+  Wizard,
+  WizardStep
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
@@ -18,17 +19,94 @@ import {
   IIoTProjectInput,
   IoTConfigurationStep,
   IoTReviewStep,
-  MessagingConfigurationStep,
   isMessagingProjectValid,
   isIoTProjectValid,
-  MessagingReviewStep,
-  IMessagingProjectInput
+  isMessagingProjectConfigurationValid,
+  isEnabledCertificateStep,
+  isRouteStepValid,
+  EndpointConfiguration
 } from "modules/project";
 import { useMutationQuery } from "hooks";
-import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
+import {
+  CREATE_ADDRESS_SPACE,
+  RETURN_NAMESPACES,
+  RETURN_ADDRESS_SPACE_SCHEMAS
+} from "graphql-module";
 import { FinishedStep } from "components";
-import { INamespaces } from "modules/address-space";
 import { ProjectType } from "modules/project/utils";
+import { IAddressSpaceSchema } from "schema";
+import { ConfiguringCertificates } from "./ConfiguringCertificates";
+import {
+  INamespaces,
+  MessagingProjectConfiguration
+} from "./MessagingProjectConfiguration";
+import { MessagingProjectReview } from "./MessagingProjectReview";
+import { ConfiguringRoutes } from "./ConfiguringRoutes";
+
+export interface IRouteConf {
+  protocol: string;
+  hostname?: string;
+  tlsTermination?: string;
+}
+export interface IMessagingProject {
+  namespace: string;
+  name: string;
+  type?: string;
+  plan?: string;
+  authService?: string;
+  customizeEndpoint: boolean;
+  isNameValid: boolean;
+  certValue?: string;
+  addCertificate: boolean;
+  tlsCertificate?: string;
+  protocols?: string[];
+  privateKey?: string;
+  addRoutes: boolean;
+  routesConf?: IRouteConf[];
+}
+
+export interface IExposeEndPoint {
+  name?: string;
+  service?: string;
+  certificate?: {
+    provider: string;
+    tlsKey?: string;
+    tlsCert?: string;
+  };
+  expose?: IExposeRoute;
+}
+export interface IExposeRoute {
+  routeHost?: string;
+  type?: string;
+  routeServicePort?: string;
+  routeTlsTermination?: string;
+}
+export interface IExposeMessagingProject {
+  as: {
+    metadata: {
+      name: string;
+      namespace: string;
+    };
+    spec: {
+      type?: string;
+      plan?: string;
+      authenticationService: {
+        name?: string;
+      };
+      endpoints?: IExposeEndPoint[];
+    };
+  };
+}
+
+const initialMessageProject: IMessagingProject = {
+  name: "",
+  namespace: "",
+  type: "",
+  isNameValid: true,
+  addCertificate: false,
+  customizeEndpoint: false,
+  addRoutes: false
+};
 
 const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -38,8 +116,8 @@ const CreateProject: React.FunctionComponent = () => {
     type?: string;
   }>();
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
-    IMessagingProjectInput
-  >({ isNameValid: true });
+    IMessagingProject
+  >(initialMessageProject);
   const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
     isNameValid: true,
     isEnabled: true
@@ -55,14 +133,14 @@ const CreateProject: React.FunctionComponent = () => {
   };
 
   const resetForm = () => {
-    setMessagingProjectDetail({ isNameValid: true });
+    setMessagingProjectDetail(initialMessageProject);
     setFirstSelectedStep(undefined);
   };
 
   const refetchQueries: string[] = ["all_address_spaces"];
 
   const resetFormState = () => {
-    setMessagingProjectDetail({ isNameValid: true });
+    setMessagingProjectDetail(initialMessageProject);
     setIsCreatedSuccessfully(true);
   };
 
@@ -73,6 +151,10 @@ const CreateProject: React.FunctionComponent = () => {
     resetFormState
   );
 
+  const { data: addressSpaceSchema } = useQuery<IAddressSpaceSchema>(
+    RETURN_ADDRESS_SPACE_SCHEMAS
+  ) || { data: { addressSpaceSchema: [] } };
+
   const handleMessagingProjectSave = () => {
     if (
       messagingProjectDetail &&
@@ -81,27 +163,27 @@ const CreateProject: React.FunctionComponent = () => {
       const variables = {
         as: {
           metadata: {
-            name: messagingProjectDetail.messagingProjectName,
+            name: messagingProjectDetail.name,
             namespace: messagingProjectDetail.namespace
           },
           spec: {
             type:
-              messagingProjectDetail.messagingProjectType &&
-              messagingProjectDetail.messagingProjectType.toLowerCase(),
+              messagingProjectDetail.type &&
+              messagingProjectDetail.type.toLowerCase(),
             plan:
-              messagingProjectDetail.messagingProjectPlan &&
-              messagingProjectDetail.messagingProjectPlan.toLowerCase(),
+              messagingProjectDetail.plan &&
+              messagingProjectDetail.plan.toLowerCase(),
             authenticationService: {
-              name: messagingProjectDetail.authenticationService
+              name: messagingProjectDetail.authService
             }
           }
         }
       };
       setMessagingVariables(variables);
       setRouteDetail({
-        name: messagingProjectDetail.messagingProjectName || "",
+        name: messagingProjectDetail.name || "",
         namespace: messagingProjectDetail.namespace || "",
-        type: messagingProjectDetail.messagingProjectType
+        type: messagingProjectDetail.type
       });
       resetForm();
     }
@@ -145,12 +227,87 @@ const CreateProject: React.FunctionComponent = () => {
 
   const finalStepForIot = IoTReviewStep(iotProjectDetail);
 
-  const configurationStepForMessaging = MessagingConfigurationStep(
-    setMessagingProjectDetail,
-    messagingProjectDetail
-  );
+  const messagingConfigurationStep = {
+    name: "Configuration",
+    component: (
+      <MessagingProjectConfiguration
+        projectDetail={messagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        setProjectDetail={setMessagingProjectDetail}
+      />
+    ),
+    enableNext: isMessagingProjectConfigurationValid(messagingProjectDetail)
+  };
 
-  const finalStepForMessaging = MessagingReviewStep(messagingProjectDetail);
+  const endpointConfiguringStep = {
+    name: "Configuring",
+    component: (
+      <EndpointConfiguration
+        setProjectDetail={setMessagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        projectDetail={messagingProjectDetail}
+      />
+    ),
+    enableNext: isMessagingProjectValid(messagingProjectDetail),
+    canJumpTo: isMessagingProjectValid(messagingProjectDetail)
+  };
+  const endpointCertificatesStep = {
+    name: "Certificates",
+    component: (
+      <ConfiguringCertificates
+        projectDetail={messagingProjectDetail}
+        setProjectDetail={setMessagingProjectDetail}
+      />
+    ),
+    enableNext:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail),
+    canJumpTo:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail)
+  };
+
+  const endpointRoutesStep = {
+    name: "Routes",
+    component: (
+      <ConfiguringRoutes
+        projectDetail={messagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        setProjectDetail={setMessagingProjectDetail}
+      />
+    ),
+    enableNext:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail) &&
+      isRouteStepValid(messagingProjectDetail),
+    canJumpTo:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail) &&
+      isRouteStepValid(messagingProjectDetail)
+  };
+
+  const endpointCustomizationStep = {
+    name: "Endpoint customization",
+    steps: [
+      ...[endpointConfiguringStep],
+      ...(messagingProjectDetail.addCertificate
+        ? [endpointCertificatesStep]
+        : []),
+      ...(messagingProjectDetail.addRoutes ? [endpointRoutesStep] : [])
+    ],
+    enableNext: isMessagingProjectValid(messagingProjectDetail),
+    canJumpTo: isMessagingProjectValid(messagingProjectDetail)
+  };
+
+  const messagingReviewStep = {
+    name: "Review",
+    component: (
+      <MessagingProjectReview projectDetail={messagingProjectDetail} />
+    ),
+    enableNext: isMessagingProjectValid(messagingProjectDetail),
+    canJumpTo: isMessagingProjectValid(messagingProjectDetail),
+    nextButtonText: "Finish"
+  };
 
   const finishedStep = {
     name: "Finish",
@@ -169,15 +326,17 @@ const CreateProject: React.FunctionComponent = () => {
     isFinishedStep: true
   };
 
-  const steps = [step1];
+  const steps: WizardStep[] = [step1];
 
   if (firstSelectedStep) {
     if (firstSelectedStep === "iot") {
       steps.push(configurationStepForIot);
       steps.push(finalStepForIot);
     } else {
-      steps.push(configurationStepForMessaging);
-      steps.push(finalStepForMessaging);
+      steps.push(messagingConfigurationStep);
+      messagingProjectDetail.customizeEndpoint &&
+        steps.push(endpointCustomizationStep);
+      steps.push(messagingReviewStep);
     }
   }
   steps.push(finishedStep);
