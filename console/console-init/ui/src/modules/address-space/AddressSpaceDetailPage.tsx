@@ -13,7 +13,7 @@ import {
   useBreadcrumb
 } from "use-patternfly";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import {
   PageSection,
   PageSectionVariants,

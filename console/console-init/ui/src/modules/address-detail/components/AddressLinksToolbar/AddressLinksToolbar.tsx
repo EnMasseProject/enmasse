@@ -4,7 +4,12 @@
  */
 
 import React from "react";
-import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
+import {
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
+} from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
@@ -19,7 +24,7 @@ export interface IAddressLinksToolbarProps
   onClearAllFilters: () => void;
 }
 const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,

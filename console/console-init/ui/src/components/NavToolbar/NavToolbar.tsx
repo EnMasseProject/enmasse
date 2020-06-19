@@ -12,7 +12,7 @@ import {
 } from "@patternfly/react-core";
 import { QuestionCircleIcon } from "@patternfly/react-icons";
 import { About, User } from "components";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 // const styles = StyleSheet.create({
 //   navtb_dropdownitem_help: {

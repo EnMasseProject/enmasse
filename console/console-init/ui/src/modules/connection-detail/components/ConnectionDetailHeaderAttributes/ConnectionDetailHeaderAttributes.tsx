@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Flex, FlexItem } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 // const styles = StyleSheet.create({
 //   flex_right_border_with_padding: {

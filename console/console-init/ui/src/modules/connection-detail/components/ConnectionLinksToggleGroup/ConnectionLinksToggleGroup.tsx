@@ -15,7 +15,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -43,8 +45,8 @@ export interface IConnectionLinksToggleGroupProps {
   onRoleSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeAddressInput?: (value: string) => Promise<any>;
@@ -106,8 +108,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
             <InputGroup>
               <TypeAheadSelect
                 id="cl-filter-select-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -137,8 +139,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select address"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select address"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onAddressSelect}
                 onClear={onAddressClear}
                 selected={addressSelected}
@@ -214,7 +216,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           )}
         </>
       }
-      show={{ xl: "show" }}
+      breakpoint="xl"
     >
       {toggleGroupItems}
     </ToolbarToggleGroup>

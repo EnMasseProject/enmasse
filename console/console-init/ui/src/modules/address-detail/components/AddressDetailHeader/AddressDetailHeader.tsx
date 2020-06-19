@@ -15,7 +15,7 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { TypeBadge } from "modules/address-detail/components";
 import { AddressTypes } from "constant";
 import { DropdownWithKebabToggle } from "components";

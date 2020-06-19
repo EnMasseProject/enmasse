@@ -4,7 +4,12 @@
  */
 
 import React from "react";
-import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
+import {
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
+} from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
@@ -26,7 +31,7 @@ export interface IAddressToolbarProps extends IAddressToggleGroupProps {
 }
 
 const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,

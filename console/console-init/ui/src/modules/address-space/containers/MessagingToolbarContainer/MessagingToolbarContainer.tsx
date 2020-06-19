@@ -6,8 +6,8 @@
 import React, { useState } from "react";
 import {
   SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
@@ -231,8 +231,8 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   };
 
   const onDelete = (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => {
     let index: number;
     switch (category && category.toString().toLowerCase()) {

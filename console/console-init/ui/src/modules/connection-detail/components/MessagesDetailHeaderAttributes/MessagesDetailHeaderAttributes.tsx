@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Split, SplitItem } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 // const styles = StyleSheet.create({
 //   message_split: {

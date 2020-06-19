@@ -4,7 +4,12 @@
  */
 
 import React from "react";
-import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
+import {
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
+} from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
   ConnectionLinksToggleGroup,
@@ -19,7 +24,7 @@ export interface IConnectionLinksToolbarProps
   onClearAllFilters: () => void;
 }
 const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,

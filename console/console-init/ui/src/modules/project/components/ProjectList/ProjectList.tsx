@@ -16,7 +16,7 @@ import {
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { FormatDistance } from "use-patternfly";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import {
   StatusTypes,
   ProjectStatus,
@@ -214,7 +214,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
   ];
 
   const onSelect = (
-    _: React.MouseEvent,
+    _: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number
   ) => {

@@ -18,7 +18,7 @@ import {
   ConnectionDetailHeaderAttributes,
   MessagesDetailHeaderAttributes
 } from "modules/connection-detail/components";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
 

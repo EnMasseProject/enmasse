@@ -15,7 +15,7 @@ import {
   PageSection,
   PageSectionVariants
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 export interface IIoTCertificate {
   "subject-dn"?: string | null;

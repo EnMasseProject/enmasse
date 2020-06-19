@@ -14,7 +14,7 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
 // import { StyleForTable } from "modules/project";

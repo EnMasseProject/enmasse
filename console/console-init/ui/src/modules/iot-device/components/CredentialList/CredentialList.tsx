@@ -16,12 +16,11 @@ import {
   CardBody,
   CardActions,
   CardHeader,
-  CardTitle,
-  CardHeaderMain,
-  ExpandableSection
+  ExpandableSection,
+  CardHeaderMain
 } from "@patternfly/react-core";
 import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import {
   DropdownWithToggle,
   SwitchWithToggle,

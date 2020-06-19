@@ -20,7 +20,7 @@ import {
   TextVariants,
   CardTitle
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import {
   CredentialsView,
   ICredentialsViewProps

@@ -16,7 +16,7 @@ import {
   IExtraData
 } from "@patternfly/react-table";
 import { FormatDistance } from "use-patternfly";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
 // import { StyleForTable } from "modules/project";
@@ -168,7 +168,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
 
   const onSelect = (
-    event: React.MouseEvent,
+    event: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number,
     rowData: IRowData,

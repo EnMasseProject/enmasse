@@ -11,7 +11,7 @@ import {
 } from "modules/iot-certificates";
 import { PageSection } from "@patternfly/react-core";
 import { ICertificateCardProps } from "../CertificateCard";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 export interface IIoTCertificateProps
   extends Pick<
