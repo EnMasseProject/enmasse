@@ -6,7 +6,7 @@
 import React from "react";
 import { Card, CardBody, TextContent, Gallery } from "@patternfly/react-core";
 import { ProjectCard } from "./ProjectCard";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 export interface IProjectCount {
   total: number;

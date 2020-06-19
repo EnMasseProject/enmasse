@@ -14,7 +14,7 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 // import { StyleForTable } from "modules/project";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 interface IConnectionLinksListProps {
   rows: ILink[];

@@ -13,7 +13,7 @@ import {
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { hasOwnProperty } from "utils";
 
 // export const dropdown_item_styles = StyleSheet.create({

@@ -21,7 +21,7 @@ import {
   SwitchWithToggle,
   IAdapterConfig
 } from "components";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 interface IDeviceRegistationManagementProps {
   token?: string;

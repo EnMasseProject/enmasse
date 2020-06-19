@@ -13,7 +13,7 @@ import {
   Divider
 } from "@patternfly/react-core";
 import { useLocation } from "react-router";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
 // import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import { ConnectionLinksContainer } from "modules/connection-detail/containers";

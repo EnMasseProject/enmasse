@@ -51,7 +51,7 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
             Upload certificate
           </Button>
         </ToolbarItem>
-        <ToolbarItem align={{ md: "alignRight" }} data-codemods="true">
+        <ToolbarItem alignment={{ md: "alignRight" }} data-codemods="true">
           <SwitchWithToggle
             id="pct-edit-json-switch"
             label="Edit in Json"

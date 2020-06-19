@@ -12,7 +12,7 @@ import {
 } from "@patternfly/react-icons";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { kFormatter } from "utils";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { ProjectTypes } from "./constant";
 
 // const style = StyleSheet.create({

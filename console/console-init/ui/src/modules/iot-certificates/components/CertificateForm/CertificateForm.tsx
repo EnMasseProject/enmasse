@@ -19,7 +19,7 @@ import {
   DropdownPosition
 } from "@patternfly/react-core";
 import { DropdownWithToggle, SwitchWithToggle } from "components";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { getLabelByKey } from "utils";
 import {
   algorithmTypeOptions,

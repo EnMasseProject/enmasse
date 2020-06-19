@@ -14,7 +14,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -47,8 +49,8 @@ export interface IMessagingToolbarToggleGroupProps {
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeNameSpaceInput?: (value: string) => Promise<any>;
@@ -123,8 +125,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -155,8 +157,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-namespace"
-                ariaLabelTypeAhead={"Select namespace"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select namespace"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
                 onClear={onNamespaceClear}
                 selected={namespaceSelected}
@@ -250,7 +252,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           )}
         </>
       }
-      show={{ xl: "show" }}
+      breakpoint="xl"
     >
       {toggleGroupItems}
     </ToolbarToggleGroup>

@@ -16,7 +16,7 @@ import {
   ButtonVariant,
   PageSectionVariants
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 
 export interface IIoTReviewProps {

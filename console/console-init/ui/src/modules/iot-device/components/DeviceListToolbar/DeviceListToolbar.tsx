@@ -94,7 +94,7 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
           id="device-list-toolbar-item-4"
           variant="pagination"
           key="pagination"
-          align={{ md: "alignRight" }}
+          alignment={{ md: "alignRight" }}
           aria-label="Device List pagination"
           data-codemods="true"
         >

@@ -15,7 +15,7 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { FormatDistance } from "use-patternfly";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { AddressSpaceType } from "modules/address-space/utils";
 import { DropdownWithKebabToggle } from "components";
 
