@@ -5,21 +5,21 @@
 
 import React from "react";
 import { Flex, FlexItem } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
-const styles = StyleSheet.create({
-  flex_right_border_with_padding: {
-    paddingRight: "48px",
-    marginRight: "48px",
-    borderRight: "2px solid",
-    borderRightColor: "lightgrey"
-  },
-  flex_bottom_boder: {
-    borderBottom: "2px solid",
-    borderBottomColor: "lightgrey",
-    paddingBottom: "12px"
-  }
-});
+// const styles = StyleSheet.create({
+//   flex_right_border_with_padding: {
+//     paddingRight: "48px",
+//     marginRight: "48px",
+//     borderRight: "2px solid",
+//     borderRightColor: "lightgrey"
+//   },
+//   flex_bottom_boder: {
+//     borderBottom: "2px solid",
+//     borderBottomColor: "lightgrey",
+//     paddingBottom: "12px"
+//   }
+// });
 export interface IConnectionDetailHeaderAttributesProps {
   isMobileView: boolean;
   product?: string;
@@ -36,12 +36,12 @@ export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnecti
 }) => {
   return (
     <Flex
-      breakpointMods={[{ modifier: "column", breakpoint: "sm" }]}
-      className={
-        !isMobileView
-          ? css(styles.flex_right_border_with_padding)
-          : css(styles.flex_bottom_boder)
-      }
+      direction={{ sm: "column" }}
+      // className={
+      //   !isMobileView
+      //     ? css(styles.flex_right_border_with_padding)
+      //     : css(styles.flex_bottom_boder)
+      // }
     >
       <Flex>
         <FlexItem>
@@ -57,12 +57,7 @@ export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnecti
           <b>Platform</b>
         </FlexItem>
         <FlexItem>
-          <Flex
-            breakpointMods={[
-              { modifier: "row", breakpoint: "lg" },
-              { modifier: "column", breakpoint: "sm" }
-            ]}
-          >
+          <Flex direction={{ lg: "row", sm: "column" }}>
             <FlexItem>
               <b>JVM: </b>
               {jvm || "-"}

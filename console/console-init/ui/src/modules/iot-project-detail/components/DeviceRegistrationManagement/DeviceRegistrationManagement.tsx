@@ -7,13 +7,13 @@ import React, { useState } from "react";
 import {
   Card,
   CardBody,
-  CardHeader,
   PageSection,
   Split,
   SplitItem,
   Text,
   TextVariants,
-  Title
+  Title,
+  CardTitle
 } from "@patternfly/react-core";
 import {
   InputText,
@@ -21,7 +21,7 @@ import {
   SwitchWithToggle,
   IAdapterConfig
 } from "components";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
 interface IDeviceRegistationManagementProps {
   token?: string;
@@ -32,9 +32,9 @@ interface IDeviceRegistationManagementProps {
   credentialApi?: IAdapterConfig;
 }
 
-const styles = StyleSheet.create({
-  fontSize: { fontSize: 20 }
-});
+// const styles = StyleSheet.create({
+//   fontSize: { fontSize: 20 }
+// });
 
 const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationManagementProps> = ({
   token,
@@ -157,7 +157,8 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
 
   const CardToDisplay = () => (
     <Card>
-      <CardHeader className={css(styles.fontSize)}>
+      {/* <CardTitle className={css(styles.fontSize)}> */}
+      <CardTitle>
         <Split>
           <SplitItem>
             <Title size="xl" headingLevel="h2">
@@ -175,7 +176,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             />
           </SplitItem>
         </Split>
-      </CardHeader>
+      </CardTitle>
       {isHidden ? (
         <CardBody>
           <JsonEditor readOnly={true} value={JSON.stringify(data)} />

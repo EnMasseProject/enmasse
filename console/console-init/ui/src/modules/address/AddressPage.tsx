@@ -13,9 +13,9 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { Divider } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { StyleSheet } from "@patternfly/react-styles";
+// import { StyleSheet } from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
 import { AddressListContainer } from "./containers";
 import {
@@ -40,14 +40,14 @@ import { AddressTypes } from "constant";
 import { AddressToolbarContainer } from "modules/address/containers";
 import { useMutationQuery } from "hooks";
 
-export const GridStylesForTableHeader = StyleSheet.create({
-  filter_left_margin: {
-    marginLeft: 24
-  },
-  create_button_left_margin: {
-    marginLeft: 10
-  }
-});
+// export const GridStylesForTableHeader = StyleSheet.create({
+//   filter_left_margin: {
+//     marginLeft: 24
+//   },
+//   create_button_left_margin: {
+//     marginLeft: 10
+//   }
+// });
 
 export interface IAddressSpacePlanResponse {
   addressSpaces: {

@@ -6,16 +6,16 @@
 import React, { useState } from "react";
 import { TextInput, TextInputProps } from "@patternfly/react-core";
 import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
-import { StyleSheet } from "@patternfly/react-styles";
+// import { StyleSheet } from "@patternfly/react-styles";
 
-const styles = StyleSheet.create({
-  icon: {
-    minWidth: 35
-  },
-  textInput: {
-    marginRight: -35
-  }
-});
+// const styles = StyleSheet.create({
+//   icon: {
+//     minWidth: 35
+//   },
+//   textInput: {
+//     marginRight: -35
+//   }
+// });
 
 export interface IPasswordInputFieldWithToggleProps extends TextInputProps {
   id: string;
@@ -25,8 +25,7 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   id,
   onChange,
   name,
-  isValid = true,
-  validated
+  validated = true
 }) => {
   const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
 
@@ -35,16 +34,21 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   };
 
   const renderIcon = () => {
-    if (isValid) {
+    if (validated) {
       if (isShowPassword) {
         return (
           <EyeSlashIcon
-            className={styles.icon}
+            // className={styles.icon}
             onClick={() => onToggle(false)}
           />
         );
       }
-      return <EyeIcon className={styles.icon} onClick={() => onToggle(true)} />;
+      return (
+        <EyeIcon
+          // className={styles.icon}
+          onClick={() => onToggle(true)}
+        />
+      );
     }
   };
 
@@ -53,13 +57,13 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   return (
     <>
       <TextInput
-        className={styles.textInput}
+        // className={styles.textInput}
         id={id}
         name={name}
         type={type}
         onChange={onChange}
-        isValid={isValid}
-        validated={validated}
+        validated={validated ? "default" : "error"}
+        // validated={validated}
       />
       {renderIcon()}
     </>

@@ -16,7 +16,7 @@ import {
   ButtonVariant,
   PageSectionVariants
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 
 export interface IIoTReviewProps {
@@ -25,25 +25,25 @@ export interface IIoTReviewProps {
   isEnabled: boolean;
 }
 
-const styles = StyleSheet.create({
-  left_padding_with_border: {
-    paddingLeft: 32,
-    borderLeft: "0.1em solid",
-    borderLeftColor: "lightgrey"
-  },
-  bottom_padding: {
-    paddingBottom: 16
-  },
-  item_grid_margin: { marginBottom: 16, marginRight: 5 },
-  editor: {
-    width: 700,
-    border: "1px solid",
-    borderColor: "lightgrey"
-  },
-  expandable: {
-    color: "rgb(0, 102, 204)"
-  }
-});
+// const styles = StyleSheet.create({
+//   left_padding_with_border: {
+//     paddingLeft: 32,
+//     borderLeft: "0.1em solid",
+//     borderLeftColor: "lightgrey"
+//   },
+//   bottom_padding: {
+//     paddingBottom: 16
+//   },
+//   item_grid_margin: { marginBottom: 16, marginRight: 5 },
+//   editor: {
+//     width: 700,
+//     border: "1px solid",
+//     borderColor: "lightgrey"
+//   },
+//   expandable: {
+//     color: "rgb(0, 102, 204)"
+//   }
+// });
 
 export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   name,
@@ -54,10 +54,10 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new iot
         project. Use the Back button to make changes.
@@ -67,7 +67,10 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
           <Grid>
             {name && name.trim() !== "" && (
               <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
+                <GridItem
+                  span={5}
+                  // className={css(styles.item_grid_margin)}
+                >
                   Project name
                 </GridItem>
                 <GridItem id="preview-iot-name" span={7}>
@@ -77,7 +80,10 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
             )}
             {namespace && namespace.trim() !== "" && (
               <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
+                <GridItem
+                  span={5}
+                  // className={css(styles.item_grid_margin)}
+                >
                   Namespace
                 </GridItem>
                 <GridItem id="preview-iot-namespace" span={7}>
@@ -87,7 +93,10 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
             )}
             {isEnabled !== undefined && (
               <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
+                <GridItem
+                  span={5}
+                  // className={css(styles.item_grid_margin)}
+                >
                   Enabled
                 </GridItem>
                 <GridItem id="preview-iot-enabled" span={7}>
@@ -112,8 +121,15 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
           </Grid>
         </GridItem>
         {isExpanded && (
-          <GridItem span={7} className={css(styles.left_padding_with_border)}>
-            <Title size="lg" className={css(styles.bottom_padding)}>
+          <GridItem
+            span={7}
+            // className={css(styles.left_padding_with_border)}
+          >
+            <Title
+              headingLevel="h2"
+              size="lg"
+              // className={css(styles.bottom_padding)}
+            >
               {`Configuration details  `}
               <Tooltip
                 id="iot-preview-feedback"
@@ -157,7 +173,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               value={"data"}
               name="UNIQUE_ID_OF_DIV"
               editorProps={{ $blockScrolling: true }}
-              className={css(styles.editor)}
+              // className={css(styles.editor)}
             />
           </GridItem>
         )}

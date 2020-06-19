@@ -9,8 +9,8 @@ import {
   Flex,
   FlexItem,
   Card,
-  CardHeader,
-  CardBody
+  CardBody,
+  CardTitle
 } from "@patternfly/react-core";
 import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
 import { FormatDistance } from "use-patternfly";
@@ -18,20 +18,20 @@ import {
   ConnectionDetailHeaderAttributes,
   MessagesDetailHeaderAttributes
 } from "modules/connection-detail/components";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
 
-const styles = StyleSheet.create({
-  expandable: {
-    color: "rgb(0, 102, 204)"
-  },
-  flex_right_border: {
-    paddingRight: "1em",
-    borderRight: "0.05em solid",
-    borderRightColor: "lightgrey"
-  }
-});
+// const styles = StyleSheet.create({
+//   expandable: {
+//     color: "rgb(0, 102, 204)"
+//   },
+//   flex_right_border: {
+//     paddingRight: "1em",
+//     borderRight: "0.05em solid",
+//     borderRightColor: "lightgrey"
+//   }
+// });
 export interface IConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
@@ -64,22 +64,22 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   const { width } = useWindowDimensions();
   return (
     <Card>
-      <CardHeader>
+      <CardTitle>
         <Title id="cd-header-title" headingLevel="h1" size="4xl">
           {hostname}
         </Title>
-      </CardHeader>
+      </CardTitle>
       <CardBody>
         <Flex>
           <FlexItem
             id="cd-header-container-id"
-            className={css(styles.flex_right_border)}
+            // className={css(styles.flex_right_border)}
           >
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem
             id="cd-header-protocol"
-            className={css(styles.flex_right_border)}
+            // className={css(styles.flex_right_border)}
           >
             <ConnectionProtocolFormat
               protocol={protocol}
@@ -102,7 +102,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
-              className={css(styles.expandable)}
+              // className={css(styles.expandable)}
             >
               {isHidden ? (
                 <>
@@ -119,10 +119,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         </Flex>
         <Flex
           id="cd-header-connection-messages"
-          breakpointMods={[
-            { modifier: "column", breakpoint: "sm" },
-            { modifier: "row", breakpoint: "lg" }
-          ]}
+          direction={{ sm: "column", lg: "row" }}
         >
           {width < 992 || !isHidden ? (
             <>

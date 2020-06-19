@@ -4,19 +4,19 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;
 }
 
-const styles = StyleSheet.create({
-  nav_item_color: {
-    color: "var(--pf-global--palette--black-1000)"
-  }
-});
+// const styles = StyleSheet.create({
+//   nav_item_color: {
+//     color: "var(--pf-global--palette--black-1000)"
+//   }
+// });
 export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({
   activeItem
 }) => {
@@ -25,8 +25,8 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
     setActive(result.itemId);
   };
   return (
-    <Nav onSelect={onSelect1}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect1}>
+      <NavList>
         <NavItem
           key="addresses"
           itemId="addresses"
@@ -35,7 +35,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-addresses"
             to={`addresses`}
-            className={css(styles.nav_item_color)}
+            // className={css(styles.nav_item_color)}
           >
             Addresses
           </NavLink>
@@ -48,7 +48,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-connections"
             to={`connections`}
-            className={css(styles.nav_item_color)}
+            // className={css(styles.nav_item_color)}
           >
             Connections
           </NavLink>
@@ -61,7 +61,7 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           <NavLink
             id="ad-space-nav-endpoints"
             to={`endpoints`}
-            className={css(styles.nav_item_color)}
+            // className={css(styles.nav_item_color)}
           >
             Endpoints
           </NavLink>

@@ -17,7 +17,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { endpointProtocolOptions } from "modules/address-space/utils";
 
 export interface IAddressSpaceReviewProps {
@@ -35,34 +35,34 @@ export interface IAddressSpaceReviewProps {
   tlsCertificate?: string;
 }
 
-const style = StyleSheet.create({
-  left_padding: {
-    paddingLeft: 32
-  },
-  left_padding_for_endpoints: {
-    paddingLeft: 40
-  },
-  bottom_padding: {
-    paddingBottom: 16
-  },
-  left_margin_gridItem: {
-    marginBottom: 16,
-    marginLeft: 10,
-    marginRight: 5
-  },
-  preview_info_gridItem: {
-    marginBottom: 16,
-    marginRight: 5
-  },
-  grid_border: {
-    borderRight: "0.1em solid",
-    borderRightColor: "lightgrey"
-  },
-  editor: {
-    border: "1px solid",
-    borderColor: "lightgrey"
-  }
-});
+// const style = StyleSheet.create({
+//   left_padding: {
+//     paddingLeft: 32
+//   },
+//   left_padding_for_endpoints: {
+//     paddingLeft: 40
+//   },
+//   bottom_padding: {
+//     paddingBottom: 16
+//   },
+//   left_margin_gridItem: {
+//     marginBottom: 16,
+//     marginLeft: 10,
+//     marginRight: 5
+//   },
+//   preview_info_gridItem: {
+//     marginBottom: 16,
+//     marginRight: 5
+//   },
+//   grid_border: {
+//     borderRight: "0.1em solid",
+//     borderRightColor: "lightgrey"
+//   },
+//   editor: {
+//     border: "1px solid",
+//     borderColor: "lightgrey"
+//   }
+// });
 interface IReviewGridProps {
   labelText: string;
   value?: string;
@@ -76,15 +76,18 @@ const ReviewGridItem: React.FunctionComponent<IReviewGridProps> = ({
   value,
   addLeftMargin = false
 }) => {
-  const className = addLeftMargin
-    ? css(style.preview_info_gridItem)
-    : css(style.left_margin_gridItem);
+  // const className = addLeftMargin
+  //   ? css(style.preview_info_gridItem)
+  //   : css(style.left_margin_gridItem);
   return (
     <>
       {((labelText && labelText.trim() !== "") ||
         (value && value.trim() !== "")) && (
         <>
-          <GridItem span={5} className={className}>
+          <GridItem
+            span={5}
+            // className={className}
+          >
             {labelText?.trim()}
           </GridItem>
           <GridItem id={valueId} span={7}>
@@ -120,16 +123,19 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new address
         space. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem span={5} className={style.grid_border}>
+        <GridItem
+          span={5}
+          // className={style.grid_border}
+        >
           <Grid>
             <ReviewGridItem
               valueId="preview-addr-name"
@@ -168,13 +174,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                   <>
                     <GridItem
                       span={5}
-                      className={css(style.left_padding_for_endpoints)}
+                      // className={css(style.left_padding_for_endpoints)}
                     >
                       Protocols
                     </GridItem>
                     <GridItem
                       span={7}
-                      className={css(style.preview_info_gridItem)}
+                      // className={css(style.preview_info_gridItem)}
                     >
                       {protocolOptions &&
                         protocolOptions.map(protocol => (
@@ -190,13 +196,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                   <>
                     <GridItem
                       span={5}
-                      className={css(style.left_padding_for_endpoints)}
+                      // className={css(style.left_padding_for_endpoints)}
                     >
                       TLS Certificates
                     </GridItem>
                     <GridItem
                       span={7}
-                      className={css(style.preview_info_gridItem)}
+                      // className={css(style.preview_info_gridItem)}
                     >
                       {certificate}
                     </GridItem>
@@ -205,13 +211,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 <>
                   <GridItem
                     span={5}
-                    className={css(style.left_padding_for_endpoints)}
+                    // className={css(style.left_padding_for_endpoints)}
                   >
                     Create Routes
                   </GridItem>
                   <GridItem
                     span={7}
-                    className={css(style.preview_info_gridItem)}
+                    // className={css(style.preview_info_gridItem)}
                   >
                     {addRoutes ? "True" : "False"}
                   </GridItem>
@@ -221,8 +227,15 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             <br />
           </Grid>
         </GridItem>
-        <GridItem span={7} className={css(style.left_padding)}>
-          <Title size={"lg"} className={css(style.bottom_padding)}>
+        <GridItem
+          span={7}
+          // className={css(style.left_padding)}
+        >
+          <Title
+            headingLevel="h2"
+            size="lg"
+            // className={css(style.bottom_padding)}
+          >
             {`Configuration details  `}
             <Tooltip
               id="preview-as-feedback-tooltip"
@@ -267,7 +280,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             value={data.addressSpaceCommand}
             name="UNIQUE_ID_OF_DIV"
             editorProps={{ $blockScrolling: true }}
-            className={css(style.editor)}
+            // className={css(style.editor)}
           />
         </GridItem>
       </Grid>

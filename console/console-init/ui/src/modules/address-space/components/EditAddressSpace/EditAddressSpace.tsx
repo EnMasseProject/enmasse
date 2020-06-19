@@ -40,7 +40,7 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
 }) => {
   return (
     <Modal
-      isLarge
+      variant="large"
       id="as-list-edit-modal"
       title="Edit"
       isOpen={true}
@@ -63,7 +63,6 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}
     >
       <Form>
         <TextContent>

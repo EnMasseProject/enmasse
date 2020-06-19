@@ -15,7 +15,7 @@ import {
 import { useLocation } from "react-router";
 import { css } from "@patternfly/react-styles";
 import { ISortBy } from "@patternfly/react-table";
-import { GridStylesForTableHeader } from "modules/address/AddressPage";
+// import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import { ConnectionLinksContainer } from "modules/connection-detail/containers";
 import { TablePagination } from "components";
 import { ConnectionLinksToolbarContainer } from "modules/connection-detail/containers";
@@ -53,8 +53,9 @@ export const ConnectionLinksWithToolbar: React.FunctionComponent<IConnectionDeta
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title
-        size={"lg"}
-        className={css(GridStylesForTableHeader.filter_left_margin)}
+        headingLevel="h2"
+        size="lg"
+        // className={css(GridStylesForTableHeader.filter_left_margin)}
       >
         Links for connection - {connectionName}
       </Title>

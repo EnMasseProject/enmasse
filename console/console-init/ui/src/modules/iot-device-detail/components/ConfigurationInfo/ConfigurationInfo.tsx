@@ -43,7 +43,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
           configure a device connection on the device side.
         </Alert>
         <br />
-        <Grid gutter="sm">
+        <Grid hasGutter>
           <GridItem span={6}>
             <Card>
               <CardBody>
@@ -56,7 +56,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
             </Card>
           </GridItem>
           <GridItem span={6}>
-            <Grid gutter="sm">
+            <Grid hasGutter>
               <GridItem>
                 <Card>
                   <CardBody>dropdown</CardBody>

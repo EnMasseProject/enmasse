@@ -214,8 +214,6 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
     <Wizard
       id="create-as-wizard"
       isOpen={true}
-      isFullHeight={true}
-      isFullWidth={true}
       onClose={onCloseDialog}
       title="Create an Instance"
       steps={steps}

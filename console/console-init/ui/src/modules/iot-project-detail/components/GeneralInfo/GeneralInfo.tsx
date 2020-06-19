@@ -8,22 +8,22 @@ import {
   Card,
   CardBody,
   Divider,
-  CardHeader,
   PageSection,
-  Title
+  Title,
+  CardTitle
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 
-const styles = StyleSheet.create({
-  style_margin: {
-    marginRight: 20
-  },
-  font_size: {
-    fontSize: 20
-  }
-});
+// const styles = StyleSheet.create({
+//   style_margin: {
+//     marginRight: 20
+//   },
+//   font_size: {
+//     fontSize: 20
+//   }
+// });
 interface IGeneralInfoProps {
   addressSpace: string;
   eventAddresses: Array<string>;
@@ -50,13 +50,20 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
   return (
     <PageSection>
       <Card>
-        <CardHeader className={css(styles.font_size)}>
+        <CardTitle
+        // className={css(styles.font_size)}
+        >
           <Title size="xl" headingLevel="h2">
             General Info
           </Title>
-        </CardHeader>
+        </CardTitle>
         <CardBody>
-          <b className={css(styles.style_margin)}>Address space</b>
+          <b
+          //
+          // className={css(styles.style_margin)}
+          >
+            Address space
+          </b>
           <Link
             //TODO:=modify route
             to={`/messaging-projects/${namespace}/${addressSpace}/standard/addresses`}
@@ -66,7 +73,12 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
             {addressSpace}
           </Link>{" "}
           <br />
-          <b className={css(styles.style_margin)}>Events address name</b>
+          <b
+          //
+          // className={css(styles.style_margin)}
+          >
+            Events address name
+          </b>
           {eventAddresses &&
             eventAddresses.length > 0 &&
             eventAddresses.map((address: string) => (
@@ -83,7 +95,11 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
               </>
             ))}
           <br />
-          <b className={css(styles.style_margin)}>Telemetry address name</b>
+          <b
+          // className={css(styles.style_margin)}
+          >
+            Telemetry address name
+          </b>
           {telemetryAddresses &&
             telemetryAddresses.length > 0 &&
             telemetryAddresses.map((address: string) => (
@@ -100,7 +116,12 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
               </>
             ))}
           <br />
-          <b className={css(styles.style_margin)}>Command address name</b>
+          <b
+          //
+          // className={css(styles.style_margin)}
+          >
+            Command address name
+          </b>
           {commandAddresses &&
             commandAddresses.length > 0 &&
             commandAddresses.map((address: string) => (
@@ -120,13 +141,29 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <br />
           <Divider />
           <br />
-          <b className={css(styles.style_margin)}>Max Connection</b>
+          <b
+          // className={css(styles.style_margin)}
+          >
+            Max Connection
+          </b>
           {kFormatter(maxConnection)} <br />
-          <b className={css(styles.style_margin)}>Data Volume</b>
+          <b
+          // className={css(styles.style_margin)}
+          >
+            Data Volume
+          </b>
           {kFormatter(dataVolume)} <br />
-          <b className={css(styles.style_margin)}>Start Date</b>
+          <b
+          // className={css(styles.style_margin)}
+          >
+            Start Date
+          </b>
           {startDate} <br />
-          <b className={css(styles.style_margin)}>End Date</b>
+          <b
+          // className={css(styles.style_margin)}
+          >
+            End Date
+          </b>
           {endDate} <br />
         </CardBody>
       </Card>

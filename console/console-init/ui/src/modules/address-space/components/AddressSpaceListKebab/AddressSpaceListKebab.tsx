@@ -10,7 +10,7 @@ import {
   OverflowMenuGroup,
   OverflowMenuItem,
   OverflowMenuControl
-} from "@patternfly/react-core/dist/js/experimental";
+} from "@patternfly/react-core";
 import { DropdownItem, Button, ButtonVariant } from "@patternfly/react-core";
 import { DropdownWithKebabToggle } from "components";
 

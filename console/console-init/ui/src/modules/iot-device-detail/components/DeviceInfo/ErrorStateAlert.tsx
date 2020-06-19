@@ -5,13 +5,12 @@
 
 import React from "react";
 import { Alert, Button, ButtonVariant } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
 
-const styles = StyleSheet.create({
-  alert_background_color: {
-    backgroundColor: "#fdf7e7"
-  }
-});
+// const styles = StyleSheet.create({
+//   alert_background_color: {
+//     backgroundColor: "#fdf7e7"
+//   }
+// });
 
 export interface IErrorStateAlertProps {
   errorState?: string;
@@ -88,7 +87,7 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
       variant="warning"
       isInline
       title={getTitle()}
-      className={styles.alert_background_color}
+      // className={styles.alert_background_color}
     >
       {getAlertBody()}
     </Alert>

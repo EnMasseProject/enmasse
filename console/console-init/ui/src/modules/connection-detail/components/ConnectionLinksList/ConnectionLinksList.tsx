@@ -13,7 +13,7 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-import { StyleForTable } from "modules/project";
+// import { StyleForTable } from "modules/project";
 import { css } from "@patternfly/react-styles";
 
 interface IConnectionLinksListProps {
@@ -74,7 +74,9 @@ export const ConnectionLinksList: React.FunctionComponent<IConnectionLinksListPr
   ];
 
   return (
-    <div className={css(StyleForTable.scroll_overflow)}>
+    <div
+    // className={css(StyleForTable.scroll_overflow)}
+    >
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

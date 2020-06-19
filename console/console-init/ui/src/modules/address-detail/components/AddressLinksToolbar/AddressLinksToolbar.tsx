@@ -4,12 +4,7 @@
  */
 
 import React from "react";
-import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps
-} from "@patternfly/react-core";
+import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
@@ -83,7 +78,7 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
         setNameInput={setNameInput}
         setContainerInput={setContainerInput}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -91,19 +86,20 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { AddressLinksToolbar };

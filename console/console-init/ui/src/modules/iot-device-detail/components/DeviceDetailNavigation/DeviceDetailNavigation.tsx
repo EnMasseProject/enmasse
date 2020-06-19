@@ -4,21 +4,21 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavItem, NavVariants } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
 export interface INavigationProps {
   activeItem: string;
 }
 
-const styles = StyleSheet.create({
-  navlink: {
-    color: "black",
-    paddingLeft: 10,
-    paddingRight: 10
-  }
-});
+// const styles = StyleSheet.create({
+//   navlink: {
+//     color: "black",
+//     paddingLeft: 10,
+//     paddingRight: 10
+//   }
+// });
 export interface INavSelectedItem {
   groupId: number | string;
   itemId: number | string;
@@ -36,8 +36,8 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
   };
 
   return (
-    <Nav onSelect={onSelect}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect}>
+      <NavList>
         <NavItem
           key="device-info"
           itemId="device-info"
@@ -46,7 +46,7 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
           <NavLink
             id="nav-device-info"
             to={`device-info`}
-            className={css(styles.navlink)}
+            // className={css(styles.navlink)}
           >
             Device Info
           </NavLink>
@@ -75,7 +75,7 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
           <NavLink
             id="nav-device-configuration-info"
             to={`configuration-info`}
-            className={css(styles.navlink)}
+            // className={css(styles.navlink)}
           >
             Configuration Info
           </NavLink>

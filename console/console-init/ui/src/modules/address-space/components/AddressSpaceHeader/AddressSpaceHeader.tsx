@@ -15,34 +15,34 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { FormatDistance } from "use-patternfly";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { AddressSpaceType } from "modules/address-space/utils";
 import { DropdownWithKebabToggle } from "components";
 
-const styles = StyleSheet.create({
-  flex_right_border: {
-    paddingRight: "1em",
-    borderRight: "0.05em solid",
-    borderRightColor: "lightgrey"
-  },
-  address_space_icon_margin: {
-    backgroundColor: "#EC7A08",
-    fontSize: 25
-  },
-  address_icon_align: {
-    paddingTop: 5,
-    paddingRight: 16
-  },
-  kebab_toggle_margin: {
-    marginTop: 20,
-    marginLeft: 10,
-    fontSize: 15
-  },
-  namespace_info_margin: {
-    marginTop: 16,
-    marginBottom: 24
-  }
-});
+// const styles = StyleSheet.create({
+//   flex_right_border: {
+//     paddingRight: "1em",
+//     borderRight: "0.05em solid",
+//     borderRightColor: "lightgrey"
+//   },
+//   address_space_icon_margin: {
+//     backgroundColor: "#EC7A08",
+//     fontSize: 25
+//   },
+//   address_icon_align: {
+//     paddingTop: 5,
+//     paddingRight: 16
+//   },
+//   kebab_toggle_margin: {
+//     marginTop: 20,
+//     marginLeft: 10,
+//     fontSize: 15
+//   },
+//   namespace_info_margin: {
+//     marginTop: 16,
+//     marginBottom: 24
+//   }
+// });
 export interface IAddressSpaceHeaderProps {
   name: string;
   namespace: string;
@@ -91,22 +91,34 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
   return (
     <>
       <Split>
-        <SplitItem className={css(styles.address_icon_align)}>
-          <Badge className={css(styles.address_space_icon_margin)}>AS</Badge>
+        <SplitItem
+        // className={css(styles.address_icon_align)}
+        >
+          <Badge
+          // className={css(styles.address_space_icon_margin)}
+          >
+            AS
+          </Badge>
         </SplitItem>
         <SplitItem>
-          <Split gutter="md">
+          <Split hasGutter>
             <SplitItem>
               <Title headingLevel="h1" size="4xl" id="as-header-title">
                 {name}
               </Title>
             </SplitItem>
           </Split>
-          <Flex className={css(styles.namespace_info_margin)}>
-            <FlexItem className={css(styles.flex_right_border)}>
+          <Flex
+          // className={css(styles.namespace_info_margin)}
+          >
+            <FlexItem
+            // className={css(styles.flex_right_border)}
+            >
               in namespace <b>{namespace}</b>
             </FlexItem>
-            <FlexItem className={css(styles.flex_right_border)}>
+            <FlexItem
+            // className={css(styles.flex_right_border)}
+            >
               <b>
                 <AddressSpaceType type={type} />
               </b>
@@ -120,7 +132,9 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
           </Flex>
         </SplitItem>
         <SplitItem isFilled></SplitItem>
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
+        <SplitItem
+        // className={css(styles.kebab_toggle_margin)}
+        >
           <DropdownWithKebabToggle
             id="as-header-dropdown"
             toggleId={"as-header-kebab"}

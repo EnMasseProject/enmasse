@@ -132,15 +132,15 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
         <GridItem span={5}>
           <Select
             variant={SelectVariant.typeahead}
-            ariaLabelTypeAhead="Select a parameter"
+            typeAheadAriaLabel="Select a parameter"
             id={"device-filter-typeahead-select-parameter" + criteria.key}
             onToggle={onToggle}
             onSelect={onSelect}
             onClear={onClearParameter}
             onFilter={onChangeParameter}
             selections={criteria.parameter}
-            isExpanded={isExpanded}
-            ariaLabelledBy={"Select a parameter"}
+            isOpen={isExpanded}
+            aria-labelledby={"Select a parameter"}
           >
             {selectOptions}
           </Select>

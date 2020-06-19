@@ -13,14 +13,14 @@ import {
   TableProps,
   SortByDirection
 } from "@patternfly/react-table";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
-const StyleForTable = StyleSheet.create({
-  scroll_overflow: {
-    overflowY: "auto",
-    paddingBottom: 100
-  }
-});
+// const StyleForTable = StyleSheet.create({
+//   scroll_overflow: {
+//     overflowY: "auto",
+//     paddingBottom: 100
+//   }
+// });
 
 export interface IAddressSpace {
   name: string;
@@ -52,7 +52,9 @@ export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> =
 }) => {
   return (
     <>
-      <div className={css(StyleForTable.scroll_overflow)}>
+      <div
+      // className={css(StyleForTable.scroll_overflow)}
+      >
         <Table
           variant={TableVariant.compact}
           onSelect={onSelect}

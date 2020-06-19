@@ -12,7 +12,7 @@ export interface IMetaDataHeader {
 
 export const MetaDataHeader: React.FC<IMetaDataHeader> = sectionName => {
   return (
-    <Grid gutter="sm">
+    <Grid hasGutter>
       <GridItem span={5}>
         {/* <b>{sectionName} parameter</b> */}
         <b>Default properties parameter</b>

@@ -4,12 +4,7 @@
  */
 
 import React from "react";
-import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps
-} from "@patternfly/react-core";
+import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { SortForMobileView, useWindowDimensions } from "components";
 import {
@@ -87,7 +82,7 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
         onChangeNameInput={onChangeNameInput}
         setNameInput={setNameInput}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -95,8 +90,8 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
-      <DataToolbarItem>
+      </ToolbarItem>
+      <ToolbarItem data-codemods="true">
         <AddressListKebab
           createAddressOnClick={onClickCreateAddress}
           onDeleteAllAddress={onDeleteAllAddress}
@@ -104,19 +99,20 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
           isDeleteAllDisabled={isDeleteAllDisabled}
           isPurgeAllDisabled={isPurgeAllDisabled}
         />
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { AddressToolbar };
