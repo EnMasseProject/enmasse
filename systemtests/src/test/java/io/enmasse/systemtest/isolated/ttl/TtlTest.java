@@ -21,7 +21,11 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.ContainerBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
+import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,7 +33,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -40,7 +48,10 @@ import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.TestTag.ISOLATED;
-import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.*;
@@ -241,15 +252,11 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
-            List<Message> messages = new ArrayList<>();
             AtomicInteger count = new AtomicInteger();
-            count.set(0);
-            IntStream.of(1).forEach(unused -> {
-                Message msg = Message.Factory.create();
-                msg.setAddress(addrWithTtl.getSpec().getAddress());
-                msg.setDurable(true);
-                messages.add(msg);
-            });
+            Message msg = Message.Factory.create();
+            msg.setAddress(addrWithTtl.getSpec().getAddress());
+            msg.setDurable(true);
+            List<Message> messages = List.of(msg);
 
             CompletableFuture<Integer> sent = client.sendMessages(addrWithTtl.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
