@@ -5,17 +5,16 @@
 package io.enmasse.controller.standard;
 
 import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.fabric8.kubernetes.api.model.KubernetesListBuilder;
-import io.fabric8.kubernetes.api.model.Quantity;
+import io.fabric8.kubernetes.api.model.*;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetBuilder;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BrokerClusterTest {
     @Test
-    public void testPatchPvcIfSame() throws Exception {
+    public void testPvcStaysTheSameIfNotChanged() throws Exception {
         BrokerCluster oldCluster = new BrokerCluster("broker", new KubernetesListBuilder()
                 .addToStatefulSetItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
@@ -36,14 +35,37 @@ public class BrokerClusterTest {
                         .endVolumeClaimTemplate()
                         .endSpec()
                         .build())
+                .addToItems(new PersistentVolumeClaimBuilder()
+                        .editOrNewMetadata()
+                        .withName("myclaim")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .addToAccessModes("ReadWriteOnce")
+                        .withNewResources()
+                        .addToRequests("storage", new Quantity("2Gi"))
+                        .endResources()
+                        .endSpec()
+                        .build())
                 .build());
 
         oldCluster.updateResources(oldCluster, new StandardInfraConfig());
-        assertFalse(oldCluster.shouldReplace());
+        PersistentVolumeClaim newClaim = null;
+        StatefulSet newBroker = null;
+        for (HasMetadata resource : oldCluster.getResources().getItems()) {
+            if (resource instanceof PersistentVolumeClaim) {
+                newClaim = (PersistentVolumeClaim) resource;
+            }
+            if (resource instanceof StatefulSet) {
+                newBroker = (StatefulSet) resource;
+            }
+        }
+
+        assertEquals("2Gi", newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage").getAmount());
+        assertEquals("2Gi", newClaim.getSpec().getResources().getRequests().get("storage").getAmount());
     }
 
     @Test
-    public void testReplaceIfPvcIsDifferent() throws Exception {
+    public void testPvcIsModifiedStatefulStaysTheSameIfModified() throws Exception {
         BrokerCluster oldCluster = new BrokerCluster("broker", new KubernetesListBuilder()
                 .addToStatefulSetItems(new StatefulSetBuilder()
                         .editOrNewMetadata()
@@ -62,6 +84,17 @@ public class BrokerClusterTest {
                         .endResources()
                         .endSpec()
                         .endVolumeClaimTemplate()
+                        .endSpec()
+                        .build())
+                .addToItems(new PersistentVolumeClaimBuilder()
+                        .editOrNewMetadata()
+                        .withName("myclaim")
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .addToAccessModes("ReadWriteOnce")
+                        .withNewResources()
+                        .addToRequests("storage", new Quantity("2Gi"))
+                        .endResources()
                         .endSpec()
                         .build())
                 .build());
@@ -89,6 +122,20 @@ public class BrokerClusterTest {
                 .build());
 
         oldCluster.updateResources(newCluster, new StandardInfraConfig());
-        assertTrue(oldCluster.shouldReplace());
+        PersistentVolumeClaim newClaim = null;
+        StatefulSet newBroker = null;
+        for (HasMetadata resource : oldCluster.getResources().getItems()) {
+            if (resource instanceof PersistentVolumeClaim) {
+                newClaim = (PersistentVolumeClaim) resource;
+            }
+            if (resource instanceof StatefulSet) {
+                newBroker = (StatefulSet) resource;
+            }
+        }
+
+        assertNotNull(newClaim);
+        assertNotNull(newBroker);
+        assertEquals("2Gi", newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests().get("storage").getAmount());
+        assertEquals("5Gi", newClaim.getSpec().getResources().getRequests().get("storage").getAmount());
     }
 }

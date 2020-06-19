@@ -39,6 +39,7 @@
 * #4682: Avoid race when processing Artemis management responses when first connecting to broker
 * #4721: Standard address space agent erroneously processes addresses of other addressspaces in the same namespace
 * #4730: Enhance brokered address space's address controller (agent) to populate address plan status
+* #4753: Resizing broker volumes broken on OpenShift 4
 
 ## 0.31.4
 * #4704: [OpenShift 3.11] Console returns 500 internal error when configured with custom certificate

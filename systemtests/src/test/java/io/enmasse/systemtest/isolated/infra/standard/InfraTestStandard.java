@@ -4,6 +4,7 @@
  */
 package io.enmasse.systemtest.isolated.infra.standard;
 
+import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.DoneableAddressSpace;
@@ -19,13 +20,21 @@ import io.enmasse.admin.model.v1.StandardInfraConfigSpecBroker;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBrokerBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouter;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecRouterBuilder;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.infra.InfraTestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.infra.InfraConfiguration;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.messagingclients.ClientArgument;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.shared.standard.QueueTest;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -42,15 +51,19 @@ import org.slf4j.Logger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
+
+    private Address exampleAddress;
 
     @Test
     @Tag(ACCEPTANCE)
@@ -130,7 +143,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
         resourcesManager.createAddressSpace(exampleAddressSpace);
 
-        resourcesManager.setAddresses(new AddressBuilder()
+        exampleAddress = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(exampleSpacePlan.getMetadata().getNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(exampleAddressSpace, "example-queue"))
@@ -140,7 +153,11 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 .withAddress("example-queue")
                 .withPlan(exampleAddressPlan.getMetadata().getName())
                 .endSpec()
-                .build());
+                .build();
+
+        resourcesManager.setAddresses(exampleAddress);
+
+        resourcesManager.createOrUpdateUser(exampleAddressSpace, exampleUser);
 
         assertInfra(InfraConfiguration.broker(null, "512Mi", brokerTemplateSpec, "1Gi", "-Dsystemtest=property"),
                 InfraConfiguration.router(null, "256Mi", routerTemplateSpec, 1),
@@ -148,6 +165,7 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
     }
 
     @Test
+    @ExternalClients
     void testIncrementInfra() throws Exception {
         testReplaceInfra(InfraConfiguration.broker("500m", "1Gi", null, "2Gi", null),
                 InfraConfiguration.router("500m", "512Mi", null, 3),
@@ -156,14 +174,25 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
 
     @Test
     @Tag(ACCEPTANCE)
+    @ExternalClients
     void testDecrementInfra() throws Exception {
-        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "512Mi", null),
+        testReplaceInfra(InfraConfiguration.broker("250m", "256Mi", null, "1Gi", null),
                 InfraConfiguration.router("250m", "128Mi", null, 1),
                 InfraConfiguration.admin("250m", "256Mi", null));
     }
 
     void testReplaceInfra(InfraConfiguration brokerConfig, InfraConfiguration routerConfig, InfraConfiguration adminConfig) throws Exception {
         testCreateInfra();
+
+        try (ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientSender())
+                .withCredentials(exampleUser)
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                .withAdditionalArgument(ClientArgument.MSG_DURABLE, "true")
+                .withCount(5)
+                .withAddress(exampleAddress)) {
+            assertTrue(client.run());
+        }
 
         Boolean updatePersistentVolumeClaim = volumeResizingSupported();
 
@@ -178,7 +207,6 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .withUpdatePersistentVolumeClaim(updatePersistentVolumeClaim)
                         .withNewResources()
                         .withMemory(brokerConfig.getMemory())
-                        .withStorage(brokerConfig.getBrokerStorage())
                         .withCpu(brokerConfig.getCpu())
                         .endResources().build())
                 .withRouter(PlanUtils.createStandardRouterResourceObject(routerConfig.getCpu(), routerConfig.getMemory(), 200, routerConfig.getRouterReplicas()))
@@ -190,6 +218,10 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                         .build())
                 .endSpec()
                 .build();
+
+        if (updatePersistentVolumeClaim && brokerConfig.getBrokerStorage() != null) {
+            infra.getSpec().getBroker().getResources().setStorage(brokerConfig.getBrokerStorage());
+        }
         resourcesManager.createInfraConfig(infra);
 
         AddressSpacePlan exampleSpacePlan = new AddressSpacePlanBuilder()
@@ -222,6 +254,14 @@ class InfraTestStandard extends InfraTestBase implements ITestIsolatedStandard {
                 () -> assertInfra(brokerConfig, routerConfig, adminConfig),
                 new TimeoutBudget(5, TimeUnit.MINUTES));
 
+        try (ExternalMessagingClient client = new ExternalMessagingClient()
+                .withClientEngine(new ProtonJMSClientReceiver())
+                .withCredentials(exampleUser)
+                .withMessagingRoute(Objects.requireNonNull(AddressSpaceUtils.getInternalEndpointByName(exampleAddressSpace, "messaging", "amqps")))
+                .withCount(5)
+                .withAddress(exampleAddress)) {
+            assertTrue(client.run());
+        }
     }
 
     @Test

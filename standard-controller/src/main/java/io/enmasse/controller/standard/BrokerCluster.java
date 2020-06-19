@@ -8,29 +8,30 @@ package io.enmasse.controller.standard;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.admin.model.v1.StandardInfraConfig;
 import io.enmasse.config.AnnotationKeys;
-import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.KubernetesList;
-import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Represents a cluster of resources for a given destination.
  */
 public class BrokerCluster {
+    private static final Logger log = LoggerFactory.getLogger(BrokerCluster.class);
     private static final ObjectMapper mapper = new ObjectMapper();
     private final String clusterId;
     private final int replicas;
     private KubernetesList resources;
     private int newReplicas;
     private final int readyReplicas;
-    private boolean shouldReplace = false;
 
     public BrokerCluster(String clusterId, KubernetesList resources) {
         this.clusterId = clusterId;
@@ -107,43 +108,52 @@ public class BrokerCluster {
     public void updateResources(BrokerCluster upgradedCluster, StandardInfraConfig infraConfig) throws Exception {
         if (upgradedCluster != null) {
 
-            List<PersistentVolumeClaim> oldClaims = Collections.emptyList();
+            // Only 1 statefulset and 1 claim for a broker
+
+            PersistentVolumeClaim existingClaim = null;
+            StatefulSet existingBroker = null;
             for (HasMetadata item : resources.getItems()) {
+                if (item instanceof PersistentVolumeClaim) {
+                    existingClaim = (PersistentVolumeClaim) item;
+                }
+
                 if (item instanceof StatefulSet) {
-                    oldClaims = ((StatefulSet) item).getSpec().getVolumeClaimTemplates();
+                    existingBroker = (StatefulSet) item;
                 }
             }
-            this.shouldReplace = false;
-            this.resources = upgradedCluster.getResources();
-            for (HasMetadata item : resources.getItems()) {
+
+            KubernetesList newResources = upgradedCluster.getResources();
+            StatefulSet newBroker = null;
+            for (HasMetadata item : newResources.getItems()) {
                 if (item instanceof StatefulSet) {
-                    if (isClaimsChanged(oldClaims, ((StatefulSet) item).getSpec().getVolumeClaimTemplates())) {
-                        shouldReplace = true;
-                    }
+                    newBroker = (StatefulSet) item;
                     Kubernetes.addObjectAnnotation(item, AnnotationKeys.APPLIED_INFRA_CONFIG, mapper.writeValueAsString(infraConfig));
+                    break;
                 }
             }
-        }
-    }
 
-    private boolean isClaimsChanged(List<PersistentVolumeClaim> oldClaims, List<PersistentVolumeClaim> newClaims) {
-        Set<String> remains = newClaims.stream().map(c -> c.getMetadata().getName()).collect(Collectors.toSet());
-        for (PersistentVolumeClaim oldClaim : oldClaims) {
-            for (PersistentVolumeClaim newClaim : newClaims) {
-                if (oldClaim.getMetadata().getName().equals(newClaim.getMetadata().getName())) {
-                    remains.remove(oldClaim.getMetadata().getName());
-                    if (!oldClaim.getSpec().getAccessModes().equals(newClaim.getSpec().getAccessModes()) ||
-                            !oldClaim.getSpec().getResources().getRequests().equals(newClaim.getSpec().getResources().getRequests())) {
-                        return true;
-                    }
-                }
+            if (newBroker == null) {
+                log.warn("Unable to find new StatefulSet for broker {}, will not apply upgrade", clusterId);
+                return;
             }
-        }
-        return !remains.isEmpty();
-    }
 
-    public boolean shouldReplace() {
-        return shouldReplace;
+            if (existingClaim != null && existingBroker != null) {
+                // Allow only storage size to change
+                Map<String, Quantity> newRequests = newBroker.getSpec().getVolumeClaimTemplates().get(0).getSpec().getResources().getRequests();
+
+                // NOTE: Workaround for https://github.com/kubernetes/kubernetes/issues/68737:
+                // To change a persistent volume, the existing generated PVC must be modified, and the template in
+                // the statefulset must remain the same. This code will reset the template resource requests, and
+                // add the PVC to the list of resources that should be applied.
+                newBroker.getSpec().setVolumeClaimTemplates(existingBroker.getSpec().getVolumeClaimTemplates());
+                existingClaim.getSpec().getResources().setRequests(newRequests);
+                newResources = new KubernetesListBuilder()
+                        .withItems(newResources.getItems())
+                        .addToItems(existingClaim)
+                        .build();
+            }
+            this.resources = newResources;
+        }
     }
 
     public int getReadyReplicas() {

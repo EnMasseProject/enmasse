@@ -120,9 +120,9 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, boolean replaceStatefulSets, Consumer<HasMetadata> appliedResourceConsumer) {
+    public void apply(KubernetesList resources, boolean patchPersistentVolumeClaims, Consumer<HasMetadata> appliedResourceConsumer) {
         for (HasMetadata resource : resources.getItems()) {
-            apply(resource, patchPersistentVolumeClaims, replaceStatefulSets);
+            apply(resource, patchPersistentVolumeClaims);
             if (appliedResourceConsumer != null) {
                 appliedResourceConsumer.accept(resource);
             }
@@ -130,7 +130,7 @@ public class KubernetesHelper implements Kubernetes {
     }
 
     @Override
-    public void apply(HasMetadata resource, boolean patchPersistentVolumeClaims, boolean replaceStatefulSets) {
+    public void apply(HasMetadata resource, boolean patchPersistentVolumeClaims) {
         try {
             if (resource instanceof ConfigMap) {
                 client.configMaps().withName(resource.getMetadata().getName()).patch((ConfigMap) resource);
@@ -139,11 +139,7 @@ public class KubernetesHelper implements Kubernetes {
             } else if (resource instanceof Deployment) {
                 client.apps().deployments().withName(resource.getMetadata().getName()).patch((Deployment) resource);
             } else if (resource instanceof StatefulSet) {
-                if (replaceStatefulSets) {
-                    client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).replace((StatefulSet) resource);
-                } else {
-                    client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
-                }
+                client.apps().statefulSets().withName(resource.getMetadata().getName()).cascading(false).patch((StatefulSet) resource);
             } else if (resource instanceof Service) {
                 client.services().withName(resource.getMetadata().getName()).patch((Service) resource);
             } else if (resource instanceof ServiceAccount) {
