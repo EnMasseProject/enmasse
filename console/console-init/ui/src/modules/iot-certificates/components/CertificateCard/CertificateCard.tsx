@@ -14,7 +14,7 @@ import {
   DropdownItem,
   CardTitle
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { getLabelByKey } from "utils";
 import { IIoTCertificate } from "modules/iot-certificates";
@@ -27,17 +27,17 @@ export interface ICertificateCardProps {
   id: string;
 }
 
-// const styles = StyleSheet.create({
-//   row_margin: {
-//     marginBottom: 5
-//   },
-//   float_right: {
-//     float: "right"
-//   },
-//   capitalize: {
-//     textTransform: "capitalize"
-//   }
-// });
+const styles = StyleSheet.create({
+  row_margin: {
+    marginBottom: 5
+  },
+  float_right: {
+    float: "right"
+  },
+  capitalize: {
+    textTransform: "capitalize"
+  }
+});
 
 export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = ({
   certificate,
@@ -79,14 +79,12 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
     </DropdownItem>
   ];
 
-  // const rowMargin: string = css(styles.row_margin);
+  const rowMargin: string = css(styles.row_margin);
 
   return (
     <Card id={`cc-card-${id}`}>
       <CardTitle id={`cc-dard-header-${id}`}>
-        <CardActions
-        // className={css(styles.float_right)}
-        >
+        <CardActions className={css(styles.float_right)}>
           <DropdownWithKebabToggle
             isPlain={true}
             dropdownItems={dropdownItems}
@@ -101,10 +99,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               <b>{getLabelByKey("subject-dn")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             {certificate["subject-dn"]}
           </GridItem>
           <GridItem span={2}>
@@ -112,10 +107,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               <b>{getLabelByKey("public-key")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             {certificate["public-key"]}
           </GridItem>
           <GridItem span={2}>
@@ -127,10 +119,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               <b>{getLabelByKey("auto-provisioning-enabled")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             <SwitchWithToggle
               id={`cc-auto-provision-switch-${id}`}
               label="Enabled"
@@ -144,15 +133,12 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               headingLevel="h1"
               size="md"
               id={`cc-algorithm-title-${id}`}
-              // className={css(styles.capitalize)}
+              className={css(styles.capitalize)}
             >
               <b>{getLabelByKey("algorithm")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             {certificate["algorithm"]}
           </GridItem>
           <GridItem span={2}>
@@ -160,10 +146,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               <b>{getLabelByKey("not-before")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             {certificate["not-before"]}
           </GridItem>
           <GridItem span={2}>
@@ -171,10 +154,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
               <b>{getLabelByKey("not-after")}</b>
             </Title>
           </GridItem>
-          <GridItem
-            span={10}
-            // className={rowMargin}
-          >
+          <GridItem span={10} className={rowMargin}>
             {certificate["not-after"]}
           </GridItem>
         </Grid>

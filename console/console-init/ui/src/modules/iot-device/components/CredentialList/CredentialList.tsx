@@ -16,11 +16,10 @@ import {
   CardBody,
   CardActions,
   CardHeader,
-  ExpandableSection,
-  CardHeaderMain
+  ExpandableSection
 } from "@patternfly/react-core";
 import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import {
   DropdownWithToggle,
   SwitchWithToggle,
@@ -39,12 +38,12 @@ import {
   HIDE_ADVANCE_SETTING
 } from "modules/iot-device/utils";
 
-// const styles = StyleSheet.create({
-//   addMoreScrets: { marginLeft: -15, marginBottom: 20 },
-//   addMoreExt: { marginLeft: -15 },
-//   dropdown_align: { display: "flex" },
-//   dropdown_toggle_align: { flex: 1 }
-// });
+const styles = StyleSheet.create({
+  addMoreScrets: { marginLeft: -15, marginBottom: 20 },
+  addMoreExt: { marginLeft: -15 },
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: 1 }
+});
 
 export interface ICredential {
   id?: string;
@@ -114,8 +113,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
         />
         {isExpandedAdvancedSetting && (
           <Grid>
-            {/* <GridItem span={12} className={styles.addMoreScrets}> */}
-            <GridItem span={12}>
+            <GridItem span={12} className={css(styles.addMoreScrets)}>
               {selectedType && (
                 <Button
                   variant="link"
@@ -137,7 +135,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               <br />
               <Button
                 variant="link"
-                // className={styles.addMoreExt}
+                className={css(styles.addMoreExt)}
                 type="button"
                 icon={<PlusCircleIcon />}
                 onClick={addMoreExtension}
@@ -237,8 +235,8 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         <DropdownWithToggle
                           id={"cl-type-dropdown-" + id}
                           name="type"
-                          // className={css(styles.dropdown_align)}
-                          // toggleClass={css(styles.dropdown_toggle_align)}
+                          className={css(styles.dropdown_align)}
+                          toggleClass={css(styles.dropdown_toggle_align)}
                           position={DropdownPosition.left}
                           onSelectItem={(value, event) =>
                             onSelectType(id, event, value)

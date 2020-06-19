@@ -18,7 +18,7 @@ import {
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
@@ -32,14 +32,15 @@ export interface IAddressPreview {
   namespace: string;
   addressspace: string;
 }
-// const Style = StyleSheet.create({
-//   left_padding: {
-//     paddingLeft: 32
-//   },
-//   bottom_padding: {
-//     paddingBottom: 16
-//   }
-// });
+
+const Style = StyleSheet.create({
+  left_padding: {
+    paddingLeft: 32
+  },
+  bottom_padding: {
+    paddingBottom: 16
+  }
+});
 
 export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   name,
@@ -130,14 +131,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             )}
           </Grid>
         </GridItem>
-        <GridItem
-          span={7}
-          // className={css(Style.left_padding)}
-        >
+        <GridItem span={7} className={css(Style.left_padding)}>
           <Title
             headingLevel="h2"
             size="lg"
-            // className={css(Style.bottom_padding)}
+            className={css(Style.bottom_padding)}
           >
             {`Configuration details  `}
             <Tooltip

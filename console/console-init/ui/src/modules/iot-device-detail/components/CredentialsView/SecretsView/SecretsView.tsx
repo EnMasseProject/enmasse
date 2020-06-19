@@ -9,25 +9,25 @@ import { EditAltIcon } from "@patternfly/react-icons";
 import classNames from "classnames";
 import { getLabelByKey } from "utils";
 import { ISecret } from "modules/iot-device/components";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { PasswordLabel } from "components";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
-// const styles = StyleSheet.create({
-//   row_margin: {
-//     marginBottom: 5
-//   },
-//   section_margin: {
-//     marginTop: 20,
-//     marginBottom: 10
-//   },
-//   c_button_PaddingLeft: {
-//     paddingLeft: 0
-//   },
-//   c_button_PaddingBottom: {
-//     paddingTop: 0
-//   }
-// });
+const styles = StyleSheet.create({
+  row_margin: {
+    marginBottom: 5
+  },
+  section_margin: {
+    marginTop: 20,
+    marginBottom: 10
+  },
+  c_button_PaddingLeft: {
+    paddingLeft: 0
+  },
+  c_button_PaddingBottom: {
+    paddingTop: 0
+  }
+});
 
 export interface ISecretsViewProps
   extends Pick<ISecretRowProps, "onConfirmPassword"> {
@@ -71,10 +71,10 @@ const SecretRow: React.FC<ISecretRowProps> = ({
         <Button
           variant="link"
           icon={<EditAltIcon />}
-          // className={classNames([
-          //   styles.c_button_PaddingLeft,
-          //   styles.c_button_PaddingBottom
-          // ])}
+          className={classNames([
+            styles.c_button_PaddingLeft,
+            styles.c_button_PaddingBottom
+          ])}
           onClick={onClickChangePassword}
         >
           Change password
@@ -99,10 +99,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
                   <b>{getLabelByKey(key)}</b>
                 </Title>
               </GridItem>
-              <GridItem
-                span={9}
-                // className={styles.row_margin}
-              >
+              <GridItem span={9} className={css(styles.row_margin)}>
                 {renderGridItemValue(value, key)}
               </GridItem>
             </Grid>
