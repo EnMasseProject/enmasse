@@ -94,6 +94,13 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                 new TtlBuilder().withMinimum(550L /* higher addr min takes priority */).withMaximum(5000L /* lower max plan takes priority */).build());
     }
 
+    @ParameterizedTest(name = "testAddressPlanSpecifiedMaxTtl-{0}-space")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressPlanSpecifiedMaxTtl(String type) throws Exception {
+        doTestTtl(type, new TtlBuilder().withMaximum(5000L).build(), null,
+                new TtlBuilder().withMaximum(5000L).build());
+    }
+
     private void doTestTtl(String type, Ttl addrPlanTtl, Ttl addrTtl, Ttl expectedTtl) throws Exception {
         final String infraConfigName = "ttl-infra";
         final String spacePlanName = "space-plan-ttl";
@@ -207,8 +214,10 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
 
             List<Message> messages = new ArrayList<>();
             AtomicInteger count = new AtomicInteger();
+            long minimum = expectedTtl.getMinimum() == null ? 0 : expectedTtl.getMinimum();
+            long maximum = expectedTtl.getMaximum();
             List.of(0L,
-                    (expectedTtl.getMaximum() - expectedTtl.getMinimum() / 2) + expectedTtl.getMinimum(),
+                    (maximum - minimum / 2) + minimum,
                     Duration.ofDays(1).toMillis()).forEach(expiry -> {
                 Message msg = Message.Factory.create();
                 msg.setAddress(addrWithTtl.getSpec().getAddress());
