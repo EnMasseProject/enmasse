@@ -68,21 +68,6 @@ function same_allocation(a, b) {
     return true;
 }
 
-function same_messages(a, b) {
-    if (a === b) {
-        return true;
-    } else if (a == null || b == null || a.length !== b.length) {
-        return false;
-    }
-
-    for (var i in a) {
-        if (!b.includes(a[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
 function same_address_definition_and_allocation(a, b) {
     if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
@@ -90,7 +75,7 @@ function same_address_definition_and_allocation(a, b) {
     return same_address_definition(a, b)
         && same_allocation(a.allocated_to, b.allocated_to)
         && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined)
-        && same_ttl(a.status ? a.status.ttl : undefined, b.status ? b.status.ttl : undefined);
+        && myutils.same_ttl(a.status ? a.status.ttl : undefined, b.status ? b.status.ttl : undefined);
 }
 
 function same_address_definition(a, b) {
@@ -100,12 +85,7 @@ function same_address_definition(a, b) {
         && a.address === b.address
         && a.type === b.type
         && a.plan === b.plan
-        && same_ttl(a.ttl, b.ttl);
-}
-
-function same_ttl(a, b) {
-    if (a === b) return true;
-    return a && b && a.minimum === b.minimum && a.maximum === b.maximum;
+        && myutils.same_ttl(a.ttl, b.ttl);
 }
 
 function same_address_status(a, b) {
@@ -114,9 +94,9 @@ function same_address_status(a, b) {
         && b
         && a.isReady === b.isReady
         && a.phase === b.phase
-        && same_messages(a.messages, b.messages)
+        && myutils.same_status_messages(a.messages, b.messages)
         && same_plan_status(a.planStatus, b.planStatus)
-        && same_ttl(a.ttl, b.ttl);
+        && myutils.same_ttl(a.ttl, b.ttl);
 }
 
 function same_address_definition_and_status(a, b) {
@@ -142,12 +122,7 @@ function by_address(a) {
 }
 
 function description(list) {
-    const max = 5;
-    if (list.length > max) {
-        return list.slice(0, max).map(by_address).join(', ') + ' and ' + (list.length - max) + ' more';
-    } else {
-        return JSON.stringify(list.map(by_address));
-    }
+    return myutils.description(list, by_address);
 }
 
 function AddressSource(config) {
@@ -337,7 +312,7 @@ AddressSource.prototype.update_status = function (record, ready) {
             updated++;
         }
 
-        if (!same_messages(address.status.messages, messages)) {
+        if (!myutils.same_status_messages(address.status.messages, messages)) {
             address.status.messages = messages;
             updated++;
         }

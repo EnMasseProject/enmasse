@@ -314,3 +314,32 @@ module.exports.parseToBytes = function (input) {
 
     return( value * multipliers[unit] );
 };
+
+module.exports.same_status_messages = function(a, b) {
+    if (a === b) {
+        return true;
+    } else if (a == null || b == null || a.length !== b.length) {
+        return false;
+    }
+
+    for (var i in a) {
+        if (!b.includes(a[i])) {
+            return false;
+        }
+    }
+    return true;
+};
+
+module.exports.same_ttl = function (a, b) {
+    if (a === b) return true;
+    return a && b && a.minimum === b.minimum && a.maximum === b.maximum;
+};
+
+module.exports.description = function description(list, name) {
+    const max = 5;
+    if (list.length > max) {
+        return list.slice(0, max).map(name).join(', ') + ' and ' + (list.length - max) + ' more';
+    } else {
+        return JSON.stringify(list.map(name));
+    }
+};
