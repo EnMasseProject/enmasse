@@ -673,7 +673,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a1")
-                .withTtl(new TtlBuilder().withMaximum(30000).build())
+                .withTtl(new TtlBuilder().withMaximum(30000L).build())
                 .endSpec()
                 .build();
 
@@ -683,7 +683,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a2")
-                .withTtl(new TtlBuilder().withMinimum(10000).build())
+                .withTtl(new TtlBuilder().withMinimum(10000L).build())
                 .endSpec()
                 .build();
 
@@ -693,7 +693,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a3")
-                .withTtl(new TtlBuilder().withMinimum(10000).withMaximum(20000).build())
+                .withTtl(new TtlBuilder().withMinimum(10000L).withMaximum(20000L).build())
                 .endSpec()
                 .build();
 
@@ -738,8 +738,8 @@ public class AddressControllerTest {
                 .withType("queue")
                 .withPlan("small-queue")
                 .withTtl(new TtlBuilder()
-                        .withMaximum(30000)
-                        .withMinimum(30001)
+                        .withMaximum(30000L)
+                        .withMinimum(30001L)
                         .build())
                 .endSpec()
                 .build();
@@ -782,8 +782,8 @@ public class AddressControllerTest {
                 .withNewSpecLike(t)
                 .withAddress("a2")
                 .withTtl(new TtlBuilder()
-                        .withMaximum(29000)
-                        .withMinimum(10000)
+                        .withMaximum(29000L)
+                        .withMinimum(10000L)
                         .build())
                 .endSpec()
                 .build();
@@ -795,8 +795,8 @@ public class AddressControllerTest {
                 .withNewSpecLike(t)
                 .withAddress("a3")
                 .withTtl(new TtlBuilder()
-                        .withMaximum(31000)
-                        .withMinimum(10000)
+                        .withMaximum(31000L)
+                        .withMinimum(10000L)
                         .build())
                 .endSpec()
                 .build();
@@ -809,22 +809,22 @@ public class AddressControllerTest {
         AddressStatus status1 = a1.getStatus();
         assertEquals(Phase.Configuring, status1.getPhase());
         assertNotNull(status1.getTtl());
-        assertEquals(30000, status1.getTtl().getMaximum()); // From plan
+        assertEquals(30000L, status1.getTtl().getMaximum()); // From plan
         assertNull(status1.getTtl().getMinimum());
 
         a2 = captured.get(1);
         AddressStatus status2 = a2.getStatus();
         assertEquals(Phase.Configuring, status2.getPhase());
         assertNotNull(status2.getTtl());
-        assertEquals(29000, status2.getTtl().getMaximum());  // Overridden by address
-        assertEquals(10000, status2.getTtl().getMinimum());
+        assertEquals(29000L, status2.getTtl().getMaximum());  // Overridden by address
+        assertEquals(10000L, status2.getTtl().getMinimum());
 
         a3 = captured.get(2);
         AddressStatus status3 = a3.getStatus();
         assertEquals(Phase.Configuring, status3.getPhase());
         assertNotNull(status3.getTtl());
-        assertEquals(30000, status3.getTtl().getMaximum()); // From plan - not overridden by address
-        assertEquals(10000, status3.getTtl().getMinimum());
+        assertEquals(30000L, status3.getTtl().getMaximum()); // From plan - not overridden by address
+        assertEquals(10000L, status3.getTtl().getMinimum());
     }
 
     @Test
@@ -845,7 +845,7 @@ public class AddressControllerTest {
                 .withNewSpecLike(t)
                 .withAddress("a1")
                 .withTtl(new TtlBuilder()
-                        .withMinimum(10001)
+                        .withMinimum(10001L)
                         .build())
                 .endSpec()
                 .build();
@@ -857,7 +857,7 @@ public class AddressControllerTest {
                 .withNewSpecLike(t)
                 .withAddress("a2")
                 .withTtl(new TtlBuilder()
-                        .withMinimum(9999)
+                        .withMinimum(9999L)
                         .build())
                 .endSpec()
                 .build();
