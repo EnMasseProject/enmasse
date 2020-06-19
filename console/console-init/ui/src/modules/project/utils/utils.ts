@@ -177,8 +177,10 @@ const isMessagingProjectValid = (messagingProject: IMessagingProject) => {
         messagingProject.tlsCertificate &&
         messagingProject.tlsCertificate.trim() !== ""))
   ) {
+    console.log("TRUE");
     return true;
   }
+  console.log("FALSE");
   return false;
 };
 

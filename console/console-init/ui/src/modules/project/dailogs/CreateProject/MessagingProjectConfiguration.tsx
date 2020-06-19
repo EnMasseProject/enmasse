@@ -11,11 +11,7 @@ import {
 } from "modules/project/components";
 import { IOptionForKeyValueLabel } from "modules/project/utils";
 import { useQuery } from "@apollo/react-hooks";
-import {
-  RETURN_ADDRESS_SPACE_PLANS,
-  RETURN_NAMESPACES
-} from "graphql-module/queries";
-import { Loading } from "use-patternfly";
+import { RETURN_ADDRESS_SPACE_PLANS } from "graphql-module/queries";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 
@@ -23,6 +19,7 @@ export interface IMessagingProjectConfigurationProps {
   projectDetail: IMessagingProject;
   setProjectDetail: (project: IMessagingProject) => void;
   addressSpaceSchema?: IAddressSpaceSchema;
+  namespaces: IOptionForKeyValueLabel[];
 }
 
 export interface IAddressSpacePlans {
@@ -64,7 +61,8 @@ export interface INamespaces {
 const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectConfigurationProps> = ({
   projectDetail,
   setProjectDetail,
-  addressSpaceSchema
+  addressSpaceSchema,
+  namespaces
 }) => {
   const {
     name,
@@ -75,18 +73,13 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     isNameValid,
     customizeEndpoint
   } = projectDetail && projectDetail;
-  const { loading, data } = useQuery<INamespaces>(RETURN_NAMESPACES);
 
   const { addressSpacePlans } = useQuery<IAddressSpacePlans>(
     RETURN_ADDRESS_SPACE_PLANS
   ).data || {
     addressSpacePlans: []
   };
-  if (loading) return <Loading />;
 
-  const { namespaces } = data || {
-    namespaces: []
-  };
   const onNameSpaceSelect = (value: string) => {
     setProjectDetail({ ...projectDetail, namespace: value });
   };
@@ -115,15 +108,6 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
     setProjectDetail({ ...projectDetail, authService: value });
   };
 
-  const getNameSpaceOptions = () => {
-    let nameSpaceOptions: IOptionForKeyValueLabel[];
-    nameSpaceOptions = namespaces.map(namespace => ({
-      value: namespace.metadata.name,
-      label: namespace.metadata.name,
-      key: namespace.metadata.name
-    }));
-    return nameSpaceOptions;
-  };
   const handleCustomEndpointChange = (customizeSwitchCheckedValue: boolean) => {
     setProjectDetail({
       ...projectDetail,
@@ -177,7 +161,7 @@ const MessagingProjectConfiguration: React.FunctionComponent<IMessagingProjectCo
       onPlanSelect={onPlanSelect}
       onAuthenticationServiceSelect={onAuthenticationServiceSelect}
       namespace={namespace || ""}
-      namespaceOptions={getNameSpaceOptions()}
+      namespaceOptions={namespaces}
       name={name || ""}
       isNameValid={isNameValid || false}
       type={type || ""}

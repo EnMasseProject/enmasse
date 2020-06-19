@@ -8,8 +8,7 @@ import {
   WizardFooter,
   WizardContextConsumer,
   Button,
-  Wizard,
-  WizardStep
+  Wizard
 } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
 import { Loading } from "use-patternfly";
@@ -21,10 +20,7 @@ import {
   IoTReviewStep,
   isMessagingProjectValid,
   isIoTProjectValid,
-  isMessagingProjectConfigurationValid,
-  isEnabledCertificateStep,
-  isRouteStepValid,
-  EndpointConfiguration
+  isMessagingProjectConfigurationValid
 } from "modules/project";
 import { useMutationQuery } from "hooks";
 import {
@@ -33,15 +29,21 @@ import {
   RETURN_ADDRESS_SPACE_SCHEMAS
 } from "graphql-module";
 import { FinishedStep } from "components";
-import { ProjectType } from "modules/project/utils";
+import {
+  ProjectType,
+  getQueryVariableForCreateAddressSpace,
+  isEnabledCertificateStep,
+  isRouteStepValid
+} from "modules/project/utils";
 import { IAddressSpaceSchema } from "schema";
-import { ConfiguringCertificates } from "./ConfiguringCertificates";
 import {
   INamespaces,
-  MessagingProjectConfiguration
-} from "./MessagingProjectConfiguration";
-import { MessagingProjectReview } from "./MessagingProjectReview";
-import { ConfiguringRoutes } from "./ConfiguringRoutes";
+  MessagingProjectConfiguration,
+  MessagingProjectReview,
+  ConfiguringRoutes,
+  ConfiguringCertificates
+} from "modules/project/dailogs";
+import { EndpointConfiguration } from "modules/project/components";
 
 export interface IRouteConf {
   protocol: string;
@@ -155,31 +157,14 @@ const CreateProject: React.FunctionComponent = () => {
     RETURN_ADDRESS_SPACE_SCHEMAS
   ) || { data: { addressSpaceSchema: [] } };
 
-  const handleMessagingProjectSave = () => {
+  const handleMessagingProjectSave = async () => {
     if (
       messagingProjectDetail &&
       isMessagingProjectValid(messagingProjectDetail)
     ) {
-      const variables = {
-        as: {
-          metadata: {
-            name: messagingProjectDetail.name,
-            namespace: messagingProjectDetail.namespace
-          },
-          spec: {
-            type:
-              messagingProjectDetail.type &&
-              messagingProjectDetail.type.toLowerCase(),
-            plan:
-              messagingProjectDetail.plan &&
-              messagingProjectDetail.plan.toLowerCase(),
-            authenticationService: {
-              name: messagingProjectDetail.authService
-            }
-          }
-        }
-      };
-      setMessagingVariables(variables);
+      await setMessagingVariables(
+        getQueryVariableForCreateAddressSpace(messagingProjectDetail)
+      );
       setRouteDetail({
         name: messagingProjectDetail.name || "",
         namespace: messagingProjectDetail.namespace || "",
@@ -200,7 +185,8 @@ const CreateProject: React.FunctionComponent = () => {
   const namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.metadata.name,
-      label: namespace.metadata.name
+      label: namespace.metadata.name,
+      key: namespace.metadata.name
     };
   });
 
@@ -227,6 +213,25 @@ const CreateProject: React.FunctionComponent = () => {
 
   const finalStepForIot = IoTReviewStep(iotProjectDetail);
 
+  const finishedStep = {
+    name: "Finish",
+    component: (
+      <FinishedStep
+        onClose={onToggle}
+        success={isCreatedSuccessfully}
+        routeDetail={routeDetail}
+        projectType={
+          messagingProjectDetail
+            ? ProjectType.MESSAGING_PROJECT
+            : ProjectType.IOT_PROJECT
+        }
+      />
+    ),
+    isFinishedStep: true
+  };
+
+  let steps: any[] = [step1];
+
   const messagingConfigurationStep = {
     name: "Configuration",
     component: (
@@ -234,6 +239,7 @@ const CreateProject: React.FunctionComponent = () => {
         projectDetail={messagingProjectDetail}
         addressSpaceSchema={addressSpaceSchema}
         setProjectDetail={setMessagingProjectDetail}
+        namespaces={namespaceOptions}
       />
     ),
     enableNext: isMessagingProjectConfigurationValid(messagingProjectDetail)
@@ -248,9 +254,9 @@ const CreateProject: React.FunctionComponent = () => {
         projectDetail={messagingProjectDetail}
       />
     ),
-    enableNext: isMessagingProjectValid(messagingProjectDetail),
-    canJumpTo: isMessagingProjectValid(messagingProjectDetail)
+    enableNext: isMessagingProjectValid(messagingProjectDetail)
   };
+
   const endpointCertificatesStep = {
     name: "Certificates",
     component: (
@@ -260,9 +266,6 @@ const CreateProject: React.FunctionComponent = () => {
       />
     ),
     enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail),
-    canJumpTo:
       isMessagingProjectValid(messagingProjectDetail) &&
       isEnabledCertificateStep(messagingProjectDetail)
   };
@@ -277,10 +280,6 @@ const CreateProject: React.FunctionComponent = () => {
       />
     ),
     enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail) &&
-      isRouteStepValid(messagingProjectDetail),
-    canJumpTo:
       isMessagingProjectValid(messagingProjectDetail) &&
       isEnabledCertificateStep(messagingProjectDetail) &&
       isRouteStepValid(messagingProjectDetail)
@@ -309,33 +308,16 @@ const CreateProject: React.FunctionComponent = () => {
     nextButtonText: "Finish"
   };
 
-  const finishedStep = {
-    name: "Finish",
-    component: (
-      <FinishedStep
-        onClose={onToggle}
-        success={isCreatedSuccessfully}
-        routeDetail={routeDetail}
-        projectType={
-          messagingProjectDetail
-            ? ProjectType.MESSAGING_PROJECT
-            : ProjectType.IOT_PROJECT
-        }
-      />
-    ),
-    isFinishedStep: true
-  };
-
-  const steps: WizardStep[] = [step1];
-
   if (firstSelectedStep) {
     if (firstSelectedStep === "iot") {
       steps.push(configurationStepForIot);
       steps.push(finalStepForIot);
     } else {
       steps.push(messagingConfigurationStep);
-      messagingProjectDetail.customizeEndpoint &&
-        steps.push(endpointCustomizationStep);
+      if (messagingProjectDetail.customizeEndpoint) {
+        steps = [...steps, endpointCustomizationStep];
+      }
+      // messagingSteps.forEach(step=>steps.push(step));
       steps.push(messagingReviewStep);
     }
   }
@@ -344,7 +326,7 @@ const CreateProject: React.FunctionComponent = () => {
   const handleNextIsEnabled = () => {
     if (firstSelectedStep) {
       if (firstSelectedStep === "messaging") {
-        if (isMessagingProjectValid(messagingProjectDetail)) {
+        if (isMessagingProjectConfigurationValid(messagingProjectDetail)) {
           return true;
         } else {
           return false;

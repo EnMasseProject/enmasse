@@ -36,6 +36,11 @@ export interface IMessagingReviewProps {
 }
 
 const style = StyleSheet.create({
+  left_padding_with_border: {
+    paddingLeft: 32,
+    borderLeft: "0.1em solid",
+    borderLeftColor: "lightgrey"
+  },
   left_padding: {
     paddingLeft: 32
   },
@@ -108,6 +113,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
   tlsCertificate
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const certificate = tlsCertificate;
   let protocolOptions = [];
   if (protocols) {
@@ -129,7 +135,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
         space. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem span={5} className={style.grid_border}>
+        <GridItem span={5}>
           <Grid>
             <ReviewGridItem
               valueId="preview-addr-name"
@@ -219,57 +225,72 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
               </>
             )}
             <br />
+            <span>
+              Click here to{" "}
+              <Button
+                variant={ButtonVariant.link}
+                isInline
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {" "}
+                {!isExpanded
+                  ? "show equivalent command"
+                  : "hide the command"}{" "}
+              </Button>
+            </span>
           </Grid>
         </GridItem>
-        <GridItem span={7} className={css(style.left_padding)}>
-          <Title size={"lg"} className={css(style.bottom_padding)}>
-            {`Configuration details  `}
-            <Tooltip
-              id="preview-as-feedback-tooltip"
-              position={TooltipPosition.top}
-              enableFlip={false}
-              trigger={"manual"}
-              content={<div>Successfully copied to the clipboard</div>}
-              isVisible={isCopied}
-            >
-              <span>
-                <Tooltip
-                  id="preview-as-copy-tooltip"
-                  position={TooltipPosition.top}
-                  enableFlip={false}
-                  content={
-                    <div>Copy the configuration details to the clipboard</div>
-                  }
-                >
-                  <Button
-                    id="preview-addr-copy-configuration-button"
-                    variant={ButtonVariant.link}
-                    aria-label="copy-configuration"
-                    onClick={() => {
-                      navigator.clipboard.writeText(data.addressSpaceCommand);
-                      setIsCopied(true);
-                    }}
-                    onMouseLeave={() => {
-                      setIsCopied(false);
-                    }}
+        {isExpanded && (
+          <GridItem span={7} className={css(style.left_padding_with_border)}>
+            <Title size={"lg"} className={css(style.bottom_padding)}>
+              {`Configuration details  `}
+              <Tooltip
+                id="preview-as-feedback-tooltip"
+                position={TooltipPosition.top}
+                enableFlip={false}
+                trigger={"manual"}
+                content={<div>Successfully copied to the clipboard</div>}
+                isVisible={isCopied}
+              >
+                <span>
+                  <Tooltip
+                    id="preview-as-copy-tooltip"
+                    position={TooltipPosition.top}
+                    enableFlip={false}
+                    content={
+                      <div>Copy the configuration details to the clipboard</div>
+                    }
                   >
-                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
-                  </Button>
-                </Tooltip>
-              </span>
-            </Tooltip>
-          </Title>
-          <AceEditor
-            mode="xml"
-            theme="github"
-            width="auto"
-            fontSize={14}
-            value={data.addressSpaceCommand}
-            name="UNIQUE_ID_OF_DIV"
-            editorProps={{ $blockScrolling: true }}
-            className={css(style.editor)}
-          />
-        </GridItem>
+                    <Button
+                      id="preview-addr-copy-configuration-button"
+                      variant={ButtonVariant.link}
+                      aria-label="copy-configuration"
+                      onClick={() => {
+                        navigator.clipboard.writeText(data.addressSpaceCommand);
+                        setIsCopied(true);
+                      }}
+                      onMouseLeave={() => {
+                        setIsCopied(false);
+                      }}
+                    >
+                      <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                    </Button>
+                  </Tooltip>
+                </span>
+              </Tooltip>
+            </Title>
+            <AceEditor
+              mode="xml"
+              theme="github"
+              width="auto"
+              fontSize={14}
+              value={data.addressSpaceCommand}
+              name="UNIQUE_ID_OF_DIV"
+              editorProps={{ $blockScrolling: true }}
+              className={css(style.editor)}
+            />
+          </GridItem>
+        )}
       </Grid>
     </PageSection>
   );
