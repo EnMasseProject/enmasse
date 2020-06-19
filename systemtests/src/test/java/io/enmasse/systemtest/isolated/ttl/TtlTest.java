@@ -6,41 +6,47 @@ package io.enmasse.systemtest.isolated.ttl;
 
 import io.enmasse.address.model.*;
 import io.enmasse.admin.model.v1.*;
+import io.enmasse.config.LabelKeys;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestBaseIsolated;
+import io.enmasse.systemtest.broker.ArtemisUtils;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.model.address.AddressType;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
+import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.ContainerBuilder;
-import io.fabric8.kubernetes.api.model.EnvVar;
-import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag(ISOLATED)
 class TtlTest extends TestBase implements ITestBaseIsolated {
+    private static Logger log = CustomLogger.getLogger();
 
     @ParameterizedTest(name = "testAddressSpecified-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
@@ -166,12 +172,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         isolatedResourcesManager.setAddresses(addrWithTtl);
 
         assertTtlStatus(addrWithTtl, expectedTtl);
-
-//        TestUtils.waitUntilCondition("artemis to be in synch", waitPhase -> {
-//            Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, addressSpace, addrWithTtl.getSpec().getAddress());
-//            return Objects.equals(expectedTtl.getMinimum() == null ? -1 : expectedTtl.getMinimum(), ((Number) actualSettings.get("minExpiryDelay")).longValue()) &&
-//                    Objects.equals(expectedTtl.getMaximum() == null ? -1  : expectedTtl.getMaximum(), ((Number) actualSettings.get("maxExpiryDelay")).longValue());
-//        }, new TimeoutBudget(1, TimeUnit.MINUTES));
+        awaitAddressSettingsSync(addressSpace, addrWithTtl, expectedTtl);
 
         UserCredentials user = new UserCredentials("user", "passwd");
         isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
@@ -233,6 +234,8 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             }
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
 
+        awaitAddressSettingsSync(addressSpace, addrWithTtl, new Ttl());
+
         try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
@@ -274,6 +277,48 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             }
 
         }
+    }
+
+    // It'd be better if the address's status reflected when the expiry/address settings spaces were applied
+    // but with out current architecture, agent (for the standard case) doesn't write the address status.
+    // For now peep at the broker(s)
+    private void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr, Ttl expectedTtl) {
+
+        UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(addressSpace);
+        List<String> brokers = new ArrayList<>();
+        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
+            Address reread = resourcesManager.getAddress(addr.getMetadata().getNamespace(), addr);
+            brokers.addAll(reread.getStatus().getBrokerStatuses().stream().map(BrokerStatus::getContainerId).collect(Collectors.toSet()));
+            assertThat(brokers.size(), greaterThanOrEqualTo(1));
+        } else {
+            Map<String, String> brokerLabels = new HashMap<>();
+            brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
+            brokerLabels.put(LabelKeys.ROLE, "broker");
+
+            List<Pod> brokerPods = Kubernetes.getInstance().listPods(brokerLabels);
+            assertThat(brokerPods.size(), equalTo(1));
+            brokers.add(brokerPods.get(0).getMetadata().getName());
+        }
+
+        brokers.forEach(name -> {
+            TestUtils.waitUntilCondition(() -> {
+                Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, name, supportCredentials, addr.getSpec().getAddress());
+                long minExpiryDelay = ((Number) actualSettings.get("minExpiryDelay")).longValue();
+                long maxExpiryDelay = ((Number) actualSettings.get("maxExpiryDelay")).longValue();
+                boolean b = expiryEquals(minExpiryDelay, expectedTtl.getMinimum()) &&
+                        expiryEquals(maxExpiryDelay, expectedTtl.getMaximum());
+                if (!b) {
+                    log.info("Address {} on broker {} does not have expected TTL values {}, actual expiry min: {} max: {}",
+                            addr.getMetadata().getName(), name, expectedTtl, maxExpiryDelay, maxExpiryDelay);
+                }
+                return b;
+            }, Duration.ofMinutes(2), Duration.ofSeconds(5));
+
+        });
+    }
+
+    private boolean expiryEquals(long artemisExpiry, Long ttlExpiry) {
+        return Objects.equals(ttlExpiry == null ? -1 : ttlExpiry, artemisExpiry);
     }
 
 
