@@ -128,20 +128,20 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   //TODO: Increase width of type dropdown
   return (
     <>
-      <Grid gutter="sm">
+      <Grid hasGutter>
         <GridItem span={5}>
           <InputGroup>
             <Select
               id="cd-metadata-typeahead-parameter"
               variant={SelectVariant.typeahead}
-              ariaLabelTypeAhead={"Select parameter"}
+              typeAheadAriaLabel={"Select parameter"}
               onToggle={onToggle}
               onSelect={onTypeAheadSelect}
               onClear={onPropertyClear}
               selections={propertySelected || metadataRow.key}
-              isExpanded={isExpanded}
+              isOpen={isExpanded}
               onFilter={onFilter}
-              ariaLabelledBy={"typeahead-parameter-id"}
+              aria-labelledby={"typeahead-parameter-id"}
               placeholderText={"Select property"}
             ></Select>
             {metadataRow.length > 0 ? (

@@ -13,18 +13,18 @@ import {
   FlexItem,
   Title
 } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+// import { StyleSheet } from "@patternfly/react-styles";
 import { CreateMetadata } from "modules/iot-device/components";
 import { useStoreContext, types } from "context-state-reducer";
 
-const styles = StyleSheet.create({
-  title: {
-    paddingLeft: 20
-  },
-  header: {
-    paddingLeft: 40
-  }
-});
+// const styles = StyleSheet.create({
+//   title: {
+//     paddingLeft: 20
+//   },
+//   header: {
+//     paddingLeft: 40
+//   }
+// });
 
 export interface IEditMetadataContainerProps {
   title?: string;
@@ -52,10 +52,14 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
 
   return (
     <>
-      <div className={styles.header}>
-        <Title size={"2xl"}>Edit device metadata</Title>
+      <div
+      // className={styles.header}
+      >
+        <Title headingLevel="h2" size="xl">
+          Edit device metadata
+        </Title>
         <br />
-        <Grid gutter="sm">
+        <Grid hasGutter>
           <GridItem span={6}>
             <CreateMetadata />
           </GridItem>

@@ -12,7 +12,7 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { Divider } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { IAddressSpace } from "./components";
 import {

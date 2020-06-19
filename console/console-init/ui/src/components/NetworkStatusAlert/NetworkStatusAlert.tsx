@@ -43,7 +43,7 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
         <Alert
           variant="danger"
           title="Disconnected from server"
-          action={<AlertActionCloseButton onClose={onClose} />}
+          actionClose={<AlertActionCloseButton onClose={onClose} />}
         >
           <span>{errorMessage}</span>
         </Alert>

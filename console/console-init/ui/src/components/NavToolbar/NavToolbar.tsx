@@ -12,22 +12,22 @@ import {
 } from "@patternfly/react-core";
 import { QuestionCircleIcon } from "@patternfly/react-icons";
 import { About, User } from "components";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
-const styles = StyleSheet.create({
-  navtb_dropdownitem_help: {
-    paddingRight: 100,
-    paddingLeft: 20,
-    paddingTop: 20,
-    paddingBottom: 10
-  },
-  navtb_dropdownitem_about: {
-    paddingRight: 100,
-    paddingLeft: 20,
-    paddingTop: 10,
-    paddingBottom: 20
-  }
-});
+// const styles = StyleSheet.create({
+//   navtb_dropdownitem_help: {
+//     paddingRight: 100,
+//     paddingLeft: 20,
+//     paddingTop: 20,
+//     paddingBottom: 10
+//   },
+//   navtb_dropdownitem_about: {
+//     paddingRight: 100,
+//     paddingLeft: 20,
+//     paddingTop: 10,
+//     paddingBottom: 20
+//   }
+// });
 
 const NavToolBar: React.FC = () => {
   const [isOpen, onToggle] = useState(false);
@@ -45,7 +45,7 @@ const NavToolBar: React.FC = () => {
       <DropdownItem
         id="navtb-item-help"
         key="help"
-        className={css(styles.navtb_dropdownitem_help)}
+        // className={css(styles.navtb_dropdownitem_help)}
       >
         Help
       </DropdownItem>
@@ -53,7 +53,7 @@ const NavToolBar: React.FC = () => {
     <DropdownItem
       id="navtb-item-about"
       key="About"
-      className={css(styles.navtb_dropdownitem_about)}
+      // className={css(styles.navtb_dropdownitem_about)}
       onClick={selectAbout}
     >
       About
@@ -71,7 +71,7 @@ const NavToolBar: React.FC = () => {
         position={DropdownPosition.right}
         toggle={
           <DropdownToggle
-            iconComponent={null}
+            toggleIndicator={null}
             onToggle={onToggle}
             aria-label="Applications"
           >

@@ -7,7 +7,6 @@ import React, { useState } from "react";
 import {
   Card,
   CardBody,
-  CardHeader,
   PageSection,
   Split,
   SplitItem,
@@ -15,7 +14,8 @@ import {
   GridItem,
   Title,
   Button,
-  ButtonVariant
+  ButtonVariant,
+  CardTitle
 } from "@patternfly/react-core";
 import { DownloadIcon } from "@patternfly/react-icons";
 import {
@@ -184,7 +184,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
 
   const CardToDisplay = () => (
     <Card>
-      <CardHeader style={{ fontSize: 20 }}>
+      <CardTitle style={{ fontSize: 20 }}>
         <Split>
           <SplitItem>
             <Title size="xl" headingLevel="h2">
@@ -196,7 +196,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             <EditIcon />
           </SplitItem>
         </Split>
-      </CardHeader>
+      </CardTitle>
       {isHidden ? (
         <CardBody>
           <JsonEditor

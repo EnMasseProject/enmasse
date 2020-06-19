@@ -9,12 +9,7 @@ import {
   IMessagingToolbarToggleGroupProps
 } from "modules/address-space/components";
 import { SortForMobileView, useWindowDimensions } from "components";
-import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps
-} from "@patternfly/react-core";
+import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
 import { AddressSpaceListKebab } from "modules/address-space/components";
 import { ISortBy } from "@patternfly/react-table";
 export interface IMessageToolbarProps
@@ -97,7 +92,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
         setNameInput={setNameInput}
         setNameSpaceInput={setNameSpaceInput}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -105,26 +100,27 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
-      <DataToolbarItem>
+      </ToolbarItem>
+      <ToolbarItem data-codemods="true">
         <AddressSpaceListKebab
           onCreateAddressSpace={onCreateAddressSpace}
           onSelectDeleteAll={onSelectDeleteAll}
           isDeleteAllDisabled={isDeleteAllDisabled}
         />
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { MessagingToolbar };

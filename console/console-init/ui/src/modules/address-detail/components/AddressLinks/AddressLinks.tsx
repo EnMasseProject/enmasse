@@ -17,7 +17,7 @@ import { ExternalLinkAltIcon } from "@patternfly/react-icons";
 import { css } from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-import { StyleForTable } from "modules/project";
+// import { StyleForTable } from "modules/project";
 
 interface IAddressLinksProps {
   rows: IAddressLink[];
@@ -83,7 +83,9 @@ export const AddressLinks: React.FunctionComponent<IAddressLinksProps> = ({
   ];
 
   return (
-    <div className={css(StyleForTable.scroll_overflow)}>
+    <div
+    // className={css(StyleForTable.scroll_overflow)}
+    >
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

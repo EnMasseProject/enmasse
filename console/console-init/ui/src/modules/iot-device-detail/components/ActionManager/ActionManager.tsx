@@ -46,7 +46,9 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
 
   return (
     <>
-      <Title size={"2xl"}>Edit device {deviceid}</Title>
+      <Title headingLevel="h2" size="xl">
+        Edit device {deviceid}
+      </Title>
       <br />
       <Divider />
       <br />

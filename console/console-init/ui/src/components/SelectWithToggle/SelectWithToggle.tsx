@@ -52,7 +52,7 @@ export const SelectWithToggle: React.FC<SelectWithToggleProps> = ({
       onToggle={onToggle}
       onSelect={onSelect}
       selections={selections}
-      isExpanded={isExpanded}
+      isOpen={isExpanded}
     >
       {selectOptions.map((option, index) => (
         <SelectOption

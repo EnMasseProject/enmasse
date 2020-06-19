@@ -14,12 +14,14 @@ import {
   Button,
   Card,
   CardBody,
-  CardHead,
   CardActions,
-  Expandable
+  CardHeader,
+  CardTitle,
+  CardHeaderMain,
+  ExpandableSection
 } from "@patternfly/react-core";
 import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import {
   DropdownWithToggle,
   SwitchWithToggle,
@@ -38,12 +40,12 @@ import {
   HIDE_ADVANCE_SETTING
 } from "modules/iot-device/utils";
 
-const styles = StyleSheet.create({
-  addMoreScrets: { marginLeft: -15, marginBottom: 20 },
-  addMoreExt: { marginLeft: -15 },
-  dropdown_align: { display: "flex" },
-  dropdown_toggle_align: { flex: 1 }
-});
+// const styles = StyleSheet.create({
+//   addMoreScrets: { marginLeft: -15, marginBottom: 20 },
+//   addMoreExt: { marginLeft: -15 },
+//   dropdown_align: { display: "flex" },
+//   dropdown_toggle_align: { flex: 1 }
+// });
 
 export interface ICredential {
   id?: string;
@@ -113,7 +115,8 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
         />
         {isExpandedAdvancedSetting && (
           <Grid>
-            <GridItem span={12} className={styles.addMoreScrets}>
+            {/* <GridItem span={12} className={styles.addMoreScrets}> */}
+            <GridItem span={12}>
               {selectedType && (
                 <Button
                   variant="link"
@@ -135,7 +138,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               <br />
               <Button
                 variant="link"
-                className={styles.addMoreExt}
+                // className={styles.addMoreExt}
                 type="button"
                 icon={<PlusCircleIcon />}
                 onClick={addMoreExtension}
@@ -194,7 +197,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
             <Grid key={id}>
               <GridItem span={6}>
                 <Card>
-                  <CardHead>
+                  <CardHeader data-codemods="true">
                     <CardActions>
                       {credentials.length > 1 && (
                         <Button
@@ -209,7 +212,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         />
                       )}
                     </CardActions>
-                  </CardHead>
+                  </CardHeader>
                   <CardBody>
                     <Form>
                       <FormGroup
@@ -235,8 +238,8 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         <DropdownWithToggle
                           id={"cl-type-dropdown-" + id}
                           name="type"
-                          className={css(styles.dropdown_align)}
-                          toggleClass={css(styles.dropdown_toggle_align)}
+                          // className={css(styles.dropdown_align)}
+                          // toggleClass={css(styles.dropdown_toggle_align)}
                           position={DropdownPosition.left}
                           onSelectItem={(value, event) =>
                             onSelectType(id, event, value)
@@ -251,7 +254,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         isExpandedAdvancedSetting
                       ) && <DividerWithTitle title={"Secrets"} />}
                       {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
-                      <Expandable
+                      <ExpandableSection
                         toggleText={
                           isExpandedAdvancedSetting
                             ? HIDE_ADVANCE_SETTING
@@ -261,7 +264,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         isExpanded={isExpandedAdvancedSetting}
                       >
                         {""}
-                      </Expandable>
+                      </ExpandableSection>
                     </Form>
                   </CardBody>
                 </Card>

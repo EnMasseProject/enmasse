@@ -7,15 +7,13 @@ import React from "react";
 import {
   SelectVariant,
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
   Badge
 } from "@patternfly/react-core";
@@ -98,10 +96,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   };
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -130,12 +126,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedAddresses.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Address"
@@ -163,12 +157,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
           categoryName="Role"
@@ -182,14 +174,14 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               selectOptions={roleOptions}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="cl-filter-dropdown"
           toggleId="cl-filter-dropdown"
@@ -206,12 +198,12 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
 
   return (
-    <DataToolbarToggleGroup
+    <ToolbarToggleGroup
       toggleIcon={
         <>
           <FilterIcon />
@@ -222,10 +214,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           )}
         </>
       }
-      breakpoint="xl"
+      show={{ xl: "show" }}
     >
       {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    </ToolbarToggleGroup>
   );
 };
 export { ConnectionLinksToggleGroup };

@@ -36,7 +36,7 @@ const NavToolBar = (
   <Dropdown
     position={DropdownPosition.right}
     toggle={
-      <DropdownToggle iconComponent={null} aria-label="Applications">
+      <DropdownToggle toggleIndicator={null} aria-label="Applications">
         <CogIcon />
       </DropdownToggle>
     }

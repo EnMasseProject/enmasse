@@ -13,9 +13,9 @@ import {
   GridItem
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { Divider } from "@patternfly/react-core";
 import { css } from "@patternfly/react-styles";
-import { GridStylesForTableHeader } from "modules/address/AddressPage";
+// import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import {
   AddressLinksContainer,
   AddressLinksToolbarContainer
@@ -63,8 +63,9 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
     <PageSection>
       <PageSection variant={PageSectionVariants.light}>
         <Title
-          size={"lg"}
-          className={css(GridStylesForTableHeader.filter_left_margin)}
+          headingLevel="h2"
+          size="lg"
+          // className={css(GridStylesForTableHeader.filter_left_margin)}
         >
           Links for address - {addressDisplayName}
         </Title>
