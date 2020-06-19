@@ -18,7 +18,7 @@ import {
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";

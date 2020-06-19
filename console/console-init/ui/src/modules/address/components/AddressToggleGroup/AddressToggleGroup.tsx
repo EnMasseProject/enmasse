@@ -14,7 +14,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -35,8 +37,8 @@ export interface IAddressToggleGroupProps {
   onStatusSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   setNameInput?: (value: string) => void;
@@ -103,8 +105,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -199,7 +201,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           )}
         </>
       }
-      show={{ xl: "show" }}
+      breakpoint="xl"
     >
       {toggleGroupItems}
     </ToolbarToggleGroup>

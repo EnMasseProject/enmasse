@@ -17,7 +17,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { endpointProtocolOptions } from "modules/address-space/utils";
 
 export interface IAddressSpaceReviewProps {

@@ -12,7 +12,7 @@ import {
   Badge,
   Switch
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { DropdownWithKebabToggle } from "components";
 
 interface IIoTProjectDetailHeaderProps {

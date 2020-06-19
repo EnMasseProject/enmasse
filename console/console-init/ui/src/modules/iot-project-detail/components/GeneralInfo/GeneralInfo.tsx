@@ -13,7 +13,7 @@ import {
   CardTitle
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 
 // const styles = StyleSheet.create({

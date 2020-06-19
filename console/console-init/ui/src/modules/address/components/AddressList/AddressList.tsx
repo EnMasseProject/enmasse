@@ -15,7 +15,7 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { useWindowDimensions } from "components";
 // import { StyleForTable } from "modules/project";
@@ -229,7 +229,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ];
 
   const onSelect = (
-    event: React.MouseEvent,
+    event: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number,
     rowData: IRowData,

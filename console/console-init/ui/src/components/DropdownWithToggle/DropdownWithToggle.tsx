@@ -13,7 +13,7 @@ import {
   DropdownPosition,
   DropdownToggleProps
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 // export const dropdown_styles = StyleSheet.create({
 //   format_description: { whiteSpace: "normal", textAlign: "justify" },

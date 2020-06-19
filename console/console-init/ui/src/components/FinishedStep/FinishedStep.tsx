@@ -11,7 +11,7 @@ import {
   ProgressSize,
   ButtonVariant
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { Link } from "react-router-dom";
 import { ProjectType } from "modules/project";
 interface IFinishedStepProps {

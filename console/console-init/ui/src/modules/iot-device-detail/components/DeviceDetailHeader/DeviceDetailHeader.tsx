@@ -14,7 +14,7 @@ import {
   DropdownPosition,
   DropdownSeparator
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";

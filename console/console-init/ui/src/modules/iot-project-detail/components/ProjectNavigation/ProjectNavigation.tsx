@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 export interface ProjectNavigationProps {
   activeItem: string;

@@ -15,7 +15,7 @@ import {
   IRowData,
   SortByDirection
 } from "@patternfly/react-table";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
@@ -58,7 +58,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   ];
 
   const onSelect = (
-    _: React.MouseEvent,
+    _: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number
   ) => {

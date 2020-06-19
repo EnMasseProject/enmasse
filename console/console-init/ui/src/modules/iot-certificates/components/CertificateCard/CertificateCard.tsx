@@ -14,7 +14,7 @@ import {
   DropdownItem,
   CardTitle
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { getLabelByKey } from "utils";
 import { IIoTCertificate } from "modules/iot-certificates";

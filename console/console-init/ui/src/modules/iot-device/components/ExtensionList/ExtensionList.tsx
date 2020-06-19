@@ -13,7 +13,7 @@ import {
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { DropdownWithToggle, DividerWithTitle } from "components";
 import { ISelectOption } from "utils";
 // import { dropdown_item_styles } from "modules/iot-device";

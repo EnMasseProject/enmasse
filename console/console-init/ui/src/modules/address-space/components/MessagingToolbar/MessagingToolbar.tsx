@@ -9,7 +9,12 @@ import {
   IMessagingToolbarToggleGroupProps
 } from "modules/address-space/components";
 import { SortForMobileView, useWindowDimensions } from "components";
-import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
+import {
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
+} from "@patternfly/react-core";
 import { AddressSpaceListKebab } from "modules/address-space/components";
 import { ISortBy } from "@patternfly/react-table";
 export interface IMessageToolbarProps
@@ -23,7 +28,7 @@ export interface IMessageToolbarProps
   onClearAllFilters: () => void;
 }
 const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,

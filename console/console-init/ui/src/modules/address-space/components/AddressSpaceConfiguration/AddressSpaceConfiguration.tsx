@@ -14,7 +14,7 @@ import {
   Radio,
   Switch
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import {} from "@patternfly/react-styles";
 import { DropdownWithToggle, IDropdownOption } from "components";
 
 // export const dropdown_item_styles = StyleSheet.create({

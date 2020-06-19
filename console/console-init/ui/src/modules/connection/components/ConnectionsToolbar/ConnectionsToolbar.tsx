@@ -8,7 +8,8 @@ import {
   ToolbarItem,
   Toolbar,
   ToolbarContent,
-  DropdownItem
+  DropdownItem,
+  ToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
@@ -30,7 +31,7 @@ export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   onCloseAll: () => void;
 }
 const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   hostnameSelected,

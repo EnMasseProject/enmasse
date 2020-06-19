@@ -26,7 +26,7 @@ export const DeviceListFooterToolbar: React.FunctionComponent<PaginationProps> =
           id="device-footer-toolbar-item-1"
           variant="pagination"
           key="pagination"
-          align={{ md: "alignRight" }}
+          alignment={{ md: "alignRight" }}
           aria-label="Device List pagination"
           data-codemods="true"
         >
