@@ -109,7 +109,12 @@ function same_ttl(a, b) {
 
 function same_address_status(a, b) {
     if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages) && same_plan_status(a.planStatus, b.planStatus);
+    return b
+        && a.isReady === b.isReady
+        && a.phase === b.phase
+        && same_messages(a.messages, b.messages)
+        && same_plan_status(a.planStatus, b.planStatus)
+        && same_ttl(a.ttl, b.ttl);
 }
 
 function same_address_definition_and_status(a, b) {

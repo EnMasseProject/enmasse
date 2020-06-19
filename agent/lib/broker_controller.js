@@ -432,14 +432,21 @@ BrokerController.prototype.update_address_setting = function (a) {
         return self.get_address_settings(a).then(function (new_settings) {
             if (new_settings) {
                 if (compare_address_settings(orig_settings, new_settings) !== 0) {
-                    log.info('[%s] Updating address settings %s', self.id, name);
-                        return self.broker.addAddressSettings(name, new_settings);
+                    log.info('[%s] Adding/updating address settings: %s', self.id, name);
+                    return self.broker.addAddressSettings(name, new_settings);
                 } else {
                     log.debug('[%s] Address settings match for %s: not updating', self.id, name);
                     return Promise.resolve();
                 }
+            } else if (compare_address_settings(orig_settings, self.root_address_settings) !== 0) {
+                // Settings were previously applied but now no longer required.  To remove them first we
+                // reset the address settings to the root values then remove the record.
+                log.info('[%s] Removing address settings: %s', self.id, name);
+                return self.broker.addAddressSettings(name, self.root_address_settings).finally(() => {
+                    return self.broker.removeAddressSettings(name);
+                });
             } else {
-                //Settings weren't created, and reason is already logged. Most likely broker resource not required.
+                // No settings required (and none currently applied).
                 return Promise.resolve();
             }
         }).catch(function (error) {
@@ -447,7 +454,7 @@ BrokerController.prototype.update_address_setting = function (a) {
             return Promise.reject(error);
         });
     }).catch(function (error) {
-        log.error('[%s] Failed to retrieve brokers address setting: %s', self.id, name, error);
+        log.error('[%s] Failed to retrieve broker address setting: %s', self.id, name, error);
         return Promise.reject(error);
     });
 }
