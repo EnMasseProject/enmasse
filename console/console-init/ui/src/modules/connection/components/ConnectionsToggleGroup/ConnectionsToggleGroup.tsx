@@ -14,7 +14,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChip,
+  ToolbarChipGroup
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import { TypeAheadSelect, DropdownWithToggle } from "components";
@@ -35,8 +37,8 @@ export interface IConnectionsToggleGroupProps {
   onContainerClear: () => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeHostNameInput?: (value: string) => Promise<any>;
   onChangeContainerInput?: (value: string) => Promise<any>;
@@ -89,8 +91,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           {filterSelected && filterSelected.toLowerCase() === "hostname" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select hostname"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select hostname"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onHostnameSelect}
                 onClear={onHostnameClear}
                 selected={hostnameSelected}
@@ -120,8 +122,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select container"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select container"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onContainerSelect}
                 onClear={onContainerClear}
                 selected={containerSelected}
@@ -180,7 +182,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           )}
         </>
       }
-      show={{ xl: "show" }}
+      breakpoint="xl"
     >
       {toggleGroupItems}
     </ToolbarToggleGroup>

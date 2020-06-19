@@ -4,7 +4,12 @@
  */
 
 import React from "react";
-import { ToolbarItem, Toolbar, ToolbarContent } from "@patternfly/react-core";
+import {
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
+} from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
   ProjectListKebab,
@@ -23,7 +28,7 @@ export interface IProjectToolbarProps extends IProjectToolbarToggleGroupProps {
   isAllProjectSelected: boolean;
 }
 const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,

@@ -14,7 +14,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -39,8 +41,8 @@ export interface IAddressLinksToggleGroupProps {
   onRoleSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeContainerInput?: (value: string) => Promise<any>;
@@ -103,8 +105,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
             <InputGroup>
               <TypeAheadSelect
                 id="ad-links-filter-select-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -134,8 +136,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select container"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select container"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onContainerSelect}
                 onClear={onContainerClear}
                 selected={containerSelected}
@@ -212,7 +214,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           )}
         </>
       }
-      show={{ xl: "show" }}
+      breakpoint="xl"
     >
       {toggleGroupItems}
     </ToolbarToggleGroup>

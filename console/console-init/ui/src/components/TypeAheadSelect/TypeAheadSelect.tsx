@@ -24,7 +24,7 @@ export interface ITypeAheadSelectProps extends Omit<SelectProps, "onToggle"> {
 
 const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
   typeAheadAriaLabel,
-  // ariaLabelledBy,
+  "aria-labelledby": ariaLabelledBy,
   onSelect,
   onClear,
   selected,
@@ -106,7 +106,7 @@ const TypeAheadSelect: React.FunctionComponent<ITypeAheadSelectProps> = ({
       onFilter={onFilter}
       selections={selected || inputData}
       isOpen={isExpanded}
-      // aria-labelledby={ariaLabelledBy}
+      aria-labelledby={ariaLabelledBy}
       placeholderText={placeholderText}
     >
       {options}

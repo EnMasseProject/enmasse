@@ -14,7 +14,9 @@ import {
   ToolbarItem,
   ButtonVariant,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChip,
+  ToolbarChipGroup
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
@@ -45,8 +47,8 @@ export interface IProjectToolbarToggleGroupProps {
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeNameSpaceInput?: (value: string) => Promise<any>;
@@ -105,8 +107,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onSelectName}
                 onClear={onClearName}
                 selected={nameSelected}
@@ -137,8 +139,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-namespace"
-                ariaLabelTypeAhead={"Select namespace"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select namespace"}
+                aria-labelledby={"typeahead-select-id"}
                 onSelect={onSelectNamespace}
                 onClear={onClearNamespace}
                 selected={namespaceSelected}
@@ -214,7 +216,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             )}
           </>
         }
-        show={{ xl: "show" }}
+        breakpoint="xl"
       >
         <ToolbarItem
           variant="bulk-select"
