@@ -13,8 +13,8 @@ include::../common/address-example-ttl.yaml[]
 
 include::ref-ttl.adoc[]
 
-TTL restrictions may also be imposed at by the address plan.  If a TTL is imposed at both the plan and the address,
-the address tll restriction can only further narrow the TTL restriction.  The address `status` section shows the
+TTL restrictions may also be imposed by the address plan.  If a TTL restriction is imposed at both the plan and the address,
+the address TTL restriction can only further narrow the TTL restriction.  The address `status` section shows the
 TTL values that are in force.
 
 
