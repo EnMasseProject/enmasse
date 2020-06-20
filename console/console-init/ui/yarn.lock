@@ -3232,7 +3232,7 @@ anymatch@~3.1.1:
     normalize-path "^3.0.0"
     picomatch "^2.0.4"
 
-aphrodite@*, aphrodite@^4.3.4:
+aphrodite@*:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/aphrodite/-/aphrodite-2.4.0.tgz#ec1a2afa41ba7310a47a4f1fba27919d99572c91"
   integrity sha512-1rVRlLco+j1YAT5aKEE8Wuw5zWV+tI41/quEheJAG0vNaGHE64iJ/a2SiVMz8Uc80VdP2/Hjlfd2bPJOWsqJuQ==
@@ -4525,13 +4525,6 @@ center-align@^0.1.1:
   dependencies:
     align-text "^0.1.3"
     lazy-cache "^1.0.3"
-
-"chainsaw@>=0.0.7 <0.1":
-  version "0.0.9"
-  resolved "https://registry.yarnpkg.com/chainsaw/-/chainsaw-0.0.9.tgz#11a05102d1c4c785b6d0415d336d5a3a1612913e"
-  integrity sha1-EaBRAtHEx4W20EFdM21aOhYSkT4=
-  dependencies:
-    traverse ">=0.3.0 <0.4"
 
 chalk@2.4.2, chalk@^2.0.0, chalk@^2.0.1, chalk@^2.1.0, chalk@^2.3.0, chalk@^2.4.1, chalk@^2.4.2:
   version "2.4.2"
@@ -7448,13 +7441,6 @@ hash.js@^1.0.0, hash.js@^1.0.3:
   dependencies:
     inherits "^2.0.3"
     minimalistic-assert "^1.0.1"
-
-"hashish@>=0.0.2 <0.1":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/hashish/-/hashish-0.0.4.tgz#6d60bc6ffaf711b6afd60e426d077988014e6554"
-  integrity sha1-bWC8b/r3Ebav1g5CbQd5iAFOZVQ=
-  dependencies:
-    traverse ">=0.2.4"
 
 hast-to-hyperscript@^7.0.0:
   version "7.0.4"
@@ -12802,13 +12788,6 @@ remove-trailing-separator@^1.0.1:
   resolved "https://registry.yarnpkg.com/remove-trailing-separator/-/remove-trailing-separator-1.1.0.tgz#c24bce2a283adad5bc3f58e0d48249b92379d8ef"
   integrity sha1-wkvOKig62tW8P1jg1IJJuSN52O8=
 
-remove@^0.1.5:
-  version "0.1.5"
-  resolved "https://registry.yarnpkg.com/remove/-/remove-0.1.5.tgz#095ffd827d65c9f41ad97d33e416a75811079955"
-  integrity sha1-CV/9gn1lyfQa2X0z5BanWBEHmVU=
-  dependencies:
-    seq ">= 0.3.5"
-
 renderkid@^2.0.1:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/renderkid/-/renderkid-2.0.3.tgz#380179c2ff5ae1365c522bf2fcfcff01c5b74149"
@@ -13232,14 +13211,6 @@ send@0.17.1:
     on-finished "~2.3.0"
     range-parser "~1.2.1"
     statuses "~1.5.0"
-
-"seq@>= 0.3.5":
-  version "0.3.5"
-  resolved "https://registry.yarnpkg.com/seq/-/seq-0.3.5.tgz#ae02af3a424793d8ccbf212d69174e0c54dffe38"
-  integrity sha1-rgKvOkJHk9jMvyEtaRdODFTf/jg=
-  dependencies:
-    chainsaw ">=0.0.7 <0.1"
-    hashish ">=0.0.2 <0.1"
 
 serialize-javascript@^2.1.2:
   version "2.1.2"
@@ -14352,16 +14323,6 @@ tr46@^1.0.1:
   dependencies:
     punycode "^2.1.0"
 
-traverse@>=0.2.4:
-  version "0.6.6"
-  resolved "https://registry.yarnpkg.com/traverse/-/traverse-0.6.6.tgz#cbdf560fd7b9af632502fed40f918c157ea97137"
-  integrity sha1-y99WD9e5r2MlAv7UD5GMFX6pcTc=
-
-"traverse@>=0.3.0 <0.4":
-  version "0.3.9"
-  resolved "https://registry.yarnpkg.com/traverse/-/traverse-0.3.9.tgz#717b8f220cc0bb7b44e40514c22b2e8bbc70d8b9"
-  integrity sha1-cXuPIgzAu3tE5AUUwisui7xw2Lk=
-
 trim-lines@^1.0.0:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/trim-lines/-/trim-lines-1.1.3.tgz#839514be82428fd9e7ec89e35081afe8f6f93115"
@@ -14768,13 +14729,6 @@ use-callback-ref@^1.2.1:
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/use-callback-ref/-/use-callback-ref-1.2.4.tgz#d86d1577bfd0b955b6e04aaf5971025f406bea3c"
   integrity sha512-rXpsyvOnqdScyied4Uglsp14qzag1JIemLeTWGKbwpotWht57hbP78aNT+Q4wdFKQfQibbUX4fb6Qb4y11aVOQ==
-
-use-patternfly@^0.1.0:
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/use-patternfly/-/use-patternfly-0.1.0.tgz#d8758d0e20ec6ad13301e3903b3e9c5dc8a36373"
-  integrity sha512-fT+J+vVui1hVBMhr1ifZZ3M7r6+qfTPaWAn2avpN9czwzE23qfQ4JIzZo7ygU4TNo4k50C3DKU4RnDY7YRa76w==
-  dependencies:
-    remove "^0.1.5"
 
 use-sidecar@^1.0.1:
   version "1.0.2"
