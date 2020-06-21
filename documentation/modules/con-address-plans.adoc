@@ -35,7 +35,7 @@ spec:
     minimim: 30000
     maximum: 300000
 ----
-<1> The address type this plan applies to.
+<1> The address type to which this plan applies.
 <2> The resources consumed by addresses using this plan. The `router` field is optional for address plans referenced by a `brokered` address space plan.
 <3> The number of partitions that should be created for queues using this plan. Only available in the `standard` address space.
 <4> Restricts message time-to-live (TTL). Applies to address types `queue` and `topic` only. (Optional)
