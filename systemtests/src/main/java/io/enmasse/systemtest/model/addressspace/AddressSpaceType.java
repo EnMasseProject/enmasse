@@ -7,6 +7,10 @@ package io.enmasse.systemtest.model.addressspace;
 public enum AddressSpaceType {
     STANDARD, BROKERED;
 
+    public static AddressSpaceType getEnum(String type) {
+        return valueOf(type.toUpperCase());
+    }
+
     @Override
     public String toString() {
         return super.toString().toLowerCase();

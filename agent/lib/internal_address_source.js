@@ -47,14 +47,6 @@ function ready (addr) {
     return addr && addr.status && addr.status.phase !== 'Terminating' && addr.status.phase !== 'Pending';
 }
 
-function same_plan_status_resources(a, b) {
-
-    if (a === undefined || a.planStatus === undefined || a.planStatus.resources === undefined ||  a.planStatus.resources.broker === undefined) {
-        return (b === undefined &&  b.planStatus === undefined && b.planStatus.resources === undefined &&  b.planStatus.resources.broker === undefined);
-    }
-    return a.planStatus.resources.broker === b.planStatus.resources.broker && a.planStatus.name === b.planStatus.name;
-}
-
 function same_allocation(a, b) {
     if (a === b) {
         return true;
@@ -76,48 +68,44 @@ function same_allocation(a, b) {
     return true;
 }
 
-function same_messages(a, b) {
-    if (a === b) {
-        return true;
-    } else if (a == null || b == null || a.length !== b.length) {
-        return false;
-    }
-
-    for (var i in a) {
-        if (!b.includes(a[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function same_address_definition(a, b) {
+function same_address_definition_and_allocation(a, b) {
     if (a.address === b.address && a.type === b.type && !same_allocation(a.allocated_to, b.allocated_to)) {
         log.info('allocation changed for %s %s: %s <-> %s', a.type, a.address, JSON.stringify(a.allocated_to), JSON.stringify(b.allocated_to));
     }
-    return a.address === b.address
-        && a.type === b.type
+    return same_address_definition(a, b)
         && same_allocation(a.allocated_to, b.allocated_to)
-        && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined);
+        && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined)
+        && myutils.same_ttl(a.status ? a.status.messageTtl : undefined, b.status ? b.status.messageTtl : undefined);
+}
+
+function same_address_definition(a, b) {
+    if (a === b) return true;
+    return a
+        && b
+        && a.address === b.address
+        && a.type === b.type
+        && a.plan === b.plan
+        && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function same_address_status(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages) && same_plan_status(a.planStatus, b.planStatus);
+    if (a === b) return true;
+    return a
+        && b
+        && a.isReady === b.isReady
+        && a.phase === b.phase
+        && myutils.same_status_messages(a.messages, b.messages)
+        && same_plan_status(a.planStatus, b.planStatus)
+        && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function same_address_definition_and_status(a, b) {
-    return same_address_definition(a, b) && same_address_status(a.status, b.status) && same_address_plan(a, b);
-}
-
-function same_address_plan(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.plan === b.plan;
+    return same_address_definition(a, b) && same_address_status(a.status, b.status);
 }
 
 function same_plan_status(a, b) {
-    if (a === undefined) return b === undefined;
-    return b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
+    if (a === b) return true;
+    return a && b && a.name === b.name && a.partitions === b.partitions && same_addressplan_resources(a.resources, b.resources);
 }
 
 function same_addressplan_resources(a, b) {
@@ -134,12 +122,7 @@ function by_address(a) {
 }
 
 function description(list) {
-    const max = 5;
-    if (list.length > max) {
-        return list.slice(0, max).map(by_address).join(', ') + ' and ' + (list.length - max) + ' more';
-    } else {
-        return JSON.stringify(list.map(by_address));
-    }
+    return myutils.description(list, by_address);
 }
 
 function AddressSource(config) {
@@ -225,12 +208,17 @@ AddressSource.prototype.updated = function (objects) {
     if (changes) {
         this.update_readiness(changes);
         this.dispatch('addresses_defined', addresses, changes.description);
-        this.dispatch_if_changed('addresses_ready', addresses.filter(ready), same_address_definition);
+        // used by standard
+        this.dispatch_if_changed('addresses_ready', addresses.filter(ready), same_address_definition_and_allocation);
     }
 };
 
 AddressSource.prototype.update_status = function (record, ready) {
     var self = this;
+
+    function sanitizeTtlValue(ttl) {
+        return ttl && ttl < 1 ? undefined : ttl;
+    }
 
     function update(address) {
         var updated = 0;
@@ -267,6 +255,45 @@ AddressSource.prototype.update_status = function (record, ready) {
                 delete address.status.planStatus.resources;
                 updated++;
             }
+
+            var minimumTtl;
+            var maximumTtl;
+            if (planDef.spec && planDef.spec.messageTtl && planDef.spec.messageTtl.minimum) {
+                minimumTtl = sanitizeTtlValue(planDef.spec.messageTtl.minimum);
+            }
+            if (planDef.spec && planDef.spec.messageTtl && planDef.spec.messageTtl.maximum) {
+                maximumTtl = sanitizeTtlValue(planDef.spec.messageTtl.maximum);
+            }
+            if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
+                maximumTtl = undefined;
+                minimumTtl = undefined;
+            }
+
+            if (address.spec.messageTtl && address.spec.messageTtl.minimum && (minimumTtl === undefined || address.spec.messageTtl.minimum > minimumTtl)) {
+                minimumTtl = address.spec.messageTtl.minimum;
+            }
+            if (address.spec.messageTtl && address.spec.messageTtl.maximum && (maximumTtl === undefined || address.spec.messageTtl.maximum < maximumTtl)) {
+                maximumTtl = address.spec.messageTtl.maximum;
+            }
+            if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
+                maximumTtl = undefined;
+                minimumTtl = undefined;
+            }
+
+            if (minimumTtl || maximumTtl) {
+                address.status.messageTtl = {};
+                if (address.status.messageTtl.minimum !== minimumTtl) {
+                    address.status.messageTtl.minimum = minimumTtl;
+                    updated++;
+                }
+                if (address.status.messageTtl.maximum !== maximumTtl) {
+                    address.status.messageTtl.maximum = maximumTtl;
+                    updated++;
+                }
+            } else {
+                delete address.status.messageTtl;
+                updated++;
+            }
         } else {
             ready = false;
             messages.push("Unknown address plan '" + address.spec.plan + "'");
@@ -285,7 +312,7 @@ AddressSource.prototype.update_status = function (record, ready) {
             updated++;
         }
 
-        if (!same_messages(address.status.messages, messages)) {
+        if (!myutils.same_status_messages(address.status.messages, messages)) {
             address.status.messages = messages;
             updated++;
         }
@@ -294,7 +321,6 @@ AddressSource.prototype.update_status = function (record, ready) {
             address.metadata.annotations = myutils.merge({"enmasse.io/version": self.config.VERSION}, address.metadata.annotations);
             updated++;
         }
-
         return updated ? address : undefined;
     }
     var options = {namespace: this.config.ADDRESS_SPACE_NAMESPACE};

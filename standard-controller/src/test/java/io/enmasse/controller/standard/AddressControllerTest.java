@@ -9,9 +9,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -32,11 +30,15 @@ import org.mockito.ArgumentCaptor;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressPlanStatus;
+import io.enmasse.address.model.AddressSpec;
+import io.enmasse.address.model.AddressSpecBuilder;
 import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.address.model.Phase;
+
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -179,10 +181,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(2)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(2));
+        List<Address> captured = captureAddresses(2);
 
         a1 = captured.get(0);
         a2 = captured.get(1);
@@ -223,10 +222,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(2)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(2));
+        List<Address> captured = captureAddresses(2);
 
         a1 = captured.get(0);
         a2 = captured.get(1);
@@ -267,10 +263,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(2)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(2));
+        List<Address> captured = captureAddresses(2);
 
         a1 = captured.get(0);
         a2 = captured.get(1);
@@ -314,10 +307,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(a1, a2));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(2)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(2));
+        List<Address> captured = captureAddresses(2);
 
         a1 = captured.get(0);
         a2 = captured.get(1);
@@ -577,10 +567,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(singletonList(sub));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(1)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(1));
+        List<Address> captured = captureAddresses(1);
 
         sub = captured.get(0);
         assertEquals(Phase.Pending, sub.getStatus().getPhase());
@@ -603,10 +590,7 @@ public class AddressControllerTest {
 
         controller.onUpdate(singletonList(sub));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(1)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(1));
+        List<Address> captured = captureAddresses(1);
 
         sub = captured.get(0);
         assertEquals(Phase.Pending, sub.getStatus().getPhase());
@@ -642,13 +626,269 @@ public class AddressControllerTest {
 
         controller.onUpdate(Arrays.asList(sub, nonTopic));
 
-        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
-        verify(mockApi, times(2)).replaceAddress(captor.capture());
-        List<Address> captured = captor.getAllValues();
-        assertThat(captured, hasSize(2));
+        List<Address> captured = captureAddresses(2);
 
         sub = captured.get(0);
         assertEquals(Phase.Pending, sub.getStatus().getPhase());
         assertThat(sub.getStatus().getMessages(), is(singletonList("Subscription address 'a1' (resource name 'myspace.a1') references a topic address 'myanycast' (resource name 'myspace.myanycast') that is not of expected type 'topic' (found type 'anycast' instead).")));
     }
+
+    @Test
+    public void testNoMessageTtlStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(Arrays.asList(new BrokerCluster("broker-infra-0", new KubernetesList())));
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withType("queue")
+                .withPlan("small-queue")
+                .endSpec()
+                .build();
+
+        controller.onUpdate(singletonList(a1));
+
+        List<Address> captured = captureAddresses(1);
+
+        a1 = captured.get(0);
+        assertEquals(Phase.Configuring, a1.getStatus().getPhase());
+        assertNull(a1.getStatus().getMessageTtl());
+    }
+
+    @Test
+    public void testAddressSpecifiedMessageTtlStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        AddressSpec t = new AddressSpecBuilder()
+                .withType("queue")
+                .withPlan("small-queue")
+                .build();
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a1")
+                .withMessageTtl(new MessageTtlBuilder().withMaximum(30000L).build())
+                .endSpec()
+                .build();
+
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a2")
+                .withMessageTtl(new MessageTtlBuilder().withMinimum(10000L).build())
+                .endSpec()
+                .build();
+
+        Address a3 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a3")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a3")
+                .withMessageTtl(new MessageTtlBuilder().withMinimum(10000L).withMaximum(20000L).build())
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1, a2, a3));
+
+        List<Address> captured = captureAddresses(3);
+
+        a1 = captured.get(0);
+        AddressStatus status1 = a1.getStatus();
+        assertEquals(Phase.Configuring, status1.getPhase());
+        assertNotNull(status1.getMessageTtl());
+        assertEquals(30000, status1.getMessageTtl().getMaximum());
+        assertNull(status1.getMessageTtl().getMinimum());
+
+        a2 = captured.get(1);
+        AddressStatus status2 = a2.getStatus();
+        assertEquals(Phase.Configuring, status2.getPhase());
+        assertNotNull(status2.getMessageTtl());
+        assertNull(status2.getMessageTtl().getMaximum());
+        assertEquals(10000, status2.getMessageTtl().getMinimum());
+
+        a3 = captured.get(2);
+        AddressStatus status3 = a3.getStatus();
+        assertEquals(Phase.Configuring, status3.getPhase());
+        assertNotNull(status3.getMessageTtl());
+        assertEquals(20000, status3.getMessageTtl().getMaximum());
+        assertEquals(10000, status3.getMessageTtl().getMinimum());
+    }
+
+    @Test
+    public void testInvalidAddressSpecifiedMessageTtlStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpec()
+                .withAddress("a1")
+                .withType("queue")
+                .withPlan("small-queue")
+                .withMessageTtl(new MessageTtlBuilder()
+                        .withMaximum(30000L)
+                        .withMinimum(30001L)
+                        .build())
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1));
+
+        List<Address> captured = captureAddresses(1);
+
+        a1 = captured.get(0);
+        AddressStatus status1 = a1.getStatus();
+        assertEquals(Phase.Configuring, status1.getPhase());
+        assertNull(status1.getMessageTtl());
+
+    }
+
+    @Test
+    public void testAddressPlanSpecifiedMaxMessageTtlStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        AddressSpec t = new AddressSpecBuilder()
+                .withType("queue")
+                .withPlan("small-queue-with-maxttl")
+                .build();
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a1")
+                .endSpec()
+                .build();
+
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a2")
+                .withMessageTtl(new MessageTtlBuilder()
+                        .withMaximum(29000L)
+                        .withMinimum(10000L)
+                        .build())
+                .endSpec()
+                .build();
+
+        Address a3 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a3")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a3")
+                .withMessageTtl(new MessageTtlBuilder()
+                        .withMaximum(31000L)
+                        .withMinimum(10000L)
+                        .build())
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1, a2, a3));
+
+        List<Address> captured = captureAddresses(3);
+
+        a1 = captured.get(0);
+        AddressStatus status1 = a1.getStatus();
+        assertEquals(Phase.Configuring, status1.getPhase());
+        assertNotNull(status1.getMessageTtl());
+        assertEquals(30000L, status1.getMessageTtl().getMaximum()); // From plan
+        assertNull(status1.getMessageTtl().getMinimum());
+
+        a2 = captured.get(1);
+        AddressStatus status2 = a2.getStatus();
+        assertEquals(Phase.Configuring, status2.getPhase());
+        assertNotNull(status2.getMessageTtl());
+        assertEquals(29000L, status2.getMessageTtl().getMaximum());  // Overridden by address
+        assertEquals(10000L, status2.getMessageTtl().getMinimum());
+
+        a3 = captured.get(2);
+        AddressStatus status3 = a3.getStatus();
+        assertEquals(Phase.Configuring, status3.getPhase());
+        assertNotNull(status3.getMessageTtl());
+        assertEquals(30000L, status3.getMessageTtl().getMaximum()); // From plan - not overridden by address
+        assertEquals(10000L, status3.getMessageTtl().getMinimum());
+    }
+
+    @Test
+    public void testAddressPlanSpecifiedMinMessageTtlStatus() throws Exception {
+        when(mockHelper.listClusters()).thenReturn(List.of(
+                new BrokerCluster("broker-infra-0", new KubernetesList()),
+                new BrokerCluster("broker-infra-1", new KubernetesList())));
+
+        AddressSpec t = new AddressSpecBuilder()
+                .withType("queue")
+                .withPlan("small-queue-with-minttl")
+                .build();
+
+        Address a1 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a1")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a1")
+                .withMessageTtl(new MessageTtlBuilder()
+                        .withMinimum(10001L)
+                        .build())
+                .endSpec()
+                .build();
+
+        Address a2 = new AddressBuilder()
+                .withNewMetadata()
+                .withName("myspace.a2")
+                .endMetadata()
+                .withNewSpecLike(t)
+                .withAddress("a2")
+                .withMessageTtl(new MessageTtlBuilder()
+                        .withMinimum(9999L)
+                        .build())
+                .endSpec()
+                .build();
+
+        controller.onUpdate(List.of(a1, a2));
+
+        List<Address> captured = captureAddresses(2);
+
+        a1 = captured.get(0);
+        AddressStatus status1 = a1.getStatus();
+        assertEquals(Phase.Configuring, status1.getPhase());
+        assertNotNull(status1.getMessageTtl());
+        assertNull(status1.getMessageTtl().getMaximum());
+        assertEquals(10001, status1.getMessageTtl().getMinimum());  // Overridden by address
+
+        a2 = captured.get(1);
+        AddressStatus status2 = a2.getStatus();
+        assertEquals(Phase.Configuring, status2.getPhase());
+        assertNotNull(status2.getMessageTtl());
+        assertNull(status2.getMessageTtl().getMaximum());
+        assertEquals(10000, status2.getMessageTtl().getMinimum());  // From plan - not overridden by address
+
+    }
+
+    private List<Address> captureAddresses(int expectedAddresses) {
+        ArgumentCaptor<Address> captor = ArgumentCaptor.forClass(Address.class);
+        verify(mockApi, times(expectedAddresses)).replaceAddress(captor.capture());
+        List<Address> captured = captor.getAllValues();
+        assertThat(captured, hasSize(expectedAddresses));
+        return captured;
+    }
+
 }

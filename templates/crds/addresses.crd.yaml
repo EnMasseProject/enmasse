@@ -93,6 +93,16 @@ spec:
                 maxConsumers:
                   type: integer
                   description: "Maximum number of concurrent consumers that can be attached to this subscription. If unspecified, 1 consumer is allowed per subscription"
+            messageTtl:
+              type: object
+              description: "Further restricts message time-to-live (TTL). Applies to address types queue and topic only. The maximum and minimum values must fall with the minimum/maximum range described by the plan's TTL settings."
+              properties:
+                maximum:
+                  description: "Imposes a maximum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values greater than this value (or no TTL value) will have their expiration adjusted."
+                  type: integer
+                minimum:
+                  description: "Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
+                  type: integer
             forwarders:
               type: array
               description: "Address forwarders for this address."
@@ -164,6 +174,16 @@ spec:
                   type: integer
                 resources:
                   type: object
+            ttl:
+              type: object
+              description: "Applied message TTL properties"
+              properties:
+                maximum:
+                  description: "Maximum TTL value"
+                  type: integer
+                minimum:
+                  description: "Minimum TTL value"
+                  type: integer
             forwarders:
               type: array
               description: "Forwarder status for this address."

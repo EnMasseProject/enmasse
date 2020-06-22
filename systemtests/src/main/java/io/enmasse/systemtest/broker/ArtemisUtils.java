@@ -29,32 +29,41 @@ import static org.hamcrest.CoreMatchers.is;
 
 public class ArtemisUtils {
 
-    public static Map<String, Object> getAddressSettings(Kubernetes kubernetes, AddressSpace addressSpace, String addressName) throws Exception {
+    public static Map<String, Object> getAddressSettings(Kubernetes kubernetes, AddressSpace addressSpace, String addressName)  {
         Map<String, String> brokerLabels = new HashMap<>();
         brokerLabels.put(LabelKeys.INFRA_UUID, AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
         brokerLabels.put(LabelKeys.ROLE, "broker");
 
         UserCredentials credentials = getSupportCredentials(addressSpace);
 
-        kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+        try {
+            kubernetes.awaitPodsReady(kubernetes.getInfraNamespace(), new TimeoutBudget(5, TimeUnit.MINUTES));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        }
 
         List<Pod> brokerPods = Kubernetes.getInstance().listPods(brokerLabels);
         assertThat(brokerPods.size(), is(1));
 
         String podName = brokerPods.get(0).getMetadata().getName();
-        ExecutionResultData jmxResponse = KubeCMDClient.runOnPod(kubernetes.getInfraNamespace(), podName, Optional.of("broker"),
+        Map<String, Object> addressSettings = getAddressSettings(kubernetes, podName, credentials, addressName);
+
+        return addressSettings;
+    }
+
+    public static Map<String, Object> getAddressSettings(Kubernetes kubernetes, String brokerPodName, UserCredentials supportCredentials, String addressName) {
+        ExecutionResultData jmxResponse = KubeCMDClient.runOnPod(kubernetes.getInfraNamespace(), brokerPodName, Optional.of("broker"),
                 "curl",
                 "--silent", "--insecure",
-                "--user", String.format("%s:%s", credentials.getUsername(), credentials.getPassword()),
+                "--user", String.format("%s:%s", supportCredentials.getUsername(), supportCredentials.getPassword()),
                 "-H", "Origin: https://localhost:8161",
-                String.format("https://localhost:8161/console/jolokia/exec/org.apache.activemq.artemis:broker=\"%s\"/getAddressSettingsAsJSON/%s", podName, addressName));
+                String.format("https://localhost:8161/console/jolokia/exec/org.apache.activemq.artemis:broker=\"%s\"/getAddressSettingsAsJSON/%s", brokerPodName, addressName));
 
         String responseJson = jmxResponse.getTrimmedStdOut();
         Map<String, Object> map = jsonResponseToMap(responseJson);
 
-        Map<String, Object> addressSettings = jsonResponseToMap((String) map.get("value"));
-
-        return addressSettings;
+        return jsonResponseToMap((String) map.get("value"));
     }
 
     public static UserCredentials getSupportCredentials(AddressSpace addressSpace) {

@@ -79,18 +79,18 @@ function same_addressplan_definition_and_status(a, b) {
 }
 
 function same_addressplan_definition(a, b) {
-    return a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources);
+    if (a === b) return true;
+    return a && b && a.addressType === b.addressType && same_addressplan_resources(a.resources, b.resources) && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function same_addressplan_resources(a, b) {
-    if (a === undefined) return b === undefined;
-    return a.broker === b.broker && a.router === b.router;
+    if (a === b) return true;
+    return a && b && a.broker === b.broker && a.router === b.router;
 }
 
 function same_addressplan_status(a, b) {
-    if (a === undefined) return b === undefined;
-    if (a === null) return b === null;
-    return b && a.isReady === b.isReady && a.phase === b.phase && same_messages(a.messages, b.messages);
+    if (a === b) return true;
+    return a && b && a.isReady === b.isReady && a.phase === b.phase && myutils.same_status_messages(a.messages, b.messages) && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function addressplan_compare(a, b) {
@@ -102,27 +102,7 @@ function by_addressplan_name(a) {
 }
 
 function description(list) {
-    const max = 5;
-    if (list.length > max) {
-        return list.slice(0, max).map(by_addressplan_name).join(', ') + ' and ' + (list.length - max) + ' more';
-    } else {
-        return JSON.stringify(list.map(by_addressplan_name));
-    }
-}
-
-function same_messages(a, b) {
-    if (a === b) {
-        return true;
-    } else if (a == null || b == null || a.length !== b.length) {
-        return false;
-    }
-
-    for (var i in a) {
-        if (!b.includes(a[i])) {
-            return false;
-        }
-    }
-    return true;
+    return myutils.description(list, by_addressplan_name);
 }
 
 module.exports = AddressPlanSource;

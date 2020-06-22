@@ -5,6 +5,7 @@
 
 package io.enmasse.admin.model;
 
+import io.enmasse.address.model.MessageTtl;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 
 import java.util.Map;
@@ -14,4 +15,5 @@ public interface AddressPlan extends HasMetadata {
     String getAddressType();
     Map<String, Double> getResources();
     int getPartitions();
+    MessageTtl getTtl();
 }

@@ -3,7 +3,9 @@
 
 ## 0.32.0
 
+
 * #3157: Add support for per-address limits in broker
+* #3158: Setting per-address max TTL
 * #3839: [IoT] Implement a JDBC based device registry
 * #3922: [IoT] Allow to enable tracing
 * #4044: Ensure agent uses bi-directional AMQP idle-time-out for all connections

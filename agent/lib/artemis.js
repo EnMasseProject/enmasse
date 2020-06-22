@@ -71,7 +71,8 @@ Artemis.prototype.receiver_ready = function (context) {
     this._send_pending_requests();
 };
 
-function as_handler(resolve, reject) {
+Artemis.prototype.as_handler = function(resolve, reject) {
+    var self = this;
     return function (context) {
         var message = context.message || context;
         if (message.application_properties && message.application_properties._AMQ_OperationSucceeded) {
@@ -82,10 +83,11 @@ function as_handler(resolve, reject) {
                     resolve(true);
                 }
             } catch (e) {
-                log.info('[%s] Error parsing message body: %s : %s', this.connection.container_id, message, e);
+                log.info('[%s] Error parsing message body: %s : %s', self.connection.container_id, message, e);
                 reject(message.body)
             }
         } else {
+            log.debug('[%s] Response did not signal _AMQ_OperationSucceeded : %j', self.connection.container_id, message);
             reject(message.body);
         }
     };
@@ -186,7 +188,7 @@ Artemis.prototype._request = function (resource, operation, parameters) {
     var self = this;
     return new Promise(function (resolve, reject) {
         self.pushed++;
-        stack.push(as_handler(resolve, reject));
+        stack.push(self.as_handler(resolve, reject));
     });
 }
 
@@ -480,36 +482,79 @@ Artemis.prototype.deleteAddress = function (name) {
     return this._request('broker', 'deleteAddress', [name]);
 };
 
-var address_settings_fields = {
-    'DLA':'',
-    'expiryAddress':'',
-    'expiryDelay':-1,
-    'lastValueQueue':false,
-    'deliveryAttempts':-1,
-    'maxSizeBytes':-1,
-    'pageSizeBytes':-1,
-    'pageMaxCacheSize':-1,
-    'redeliveryDelay':1,
-    'redeliveryMultiplier':1.5,
-    'maxRedeliveryDelay':10000,
-    'redistributionDelay':-1,
-    'sendToDLAOnNoRoute':false,
-    'addressFullMessagePolicy': 'FAIL',
-    'slowConsumerThreshold':-1,
-    'slowConsumerCheckPeriod':5,
-    'slowConsumerPolicy':'KILL',
-    'autoCreateJmsQueues':true,
-    'autoDeleteJmsQueues':true,
-    'autoCreateJmsTopics':true,
-    'autoDeleteJmsTopics':true,
-};
+var address_settings_order = [
+    'DLA',
+    'expiryAddress',
+    'expiryDelay',
+    'lastValueQueue',
+    'maxDeliveryAttempts',
+    'maxSizeBytes',
+    'pageSizeBytes',
+    'pageCacheMaxSize',
+    'redeliveryDelay',
+    'redeliveryMultiplier',
+
+
+    'maxRedeliveryDelay',
+    'redistributionDelay',
+    'sendToDLAOnNoRoute',
+    'addressFullMessagePolicy',
+    'slowConsumerThreshold',
+    'slowConsumerCheckPeriod',
+    'slowConsumerPolicy',
+
+    'autoCreateJmsQueues',
+    'autoDeleteJmsQueues',
+    'autoCreateJmsTopics',
+    'autoDeleteJmsTopics',
+    'autoCreateQueues',
+    'autoDeleteQueues',
+    'autoCreateAddresses',
+    'autoDeleteAddresses',
+
+    'configDeleteQueues',
+    'configDeleteAddresses',
+
+    'maxSizeBytesRejectThreshold',
+    'defaultLastValueKey',
+    'defaultNonDestructive',
+    'defaultExclusiveQueue',
+    'defaultGroupRebalance',
+    'defaultGroupBuckets',
+    'defaultGroupFirstKey',
+    'defaultMaxConsumers',
+
+    'defaultPurgeOnNoConsumers',
+    'defaultConsumersBeforeDispatch',
+    'defaultDelayBeforeDispatch',
+    'defaultQueueRoutingType',
+    'defaultAddressRoutingType',
+    'defaultConsumerWindowSize',
+    'defaultRingSize',
+
+    'autoDeleteCreatedQueues',
+    'autoDeleteQueuesDelay',
+    'autoDeleteQueuesMessageCount',
+    'autoDeleteAddressesDelay',
+
+    'redeliveryCollisionAvoidanceFactor',
+    'retroactiveMessageCount',
+    'autoCreateDeadLetterResources',
+    'deadLetterQueuePrefix',
+    'deadLetterQueueSuffix',
+    'autoCreateExpiryResources',
+    'expiryQueuePrefix',
+    'expiryQueueSuffix',
+    'minExpiryDelay',
+    'maxExpiryDelay',
+    'enableMetrics'];
 
 Artemis.prototype.addAddressSettings = function (match, settings) {
     var args = [match];
-    for (var name in address_settings_fields) {
-        var v = settings[name] || address_settings_fields[name];
+    address_settings_order.forEach((name) => {
+        var v = settings[name];
         args.push(v);
-    }
+    });
     return this._request('broker', 'addAddressSettings', args);
 };
 

@@ -71,6 +71,8 @@ under the License.
 
       <jmx-management-enabled>true</jmx-management-enabled>
 
+      <message-expiry-scan-period>${MESSAGE_EXPIRY_SCAN_PERIOD}</message-expiry-scan-period>
+
       <acceptors>
          <acceptor name="artemis-local">tcp://127.0.0.1:61616?tcpSendBufferSize=1048576;tcpReceiveBufferSize=1048576;protocols=CORE</acceptor>
          <acceptor name="amqp-local">tcp://127.0.0.1:5672?protocols=AMQP;saslMechanisms=PLAIN</acceptor>

@@ -16,9 +16,7 @@
 'use strict';
 
 var assert = require('assert');
-var events = require('events');
 var util = require('util');
-var rhea = require('rhea');
 var MockBroker = require('../testlib/mock_broker.js');
 var broker_controller = require('../lib/broker_controller.js');
 
@@ -173,7 +171,7 @@ describe('broker controller', function() {
 
     it('get address settings async - returns setting maxSizeBytes calculated from infra with partitions', function(done) {
         config.BROKER_GLOBAL_MAX_SIZE="64MB";
-        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config)
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", partitions: 2, resources: {broker: 0.2}}}}).then(function (result) {
             assert.equal(6710886, result.maxSizeBytes);
             done();
@@ -182,9 +180,18 @@ describe('broker controller', function() {
 
     it('get address settings async - returns setting maxSizeBytes calculated from broker', function(done) {
         config.BROKER_GLOBAL_MAX_SIZE=undefined;
-        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config)
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
         brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {planStatus: {name: "small-queue", resources: {broker: 0.1}}}}, Promise.resolve(1000000)).then(function (result) {
             assert.equal(100000, result.maxSizeBytes);
+            done();
+        });
+    });
+
+    it('get address settings async - returns ttl settings', function(done) {
+        var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
+        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
+            assert.equal(1000, result.minExpiryDelay);
+            assert.equal(2000, result.maxExpiryDelay);
             done();
         });
     });

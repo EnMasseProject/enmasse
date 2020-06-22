@@ -20,6 +20,7 @@ var events = require('events');
 var util = require('util');
 var rhea = require('rhea');
 var myutils = require('../lib/utils.js');
+var log = require('../lib/log.js').logger();
 
 var counters = {};
 
@@ -158,14 +159,14 @@ function MockBroker (name) {
             }
         },
         addAddressSettings : function () {
-            if (self.objects.some(function (o) { return o.type === 'address_settings' && o.match === arguments[0]; })) {
+            if (self.objects.some(function (o) { return o.type === 'address_settings' && o.name === arguments[0]; })) {
                 throw new Error('address settings for ' + o.match + ' already exists!');
             } else {
                 self.add_address_settings(arguments[0], get_address_settings(Array.prototype.slice.call(arguments, 1)));
             }
         },
         removeAddressSettings : function (match) {
-            if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.match === match; }) !== 1) {
+            if (myutils.remove(self.objects, function (o) { return o.type === 'address_settings' && o.name === match; }) !== 1) {
                 throw new Error('error deleting address settings ' + match);
             }
         },

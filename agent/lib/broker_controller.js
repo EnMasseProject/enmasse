@@ -25,6 +25,7 @@ var myutils = require('./utils.js');
 var plimit = require('p-limit');
 var crypto = require('crypto');
 var uuidv5 = require('uuid/v5');
+var clone = require('clone');
 
 function BrokerController(event_sink, config) {
     events.EventEmitter.call(this);
@@ -38,6 +39,7 @@ function BrokerController(event_sink, config) {
     this.excluded_types = undefined;
     this.config = config ? config : process.env;
     this.global_max_size = this.read_global_max_size();
+    this.root_address_settings = {};
 };
 
 util.inherits(BrokerController, events.EventEmitter);
@@ -71,17 +73,32 @@ BrokerController.prototype.on_connection_open = function (context) {
     var self = this;
     this.broker = new artemis.Artemis(context.connection);
     this.id = context.connection.container_id;
-    this.check_broker_addresses().then(() => {
-        log.info('[%s] broker controller ready', this.id);
-        self.emit('ready');
+    self.broker.getAddressSettings('#').then((root_address_settings) => {
+        self.root_address_settings = root_address_settings;
+        self.check_broker_addresses().then(() => {
+            log.info('[%s] broker controller ready', self.id);
+            self.emit('ready');
+        }).catch((e) => {
+            log.error("[%s] failed to check_broker_addresses", self.id, e);
+        });
+    }).catch((e) => {
+        log.error("[%s] failed to get root settings", self.id, e);
     });
 };
 
 BrokerController.prototype.set_connection = function (connection) {
+    var self = this;
     this.broker = new artemis.Artemis(connection);
     this.id = connection.container_id;
     log.info('[%s] broker controller ready', this.id);
-};
+
+    return new Promise((resolve, reject) => {
+        self.broker.getAddressSettings('#').then((root_address_settings) => {
+            self.root_address_settings = root_address_settings;
+            resolve();
+        }).catch(reject);
+    });
+}
 
 BrokerController.prototype.addresses_defined = function (addresses) {
     this.addresses = addresses.reduce(function (map, a) { map[a.address] = a; return map; }, {});
@@ -415,14 +432,21 @@ BrokerController.prototype.update_address_setting = function (a) {
         return self.get_address_settings(a).then(function (new_settings) {
             if (new_settings) {
                 if (compare_address_settings(orig_settings, new_settings) !== 0) {
-                    log.info('[%s] Updating address settings %s', self.id, name);
-                        return self.broker.addAddressSettings(name, new_settings);
+                    log.info('[%s] Adding/updating address settings: %s', self.id, name);
+                    return self.broker.addAddressSettings(name, new_settings);
                 } else {
                     log.debug('[%s] Address settings match for %s: not updating', self.id, name);
                     return Promise.resolve();
                 }
+            } else if (compare_address_settings(orig_settings, self.root_address_settings) !== 0) {
+                // Settings were previously applied but now no longer required.  To remove them first we
+                // reset the address settings to the root values then remove the record.
+                log.info('[%s] Removing address settings: %s', self.id, name);
+                return self.broker.addAddressSettings(name, self.root_address_settings).finally(() => {
+                    return self.broker.removeAddressSettings(name);
+                });
             } else {
-                //Settings weren't created, and reason is already logged. Most likely broker resource not required.
+                // No settings required (and none currently applied).
                 return Promise.resolve();
             }
         }).catch(function (error) {
@@ -430,7 +454,7 @@ BrokerController.prototype.update_address_setting = function (a) {
             return Promise.reject(error);
         });
     }).catch(function (error) {
-        log.error('[%s] Failed to retrieve brokers address setting: %s', self.id, name, error);
+        log.error('[%s] Failed to retrieve broker address setting: %s', self.id, name, error);
         return Promise.reject(error);
     });
 }
@@ -582,7 +606,7 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 BrokerController.prototype._sync_broker_addresses = function (retry) {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
-        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue'));
+        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue' || o.type === 'topic'));
         var actual = translate(results, excluded_addresses, self.excluded_types);
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
@@ -710,20 +734,39 @@ BrokerController.prototype._sync_addresses_and_forwarders = function () {
 
 
 BrokerController.prototype.generate_address_settings = function (address, global_max_size) {
-    if (address.status && address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0) {
-        var planStatus = address.status.planStatus;
+    if (address.status) {
+        var addressSettings = clone(this.root_address_settings);
+        var upd = 0;
+        if (address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0 && (address.type === 'subscription' || address.type === 'queue')) {
+            var planStatus = address.status.planStatus;
 
-        var r = planStatus.resources.broker;
-        var p = planStatus.partitions;
-        var allocation = (r && p) ? (r / p) : (r) ? r : undefined;
-        if (allocation) {
-            var maxSizeBytes = Math.round(allocation * global_max_size);
-            return {
-                maxSizeBytes: maxSizeBytes
-            };
+            var r = planStatus.resources.broker;
+            var p = planStatus.partitions;
+            var allocation = (r && p) ? (r / p) : (r) ? r : undefined;
+            if (allocation) {
+                var maxSizeBytes = Math.round(allocation * global_max_size);
+                if ('PAGE' === addressSettings.addressFullMessagePolicy && addressSettings.pageSizeBytes > 0) {
+                    // Artemis business rule that maxSizeBytes >= pageSizeBytes
+                    maxSizeBytes = Math.max(maxSizeBytes, addressSettings.pageSizeBytes);
+                } else {
+                    addressSettings.pageSizeBytes = -1;
+                }
+                addressSettings.maxSizeBytes = maxSizeBytes;
+                upd++;
+            }
         }
+        if (address.status.messageTtl && (address.type === 'topic' || address.type === 'queue')) {
+            if (address.status.messageTtl.minimum) {
+                addressSettings.minExpiryDelay = address.status.messageTtl.minimum;
+                upd++;
+            }
+            if (address.status.messageTtl.maximum) {
+                addressSettings.maxExpiryDelay = address.status.messageTtl.maximum;
+                upd++;
+            }
+        }
+        return upd ? addressSettings : undefined;
     }
-    log.info('no broker resource required for %s, therefore not applying address settings', address.name);
 };
 
 BrokerController.prototype.get_address_settings = function (address) {
@@ -759,8 +802,12 @@ module.exports.create_controller = function (connection, event_sink) {
         bc.excluded_types = type_filter(['queue', 'topic']);
         log.info('excluding types %j controller for %s (%s)', bc.excluded_types, connection.container_id, rcg);
     }
-    bc.set_connection(connection);
-    return bc;
+
+    return new Promise((resolve, reject) => {
+        bc.set_connection(connection).then(() => {
+            resolve(bc);
+        }).catch(reject);
+    });
 };
 
 module.exports.create_agent = function (event_sink, polling_frequency) {
