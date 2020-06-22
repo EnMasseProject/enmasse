@@ -78,7 +78,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdOut() + allAddresses.getStdErr();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     @Test
@@ -157,7 +157,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdErr();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     @Test
@@ -191,7 +191,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
-            }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+            }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());

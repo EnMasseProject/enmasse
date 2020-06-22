@@ -108,7 +108,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace());
             return allAddresses.getStdErr() + allAddresses.getStdOut();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     @Test
@@ -182,6 +182,6 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         TestUtils.waitUntilCondition(() -> {
             ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace());
             return addresses.getStdOut() + addresses.getStdErr();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 }
