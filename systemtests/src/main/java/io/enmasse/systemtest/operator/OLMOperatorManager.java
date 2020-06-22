@@ -129,11 +129,12 @@ public class OLMOperatorManager {
                 SystemtestsKubernetesApps.buildOperatorRegistryImage(kube, olmManifestsImage, customRegistryImageToPush, clusterExternalImageRegistry, dockerfilePath, manifestsReplacerScript);
             } else {
                 String volume = System.getProperty("user.dir") + "/custom-operator-registry/workspace:/workspace";
-                String kanikoImage = "gcr.io/kaniko-project/executor:v0.19.0";
+                String kanikoImage = "gcr.io/kaniko-project/executor:v0.23.0";
                 List<String> command = Arrays.asList("docker", "run", "-v", volume, kanikoImage, "--context=dir:///workspace", "--destination=" + customRegistryImageToPush,
                         "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
                         "--insecure-registry=true",
                         "--skip-tls-verify=true",
+                        "--insecure-pull",
                         "--force");
                 var result = Exec.execute(command);
                 if (!result.getRetCode()) {
