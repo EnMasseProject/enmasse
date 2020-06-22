@@ -95,10 +95,10 @@ spec:
           description: "Restricts message time-to-live (TTL). Applies to address types queue and topic only."
           properties:
             maximum:
-              description: "Imposes a maximum TTL value for messages arriving at the address.  Messages arriving with TTL values greater than this value (or no TTL value) will have their expiration adjusted."
+              description: "Imposes a maximum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values greater than this value (or no TTL value) will have their expiration adjusted."
               type: integer
             minimum:
-              description: "Imposes a minimum TTL value for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
+              description: "Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
               type: integer
         requiredResources:
           type: array
