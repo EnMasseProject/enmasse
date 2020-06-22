@@ -5,6 +5,6 @@ any message put to a queue or topic. The `maximum` and `minimum` values, defined
 * If a messages arrives at the address with a TTL value that is greater than the `maximum` value, the system changes the message TTL to the maximum value.
 * If a message arrives at the address with a TTL value that is less than the `minimum` value, the system changes the message TTL to the minimum value.
 
-Messages arriving without a TTL defined are considered to have a TTL value of infinity when considered by these rules.
+Messages that arrive without a TTL defined are considered to have a TTL value of infinity.
 
 Expired messages will be automatically removed from the `queue`, `subscription` or temporary topic subscription periodically. These messages are lost. This occurs every 30 seconds.
