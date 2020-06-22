@@ -6,7 +6,7 @@
 package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.TestTag.FRAMEWORK;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.security.cert.X509Certificate;
 import java.time.Duration;

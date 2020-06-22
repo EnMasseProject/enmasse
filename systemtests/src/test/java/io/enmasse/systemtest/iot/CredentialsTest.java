@@ -11,7 +11,7 @@ import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(TestTag.FRAMEWORK)
 public class CredentialsTest {

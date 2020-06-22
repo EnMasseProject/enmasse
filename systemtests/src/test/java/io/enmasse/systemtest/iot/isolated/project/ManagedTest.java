@@ -10,7 +10,7 @@ import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static org.hamcrest.collection.IsEmptyIterable.emptyIterable;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import java.net.HttpURLConnection;
 import java.util.LinkedList;

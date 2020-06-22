@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import org.slf4j.Logger;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
@@ -73,7 +74,7 @@ public class OLMOperatorManager {
 
         if (installation == OLMInstallationType.SPECIFIC) {
             Path operatorGroupFile = Files.createTempFile("operatorgroup", ".yaml");
-            String operatorGroup = Files.readString(Paths.get("custom-operator-registry", "operator-group.yaml"));
+            String operatorGroup = Files.readString(Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "operator-group.yaml"));
             Files.writeString(operatorGroupFile, operatorGroup.replaceAll("\\$\\{OPERATOR_NAMESPACE}", namespace));
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
@@ -91,31 +92,31 @@ public class OLMOperatorManager {
 
     public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
-        String subscription = Files.readString(Paths.get("custom-operator-registry", "subscription.yaml"));
+        String subscription = Files.readString(Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
-                    .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
-                    .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
-                    .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
-                    .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
-                    .replaceAll("\\$\\{CSV}", csvName));
+                        .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
+                        .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
+                        .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
+                        .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
+                        .replaceAll("\\$\\{CSV}", csvName));
         KubeCMDClient.applyFromFile(installationNamespace, subscriptionFile);
     }
 
     public void deployCatalogSource(String catalogSourceName, String catalogNamespace, String customRegistryImageToUse) throws IOException {
         Path catalogSourceFile = Files.createTempFile("catalogsource", ".yaml");
-        String catalogSource = Files.readString(Paths.get("custom-operator-registry", "catalog-source.yaml"));
+        String catalogSource = Files.readString(Paths.get(System.getProperty("user.dir"), "custom-operator-registry", "catalog-source.yaml"));
         Files.writeString(catalogSourceFile,
                 catalogSource
-                    .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
-                    .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace)
-                    .replaceAll("\\$\\{REGISTRY_IMAGE}", customRegistryImageToUse));
+                        .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
+                        .replaceAll("\\$\\{OPERATOR_NAMESPACE}", catalogNamespace)
+                        .replaceAll("\\$\\{REGISTRY_IMAGE}", customRegistryImageToUse));
         KubeCMDClient.applyFromFile(catalogNamespace, catalogSourceFile);
     }
 
     public void buildPushCustomOperatorRegistry(String namespace, String manifestsImage) throws Exception {
-        String customRegistryImageToPush = clusterExternalImageRegistry+"/"+namespace+"/systemtests-operator-registry:latest";
+        String customRegistryImageToPush = clusterExternalImageRegistry + "/" + namespace + "/systemtests-operator-registry:latest";
 
         String olmManifestsImage = manifestsImage.replace(clusterInternalImageRegistry, clusterExternalImageRegistry);
 
@@ -154,7 +155,7 @@ public class OLMOperatorManager {
     }
 
     public String getCustomOperatorRegistryInternalImage(String namespace) {
-        return clusterInternalImageRegistry+"/"+namespace+"/systemtests-operator-registry:latest";
+        return clusterInternalImageRegistry + "/" + namespace + "/systemtests-operator-registry:latest";
     }
 
     public String getLatestStartingCsv() throws Exception {

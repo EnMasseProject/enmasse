@@ -45,7 +45,6 @@ import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.PlanUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Pod;
-import io.github.artsok.RepeatedIfExceptionsTest;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -606,7 +605,6 @@ class CommonTest extends TestBase implements ITestBaseIsolated {
 
     @Tag(NON_PR)
     @DisplayName("testFullBrokerRemainsOperableBrokered")
-    @RepeatedIfExceptionsTest(repeats = 2, name = "")
     public void testFullBrokerRemainsOperableBrokered() throws Exception {
         BrokeredInfraConfig testInfra = new BrokeredInfraConfigBuilder()
                 .withNewMetadata()
