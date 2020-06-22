@@ -342,6 +342,8 @@ public class GlobalLogCollector {
             Files.writeString(path.resolve("describe_addresses.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "addresses", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addressspaces.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addresses.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addresses", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("catalogsources.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "catalogsources", "-o", "yaml", "--all-namespaces").getStdOut());
+            Files.writeString(path.resolve("csvs.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "csvs", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("users.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "messaginguser", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addressspaceplans.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addressspaceplans", "-o", "yaml", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("addressplans.yml"), KubeCMDClient.runOnClusterWithoutLogger("get", "addressplans", "-o", "yaml", "--all-namespaces").getStdOut());
