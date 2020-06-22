@@ -76,7 +76,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         resourcesManager.deleteAddressSpace(brokered);
         TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdOut() + allAddresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -155,7 +155,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         KubeCMDClient.deleteAddressSpace(environment.namespace(), brokered.getMetadata().getName());
         AddressSpaceUtils.waitForAddressSpaceDeleted(brokered);
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }

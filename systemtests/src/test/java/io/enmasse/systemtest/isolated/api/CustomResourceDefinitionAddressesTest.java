@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -105,7 +106,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         KubeCMDClient.deleteAddress(environment.namespace(), dest2.getMetadata().getName());
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddress(environment.namespace());
             return allAddresses.getStdErr() + allAddresses.getStdOut();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
@@ -162,7 +163,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
         AddressUtils.waitForDestinationsReady(dest1, dest2);
 
-        result = KubeCMDClient.getAddress(environment.namespace(), "-a");
+        result = KubeCMDClient.getAddress(environment.namespace());
         output = result.getStdOut().trim();
 
         assertTrue(output.contains(Objects.requireNonNull(dest1.getMetadata().getName())),
@@ -179,7 +180,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
         resourcesManager.deleteAddresses(dest2);
 
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace(), "-a");
+            ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace());
             return addresses.getStdOut() + addresses.getStdErr();
         }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
