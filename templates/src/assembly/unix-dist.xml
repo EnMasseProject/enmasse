@@ -24,11 +24,11 @@
         <format>tar.gz</format>
         <format>zip</format>
     </formats>
-    <includeBaseDirectory>False</includeBaseDirectory>
+    <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
       <fileSet>
-        <directory>${project.basedir}/build/enmasse-${env.IMAGE_VERSION}</directory>
-        <outputDirectory>${application.bundle.prefix}-${env.IMAGE_VERSION}</outputDirectory>
+        <directory>${project.basedir}/build/enmasse-${image.version}</directory>
+        <outputDirectory>${application.bundle.prefix}-${image.version}</outputDirectory>
         <includes>
            <include>**/*</include>
         </includes>
