@@ -2,7 +2,7 @@
 The `ttl` field is used to restrict the effective link:http://docs.oasis-open.org/amqp/core/v1.0/os/amqp-core-messaging-v1.0-os.html#type-properties[`absolute-expiry-time`] of
 any message put to a queue or topic. The `maximum` and `minimum` values, defined in milliseconds will adjust the TTL value of an incoming messages to that address if
 
-* If a messages arrives at the address with a TTL value that is greater than the `maximum`, its TTL is changed to the maximum value.
+* If a messages arrives at the address with a TTL value that is greater than the `maximum` value, the system changes the message TTL to the maximum value.
 * If a messages arrives with a TTL value that is less than the `minimum`, the TTL is changed to the minimum.
 
 Messages arriving without a TTL defined are considered to have a TTL value of infinity when considered by these rules.
