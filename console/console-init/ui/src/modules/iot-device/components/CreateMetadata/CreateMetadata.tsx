@@ -8,28 +8,15 @@ import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
-import { deviceRegistrationTypeOptions } from "modules/iot-device";
-import { getInitialStateCreateMetadata } from "modules/iot-device/utils";
+import { getInitialMetadataState } from "modules/iot-device/utils";
 
-export interface ICreateMetadataProps {
-  onChangePropertyInput?: (value: string) => Promise<any>;
-}
+export interface ICreateMetadataProps {}
 
-const defaultType =
-  deviceRegistrationTypeOptions && deviceRegistrationTypeOptions[0]?.value;
-
-export const CreateMetadata: React.FC<ICreateMetadataProps> = ({
-  onChangePropertyInput
-}) => {
-  const [metadataList, setMetadataList] = useState([
-    getInitialStateCreateMetadata(defaultType)
-  ]);
+export const CreateMetadata: React.FC<ICreateMetadataProps> = ({}) => {
+  const [metadataList, setMetadataList] = useState([getInitialMetadataState()]);
 
   const handleAddParentRow = () => {
-    setMetadataList([
-      ...metadataList,
-      getInitialStateCreateMetadata(defaultType)
-    ]);
+    setMetadataList([...metadataList, getInitialMetadataState()]);
   };
 
   return (

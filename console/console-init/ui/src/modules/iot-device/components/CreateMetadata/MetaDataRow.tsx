@@ -10,18 +10,11 @@ import {
   InputGroup,
   Button,
   DropdownPosition,
-  TextInput,
-  SelectOptionObject,
-  SelectVariant,
-  Select,
-  SelectOption
+  TextInput
 } from "@patternfly/react-core";
 import { DropdownWithToggle } from "components";
 import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
-import {
-  deviceRegistrationTypeOptions,
-  getLabelByValue
-} from "modules/iot-device";
+import { deviceRegistrationTypeOptions } from "modules/iot-device";
 import { DataType } from "constant";
 
 export interface IMetaDataRow {
@@ -37,50 +30,17 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
 }) => {
   const metadataRow = metadataList[rowIndex];
   // console.log("metadataList", metadataList, "type", metadataRow.type);
-  const [propertySelected, setPropertySelected] = useState<string | undefined>(
-    ""
-  );
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
-
-  const onToggle = (isExpanded: boolean) => {
-    setIsExpanded(isExpanded);
-  };
-
-  const onTypeAheadSelect = (e: any, selection: SelectOptionObject) => {
-    onPropertySelect && onPropertySelect(e, selection);
-    setIsExpanded(false);
-  };
 
   const onSelectType = (typeValue: string) => {
     let updatedTypeMetadata = [...metadataList];
     updatedTypeMetadata[rowIndex].type = typeValue;
+    if (isObjectOrArray(typeValue as any))
+      updatedTypeMetadata[rowIndex].value = "";
     setMetadataList(updatedTypeMetadata);
   };
 
-  //TODO: Move this method to container
-  const onFilter = (e: any) => {
-    const propertyInput = e.target.value && e.target.value.trim();
-    //TODO: Analyze if option type can be changed
-    let propertyOptions: React.ReactElement[] = [];
-    onChangePropertyInput &&
-      onChangePropertyInput(propertyInput).then((options: any) => {
-        const propertyList = options;
-        propertyOptions = propertyList
-          ? propertyList.map((propertyItem: any, index: number) => (
-              <SelectOption
-                disabled={propertyItem.isDisabled}
-                key={index}
-                value={propertyItem.value}
-              />
-            ))
-          : [];
-      });
-
-    return propertyOptions;
-  };
-
   //TODO: Call graphql queries and populate options in SelectOption
-  const onChangePropertyInput = async (propertyKey: string) => {
+  const handlePropertyInputChange = async (propertyKey: string) => {
     let updatedPropertyMetadata = [...metadataList];
     updatedPropertyMetadata[rowIndex].key = propertyKey;
     setMetadataList(updatedPropertyMetadata);
@@ -107,21 +67,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     setMetadataList(updatedValueMetadata);
   };
 
-  const onPropertySelect = (e: any, selection: SelectOptionObject) => {
-    setPropertySelected(selection.toString());
-  };
-
-  const onPropertyClear = () => {
-    setPropertySelected(undefined);
-    let updatedPropertyMetadata = [...metadataList];
-    updatedPropertyMetadata[rowIndex].key = "";
-    setMetadataList(updatedPropertyMetadata);
-  };
-
-  //TODO: Clear value of property when type is array or object
-  //TODO: Disable Type when type is array or object
-
-  const isChildAdditionEnabled = (type: DataType.ARRAY | DataType.OBJECT) => {
+  const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
     return type === DataType.OBJECT || type === DataType.ARRAY;
   };
 
@@ -131,34 +77,24 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
       <Grid gutter="sm">
         <GridItem span={5}>
           <InputGroup>
-            <Select
-              id="cd-metadata-typeahead-parameter"
-              variant={SelectVariant.typeahead}
-              ariaLabelTypeAhead={"Select parameter"}
-              onToggle={onToggle}
-              onSelect={onTypeAheadSelect}
-              onClear={onPropertyClear}
-              selections={propertySelected || metadataRow.key}
-              isExpanded={isExpanded}
-              onFilter={onFilter}
-              ariaLabelledBy={"typeahead-parameter-id"}
-              placeholderText={"Select property"}
-            ></Select>
-            {metadataRow.length > 0 ? (
-              isChildAdditionEnabled(metadataRow.type) && (
-                <Button
-                  variant="control"
-                  aria-label="Add child on button click"
-                  onClick={e => {
-                    let parentValue: string = metadataRow.key;
-                    handleAddChildRow(e, parentValue);
-                  }}
-                >
-                  <PlusIcon />
-                </Button>
-              )
-            ) : (
-              <></>
+            <TextInput
+              id="cd-metadata-text-parameter"
+              value={metadataRow.key}
+              type="text"
+              onChange={handlePropertyInputChange}
+              aria-label="text input example"
+            />
+            {isObjectOrArray(metadataRow.type) && (
+              <Button
+                variant="control"
+                aria-label="Add child on button click"
+                onClick={e => {
+                  let parentValue: string = metadataRow.key;
+                  handleAddChildRow(e, parentValue);
+                }}
+              >
+                <PlusIcon />
+              </Button>
             )}
           </InputGroup>
         </GridItem>
@@ -168,7 +104,9 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
             position={DropdownPosition.left}
             onSelectItem={onSelectType}
             dropdownItems={deviceRegistrationTypeOptions}
-            value={getLabelByValue(metadataRow.type)}
+            value={metadataRow.type}
+            isLabelAndValueNotSame={true}
+            isDisabled={isObjectOrArray(metadataRow.type)}
           />
         </GridItem>
         <GridItem span={5}>
@@ -179,7 +117,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
               type="text"
               onChange={handleValueChange}
               aria-label="text input example"
-              isDisabled={isChildAdditionEnabled(metadataRow.type)}
+              isDisabled={isObjectOrArray(metadataRow.type)}
             />
             <Button
               id="cd-metadata-button-delete"
