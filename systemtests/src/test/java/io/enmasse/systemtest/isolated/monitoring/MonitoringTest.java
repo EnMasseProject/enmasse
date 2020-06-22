@@ -44,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(ACCEPTANCE)
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     String testNamespace = "monitoring-test";
-    private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     private MonitoringClient monitoring;
 
@@ -74,7 +73,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
     @AfterAll
     void uninstallMonitoring() throws Exception {
-        beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         EnmasseOperatorManager.getInstance().removeIoT();
         if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
             EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
