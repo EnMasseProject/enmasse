@@ -31,7 +31,7 @@ spec:
     router: 0.2
     broker: 0.3
   partitions: 1 <3>
-  ttl: <4>
+  messageTtl: <4>
     minimim: 30000
     maximum: 300000
 ----
