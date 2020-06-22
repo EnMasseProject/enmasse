@@ -92,6 +92,19 @@ func generateConfig(router *v1beta2.MessagingInfrastructureSpecRouter) routerCon
 					"httpRootDir":      "invalid",
 				},
 			},
+			[]interface{}{
+				// Listener for cluster-internal components
+				"listener",
+				map[string]interface{}{
+					"name":             "cluster-internal",
+					"host":             "0.0.0.0",
+					"port":             55667,
+					"requireSsl":       true,
+					"saslMechanisms":   "EXTERNAL",
+					"sslProfile":       "infra_tls",
+					"authenticatePeer": true,
+				},
+			},
 		},
 	}
 }

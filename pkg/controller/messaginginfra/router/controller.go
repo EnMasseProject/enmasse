@@ -123,6 +123,8 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	certShaSum = certSha.Sum(certShaSum)
 	routerCertSha := hex.EncodeToString(certShaSum[:])
 
+	meshServiceName := fmt.Sprintf("%s-mesh", routerInfraName)
+
 	// Reconcile statefulset of the router
 	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
@@ -158,12 +160,20 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			install.ApplyEnvSimple(container, "QDROUTERD_CONF", "/etc/qpid-dispatch/config/qdrouterd.json")
 			install.ApplyEnvSimple(container, "QDROUTERD_CONF_TYPE", "json")
 			install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_DISCOVERY", "INFER")
-			install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_SERVICE_NAME", routerInfraName)
+			install.ApplyEnvSimple(container, "QDROUTERD_AUTO_MESH_SERVICE_NAME", meshServiceName)
 
 			container.Ports = []corev1.ContainerPort{
 				{
 					ContainerPort: 55672,
 					Name:          "inter-router",
+				},
+				{
+					ContainerPort: 55671,
+					Name:          "operator-management",
+				},
+				{
+					ContainerPort: 55667,
+					Name:          "cluster-internal",
 				},
 				{
 					ContainerPort: 7777,
@@ -214,7 +224,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			return err
 		}
 		statefulset.Spec.Template.Spec.Containers = containers
-		statefulset.Spec.ServiceName = routerInfraName
+		statefulset.Spec.ServiceName = meshServiceName
 
 		install.ApplyConfigMapVolume(&statefulset.Spec.Template.Spec, "config", routerInfraName)
 		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "certs", certSecretName)
@@ -227,17 +237,17 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	// Reconcile router service
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: routerInfraName},
+	meshService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: meshServiceName},
 	}
-	_, err = controllerutil.CreateOrUpdate(ctx, r.client, service, func() error {
-		if err := controllerutil.SetControllerReference(infra, service, r.scheme); err != nil {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, meshService, func() error {
+		if err := controllerutil.SetControllerReference(infra, meshService, r.scheme); err != nil {
 			return err
 		}
-		install.ApplyServiceDefaults(service, "router", infra.Name)
-		service.Spec.ClusterIP = "None"
-		service.Spec.Selector = statefulset.Spec.Template.Labels
-		service.Spec.Ports = []corev1.ServicePort{
+		install.ApplyServiceDefaults(meshService, "router", infra.Name)
+		meshService.Spec.ClusterIP = "None"
+		meshService.Spec.Selector = statefulset.Spec.Template.Labels
+		meshService.Spec.Ports = []corev1.ServicePort{
 			{
 				Port:       55672,
 				Protocol:   corev1.ProtocolTCP,
@@ -252,8 +262,41 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 		return nil, err
 	}
 
+	// Reconcile internal cluster router service
+	internalClusterServiceName := fmt.Sprintf("%s-internal", routerInfraName)
+	internalClusterService := &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: internalClusterServiceName},
+	}
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, internalClusterService, func() error {
+		if err := controllerutil.SetControllerReference(infra, internalClusterService, r.scheme); err != nil {
+			return err
+		}
+		install.ApplyServiceDefaults(internalClusterService, "router", infra.Name)
+		internalClusterService.Spec.Type = corev1.ServiceTypeClusterIP
+		internalClusterService.Spec.Selector = statefulset.Spec.Template.Labels
+		internalClusterService.Spec.Ports = []corev1.ServicePort{
+			{
+				Port:       55667,
+				Protocol:   corev1.ProtocolTCP,
+				TargetPort: intstr.FromString("cluster-internal"),
+				Name:       "cluster-internal",
+			},
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	// Reconcile router certificate
-	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset, fmt.Sprintf("%s", service.Name), fmt.Sprintf("%s.%s.svc", service.Name, service.Namespace), fmt.Sprintf("*.%s.%s.svc", service.Name, service.Namespace))
+	_, err = r.certController.ReconcileCert(ctx, logger, infra, statefulset,
+		fmt.Sprintf("%s", meshService.Name),
+		fmt.Sprintf("%s.%s.svc", meshService.Name, meshService.Namespace),
+		fmt.Sprintf("*.%s.%s.svc", meshService.Name, meshService.Namespace),
+		fmt.Sprintf("%s", internalClusterService.Name),
+		fmt.Sprintf("%s.%s.svc", internalClusterService.Name, internalClusterService.Namespace),
+		fmt.Sprintf("*.%s.%s.svc", internalClusterService.Name, internalClusterService.Namespace))
 	if err != nil {
 		return nil, err
 	}
