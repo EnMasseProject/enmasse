@@ -26,7 +26,7 @@ import {
   IAdapter
 } from "components";
 
-export interface IMessagingObject {
+export interface IIoTMessagingObject {
   url?: string;
   username?: string;
   password?: string;
@@ -37,7 +37,7 @@ export interface IMessagingObject {
 }
 export interface IAccessCredentialsProps {
   tenantId: string;
-  messaging: IMessagingObject;
+  messaging: IIoTMessagingObject;
   adapters: IAdapter[];
   onDownloadCertificate: (certificateType: ".pem" | ".jks") => void;
 }

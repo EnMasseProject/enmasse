@@ -18,9 +18,12 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject: any) => {
   return filter;
 };
 
-export const RETURN_IOT_PROJECTS = (filterObj?: any, resolver?: string) => {
+export const RETURN_IOT_PROJECTS = (
+  filterObj?: any,
+  queryResolver?: string
+) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
-  const defaultResolver = `
+  const defaultQueryResolver = `
     total
     iotProjects {
       metadata {
@@ -36,8 +39,8 @@ export const RETURN_IOT_PROJECTS = (filterObj?: any, resolver?: string) => {
     }
   `;
 
-  if (!resolver) {
-    resolver = defaultResolver;
+  if (!queryResolver) {
+    queryResolver = defaultQueryResolver;
   }
 
   let filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
@@ -48,7 +51,7 @@ export const RETURN_IOT_PROJECTS = (filterObj?: any, resolver?: string) => {
         filter: "${filter}",
         projectType: iotProject
       ) {
-         ${resolver}
+         ${queryResolver}
       }
     }`
   );

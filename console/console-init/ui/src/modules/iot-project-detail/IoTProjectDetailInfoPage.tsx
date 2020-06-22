@@ -4,18 +4,18 @@ import {
   GeneralInfo,
   DeviceRegistationManagement,
   AccessCredentials,
-  IMessagingObject
-} from ".";
+  IIoTMessagingObject
+} from "modules/iot-project-detail/components";
 import { action } from "@storybook/addon-actions";
 import { IAdapterConfig, IAdapter } from "components/AdapterList";
 import { Protocols } from "constant";
 
-export default function DetailPage() {
+export default function IoTProjectDetailInfoPage() {
   const eventAddresses: Array<string> = ["event_address", "event_address1"];
   const telemetryAddresses: Array<string> = ["telemetry_address"];
   const commandAddresses: Array<string> = ["command_address"];
 
-  const messaging: IMessagingObject = {
+  const messaging: IIoTMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
     username: "username",
     password: "password",
