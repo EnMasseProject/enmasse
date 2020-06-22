@@ -12,7 +12,7 @@ import { getInitialMetadataState } from "modules/iot-device/utils";
 
 export interface ICreateMetadataProps {}
 
-export const CreateMetadata: React.FC<ICreateMetadataProps> = ({}) => {
+export const CreateMetadata: React.FC<ICreateMetadataProps> = () => {
   const [metadataList, setMetadataList] = useState([getInitialMetadataState()]);
 
   const handleAddParentRow = () => {
