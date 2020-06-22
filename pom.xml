@@ -42,13 +42,14 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <avro.version>1.9.0</avro.version>
-        <fabric8.kubernetes-client.version>4.6.4</fabric8.kubernetes-client.version>
+        <!-- fabric8.kubernetes-client: must be aligned with quarkus -->
+        <fabric8.kubernetes-client.version>4.9.1</fabric8.kubernetes-client.version>
         <sundrio.version>0.17.2</sundrio.version>
         <vertx.version>3.9.0</vertx.version>
         <slf4j.version>1.7.21</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <lucene.version>7.7.1</lucene.version>
-        <hibernate.validator.version>6.0.20.Final</hibernate.validator.version>
+        <hibernate.validator.version>6.1.5.Final</hibernate.validator.version>
         <jackson-annotations.version>2.10.0</jackson-annotations.version>
         <jackson-core.version>2.10.4</jackson-core.version>
         <jackson-databind.version>2.10.4</jackson-databind.version>
@@ -68,7 +69,7 @@
         <junit.platform.launcher.version>1.6.2</junit.platform.launcher.version>
         <artemis.version>2.13.0</artemis.version>
         <paho.version>1.2.1</paho.version>
-        <netty.version>4.1.48.Final</netty.version>
+        <netty.version>4.1.49.Final</netty.version>
         <keycloak.version>4.8.3.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.processor.version>2.1.0.Final</jboss.logging.processor.version>
@@ -86,9 +87,12 @@
         <jsonschema2pojo.version>1.0.2</jsonschema2pojo.version>
         <lombok.version>1.18.10</lombok.version>
 
-        <!-- NOTE: jaeger-client must be aligned with Hono -->
+        <quarkus.version>1.5.2.Final</quarkus.version>
+        <jandex-plugin.version>1.0.7</jandex-plugin.version>
+
+        <!-- NOTE: jaeger-client must be aligned with Hono and Quarkus -->
         <jaeger-client.version>1.1.0</jaeger-client.version>
-        <!-- NOTE: opentracing must be aligned with Hono -->
+        <!-- NOTE: opentracing must be aligned with Hono and Quarkus -->
         <opentracing.version>0.33.0</opentracing.version>
 
         <asciidoctor-maven-plugin.version>1.6.0</asciidoctor-maven-plugin.version>
@@ -637,6 +641,51 @@
                 <version>${snakeyaml.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-core</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-config-yaml</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-hibernate-validator</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-kubernetes-client</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-jaeger</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-vertx</artifactId>
+                <version>${quarkus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jaegertracing</groupId>
+                <artifactId>jaeger-core</artifactId>
+                <version>${jaeger-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jaegertracing</groupId>
+                <artifactId>jaeger-client</artifactId>
+                <version>${jaeger-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jaegertracing</groupId>
+                <artifactId>jaeger-thrift</artifactId>
+                <version>${jaeger-client.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -747,6 +796,16 @@
                     <groupId>org.jsonschema2pojo</groupId>
                     <artifactId>jsonschema2pojo-maven-plugin</artifactId>
                     <version>${jsonschema2pojo.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>io.quarkus</groupId>
+                    <artifactId>quarkus-maven-plugin</artifactId>
+                    <version>${quarkus.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jboss.jandex</groupId>
+                    <artifactId>jandex-maven-plugin</artifactId>
+                    <version>${jandex-plugin.version}</version>
                 </plugin>
 
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->

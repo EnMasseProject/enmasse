@@ -7,6 +7,7 @@ package io.enmasse.iot.model.v1;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
@@ -22,6 +23,7 @@ import io.sundr.builder.annotations.Inline;
                         value = "done"))
 @DefaultCustomResource
 @SuppressWarnings("serial")
+@RegisterForReflection
 public class IoTConfig extends AbstractHasMetadata<IoTConfig> {
 
     public static final String KIND = "IoTConfig";

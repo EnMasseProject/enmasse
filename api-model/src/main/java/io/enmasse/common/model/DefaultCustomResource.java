@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JacksonAnnotationsInside;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * A default set of Jackson annotations for custom resources.
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Retention(RUNTIME)
 @Target(TYPE)
+@RegisterForReflection
 public @interface DefaultCustomResource {
 
 }

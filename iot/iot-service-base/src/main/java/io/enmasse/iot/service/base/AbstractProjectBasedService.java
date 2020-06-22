@@ -5,26 +5,26 @@
 
 package io.enmasse.iot.service.base;
 
-import static io.vertx.core.Future.succeededFuture;
-import static java.util.Optional.ofNullable;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import io.enmasse.common.model.CustomResources;
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.iot.utils.ConfigBase;
+
 import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
 import io.vertx.core.Future;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static io.vertx.core.Future.succeededFuture;
+import static java.util.Optional.ofNullable;
 
 public abstract class AbstractProjectBasedService extends AbstractKubernetesBasedService {
 
@@ -41,7 +41,7 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
      */
     private Duration resyncPeriod = DEFAULT_RESYNC_PERIOD;
 
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + "kubernetes.informer.resyncPeriod")
+    @ConfigProperty(name = ConfigBase.CONFIG_BASE + "kubernetes.informer.resyncPeriod")
     public void setResyncPeriod(final Duration resyncPeriod) {
         this.resyncPeriod = resyncPeriod != null ? resyncPeriod : DEFAULT_RESYNC_PERIOD;
     }
@@ -72,14 +72,17 @@ public abstract class AbstractProjectBasedService extends AbstractKubernetesBase
 
         log.info("Starting project watcher");
 
+        // CustomResourceDefinitions.registerAll();
+
         // create a new informer factory
         this.factory = getClient().inAnyNamespace().informers();
 
         // setup informer
-        this.factory.sharedIndexInformerForCustomResource(
+        var informer = this.factory.sharedIndexInformerForCustomResource(
                 CustomResources.toContext(IoTCrd.project()),
-                IoTProject.class, IoTProjectList.class, this.resyncPeriod.toMillis())
-                .addEventHandler(new ResourceEventHandler<IoTProject>() {
+                IoTProject.class, IoTProjectList.class, this.resyncPeriod.toMillis());
+
+        informer.addEventHandler(new ResourceEventHandler<IoTProject>() {
 
                     @Override
                     public void onUpdate(final IoTProject oldObj, final IoTProject newObj) {

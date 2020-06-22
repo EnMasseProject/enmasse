@@ -5,29 +5,10 @@
 
 package io.enmasse.iot.tenant.config;
 
-import org.eclipse.hono.config.ServiceConfigProperties;
-import org.eclipse.hono.util.Constants;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import io.enmasse.iot.tenant.impl.TenantAmqpService;
+import io.enmasse.iot.tenant.config.compat.ServiceConfig;
 import io.enmasse.iot.utils.ConfigBase;
+import io.quarkus.arc.config.ConfigProperties;
 
-@Configuration
-public class AmqpEndpointConfiguration {
-
-    @Qualifier(Constants.QUALIFIER_AMQP)
-    @Bean
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".amqp")
-    public ServiceConfigProperties amqpEndpointProperties() {
-        return new ServiceConfigProperties();
-    }
-
-    @Bean
-    public TenantAmqpService amqpServer() {
-        return new TenantAmqpService();
-    }
-
+@ConfigProperties(prefix = ConfigBase.CONFIG_BASE + ".amqp", namingStrategy = ConfigProperties.NamingStrategy.VERBATIM, failOnMismatchingMember = false)
+public class AmqpEndpointConfiguration extends ServiceConfig {
 }

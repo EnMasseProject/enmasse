@@ -235,11 +235,11 @@ func TestAppendEnvVar(t *testing.T) {
 
 	// append second element
 
-	AppendEnvVarValue(&container, JavaOptsEnvVarName, "bar")
+	AppendEnvVarValue(&container, JavaOptsEnvVarName, "bar", "baz")
 
 	assert.NotNil(t, container.Env)
 	assert.Len(t, container.Env, 1)
 	assert.Equal(t, JavaOptsEnvVarName, container.Env[0].Name)
-	assert.Equal(t, "foo bar", container.Env[0].Value)
+	assert.Equal(t, "foo bar baz", container.Env[0].Value)
 
 }

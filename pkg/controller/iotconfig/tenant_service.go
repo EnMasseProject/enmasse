@@ -19,6 +19,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 )
@@ -30,13 +31,6 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	rc := &recon.ReconcileContext{}
 	change := cchange.NewRecorder()
 
-	service := config.Spec.ServicesConfig.Tenant
-
-	rc.ProcessSimple(func() error {
-		return r.processConfigMap(ctx, nameTenantService+"-config", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileTenantServiceConfigMap(config, service, configMap, change)
-		})
-	})
 	rc.ProcessSimple(func() error {
 		return r.processDeployment(ctx, nameTenantService, config, false, func(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment) error {
 			return r.reconcileTenantServiceDeployment(config, deployment, change, authServicePsk)
@@ -48,6 +42,12 @@ func (r *ReconcileIoTConfig) processTenantService(ctx context.Context, config *i
 	rc.ProcessSimple(func() error {
 		return r.processService(ctx, nameTenantService+"-metrics", config, false, r.reconcileMetricsService(nameTenantService))
 	})
+
+	// delete legacy configmap
+
+	rc.Delete(ctx, r.client, &corev1.ConfigMap{ObjectMeta: metav1.ObjectMeta{Namespace: config.Namespace, Name: nameTenantService}})
+
+	// done
 
 	return rc.Result()
 }
@@ -66,13 +66,19 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 	err := install.ApplyDeploymentContainerWithError(deployment, "tenant-service", func(container *corev1.Container) error {
 
 		tracingContainer = container
+		var javaOptions []string
 
 		if err := install.SetContainerImage(container, "iot-tenant-service", config); err != nil {
 			return err
 		}
 
-		container.Args = nil
-		container.Command = nil
+		// set command
+
+		if service.Container.UseNativeImage(config) {
+			container.Command = []string{"/iot-tenant-service"}
+		} else {
+			container.Command = nil
+		}
 
 		// set default resource limits
 
@@ -92,20 +98,20 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 		// environment
 
 		container.Env = []corev1.EnvVar{
-			{Name: "SPRING_PROFILES_ACTIVE", Value: "prod"},
-			{Name: "LOGGING_CONFIG", Value: "file:///etc/config/logback-spring.xml"},
 			{Name: "KUBERNETES_NAMESPACE", ValueFrom: install.FromFieldNamespace()},
 
 			{Name: "ENMASSE_IOT_AUTH_HOST", Value: FullHostNameForEnvVar("iot-auth-service")},
-			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
+			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHAREDSECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
-		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.CommonServiceConfig)
+		javaOptions = service.QuarkusServiceConfig.Container.ApplyLoggingToContainer(config, javaOptions)
+
+		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.QuarkusServiceConfig)
 
 		SetupTracing(config, deployment, container)
-		AppendStandardHonoJavaOptions(container)
+		javaOptions = AppendQuarkusHonoJavaOptions(javaOptions)
 
-		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUST_STORE_PATH"}); err != nil {
+		if err := AppendTrustStores(config, container, []string{"ENMASSE_IOT_AUTH_TRUSTSTOREPATH"}); err != nil {
 			return err
 		}
 
@@ -117,6 +123,16 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 		// apply container options
 
 		applyContainerConfig(container, service.Container.ContainerConfig)
+
+		// apply java options
+
+		if service.Container.UseNativeImage(config) {
+			container.Args = javaOptions
+			install.RemoveEnv(container, install.JavaOptsEnvVarName)
+		} else {
+			container.Args = nil
+			install.AppendEnvVarValue(container, install.JavaOptsEnvVarName, javaOptions...)
+		}
 
 		// return
 
@@ -170,21 +186,6 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceService(config *iotv1alpha1.I
 	if err := ApplyInterServiceForService(config, service, nameTenantService); err != nil {
 		return err
 	}
-
-	return nil
-}
-
-func (r *ReconcileIoTConfig) reconcileTenantServiceConfigMap(config *iotv1alpha1.IoTConfig, service iotv1alpha1.TenantServiceConfig, configMap *corev1.ConfigMap, change *cchange.ConfigChangeRecorder) error {
-
-	install.ApplyDefaultLabels(&configMap.ObjectMeta, "iot", configMap.Name)
-
-	if configMap.Data == nil {
-		configMap.Data = make(map[string]string)
-	}
-
-	configMap.Data["logback-spring.xml"] = service.RenderConfiguration(config, logbackDefault, configMap.Data["logback-custom.xml"])
-
-	change.AddStringsFromMap(configMap.Data, "logback-spring.xml")
 
 	return nil
 }

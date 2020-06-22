@@ -7,6 +7,10 @@ package io.enmasse.iot.tenant.impl;
 
 import java.time.Duration;
 
+import io.enmasse.iot.utils.ConfigBase;
+import io.quarkus.arc.config.ConfigProperties;
+
+@ConfigProperties(prefix = ConfigBase.CONFIG_BASE + ".tenant.service", namingStrategy = ConfigProperties.NamingStrategy.VERBATIM, failOnMismatchingMember = false)
 public class TenantServiceConfigProperties {
 
     private static final Duration DEFAULT_CACHE_TIME_TO_LIVE = Duration.ofMinutes(5);

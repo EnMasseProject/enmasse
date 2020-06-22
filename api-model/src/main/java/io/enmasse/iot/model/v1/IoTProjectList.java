@@ -6,9 +6,11 @@ package io.enmasse.iot.model.v1;
 
 import io.enmasse.common.model.AbstractList;
 import io.enmasse.common.model.DefaultCustomResource;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @DefaultCustomResource
 @SuppressWarnings("serial")
+@RegisterForReflection
 public class IoTProjectList extends AbstractList<IoTProject> {
 
     public static final String KIND = "IoTProjectList";

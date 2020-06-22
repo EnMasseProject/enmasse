@@ -17,6 +17,14 @@ ifeq ($(MAVEN_BATCH),true)
 	MAVEN_ARGS+=-B
 endif
 
+ifneq (, $(shell which podman))
+QUARKUS_CONTAINER_RUNTIME=podman
+else ifneq  (, $(shell which docker))
+QUARKUS_CONTAINER_RUNTIME=docker
+else
+$(error "No container runtime found for native Quarkus build. You need either 'podman' or 'docker')
+endif
+
 all: init build test package
 
 init:

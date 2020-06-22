@@ -7,6 +7,7 @@ package io.enmasse.iot.model.v1;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
 
@@ -19,6 +20,7 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@RegisterForReflection
 public class ResourceLimits {
 
     private Long maximumConnections;

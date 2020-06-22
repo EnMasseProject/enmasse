@@ -45,6 +45,13 @@
       <artifactId>kubernetes-client</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-config-yaml</artifactId>
+      <version>${quarkus.version}</version>
+      <optional>true</optional>
+    </dependency>
+
     <!-- testing -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>

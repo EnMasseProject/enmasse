@@ -21,7 +21,7 @@ else
 endif
 
 package_java:
-	$(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn package -DskipTests $(MAVEN_ARGS)
+	$(IMAGE_ENV) IMAGE_ENV="$(IMAGE_ENV)" mvn package -DskipTests $(MAVEN_ARGS) $(MAVEN_PACKAGE_ARGS)
 
 package: package_java
 endif

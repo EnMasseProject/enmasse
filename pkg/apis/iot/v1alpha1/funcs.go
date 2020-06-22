@@ -9,6 +9,8 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/pkg/errors"
+	"sort"
+	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -116,6 +118,58 @@ func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
 	} else {
 		return config.Spec.TlsDefaults.Versions
 	}
+}
+
+// endregion
+
+// region QuarkusServiceConfig
+
+func (c *QuarkusServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
+	if c.Container.RequireNativeTls == nil {
+		return config.Spec.DefaultNativeTlsRequired()
+	}
+	return *c.Container.RequireNativeTls
+}
+
+func (c *QuarkusServiceConfig) TlsVersions(config *IoTConfig) []string {
+	if len(c.Tls.Versions) > 0 {
+		return c.Tls.Versions
+	} else {
+		return config.Spec.TlsDefaults.Versions
+	}
+}
+
+func (c QuarkusContainerConfig) ApplyLoggingToContainer(config *IoTConfig, opts []string) []string {
+
+	level, loggers := c.Logging.GetEffectiveConfiguration(config)
+
+	opts = append(opts, "-Dquarkus.log.level="+strings.ToUpper(string(level)))
+
+	// extract keys, and sort
+	keys := make([]string, 0, len(loggers))
+	for k, _ := range loggers {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// iterate with sorted keys to have a stable env-var value
+	for _, k := range keys {
+		v := strings.ToUpper(string(loggers[k]))
+		if v == "" {
+			v = "INFO"
+		}
+		opts = append(opts, "-Dquarkus.log.category.\""+k+"\".level="+v)
+	}
+
+	return opts
+}
+
+// check if the native image should be used
+func (c QuarkusContainerConfig) UseNativeImage(_ *IoTConfig) bool {
+	if c.NativeImage != nil {
+		return *c.NativeImage
+	}
+	return false
 }
 
 // endregion
@@ -328,44 +382,49 @@ func (r JdbcDeviceRegistry) IsSplitRegistry() (bool, error) {
 
 // region Logging
 
+func (log CommonLoggingConfig) GetEffectiveConfiguration(config *IoTConfig) (rootLevel LogLevel, loggers map[string]LogLevel) {
+
+	// if we have a local level or loggers
+	if log.Level != "" || log.Loggers != nil {
+
+		rootLevel = log.Level
+		loggers = log.Loggers
+
+		// if the local root level is empty
+		if rootLevel == "" {
+			// use the global root level
+			rootLevel = config.Spec.Logging.Level
+		}
+
+	} else {
+
+		rootLevel = config.Spec.Logging.Level
+		loggers = config.Spec.Logging.Loggers
+
+	}
+
+	if rootLevel == "" {
+		rootLevel = LogLevelInfo
+	}
+
+	return
+}
+
 type DefaultLoggingRenderer func(rootLogger LogLevel, loggers map[string]LogLevel) string
 
-func (log LogbackConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
+func (log CommonLoggingConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
 
 	// did we get overridden
 	if override != "" {
 		return override
 	}
 
-	// if we have an explicit configuration
-	if log.Logback != "" {
-		// use it
-		return log.Logback
-	}
-
-	// if we have a local level or loggers
-	if log.Level != "" || log.Loggers != nil {
-		// if the local root level is empty
-		if log.Level == "" {
-			// use the global root level
-			log.Level = config.Spec.Logging.Level
-		}
-		return defaultRenderer(log.Level, log.Loggers)
-	}
-
-	// if we have a global explicit logback config
-	if config.Spec.Logging.Defaults.Logback != "" {
-		// use it
-		return config.Spec.Logging.Defaults.Logback
-	}
-
-	// generate some reasonable defaults
-	return defaultRenderer(config.Spec.Logging.Level, config.Spec.Logging.Loggers)
+	return defaultRenderer(log.GetEffectiveConfiguration(config))
 
 }
 
 func (csc CommonServiceConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
-	return csc.Container.Logback.RenderConfiguration(config, defaultRenderer, override)
+	return csc.Container.Logging.RenderConfiguration(config, defaultRenderer, override)
 }
 
 // endregion

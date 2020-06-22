@@ -570,7 +570,7 @@ func ApplyEnvConfigMap(container *corev1.Container, name string, configMapKey st
 
 // Append a string to the value of an env-var. If the env-var doesn't exist, it will be created with the provided value.
 // A whitespace is added between the existing value and the new value.
-func AppendEnvVarValue(container *corev1.Container, name string, value string) {
+func AppendEnvVarValue(container *corev1.Container, name string, values ...string) {
 	if container.Env == nil {
 		container.Env = make([]corev1.EnvVar, 0)
 	}
@@ -583,7 +583,7 @@ func AppendEnvVarValue(container *corev1.Container, name string, value string) {
 				opts += " "
 			}
 
-			opts += value
+			opts += strings.Join(values, " ")
 
 			env.Value = opts
 			container.Env[i] = env
@@ -594,7 +594,7 @@ func AppendEnvVarValue(container *corev1.Container, name string, value string) {
 
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  name,
-		Value: value,
+		Value: strings.Join(values, " "),
 	})
 }
 

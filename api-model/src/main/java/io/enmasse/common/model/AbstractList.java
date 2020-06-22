@@ -15,8 +15,10 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.KubernetesResource;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.ListMeta;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 @SuppressWarnings("serial")
+@RegisterForReflection
 public abstract class AbstractList<T extends HasMetadata> extends AbstractResource<T>
                 implements KubernetesResource, KubernetesResourceList<T> {
 

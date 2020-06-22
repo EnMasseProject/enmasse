@@ -67,11 +67,6 @@ type CommonLoggingConfig struct {
 	Loggers map[string]LogLevel `json:"loggers,omitempty"`
 }
 
-type LogbackConfig struct {
-	CommonLoggingConfig `json:",inline"`
-	Logback             string `json:"logback,omitempty"`
-}
-
 // endregion
 
 //region Mesh
@@ -169,7 +164,13 @@ type JavaContainerConfig struct {
 
 	RequireNativeTls *bool `json:"requireNativeTls,omitempty"`
 
-	Logback LogbackConfig `json:"logback,omitempty"`
+	Logging CommonLoggingConfig `json:"logging,omitempty"`
+}
+
+type QuarkusContainerConfig struct {
+	JavaContainerConfig `json:",inline"`
+
+	NativeImage *bool `json:"native,omitempty"`
 }
 
 type EndpointConfig struct {
@@ -352,16 +353,24 @@ type JdbcRegistryManagement struct {
 //endregion
 
 // Common options for a single container Java service
+
 type CommonServiceConfig struct {
 	Container JavaContainerConfig `json:"container,omitempty"`
 	Tls       TlsOptions          `json:"tls,omitempty"`
 }
 
+// Options for single container Quarkus service
+
+type QuarkusServiceConfig struct {
+	Container QuarkusContainerConfig `json:"container,omitempty"`
+	Tls       TlsOptions             `json:"tls,omitempty"`
+}
+
 //region TenantService
 
 type TenantServiceConfig struct {
-	ServiceConfig       `json:",inline"`
-	CommonServiceConfig `json:",inline"`
+	ServiceConfig        `json:",inline"`
+	QuarkusServiceConfig `json:",inline"`
 }
 
 //endregion

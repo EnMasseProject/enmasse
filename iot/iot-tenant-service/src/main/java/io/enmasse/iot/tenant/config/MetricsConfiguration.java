@@ -5,22 +5,30 @@
 
 package io.enmasse.iot.tenant.config;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Singleton;
+
 import org.eclipse.hono.service.metric.MetricsTags;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.eclipse.hono.service.metric.PrometheusScrapingResource;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
+import io.micrometer.prometheus.PrometheusConfig;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 
-@Configuration
+@ApplicationScoped
 public class MetricsConfiguration {
 
-    @Bean
-    public MeterRegistryCustomizer<MeterRegistry> commonTags() {
+    @Singleton
+    PrometheusMeterRegistry metricsRegistry() {
+        var result = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
+        result
+                .config()
+                .commonTags(MetricsTags.forService("tenant-service"));
+        return result;
+    }
 
-        return r -> r.config().commonTags(
-                MetricsTags.forService("tenant-service"));
-
+    @Singleton
+    PrometheusScrapingResource scrapingResource(final PrometheusMeterRegistry registry) {
+        return new PrometheusScrapingResource(registry);
     }
 
 }

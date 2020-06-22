@@ -63,14 +63,14 @@ public abstract class AbstractKubernetesBasedService extends AbstractVerticle im
     }
 
     @Override
-    public final void start(final Future<Void> startFuture) {
+    public void start(final Future<Void> startFuture) {
         doStart()
                 .<Void>mapEmpty()
                 .onComplete(startFuture);
     }
 
     @Override
-    public final void stop(final Future<Void> stopFuture) {
+    public void stop(final Future<Void> stopFuture) {
         doStop()
                 .<Void>mapEmpty()
                 .onComplete(stopFuture);

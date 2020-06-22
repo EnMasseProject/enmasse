@@ -127,6 +127,11 @@ func AppendStandardHonoJavaOptions(container *corev1.Container) {
 
 }
 
+func AppendQuarkusHonoJavaOptions(opts []string) []string {
+	opts = append(opts, "-Djava.net.preferIPv4Stack=true")
+	return opts
+}
+
 func applyDefaultStatefulSetConfig(statefulSet *appsv1.StatefulSet, serviceConfig iotv1alpha1.ServiceConfig, config *cchange.ConfigChangeRecorder) {
 
 	statefulSet.Spec.Replicas = serviceConfig.Replicas
@@ -245,10 +250,10 @@ func appendCommonHonoJavaEnv(container *corev1.Container, envVarPrefix string, c
 
 	// add native tls flag
 
-	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"NATIVE_TLS_REQUIRED", strconv.FormatBool(commonJavaService.IsNativeTlsRequired(config)))
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"NATIVETLSREQUIRED", strconv.FormatBool(commonJavaService.IsNativeTlsRequired(config)))
 
 	// configure tls versions
 
-	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"SECURE_PROTOCOLS", strings.Join(commonJavaService.TlsVersions(config), ","))
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"SECUREPROTOCOLS", strings.Join(commonJavaService.TlsVersions(config), ","))
 
 }

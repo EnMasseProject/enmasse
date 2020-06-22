@@ -10,6 +10,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.MoreObjects.ToStringHelper;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
 
@@ -22,6 +23,7 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@RegisterForReflection
 public class CommonCondition<T extends Enum<T>> {
 
     private T type;

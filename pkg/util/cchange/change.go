@@ -26,7 +26,7 @@ func NewRecorder() *ConfigChangeRecorder {
 func (c *ConfigChangeRecorder) AddBytesFromMap(data map[string][]byte, onlyKeys ...string) {
 
 	// extract keys, and sort
-	keys := make([]string, len(data))
+	keys := make([]string, 0, len(data))
 	for k, _ := range data {
 		keys = append(keys, k)
 	}
@@ -53,7 +53,7 @@ func (c *ConfigChangeRecorder) AddBytesFromMap(data map[string][]byte, onlyKeys 
 func (c *ConfigChangeRecorder) AddStringsFromMap(data map[string]string, onlyKeys ...string) {
 
 	// extract keys, and sort
-	keys := make([]string, len(data))
+	keys := make([]string, 0, len(data))
 	for k, _ := range data {
 		keys = append(keys, k)
 	}

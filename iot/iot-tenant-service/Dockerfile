@@ -5,7 +5,8 @@ ARG maven_version
 ARG revision
 ENV VERSION=${version} REVISION=${revision} MAVEN_VERSION=${maven_version}
 
-ADD target/iot-tenant-service-${maven_version}.jar /iot-tenant-service.jar
+ADD target/iot-tenant-service-${maven_version}-runner.jar /iot-tenant-service.jar
+ADD target/iot-tenant-service-${maven_version}-runner /iot-tenant-service
 
 ENV JAVA_LAUNCH_PROFILE=openjdk-11
 CMD ["/opt/run-java/launch_java.sh", "-jar", "/iot-tenant-service.jar"]

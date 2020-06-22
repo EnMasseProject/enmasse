@@ -14,3 +14,4 @@ type CommonJavaContainerOptions interface {
 
 var _ CommonJavaContainerOptions = &CommonAdapterConfig{}
 var _ CommonJavaContainerOptions = &CommonServiceConfig{}
+var _ CommonJavaContainerOptions = &QuarkusServiceConfig{}

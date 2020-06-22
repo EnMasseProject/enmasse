@@ -1,0 +1,26 @@
+[
+	{
+		"name": "io.jsonwebtoken.impl.DefaultJwtParser",
+		"methods": [
+			{ "name": "<init>", "parameterTypes": [] }
+		]
+	},
+	{
+		"name": "io.jsonwebtoken.impl.io.RuntimeClasspathDeserializerLocator",
+		"methods": [
+			{ "name": "<init>", "parameterTypes": [] }
+		]
+	},
+	{
+		"name": "com.fasterxml.jackson.databind.ObjectMapper",
+		"methods": [
+			{ "name": "<init>", "parameterTypes": [] }
+		]
+	},
+	{
+		"name": "io.jsonwebtoken.io.JacksonDeserializer",
+		"methods": [
+			{ "name": "<init>", "parameterTypes": [] }
+		]
+	}
+]

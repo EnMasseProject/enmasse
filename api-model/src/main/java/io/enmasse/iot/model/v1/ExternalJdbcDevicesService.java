@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.Nulls;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
 
@@ -25,6 +26,7 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(NON_EMPTY)
+@RegisterForReflection
 public class ExternalJdbcDevicesService {
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)

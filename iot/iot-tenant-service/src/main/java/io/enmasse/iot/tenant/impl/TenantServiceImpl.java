@@ -18,6 +18,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.security.auth.x500.X500Principal;
 
 import org.eclipse.hono.util.Strings;
@@ -30,10 +31,13 @@ import com.google.common.collect.ImmutableMap;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.opentracing.Span;
+import io.quarkus.runtime.Startup;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
+@ApplicationScoped
+@Startup
 public class TenantServiceImpl extends AbstractTenantService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);

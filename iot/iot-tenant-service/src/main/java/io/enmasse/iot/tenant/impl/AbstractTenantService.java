@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import java.time.Instant;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.security.auth.x500.X500Principal;
 
 import org.eclipse.hono.service.tenant.TenantService;
@@ -20,7 +21,6 @@ import org.eclipse.hono.util.CacheDirective;
 import org.eclipse.hono.util.TenantConstants;
 import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.service.base.AbstractProjectBasedService;
@@ -43,13 +43,13 @@ public abstract class AbstractTenantService extends AbstractProjectBasedService 
 
     protected Tracer tracer;
 
-    @Autowired
+    @Inject
     public void setConfig(final TenantServiceConfigProperties configuration) {
         this.configuration = configuration;
     }
 
-    @Autowired
-    public void setTracer(Tracer tracer) {
+    @Inject
+    public void setTracer(final Tracer tracer) {
         this.tracer = tracer;
     }
 

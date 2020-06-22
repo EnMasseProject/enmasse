@@ -5,57 +5,10 @@
 
 package io.enmasse.iot.tenant.config;
 
-import static org.eclipse.hono.service.auth.AuthTokenHelperImpl.forValidating;
-
-import org.eclipse.hono.connection.ConnectionFactory;
-import org.eclipse.hono.connection.impl.ConnectionFactoryImpl;
-import org.eclipse.hono.service.auth.AuthTokenHelper;
-import org.eclipse.hono.service.auth.HonoSaslAuthenticatorFactory;
-import org.eclipse.hono.service.auth.delegating.AuthenticationServerClientConfigProperties;
-import org.eclipse.hono.service.auth.delegating.DelegatingAuthenticationService;
-import org.eclipse.hono.util.AuthenticationConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+import io.enmasse.iot.tenant.config.compat.AuthenticationServerClientConfig;
 import io.enmasse.iot.utils.ConfigBase;
-import io.vertx.core.Vertx;
+import io.quarkus.arc.config.ConfigProperties;
 
-@Configuration
-public class AuthenticationConfiguration {
-
-    @Bean
-    public DelegatingAuthenticationService authenticationService() {
-        return new DelegatingAuthenticationService();
-    }
-
-    @Bean
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".auth")
-    @Qualifier(AuthenticationConstants.QUALIFIER_AUTHENTICATION)
-    public AuthenticationServerClientConfigProperties authenticationServiceClientProperties() {
-        return new AuthenticationServerClientConfigProperties();
-    }
-
-    @Bean
-    @Qualifier(AuthenticationConstants.QUALIFIER_AUTHENTICATION)
-    public ConnectionFactory authenticationServiceConnectionFactory(final Vertx vertx) {
-        return new ConnectionFactoryImpl(vertx, authenticationServiceClientProperties());
-    }
-
-    @Bean
-    @Qualifier(AuthenticationConstants.QUALIFIER_AUTHENTICATION)
-    public AuthTokenHelper tokenValidator(final Vertx vertx) {
-        return forValidating(vertx, authenticationServiceClientProperties().getValidation());
-    }
-
-    @Bean
-    public HonoSaslAuthenticatorFactory authenticatorFactory(
-            @Autowired final Vertx vertx,
-            @Qualifier(AuthenticationConstants.QUALIFIER_AUTHENTICATION) final AuthTokenHelper validator) {
-
-        return new HonoSaslAuthenticatorFactory(vertx, validator);
-
-    }
+@ConfigProperties(prefix = ConfigBase.CONFIG_BASE + ".auth", namingStrategy = ConfigProperties.NamingStrategy.VERBATIM, failOnMismatchingMember = false)
+public class AuthenticationConfiguration extends AuthenticationServerClientConfig {
 }

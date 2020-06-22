@@ -5,5 +5,8 @@
 
 package io.enmasse.iot.model.v1;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
+@RegisterForReflection
 public class ServiceStatus extends CommonStatus {
 }

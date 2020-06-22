@@ -5,31 +5,17 @@
 
 package io.enmasse.iot.tenant.config;
 
-import org.eclipse.hono.config.ServerConfig;
-import org.eclipse.hono.service.VertxBasedHealthCheckServer;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+import io.enmasse.iot.tenant.config.compat.ServerConfig;
 import io.enmasse.iot.utils.ConfigBase;
-import io.vertx.core.Vertx;
+import io.quarkus.arc.config.ConfigProperties;
 
-@Configuration
-public class HealthConfiguration {
+@ConfigProperties(prefix = ConfigBase.CONFIG_BASE + ".health-check", namingStrategy = ConfigProperties.NamingStrategy.VERBATIM, failOnMismatchingMember = false)
+public class HealthConfiguration extends ServerConfig {
 
-    private static final String QUALIFIER = "health";
-
-    @Bean
-    @Qualifier(QUALIFIER)
-    @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".health-check")
-    public ServerConfig healthCheckConfigProperties() {
-        return new ServerConfig();
-    }
-
-    @Bean
-    public VertxBasedHealthCheckServer healthCheckServer (final Vertx vertx, @Qualifier(QUALIFIER) final ServerConfig config) {
-        return new VertxBasedHealthCheckServer(vertx, config);
+    public org.eclipse.hono.config.ServerConfig toHono() {
+        var result = new org.eclipse.hono.config.ServerConfig();
+        super.applyTo(result);
+        return result;
     }
 
 }

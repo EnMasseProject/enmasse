@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import io.fabric8.kubernetes.api.model.Doneable;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
 
@@ -25,6 +26,7 @@ import io.sundr.builder.annotations.Inline;
                 prefix = "Doneable",
                 value = "done"))
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@RegisterForReflection
 public class TenantConfiguration {
 
     private Boolean enabled;
@@ -34,8 +36,8 @@ public class TenantConfiguration {
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private Map<String, AdapterConfiguration> adapters;
 
-    private ObjectNode defaults;
-    private ObjectNode extensions;
+    private Map<String,Object> defaults;
+    private Map<String,Object> extensions;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private List<TrustAnchor> trustAnchors;
@@ -66,19 +68,19 @@ public class TenantConfiguration {
         this.adapters = adapters;
     }
 
-    public ObjectNode getDefaults() {
+    public Map<String,Object> getDefaults() {
         return defaults;
     }
 
-    public void setDefaults(ObjectNode defaults) {
+    public void setDefaults(Map<String,Object> defaults) {
         this.defaults = defaults;
     }
 
-    public ObjectNode getExtensions() {
+    public Map<String,Object> getExtensions() {
         return extensions;
     }
 
-    public void setExtensions(ObjectNode extensions) {
+    public void setExtensions(Map<String,Object> extensions) {
         this.extensions = extensions;
     }
 

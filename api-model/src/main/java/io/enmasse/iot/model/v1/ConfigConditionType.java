@@ -6,7 +6,9 @@
 package io.enmasse.iot.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
+@RegisterForReflection
 public enum ConfigConditionType {
 
     READY("Ready"),
