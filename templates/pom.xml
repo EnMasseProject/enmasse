@@ -9,6 +9,11 @@
   <packaging>pom</packaging>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>templates</artifactId>
+
+  <properties>
+    <image.version>latest</image.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -22,7 +27,7 @@
               <goal>single</goal>
             </goals>
             <configuration>
-              <finalName>${application.bundle.prefix}-${env.IMAGE_VERSION}</finalName>
+              <finalName>${application.bundle.prefix}-${image.version}</finalName>
               <appendAssemblyId>false</appendAssemblyId>
               <ignoreMissingDescriptor>false</ignoreMissingDescriptor>
               <descriptors>
@@ -35,4 +40,19 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>image-version-from-env</id>
+      <activation>
+        <property>
+          <name>env.IMAGE_VERSION</name>
+        </property>
+      </activation>
+      <properties>
+        <image.version>${env.IMAGE_VERSION}</image.version>
+      </properties>
+    </profile>
+  </profiles>
+
 </project>
