@@ -106,6 +106,7 @@
         <maven-surefire-plugin.version>3.0.0-M4</maven-surefire-plugin.version>
         <maven-site-plugin.version>3.5.1</maven-site-plugin.version>
         <maven-project-info-reports-plugin.version>2.9</maven-project-info-reports-plugin.version>
+        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
         <maven-enforcer-plugin.version>3.0.0-M2</maven-enforcer-plugin.version>
         <security-versions-plugin.version>1.0.6</security-versions-plugin.version>
         <dependency-check-maven-plugin.version>4.0.2</dependency-check-maven-plugin.version>
@@ -764,6 +765,11 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>properties-maven-plugin</artifactId>
                     <version>${properties-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${maven-assembly-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
