@@ -27,6 +27,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`broker.podTemplate.spec.affinity` |Specifies the affinity settings for the broker Pod so you can specify where on particular nodes a Pod runs, or if it cannot run together with other instances.
 |`broker.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the broker Pod so you can prioritize broker Pods over other Pods in the {KubePlatform} cluster.
 |`broker.podTemplate.spec.tolerations` |Specifies the toleration settings for the broker Pod, which allow this Pod to run on certain nodes on which other Pods cannot run.
+|`broker.podTemplate.spec.securityContext` |Specifies the link:{KubePlatformSecurityContextURL}[security context] for the broker Pod.
 |`broker.podTemplate.spec.containers.env` |Specifies environment variables for the broker Pod.
 |`broker.podTemplate.spec.containers.livenessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a broker Pod starts and the probe fails before restarting the container.
 |`broker.podTemplate.spec.containers.livenessProbe.initialDelaySeconds` |Specifies the probe delay value in seconds for the broker Pod.
@@ -47,6 +48,7 @@ This table shows the fields available for the standard infrastructure configurat
 |`router.podTemplate.spec.affinity` |Specifies the affinity settings for the router Pod so you can specify where on particular nodes a pod runs, or if it cannot run together with other instances.
 |`router.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the router Pod so you can prioritize router pods over other pods in the {KubePlatform} cluster.
 |`router.podTemplate.spec.tolerations` |Specifies the toleration settings for the router Pod, which allow this Pod to run on certain nodes on which other Pods cannot run.
+|`broker.podTemplate.spec.securityContext` |Specifies the link:{KubePlatformSecurityContextURL}[security context] for the router Pod.
 |`router.podTemplate.spec.containers.env` |Specifies the environment variables for the router Pod.
 |`router.podTemplate.spec.containers.livenessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a router Pod starts and the probe fails before restarting the container.
 |`router.podTemplate.spec.containers.livenessProbe.initialDelaySeconds` |Specifies the probe delay value in seconds for the router Pod.

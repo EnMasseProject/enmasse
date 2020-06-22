@@ -27,6 +27,7 @@ This table shows the fields available for the brokered infrastructure configurat
 |`broker.podTemplate.spec.affinity` |Specifies the affinity settings for the broker Pod so you can specify where on particular nodes a Pod runs, or if it cannot run together with other instances.
 |`broker.podTemplate.spec.priorityClassName` |Specifies the priority class to use for the broker Pod so you can prioritize broker Pods over other Pods in the {KubePlatform} cluster.
 |`broker.podTemplate.spec.tolerations` |Specifies the toleration settings for the broker Pod, which allows this Pod to run on certain nodes that other Pods cannot run on.
+|`broker.podTemplate.spec.securityContext` |Specifies the link:{KubePlatformSecurityContextURL}[security context] for the broker Pod.
 |`broker.podTemplate.spec.containers.env` |Specifies environment variables for the broker Pod.
 |`broker.podTemplate.spec.containers.livenessProbe.failureThreshold` |Specifies the number of times that {KubePlatform} tries when a broker Pod starts and the probe fails before restarting the container.
 |`broker.podTemplate.spec.containers.livenessProbe.initialDelaySeconds` |Specifies the probe delay value in seconds for the broker Pod.
