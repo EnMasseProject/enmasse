@@ -18,20 +18,20 @@ import {
   ConnectionDetailHeaderAttributes,
   MessagesDetailHeaderAttributes
 } from "modules/connection-detail/components";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
 
-// const styles = StyleSheet.create({
-//   expandable: {
-//     color: "rgb(0, 102, 204)"
-//   },
-//   flex_right_border: {
-//     paddingRight: "1em",
-//     borderRight: "0.05em solid",
-//     borderRightColor: "lightgrey"
-//   }
-// });
+const styles = StyleSheet.create({
+  expandable: {
+    color: "rgb(0, 102, 204)"
+  },
+  flex_right_border: {
+    paddingRight: "1em",
+    borderRight: "0.05em solid",
+    borderRightColor: "lightgrey"
+  }
+});
 export interface IConnectionHeaderDetailProps {
   hostname: string;
   containerId: string;
@@ -62,6 +62,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
 }) => {
   const [isHidden, setIsHidden] = useState(true);
   const { width } = useWindowDimensions();
+
   return (
     <Card>
       <CardTitle>
@@ -73,13 +74,13 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         <Flex>
           <FlexItem
             id="cd-header-container-id"
-            // className={css(styles.flex_right_border)}
+            className={css(styles.flex_right_border)}
           >
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem
             id="cd-header-protocol"
-            // className={css(styles.flex_right_border)}
+            className={css(styles.flex_right_border)}
           >
             <ConnectionProtocolFormat
               protocol={protocol}
@@ -102,7 +103,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
-              // className={css(styles.expandable)}
+              className={css(styles.expandable)}
             >
               {isHidden ? (
                 <>
@@ -121,7 +122,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           id="cd-header-connection-messages"
           direction={{ sm: "column", lg: "row" }}
         >
-          {width < 992 || !isHidden ? (
+          {(width < 992 || !isHidden) && (
             <>
               <ConnectionDetailHeaderAttributes
                 product={product}
@@ -137,8 +138,6 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                 addressSpaceType={addressSpaceType}
               />
             </>
-          ) : (
-            ""
           )}
         </Flex>
       </CardBody>

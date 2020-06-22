@@ -7,15 +7,15 @@ import React, { useState } from "react";
 import { useParams } from "react-router";
 //import {useQuery} from "@apollo/react-hooks";
 import { Flex, FlexItem, Button, ButtonVariant } from "@patternfly/react-core";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { AddGateways } from "modules/iot-device/components";
 import { useStoreContext, types } from "context-state-reducer";
 
-// const styles = StyleSheet.create({
-//   button_padding: {
-//     paddingTop: 100
-//   }
-// });
+const styles = StyleSheet.create({
+  button_padding: {
+    paddingTop: 100
+  }
+});
 
 export const AddGatewaysContainer = () => {
   const { deviceid } = useParams();
@@ -47,9 +47,7 @@ export const AddGatewaysContainer = () => {
         header={`Add gateways of device ${deviceid}`}
         returnGateways={getGateways}
       />
-      <Flex
-      // className={styles.button_padding}
-      >
+      <Flex className={css(styles.button_padding)}>
         <FlexItem>
           <Button
             id="ag-save-gateways-button"

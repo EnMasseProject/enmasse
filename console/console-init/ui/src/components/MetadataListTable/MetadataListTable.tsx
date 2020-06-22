@@ -13,19 +13,19 @@ import {
   DataListItemCells,
   Title
 } from "@patternfly/react-core";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { convertJsonToMetadataOptions } from "utils";
 import { TableRow, IRowOption } from "./TableRow";
 import { NoMetadataFound } from "./NoMetadataFound";
 
-// const styles = StyleSheet.create({
-//   header_magin_left: {
-//     marginLeft: 45
-//   },
-//   header_text_align_center: {
-//     textAlign: "center"
-//   }
-// });
+const styles = StyleSheet.create({
+  header_magin_left: {
+    marginLeft: 45
+  },
+  header_text_align_center: {
+    textAlign: "center"
+  }
+});
 
 interface IHeaderProps {
   headers?: string[];
@@ -51,16 +51,13 @@ const TableHeader: React.FC<IHeaderProps> = ({
   const dataListCells = () =>
     headers &&
     headers.map((header: string, index: number) => {
-      // const cssClass = classNames({
-      //   [styles.header_magin_left]: index === 0,
-      //   [styles.header_text_align_center]: index === 1 || index === 2
-      // });
+      const cssClass = classNames({
+        [css(styles.header_magin_left)]: index === 0,
+        [css(styles.header_text_align_center)]: index === 1 || index === 2
+      });
 
       return (
-        <DataListCell
-          key={index}
-          // className={cssClass}
-        >
+        <DataListCell key={index} className={cssClass}>
           <Title headingLevel="h6" size="md">
             {header}
           </Title>

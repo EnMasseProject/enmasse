@@ -14,8 +14,8 @@ import {
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { Divider } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
-// import { GridStylesForTableHeader } from "modules/address/AddressPage";
+import { css } from "aphrodite";
+import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import {
   AddressLinksContainer,
   AddressLinksToolbarContainer
@@ -65,7 +65,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
         <Title
           headingLevel="h2"
           size="lg"
-          // className={css(GridStylesForTableHeader.filter_left_margin)}
+          className={css(GridStylesForTableHeader.filter_left_margin)}
         >
           Links for address - {addressDisplayName}
         </Title>

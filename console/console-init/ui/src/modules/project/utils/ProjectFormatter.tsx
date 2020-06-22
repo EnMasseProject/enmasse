@@ -12,14 +12,14 @@ import {
 } from "@patternfly/react-icons";
 import { Flex, FlexItem } from "@patternfly/react-core";
 import { kFormatter } from "utils";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { ProjectTypes } from "./constant";
 
-// const style = StyleSheet.create({
-//   red_color: {
-//     color: "var(--pf-global--palette--red-100)"
-//   }
-// });
+const style = StyleSheet.create({
+  red_color: {
+    color: "var(--pf-global--palette--red-100)"
+  }
+});
 interface IProjectTypePlanProps {
   projectType: string;
   msgType?: string;
@@ -95,11 +95,7 @@ const ProjectError: React.FunctionComponent<IProjectErrorProps> = ({
     <>
       {errorCount &&
         (errorCount >= 25 ? (
-          <span
-          // className={css(style.red_color)}
-          >
-            {errorCount}%
-          </span>
+          <span className={css(style.red_color)}>{errorCount}%</span>
         ) : (
           errorCount + "%"
         ))}

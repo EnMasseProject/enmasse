@@ -11,7 +11,7 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { JsonEditor } from "components";
 import {
   AddJsonUsingTemplate,
@@ -23,16 +23,16 @@ import { types, MODAL_TYPES, useStoreContext } from "context-state-reducer";
 import { DeviceListAlert } from "modules/iot-device";
 import { TemplateType } from "constant";
 
-// const styles = StyleSheet.create({
-//   box_align_style: {
-//     minHeight: "40em",
-//     maxHeight: "40em",
-//     border: "1px solid",
-//     borderColor: "grey",
-//     padding: 20,
-//     marginRight: 20
-//   }
-// });
+const styles = StyleSheet.create({
+  box_align_style: {
+    minHeight: "40em",
+    maxHeight: "40em",
+    border: "1px solid",
+    borderColor: "grey",
+    padding: 20,
+    marginRight: 20
+  }
+});
 interface IAddDeviceWithJsonProps {}
 
 const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () => {
@@ -130,10 +130,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
 
       <br />
       <Grid>
-        <GridItem
-          span={9}
-          // className={css(styles.box_align_style)}
-        >
+        <GridItem span={9} className={css(styles.box_align_style)}>
           <JsonEditor
             value={deviceDetail}
             readOnly={false}
@@ -144,10 +141,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
             }}
           />
         </GridItem>
-        <GridItem
-          span={3}
-          // className={css(styles.box_align_style)}
-        >
+        <GridItem span={3} className={css(styles.box_align_style)}>
           <PageSection variant={PageSectionVariants.light}>
             <AddJsonUsingTemplate
               setDetail={setDeviceInfoInDetail}

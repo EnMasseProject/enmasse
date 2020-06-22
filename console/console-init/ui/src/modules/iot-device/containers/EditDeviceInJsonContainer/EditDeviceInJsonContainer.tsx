@@ -7,18 +7,18 @@ import React from "react";
 import { useParams } from "react-router";
 import { Flex, FlexItem, Button, ButtonVariant } from "@patternfly/react-core";
 import { Loading } from "use-patternfly";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { useQuery } from "@apollo/react-hooks";
 import { JsonEditor } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { RETURN_IOT_DEVICE_DETAIL } from "graphql-module";
 import { IDeviceDetailResponse } from "schema";
 
-// const styles = StyleSheet.create({
-//   editor_border: {
-//     border: "1px solid var(--pf-global--BorderColor--100)"
-//   }
-// });
+const styles = StyleSheet.create({
+  editor_border: {
+    border: "1px solid var(--pf-global--BorderColor--100)"
+  }
+});
 
 export const EditDeviceInJsonContainer = () => {
   const { dispatch } = useStoreContext();
@@ -69,7 +69,7 @@ export const EditDeviceInJsonContainer = () => {
       <JsonEditor
         readOnly={false}
         value={JSON.stringify(getDeviceJson(), undefined, 2)}
-        // className={styles.editor_border}
+        className={css(styles.editor_border)}
       />
       <br />
       <br />

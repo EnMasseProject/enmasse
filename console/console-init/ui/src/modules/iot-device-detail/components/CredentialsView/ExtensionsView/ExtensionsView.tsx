@@ -6,21 +6,21 @@
 import React from "react";
 import { Title, Grid, GridItem } from "@patternfly/react-core";
 import { Table, TableHeader, TableBody } from "@patternfly/react-table";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { convertJsonToMetadataOptions } from "utils";
 
-// const styles = StyleSheet.create({
-//   type: {
-//     textTransform: "capitalize"
-//   },
-//   row_margin: {
-//     marginBottom: 5
-//   },
-//   section_margin: {
-//     marginTop: 20,
-//     marginBottom: 10
-//   }
-// });
+const styles = StyleSheet.create({
+  type: {
+    textTransform: "capitalize"
+  },
+  row_margin: {
+    marginBottom: 5
+  },
+  section_margin: {
+    marginTop: 20,
+    marginBottom: 10
+  }
+});
 
 export interface IExtensionsViewProps {
   id: string;
@@ -65,13 +65,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
       { header: "parameter", title: key },
       {
         header: "type",
-        title: (
-          <span
-          // className={styles.type}
-          >
-            {typeLabel}
-          </span>
-        )
+        title: <span className={css(styles.type)}>{typeLabel}</span>
       },
       { header: "value", title: value }
     ];
@@ -82,10 +76,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
     <>
       {extOptions && extOptions.length > 0 && (
         <Grid id={id}>
-          <GridItem
-            span={12}
-            // className={styles.section_margin}
-          >
+          <GridItem span={12} className={css(styles.section_margin)}>
             {heading}
           </GridItem>
           <Table aria-label="extensions view table" cells={columns} rows={rows}>

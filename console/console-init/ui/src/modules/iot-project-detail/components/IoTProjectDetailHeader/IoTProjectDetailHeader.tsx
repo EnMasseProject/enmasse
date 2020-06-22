@@ -12,7 +12,7 @@ import {
   Badge,
   Switch
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithKebabToggle } from "components";
 
 interface IIoTProjectDetailHeaderProps {
@@ -25,41 +25,41 @@ interface IIoTProjectDetailHeaderProps {
   onDelete: (name: string) => void;
 }
 
-// export const project_header_styles = StyleSheet.create({
-//   flex_left_border: {
-//     paddingLeft: "1em",
-//     borderLeft: "0.05em solid",
-//     borderRightColor: "lightgrey"
-//   },
-//   address_space_icon_margin: {
-//     backgroundColor: "#EC7A08",
-//     fontSize: 25
-//   },
-//   address_icon_align: {
-//     paddingTop: 5,
-//     paddingRight: 16
-//   },
-//   kebab_toggle_margin: {
-//     marginTop: 20,
-//     marginLeft: 10,
-//     fontSize: 15
-//   },
-//   namespace_info_margin: {
-//     marginTop: 16,
-//     marginBottom: 24
-//   },
-//   no_bottom_padding: {
-//     paddingBottom: 0
-//   },
-//   badge_style: {
-//     backgroundColor: "#EC7A08",
-//     fontSize: 25,
-//     paddingLeft: 15,
-//     paddingRight: 15,
-//     paddingTop: 5,
-//     paddingBottom: 5
-//   }
-// });
+export const project_header_styles = StyleSheet.create({
+  flex_left_border: {
+    paddingLeft: "1em",
+    borderLeft: "0.05em solid",
+    borderRightColor: "lightgrey"
+  },
+  address_space_icon_margin: {
+    backgroundColor: "#EC7A08",
+    fontSize: 25
+  },
+  address_icon_align: {
+    paddingTop: 5,
+    paddingRight: 16
+  },
+  kebab_toggle_margin: {
+    marginTop: 20,
+    marginLeft: 10,
+    fontSize: 15
+  },
+  namespace_info_margin: {
+    marginTop: 16,
+    marginBottom: 24
+  },
+  no_bottom_padding: {
+    paddingBottom: 0
+  },
+  badge_style: {
+    backgroundColor: "#EC7A08",
+    fontSize: 25,
+    paddingLeft: 15,
+    paddingRight: 15,
+    paddingTop: 5,
+    paddingBottom: 5
+  }
+});
 
 const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderProps> = ({
   projectName,
@@ -81,14 +81,13 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   );
 
   const AddressDetailInFlex = () => (
-    // <Flex className={css(project_header_styles.namespace_info_margin)}>
-    <Flex>
+    <Flex className={css(project_header_styles.namespace_info_margin)}>
       <FlexItem id="iot-project-type">
         Type : <b>{type}</b>
       </FlexItem>
       <FlexItem
         id="iot-project-status"
-        // className={css(project_header_styles.flex_left_border)}
+        className={css(project_header_styles.flex_left_border)}
       >
         Status : <b>{status}</b>
       </FlexItem>
@@ -97,14 +96,8 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
 
   const AddressDetailLayout = () => (
     <>
-      <SplitItem
-      // className={css(project_header_styles.address_icon_align)}
-      >
-        <Badge
-        // className={css(project_header_styles.badge_style)}
-        >
-          IoT
-        </Badge>
+      <SplitItem className={css(project_header_styles.address_icon_align)}>
+        <Badge className={css(project_header_styles.badge_style)}>IoT</Badge>
       </SplitItem>
       <SplitItem>
         <AddressTitle />
@@ -156,19 +149,15 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      // className={css(project_header_styles.no_bottom_padding)}
+      className={css(project_header_styles.no_bottom_padding)}
     >
       <Split>
         <AddressDetailLayout />
         <SplitItem isFilled />
-        <SplitItem
-        // className={css(project_header_styles.kebab_toggle_margin)}
-        >
+        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
           <EnabledIcon />
         </SplitItem>
-        <SplitItem
-        // className={css(project_header_styles.kebab_toggle_margin)}
-        >
+        <SplitItem className={css(project_header_styles.kebab_toggle_margin)}>
           <KebabOptionsLayout />
         </SplitItem>
       </Split>
