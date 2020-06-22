@@ -43,7 +43,7 @@ ifeval::["{cmdcli}" == "oc"]
 endif::[]
 
 +
-You can override the namespace the `deploy` script installs the keys and certificates to, by
+You can override the namespace to which the `deploy` script installs the keys and certificates by
 setting the environment variable `NAMESPACE` when calling the script. For example:
 
 +
