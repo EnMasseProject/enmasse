@@ -868,6 +868,7 @@ public class SystemtestsKubernetesApps {
                                 "--destination=" + destinationImage,
                                 "--build-arg=MANIFESTS_IMAGE=" + olmManifestsImage,
                                 "--insecure-registry=true",
+                                "--insecure-pull",
                                 "--skip-tls-verify=true")
                         .withVolumeMounts(
                                 new VolumeMountBuilder()
