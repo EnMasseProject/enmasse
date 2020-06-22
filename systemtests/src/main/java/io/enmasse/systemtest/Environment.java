@@ -51,6 +51,8 @@ public class Environment {
     private static final String MONITORING_NAMESPACE_ENV = "MONITORING_NAMESPACE";
     private static final String TAG_ENV = "TAG";
     private static final String PRODUCT_NAME_ENV = "PRODUCT_NAME";
+    private static final String OPERATOR_NAME_ENV = "OPERATOR_NAME";
+    private static final String OPERATOR_CHANNEL_ENV = "OPERATOR_CHANNEL";
     private static final String INSTALL_TYPE = "INSTALL_TYPE";
     private static final String OLM_INSTALL_TYPE = "OLM_INSTALL_TYPE";
     private static final String SKIP_SAVE_STATE = "SKIP_SAVE_STATE";
@@ -81,6 +83,8 @@ public class Environment {
     private final String monitoringNamespace = getOrDefault(jsonEnv, MONITORING_NAMESPACE_ENV, "enmasse-monitoring");
     private final String tag = getOrDefault(jsonEnv, TAG_ENV, "latest");
     private final String productName = getOrDefault(jsonEnv, PRODUCT_NAME_ENV, "enmasse");
+    private final String operatorName = getOrDefault(jsonEnv, OPERATOR_NAME_ENV, "enmasse");
+    private final String operatorChannel = getOrDefault(jsonEnv, OPERATOR_CHANNEL_ENV, "alpha");
     private final boolean skipSaveState = getOrDefault(jsonEnv, SKIP_SAVE_STATE, Boolean::parseBoolean, false);
     private final boolean skipDeployInfinispan = getOrDefault(jsonEnv, SKIP_DEPLOY_INFINISPAN, Boolean::parseBoolean, false);
     private final boolean skipDeployPostgresql = getOrDefault(jsonEnv, SKIP_DEPLOY_POSTGRESQL, Boolean::parseBoolean, false);
@@ -354,5 +358,13 @@ public class Environment {
             LOGGER.warn("Json configuration not provider or not exists");
             return mapper.createObjectNode();
         }
+    }
+
+    public String getOperatorChannel() {
+        return operatorChannel;
+    }
+
+    public String getOperatorName() {
+        return operatorName;
     }
 }

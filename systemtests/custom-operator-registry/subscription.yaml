@@ -6,9 +6,9 @@ metadata:
   labels:
     app: enmasse
 spec:
-  name: enmasse
+  name: ${OPERATOR_NAME}
   source: ${CATALOG_SOURCE_NAME}
   sourceNamespace: ${CATALOG_NAMESPACE}
   startingCSV: ${CSV}
-  channel: alpha
+  channel: ${OPERATOR_CHANNEL}
   installPlanApproval: Automatic

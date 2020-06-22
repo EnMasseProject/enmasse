@@ -507,7 +507,7 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
         String catalogSourceName = "enmasse-source";
         String catalogNamespace = infraNamespace;
         //update subscription to point to new catalog and to use latest csv
-        operatorManager.olm().applySubscription(infraNamespace, catalogSourceName, catalogNamespace, csvName);
+        operatorManager.olm().applySubscription(infraNamespace, catalogSourceName, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
 
         //should update
         Thread.sleep(300_000);

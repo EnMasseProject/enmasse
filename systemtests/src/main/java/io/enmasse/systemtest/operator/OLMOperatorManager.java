@@ -78,7 +78,7 @@ public class OLMOperatorManager {
             KubeCMDClient.applyFromFile(namespace, operatorGroupFile);
         }
 
-        applySubscription(namespace, catalogSourceName, catalogNamespace, csvName);
+        applySubscription(namespace, catalogSourceName, catalogNamespace, csvName, Environment.getInstance().getOperatorName(), Environment.getInstance().getOperatorChannel());
 
         TestUtils.waitForPodReady("enmasse-operator", namespace);
 
@@ -89,11 +89,13 @@ public class OLMOperatorManager {
         SystemtestsKubernetesApps.cleanBuiltContainerImages(kube);
     }
 
-    public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName) throws IOException {
+    public void applySubscription(String installationNamespace, String catalogSourceName, String catalogNamespace, String csvName, String operatorName, String operatorChannel) throws IOException {
         Path subscriptionFile = Files.createTempFile("subscription", ".yaml");
         String subscription = Files.readString(Paths.get("custom-operator-registry", "subscription.yaml"));
         Files.writeString(subscriptionFile,
                 subscription
+                    .replaceAll("\\$\\{OPERATOR_NAME}", operatorName)
+                    .replaceAll("\\$\\{OPERATOR_CHANNEL}", operatorChannel)
                     .replaceAll("\\$\\{OPERATOR_NAMESPACE}", installationNamespace)
                     .replaceAll("\\$\\{CATALOG_SOURCE_NAME}", catalogSourceName)
                     .replaceAll("\\$\\{CATALOG_NAMESPACE}", catalogNamespace)
