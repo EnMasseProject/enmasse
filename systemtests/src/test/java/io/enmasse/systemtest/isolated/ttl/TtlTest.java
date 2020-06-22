@@ -76,32 +76,39 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
     @ParameterizedTest(name = "testAddressSpecified-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressSpecified(String type) throws Exception {
-        doTestTtl(type, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
                 new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testAddressPlanSpecifiedTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressPlanSpecified(String type) throws Exception {
-        doTestTtl(type, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
                 new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testOverriding-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testOverriding(String type) throws Exception {
-        doTestTtl(type, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), new TtlBuilder().withMinimum(550L).withMaximum(6000L).build(),
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), new TtlBuilder().withMinimum(550L).withMaximum(6000L).build(),
                 new TtlBuilder().withMinimum(550L /* higher addr min takes priority */).withMaximum(5000L /* lower max plan takes priority */).build());
     }
 
     @ParameterizedTest(name = "testAddressPlanSpecifiedMaxTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressPlanSpecifiedMaxTtl(String type) throws Exception {
-        doTestTtl(type, new TtlBuilder().withMaximum(5000L).build(), null,
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMaximum(5000L).build(), null,
                 new TtlBuilder().withMaximum(5000L).build());
     }
 
-    private void doTestTtl(String type, Ttl addrPlanTtl, Ttl addrTtl, Ttl expectedTtl) throws Exception {
+    @ParameterizedTest(name = "testTopicAddressSpecified-{0}-space")
+    @ValueSource(strings = {"standard"})
+    void testTopicAddressSpecified(String type) throws Exception {
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.TOPIC, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
+                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
+    }
+
+    private void doTestTtl(AddressSpaceType addressSpaceType, AddressType addressType, Ttl addrPlanTtl, Ttl addrTtl, Ttl expectedTtl) throws Exception {
         final String infraConfigName = "ttl-infra";
         final String spacePlanName = "space-plan-ttl";
         final String addrPlanName = "addr-plan-ttl";
@@ -116,9 +123,9 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                         .withName("broker-plugin")
                         .withEnv(new EnvVar("MESSAGE_EXPIRY_SCAN_PERIOD", String.format("%d", messageExpiryScanPeriod), null)).build()).endSpec().build();
 
-        if ("standard".equals(type)) {
+        if (AddressSpaceType.STANDARD == addressSpaceType) {
             baseSpacePlan =  AddressSpacePlans.STANDARD_SMALL;
-            baseAddressPlan = DestinationPlan.STANDARD_MEDIUM_QUEUE;
+            baseAddressPlan = addressType == AddressType.QUEUE ? DestinationPlan.STANDARD_MEDIUM_QUEUE : DestinationPlan.STANDARD_SMALL_TOPIC;
             StandardInfraConfig infraConfig = isolatedResourcesManager.getStandardInfraConfig("default");
             StandardInfraConfig ttlInfra = new StandardInfraConfigBuilder()
                     .withNewMetadata()
@@ -133,7 +140,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             isolatedResourcesManager.createInfraConfig(ttlInfra);
         } else {
             baseSpacePlan =  AddressSpacePlans.BROKERED;
-            baseAddressPlan = DestinationPlan.BROKERED_QUEUE;
+            baseAddressPlan = addressType == AddressType.QUEUE ? DestinationPlan.BROKERED_QUEUE : DestinationPlan.BROKERED_TOPIC;
             BrokeredInfraConfig infraConfig = isolatedResourcesManager.getBrokeredInfraConfig("default");
             BrokeredInfraConfig ttlInfra = new BrokeredInfraConfigBuilder()
                     .withNewMetadata()
@@ -188,59 +195,66 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                 .endSpec()
                 .build();
 
-        Address addrWithTtl = new AddressBuilder()
+        Address addr = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(kubernetes.getInfraNamespace())
                 .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-ttl"))
                 .endMetadata()
                 .withNewSpec()
-                .withType(AddressType.QUEUE.toString())
+                .withType(addressType.toString())
                 .withTtl(addrTtl)
                 .withAddress("message-ttl")
                 .withPlan(addrPlan.getMetadata().getName())
                 .endSpec()
                 .build();
         isolatedResourcesManager.createAddressSpace(addressSpace);
-        isolatedResourcesManager.setAddresses(addrWithTtl);
+        isolatedResourcesManager.setAddresses(addr);
 
-        assertTtlStatus(addrWithTtl, expectedTtl);
-        awaitAddressSettingsSync(addressSpace, addrWithTtl, expectedTtl);
+        Address recvAddr;
+        if (addressType == AddressType.TOPIC && AddressSpaceType.STANDARD == addressSpaceType) {
+                recvAddr = new AddressBuilder()
+                        .withNewMetadata()
+                        .withNamespace(kubernetes.getInfraNamespace())
+                        .withName(AddressUtils.generateAddressMetadataName(addressSpace, "message-ttl-sub"))
+                        .endMetadata()
+                        .withNewSpec()
+                        .withType(AddressType.SUBSCRIPTION.toString())
+                        .withTtl(addrTtl)
+                        .withAddress("message-ttl-sub")
+                        .withTopic(addr.getSpec().getAddress())
+                        .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
+                        .endSpec()
+                        .build();
+                isolatedResourcesManager.setAddresses(recvAddr);
+        } else {
+            recvAddr = addr;
+        }
+
+        assertTtlStatus(addr, expectedTtl);
+        awaitAddressSettingsSync(addressSpace, addr, expectedTtl);
 
         UserCredentials user = new UserCredentials("user", "passwd");
         isolatedResourcesManager.createOrUpdateUser(addressSpace, user);
 
-        try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
-            client.getConnectOptions().setCredentials(user);
+        final List<Message> messages = new ArrayList<>();
+        long minimum = expectedTtl.getMinimum() == null ? 0 : expectedTtl.getMinimum();
+        long maximum = expectedTtl.getMaximum();
+        List.of(0L,
+                (maximum - minimum / 2) + minimum,
+                Duration.ofDays(1).toMillis()).forEach(expiry -> {
+            Message msg = Message.Factory.create();
+            msg.setAddress(addr.getSpec().getAddress());
+            msg.setDurable(true);
+            if (expiry > 0) {
+                msg.setExpiryTime(expiry);
+            }
+            messages.add(msg);
+        });
 
-            List<Message> messages = new ArrayList<>();
-            AtomicInteger count = new AtomicInteger();
-            long minimum = expectedTtl.getMinimum() == null ? 0 : expectedTtl.getMinimum();
-            long maximum = expectedTtl.getMaximum();
-            List.of(0L,
-                    (maximum - minimum / 2) + minimum,
-                    Duration.ofDays(1).toMillis()).forEach(expiry -> {
-                Message msg = Message.Factory.create();
-                msg.setAddress(addrWithTtl.getSpec().getAddress());
-                msg.setDurable(true);
-                if (expiry > 0) {
-                    msg.setExpiryTime(expiry);
-                }
-                messages.add(msg);
-            });
-
-            CompletableFuture<Integer> sent = client.sendMessages(addrWithTtl.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
-            assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
-
-            Thread.sleep((expectedTtl.getMaximum() + messageExpiryScanPeriod * 2));  // Give sufficient time for the expected expiration
-
-            assertThrows(TimeoutException.class, () -> {
-                List<Message> received = client.recvMessages(addrWithTtl.getSpec().getAddress(), (message) -> true).get(20, TimeUnit.SECONDS);
-                assertThat("all messages should have expired", received.size(), is(0));
-            });
-        }
+        doSendReceive(addressSpace, addr, recvAddr, user, messages, expectedTtl.getMaximum() + messageExpiryScanPeriod * 2, false);
 
         // Now remove the TTL restriction from the plan/address
-        // and send
+        // and send again to confirm that messages are no longer subjected to TTL
         if (addrPlan.getSpec().getTtl() != null) {
             isolatedResourcesManager.replaceAddressPlan(new AddressPlanBuilder()
                     .withMetadata(addrPlan.getMetadata())
@@ -250,10 +264,10 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                     .build());
         }
 
-        if (addrWithTtl.getSpec().getTtl() != null) {
+        if (addr.getSpec().getTtl() != null) {
             isolatedResourcesManager.replaceAddress(new AddressBuilder()
-                    .withMetadata(addrWithTtl.getMetadata())
-                    .withNewSpecLike(addrWithTtl.getSpec())
+                    .withMetadata(addr.getMetadata())
+                    .withNewSpecLike(addr.getSpec())
                     .withTtl(new Ttl())
                     .endSpec()
                     .build());
@@ -261,31 +275,46 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
 
         TestUtils.waitUntilCondition(() -> {
             try {
-                assertTtlStatus(addrWithTtl, null);
+                assertTtlStatus(addr, null);
                 return true;
             } catch (Exception | AssertionError e) {
                 return false;
             }
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
 
-        awaitAddressSettingsSync(addressSpace, addrWithTtl, new Ttl());
+        awaitAddressSettingsSync(addressSpace, addr, new Ttl());
 
-        try(AmqpClient client = getAmqpClientFactory().createQueueClient(addressSpace)) {
+        Message msg = Message.Factory.create();
+        msg.setAddress(addr.getSpec().getAddress());
+        msg.setDurable(true);
+
+        doSendReceive(addressSpace, addr, recvAddr, user, List.of(msg), messageExpiryScanPeriod * 2, true);
+    }
+
+    private void doSendReceive(AddressSpace addressSpace, Address sendAddr, Address recvAddr, UserCredentials user, List<Message> messages, long waitTime, boolean expectReceive) throws Exception {
+        AddressType addressType = AddressType.getEnum(sendAddr.getSpec().getType());
+        try(AmqpClient client = addressType == AddressType.TOPIC ? getAmqpClientFactory().createTopicClient(addressSpace) : getAmqpClientFactory().createQueueClient(addressSpace)) {
             client.getConnectOptions().setCredentials(user);
 
-            AtomicInteger count = new AtomicInteger();
-            Message msg = Message.Factory.create();
-            msg.setAddress(addrWithTtl.getSpec().getAddress());
-            msg.setDurable(true);
-            List<Message> messages = List.of(msg);
+            // TODO: for a brokered topic test, we need to be able to create the receiver first but not grant credit until after the
+            // messages are sent.  The test framework does not currently permit this.
 
-            CompletableFuture<Integer> sent = client.sendMessages(addrWithTtl.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
+            AtomicInteger count = new AtomicInteger();
+            CompletableFuture<Integer> sent = client.sendMessages(sendAddr.getSpec().getAddress(), messages, (message -> count.getAndIncrement()  == messages.size()));
             assertThat("all messages should have been sent", sent.get(20, TimeUnit.SECONDS), is(messages.size()));
 
-            Thread.sleep(messageExpiryScanPeriod * 2);  // Give sufficient time for an erroneous expiration
+            Thread.sleep(waitTime);  // Give sufficient time for an expiration
 
-            Future<List<Message>> received = client.recvMessages(addrWithTtl.getSpec().getAddress(),1);
-            assertThat("message should not have expired", received.get(20, TimeUnit.SECONDS).size(), is(1));
+            String recvAddress = AddressType.getEnum(recvAddr.getSpec().getType()) == AddressType.SUBSCRIPTION ?  sendAddr.getSpec().getAddress() + "::" + recvAddr.getSpec().getAddress() : recvAddr.getSpec().getAddress();
+            if (expectReceive) {
+                Future<List<Message>> received = client.recvMessages(recvAddress, messages.size());
+                assertThat("message should not have expired", received.get(20, TimeUnit.SECONDS).size(), is(messages.size()));
+            } else {
+                assertThrows(TimeoutException.class, () -> {
+                    List<Message> received = client.recvMessages(recvAddress, (message) -> true).get(20, TimeUnit.SECONDS);
+                    assertThat("all messages should have expired", received.size(), is(0));
+                });
+            }
         }
     }
 
@@ -330,21 +359,18 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             brokers.add(brokerPods.get(0).getMetadata().getName());
         }
 
-        brokers.forEach(name -> {
-            TestUtils.waitUntilCondition(() -> {
-                Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, name, supportCredentials, addr.getSpec().getAddress());
-                long minExpiryDelay = ((Number) actualSettings.get("minExpiryDelay")).longValue();
-                long maxExpiryDelay = ((Number) actualSettings.get("maxExpiryDelay")).longValue();
-                boolean b = expiryEquals(minExpiryDelay, expectedTtl.getMinimum()) &&
-                        expiryEquals(maxExpiryDelay, expectedTtl.getMaximum());
-                if (!b) {
-                    log.info("Address {} on broker {} does not have expected TTL values {}, actual expiry min: {} max: {}",
-                            addr.getMetadata().getName(), name, expectedTtl, maxExpiryDelay, maxExpiryDelay);
-                }
-                return b;
-            }, Duration.ofMinutes(2), Duration.ofSeconds(5));
-
-        });
+        brokers.forEach(name -> TestUtils.waitUntilCondition(() -> {
+            Map<String, Object> actualSettings = ArtemisUtils.getAddressSettings(kubernetes, name, supportCredentials, addr.getSpec().getAddress());
+            long minExpiryDelay = ((Number) actualSettings.get("minExpiryDelay")).longValue();
+            long maxExpiryDelay = ((Number) actualSettings.get("maxExpiryDelay")).longValue();
+            boolean b = expiryEquals(minExpiryDelay, expectedTtl.getMinimum()) &&
+                    expiryEquals(maxExpiryDelay, expectedTtl.getMaximum());
+            if (!b) {
+                log.info("Address {} on broker {} does not have expected TTL values {}, actual expiry min: {} max: {}",
+                        addr.getMetadata().getName(), name, expectedTtl, maxExpiryDelay, maxExpiryDelay);
+            }
+            return b;
+        }, Duration.ofMinutes(2), Duration.ofSeconds(5)));
     }
 
     private boolean expiryEquals(long artemisExpiry, Long ttlExpiry) {

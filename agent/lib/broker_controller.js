@@ -606,7 +606,7 @@ BrokerController.prototype._set_sync_status = function (stale, missing) {
 BrokerController.prototype._sync_broker_addresses = function (retry) {
     var self = this;
     return this.broker.listAddresses().then(function (results) {
-        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue'));
+        var addrSettings = self.sync_addresssettings(values(self.addresses).filter((o) => o.type === 'subscription' || o.type === 'queue' || o.type === 'topic'));
         var actual = translate(results, excluded_addresses, self.excluded_types);
         var stale = values(difference(actual, self.addresses, same_address));
         var missing = values(difference(self.addresses, actual, same_address));
@@ -737,7 +737,7 @@ BrokerController.prototype.generate_address_settings = function (address, global
     if (address.status) {
         var addressSettings = clone(this.root_address_settings);
         var upd = 0;
-        if (address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0) {
+        if (address.status.planStatus && address.status.planStatus.resources && address.status.planStatus.resources.broker > 0 && (address.type === 'subscription' || address.type === 'queue')) {
             var planStatus = address.status.planStatus;
 
             var r = planStatus.resources.broker;
@@ -755,7 +755,7 @@ BrokerController.prototype.generate_address_settings = function (address, global
                 upd++;
             }
         }
-        if (address.status.ttl) {
+        if (address.status.ttl && (address.type === 'topic' || address.type === 'queue')) {
             if (address.status.ttl.minimum) {
                 addressSettings.minExpiryDelay = address.status.ttl.minimum;
                 upd++;
