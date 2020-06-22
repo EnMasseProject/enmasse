@@ -90,7 +90,7 @@ spec:
           type: string
         addressType:
           type: string
-        ttl:
+        messageTtl:
           type: object
           description: "Restricts message time-to-live (TTL). Applies to address types queue and topic only."
           properties:

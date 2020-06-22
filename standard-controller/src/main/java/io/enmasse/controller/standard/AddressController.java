@@ -822,9 +822,9 @@ public class AddressController implements Watcher<Address> {
     }
 
     private void updateMessageTtlStatus(AddressPlan addressPlan, Address address) {
-        TtlBuilder status = new TtlBuilder();
+        MessageTtlBuilder status = new MessageTtlBuilder();
 
-        Ttl planTtl = addressPlan.getTtl();
+        MessageTtl planTtl = addressPlan.getTtl();
         if (planTtl != null) {
             Long min = sanitizeTtlValue(planTtl.getMinimum());
             Long max = sanitizeTtlValue(planTtl.getMaximum());
@@ -838,7 +838,7 @@ public class AddressController implements Watcher<Address> {
             }
         }
 
-        Ttl addrTtl = address.getSpec().getTtl();
+        MessageTtl addrTtl = address.getSpec().getMessageTtl();
         if (addrTtl != null) {
             Long min = sanitizeTtlValue(addrTtl.getMinimum());
             Long max = sanitizeTtlValue(addrTtl.getMaximum());
@@ -852,7 +852,7 @@ public class AddressController implements Watcher<Address> {
             }
         }
 
-        address.getStatus().setTtl(status.hasMaximum() || status.hasMinimum() ? status.build() : null);
+        address.getStatus().setMessageTtl(status.hasMaximum() || status.hasMinimum() ? status.build() : null);
 
     }
 

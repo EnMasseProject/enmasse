@@ -189,7 +189,7 @@ describe('broker controller', function() {
 
     it('get address settings async - returns ttl settings', function(done) {
         var brokerAddressSettings =  new broker_controller.BrokerController(undefined, config);
-        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {ttl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
+        brokerAddressSettings.get_address_settings_async({address:'foo',type:'queue', plan: 'small-queue', status: {messageTtl: {minimum: 1000, maximum: 2000}}}, Promise.resolve(undefined)).then(function (result) {
             assert.equal(1000, result.minExpiryDelay);
             assert.equal(2000, result.maxExpiryDelay);
             done();

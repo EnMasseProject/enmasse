@@ -9,8 +9,8 @@ import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
 import io.enmasse.address.model.BrokerStatus;
-import io.enmasse.address.model.Ttl;
-import io.enmasse.address.model.TtlBuilder;
+import io.enmasse.address.model.MessageTtl;
+import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.admin.model.v1.AddressPlan;
 import io.enmasse.admin.model.v1.AddressPlanBuilder;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
@@ -70,45 +70,45 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(ISOLATED)
 @Tag(ACCEPTANCE)
-class TtlTest extends TestBase implements ITestBaseIsolated {
+class MessageTtlTest extends TestBase implements ITestBaseIsolated {
     private static Logger log = CustomLogger.getLogger();
 
     @ParameterizedTest(name = "testAddressSpecified-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressSpecified(String type) throws Exception {
-        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
-                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, null, new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
+                new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testAddressPlanSpecifiedTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressPlanSpecified(String type) throws Exception {
-        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
-                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build(), null,
+                new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testOverriding-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testOverriding(String type) throws Exception {
-        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(), new TtlBuilder().withMinimum(550L).withMaximum(6000L).build(),
-                new TtlBuilder().withMinimum(550L /* higher addr min takes priority */).withMaximum(5000L /* lower max plan takes priority */).build());
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build(), new MessageTtlBuilder().withMinimum(550L).withMaximum(6000L).build(),
+                new MessageTtlBuilder().withMinimum(550L /* higher addr min takes priority */).withMaximum(5000L /* lower max plan takes priority */).build());
     }
 
     @ParameterizedTest(name = "testAddressPlanSpecifiedMaxTtl-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
     void testAddressPlanSpecifiedMaxTtl(String type) throws Exception {
-        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new TtlBuilder().withMaximum(5000L).build(), null,
-                new TtlBuilder().withMaximum(5000L).build());
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.QUEUE, new MessageTtlBuilder().withMaximum(5000L).build(), null,
+                new MessageTtlBuilder().withMaximum(5000L).build());
     }
 
     @ParameterizedTest(name = "testTopicAddressSpecified-{0}-space")
     @ValueSource(strings = {"standard"})
     void testTopicAddressSpecified(String type) throws Exception {
-        doTestTtl(AddressSpaceType.getEnum(type), AddressType.TOPIC, null, new TtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
-                new TtlBuilder().withMinimum(500L).withMaximum(5000L).build());
+        doTestTtl(AddressSpaceType.getEnum(type), AddressType.TOPIC, null, new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build(),
+                new MessageTtlBuilder().withMinimum(500L).withMaximum(5000L).build());
     }
 
-    private void doTestTtl(AddressSpaceType addressSpaceType, AddressType addressType, Ttl addrPlanTtl, Ttl addrTtl, Ttl expectedTtl) throws Exception {
+    private void doTestTtl(AddressSpaceType addressSpaceType, AddressType addressType, MessageTtl addrPlanTtl, MessageTtl addrTtl, MessageTtl expectedTtl) throws Exception {
         final String infraConfigName = "ttl-infra";
         final String spacePlanName = "space-plan-ttl";
         final String addrPlanName = "addr-plan-ttl";
@@ -163,7 +163,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                 .withName(addrPlanName)
                 .endMetadata()
                 .withNewSpecLike(smallPlan.getSpec())
-                .withTtl(addrPlanTtl)
+                .withMessageTtl(addrPlanTtl)
                 .endSpec()
                 .build();
 
@@ -202,7 +202,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                 .endMetadata()
                 .withNewSpec()
                 .withType(addressType.toString())
-                .withTtl(addrTtl)
+                .withMessageTtl(addrTtl)
                 .withAddress("message-ttl")
                 .withPlan(addrPlan.getMetadata().getName())
                 .endSpec()
@@ -219,7 +219,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
                         .endMetadata()
                         .withNewSpec()
                         .withType(AddressType.SUBSCRIPTION.toString())
-                        .withTtl(addrTtl)
+                        .withMessageTtl(addrTtl)
                         .withAddress("message-ttl-sub")
                         .withTopic(addr.getSpec().getAddress())
                         .withPlan(DestinationPlan.STANDARD_SMALL_SUBSCRIPTION)
@@ -255,20 +255,20 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
 
         // Now remove the TTL restriction from the plan/address
         // and send again to confirm that messages are no longer subjected to TTL
-        if (addrPlan.getSpec().getTtl() != null) {
+        if (addrPlan.getSpec().getMessageTtl() != null) {
             isolatedResourcesManager.replaceAddressPlan(new AddressPlanBuilder()
                     .withMetadata(addrPlan.getMetadata())
                     .withNewSpecLike(addrPlan.getSpec())
-                    .withTtl(new Ttl())
+                    .withMessageTtl(new MessageTtl())
                     .endSpec()
                     .build());
         }
 
-        if (addr.getSpec().getTtl() != null) {
+        if (addr.getSpec().getMessageTtl() != null) {
             isolatedResourcesManager.replaceAddress(new AddressBuilder()
                     .withMetadata(addr.getMetadata())
                     .withNewSpecLike(addr.getSpec())
-                    .withTtl(new Ttl())
+                    .withMessageTtl(new MessageTtl())
                     .endSpec()
                     .build());
         }
@@ -282,7 +282,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
             }
         }, Duration.ofMinutes(2), Duration.ofSeconds(15));
 
-        awaitAddressSettingsSync(addressSpace, addr, new Ttl());
+        awaitAddressSettingsSync(addressSpace, addr, new MessageTtl());
 
         Message msg = Message.Factory.create();
         msg.setAddress(addr.getSpec().getAddress());
@@ -318,21 +318,21 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
         }
     }
 
-    private void assertTtlStatus(Address addrWithTtl, Ttl expectedTtl) {
+    private void assertTtlStatus(Address addrWithTtl, MessageTtl expectedTtl) {
         Address reread = resourcesManager.getAddress(addrWithTtl.getMetadata().getNamespace(), addrWithTtl);
         if (expectedTtl == null) {
-            assertThat(reread.getStatus().getTtl(), nullValue());
+            assertThat(reread.getStatus().getMessageTtl(), nullValue());
         } else {
-            assertThat(reread.getStatus().getTtl(), notNullValue());
+            assertThat(reread.getStatus().getMessageTtl(), notNullValue());
             if (expectedTtl.getMinimum() != null) {
-                assertThat(reread.getStatus().getTtl().getMinimum(), is(expectedTtl.getMinimum()));
+                assertThat(reread.getStatus().getMessageTtl().getMinimum(), is(expectedTtl.getMinimum()));
             } else {
-                assertThat(reread.getStatus().getTtl().getMinimum(), nullValue());
+                assertThat(reread.getStatus().getMessageTtl().getMinimum(), nullValue());
             }
             if (expectedTtl.getMaximum() != null) {
-                assertThat(reread.getStatus().getTtl().getMaximum(), is(expectedTtl.getMaximum()));
+                assertThat(reread.getStatus().getMessageTtl().getMaximum(), is(expectedTtl.getMaximum()));
             } else {
-                assertThat(reread.getStatus().getTtl().getMaximum(), nullValue());
+                assertThat(reread.getStatus().getMessageTtl().getMaximum(), nullValue());
             }
 
         }
@@ -341,7 +341,7 @@ class TtlTest extends TestBase implements ITestBaseIsolated {
     // It'd be better if the address's status reflected when the expiry/address settings spaces were applied
     // but with out current architecture, agent (for the standard case) doesn't write the address status.
     // For now peep at the broker(s)
-    private void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr, Ttl expectedTtl) {
+    private void awaitAddressSettingsSync(AddressSpace addressSpace, Address addr, MessageTtl expectedTtl) {
 
         UserCredentials supportCredentials = ArtemisUtils.getSupportCredentials(addressSpace);
         List<String> brokers = new ArrayList<>();

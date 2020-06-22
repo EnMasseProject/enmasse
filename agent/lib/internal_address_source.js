@@ -75,7 +75,7 @@ function same_address_definition_and_allocation(a, b) {
     return same_address_definition(a, b)
         && same_allocation(a.allocated_to, b.allocated_to)
         && same_plan_status(a.status ? a.status.planStatus : undefined, b.status ? b.status.planStatus : undefined)
-        && myutils.same_ttl(a.status ? a.status.ttl : undefined, b.status ? b.status.ttl : undefined);
+        && myutils.same_ttl(a.status ? a.status.messageTtl : undefined, b.status ? b.status.messageTtl : undefined);
 }
 
 function same_address_definition(a, b) {
@@ -85,7 +85,7 @@ function same_address_definition(a, b) {
         && a.address === b.address
         && a.type === b.type
         && a.plan === b.plan
-        && myutils.same_ttl(a.ttl, b.ttl);
+        && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function same_address_status(a, b) {
@@ -96,7 +96,7 @@ function same_address_status(a, b) {
         && a.phase === b.phase
         && myutils.same_status_messages(a.messages, b.messages)
         && same_plan_status(a.planStatus, b.planStatus)
-        && myutils.same_ttl(a.ttl, b.ttl);
+        && myutils.same_ttl(a.messageTtl, b.messageTtl);
 }
 
 function same_address_definition_and_status(a, b) {
@@ -258,22 +258,22 @@ AddressSource.prototype.update_status = function (record, ready) {
 
             var minimumTtl;
             var maximumTtl;
-            if (planDef.spec && planDef.spec.ttl && planDef.spec.ttl.minimum) {
-                minimumTtl = sanitizeTtlValue(planDef.spec.ttl.minimum);
+            if (planDef.spec && planDef.spec.messageTtl && planDef.spec.messageTtl.minimum) {
+                minimumTtl = sanitizeTtlValue(planDef.spec.messageTtl.minimum);
             }
-            if (planDef.spec && planDef.spec.ttl && planDef.spec.ttl.maximum) {
-                maximumTtl = sanitizeTtlValue(planDef.spec.ttl.maximum);
+            if (planDef.spec && planDef.spec.messageTtl && planDef.spec.messageTtl.maximum) {
+                maximumTtl = sanitizeTtlValue(planDef.spec.messageTtl.maximum);
             }
             if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
                 maximumTtl = undefined;
                 minimumTtl = undefined;
             }
 
-            if (address.spec.ttl && address.spec.ttl.minimum && (minimumTtl === undefined || address.spec.ttl.minimum > minimumTtl)) {
-                minimumTtl = address.spec.ttl.minimum;
+            if (address.spec.messageTtl && address.spec.messageTtl.minimum && (minimumTtl === undefined || address.spec.messageTtl.minimum > minimumTtl)) {
+                minimumTtl = address.spec.messageTtl.minimum;
             }
-            if (address.spec.ttl && address.spec.ttl.maximum && (maximumTtl === undefined || address.spec.ttl.maximum < maximumTtl)) {
-                maximumTtl = address.spec.ttl.maximum;
+            if (address.spec.messageTtl && address.spec.messageTtl.maximum && (maximumTtl === undefined || address.spec.messageTtl.maximum < maximumTtl)) {
+                maximumTtl = address.spec.messageTtl.maximum;
             }
             if (maximumTtl && minimumTtl && minimumTtl > maximumTtl) {
                 maximumTtl = undefined;
@@ -281,17 +281,17 @@ AddressSource.prototype.update_status = function (record, ready) {
             }
 
             if (minimumTtl || maximumTtl) {
-                address.status.ttl = {};
-                if (address.status.ttl.minimum !== minimumTtl) {
-                    address.status.ttl.minimum = minimumTtl;
+                address.status.messageTtl = {};
+                if (address.status.messageTtl.minimum !== minimumTtl) {
+                    address.status.messageTtl.minimum = minimumTtl;
                     updated++;
                 }
-                if (address.status.ttl.maximum !== maximumTtl) {
-                    address.status.ttl.maximum = maximumTtl;
+                if (address.status.messageTtl.maximum !== maximumTtl) {
+                    address.status.messageTtl.maximum = maximumTtl;
                     updated++;
                 }
             } else {
-                delete address.status.ttl;
+                delete address.status.messageTtl;
                 updated++;
             }
         } else {

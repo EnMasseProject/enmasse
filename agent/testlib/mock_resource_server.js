@@ -393,7 +393,7 @@ AddressServer.prototype.add_address_plan = function (params) {
             longDescription: params.longDescription,
             displayOrder: params.displayOrder,
             addressType: params.address_type,
-            ttl: params.ttl,
+            messageTtl: params.messageTtl,
         }
     };
     if (params.resources) {
@@ -412,7 +412,7 @@ AddressServer.prototype.update_address_plan = function (params) {
             longDescription: params.longDescription,
             displayOrder: params.displayOrder,
             addressType: params.address_type,
-            ttl: params.ttl,
+            messageTtl: params.messageTtl,
         }
     };
     if (params.required_resources) {

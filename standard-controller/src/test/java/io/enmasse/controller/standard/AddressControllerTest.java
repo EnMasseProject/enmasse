@@ -36,8 +36,9 @@ import io.enmasse.address.model.AddressSpecForwarderDirection;
 import io.enmasse.address.model.AddressStatus;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
+import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.address.model.Phase;
-import io.enmasse.address.model.TtlBuilder;
+
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.AddressApi;
 import io.enmasse.k8s.api.AddressSpaceApi;
@@ -653,7 +654,7 @@ public class AddressControllerTest {
 
         a1 = captured.get(0);
         assertEquals(Phase.Configuring, a1.getStatus().getPhase());
-        assertNull(a1.getStatus().getTtl());
+        assertNull(a1.getStatus().getMessageTtl());
     }
 
     @Test
@@ -673,7 +674,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a1")
-                .withTtl(new TtlBuilder().withMaximum(30000L).build())
+                .withMessageTtl(new MessageTtlBuilder().withMaximum(30000L).build())
                 .endSpec()
                 .build();
 
@@ -683,7 +684,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a2")
-                .withTtl(new TtlBuilder().withMinimum(10000L).build())
+                .withMessageTtl(new MessageTtlBuilder().withMinimum(10000L).build())
                 .endSpec()
                 .build();
 
@@ -693,7 +694,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a3")
-                .withTtl(new TtlBuilder().withMinimum(10000L).withMaximum(20000L).build())
+                .withMessageTtl(new MessageTtlBuilder().withMinimum(10000L).withMaximum(20000L).build())
                 .endSpec()
                 .build();
 
@@ -704,23 +705,23 @@ public class AddressControllerTest {
         a1 = captured.get(0);
         AddressStatus status1 = a1.getStatus();
         assertEquals(Phase.Configuring, status1.getPhase());
-        assertNotNull(status1.getTtl());
-        assertEquals(30000, status1.getTtl().getMaximum());
-        assertNull(status1.getTtl().getMinimum());
+        assertNotNull(status1.getMessageTtl());
+        assertEquals(30000, status1.getMessageTtl().getMaximum());
+        assertNull(status1.getMessageTtl().getMinimum());
 
         a2 = captured.get(1);
         AddressStatus status2 = a2.getStatus();
         assertEquals(Phase.Configuring, status2.getPhase());
-        assertNotNull(status2.getTtl());
-        assertNull(status2.getTtl().getMaximum());
-        assertEquals(10000, status2.getTtl().getMinimum());
+        assertNotNull(status2.getMessageTtl());
+        assertNull(status2.getMessageTtl().getMaximum());
+        assertEquals(10000, status2.getMessageTtl().getMinimum());
 
         a3 = captured.get(2);
         AddressStatus status3 = a3.getStatus();
         assertEquals(Phase.Configuring, status3.getPhase());
-        assertNotNull(status3.getTtl());
-        assertEquals(20000, status3.getTtl().getMaximum());
-        assertEquals(10000, status3.getTtl().getMinimum());
+        assertNotNull(status3.getMessageTtl());
+        assertEquals(20000, status3.getMessageTtl().getMaximum());
+        assertEquals(10000, status3.getMessageTtl().getMinimum());
     }
 
     @Test
@@ -737,7 +738,7 @@ public class AddressControllerTest {
                 .withAddress("a1")
                 .withType("queue")
                 .withPlan("small-queue")
-                .withTtl(new TtlBuilder()
+                .withMessageTtl(new MessageTtlBuilder()
                         .withMaximum(30000L)
                         .withMinimum(30001L)
                         .build())
@@ -751,7 +752,7 @@ public class AddressControllerTest {
         a1 = captured.get(0);
         AddressStatus status1 = a1.getStatus();
         assertEquals(Phase.Configuring, status1.getPhase());
-        assertNull(status1.getTtl());
+        assertNull(status1.getMessageTtl());
 
     }
 
@@ -781,7 +782,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a2")
-                .withTtl(new TtlBuilder()
+                .withMessageTtl(new MessageTtlBuilder()
                         .withMaximum(29000L)
                         .withMinimum(10000L)
                         .build())
@@ -794,7 +795,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a3")
-                .withTtl(new TtlBuilder()
+                .withMessageTtl(new MessageTtlBuilder()
                         .withMaximum(31000L)
                         .withMinimum(10000L)
                         .build())
@@ -808,23 +809,23 @@ public class AddressControllerTest {
         a1 = captured.get(0);
         AddressStatus status1 = a1.getStatus();
         assertEquals(Phase.Configuring, status1.getPhase());
-        assertNotNull(status1.getTtl());
-        assertEquals(30000L, status1.getTtl().getMaximum()); // From plan
-        assertNull(status1.getTtl().getMinimum());
+        assertNotNull(status1.getMessageTtl());
+        assertEquals(30000L, status1.getMessageTtl().getMaximum()); // From plan
+        assertNull(status1.getMessageTtl().getMinimum());
 
         a2 = captured.get(1);
         AddressStatus status2 = a2.getStatus();
         assertEquals(Phase.Configuring, status2.getPhase());
-        assertNotNull(status2.getTtl());
-        assertEquals(29000L, status2.getTtl().getMaximum());  // Overridden by address
-        assertEquals(10000L, status2.getTtl().getMinimum());
+        assertNotNull(status2.getMessageTtl());
+        assertEquals(29000L, status2.getMessageTtl().getMaximum());  // Overridden by address
+        assertEquals(10000L, status2.getMessageTtl().getMinimum());
 
         a3 = captured.get(2);
         AddressStatus status3 = a3.getStatus();
         assertEquals(Phase.Configuring, status3.getPhase());
-        assertNotNull(status3.getTtl());
-        assertEquals(30000L, status3.getTtl().getMaximum()); // From plan - not overridden by address
-        assertEquals(10000L, status3.getTtl().getMinimum());
+        assertNotNull(status3.getMessageTtl());
+        assertEquals(30000L, status3.getMessageTtl().getMaximum()); // From plan - not overridden by address
+        assertEquals(10000L, status3.getMessageTtl().getMinimum());
     }
 
     @Test
@@ -844,7 +845,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a1")
-                .withTtl(new TtlBuilder()
+                .withMessageTtl(new MessageTtlBuilder()
                         .withMinimum(10001L)
                         .build())
                 .endSpec()
@@ -856,7 +857,7 @@ public class AddressControllerTest {
                 .endMetadata()
                 .withNewSpecLike(t)
                 .withAddress("a2")
-                .withTtl(new TtlBuilder()
+                .withMessageTtl(new MessageTtlBuilder()
                         .withMinimum(9999L)
                         .build())
                 .endSpec()
@@ -869,16 +870,16 @@ public class AddressControllerTest {
         a1 = captured.get(0);
         AddressStatus status1 = a1.getStatus();
         assertEquals(Phase.Configuring, status1.getPhase());
-        assertNotNull(status1.getTtl());
-        assertNull(status1.getTtl().getMaximum());
-        assertEquals(10001, status1.getTtl().getMinimum());  // Overridden by address
+        assertNotNull(status1.getMessageTtl());
+        assertNull(status1.getMessageTtl().getMaximum());
+        assertEquals(10001, status1.getMessageTtl().getMinimum());  // Overridden by address
 
         a2 = captured.get(1);
         AddressStatus status2 = a2.getStatus();
         assertEquals(Phase.Configuring, status2.getPhase());
-        assertNotNull(status2.getTtl());
-        assertNull(status2.getTtl().getMaximum());
-        assertEquals(10000, status2.getTtl().getMinimum());  // From plan - not overridden by address
+        assertNotNull(status2.getMessageTtl());
+        assertNull(status2.getMessageTtl().getMaximum());
+        assertEquals(10000, status2.getMessageTtl().getMinimum());  // From plan - not overridden by address
 
     }
 

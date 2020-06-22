@@ -14,7 +14,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.annotation.Nulls;
 
-import io.enmasse.address.model.Ttl;
+import io.enmasse.address.model.MessageTtl;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.Inline;
@@ -31,7 +31,7 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
     private String shortDescription;
     private String addressType;
     private Integer partitions;
-    private Ttl ttl;
+    private MessageTtl messageTtl;
 
     @JsonSetter(nulls = Nulls.AS_EMPTY)
     private Map<String, Double> resources = new HashMap<>();
@@ -68,12 +68,12 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
         this.partitions = partitions;
     }
 
-    public Ttl getTtl() {
-        return ttl;
+    public MessageTtl getMessageTtl() {
+        return messageTtl;
     }
 
-    public void setTtl(Ttl ttl) {
-        this.ttl = ttl;
+    public void setMessageTtl(MessageTtl messageTtl) {
+        this.messageTtl = messageTtl;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
                 Objects.equals(addressType, that.addressType) &&
                 Objects.equals(partitions, that.partitions) &&
                 Objects.equals(resources, that.resources) &&
-                Objects.equals(ttl, that.ttl);
+                Objects.equals(messageTtl, that.messageTtl);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class AddressPlanSpec extends AbstractWithAdditionalProperties {
                 ", addressType='" + addressType + '\'' +
                 ", partitions='" + partitions + '\'' +
                 ", resources=" + resources +
-                ", ttl=" + ttl +
+                ", messageTtl=" + messageTtl +
                 '}';
     }
 }

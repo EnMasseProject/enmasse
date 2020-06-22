@@ -120,7 +120,7 @@ describe('addressplan source', function() {
     });
     it('watches for changes - redefined plan - ttl', function(done) {
 
-        address_server.add_address_plan({plan_name:'small', address_type:'queue', ttl: {minimum: 1000, maximum: 2000}});
+        address_server.add_address_plan({plan_name:'small', address_type:'queue', messageTtl: {minimum: 1000, maximum: 2000}});
 
         var source = new AddressPlanSource({port:address_server.port, host:'localhost', token:'foo', namespace:'default', ADDRESS_SPACE_PLAN: 'space', ADDRESS_SPACE_PREFIX: 's1.'});
         source.start(address_space_plan_source);
@@ -134,7 +134,7 @@ describe('addressplan source', function() {
         source.once('addressplans_defined', (addressplans) => {
             assert.equal(addressplans.length, 1);
             process.nextTick(() => {
-                    address_server.update_address_plan({plan_name:'small', address_type:'queue', ttl: {minimum: 1001, maximum: 1999}});
+                    address_server.update_address_plan({plan_name:'small', address_type:'queue', messageTtl: {minimum: 1001, maximum: 1999}});
             });
 
             source.on('addressplans_defined', (update) => {

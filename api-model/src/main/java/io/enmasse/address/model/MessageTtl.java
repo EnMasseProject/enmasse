@@ -26,7 +26,7 @@ import java.util.Objects;
         )
 )
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class Ttl extends AbstractWithAdditionalProperties {
+public class MessageTtl extends AbstractWithAdditionalProperties {
     private Long maximum;
     private Long minimum;
 
@@ -50,9 +50,9 @@ public class Ttl extends AbstractWithAdditionalProperties {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Ttl ttl = (Ttl) o;
-        return Objects.equals(maximum, ttl.maximum) &&
-                Objects.equals(minimum, ttl.minimum);
+        MessageTtl messageTtl = (MessageTtl) o;
+        return Objects.equals(maximum, messageTtl.maximum) &&
+                Objects.equals(minimum, messageTtl.minimum);
     }
 
     @Override

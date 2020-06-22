@@ -8,9 +8,9 @@ import io.enmasse.address.model.AddressSpaceType;
 import io.enmasse.address.model.AddressSpaceTypeBuilder;
 import io.enmasse.address.model.AddressTypeBuilder;
 import io.enmasse.address.model.EndpointSpecBuilder;
+import io.enmasse.address.model.MessageTtlBuilder;
 import io.enmasse.address.model.Schema;
 import io.enmasse.address.model.SchemaBuilder;
-import io.enmasse.address.model.TtlBuilder;
 import io.enmasse.admin.model.v1.AddressPlanBuilder;
 import io.enmasse.admin.model.v1.AddressPlanSpecBuilder;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
@@ -120,14 +120,14 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .withSpec(new AddressPlanSpecBuilder()
                                                         .withAddressType("queue")
                                                         .withResources(Map.of("router", 0.2, "broker", 0.4))
-                                                        .withTtl(new TtlBuilder().withMaximum(30000L).build()).build())
+                                                        .withMessageTtl(new MessageTtlBuilder().withMaximum(30000L).build()).build())
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-minttl").build())
                                                 .withSpec(new AddressPlanSpecBuilder()
                                                         .withAddressType("queue")
                                                         .withResources(Map.of("router", 0.2, "broker", 0.4))
-                                                        .withTtl(new TtlBuilder().withMinimum(10000L).build()).build())
+                                                        .withMessageTtl(new MessageTtlBuilder().withMinimum(10000L).build()).build())
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-sharded-queue").build())

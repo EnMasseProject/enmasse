@@ -93,7 +93,7 @@ spec:
                 maxConsumers:
                   type: integer
                   description: "Maximum number of concurrent consumers that can be attached to this subscription. If unspecified, 1 consumer is allowed per subscription"
-            ttl:
+            messageTtl:
               type: object
               description: "Further restricts message time-to-live (TTL). Applies to address types queue and topic only. The maximum and minimum values must fall with the minimum/maximum range described by the plan's TTL settings."
               properties:

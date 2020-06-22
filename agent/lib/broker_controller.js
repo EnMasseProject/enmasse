@@ -755,13 +755,13 @@ BrokerController.prototype.generate_address_settings = function (address, global
                 upd++;
             }
         }
-        if (address.status.ttl && (address.type === 'topic' || address.type === 'queue')) {
-            if (address.status.ttl.minimum) {
-                addressSettings.minExpiryDelay = address.status.ttl.minimum;
+        if (address.status.messageTtl && (address.type === 'topic' || address.type === 'queue')) {
+            if (address.status.messageTtl.minimum) {
+                addressSettings.minExpiryDelay = address.status.messageTtl.minimum;
                 upd++;
             }
-            if (address.status.ttl.maximum) {
-                addressSettings.maxExpiryDelay = address.status.ttl.maximum;
+            if (address.status.messageTtl.maximum) {
+                addressSettings.maxExpiryDelay = address.status.messageTtl.maximum;
                 upd++;
             }
         }
