@@ -168,6 +168,7 @@
                     <groups>${groups}</groups>
                     <excludedGroups>${excludeGroups}</excludedGroups>
                     <skipTests>${skip.tests}</skipTests>
+                    <forkCount>0</forkCount>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                         <enmasse.docs>${application.docs}</enmasse.docs>
