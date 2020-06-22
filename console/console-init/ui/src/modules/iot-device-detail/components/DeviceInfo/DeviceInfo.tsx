@@ -20,7 +20,7 @@ import {
   TextVariants,
   CardTitle
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import {
   CredentialsView,
   ICredentialsViewProps
@@ -28,14 +28,14 @@ import {
 import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
 import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
 
-// const styles = StyleSheet.create({
-//   card_body: {
-//     paddingLeft: 0,
-//     paddingRight: 0,
-//     paddingBottom: 0,
-//     minHeight: 336
-//   }
-// });
+const styles = StyleSheet.create({
+  card_body: {
+    paddingLeft: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    minHeight: 336
+  }
+});
 
 export interface IDeviceInfoProps
   extends Pick<
@@ -169,9 +169,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                     Device metadata
                   </Title>
                 </CardTitle>
-                <CardBody
-                // className={css(styles.card_body)}
-                >
+                <CardBody className={css(styles.card_body)}>
                   <MetadataListTable
                     dataList={prepareMetadataList()}
                     id={"divice-info-metadata-table"}

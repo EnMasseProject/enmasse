@@ -18,7 +18,7 @@ import {
   KebabToggle,
   Dropdown
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle } from "components";
 import { compareObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/iot-device";
@@ -31,14 +31,14 @@ import {
   getInitialFilter
 } from "modules/iot-device/utils";
 
-// const styles = StyleSheet.create({
-//   time_input_box: {
-//     padding: 20,
-//     marginRight: 10
-//   },
-//   dropdown_align: { display: "flex", marginRight: 10 },
-//   dropdown_toggle_align: { flex: "1" }
-// });
+const styles = StyleSheet.create({
+  time_input_box: {
+    padding: 20,
+    marginRight: 10
+  },
+  dropdown_align: { display: "flex", marginRight: 10 },
+  dropdown_toggle_align: { flex: "1" }
+});
 
 export interface ITimeOption {
   time: string;
@@ -195,8 +195,8 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
           <DropdownWithToggle
             id={"device-filter-dropdown-device-type"}
             name="Device Type"
-            // className={css(styles.dropdown_align)}
-            // toggleClass={css(styles.dropdown_toggle_align)}
+            className={css(styles.dropdown_align)}
+            toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
             onSelectItem={onTypeSelect}
             dropdownItems={deviceTypeOptions}
@@ -208,8 +208,8 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
           <DropdownWithToggle
             id={"device-filter-dropdown-device-status"}
             name="Status"
-            // className={css(styles.dropdown_align)}
-            // toggleClass={css(styles.dropdown_toggle_align)}
+            className={css(styles.dropdown_align)}
+            toggleClass={css(styles.dropdown_toggle_align)}
             position={DropdownPosition.left}
             onSelectItem={onStatusSelect}
             dropdownItems={deviceStatusOptions}

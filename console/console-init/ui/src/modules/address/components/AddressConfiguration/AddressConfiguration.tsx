@@ -12,21 +12,21 @@ import {
   TextInput,
   DropdownPosition
 } from "@patternfly/react-core";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { IDropdownOption, DropdownWithToggle } from "components";
 
-// const styles = StyleSheet.create({
-//   dropdownItem: {
-//     "text-transform": "capitalize",
-//     fontWeight: "bold"
-//   },
-//   dropdown_align: {
-//     display: "flex"
-//   },
-//   dropdown_toggle: {
-//     flex: "1"
-//   }
-// });
+const styles = StyleSheet.create({
+  dropdownItem: {
+    "text-transform": "capitalize",
+    fontWeight: "bold"
+  },
+  dropdown_align: {
+    display: "flex"
+  },
+  dropdown_toggle: {
+    flex: "1"
+  }
+});
 
 export interface IAddressConfigurationProps {
   addressName: string;
@@ -98,9 +98,9 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               <br />
               <DropdownWithToggle
                 id="address-definition-type-dropdown"
-                // className={styles.dropdown_align}
-                // toggleClass={styles.dropdown_toggle}
-                // dropdownItemClass={styles.dropdownItem}
+                className={css(styles.dropdown_align)}
+                toggleClass={css(styles.dropdown_toggle)}
+                dropdownItemClass={css(styles.dropdownItem)}
                 position={DropdownPosition.left}
                 onSelectItem={onTypeSelect}
                 value={type}
@@ -115,9 +115,9 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 id="address-definition-plan-dropdown"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
-                // className={styles.dropdown_align}
-                // toggleClass={styles.dropdown_toggle}
-                // dropdownItemClass={styles.dropdownItem}
+                className={css(styles.dropdown_align)}
+                toggleClass={css(styles.dropdown_toggle)}
+                dropdownItemClass={css(styles.dropdownItem)}
                 value={plan}
                 dropdownItems={planOptions}
                 dropdownItemIdPrefix="address-definition-plan-dropdown-item"
@@ -133,9 +133,9 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 <br />
                 <DropdownWithToggle
                   id="address-definition-topic-dropdown"
-                  // className={styles.dropdown_align}
-                  // toggleClass={styles.dropdown_toggle}
-                  // dropdownItemClass={styles.dropdownItem}
+                  className={css(styles.dropdown_align)}
+                  toggleClass={css(styles.dropdown_toggle)}
+                  dropdownItemClass={css(styles.dropdownItem)}
                   position={DropdownPosition.left}
                   onSelectItem={onTopicSelect}
                   value={topic}

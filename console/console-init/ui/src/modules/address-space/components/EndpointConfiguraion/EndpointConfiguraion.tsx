@@ -15,15 +15,15 @@ import {
 } from "@patternfly/react-core";
 import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
-import {} from "@patternfly/react-styles";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { IDropdownOption } from "components";
+import { StyleSheet, css } from "aphrodite";
 
-// const style = StyleSheet.create({
-//   margin_left: {
-//     marginLeft: 20,
-//   },
-// });
+const style = StyleSheet.create({
+  margin_left: {
+    marginLeft: 20
+  }
+});
 interface IEndpointConfigurationProps {
   projectDetail: IMessagingProject;
   addressSpaceSchema?: IAddressSpaceSchema;
@@ -164,7 +164,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     id={`checkbox-${protocol.key}`}
                     key={protocol.key}
                     name={protocol.key}
-                    // className={css(style.margin_left)}
+                    className={css(style.margin_left)}
                   />
                 </div>
               ))}
@@ -187,7 +187,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     label={certificate.label}
                     id={`radio-${certificate.key}`}
                     value={certificate.value}
-                    // className={css(style.margin_left)}
+                    className={css(style.margin_left)}
                   />
                 </div>
               ))}

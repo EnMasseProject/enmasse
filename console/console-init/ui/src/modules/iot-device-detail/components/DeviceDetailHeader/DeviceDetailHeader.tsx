@@ -14,7 +14,7 @@ import {
   DropdownPosition,
   DropdownSeparator
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";
@@ -32,25 +32,25 @@ interface IDeviceDetailHeaderProps {
   credentials?: any[];
 }
 
-// const styles = StyleSheet.create({
-//   flex_left_border: {
-//     paddingLeft: "1em",
-//     borderLeft: "0.05em solid",
-//     borderRightColor: "--pf-chart-global--Fill--Color--200"
-//   },
-//   kebab_toggle_margin: {
-//     marginTop: 20,
-//     marginLeft: 10,
-//     fontSize: 15
-//   },
-//   namespace_info_margin: {
-//     marginTop: 16,
-//     marginBottom: 24
-//   },
-//   no_bottom_padding: {
-//     paddingBottom: 0
-//   }
-// });
+const styles = StyleSheet.create({
+  flex_left_border: {
+    paddingLeft: "1em",
+    borderLeft: "0.05em solid",
+    borderRightColor: "--pf-chart-global--Fill--Color--200"
+  },
+  kebab_toggle_margin: {
+    marginTop: 20,
+    marginLeft: 10,
+    fontSize: 15
+  },
+  namespace_info_margin: {
+    marginTop: 16,
+    marginBottom: 24
+  },
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 
 const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   deviceName,
@@ -110,9 +110,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
             </Title>
           </SplitItem>
         </Split>
-        <Flex
-        // className={css(styles.namespace_info_margin)}
-        >
+        <Flex className={css(styles.namespace_info_margin)}>
           <FlexItem id="flex-item-device-added-date">
             Added Date :
             <b>
@@ -121,7 +119,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           </FlexItem>
           <FlexItem
             id="flex-item-device-last-seen-time"
-            // className={css(styles.flex_left_border)}
+            className={css(styles.flex_left_border)}
           >
             Last time seen :{" "}
             <b>
@@ -230,9 +228,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     <Split>
       <DeviceDetailLayout />
       <SplitItem isFilled />
-      <SplitItem
-      // className={css(styles.kebab_toggle_margin)}
-      >
+      <SplitItem className={css(styles.kebab_toggle_margin)}>
         <SwitchWithToggle
           id="switch-device-header-enable-btn"
           label="Enabled"
@@ -241,9 +237,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           isChecked={deviceStatus}
         />
       </SplitItem>
-      <SplitItem
-      // className={css(styles.kebab_toggle_margin)}
-      >
+      <SplitItem className={css(styles.kebab_toggle_margin)}>
         <KebabOptionsLayout />
       </SplitItem>
     </Split>

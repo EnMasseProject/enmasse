@@ -16,7 +16,7 @@ import {
 } from "@patternfly/react-table";
 import { Link } from "react-router-dom";
 import { FormatDistance } from "use-patternfly";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import {
   StatusTypes,
   ProjectStatus,
@@ -27,12 +27,12 @@ import {
 } from "modules/project/utils";
 import { EmptyProject } from "modules/project";
 
-// export const StyleForTable = StyleSheet.create({
-//   scroll_overflow: {
-//     overflowY: "auto",
-//     paddingBottom: 100
-//   }
-// });
+export const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 export interface IProject {
   projectType: ProjectTypes;
@@ -225,9 +225,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
 
   return (
     <>
-      <div
-      // className={css(StyleForTable.scroll_overflow)}
-      >
+      <div className={css(StyleForTable.scroll_overflow)}>
         <Table
           variant={TableVariant.compact}
           canSelectAll={false}

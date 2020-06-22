@@ -14,15 +14,15 @@ import {
   Radio,
   Switch
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle, IDropdownOption } from "components";
 
-// export const dropdown_item_styles = StyleSheet.create({
-//   format_item: { whiteSpace: "normal", textAlign: "justify" },
-//   dropdown_align: { display: "flex" },
-//   dropdown_toggle_align: { flex: "1" },
-//   dropdown_item: { fontWeight: "bold" }
-// });
+export const dropdown_item_styles = StyleSheet.create({
+  format_item: { whiteSpace: "normal", textAlign: "justify" },
+  dropdown_align: { display: "flex" },
+  dropdown_toggle_align: { flex: "1" },
+  dropdown_item: { fontWeight: "bold" }
+});
 
 export interface IPlanOption {
   label: string;
@@ -92,9 +92,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
               <br />
               <DropdownWithToggle
                 id="cas-dropdown-namespace"
-                // className={css(dropdown_item_styles.dropdown_align)}
-                // toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                // dropdownItemClass={dropdown_item_styles.dropdown_item}
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 position={DropdownPosition.left}
                 onSelectItem={onNameSpaceSelect}
                 dropdownItems={namespaceOptions}
@@ -152,9 +152,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 id="cas-dropdown-plan"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
-                // className={css(dropdown_item_styles.dropdown_align)}
-                // toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                // dropdownItemClass={dropdown_item_styles.dropdown_item}
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 dropdownItems={planOptions}
                 isDisabled={type.trim() === ""}
                 value={plan}
@@ -170,9 +170,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 id="cas-dropdown-auth-service"
                 position={DropdownPosition.left}
                 onSelectItem={onAuthenticationServiceSelect}
-                // className={css(dropdown_item_styles.dropdown_align)}
-                // toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                // dropdownItemClass={dropdown_item_styles.dropdown_item}
+                className={css(dropdown_item_styles.dropdown_align)}
+                toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 dropdownItems={authenticationServiceOptions}
                 isDisabled={type.trim() === ""}
                 value={authenticationService}

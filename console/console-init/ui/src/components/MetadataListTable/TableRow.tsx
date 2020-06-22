@@ -13,30 +13,30 @@ import {
   DataListItemCells
 } from "@patternfly/react-core";
 import classNames from "classnames";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { uniqueId } from "utils";
 import { DataType } from "constant";
 
-// const styles = StyleSheet.create({
-//   key_cell_toogle: {
-//     marginLeft: -25
-//   },
-//   key_cell: {
-//     marginLeft: 50
-//   },
-//   type_cell_toggle: {
-//     textAlign: "center",
-//     textTransform: "capitalize"
-//   },
-//   type_cell: {
-//     textAlign: "center",
-//     marginLeft: 55,
-//     textTransform: "capitalize"
-//   },
-//   value_cell: {
-//     textAlign: "center"
-//   }
-// });
+const styles = StyleSheet.create({
+  key_cell_toogle: {
+    marginLeft: -25
+  },
+  key_cell: {
+    marginLeft: 50
+  },
+  type_cell_toggle: {
+    textAlign: "center",
+    textTransform: "capitalize"
+  },
+  type_cell: {
+    textAlign: "center",
+    marginLeft: 55,
+    textTransform: "capitalize"
+  },
+  value_cell: {
+    textAlign: "center"
+  }
+});
 
 export interface IRowOption {
   key: string;
@@ -67,17 +67,17 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
     return false;
   };
 
-  // const cssClassKey = classNames({
-  //   [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
-  //   [styles.key_cell]: !shouldDisplayDataListToggle(type)
-  // });
+  const cssClassKey = classNames({
+    [css(styles.key_cell_toogle)]: shouldDisplayDataListToggle(type),
+    [css(styles.key_cell)]: !shouldDisplayDataListToggle(type)
+  });
 
-  // const cssClassType = classNames({
-  //   [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
-  //   [styles.type_cell]: !shouldDisplayDataListToggle(type)
-  // });
+  const cssClassType = classNames({
+    [css(styles.type_cell_toggle)]: shouldDisplayDataListToggle(type),
+    [css(styles.type_cell)]: !shouldDisplayDataListToggle(type)
+  });
 
-  // const cssClassValue = classNames([styles.value_cell]);
+  const cssClassValue = classNames([styles.value_cell]);
 
   const toggle = (event: any) => {
     const expandedRowId = event.target.id;
@@ -116,23 +116,13 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
             id={key + "-" + uniqueId()}
             dataListCells={[
               <DataListCell key="key-content">
-                <div
-                // className={cssClassKey}
-                >
-                  {key}
-                </div>
+                <div className={cssClassKey}>{key}</div>
               </DataListCell>,
               <DataListCell key="type-content">
-                <div
-                // className={cssClassType}
-                >
-                  {typeLabel}
-                </div>
+                <div className={cssClassType}>{typeLabel}</div>
               </DataListCell>,
               <DataListCell key="value-content">
-                <div
-                // className={cssClassValue}
-                >
+                <div className={cssClassValue}>
                   {type === DataType.OBJECT || type === DataType.ARRAY
                     ? "- -"
                     : value}

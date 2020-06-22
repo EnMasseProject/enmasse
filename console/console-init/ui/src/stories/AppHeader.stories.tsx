@@ -23,7 +23,7 @@ export default {
   title: "AppHeader"
 };
 
-const avatar = (
+const Avatar = () => (
   <React.Fragment>
     <Text component={TextVariants.p}>Ramakrishna Pattnaik</Text>
   </React.Fragment>
@@ -32,7 +32,7 @@ const dropdownItems = [
   <DropdownItem key="help">Help</DropdownItem>,
   <DropdownItem key="About">About</DropdownItem>
 ];
-const NavToolBar = (
+const NavToolBar = () => (
   <Dropdown
     position={DropdownPosition.right}
     toggle={
@@ -47,13 +47,19 @@ const NavToolBar = (
 );
 const logo = <Brand src={brandImg} alt="Console Logo" />;
 
+const HeaderTools = () => (
+  <div className="pf-c-page__header-tools">
+    <NavToolBar />
+    <Avatar />
+  </div>
+);
+
 export const pageHeader = () => (
   <AppLayout
     logoProps={{
       onClick: action("Logo clicked")
     }}
     logo={logo}
-    avatar={avatar}
-    toolbar={NavToolBar}
+    headerTools={<HeaderTools />}
   ></AppLayout>
 );

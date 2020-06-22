@@ -6,16 +6,16 @@
 import React, { useState } from "react";
 import { TextInput, TextInputProps } from "@patternfly/react-core";
 import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
-// import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
-// const styles = StyleSheet.create({
-//   icon: {
-//     minWidth: 35
-//   },
-//   textInput: {
-//     marginRight: -35
-//   }
-// });
+const styles = StyleSheet.create({
+  icon: {
+    minWidth: 35
+  },
+  textInput: {
+    marginRight: -35
+  }
+});
 
 export interface IPasswordInputFieldWithToggleProps extends TextInputProps {
   id: string;
@@ -38,16 +38,13 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
       if (isShowPassword) {
         return (
           <EyeSlashIcon
-            // className={styles.icon}
+            className={css(styles.icon)}
             onClick={() => onToggle(false)}
           />
         );
       }
       return (
-        <EyeIcon
-          // className={styles.icon}
-          onClick={() => onToggle(true)}
-        />
+        <EyeIcon className={css(styles.icon)} onClick={() => onToggle(true)} />
       );
     }
   };
@@ -57,13 +54,12 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   return (
     <>
       <TextInput
-        // className={styles.textInput}
+        className={css(styles.textInput)}
         id={id}
         name={name}
         type={type}
         onChange={onChange}
         validated={validated ? "default" : "error"}
-        // validated={validated}
       />
       {renderIcon()}
     </>

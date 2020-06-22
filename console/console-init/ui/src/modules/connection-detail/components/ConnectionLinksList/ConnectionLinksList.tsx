@@ -13,8 +13,14 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-// import { StyleForTable } from "modules/project";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IConnectionLinksListProps {
   rows: ILink[];
@@ -74,9 +80,7 @@ export const ConnectionLinksList: React.FunctionComponent<IConnectionLinksListPr
   ];
 
   return (
-    <div
-    // className={css(StyleForTable.scroll_overflow)}
-    >
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

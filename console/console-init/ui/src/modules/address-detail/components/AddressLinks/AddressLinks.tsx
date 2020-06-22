@@ -14,10 +14,16 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-// import { StyleForTable } from "modules/project";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IAddressLinksProps {
   rows: IAddressLink[];
@@ -83,9 +89,7 @@ export const AddressLinks: React.FunctionComponent<IAddressLinksProps> = ({
   ];
 
   return (
-    <div
-    // className={css(StyleForTable.scroll_overflow)}
-    >
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

@@ -5,16 +5,16 @@
 
 import React from "react";
 import { Split, SplitItem } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
-// const styles = StyleSheet.create({
-//   message_split: {
-//     paddingTop: 15,
-//     textAlign: "center",
-//     paddingLeft: 48,
-//     fontSize: 21
-//   }
-// });
+const styles = StyleSheet.create({
+  message_split: {
+    paddingTop: 15,
+    textAlign: "center",
+    paddingLeft: 48,
+    fontSize: 21
+  }
+});
 export interface IMessagesDetailHeaderAttributes {
   messageIn?: number | string;
   messageOut?: number | string;
@@ -33,7 +33,7 @@ export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDe
       <SplitItem
         id="message-detail-message-in"
         span={6}
-        // className={css(styles.message_split)}
+        className={css(styles.message_split)}
       >
         {messageIn || messageIn === "" ? messageIn : 0}
         {isMobileView ? "" : <br />} Message in/sec
@@ -44,7 +44,7 @@ export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDe
         <SplitItem
           id="message-detail-message-out"
           span={6}
-          // className={css(styles.message_split)}
+          className={css(styles.message_split)}
         >
           {messageOut || messageOut === "" ? messageOut : 0}
           {isMobileView ? "" : <br />} Message out/sec

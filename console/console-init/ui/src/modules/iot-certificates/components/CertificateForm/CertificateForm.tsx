@@ -19,24 +19,24 @@ import {
   DropdownPosition
 } from "@patternfly/react-core";
 import { DropdownWithToggle, SwitchWithToggle } from "components";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
 import {
   algorithmTypeOptions,
   IIoTCertificate
 } from "modules/iot-certificates";
 
-// const styles = StyleSheet.create({
-//   dropdown_align: {
-//     display: "flex"
-//   },
-//   dropdown_toggle_align: {
-//     flex: "1"
-//   },
-//   capitalize: {
-//     textTransform: "capitalize"
-//   }
-// });
+const styles = StyleSheet.create({
+  dropdown_align: {
+    display: "flex"
+  },
+  dropdown_toggle_align: {
+    flex: "1"
+  },
+  capitalize: {
+    textTransform: "capitalize"
+  }
+});
 
 export interface ICertificateFormProps {
   certificate?: IIoTCertificate;
@@ -146,13 +146,13 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             fieldId={`cf-algo-${id}`}
             isRequired
             label={getLabelByKey("algorithm")}
-            // className={css(styles.capitalize)}
+            className={css(styles.capitalize)}
           >
             <DropdownWithToggle
               id={`cf-algo-${id}`}
               name="algorithm"
-              // className={css(styles.dropdown_align)}
-              // toggleClass={css(styles.dropdown_toggle_align)}
+              className={css(styles.dropdown_align)}
+              toggleClass={css(styles.dropdown_toggle_align)}
               position={DropdownPosition.left}
               onSelectItem={onSelectAlgorithm}
               dropdownItems={algorithmTypeOptions}

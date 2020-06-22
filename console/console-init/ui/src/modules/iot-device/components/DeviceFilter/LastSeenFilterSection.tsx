@@ -5,19 +5,19 @@ import {
   TextContent,
   DropdownPosition
 } from "@patternfly/react-core";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { IDeviceFilter } from "./DeviceFilter";
 import { DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
 
-// const styles = StyleSheet.create({
-//   time_input_box: {
-//     padding: 20,
-//     marginRight: 10
-//   },
-//   dropdown_align: { display: "flex", marginRight: 10 },
-//   dropdown_toggle_align: { flex: "1" }
-// });
+const styles = StyleSheet.create({
+  time_input_box: {
+    padding: 20,
+    marginRight: 10
+  },
+  dropdown_align: { display: "flex", marginRight: 10 },
+  dropdown_toggle_align: { flex: "1" }
+});
 
 interface ILastSeenFilterSectionProps {
   filter: IDeviceFilter;
@@ -75,7 +75,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
   return (
     <InputGroup>
       <TextInput
-        // className={css(styles.time_input_box)}
+        className={css(styles.time_input_box)}
         name="last-start-time-number"
         id="device-filter-text-input-last-start-time-number"
         type="number"
@@ -84,8 +84,8 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
         onChange={onStartTimeChange}
       />
       <DropdownWithToggle
-        // className={css(styles.dropdown_align)}
-        // toggleClass={css(styles.dropdown_toggle_align)}
+        className={css(styles.dropdown_align)}
+        toggleClass={css(styles.dropdown_toggle_align)}
         id="device-filter-dropdown-last-seen-start-time-format"
         position={DropdownPosition.left}
         onSelectItem={onStartTimeFormatChange}
@@ -95,7 +95,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       />
       <TextContent>{" - "}</TextContent>
       <TextInput
-        // className={css(styles.time_input_box)}
+        className={css(styles.time_input_box)}
         name="last-end-time-number"
         id="device-filter-text-input-last-end-time-number"
         type="number"
@@ -104,7 +104,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
         onChange={onEndTimeChange}
       />
       <DropdownWithToggle
-        // className={css(styles.dropdown_align)}
+        className={css(styles.dropdown_align)}
         id="device-filter-dropdown-last-seen-end-time-format"
         position={DropdownPosition.left}
         onSelectItem={onEndTimeFormatChange}

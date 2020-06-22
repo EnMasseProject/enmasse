@@ -16,10 +16,16 @@ import {
   IExtraData
 } from "@patternfly/react-table";
 import { FormatDistance } from "use-patternfly";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
-// import { StyleForTable } from "modules/project";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -193,9 +199,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
 
   return (
-    <div
-    // className={css(StyleForTable.scroll_overflow)}
-    >
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

@@ -15,10 +15,9 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import {} from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
 import { useWindowDimensions } from "components";
-// import { StyleForTable } from "modules/project";
 import {
   AddressStatus,
   AddressErrorMessage,
@@ -26,6 +25,13 @@ import {
   Messages
 } from "modules/address";
 import { AddressTypes } from "constant";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 export interface IAddress {
   name: string;
@@ -253,9 +259,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     }
   };
   return (
-    <div
-    // className={css(StyleForTable.scroll_overflow)}
-    >
+    <div className={css(StyleForTable.scroll_overflow)}>
       <Table
         variant={TableVariant.compact}
         onSelect={onSelect}
