@@ -2,6 +2,7 @@ name: PR job
 env:
   DOCKER_REGISTRY: "localhost:5000"
   TAG: "latest"
+  IMAGE_PULL_POLICY: "IfNotPresent"
   DOCKER_ORG: enmasse
   KUBERNETES_NAMESPACE: "enmasse-infra"
 
