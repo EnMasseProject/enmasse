@@ -202,7 +202,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
     @Test
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
-        UserCredentials user = new UserCredentials("pepan", "pepan");
+        UserCredentials user = Credentials.userCredentials();
         try {
             //===========================
             // AddressSpace part
