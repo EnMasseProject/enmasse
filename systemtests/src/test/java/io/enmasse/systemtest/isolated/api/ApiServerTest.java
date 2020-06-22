@@ -404,8 +404,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     @Test
     void testCreateAddressSpaceViaApiNonAdmin() throws Exception {
         String namespace = "pepinator";
-        UserCredentials user = new UserCredentials("jarda", "jarda");
-
+        UserCredentials user = Credentials.userCredentials();
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);
