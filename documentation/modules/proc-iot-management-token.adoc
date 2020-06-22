@@ -3,35 +3,33 @@
 // assembly-iot-creating-device.adoc
 
 [id='proc-iot-management-token-{context}']
-= Getting an authentication token
+= Obtaining an authentication token
 
-In order to access the Device Management API, you will need a token for authenticating yourself
-against the management API.
+To access the device management API, you must obtain a token to authenticate yourself
+to the API.
 
-Access to devices of an IoT tenant is mapped by the device registry based on access to
-the `IoTProject` resource. If an account has *read* access to the `IoTProject`, the this
+Access to an IoT tenant's devices is mapped by the device registry based on access to
+the `IoTProject` resource. If an account has *read* access to the `IoTProject`, this
 account can also execute *read* operations on the device registry for this IoT tenant.
 
-The token has to be presented to the API as a *bearer token*. This is done by adding
+The token has to be presented to the API as a *bearer token* by adding
 an HTTP header value: `Authorization: Bearer <token>`. For more information,
-see https://tools.ietf.org/html/rfc6750[RFC 6750].
+see link:https://tools.ietf.org/html/rfc6750[RFC 6750].
 
-In the following examples, the variable `${TOKEN}` will be used as a placeholder.
-Be sure replace this variable with the actual token.
+In the following configuration examples, replace `${TOKEN}` with the actual token.
 
-[id='proc-iot-management-token-from-user{context}']
-== From a user
+== Obtaining an authentication token for a user
 
 If you want to use the token of the current {KubePlatform}, you can extract the
-token by executing the following command:
+token.
 
 .Prerequisites
 
-* Be logged in to your {KubePlatform} instance with a user that supports tokens
+* You must be logged in to your {KubePlatform} instance as a user that supports tokens.
 
 .Procedure
 
-. Extract the token for the current user
+. Extract the token for the current user:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -43,22 +41,20 @@ kubectl config view -o json| jq -r '.users[] as $users | ."current-context" as $
 endif::[]
 ----
 
-NOTE: User tokens mostley have a limited lifetime. So it may be necessary
-to re-acquire the token after it has expired.
+NOTE: User tokens have a limited lifetime, so it may be necessary
+to renew the token after it has expired.
 
-[id='proc-iot-management-token-from-service-account{context}']
-== From a service account
+== Obtaining an authentication token for a service account
 
-In order to create a new service account and extract the token you need to perform
-the following steps:
+Perform the following steps to create a new service account and extract the token.
 
 .Prerequisites
 
-* Be logged in to your {KubePlatform} instance with permissions to create new service accounts, roles and role bindings.
+* You must be logged in to your {KubePlatform} instance with permissions to create new service accounts, roles and role bindings.
 
 .Procedure
 
-. Create a new service account
+. Create a new service account:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -67,9 +63,9 @@ kind: ServiceAccount
 metadata:
   name: my-device-manager-account # <1>
 ----
-<1> The name of the service account
+<1> The name of the service account.
 
-. Create a new role, allowing access to the `IoTProject`
+. Create a new role, allowing access to the `IoTProject`:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -82,13 +78,13 @@ rules: # <2>
   resources: ["iotprojects"]
   verbs: ["create", "update", "get", "list", "delete"]
 ----
-<1> The name of the role
+<1> The name of the role.
 <2> The access rules, which must grant CRUD access to the `IoTProject`.
 +
-This example grants access to all `IoTProjects`s in a namespace. It is possible
-to further narrow down access by using more specific rules.
+This example grants access to all `IoTProjects`s in a namespace.
+To further restrict access, use more specific rules.
 
-. Create a new role binding, assigning the role to the service account
+. Create a new role binding, assigning the role to the service account:
 +
 [source,yaml,options="nowrap"]
 ----
@@ -104,10 +100,10 @@ subjects:
 - kind: ServiceAccount
   name: my-device-manager-account # <2>
 ----
-<1> The name of the role
-<2> The name of the service account
+<1> The name of the role.
+<2> The name of the service account.
 
-. Retrieve the token from the service account. Execute the following command:
+. Retrieve the token from the service account:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
