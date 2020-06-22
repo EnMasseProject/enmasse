@@ -6,6 +6,6 @@ spec:
     address: myqueue
     type: queue
     plan: standard-small-queue
-    ttl: <1>
+    messageTtl: <1>
         minimim: 30000
         maximum: 300000
