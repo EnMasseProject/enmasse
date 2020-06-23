@@ -99,17 +99,12 @@ const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "array", label: "Array", value: "array" }
 ];
 
-//Make generic method by combining the methods in utils
-const getLabelByValue = (typeValue: string) => {
-  const filteredType: ISelectOption = deviceRegistrationTypeOptions.filter(
-    (typeItem: ISelectOption, index: number) => (typeItem.value = typeValue)
-  )[0];
-
-  return filteredType?.label as string;
-};
-
-const getInitialStateCreateMetadata = (defaultType: string) => {
-  const initialState = { key: "", value: [], type: defaultType };
+const getInitialMetadataState = () => {
+  const initialState = {
+    key: "",
+    value: [],
+    type: deviceRegistrationTypeOptions[0].value
+  };
   return initialState;
 };
 
@@ -124,7 +119,6 @@ export {
   SHOW_ADVANCE_SETTING,
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
-  getLabelByValue,
-  getInitialStateCreateMetadata,
+  getInitialMetadataState,
   MAX_DEVICE_LIST_COUNT
 };

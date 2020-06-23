@@ -66,7 +66,7 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           </FormGroup>
           <Divider />
           Metadata
-          <CreateMetadata onChangePropertyInput={onChangePropertyInput} />
+          <CreateMetadata />
         </Form>
       </GridItem>
     </Grid>
