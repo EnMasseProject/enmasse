@@ -92,7 +92,7 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/devices/:deviceid/:subList"
       getComponent={getDeviceDetailPage}
-      />
+    />
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/:sublist"
       getComponent={getIoTProjectDetailPage}
