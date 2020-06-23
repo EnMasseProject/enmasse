@@ -99,10 +99,18 @@ func TestSyncConnectors(t *testing.T) {
 	assert.NotNil(t, i)
 
 	bclient.Handler = func(req *amqp.Message) (*amqp.Message, error) {
-		return &amqp.Message{
-			ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
-			Value:                 "[[\"q1\",\"q2\"]]",
-		}, nil
+		op := req.ApplicationProperties["_AMQ_OperationName"]
+		if op == "getAddressSettingsAsJSON" {
+			return &amqp.Message{
+				ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
+				Value:                 "[]",
+			}, nil
+		} else {
+			return &amqp.Message{
+				ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
+				Value:                 "[[\"q1\",\"q2\"]]",
+			}, nil
+		}
 	}
 
 	rclient.Handler = func(req *amqp.Message) (*amqp.Message, error) {

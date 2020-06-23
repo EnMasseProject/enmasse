@@ -62,18 +62,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MessagingEndpointTest extends TestBase implements ITestIsolatedSharedInfra {
 
     @Test
-    @Kubernetes(type = ClusterType.MINIKUBE)
-    public void testNodePortEndpointMinikube() throws Exception {
-        testNodePortEndpoint();
-    }
-
-    @Test
-    @OpenShift(type = ClusterType.CRC)
-    public void testNodePortEndpointCRC() throws Exception {
-        testNodePortEndpoint();
-    }
-
-    private void testNodePortEndpoint() throws Exception {
+    public void testNodePortEndpoint() throws Exception {
         MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -81,7 +70,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
-                .withHost(kubernetes.getHost())
+                .withHost(kubernetes.getNodeHost())
                 .addToProtocols("AMQP")
                 .editOrNewNodePort()
                 .endNodePort()

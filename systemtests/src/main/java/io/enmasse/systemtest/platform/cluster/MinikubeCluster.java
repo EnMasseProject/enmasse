@@ -5,6 +5,7 @@
 package io.enmasse.systemtest.platform.cluster;
 
 import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
 
 import java.util.Arrays;
 
@@ -14,7 +15,7 @@ public class MinikubeCluster implements KubeCluster {
 
     @Override
     public boolean isAvailable() {
-        return Exec.isExecutableOnPath(IDENTIFIER);
+        return Exec.isExecutableOnPath(IDENTIFIER) && Exec.execute(IDENTIFIER, "status").getRetCode();
     }
 
     @Override

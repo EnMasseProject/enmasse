@@ -65,6 +65,51 @@ type BrokerDivert struct {
 	TransformerClassName string `json:"transformerClassName,omitempty"`
 }
 
+type BrokerAddressSetting struct {
+	Name                     string             `json:"name"`
+	DeadLetterAddress        string             `json:"DLA,omitempty"`
+	ExpiryAddress            string             `json:"expiryAddress,omitempty"`
+	ExpiryDelay              int64              `json:"expiryDelay,omitempty"`
+	LastValueQueue           bool               `json:"lastValueQueue,omitempty"`
+	DeliveryAttempts         int32              `json:"deliveryAttempts,omitempty"`
+	MaxSizeBytes             int64              `json:"maxSizeBytes,omitempty"`
+	PageSizeBytes            int32              `json:"pageSizeBytes,omitempty"`
+	PageMaxCacheSize         int32              `json:"pageMaxCacheSize,omitempty"`
+	RedeliveryDelay          int64              `json:"redeliveryDelay,omitempty"`
+	RedeliveryMultiplier     float64            `json:"redeliveryMultiplier,omitempty"`
+	MaxRedeliveryDelay       int64              `json:"maxRedeliveryDelay,omitempty"`
+	RedistributionDelay      int64              `json:"redistributionDelay,omitempty"`
+	SendToDLAOnNoRoute       bool               `json:"sendToDLAOnNoRoute,omitempty"`
+	AddressFullMessagePolicy AddressFullPolicy  `json:"addressFullMessagePolicy,omitempty"`
+	SlowConsumerThreshold    int64              `json:"slowConsumerThreshold,omitempty"`
+	SlowConsumerCheckPeriod  int64              `json:"slowConsumerCheckPeriod,omitempty"`
+	SlowConsumerPolicy       SlowConsumerPolicy `json:"slowConsumerPolicy,omitempty"`
+	AutoCreateJmsQueues      bool               `json:"autoCreateJmsQueues,omitempty"`
+	AutoDeleteJmsQueues      bool               `json:"autoDeleteJmsQueues,omitempty"`
+	AutoCreateJmsTopics      bool               `json:"autoCreateJmsTopics,omitempty"`
+	AutoDeleteJmsTopics      bool               `json:"autoDeleteJmsTopics,omitempty"`
+	AutoCreateQueues         bool               `json:"autoCreateQueues,omitempty"`
+	AutoDeleteQueues         bool               `json:"autoDeleteQueues,omitempty"`
+	AutoCreateAddresses      bool               `json:"autoCreateAddresses,omitempty"`
+	AutoDeleteAddresses      bool               `json:"autoDeleteAddresses,omitempty"`
+}
+
+type AddressFullPolicy string
+
+const (
+	AddressFullPolicyDrop  AddressFullPolicy = "DROP"
+	AddressFullPolicyPage  AddressFullPolicy = "PAGE"
+	AddressFullPolicyFail  AddressFullPolicy = "FAIL"
+	AddressFullPolicyBlock AddressFullPolicy = "BLOCK"
+)
+
+type SlowConsumerPolicy string
+
+const (
+	SlowConsumerPolicyKill   SlowConsumerPolicy = "KILL"
+	SlowConsumerPolicyNotify SlowConsumerPolicy = "NOTIFY"
+)
+
 type RoutingType string
 
 const (

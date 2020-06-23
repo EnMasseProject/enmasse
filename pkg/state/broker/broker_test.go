@@ -29,10 +29,18 @@ func TestInitializeBroker(t *testing.T) {
 	}
 
 	client.Handler = func(req *amqp.Message) (*amqp.Message, error) {
-		return &amqp.Message{
-			ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
-			Value:                 "[[\"queue1\",\"queue2\"]]",
-		}, nil
+		op := req.ApplicationProperties["_AMQ_OperationName"]
+		if op == "getAddressSettingsAsJSON" {
+			return &amqp.Message{
+				ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
+				Value:                 "[]",
+			}, nil
+		} else {
+			return &amqp.Message{
+				ApplicationProperties: map[string]interface{}{"_AMQ_OperationSucceeded": true},
+				Value:                 "[[\"queue1\",\"queue2\"]]",
+			}, nil
+		}
 	}
 
 	err := state.Initialize(time.Time{})

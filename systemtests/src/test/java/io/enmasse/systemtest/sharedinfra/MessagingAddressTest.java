@@ -10,28 +10,45 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpConnectOptions;
+import io.enmasse.systemtest.amqp.DeliveryHandler;
+import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
+import io.enmasse.systemtest.condition.Kubernetes;
+import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
-import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
-import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonDelivery;
+import io.vertx.proton.ProtonQoS;
+import org.apache.qpid.proton.amqp.messaging.Accepted;
+import org.apache.qpid.proton.amqp.messaging.Rejected;
+import org.apache.qpid.proton.amqp.messaging.Source;
+import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -113,6 +130,86 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
     }
 
     @Test
+    public void testDeadLetterExpiry() throws Exception {
+        infraResourceManager.createResource(new MessagingAddressBuilder()
+                .editOrNewMetadata()
+                .withName("dlq1")
+                .withNamespace(tenant.getMetadata().getNamespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewDeadLetter()
+                .endDeadLetter()
+                .endSpec()
+                .build());
+        infraResourceManager.createResource(new MessagingAddressBuilder()
+                .editOrNewMetadata()
+                .withName("queue1")
+                .withNamespace(tenant.getMetadata().getNamespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewQueue()
+                .withExpiryAddress("dlq1")
+                .endQueue()
+                .endSpec()
+                .build());
+
+        doTestSendReceive(false, Collections.singletonMap(ClientArgument.MSG_TTL, "100"), null, "queue1", "dlq1");
+    }
+
+    @Test
+    public void testDeadLetterConsume() throws Exception {
+        MessagingEndpoint ingress = new MessagingEndpointBuilder()
+                .editOrNewMetadata()
+                .withName("dlq")
+                .withNamespace(tenant.getMetadata().getNamespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewNodePort()
+                .endNodePort()
+                .withHost(kubernetes.getNodeHost())
+                .addToProtocols("AMQP")
+                .endSpec()
+                .build();
+        infraResourceManager.createResource(ingress);
+        infraResourceManager.createResource(new MessagingAddressBuilder()
+                .editOrNewMetadata()
+                .withName("dlq1")
+                .withNamespace(tenant.getMetadata().getNamespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewDeadLetter()
+                .endDeadLetter()
+                .endSpec()
+                .build());
+        infraResourceManager.createResource(new MessagingAddressBuilder()
+                .editOrNewMetadata()
+                .withName("queue1")
+                .withNamespace(tenant.getMetadata().getNamespace())
+                .endMetadata()
+                .editOrNewSpec()
+                .editOrNewQueue()
+                .withDeadLetterAddress("dlq1")
+                .endQueue()
+                .endSpec()
+                .build());
+
+
+        AmqpClient client = infraResourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+                .setSaslMechanism("ANONYMOUS")
+                .setQos(ProtonQoS.AT_LEAST_ONCE)
+                .setEndpoint(new Endpoint(ingress.getStatus().getHost(), ingress.getStatus().getPorts().get(0).getPort()))
+                .setProtonClientOptions(new ProtonClientOptions())
+                .setTerminusFactory(new QueueTerminusFactory()));
+
+        assertEquals(1, client.sendMessages("queue1", Collections.singletonList("todeadletter")).get(1, TimeUnit.MINUTES));
+        Source source = new Source();
+        source.setAddress("queue1");
+        AtomicInteger redeliveries = new AtomicInteger(0);
+        assertEquals(1, client.recvMessages(source, message -> redeliveries.incrementAndGet() >= 1, Optional.empty(), protonDelivery -> protonDelivery.disposition(new Rejected(), true)).getResult().get(1, TimeUnit.MINUTES).size());
+        assertEquals(1, client.recvMessages("dlq1", 1).get(1, TimeUnit.MINUTES).size());
+    }
+
+    @Test
     public void testTopic() throws Exception {
         infraResourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
@@ -167,7 +264,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
     /**
      * Send 10 messages on sender address, and receive 10 messages on each receiver address.
      */
-    void doTestSendReceive(boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
+    void doTestSendReceive(boolean waitReceivers, Map<ClientArgument, Object> extraSenderArgs, Map<ClientArgument, Object> extraReceiverArgs, String senderAddress, String ... receiverAddresses) throws Exception {
         int expectedMsgCount = 10;
 
         Endpoint e = new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint));
@@ -180,15 +277,29 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                 .withTimeout(60);
 
+        if (extraSenderArgs != null) {
+            for (Map.Entry<ClientArgument, Object> arg : extraSenderArgs.entrySet()) {
+                senderClient.withAdditionalArgument(arg.getKey(), arg.getValue());
+            }
+        }
+
         List<ExternalMessagingClient> receiverClients = new ArrayList<>();
         for (String receiverAddress : receiverAddresses) {
-            receiverClients.add(new ExternalMessagingClient(false)
+            ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
                     .withClientEngine(new RheaClientReceiver())
                     .withMessagingRoute(e)
                     .withAddress(receiverAddress)
                     .withCount(expectedMsgCount)
                     .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                    .withTimeout(60));
+                    .withTimeout(60);
+
+            if (extraReceiverArgs != null) {
+                for (Map.Entry<ClientArgument, Object> arg : extraReceiverArgs.entrySet()) {
+                    receiverClient.withAdditionalArgument(arg.getKey(), arg.getValue());
+                }
+            }
+
+            receiverClients.add(receiverClient);
         }
 
         List<Future<Boolean>> receiverResults = new ArrayList<>();
@@ -214,6 +325,10 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
             assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
                     String.format("Expected %d received messages", expectedMsgCount));
         }
+    }
+
+    void doTestSendReceive(boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
+        doTestSendReceive(waitReceivers, null, null, senderAddress, receiverAddresses);
     }
 
     void doTestSendReceive(String senderAddress, String ... receiverAddresses) throws Exception {
