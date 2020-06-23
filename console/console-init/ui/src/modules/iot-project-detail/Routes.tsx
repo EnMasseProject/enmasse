@@ -5,23 +5,34 @@
 
 import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
-import { Redirect } from "react-router";
 
-const getCertificates = () =>
+const getDevicesPage = () => import("modules/iot-device/DeviceListPage");
+const IoTProjectDetailInfoPage = () =>
+  import("modules/iot-project-detail/IoTProjectDetailInfoPage");
+const getDeviceListPage = () => import("modules/iot-device/DeviceListPage");
+const getCertificatesPage = () =>
   import("modules/iot-certificates/IoTCertificatesPage");
-const getDevices = () => import("modules/iot-device/DeviceListPage");
 
 export const Routes = () => (
   <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
     <LazyRoute
-      path="/iot-projects/:namespace/:projectname/certificates"
-      getComponent={getCertificates}
+      path="/iot-projects/:namespace/:projectname/detail"
+      getComponent={IoTProjectDetailInfoPage}
       exact={true}
     />
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/devices"
-      getComponent={getDevices}
+      getComponent={getDeviceListPage}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/certificates"
+      getComponent={getCertificatesPage}
+      exact={true}
+    />
+    <LazyRoute
+      path="/iot-projects/:namespace/:projectname/devices"
+      getComponent={getDevicesPage}
       exact={true}
     />
   </SwitchWith404>
