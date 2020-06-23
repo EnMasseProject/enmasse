@@ -19,12 +19,6 @@ spec:
     - name: v1beta2
       served: true
       storage: true
-    - name: v1beta1
-      served: true
-      storage: false
-    - name: v1alpha1
-      served: true
-      storage: false
   additionalPrinterColumns:
   - name: Phase
     type: string
@@ -86,31 +80,3 @@ spec:
               type: array
               items:
                 type: string
-        displayName:
-          type: string
-        displayOrder:
-          type: integer
-        shortDescription:
-          type: string
-        longDescription:
-          type: string
-        uuid:
-          type: string
-        addressSpaceType:
-          type: string
-        resources:
-          type: array
-          items:
-            type: object
-            required:
-            - name
-            - max
-            properties:
-              name:
-                type: string
-              max:
-                type: number
-        addressPlans:
-          type: array
-          items:
-            type: string

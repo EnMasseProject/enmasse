@@ -277,42 +277,6 @@ public class SerializationTest {
     }
 
     @Test
-    public void testDeserializeDeprecatedAddressSpacePlan() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
-                "\"kind\":\"AddressSpacePlan\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"myspace\"," +
-                "  \"annotations\": {" +
-                "    \"mykey\": \"myvalue\"" +
-                "  }" +
-                "}," +
-                "\"displayName\": \"MySpace\"," +
-                "\"shortDescription\": \"MySpace is cool\"," +
-                "\"longDescription\": \"MySpace is cool, but not much used anymore\"," +
-                "\"uuid\": \"12345\"," +
-                "\"addressPlans\":[\"plan1\"]," +
-                "\"addressSpaceType\": \"standard\"," +
-                "\"resources\": [" +
-                "  { \"name\": \"router\", \"min\": 0.5, \"max\": 1.0 }, " +
-                "  { \"name\": \"broker\", \"min\": 0.1, \"max\": 0.5 }" +
-                "]" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
-        assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
-        assertThat(addressSpacePlan.getAdditionalProperties().get("displayName"), is("MySpace"));
-        assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
-        assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
-        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
-        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
-        assertThat(addressSpacePlan.getMetadata().getAnnotations().size(), is(1));
-        assertThat(addressSpacePlan.getAnnotation("mykey"), is("myvalue"));
-    }
-
-    @Test
     public void testDeserializeAddressSpacePlan() throws IOException {
         String json = "{" +
                 "\"apiVersion\":\"enmasse.io/v1beta2\"," +
@@ -346,32 +310,6 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
         assertThat(addressSpacePlan.getMetadata().getAnnotations().size(), is(1));
         assertThat(addressSpacePlan.getAnnotation("mykey"), is("myvalue"));
-    }
-
-    @Test
-    public void testDeserializeDeprecatedAddressSpacePlanWithDefaults() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
-                "\"kind\":\"AddressSpacePlan\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"myspace\"" +
-                "}," +
-                "\"addressPlans\":[\"plan1\"]," +
-                "\"addressSpaceType\": \"standard\"," +
-                "\"resources\": [" +
-                "  { \"name\": \"router\", \"min\": 0.5, \"max\": 1.0 }, " +
-                "  { \"name\": \"broker\", \"min\": 0.1, \"max\": 0.5 }" +
-                "]" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        AddressSpacePlan addressSpacePlan = mapper.readValue(json, AddressSpacePlan.class);
-        assertThat(addressSpacePlan.getMetadata().getName(), is("myspace"));
-        assertThat(addressSpacePlan.getAddressPlans().size(), is(1));
-        assertThat(addressSpacePlan.getAddressPlans().get(0), is("plan1"));
-        assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
-        assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
-        assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
     }
 
     @Test
@@ -424,22 +362,6 @@ public class SerializationTest {
         assertThat(addressSpacePlan.getResourceLimits().size(), is(2));
         assertThat(addressSpacePlan.getResourceLimits().get("router"), is(1.0));
         assertThat(addressSpacePlan.getResourceLimits().get("broker"), is(0.5));
-    }
-
-    @Test
-    public void testBuilder() {
-        AddressSpacePlan plan = new AddressSpacePlanBuilder()
-                .withNewMetadata()
-                .withName("plan1")
-                .withNamespace("ns")
-                .endMetadata()
-
-                .withShortDescription("desc")
-                .withAddressPlans(Arrays.asList("a", "b"))
-                .build();
-        assertEquals(2, plan.getAddressPlans().size());
-        assertEquals("plan1", plan.getMetadata().getName());
-        assertEquals("desc", plan.getShortDescription());
     }
 
     @Test
@@ -536,34 +458,6 @@ public class SerializationTest {
     }*/
 
     @Test
-    public void testDeserializeDeprecatedAddressPlan() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
-                "\"kind\":\"AddressPlan\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"plan1\"" +
-                "}," +
-                "\"displayName\": \"MyPlan\"," +
-                "\"shortDescription\": \"MyPlan is cool\"," +
-                "\"longDescription\": \"MyPlan is cool, but not much used anymore\"," +
-                "\"addressType\": \"queue\"," +
-                "\"requiredResources\": [" +
-                "  { \"name\": \"router\", \"credit\": 0.2 }," +
-                "  { \"name\": \"broker\", \"credit\": 0.5 }" +
-                "]" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
-        assertThat(addressPlan.getMetadata().getName(), is("plan1"));
-        assertThat(addressPlan.getAdditionalProperties().get("displayName"), is("MyPlan"));
-        assertThat(addressPlan.getAddressType(), is("queue"));
-        assertThat(addressPlan.getResources().size(), is(2));
-        assertThat(addressPlan.getResources().get("router"), is(0.2));
-        assertThat(addressPlan.getResources().get("broker"), is(0.5));
-    }
-
-    @Test
     public void testDeserializeAddressPlan() throws IOException {
         String json = "{" +
                 "\"apiVersion\":\"enmasse.io/v1beta2\"," +
@@ -586,30 +480,6 @@ public class SerializationTest {
         AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
         assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getSpec().getAdditionalProperties().get("displayName"), is("MyPlan"));
-        assertThat(addressPlan.getAddressType(), is("queue"));
-        assertThat(addressPlan.getResources().size(), is(2));
-        assertThat(addressPlan.getResources().get("router"), is(0.2));
-        assertThat(addressPlan.getResources().get("broker"), is(0.5));
-    }
-
-    @Test
-    public void testDeserializeDeprecatedAddressPlanWithDefaults() throws IOException {
-        String json = "{" +
-                "\"apiVersion\":\"enmasse.io/v1beta1\"," +
-                "\"kind\":\"AddressPlan\"," +
-                "\"metadata\":{" +
-                "  \"name\":\"plan1\"" +
-                "}," +
-                "\"addressType\": \"queue\"," +
-                "\"requiredResources\": [" +
-                "  { \"name\": \"router\", \"credit\": 0.2 }," +
-                "  { \"name\": \"broker\", \"credit\": 0.5 }" +
-                "]" +
-                "}";
-
-        ObjectMapper mapper = new ObjectMapper();
-        AddressPlan addressPlan = mapper.readValue(json, AddressPlan.class);
-        assertThat(addressPlan.getMetadata().getName(), is("plan1"));
         assertThat(addressPlan.getAddressType(), is("queue"));
         assertThat(addressPlan.getResources().size(), is(2));
         assertThat(addressPlan.getResources().get("router"), is(0.2));

@@ -4,10 +4,6 @@
  */
 package io.enmasse.k8s.api;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-
 import io.enmasse.address.model.AddressSpaceTypeBuilder;
 import io.enmasse.address.model.AddressTypeBuilder;
 import io.enmasse.address.model.EndpointSpecBuilder;
@@ -16,12 +12,15 @@ import io.enmasse.address.model.SchemaBuilder;
 import io.enmasse.admin.model.v1.AddressPlanBuilder;
 import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
-import io.enmasse.admin.model.v1.ResourceAllowanceBuilder;
-import io.enmasse.admin.model.v1.ResourceRequestBuilder;
+import io.enmasse.admin.model.v1.AuthenticationServiceBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.admin.model.v1.StandardInfraConfigSpecBuilder;
-import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
 public class TestSchemaApi implements SchemaApi {
     public Schema getSchema() {
@@ -38,12 +37,10 @@ public class TestSchemaApi implements SchemaApi {
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("plan1")
                                                                         .build())
+                                                                .editOrNewSpec()
                                                                 .withAddressType("queue")
-                                                                .withRequiredResources(Arrays.asList(
-                                                                        new ResourceRequestBuilder()
-                                                                                .withName("broker")
-                                                                                .withCredit(0.1)
-                                                                                .build()))
+                                                                .withResources(Map.of("broker", 0.1))
+                                                                .endSpec()
                                                                 .build()
                                                 ))
                                                 .build()))
@@ -64,12 +61,10 @@ public class TestSchemaApi implements SchemaApi {
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("plan1")
                                                                         .build())
+                                                                .editOrNewSpec()
                                                                 .withAddressType("anycast")
-                                                                .withRequiredResources(Arrays.asList(
-                                                                        new ResourceRequestBuilder()
-                                                                        .withName("router")
-                                                                        .withCredit(1.0)
-                                                                        .build()))
+                                                                .withResources(Map.of("router", 1.0))
+                                                                .endSpec()
                                                                 .build()
                                                 ))
                                                 .build(),
@@ -81,23 +76,19 @@ public class TestSchemaApi implements SchemaApi {
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("pooled-inmemory")
                                                                         .build())
+                                                                .editOrNewSpec()
                                                                 .withAddressType("queue")
-                                                                .withRequiredResources(Arrays.asList(
-                                                                        new ResourceRequestBuilder()
-                                                                                .withName("broker")
-                                                                                .withCredit(0.1)
-                                                                                .build()))
+                                                                .withResources(Map.of("broker", 0.1))
+                                                                .endSpec()
                                                                 .build(),
                                                         new AddressPlanBuilder()
                                                                 .withMetadata(new ObjectMetaBuilder()
                                                                         .withName("plan1")
                                                                         .build())
+                                                                .editOrNewSpec()
                                                                 .withAddressType("queue")
-                                                                .withRequiredResources(Arrays.asList(
-                                                                        new ResourceRequestBuilder()
-                                                                                .withName("broker")
-                                                                                .withCredit(1.0)
-                                                                                .build()))
+                                                                .withResources(Map.of("broker", 1.0))
+                                                                .endSpec()
                                                                 .build())
                                                 ).build()
                                 ))
@@ -112,27 +103,25 @@ public class TestSchemaApi implements SchemaApi {
                                 .withPlans(Arrays.asList(
                                         new AddressSpacePlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder()
-                                                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra")
                                                         .withName("myplan")
                                                         .build())
+                                                .editOrNewSpec()
+                                                .withInfraConfigRef("infra")
                                                 .withAddressSpaceType("brokered")
-                                                .withResources(Arrays.asList(new ResourceAllowanceBuilder()
-                                                        .withName("broker")
-                                                        .withMax(1.0)
-                                                        .build()))
+                                                .withResourceLimits(Map.of("broker", 1.0))
                                                 .withAddressPlans(Arrays.asList("plan1"))
+                                                .endSpec()
                                                 .build(),
                                         new AddressSpacePlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder()
-                                                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra")
                                                         .withName("myplan")
                                                         .build())
+                                                .editOrNewSpec()
+                                                .withInfraConfigRef("infra")
                                                 .withAddressSpaceType("type1")
-                                                .withResources(Arrays.asList(new ResourceAllowanceBuilder()
-                                                        .withName("broker")
-                                                        .withMax(1.0)
-                                                        .build()))
+                                                .withResourceLimits(Map.of("broker", 1.0))
                                                 .withAddressPlans(Arrays.asList("plan1"))
+                                                .endSpec()
                                                 .build()
                                 ))
                                 .build()

@@ -17,6 +17,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -53,38 +54,46 @@ public class KubeSchemaApiTest {
                 new AddressSpacePlanBuilder()
                         .withNewMetadata()
                         .withName("spaceplan1")
-                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
                         .endMetadata()
+                        .editOrNewSpec()
+                        .withInfraConfigRef("infra1")
                         .withAddressSpaceType("standard")
                         .withAddressPlans(Arrays.asList("plan1", "plan2", "plan4"))
-                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1), new ResourceAllowance("router", 1), new ResourceAllowance("aggregate", 1)))
+                        .withResourceLimits(Map.of("broker", 1.0, "router", 1.0, "aggregate", 1.0))
+                        .endSpec()
                         .build(),
                 new AddressSpacePlanBuilder()
                         .withNewMetadata()
                         .withName("spaceplan2")
-                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
                         .endMetadata()
+                        .editOrNewSpec()
+                        .withInfraConfigRef("infra1")
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "plan3"))
-                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
+                        .withResourceLimits(Map.of("broker", 1.0))
+                        .endSpec()
                         .build(),
                 new AddressSpacePlanBuilder()
                         .withNewMetadata()
                         .withName("spaceplan3")
-                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra4")
                         .endMetadata()
+                        .editOrNewSpec()
+                        .withInfraConfigRef("infra4")
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "unknown"))
-                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
+                        .withResourceLimits(Map.of("broker", 1.0))
+                        .endSpec()
                         .build(),
                 new AddressSpacePlanBuilder()
                         .withNewMetadata()
                         .withName("spaceplan4")
-                        .addToAnnotations(AnnotationKeys.DEFINED_BY, "infra1")
                         .endMetadata()
+                        .editOrNewSpec()
+                        .withInfraConfigRef("infra1")
                         .withAddressSpaceType("brokered")
                         .withAddressPlans(Arrays.asList( "plan4"))
-                        .withResources(Arrays.asList(new ResourceAllowance("broker", 1)))
+                        .withResourceLimits(Map.of("broker", 1.0))
+                        .endSpec()
                         .build());
 
         List<AddressPlan> addressPlans = Arrays.asList(
@@ -92,29 +101,37 @@ public class KubeSchemaApiTest {
                         .withNewMetadata()
                         .withName("plan1")
                         .endMetadata()
+                        .editOrNewSpec()
                         .withAddressType("queue")
-                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
+                        .withResources(Map.of("broker", 0.1, "router", 0.01))
+                        .endSpec()
                         .build(),
                 new AddressPlanBuilder()
                         .withNewMetadata()
                         .withName("plan2")
                         .endMetadata()
+                        .editOrNewSpec()
                         .withAddressType("topic")
-                        .withRequiredResources(new ResourceRequest("broker", 0.1), new ResourceRequest("router", 0.01))
+                        .withResources(Map.of("broker", 0.1, "router", 0.01))
+                        .endSpec()
                         .build(),
                 new AddressPlanBuilder()
                         .withMetadata(new ObjectMetaBuilder()
                                 .withName("plan4")
                                 .build())
+                        .editOrNewSpec()
                         .withAddressType("anycast")
-                        .withRequiredResources(new ResourceRequest("router", 0.01), new ResourceRequest("broker", 0.01))
+                        .withResources(Map.of("broker", 0.1, "router", 0.01))
+                        .endSpec()
                         .build(),
                 new AddressPlanBuilder()
                         .withNewMetadata()
                         .withName("plan3")
                         .endMetadata()
+                        .editOrNewSpec()
                         .withAddressType("queue")
-                        .withRequiredResources(new ResourceRequest("broker", 0.1))
+                        .withResources(Map.of("broker", 0.1))
+                        .endSpec()
                         .build());
 
         List<StandardInfraConfig> standardInfraConfigs = Arrays.asList(
@@ -135,13 +152,6 @@ public class KubeSchemaApiTest {
                 new AuthenticationServiceBuilder()
                         .withNewMetadata()
                         .withName("standard")
-                        .endMetadata()
-                        .build());
-
-        List<ConsoleService> consoleServices = Arrays.asList(
-                new ConsoleServiceBuilder()
-                        .withNewMetadata()
-                        .withName("console")
                         .endMetadata()
                         .build());
 

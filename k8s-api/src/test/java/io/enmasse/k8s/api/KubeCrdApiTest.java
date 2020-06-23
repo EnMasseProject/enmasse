@@ -54,9 +54,10 @@ class KubeCrdApiTest extends JULInitializingTest {
                 .withName("plan1")
                 .withNamespace(client.getNamespace())
                 .endMetadata()
-
+                .editOrNewSpec()
                 .withAddressSpaceType("standard")
                 .withAddressPlans(Arrays.asList("p1", "p2"))
+                .endSpec()
                 .done();
 
         CompletableFuture<List<AddressSpacePlan>> promise = new CompletableFuture<>();
@@ -93,9 +94,10 @@ class KubeCrdApiTest extends JULInitializingTest {
                     .withName("plan1")
                     .withNamespace(client.getNamespace())
                     .endMetadata()
-
+                    .editOrNewSpec()
                     .withAddressSpaceType("standard")
                     .withAddressPlans(Arrays.asList("p1", "p2"))
+                    .endSpec()
                     .done();
 
             List<AddressSpacePlan> list = promise.get(30, TimeUnit.SECONDS);

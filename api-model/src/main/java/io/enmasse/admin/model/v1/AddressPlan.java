@@ -6,7 +6,6 @@
 package io.enmasse.admin.model.v1;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.enmasse.address.model.MessageTtl;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -14,8 +13,6 @@ import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -34,11 +31,6 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
 
     private AddressPlanSpec spec;
     private AddressPlanStatus status;
-
-    // Deprecated format
-    private String shortDescription;
-    private String addressType;
-    private List<ResourceRequest> requiredResources;
 
     public AddressPlan() {
         super(KIND, AdminCrd.API_VERSION_V1BETA2);
@@ -77,46 +69,26 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     @Override
     @JsonIgnore
     public String getShortDescription() {
-        if (spec != null) {
-            return spec.getShortDescription();
-        } else {
-            return shortDescription;
-        }
+        return spec.getShortDescription();
     }
 
     @Override
     @JsonIgnore
     public String getAddressType() {
-        if (spec != null) {
-            return spec.getAddressType();
-        } else {
-            return addressType;
-        }
+        return spec.getAddressType();
     }
 
     @Override
     @JsonIgnore
     public Map<String, Double> getResources() {
-        if (spec != null) {
-            return spec.getResources();
-        } else {
-            Map<String, Double> returnedResources = new HashMap<>();
-            for (ResourceRequest resourceRequest : requiredResources) {
-                returnedResources.put(resourceRequest.getName(), resourceRequest.getCredit());
-            }
-            return returnedResources;
-        }
+        return spec.getResources();
     }
 
     @Override
     @JsonIgnore
     public int getPartitions() {
-        if (spec != null) {
-            if (spec.getPartitions() != null) {
-                return spec.getPartitions();
-            } else {
-                return 1;
-            }
+        if (spec.getPartitions() != null) {
+            return spec.getPartitions();
         } else {
             return 1;
         }
@@ -126,26 +98,6 @@ public class AddressPlan extends AbstractHasMetadataWithAdditionalProperties<Add
     @JsonIgnore
     public MessageTtl getTtl() {
         return spec == null ? null : spec.getMessageTtl();
-    }
-
-    @JsonIgnore
-    public List<ResourceRequest> getRequiredResources() {
-        return requiredResources;
-    }
-
-    @JsonProperty("shortDescription")
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-
-    @JsonProperty("addressType")
-    public void setAddressType(String addressType) {
-        this.addressType = addressType;
-    }
-
-    @JsonProperty("requiredResources")
-    public void setRequiredResources(List<ResourceRequest> requiredResources) {
-        this.requiredResources = requiredResources;
     }
 
     public AddressPlanStatus getStatus() {

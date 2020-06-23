@@ -16,7 +16,6 @@ import io.enmasse.admin.model.v1.AddressPlanSpecBuilder;
 import io.enmasse.admin.model.v1.AddressSpacePlan;
 import io.enmasse.admin.model.v1.AddressSpacePlanBuilder;
 import io.enmasse.admin.model.v1.ResourceAllowance;
-import io.enmasse.admin.model.v1.ResourceRequest;
 import io.enmasse.admin.model.v1.StandardInfraConfigBuilder;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.k8s.api.SchemaProvider;
@@ -30,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class StandardControllerSchema implements SchemaProvider {
 
@@ -38,20 +38,22 @@ public class StandardControllerSchema implements SchemaProvider {
     private Schema schema;
 
     public StandardControllerSchema() {
-        this(Arrays.asList(new ResourceAllowance("router", 1.0),
-                new ResourceAllowance("broker", 3.0),
-                new ResourceAllowance("aggregate", 3.0)));
-
+        this(Map.of("router", 1.0, "broker", 3.0, "aggregate", 3.0));
     }
 
     public StandardControllerSchema(List<ResourceAllowance> resourceAllowanceList) {
+        this(resourceAllowanceList.stream().collect(Collectors.toMap(ResourceAllowance::getName, ResourceAllowance::getMax)));
+    }
+
+    public StandardControllerSchema(Map<String, Double> resourceAllowanceList) {
         plan = new AddressSpacePlanBuilder()
                 .withNewMetadata()
                 .withName("plan1")
-                .addToAnnotations(AnnotationKeys.DEFINED_BY, "cfg1")
                 .endMetadata()
 
-                .addAllToResources(resourceAllowanceList)
+                .editOrNewSpec()
+                .withInfraConfigRef("cfg1")
+                .withResourceLimits(resourceAllowanceList)
                 .withAddressSpaceType("standard")
                 .withAddressPlans(Arrays.asList(
                         "small-anycast",
@@ -64,6 +66,7 @@ public class StandardControllerSchema implements SchemaProvider {
                         "small-topic",
                         "small-subscription"
                 ))
+                .endSpec()
                 .build();
 
         type = new AddressSpaceTypeBuilder()
@@ -81,9 +84,10 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-anycast").build())
+                                        .editOrNewSpec()
                                         .withAddressType("anycast")
-                                        .withRequiredResources(Arrays.asList(
-                                                new ResourceRequest("router", 0.2000000000)))
+                                        .withResources(Map.of("router", 0.2000000000))
+                                        .endSpec()
                                         .build()))
                                 .build(),
                         new AddressTypeBuilder()
@@ -92,28 +96,31 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("pooled-queue-large").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("broker", 0.6)))
+                                                .withResources(Map.of("broker", 0.6))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("pooled-queue-small").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("broker", 0.1)))
+                                                .withResources(Map.of("broker", 0.1))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("pooled-queue-tiny").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("broker", 0.049)))
+                                                .withResources(Map.of("broker", 0.049))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-queue").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 0.4)))
+                                                .withResources(Map.of("router", 0.2, "broker", 0.4))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-queue-with-maxttl").build())
@@ -147,24 +154,24 @@ public class StandardControllerSchema implements SchemaProvider {
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("large-queue").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 1.0)))
+                                                .withResources(Map.of("router", 0.2, "broker", 1.0))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("xlarge-queue").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 2.0)))
+                                                .withResources(Map.of("router", 0.2, "broker", 2.0))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("mega-xlarge-queue").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("queue")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 10.0)))
+                                                .withResources(Map.of("router", 0.2, "broker", 10.0))
+                                                .endSpec()
                                                 .build()))
                                 .build(),
                         new AddressTypeBuilder()
@@ -173,24 +180,24 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-topic").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("topic")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.1),
-                                                        new ResourceRequest("broker", 0.2)))
+                                                .withResources(Map.of("router", 0.1, "broker", 0.2))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("large-topic").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("topic")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 1.0)))
+                                                .withResources(Map.of("router", 0.2, "broker", 1.0))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("xlarge-topic").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("topic")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.2),
-                                                        new ResourceRequest("broker", 2.0)))
+                                                .withResources(Map.of("router", 0.2, "broker", 2.0))
+                                                .endSpec()
                                                 .build()))
                                 .build(),
                         new AddressTypeBuilder()
@@ -199,17 +206,17 @@ public class StandardControllerSchema implements SchemaProvider {
                                 .withPlans(Arrays.asList(
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("small-subscription").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("subscription")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.05),
-                                                        new ResourceRequest("broker", 0.1)))
+                                                .withResources(Map.of("router", 0.05, "broker", 0.1))
+                                                .endSpec()
                                                 .build(),
                                         new AddressPlanBuilder()
                                                 .withMetadata(new ObjectMetaBuilder().withName("large-subscription").build())
+                                                .editOrNewSpec()
                                                 .withAddressType("subscription")
-                                                .withRequiredResources(Arrays.asList(
-                                                        new ResourceRequest("router", 0.1),
-                                                        new ResourceRequest("broker", 1.0)))
+                                                .withResources(Map.of("router", 0.1, "broker", 1.0))
+                                                .endSpec()
                                                 .build()))
 
                                 .build()))
