@@ -309,7 +309,7 @@ spec:
                           - required: ['valueFromSecret']
                   credentials:
                     type: object
-                    description: "Credentials used when connecting to endpoints. Either 'username' and 'password', or 'secret' must be defined."
+                    description: "Credentials used when connecting to endpoints."
                     properties:
                       username:
                         description: "Username to use for connector."
@@ -355,6 +355,9 @@ spec:
                         anyOf:
                           - required: ['value']
                           - required: ['valueFromSecret']
+                    required:
+                      - username
+                      - password
                   addresses:
                     type: array
                     description: "Addresses to make be accessible via this address space."
