@@ -46,7 +46,8 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     setMetadataList(updatedPropertyMetadata);
   };
 
-  const handleAddChildRow = (event: any, parentKey: string) => {
+  const handleAddChildRow = (event: any) => {
+    let parentKey: string = metadataRow.key;
     let newRow = {
       key: parentKey + "/",
       value: [],
@@ -88,10 +89,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
               <Button
                 variant="control"
                 aria-label="Add child on button click"
-                onClick={e => {
-                  let parentValue: string = metadataRow.key;
-                  handleAddChildRow(e, parentValue);
-                }}
+                onClick={handleAddChildRow}
               >
                 <PlusIcon />
               </Button>
