@@ -164,16 +164,16 @@ metadata:
           "spec": {
             "adapters": {
               "http": {
-                "enabled": "true"
+                "enabled": true
               },
               "mqtt": {
-                "enabled": "false"
+                "enabled": false
               }
               "lorawan": {
-                "enabled": "false"
+                "enabled": false
               }
               "sigfox": {
-                "enabled": "false"
+                "enabled": false
               }
             },
             "services": {
