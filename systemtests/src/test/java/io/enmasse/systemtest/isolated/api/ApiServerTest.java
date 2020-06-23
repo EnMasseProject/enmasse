@@ -60,6 +60,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
+import static org.hamcrest.CoreMatchers.anyOf;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -165,7 +167,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         Throwable exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutAddress));
-        assertTrue(exception.getMessage().contains("spec.address in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
+        assertThat(exception.getMessage(), anyOf(containsString("spec.address in body is required"), containsString("spec.address: Required value")));
 
         Address destWithoutType = new AddressBuilder()
                 .withNewMetadata()
@@ -178,7 +180,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutType));
-        assertTrue(exception.getMessage().contains("spec.type in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
+        assertThat(exception.getMessage(), anyOf(containsString("spec.type in body is required"), containsString("spec.type: Required value")));
 
         Address destWithoutPlan = new AddressBuilder()
                 .withNewMetadata()
@@ -191,7 +193,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
                 .endSpec()
                 .build();
         exception = assertThrows(KubernetesClientException.class, () -> resourcesManager.setAddresses(destWithoutPlan));
-        assertTrue(exception.getMessage().contains("spec.plan in body is required"), "Incorrect response from server on missing address: '" + exception.getMessage() + "'");
+        assertThat(exception.getMessage(), anyOf(containsString("spec.plan in body is required"), containsString("spec.plan: Required value")));
     }
 
     @Test
@@ -402,8 +404,7 @@ class ApiServerTest extends TestBase implements ITestIsolatedStandard {
     @Test
     void testCreateAddressSpaceViaApiNonAdmin() throws Exception {
         String namespace = "pepinator";
-        UserCredentials user = new UserCredentials("jarda", "jarda");
-
+        UserCredentials user = Credentials.userCredentials();
         try {
             KubeCMDClient.loginUser(user.getUsername(), user.getPassword());
             KubeCMDClient.createNamespace(namespace);

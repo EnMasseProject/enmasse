@@ -76,9 +76,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         resourcesManager.deleteAddressSpace(brokered);
         TestUtils.waitForNamespaceDeleted(kubernetes, brokered.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdOut() + allAddresses.getStdErr();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     @Test
@@ -155,9 +155,9 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
         KubeCMDClient.deleteAddressSpace(environment.namespace(), brokered.getMetadata().getName());
         AddressSpaceUtils.waitForAddressSpaceDeleted(brokered);
         TestUtils.waitUntilCondition(() -> {
-            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), "-a");
+            ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(environment.namespace(), Optional.empty());
             return allAddresses.getStdErr();
-        }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+        }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
     }
 
     @Test
@@ -191,7 +191,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             TestUtils.waitUntilCondition(() -> {
                 ExecutionResultData allAddresses = KubeCMDClient.getAddressSpace(namespace, Optional.empty());
                 return allAddresses.getStdOut() + allAddresses.getStdErr();
-            }, "No resources found.", new TimeoutBudget(30, TimeUnit.SECONDS));
+            }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
         } finally {
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
@@ -202,7 +202,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
     @Test
     void testCliOutput() throws Exception {
         String namespace = "cli-output";
-        UserCredentials user = new UserCredentials("pepan", "pepan");
+        UserCredentials user = Credentials.userCredentials();
         try {
             //===========================
             // AddressSpace part
