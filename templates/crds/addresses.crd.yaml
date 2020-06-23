@@ -174,9 +174,9 @@ spec:
                   type: integer
                 resources:
                   type: object
-            ttl:
+            messageTtl:
               type: object
-              description: "Applied message TTL properties"
+              description: "Applied message TTL properties."
               properties:
                 maximum:
                   description: "Maximum TTL value"
