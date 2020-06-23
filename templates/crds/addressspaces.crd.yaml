@@ -178,7 +178,6 @@ spec:
                         required:
                           - type
                           - loadBalancerPorts
-                          - loadBalancerSourceRanges
                       - properties:
                           type:
                             pattern: route
