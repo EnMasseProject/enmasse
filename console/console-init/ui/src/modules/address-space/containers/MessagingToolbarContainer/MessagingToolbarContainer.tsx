@@ -82,8 +82,6 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   const resettInitialState = () => {
     setNameInput("");
     setNamespaceInput("");
-    setTypeSelected(null);
-    setStatusSelected(null);
   };
 
   const onFilterSelect = (value: string) => {

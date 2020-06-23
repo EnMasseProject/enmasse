@@ -46,15 +46,16 @@ const ALL_ADDRESS_SPACES_FILTER = (
     filter += " AND ";
   }
 
-  //filter tye
+  //filter type
   if (filterType) {
     filter += generateFilterPattern("spec.type", [
       { value: filterType.toLowerCase(), isExact: true }
     ]);
   }
 
-  //filter tye
+  //filter status
   if (filterStatus) {
+    filter += " AND ";
     if (filterStatus !== "Pending") {
       filter += generateFilterPattern("status.phase", [
         { value: filterStatus, isExact: true }
