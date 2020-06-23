@@ -123,7 +123,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	certShaSum = certSha.Sum(certShaSum)
 	routerCertSha := hex.EncodeToString(certShaSum[:])
 
-	meshServiceName := fmt.Sprintf("%s-mesh", routerInfraName)
+	meshServiceName := fmt.Sprintf("%s", routerInfraName)
 
 	// Reconcile statefulset of the router
 	statefulset := &appsv1.StatefulSet{
@@ -169,11 +169,11 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 				},
 				{
 					ContainerPort: 55671,
-					Name:          "operator-management",
+					Name:          "operator",
 				},
 				{
 					ContainerPort: 55667,
-					Name:          "cluster-internal",
+					Name:          "cluster",
 				},
 				{
 					ContainerPort: 7777,
@@ -263,7 +263,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	// Reconcile internal cluster router service
-	internalClusterServiceName := fmt.Sprintf("%s-internal", routerInfraName)
+	internalClusterServiceName := fmt.Sprintf("%s-cluster", routerInfraName)
 	internalClusterService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: internalClusterServiceName},
 	}
@@ -278,8 +278,8 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			{
 				Port:       55667,
 				Protocol:   corev1.ProtocolTCP,
-				TargetPort: intstr.FromString("cluster-internal"),
-				Name:       "cluster-internal",
+				TargetPort: intstr.FromString("cluster"),
+				Name:       "cluster",
 			},
 		}
 

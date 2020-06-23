@@ -103,7 +103,7 @@ func (r *ReconcileIoTConfig) processAdapterInfraCert(ctx context.Context, config
 
 	// TODO: Inject the following into adapter deployments
 	certSecretName := cert.GetCertSecretName(config.Name)
-	host := fmt.Sprintf("%s-internal", infra.Name)
+	host := fmt.Sprintf("%s-cluster", infra.Name)
 	port := 55667
 	log.Info("Reconcile adapter cert", "secret", certSecretName, "host", host, "port", port)
 
