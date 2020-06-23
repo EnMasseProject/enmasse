@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import {
   Split,
@@ -16,13 +21,12 @@ import { css, StyleSheet } from "@patternfly/react-styles";
 import { DropdownWithKebabToggle } from "components";
 
 interface IIoTProjectDetailHeaderProps {
-  projectName: string;
-  type: string;
-  status: string;
-  isEnabled: boolean;
-  changeEnable: (value: boolean) => void;
-  onEdit: (name: string) => void;
-  onDelete: (name: string) => void;
+  projectName?: string;
+  type?: string;
+  status?: string;
+  isEnabled?: boolean;
+  changeEnable: () => void;
+  onDelete: () => void;
 }
 
 export const project_header_styles = StyleSheet.create({
@@ -67,7 +71,6 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   status,
   isEnabled,
   changeEnable,
-  onEdit,
   onDelete
 }) => {
   const AddressTitle = () => (
@@ -83,6 +86,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const AddressDetailInFlex = () => (
     <Flex className={css(project_header_styles.namespace_info_margin)}>
       <FlexItem id="iot-project-type">
+        {/* TODO: The bold tag should have the CSS to capitalize text */}
         Type : <b>{type}</b>
       </FlexItem>
       <FlexItem
@@ -106,7 +110,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
     </>
   );
   const onChange = () => {
-    changeEnable(!isEnabled);
+    changeEnable();
   };
   const EnabledIcon = () => (
     <Switch
@@ -119,18 +123,10 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const KebabOptionsLayout = () => {
     const dropdownItems = [
       <DropdownItem
-        id="iot-project-header-kebab-option-edit"
-        key="edit"
-        aria-label="edit"
-        onClick={() => onEdit(projectName)}
-      >
-        Edit
-      </DropdownItem>,
-      <DropdownItem
         id="iot-project-header-kebab-option-delete"
         key="delete"
         aria-label="delete"
-        onClick={() => onDelete(projectName)}
+        onClick={() => onDelete()}
       >
         Delete
       </DropdownItem>

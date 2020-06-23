@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   DeviceRegistationManagement,
   AccessCredentials,
-  IMessagingObject,
+  IIoTMessagingObject,
   GeneralInfo
 } from "modules/iot-project-detail/components";
 import { action } from "@storybook/addon-actions";
@@ -27,7 +27,7 @@ export default {
   title: "Project Detail Page"
 };
 
-export const projectDetailPage = () => {
+export const IoTProjectDetailInfoPage = () => {
   const eventAddresses: Array<string> = [
     text("Event Address Name", "event_address"),
     text("Event Address Name 1", "event_address1")
@@ -39,7 +39,7 @@ export const projectDetailPage = () => {
     text("Command Address Name", "command_address")
   ];
 
-  const messaging: IMessagingObject = {
+  const messaging: IIoTMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),

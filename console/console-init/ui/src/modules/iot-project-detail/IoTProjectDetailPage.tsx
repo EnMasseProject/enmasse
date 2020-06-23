@@ -1,20 +1,16 @@
-/*
- * Copyright 2020, EnMasse authors.
- * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
- */
-
 import React from "react";
-import { ProjectNavigation } from "./components";
-import { Routes } from "./Routes";
 import {
-  PageSectionVariants,
   PageSection,
+  PageSectionVariants,
   Breadcrumb,
   BreadcrumbItem
 } from "@patternfly/react-core";
+import { ProjectNavigation } from "modules/iot-project-detail/components";
+import { useParams } from "react-router";
+import { Routes } from "./Routes";
 import { Link } from "react-router-dom";
 import { useBreadcrumb, useDocumentTitle } from "use-patternfly";
-import { useParams } from "react-router";
+import { IoTProjectDetailHeaderContainer } from "modules/iot-project-detail/containers";
 
 const breadcrumb = (
   <Breadcrumb>
@@ -27,10 +23,12 @@ const breadcrumb = (
 export default function IoTProjectDetailPage() {
   useBreadcrumb(breadcrumb);
   useDocumentTitle("IoT Project Detail");
-  const { sublist } = useParams();
+  const { projectname, sublist } = useParams();
+
   return (
     <>
       <PageSection variant={PageSectionVariants.light}>
+        <IoTProjectDetailHeaderContainer projectName={projectname} />
         <ProjectNavigation activeItem={sublist || "detail"} />
       </PageSection>
       <PageSection>

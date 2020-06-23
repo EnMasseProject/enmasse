@@ -9,7 +9,7 @@ import { MemoryRouter } from "react-router";
 import {
   ProjectNavigation,
   GeneralInfo,
-  IMessagingObject
+  IIoTMessagingObject
 } from "modules/iot-project-detail/components";
 import { Page, Grid, GridItem } from "@patternfly/react-core";
 import {
@@ -91,7 +91,7 @@ export const projectDetailRegistryManagement = () => {
 };
 
 export const projectAccessCredentials = () => {
-  const messaging: IMessagingObject = {
+  const messaging: IIoTMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),

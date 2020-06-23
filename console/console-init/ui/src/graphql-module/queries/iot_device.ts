@@ -99,9 +99,9 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   iotproject: string,
   sortBy?: ISortBy,
   filterObj?: IDeviceFilter,
-  resolver?: string
+  queryResolver?: string
 ) => {
-  const defaultResolver = `
+  const defaultQueryResolver = `
     total
     devices {
       deviceId
@@ -111,8 +111,8 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
     }
   `;
 
-  if (!resolver) {
-    resolver = defaultResolver;
+  if (!queryResolver) {
+    queryResolver = defaultQueryResolver;
   }
 
   let filter = FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
@@ -124,7 +124,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   const ALL_DEVICE_LIST = gql(
     `query devices_for_iot_project {
       devices(iotproject: "${iotproject}", orderBy:"${orderBy}", filter: "${filter}") {
-        ${defaultResolver}
+        ${queryResolver}
       }
     }`
   );

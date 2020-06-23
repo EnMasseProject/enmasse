@@ -22,7 +22,6 @@ export const ProjectDetailHeader = () => (
       isEnabled={boolean("Enabled", true)}
       changeEnable={action("onEnableChange Clicked")}
       onDelete={action("onDelete Clicked")}
-      onEdit={action("onEdit Clicked")}
     />
   </MemoryRouter>
 );
