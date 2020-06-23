@@ -106,9 +106,9 @@ export const AddressDefinitionContainer: React.FunctionComponent<IAddressDefinit
             description: plan.spec.shortDescription || plan.spec.longDescription
           };
         });
-        setPlan(" ");
         setTopic(" ");
         setPlanOptions(planOptions);
+        setPlan(" ");
       }
 
       if (type.toLowerCase() === "subscription") {
