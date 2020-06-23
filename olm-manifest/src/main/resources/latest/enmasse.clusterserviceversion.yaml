@@ -163,12 +163,17 @@ metadata:
           },
           "spec": {
             "adapters": {
+              "http": {
+                "enabled": "true"
+              },
               "mqtt": {
-                "endpoint": {
-                  "secretNameStrategy": {
-                    "secretName": "iot-mqtt-adapter-tls"
-                  }
-                }
+                "enabled": "false"
+              }
+              "lorawan": {
+                "enabled": "false"
+              }
+              "sigfox": {
+                "enabled": "false"
               }
             },
             "services": {
@@ -191,7 +196,7 @@ metadata:
               "managedStrategy": {
                 "addressSpace": {
                   "name": "iot",
-                  "plan": "standard-unlimited"
+                  "plan": "standard-small"
                 },
                 "addresses": {
                   "command": {
