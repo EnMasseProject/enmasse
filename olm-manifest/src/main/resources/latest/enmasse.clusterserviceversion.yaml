@@ -168,10 +168,10 @@ metadata:
               },
               "mqtt": {
                 "enabled": false
-              }
+              },
               "lorawan": {
                 "enabled": false
-              }
+              },
               "sigfox": {
                 "enabled": false
               }
