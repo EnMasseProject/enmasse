@@ -41,6 +41,7 @@ import org.apache.qpid.proton.engine.Session;
 import org.apache.qpid.proton.engine.Transport;
 import org.apache.qpid.proton.engine.impl.LinkMutator;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -275,6 +276,13 @@ public class LinkInitiator implements EventHandler {
       source.setOutcomes(Accepted.DESCRIPTOR_SYMBOL, Rejected.DESCRIPTOR_SYMBOL, Released.DESCRIPTOR_SYMBOL, Modified.DESCRIPTOR_SYMBOL);
       if (!linkInfo.getCapabilities().isEmpty()) {
          source.setCapabilities(Symbol.getSymbol("qd.waypoint"));
+      }
+      if (linkInfo.getConsumerPriority() != null) {
+          Map<Symbol, Object> properties = sender.getRemoteProperties();
+          if (properties == null) {
+             properties = new HashMap<>();
+          }
+          properties.put(Symbol.getSymbol("priority"), linkInfo.getConsumerPriority());
       }
       sender.setSource(source);
 
