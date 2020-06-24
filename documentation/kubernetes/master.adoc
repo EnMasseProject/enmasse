@@ -11,6 +11,7 @@ include::common/attributes.adoc[]
 :OperatorMarketplaceNamespace: marketplace
 
 :KubePlatformRbacURL: https://kubernetes.io/docs/reference/access-authn-authz/rbac/
+:KubePlatformSecurityContextURL: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
 
 = Documentation for {ProductName} on Kubernetes
 
