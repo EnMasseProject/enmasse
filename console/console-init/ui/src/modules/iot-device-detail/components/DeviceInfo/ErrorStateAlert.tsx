@@ -74,14 +74,12 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
         <Flex>
           <FlexItem>
             <AlertActionLink onClick={deleteGateways}>
-              {" "}
               Delete gateways
             </AlertActionLink>
           </FlexItem>
           <FlexItem>or</FlexItem>
           <FlexItem>
             <AlertActionLink onClick={deleteCredentials}>
-              {" "}
               Delete credentials
             </AlertActionLink>
           </FlexItem>

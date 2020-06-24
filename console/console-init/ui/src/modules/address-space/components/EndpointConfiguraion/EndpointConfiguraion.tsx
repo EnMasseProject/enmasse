@@ -16,7 +16,6 @@ import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { IDropdownOption, SwitchWithToggle } from "components";
-import { StyleSheet, css } from "aphrodite";
 
 interface IEndpointConfigurationProps {
   projectDetail: IMessagingProject;
