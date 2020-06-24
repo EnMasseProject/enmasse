@@ -59,6 +59,7 @@ public class ArtemisUtils {
                 "--user", String.format("%s:%s", supportCredentials.getUsername(), supportCredentials.getPassword()),
                 "-H", "Origin: https://localhost:8161",
                 String.format("https://localhost:8161/console/jolokia/exec/org.apache.activemq.artemis:broker=\"%s\"/getAddressSettingsAsJSON/%s", brokerPodName, addressName));
+        assertThat(String.format("Failed to invoke getAddressSettingsAsJSON query: %s : %s", jmxResponse.getStdOut(), jmxResponse.getStdErr()), jmxResponse.getRetCode(), is(true));
 
         String responseJson = jmxResponse.getTrimmedStdOut();
         Map<String, Object> map = jsonResponseToMap(responseJson);
