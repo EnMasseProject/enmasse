@@ -13,18 +13,18 @@ spec:
     plural: iotconfigs
     singular: iotconfig
     shortNames:
-    - icfg
+      - icfg
     categories:
-    - enmasse
+      - enmasse
   additionalPrinterColumns:
-  - name: Phase
-    type: string
-    description: Phase of the IoT config
-    JSONPath: .status.phase
-  - name: Message
-    type: string
-    description: Message
-    JSONPath: .status.message
+    - name: Phase
+      type: string
+      description: Phase of the IoT config
+      JSONPath: .status.phase
+    - name: Message
+      type: string
+      description: Message
+      JSONPath: .status.message
   subresources:
     status: {}
   validation:
@@ -120,6 +120,18 @@ spec:
                 sigfox:
                   type: object
                 lorawan:
+                  type: object
+
+            services:
+              type: object
+              properties:
+                deviceConnection:
+                  type: object
+                deviceRegistry:
+                  type: object
+                authentication:
+                  type: object
+                tenant:
                   type: object
 
             tracing:
