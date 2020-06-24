@@ -9,12 +9,14 @@ import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressSpaceBuilder;
+import io.enmasse.config.AnnotationKeys;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.bases.isolated.ITestIsolatedStandard;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.iot.DeviceManagementApi;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
@@ -24,6 +26,7 @@ import io.enmasse.systemtest.monitoring.MonitoringQueries;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,13 +51,17 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @BeforeAll
     void installMonitoring() {
         try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            EnmasseOperatorManager.getInstance().installMonitoringOperator();
-            Endpoint prometheusEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
-            monitoring = new MonitoringClient(prometheusEndpoint);
-            monitoring.waitUntilPrometheusReady();
+            EnmasseOperatorManager.getInstance().enableMonitoring();
+            Endpoint metricsEndpoint;
+            if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
+                metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("thanos-querier", "openshift-monitoring");
+            } else {
+                metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
+            }
+            monitoring = new MonitoringClient(metricsEndpoint);
             kubernetes.createNamespace(testNamespace);
-        } catch (Exception ex) {
-            beforeAllException = ex;
+        } catch (Exception e) {
+            beforeAllException = e;
         }
     }
 
@@ -69,7 +76,9 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     void uninstallMonitoring() throws Exception {
         beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         EnmasseOperatorManager.getInstance().removeIoT();
-        EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
+        if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
+            EnmasseOperatorManager.getInstance().deleteMonitoringOperator();
+        }
         kubernetes.deleteNamespace(testNamespace);
     }
 
@@ -77,7 +86,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @OpenShift
     void testAddressSpaceRules() throws Exception {
         Instant startTs = Instant.now();
-        String addressSpaceName = "monitoring-address-space";
+        String addressSpaceName = "monitoring-address-space-test1";
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName(addressSpaceName)
@@ -93,9 +102,11 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .build();
         resourcesManager.createAddressSpace(addressSpace);
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, "1",
+                Collections.singletonMap("address_space_name", "monitoring-address-space-test1")));
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_NOT_READY, "0",
+                Collections.singletonMap("address_space_name", "monitoring-address-space-test1")));
 
         //tests address spaces ready goes from 0 to 1
         assertDoesNotThrow(() -> monitoring.validateRangeQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_SPACES_READY, startTs, range -> Ordering.natural().isOrdered(range)));
@@ -107,7 +118,7 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @Test
     @OpenShift
     void testAddressQueries() throws Exception {
-        String addressSpaceName = "monitoring-address-space";
+        String addressSpaceName = "monitoring-address-space-test2";
         AddressSpace addressSpace = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName(addressSpaceName)
@@ -150,22 +161,28 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
                 .build();
 
         resourcesManager.setAddresses(false, topic, queue);
+        String infraUuid = addressSpace.getAnnotation(AnnotationKeys.INFRA_UUID);
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "2"));
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CONFIGURING_TOTAL, "2"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "2",
+                Collections.singletonMap("service", "standard-controller-" + infraUuid)));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CONFIGURING_TOTAL, "2",
+                Collections.singletonMap("service", "standard-controller-" + infraUuid)));
 
         AddressUtils.waitForDestinationsReady(topic, queue);
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_READY_TOTAL, "2",
+                Collections.singletonMap("service", "standard-controller-" + infraUuid)));
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_NOT_READY_TOTAL, "0",
+                Collections.singletonMap("service", "standard-controller-" + infraUuid)));
 
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "0",
                 Collections.singletonMap("address", queue.getSpec().getAddress())));
 
         getClientUtils().sendDurableMessages(resourcesManager, addressSpace, user, 10, queue);
 
-        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CANARY_HEALTH_FAILURES_TOTAL, "0"));
+        assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ADDRESS_CANARY_HEALTH_FAILURES_TOTAL, "0",
+                Collections.singletonMap("service", "standard-controller-" + infraUuid)));
 
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_ARTEMIS_DURABLE_MESSAGE_COUNT, "10",
                 Collections.singletonMap("address", queue.getSpec().getAddress())));
@@ -195,6 +212,8 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     @OpenShift(version = OpenShiftVersion.OCP4)
     void testMonitoringIoTComponents() throws Exception {
         EnmasseOperatorManager.getInstance().installIoTOperator();
+        DeviceManagementApi.createManagementServiceAccount();
+        IoTTestSession.deployDefaultCerts();
         IoTTestSession
                 .createDefault()
                 .adapters(IoTTestSession.Adapter.HTTP)
