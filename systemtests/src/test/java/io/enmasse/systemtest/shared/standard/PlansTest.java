@@ -39,7 +39,7 @@ class PlansTest extends TestBase implements ITestSharedStandard {
 
         AddressSpacePlan standardPlan = resourcesManager.getAddressSpacePlan("standard");
         resourcesManager.createAddressPlan(weakQueuePlan);
-        standardPlan = new DoneableAddressSpacePlan(standardPlan).addNewAddressPlan(weakQueuePlanName).done();
+        standardPlan = new DoneableAddressSpacePlan(standardPlan).editOrNewSpec().addNewAddressPlan(weakQueuePlanName).endSpec().done();
         resourcesManager.removeAddressSpacePlan(standardPlan);
 
         ArrayList<Address> dest = new ArrayList<>();

@@ -4,23 +4,16 @@
  */
 package io.enmasse.admin.model.v1;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.Nulls;
-
 import io.enmasse.common.model.DefaultCustomResource;
-import io.enmasse.config.AnnotationKeys;
 import io.fabric8.kubernetes.api.model.Doneable;
 import io.sundr.builder.annotations.Buildable;
 import io.sundr.builder.annotations.BuildableReference;
 import io.sundr.builder.annotations.Inline;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Buildable(
         editableEnabled = false,
@@ -37,14 +30,6 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
 
     private AddressSpacePlanSpec spec;
     private AddressSpacePlanStatus status;
-
-    private String shortDescription;
-    private String addressSpaceType;
-
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
-    private List<ResourceAllowance> resources = new LinkedList<>();
-    @JsonSetter(nulls = Nulls.AS_EMPTY)
-    private List<String> addressPlans = new LinkedList<>();
 
     public AddressSpacePlan() {
         super(KIND, AdminCrd.API_VERSION_V1BETA2);
@@ -85,35 +70,19 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
     @JsonIgnore
     @Override
     public Map<String, Double> getResourceLimits() {
-        if (spec != null) {
-            return spec.getResourceLimits();
-        } else {
-            Map<String, Double> resourceLimits = new HashMap<>();
-            for (ResourceAllowance allowance : resources) {
-                resourceLimits.put(allowance.getName(), allowance.getMax());
-            }
-            return resourceLimits;
-        }
+        return spec.getResourceLimits();
     }
 
     @JsonIgnore
     @Override
     public List<String> getAddressPlans() {
-        if (spec != null) {
-            return spec.getAddressPlans();
-        } else {
-            return addressPlans;
-        }
+        return spec.getAddressPlans();
     }
 
     @JsonIgnore
     @Override
     public String getShortDescription() {
-        if (spec != null) {
-            return spec.getShortDescription();
-        } else {
-            return shortDescription;
-        }
+        return spec.getShortDescription();
     }
 
     @JsonIgnore
@@ -139,46 +108,13 @@ public class AddressSpacePlan extends AbstractHasMetadataWithAdditionalPropertie
     @JsonIgnore
     @Override
     public String getAddressSpaceType() {
-        if (spec != null) {
-            return spec.getAddressSpaceType();
-        } else {
-            return addressSpaceType;
-        }
+        return spec.getAddressSpaceType();
     }
 
     @JsonIgnore
     @Override
     public String getInfraConfigRef() {
-        if (spec != null) {
-            return spec.getInfraConfigRef();
-        } else {
-            return getAnnotation(AnnotationKeys.DEFINED_BY);
-        }
-    }
-
-    @JsonIgnore
-    public List<ResourceAllowance> getResources() {
-        return resources;
-    }
-
-    @JsonProperty("resources")
-    public void setResources(List<ResourceAllowance> resources) {
-        this.resources = resources;
-    }
-
-    @JsonProperty("addressPlans")
-    public void setAddressPlans(List<String> addressPlans) {
-        this.addressPlans = addressPlans;
-    }
-
-    @JsonProperty("shortDescription")
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-
-    @JsonProperty("addressSpaceType")
-    public void setAddressSpaceType(String addressSpaceType) {
-        this.addressSpaceType = addressSpaceType;
+        return spec.getInfraConfigRef();
     }
 
     public AddressSpacePlanStatus getStatus() {
