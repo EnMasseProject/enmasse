@@ -575,23 +575,26 @@ func AppendEnvVarValue(container *corev1.Container, name string, value string) {
 		container.Env = make([]corev1.EnvVar, 0)
 	}
 
-	opts := ""
-
-	for _, env := range container.Env {
+	for i, env := range container.Env {
 		if env.Name == name {
-			opts = env.Value
+			opts := env.Value
+
+			if len(opts) > 0 {
+				opts += " "
+			}
+
+			opts += value
+
+			env.Value = opts
+			container.Env[i] = env
+
+			return
 		}
 	}
 
-	if len(opts) > 0 {
-		opts += " "
-	}
-
-	opts += value
-
 	container.Env = append(container.Env, corev1.EnvVar{
 		Name:  name,
-		Value: opts,
+		Value: value,
 	})
 }
 

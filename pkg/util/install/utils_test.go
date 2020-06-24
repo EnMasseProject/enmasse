@@ -216,3 +216,30 @@ func TestComputeConfigMapHash(t *testing.T) {
 	assert.Equal(t, hash(data1), hash(data2))
 	assert.NotEqual(t, hash(bar), hash(data2))
 }
+
+func TestAppendEnvVar(t *testing.T) {
+
+	container := corev1.Container{}
+
+	assert.Nil(t, container.Env)
+	assert.Len(t, container.Env, 0)
+
+	// append first element
+
+	AppendEnvVarValue(&container, JavaOptsEnvVarName, "foo")
+
+	assert.NotNil(t, container.Env)
+	assert.Len(t, container.Env, 1)
+	assert.Equal(t, JavaOptsEnvVarName, container.Env[0].Name)
+	assert.Equal(t, "foo", container.Env[0].Value)
+
+	// append second element
+
+	AppendEnvVarValue(&container, JavaOptsEnvVarName, "bar")
+
+	assert.NotNil(t, container.Env)
+	assert.Len(t, container.Env, 1)
+	assert.Equal(t, JavaOptsEnvVarName, container.Env[0].Name)
+	assert.Equal(t, "foo bar", container.Env[0].Value)
+
+}
