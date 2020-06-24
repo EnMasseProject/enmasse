@@ -136,7 +136,7 @@ public class AddressFinalizerControllerTest {
         // when running the reconcile method
 
         Controller.ReconcileResult result = controller.reconcileAnyState(addressSpace);
-        assertFalse(result.isPersistAndRequeue());
+        assertTrue(result.isPersistAndRequeue());
         addressSpace = result.getAddressSpace();
 
         // then the finalizer of this controller should be removed, and the address should be deleted
