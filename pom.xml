@@ -60,7 +60,6 @@
         <glassfish.el.version>3.0.1-b08</glassfish.el.version>
         <resteasy.version>3.6.1.SP2</resteasy.version>
         <mockito.version>2.21.0</mockito.version>
-        <commons-collections.version>3.2.2</commons-collections.version>
         <guava.version>25.0-jre</guava.version>
         <hamcrest.version>2.2</hamcrest.version>
         <junit.jupiter.version>5.5.2</junit.jupiter.version>
@@ -215,13 +214,6 @@
             </dependency>
 
             <!-- Other dependencies -->
-
-            <!-- Overridden to avoid CVE-2017-15708 -->
-            <dependency>
-                <groupId>commons-collections</groupId>
-                <artifactId>commons-collections</artifactId>
-                <version>${commons-collections.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.apache.activemq</groupId>
