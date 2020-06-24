@@ -39,7 +39,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --env=jest-environment-jsdom-sixteen",
     "eject": "react-scripts eject",
     "format": "prettier --write 'src/**/*.{js,ts,tsx,json}'",
     "storybook": "start-storybook -p 9009",
@@ -83,6 +83,7 @@
     "babel-loader": "^8.0.6",
     "handlebars": "4.7.6",
     "husky": ">=3.1.0",
+    "jest-environment-jsdom-sixteen": "^1.0.3",
     "lint-staged": ">=9.4.3",
     "prettier": "^1.19.1",
     "react-testing-library": "^8.0.1",
