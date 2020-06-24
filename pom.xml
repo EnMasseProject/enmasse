@@ -675,7 +675,6 @@
                 <version>${gson.version}</version>
             </dependency>
 
-            <!-- Overridden as new version resolves problem with license metadata -->
             <dependency>
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
