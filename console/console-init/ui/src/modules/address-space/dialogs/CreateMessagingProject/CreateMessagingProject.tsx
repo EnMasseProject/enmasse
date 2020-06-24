@@ -218,6 +218,7 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
       title="Create an Instance"
       steps={steps}
       onSave={handleSave}
+      height={400}
     />
   );
 };

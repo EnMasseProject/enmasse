@@ -10,20 +10,14 @@ import {
   Form,
   Checkbox,
   FormGroup,
-  Radio,
-  Switch
+  Radio
 } from "@patternfly/react-core";
 import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
-import { IDropdownOption } from "components";
+import { IDropdownOption, SwitchWithToggle } from "components";
 import { StyleSheet, css } from "aphrodite";
 
-const style = StyleSheet.create({
-  margin_left: {
-    marginLeft: 20
-  }
-});
 interface IEndpointConfigurationProps {
   projectDetail: IMessagingProject;
   addressSpaceSchema?: IAddressSpaceSchema;
@@ -144,7 +138,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
   };
   return (
     <Grid>
-      <GridItem span={6}>
+      <GridItem span={12}>
         <Form>
           {getProtocolOptions() && getProtocolOptions().length > 0 && (
             <FormGroup
@@ -164,7 +158,6 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     id={`checkbox-${protocol.key}`}
                     key={protocol.key}
                     name={protocol.key}
-                    className={css(style.margin_left)}
                   />
                 </div>
               ))}
@@ -187,7 +180,6 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                     label={certificate.label}
                     id={`radio-${certificate.key}`}
                     value={certificate.value}
-                    className={css(style.margin_left)}
                   />
                 </div>
               ))}
@@ -196,14 +188,13 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
 
           <FormGroup fieldId="form-group-create-routes" label="Create Routes">
             <br />
-            <br />
-            <Switch
+            <SwitchWithToggle
               id="switch-configure-route-btn"
+              onChange={onRouteChange}
               label={
                 "Enable routing to make the address space publicly visible"
               }
               isChecked={projectDetail.addRoutes}
-              onChange={onRouteChange}
             />
           </FormGroup>
         </Form>

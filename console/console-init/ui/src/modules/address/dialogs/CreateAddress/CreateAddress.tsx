@@ -181,6 +181,7 @@ export const CreateAddress: React.FunctionComponent = () => {
       nextButtonText: "Finish"
     }
   ];
+
   return (
     <Wizard
       id="create-addr-wizard"
@@ -190,6 +191,7 @@ export const CreateAddress: React.FunctionComponent = () => {
       steps={steps}
       onNext={() => {}}
       onSave={handleSave}
+      height={400}
     />
   );
 };

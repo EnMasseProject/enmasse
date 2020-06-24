@@ -4,21 +4,39 @@
  */
 
 import React from "react";
-import { NavLink } from "react-router-dom";
-import { Alert, PageSection } from "@patternfly/react-core";
+import { useHistory } from "react-router-dom";
+import { Alert, PageSection, AlertActionLink } from "@patternfly/react-core";
+import { StyleSheet, css } from "aphrodite";
 import { useA11yRouteChange } from "./useA11yRoute";
 import { useDocumentTitle } from "./useDocumentTitle";
+
+const styles = StyleSheet.create({
+  alert: {
+    backgroundColor: "var(--pf-c-alert--m-inline--BackgroundColor)"
+  }
+});
 
 export const NotFound: React.FunctionComponent = () => {
   useA11yRouteChange();
   useDocumentTitle("Page not found");
+  const history = useHistory();
+
+  const handleRedirectLink = () => {
+    history.push("/");
+  };
+
   return (
     <PageSection>
-      <Alert variant="danger" title="404! This view hasn't been created yet." />
-      <br />
-      <NavLink to="/" className="pf-c-nav__link">
-        Take me home
-      </NavLink>
+      <Alert
+        variant="danger"
+        title="404! This view hasn't been created yet."
+        className={css(styles.alert)}
+        actionLinks={
+          <AlertActionLink onClick={handleRedirectLink}>
+            Take me home
+          </AlertActionLink>
+        }
+      />
     </PageSection>
   );
 };
