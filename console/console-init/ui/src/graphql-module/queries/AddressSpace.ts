@@ -40,8 +40,7 @@ const ALL_ADDRESS_SPACES_FILTER = (
   if (
     ((filterNamesLength && filterNamesLength > 0) ||
       (filterNameSpacesLength && filterNameSpacesLength > 0)) &&
-    filterType &&
-    filterType.trim() !== ""
+    (filterType?.trim() || filterStatus?.trim())
   ) {
     filter += " AND ";
   }
@@ -51,6 +50,10 @@ const ALL_ADDRESS_SPACES_FILTER = (
     filter += generateFilterPattern("spec.type", [
       { value: filterType.toLowerCase(), isExact: true }
     ]);
+  }
+
+  if (filterType?.trim() && filterStatus?.trim()) {
+    filter += " AND ";
   }
 
   //filter tye
