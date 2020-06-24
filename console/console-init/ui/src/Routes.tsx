@@ -31,7 +31,7 @@ export const AppRoutes = () => (
   //     exact={true}
   //     getComponent={getAddressSpaceListPage}
   //   />
-  //   {/* messaging project detial page route */}
+  //   {/* messaging project detail page route */}
   //   <LazyRoute
   //     path="/msg-projects/:namespace/:projectname/:type/:subList"
   //     exact={true}
@@ -92,7 +92,7 @@ export const AppRoutes = () => (
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/devices/:deviceid/:subList"
       getComponent={getDeviceDetailPage}
-      />
+    />
     <LazyRoute
       path="/iot-projects/:namespace/:projectname/:sublist"
       getComponent={getIoTProjectDetailPage}
