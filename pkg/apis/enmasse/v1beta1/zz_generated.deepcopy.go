@@ -630,6 +630,11 @@ func (in *ConnectorSpec) DeepCopyInto(out *ConnectorSpec) {
 		*out = new(int)
 		**out = **in
 	}
+	if in.Cost != nil {
+		in, out := &in.Cost, &out.Cost
+		*out = new(int)
+		**out = **in
+	}
 	out.Credentials = in.Credentials
 	if in.Addresses != nil {
 		in, out := &in.Addresses, &out.Addresses

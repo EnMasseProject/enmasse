@@ -660,6 +660,10 @@ public class RouterConfigController implements Controller {
                 remoteConnector.setIdleTimeoutSeconds(connector.getIdleTimeout());
             }
 
+            if (connector.getCost() != null) {
+                remoteConnector.setCost(connector.getCost());
+            }
+
             if (connector.getMaxFrameSize() != null) {
                 remoteConnector.setMaxFrameSize(Math.max(512 /* AMQP MIN-MAX-FRAME-SIZE */ , connector.getMaxFrameSize()));
             }

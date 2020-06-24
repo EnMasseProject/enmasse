@@ -30,11 +30,11 @@ type AddressSpaceSchema struct {
 }
 
 type AddressSpaceSchemaSpec struct {
-	AuthenticationServices []string `json:"authenticationServices,omitempty"`
-	RouteServicePorts []RouteServicePortDescription `json:"routeServicePorts,omitempty"`
+	AuthenticationServices   []string                             `json:"authenticationServices,omitempty"`
+	RouteServicePorts        []RouteServicePortDescription        `json:"routeServicePorts,omitempty"`
 	CertificateProviderTypes []CertificateProviderTypeDescription `json:"certificateProviderTypes,omitempty"`
-	EndpointExposeTypes []EndpointExposeTypeDescription `json:"endpointExposeTypes,omitempty"`
-	Description            string   `json:"description,omitempty"`
+	EndpointExposeTypes      []EndpointExposeTypeDescription      `json:"endpointExposeTypes,omitempty"`
+	Description              string                               `json:"description,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -54,9 +54,9 @@ type RouteServicePortDescription struct {
 }
 
 type CertificateProviderTypeDescription struct {
-	Name                 CertificateProviderType `json:"name,omitempty"`
-	DisplayName          string                  `json:"displayName,omitempty"`
-	Description          string                  `json:"description,omitempty"`
+	Name        CertificateProviderType `json:"name,omitempty"`
+	DisplayName string                  `json:"displayName,omitempty"`
+	Description string                  `json:"description,omitempty"`
 }
 
 type EndpointExposeTypeDescription struct {
@@ -192,6 +192,7 @@ type ConnectorSpec struct {
 	Role          *string                  `json:"role,omitempty"`
 	MaxFrameSize  *int                     `json:"maxFrameSize,omitempty"`
 	IdleTimeout   *int                     `json:"idleTimeout,omitempty"`
+	Cost          *int                     `json:"cost,omitempty"`
 	Credentials   ConnectorCredentialsSpec `json:"credentials,omitempty"`
 	Addresses     []ConnectorAddressRule   `json:"addresses"`
 }

@@ -236,6 +236,9 @@ spec:
                   maxFrameSize:
                     type: integer
                     description: "Max frame size of AMQP connection."
+                  cost:
+                    type: integer
+                    description: "Cost of connector link. Only applied to inter-router roles"
                   tls:
                     type: object
                     description: "TLS configuration for the connector. If not specified, TLS will not be used."

@@ -44,6 +44,7 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
     private String role;
     private Integer maxFrameSize;
     private Integer idleTimeout;
+    private Integer cost;
 
     @NotNull
     @NotEmpty
@@ -135,6 +136,14 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
         this.idleTimeout = idleTimeout;
     }
 
+    public Integer getCost() {
+        return cost;
+    }
+
+    public void setCost(Integer cost) {
+        this.cost = cost;
+    }
+
     @Override
     public String toString() {
         return "AddressSpaceSpecConnector{" +
@@ -146,6 +155,7 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
                 ", role=" + role +
                 ", idleTimeout=" + idleTimeout +
                 ", maxFrameSize=" + maxFrameSize +
+                ", cost=" + cost +
                 '}';
     }
 
@@ -161,11 +171,12 @@ public class AddressSpaceSpecConnector extends AbstractWithAdditionalProperties 
                 Objects.equals(addresses, connector.addresses) &&
                 Objects.equals(role, connector.role) &&
                 Objects.equals(idleTimeout, connector.idleTimeout) &&
-                Objects.equals(maxFrameSize, connector.maxFrameSize);
+                Objects.equals(maxFrameSize, connector.maxFrameSize) &&
+                Objects.equals(cost, connector.cost);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, endpointHosts, credentials, tls, addresses, role, idleTimeout, maxFrameSize);
+        return Objects.hash(name, endpointHosts, credentials, tls, addresses, role, idleTimeout, maxFrameSize, cost);
     }
 }

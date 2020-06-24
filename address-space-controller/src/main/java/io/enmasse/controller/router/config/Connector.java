@@ -22,6 +22,7 @@ public class Connector {
     private Role role;
     private Integer maxFrameSize;
     private Integer idleTimeoutSeconds;
+    private Integer cost;
 
     public String getHost() {
         return host;
@@ -119,6 +120,14 @@ public class Connector {
         this.idleTimeoutSeconds = idleTimeoutSeconds;
     }
 
+    public void setCost(Integer cost) {
+        this.cost = cost;
+    }
+
+    public Integer getCost() {
+        return cost;
+    }
+
     @Override
     public String toString() {
         return "Connector{" +
@@ -131,6 +140,7 @@ public class Connector {
                 ", failoverUrls='" + failoverUrls + '\'' +
                 ", idleTimeoutSeconds=" + idleTimeoutSeconds +
                 ", maxFrameSize=" + maxFrameSize +
+                ", cost=" + cost +
                 ", role=" + role +
                 '}';
     }
@@ -151,11 +161,12 @@ public class Connector {
                 Objects.equals(failoverUrls, connector.failoverUrls) &&
                 role == connector.role &&
                 Objects.equals(idleTimeoutSeconds, connector.idleTimeoutSeconds) &&
-                Objects.equals(maxFrameSize, connector.maxFrameSize);
+                Objects.equals(maxFrameSize, connector.maxFrameSize) &&
+                Objects.equals(cost, connector.cost);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, host, port, sslProfile, verifyHostname, saslUsername, saslPassword, saslMechanisms, failoverUrls, role, idleTimeoutSeconds, maxFrameSize);
+        return Objects.hash(name, host, port, sslProfile, verifyHostname, saslUsername, saslPassword, saslMechanisms, failoverUrls, role, idleTimeoutSeconds, maxFrameSize, cost);
     }
 }
