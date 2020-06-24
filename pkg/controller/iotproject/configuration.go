@@ -152,7 +152,7 @@ func (r *ReconcileIoTProject) acceptTrustAnchors(project *iotv1alpha1.IoTProject
 		for k := range duplicateTrustAnchors {
 			tas = append(tas, k)
 		}
-		cond.SetStatusAsBoolean(false, "AsExpected", fmt.Sprintf("All configured trust anchors are claimed by this instance: %s", strings.Join(tas, ", ")))
+		cond.SetStatusAsBoolean(true, "AsExpected", fmt.Sprintf("All configured trust anchors are claimed by this instance: %s", strings.Join(tas, ", ")))
 	}
 
 	// return result
