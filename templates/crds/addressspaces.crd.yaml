@@ -141,53 +141,50 @@ spec:
                   expose:
                     description: "Expose configuration of this endpoint."
                     type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - loadbalancer
+                          - route
+                        annotations:
+                          type: object
+                        loadBalancerPorts:
+                          type: array
+                          items:
+                            type: string
+                        loadBalancerSourceRanges:
+                          type: array
+                          items:
+                            type: string
+                        routeHost:
+                          type: string
+                        routeServicePort:
+                          type: string
+                          description: "Service port. Valid values are 'amqps' for the messaging service, 'secure-mqtt' for the mqtt service, and 'https' for the console service."
+                          enum:
+                            - amqps
+                            - https
+                            - secure-mqtt
+                        routeTlsTermination:
+                          type: string
+                          enum:
+                            - passthrough
+                            - reencrypt
                     anyOf:
-                      - required:
+                      - properties:
+                          type:
+                            pattern: loadbalancer
+                        required:
                           - type
                           - loadBalancerPorts
-                        properties:
+                      - properties:
                           type:
-                            type: string
-                            description: "Expose this endpoint as LoadBalancer service."
-                            enum:
-                              - loadbalancer
-                          annotations:
-                            type: object
-                          loadBalancerPorts:
-                            type: array
-                            items:
-                              type: string
-                          loadBalancerSourceRanges:
-                            type: array
-                            items:
-                              type: string
-                      - required:
+                            pattern: route
+                        required:
                           - type
-                          - routeTlsTermination
                           - routeServicePort
-                        properties:
-                          type:
-                            type: string
-                            description: "Expose this endpoint as an OpenShift route."
-                            enum:
-                              - route
-                          annotations:
-                            type: object
-                            description: "Annotations to set on the created endpoint."
-                          routeHost:
-                            type: string
-                          routeServicePort:
-                            type: string
-                            description: "Service port. Valid values are 'amqps' for the messaging service, 'secure-mqtt' for the mqtt service, and 'https' for the console service."
-                            enum:
-                              - amqps
-                              - https
-                              - secure-mqtt
-                          routeTlsTermination:
-                            type: string
-                            enum:
-                              - passthrough
-                              - reencrypt
+                          - routeTlsTermination
             networkPolicy:
               type: object
               description: "Define NetworkPolicy for this address space."
@@ -245,118 +242,121 @@ spec:
                     properties:
                       caCert:
                         description: "CA certificate to be used by the connector."
-                        anyOf:
-                          - type: string
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                            description: "Value of field"
+                          valueFromSecret:
+                            type: object
+                            description: "Secret containing value."
+                            required:
+                              - name
                             properties:
-                              value:
+                              name:
                                 type: string
-                                description: "Value of field"
-                          - type: object
-                            properties:
-                              valueFromSecret:
-                                type: object
-                                description: "Secret containing value."
-                                required:
-                                  - name
-                                properties:
-                                  name:
-                                    type: string
-                                    description: "Name of Secret containing value."
-                                  key:
-                                    type: string
-                                    description: "Key to use for looking up entry."
+                                description: "Name of Secret containing value."
+                              key:
+                                type: string
+                                description: "Key to use for looking up entry."
+                        anyOf:
+                          - required: ['value']
+                          - required: ['valueFromSecret']
                       clientCert:
                         description: "Client certificate to be used by the connector."
-                        anyOf:
-                          - type: string
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                            description: "Value of field"
+                          valueFromSecret:
+                            type: object
+                            description: "Secret containing value."
+                            required:
+                              - name
                             properties:
-                              value:
+                              name:
                                 type: string
-                                description: "Value of field"
-                          - type: object
-                            properties:
-                              valueFromSecret:
-                                type: object
-                                description: "Secret containing value."
-                                required:
-                                  - name
-                                properties:
-                                  name:
-                                    type: string
-                                    description: "Name of Secret containing value."
-                                  key:
-                                    type: string
-                                    description: "Key to use for looking up entry."
+                                description: "Name of Secret containing value."
+                              key:
+                                type: string
+                                description: "Key to use for looking up entry."
+                        anyOf:
+                          - required: ['value']
+                          - required: ['valueFromSecret']
                       clientKey:
                         description: "Client key to be used by the connector."
-                        anyOf:
-                          - type: string
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                            description: "Value of field"
+                          valueFromSecret:
+                            type: object
+                            description: "Secret containing value."
+                            required:
+                              - name
                             properties:
-                              value:
+                              name:
                                 type: string
-                                description: "Value of field"
-                          - type: object
-                            properties:
-                              valueFromSecret:
-                                type: object
-                                description: "Secret containing value."
-                                required:
-                                  - name
-                                properties:
-                                  name:
-                                    type: string
-                                    description: "Name of Secret containing value."
-                                  key:
-                                    type: string
-                                    description: "Key to use for looking up entry."
+                                description: "Name of Secret containing value."
+                              key:
+                                type: string
+                                description: "Key to use for looking up entry."
+                        anyOf:
+                          - required: ['value']
+                          - required: ['valueFromSecret']
                   credentials:
                     type: object
-                    description: "Credentials used when connecting to endpoints. Either 'username' and 'password', or 'secret' must be defined."
+                    description: "Credentials used when connecting to endpoints."
                     properties:
                       username:
                         description: "Username to use for connector."
-                        anyOf:
-                          - type: object
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                            description: "Value of field"
+                          valueFromSecret:
+                            type: object
+                            description: "Secret containing value."
+                            required:
+                              - name
                             properties:
-                              value:
+                              name:
                                 type: string
-                                description: "Value of field"
-                          - type: object
-                            properties:
-                              valueFromSecret:
-                                type: object
-                                description: "Secret containing value."
-                                required:
-                                  - name
-                                properties:
-                                  name:
-                                    type: string
-                                    description: "Name of Secret containing value."
-                                  key:
-                                    type: string
-                                    description: "Key to use for looking up entry."
+                                description: "Name of Secret containing value."
+                              key:
+                                type: string
+                                description: "Key to use for looking up entry."
+                        anyOf:
+                          - required: ['value']
+                          - required: ['valueFromSecret']
                       password:
                         description: "Password to use for connector."
-                        anyOf:
-                          - type: string
+                        type: object
+                        properties:
+                          value:
+                            type: string
+                            description: "Value of field"
+                          valueFromSecret:
+                            type: object
+                            description: "Secret containing value."
+                            required:
+                              - name
                             properties:
-                              value:
+                              name:
                                 type: string
-                                description: "Value of field"
-                          - type: object
-                            properties:
-                              valueFromSecret:
-                                type: object
-                                description: "Secret containing value."
-                                required:
-                                  - name
-                                properties:
-                                  name:
-                                    type: string
-                                    description: "Name of Secret containing value."
-                                  key:
-                                    type: string
-                                    description: "Key to use for looking up entry."
+                                description: "Name of Secret containing value."
+                              key:
+                                type: string
+                                description: "Key to use for looking up entry."
+                        anyOf:
+                          - required: ['value']
+                          - required: ['valueFromSecret']
+                    required:
+                      - username
+                      - password
                   addresses:
                     type: array
                     description: "Addresses to make be accessible via this address space."

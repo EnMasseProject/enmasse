@@ -33,6 +33,7 @@
 * #4569: [IoT] Allowing configuring log levels of IoT infrastructure components
 * #4576: [IoT] Rename the status section field `phaseReason` to `message` to better align with others
 * #4592: [IoT] Externalize infrastructure secrets from `IoTConfig` to actual `Secrets`
+* #4604: AddressSpaces CRD reported as NonStructuralSchema
 * #4610: Extend addressspaceschema to enumerate endpoint types etc (#4590)
 * #4656: Defining a connector before its referenced secret exists results in NPE and permanently unready address space
 * #4600: [IoT] Allow configuring Pod affinities
