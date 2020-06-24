@@ -32,12 +32,14 @@ public class LinkInfo {
    private final String targetAddress;
    private final Direction direction;
    private final List<Symbol> capabilities = new ArrayList<>();
+   private final Integer consumerPriority;
 
-   public LinkInfo(String linkName, String sourceAddress, String targetAddress, Direction direction, List<Symbol> capabilities) {
+   public LinkInfo(String linkName, String sourceAddress, String targetAddress, Direction direction, List<Symbol> capabilities, Integer consumerPriority) {
       this.linkName = linkName;
       this.sourceAddress = sourceAddress;
       this.targetAddress = targetAddress;
       this.direction = direction;
+      this.consumerPriority = consumerPriority;
       if (capabilities != null) {
          this.capabilities.addAll(capabilities);
       }
@@ -63,6 +65,10 @@ public class LinkInfo {
       return Collections.unmodifiableList(capabilities);
    }
 
+   public Integer getConsumerPriority() {
+      return consumerPriority;
+   }
+
    @Override
    public String toString() {
       return "LinkInfo{" +
@@ -71,7 +77,7 @@ public class LinkInfo {
               ", targetAddress='" + targetAddress + '\'' +
               ", direction=" + direction +
               ", capabilities=" + capabilities +
+              ", priority=" + consumerPriority +
               '}';
    }
-
 }
