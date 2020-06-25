@@ -17,7 +17,7 @@ import { IDropdownOption } from "components";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { useStoreContext, types } from "context-state-reducer";
 import { IAddressSpacesResponse } from "schema/ResponseTypes";
-import { FetchPolicy, WIZARD_HIGHT } from "constant";
+import { FetchPolicy, WIZARD_HEIGHT } from "constant";
 
 export const CreateAddress: React.FunctionComponent = () => {
   const { dispatch, state } = useStoreContext();
@@ -191,7 +191,7 @@ export const CreateAddress: React.FunctionComponent = () => {
       steps={steps}
       onNext={() => {}}
       onSave={handleSave}
-      height={WIZARD_HIGHT}
+      height={WIZARD_HEIGHT}
     />
   );
 };

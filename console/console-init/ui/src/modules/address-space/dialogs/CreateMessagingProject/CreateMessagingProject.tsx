@@ -25,7 +25,7 @@ import { ConfiguringRoutes } from "./ConfiguringRoutes";
 import { EndpointConfiguration } from "modules/address-space/components";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { useQuery } from "@apollo/react-hooks";
-import { WIZARD_HIGHT } from "constant";
+import { WIZARD_HEIGHT } from "constant";
 export interface IRouteConf {
   protocol: string;
   hostname?: string;
@@ -219,7 +219,7 @@ const CreateMessagingProject: React.FunctionComponent<ICreateMessagingProjectPro
       title="Create an Instance"
       steps={steps}
       onSave={handleSave}
-      height={WIZARD_HIGHT}
+      height={WIZARD_HEIGHT}
     />
   );
 };

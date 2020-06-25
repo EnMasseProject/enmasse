@@ -60,7 +60,7 @@ enum DialogTypes {
   DELETE = "Delete"
 }
 
-const WIZARD_HIGHT = 400;
+const WIZARD_HEIGHT = 400;
 
 export {
   UNKNOWN,
@@ -78,5 +78,5 @@ export {
   DataType,
   Protocols,
   DialogTypes,
-  WIZARD_HIGHT
+  WIZARD_HEIGHT
 };
