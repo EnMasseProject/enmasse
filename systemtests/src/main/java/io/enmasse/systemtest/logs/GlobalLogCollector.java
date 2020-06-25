@@ -286,9 +286,9 @@ public class GlobalLogCollector {
             nsList.add(infraNamespace);
             nsList.addAll(Arrays.asList(SystemtestsKubernetesApps.ST_NAMESPACES));
             nsList.add(Environment.getInstance().getMonitoringNamespace());
-            // TMP: trying to understand sporadic problems with openshift 4 console authentication.
             if (Kubernetes.isOpenShiftCompatible(OpenShiftVersion.OCP4)) {
                 nsList.add("openshift-authentication");
+                nsList.add("openshift-ingress");
             }
             // TMP: check logs from openshift router.
             nsList.add("default");
