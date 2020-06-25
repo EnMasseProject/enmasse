@@ -8,12 +8,13 @@
 
 After installing the IoT services and creating an IoT project, you can create an IoT device for the device you want to monitor.
 
+
 :headers: -H 'Content-Type: application/json' -H "Authorization: Bearer ${TOKEN}"
 ifeval::["{cmdcli}" == "oc"]
 :registry: $(oc -n {ProductNamespace} get routes device-registry --template='{{ .spec.host }}')
 endif::[]
 ifeval::["{cmdcli}" == "kubectl"]
-:registry: $(kubectl -n enmasse-infra get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
+:registry: $(kubectl -n {ProductNamespace} get service iot-device-registry-external -o jsonpath={.status.loadBalancer.ingress[0].hostname}):31443
 endif::[]
 
 .Prerequisites
