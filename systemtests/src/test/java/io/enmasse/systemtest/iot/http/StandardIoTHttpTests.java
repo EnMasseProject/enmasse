@@ -59,7 +59,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventSingle-{0}")
     @MethodSource("getDevices")
-    @Disabled
     default void testHttpEventSingle(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -82,7 +81,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpTelemetryBatch50-{0}")
     @MethodSource("getDevices")
-    @Disabled
     default void testHttpTelemetryBatch50(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -107,7 +105,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5After-{0}")
     @MethodSource("getDevices")
-    @Disabled
     default void testHttpEventBatch5After(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -132,7 +129,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpEventBatch5Before-{0}")
     @MethodSource("getDevices")
-    @Disabled
     default void testHttpEventBatch5Before(final DeviceSupplier device) throws Exception {
 
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
@@ -156,7 +152,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
      */
     @ParameterizedTest(name = "testHttpDeviceFails-{0}")
     @MethodSource("getInvalidDevices")
-    @Disabled
     default void testHttpDeviceFails(final DeviceSupplier deviceSupplier) throws Exception {
 
         log.info("Testing invalid devices, the following exception may be expected");
