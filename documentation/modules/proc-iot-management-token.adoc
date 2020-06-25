@@ -81,7 +81,7 @@ rules: # <2>
 <1> The name of the role.
 <2> The access rules, which must grant CRUD access to the `IoTProject`.
 +
-This example grants access to all `IoTProjects`s in a namespace.
+This example grants access to all `IoTProjects` in a namespace.
 To further restrict access, use more specific rules.
 
 . Create a new role binding, assigning the role to the service account:
