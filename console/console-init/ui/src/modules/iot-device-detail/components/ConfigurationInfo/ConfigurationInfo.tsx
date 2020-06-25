@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Page,
   PageSection,
@@ -12,10 +12,13 @@ import {
   Card,
   CardBody,
   Title,
-  Alert,
-  DropdownPosition
+  DropdownPosition,
+  Tooltip,
+  TooltipPosition,
+  Button,
+  ButtonVariant
 } from "@patternfly/react-core";
-import { FilterIcon } from "@patternfly/react-icons";
+import { FilterIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet } from "@patternfly/react-styles";
 import { AdapterList, IAdapterListProps } from "components";
 import {
@@ -50,18 +53,20 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   onSelectFilterType,
   onSelectFilterValue
 }) => {
-  const [credentialType, setCredentialType] = useState<string>(
-    "all-credentials"
-  );
+  const [credentialType, setCredentialType] = useState<string>("all");
   const [filterOptions, setFilterOptions] = useState<IDropdownOption[]>([]);
   const [selectedFilterValue, setSelectedFilterValue] = useState();
 
   useEffect(() => {
     getFilterOptions();
-  }, [credentialType]);
+  }, [credentialType, credentials]);
 
   const onSelectCredentialType = (value: string) => {
     setCredentialType(value);
+    /**
+     * reset default selected value of filter dropdown
+     */
+    onSelectFilterValue && onSelectFilterValue("all");
     onSelectFilterType && onSelectFilterType(value);
   };
 
@@ -104,72 +109,84 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   };
 
   return (
-    <Page id={id}>
-      <PageSection>
-        <Alert
-          variant="info"
-          isInline
-          title="Device connection configuration info"
+    <>
+      <Tooltip
+        id="ci-help-tooltip"
+        position={TooltipPosition.bottom}
+        content={
+          <div>
+            {" "}
+            This info section provides a quick view of the information needed to
+            configure a device connection on the device side.
+          </div>
+        }
+      >
+        <Button
+          id="ci-help-icon-button"
+          icon={<ExclamationCircleIcon />}
+          variant={ButtonVariant.link}
         >
-          This info section provides a quick view of the information needed to
-          configure a device connection on the device side.
-        </Alert>
-        <br />
-        <Grid gutter="sm">
-          <GridItem span={6}>
-            <Card>
-              <CardBody>
-                <Title size="xl" headingLevel="h1">
-                  <b>Adapters</b>
-                </Title>
-                <br />
-                <AdapterList id="ci-adapter" adapters={adapters} />
-              </CardBody>
-            </Card>
-          </GridItem>
-          <GridItem span={6}>
-            <Grid gutter="sm">
-              <GridItem>
-                <Card>
-                  <CardBody>
-                    <DropdownWithToggle
-                      id="ci-credential-type-dropdown"
-                      toggleId={"ci-credential-type-dropdown"}
-                      position={DropdownPosition.left}
-                      onSelectItem={onSelectCredentialType}
-                      dropdownItems={credentialsTypeOptions}
-                      value={credentialType && credentialType.trim()}
-                      isLabelAndValueNotSame={true}
-                      toggleIcon={
-                        <>
-                          <FilterIcon />
-                          &nbsp;
-                        </>
-                      }
-                    />
-                    {filterOptions?.length > 0 && (
+          What is the device configuration info for?
+        </Button>
+      </Tooltip>
+      <Page id={id}>
+        <PageSection>
+          <Grid gutter="sm">
+            <GridItem span={6}>
+              <Card>
+                <CardBody>
+                  <Title size="xl" headingLevel="h1">
+                    <b>Adapters</b>
+                  </Title>
+                  <br />
+                  <AdapterList id="ci-adapter" adapters={adapters} />
+                </CardBody>
+              </Card>
+            </GridItem>
+            <GridItem span={6}>
+              <Grid gutter="sm">
+                <GridItem>
+                  <Card>
+                    <CardBody>
                       <DropdownWithToggle
-                        id="ci-filter-dropdown"
-                        toggleId={"ci-filter-dropdown"}
+                        id="ci-credential-type-dropdown"
+                        toggleId={"ci-credential-type-dropdown"}
                         position={DropdownPosition.left}
-                        onSelectItem={onSelectFilterItem}
-                        dropdownItems={filterOptions}
-                        value={selectedFilterValue}
+                        onSelectItem={onSelectCredentialType}
+                        dropdownItems={credentialsTypeOptions}
+                        value={credentialType && credentialType.trim()}
                         isLabelAndValueNotSame={true}
-                        className={style.filter_dropdown}
+                        toggleIcon={
+                          <>
+                            <FilterIcon />
+                            &nbsp;
+                          </>
+                        }
                       />
-                    )}
-                  </CardBody>
-                </Card>
-              </GridItem>
-            </Grid>
-            <CredentialsView
-              id="ci-credentials-view"
-              credentials={credentials}
-            />
-          </GridItem>
-        </Grid>
-      </PageSection>
-    </Page>
+                      {filterOptions?.length > 0 && (
+                        <DropdownWithToggle
+                          id="ci-filter-dropdown"
+                          toggleId={"ci-filter-dropdown"}
+                          position={DropdownPosition.left}
+                          onSelectItem={onSelectFilterItem}
+                          dropdownItems={filterOptions}
+                          value={selectedFilterValue}
+                          isLabelAndValueNotSame={true}
+                          className={style.filter_dropdown}
+                        />
+                      )}
+                    </CardBody>
+                  </Card>
+                </GridItem>
+              </Grid>
+              <CredentialsView
+                id="ci-credentials-view"
+                credentials={credentials}
+              />
+            </GridItem>
+          </Grid>
+        </PageSection>
+      </Page>
+    </>
   );
 };

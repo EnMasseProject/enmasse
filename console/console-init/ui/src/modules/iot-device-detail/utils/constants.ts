@@ -4,7 +4,7 @@ import { CredentialsType } from "constant";
 const credentialsTypeOptions: IDropdownOption[] = [
   {
     key: "all-credentials",
-    value: "all-credentials",
+    value: "all",
     label: "All credentials"
   },
   {
@@ -32,20 +32,20 @@ const getDefaultCredentialsFiterOption = (credentialType: string) => {
     case CredentialsType.PASSWORD:
       filterOptions.push({
         key: "all-password",
-        value: "all-password",
+        value: "all",
         label: "All passwords"
       });
       break;
     case CredentialsType.PSK:
       filterOptions.push({
-        key: "all-psk",
+        key: "all",
         value: "all-psk",
         label: "All PSK"
       });
       break;
     case CredentialsType.X509_CERTIFICATE:
       filterOptions.push({
-        key: "all-x509-cert",
+        key: "all",
         value: "all-x509-cert",
         label: "All X.590 certificates"
       });

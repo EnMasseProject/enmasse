@@ -13,6 +13,10 @@ import {
   IConfigurationInfoProps
 } from "modules/iot-device-detail/components";
 import { mock_adapters } from "mock-data";
+import {
+  getCredentialFilterType,
+  getCredentialFilterValue
+} from "modules/iot-device-detail/utils";
 
 export const ConfigurationInfoContainer: React.FC<Pick<
   IConfigurationInfoProps,
@@ -22,50 +26,12 @@ export const ConfigurationInfoContainer: React.FC<Pick<
   const [filterType, setFilterType] = useState();
   const [filterValue, setFilterValue] = useState();
 
-  const getFilterType = () => {
-    let type: string = "";
-    if (filterType === "enabled") {
-      type = filterType;
-    } else if (
-      filterType !== "all-credentials" &&
-      filterType !== "enabled" &&
-      (filterValue === undefined ||
-        filterValue === "all-password" ||
-        filterValue === "all-psk" ||
-        filterValue === "all-x509-cert")
-    ) {
-      type = "type";
-    } else if (filterType !== "all-credentials" && filterType !== "enabled") {
-      type = "auth-id";
-    }
-    return type;
-  };
-
-  const getFilterValue = () => {
-    let value: string | boolean;
-    if (filterType === "enabled") {
-      value = true;
-    } else if (
-      filterType !== "all-credentials" &&
-      filterType !== "enabled" &&
-      (filterValue === undefined ||
-        filterValue === "all-password" ||
-        filterValue === "all-psk" ||
-        filterValue === "all-x509-cert")
-    ) {
-      value = filterType;
-    } else {
-      value = filterValue;
-    }
-    return value;
-  };
-
   const { data } = useQuery<ICredentialsReponse>(
     RETURN_IOT_CREDENTIALS(
       projectname,
       deviceid,
-      getFilterType(),
-      getFilterValue()
+      getCredentialFilterType(filterType, filterValue),
+      getCredentialFilterValue(filterType, filterValue)
     )
   );
 
