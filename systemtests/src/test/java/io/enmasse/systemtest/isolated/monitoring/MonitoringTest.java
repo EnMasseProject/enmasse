@@ -204,8 +204,6 @@ class MonitoringTest extends TestBase implements ITestIsolatedStandard {
 
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "cr-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
         assertDoesNotThrow(() -> monitoring.validateQueryAndWait(MonitoringQueries.ENMASSE_COMPONENT_HEALTH, "1", Map.ofEntries(Map.entry("endpoint", "http-metrics"), Map.entry("job", "enmasse-operator-metrics"))));
-
-        assertEquals(environment.enmasseVersion(), monitoring.getQueryResult(MonitoringQueries.ENMASSE_VERSION, Collections.singletonMap("name", "enmasse-operator")).getMetadataValue("version"));
     }
 
     @Test
