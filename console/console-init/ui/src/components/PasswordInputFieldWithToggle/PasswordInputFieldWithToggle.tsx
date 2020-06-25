@@ -4,7 +4,12 @@
  */
 
 import React, { useState } from "react";
-import { TextInput, TextInputProps } from "@patternfly/react-core";
+import {
+  TextInput,
+  TextInputProps,
+  ValidatedOptions,
+  TextInputTypes
+} from "@patternfly/react-core";
 import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 
@@ -25,31 +30,36 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   id,
   onChange,
   name,
-  validated = true
+  validated
 }) => {
-  const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
+  const [shouldShowPassword, setshouldShowPassword] = useState<boolean>(false);
 
-  const onToggle = (isShowPassword: boolean) => {
-    setIsShowPassword(isShowPassword);
+  const onToggle = (showPassword: boolean) => {
+    setshouldShowPassword(showPassword);
   };
 
   const renderIcon = () => {
-    if (validated) {
-      if (isShowPassword) {
+    if (validated !== ValidatedOptions.error) {
+      if (shouldShowPassword) {
         return (
-          <EyeSlashIcon
+          <EyeIcon
             className={css(styles.icon)}
             onClick={() => onToggle(false)}
           />
         );
       }
       return (
-        <EyeIcon className={css(styles.icon)} onClick={() => onToggle(true)} />
+        <EyeSlashIcon
+          className={css(styles.icon)}
+          onClick={() => onToggle(true)}
+        />
       );
     }
   };
 
-  const type = isShowPassword ? "text" : "password";
+  const type = shouldShowPassword
+    ? TextInputTypes.text
+    : TextInputTypes.password;
 
   return (
     <>
@@ -59,7 +69,7 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
         name={name}
         type={type}
         onChange={onChange}
-        validated={validated ? "default" : "error"}
+        validated={validated}
       />
       {renderIcon()}
     </>

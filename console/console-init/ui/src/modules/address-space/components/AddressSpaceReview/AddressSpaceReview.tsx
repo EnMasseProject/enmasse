@@ -40,7 +40,7 @@ const style = StyleSheet.create({
     paddingLeft: 32
   },
   left_padding_for_endpoints: {
-    paddingLeft: 40
+    paddingLeft: 20
   },
   bottom_padding: {
     paddingBottom: 16
@@ -158,22 +158,19 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             />
             {customizeEndpoint && (
               <>
-                <ReviewGridItem
-                  valueId="preview-addr-cutom-endpoint"
-                  value={""}
-                  labelText="Endpoint customization"
-                />
-
+                <GridItem span={12} className={css(style.left_margin_gridItem)}>
+                  Endpoint customization
+                </GridItem>
                 {protocolOptions.length > 0 && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       Protocols
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {protocolOptions &&
@@ -189,13 +186,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 {certificate && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       TLS Certificates
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {certificate}
@@ -204,13 +201,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 )}
                 <>
                   <GridItem
-                    span={5}
+                    span={6}
                     className={css(style.left_padding_for_endpoints)}
                   >
                     Create Routes
                   </GridItem>
                   <GridItem
-                    span={7}
+                    span={6}
                     className={css(style.preview_info_gridItem)}
                   >
                     {addRoutes ? "True" : "False"}

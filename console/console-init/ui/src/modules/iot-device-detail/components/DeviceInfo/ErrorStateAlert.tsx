@@ -4,13 +4,7 @@
  */
 
 import React from "react";
-import { Alert, Button, ButtonVariant } from "@patternfly/react-core";
-
-// const styles = StyleSheet.create({
-//   alert_background_color: {
-//     backgroundColor: "#fdf7e7"
-//   }
-// });
+import { Alert, AlertActionLink, Flex, FlexItem } from "@patternfly/react-core";
 
 export interface IErrorStateAlertProps {
   errorState?: string;
@@ -40,20 +34,12 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
     return title;
   };
 
-  const getAlertBody = () => {
+  const getAlertMessage = () => {
     if (errorState === ErrorState.MISSING) {
       return (
         <>
           In order to enable a device to connect, it either needs credentials or
           gateways/a gateway.
-          <br />
-          <Button variant={ButtonVariant.link} onClick={addGateways}>
-            Add gateways
-          </Button>{" "}
-          or
-          <Button variant={ButtonVariant.link} onClick={addCredentials}>
-            Add credentials
-          </Button>
         </>
       );
     } else if (ErrorState.CONFLICTING) {
@@ -61,23 +47,43 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
         <>
           This device has two connection types that are conflicting with each
           other. You can choose actions to fix this issue.
-          <br />
-          <Button
-            id="es-delete-gateway-button"
-            variant={ButtonVariant.link}
-            onClick={deleteGateways}
-          >
-            Delete gateways
-          </Button>{" "}
-          or
-          <Button
-            id="es-delete-credentials-button"
-            variant={ButtonVariant.link}
-            onClick={deleteCredentials}
-          >
-            Delete credentials
-          </Button>
         </>
+      );
+    }
+  };
+
+  const getActionLinks = () => {
+    if (errorState === ErrorState.MISSING) {
+      return (
+        <Flex>
+          <FlexItem>
+            <AlertActionLink onClick={addGateways}>
+              Add credentials
+            </AlertActionLink>
+          </FlexItem>
+          <FlexItem>or</FlexItem>
+          <FlexItem>
+            <AlertActionLink onClick={addCredentials}>
+              Add credentials
+            </AlertActionLink>
+          </FlexItem>
+        </Flex>
+      );
+    } else if (ErrorState.CONFLICTING) {
+      return (
+        <Flex>
+          <FlexItem>
+            <AlertActionLink onClick={deleteGateways}>
+              Delete gateways
+            </AlertActionLink>
+          </FlexItem>
+          <FlexItem>or</FlexItem>
+          <FlexItem>
+            <AlertActionLink onClick={deleteCredentials}>
+              Delete credentials
+            </AlertActionLink>
+          </FlexItem>
+        </Flex>
       );
     }
   };
@@ -87,9 +93,9 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
       variant="warning"
       isInline
       title={getTitle()}
-      // className={styles.alert_background_color}
+      actionLinks={getActionLinks()}
     >
-      {getAlertBody()}
+      {getAlertMessage()}
     </Alert>
   );
 };

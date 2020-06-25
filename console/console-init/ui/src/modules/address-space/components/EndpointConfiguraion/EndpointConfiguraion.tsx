@@ -10,20 +10,13 @@ import {
   Form,
   Checkbox,
   FormGroup,
-  Radio,
-  Switch
+  Radio
 } from "@patternfly/react-core";
 import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
-import { IDropdownOption } from "components";
-import { StyleSheet, css } from "aphrodite";
+import { IDropdownOption, SwitchWithToggle } from "components";
 
-const style = StyleSheet.create({
-  margin_left: {
-    marginLeft: 20
-  }
-});
 interface IEndpointConfigurationProps {
   projectDetail: IMessagingProject;
   addressSpaceSchema?: IAddressSpaceSchema;
@@ -143,72 +136,63 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     });
   };
   return (
-    <Grid>
-      <GridItem span={6}>
-        <Form>
-          {getProtocolOptions() && getProtocolOptions().length > 0 && (
-            <FormGroup
-              fieldId="form-group-endpoint-protocol"
-              label="Protocols"
-              isRequired={true}
-            >
-              {getProtocolOptions().map(protocol => (
-                <div key={`key-protocol-${protocol.key}`}>
-                  <br />
-                  <Checkbox
-                    label={protocol.label}
-                    isChecked={isProtocolPresent(protocol.value)}
-                    onChange={onProtocolChange}
-                    value={protocol.value}
-                    aria-label={`Protocol checkbox to select ${protocol.value}`}
-                    id={`checkbox-${protocol.key}`}
-                    key={protocol.key}
-                    name={protocol.key}
-                    className={css(style.margin_left)}
-                  />
-                </div>
-              ))}
-            </FormGroup>
-          )}
-          {getCertificateOptions() && getCertificateOptions().length > 0 && (
-            <FormGroup
-              fieldId="form-group-endpoint-tls-certs"
-              label="TLS Certificates"
-              isRequired={true}
-            >
-              {getCertificateOptions().map(certificate => (
-                <div key={`key-cert-${certificate.key}`}>
-                  <br />
-                  <Radio
-                    isChecked={tlsCertificate === certificate.value}
-                    key={certificate.key}
-                    onChange={onCertificateChange}
-                    name={`radio-${certificate.key}`}
-                    label={certificate.label}
-                    id={`radio-${certificate.key}`}
-                    value={certificate.value}
-                    className={css(style.margin_left)}
-                  />
-                </div>
-              ))}
-            </FormGroup>
-          )}
+    <Form>
+      {getProtocolOptions() && getProtocolOptions().length > 0 && (
+        <FormGroup
+          fieldId="form-group-endpoint-protocol"
+          label="Protocols"
+          isRequired={true}
+        >
+          {getProtocolOptions().map(protocol => (
+            <div key={`key-protocol-${protocol.key}`}>
+              <br />
+              <Checkbox
+                label={protocol.label}
+                isChecked={isProtocolPresent(protocol.value)}
+                onChange={onProtocolChange}
+                value={protocol.value}
+                aria-label={`Protocol checkbox to select ${protocol.value}`}
+                id={`checkbox-${protocol.key}`}
+                key={protocol.key}
+                name={protocol.key}
+              />
+            </div>
+          ))}
+        </FormGroup>
+      )}
+      {getCertificateOptions() && getCertificateOptions().length > 0 && (
+        <FormGroup
+          fieldId="form-group-endpoint-tls-certs"
+          label="TLS Certificates"
+          isRequired={true}
+        >
+          {getCertificateOptions().map(certificate => (
+            <div key={`key-cert-${certificate.key}`}>
+              <br />
+              <Radio
+                isChecked={tlsCertificate === certificate.value}
+                key={certificate.key}
+                onChange={onCertificateChange}
+                name={`radio-${certificate.key}`}
+                label={certificate.label}
+                id={`radio-${certificate.key}`}
+                value={certificate.value}
+              />
+            </div>
+          ))}
+        </FormGroup>
+      )}
 
-          <FormGroup fieldId="form-group-create-routes" label="Create Routes">
-            <br />
-            <br />
-            <Switch
-              id="switch-configure-route-btn"
-              label={
-                "Enable routing to make the address space publicly visible"
-              }
-              isChecked={projectDetail.addRoutes}
-              onChange={onRouteChange}
-            />
-          </FormGroup>
-        </Form>
-      </GridItem>
-    </Grid>
+      <FormGroup fieldId="form-group-create-routes" label="Create Routes">
+        <br />
+        <SwitchWithToggle
+          id="switch-configure-route-btn"
+          onChange={onRouteChange}
+          label={"Enable routing to make the address space publicly visible"}
+          isChecked={projectDetail.addRoutes}
+        />
+      </FormGroup>
+    </Form>
   );
 };
 
