@@ -69,8 +69,8 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Events address name</b>
           {eventAddresses &&
             eventAddresses.length > 0 &&
-            eventAddresses.map((address: string) => (
-              <>
+            eventAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -80,14 +80,14 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <b className={css(styles.style_margin)}>Telemetry address name</b>
           {telemetryAddresses &&
             telemetryAddresses.length > 0 &&
-            telemetryAddresses.map((address: string) => (
-              <>
+            telemetryAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -97,14 +97,14 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <b className={css(styles.style_margin)}>Command address name</b>
           {commandAddresses &&
             commandAddresses.length > 0 &&
-            commandAddresses.map((address: string) => (
-              <>
+            commandAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -114,7 +114,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <br />
