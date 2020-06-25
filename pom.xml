@@ -902,6 +902,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <inherited>true</inherited>
                 <configuration>
+                    <forkCount>10</forkCount>
+                    <reuseForks>true</reuseForks>
                     <environmentVariables>
                         <ENV_VAR_EXISTS>value</ENV_VAR_EXISTS>
                         <ENV_VAR_EXISTS_BOOLEAN>true</ENV_VAR_EXISTS_BOOLEAN>
