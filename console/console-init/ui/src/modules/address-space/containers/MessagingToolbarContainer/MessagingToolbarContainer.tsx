@@ -79,16 +79,14 @@ export const MessagingToolbarContainer: React.FunctionComponent<IMessagingToolba
   };
 
   //this function used to clear value of type ahead select input field on filter change
-  const resettInitialState = () => {
+  const resetInitialState = () => {
     setNameInput("");
     setNamespaceInput("");
-    setTypeSelected(null);
-    setStatusSelected(null);
   };
 
   const onFilterSelect = (value: string) => {
     setFilterSelected(value);
-    resettInitialState();
+    resetInitialState();
   };
 
   const onNameSelect = (e: any, selection: SelectOptionObject) => {

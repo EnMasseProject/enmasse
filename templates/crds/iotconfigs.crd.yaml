@@ -122,6 +122,18 @@ spec:
                 lorawan:
                   type: object
 
+            services:
+              type: object
+              properties:
+                deviceConnection:
+                  type: object
+                deviceRegistry:
+                  type: object
+                authentication:
+                  type: object
+                tenant:
+                  type: object
+
             tracing:
               type: object
 

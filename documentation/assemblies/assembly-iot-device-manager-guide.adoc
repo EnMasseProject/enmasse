@@ -9,4 +9,6 @@
 
 Device managers are typically responsible for creating and managing device identities and credentials in the system.
 
+include::../modules/proc-iot-management-token.adoc[leveloffset=+1]
+
 include::assembly-iot-creating-device.adoc[leveloffset=+1]

@@ -722,7 +722,17 @@ public abstract class ConsoleTest extends TestBase {
 
         consolePage.addFilter(FilterType.STATUS, "Terminating");
         assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(0));
+        consolePage.removeAllFilters();
 
+        consolePage.addFilter(FilterType.NAME, "standard");
+        consolePage.addFilter(FilterType.NAMESPACE, kubernetes.getInfraNamespace());
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+        consolePage.addFilter(FilterType.STATUS, "Active");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(2));
+        consolePage.addFilter(FilterType.TYPE, "Standard");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(1));
+        consolePage.addFilter(FilterType.STATUS, "Pending");
+        assertThat("Console does not show all addressspaces", consolePage.getAddressSpaceItems().size(), is(0));
     }
 
     protected void doTestListEndpoints() throws Exception {
