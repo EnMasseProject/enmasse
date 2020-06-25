@@ -136,69 +136,63 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     });
   };
   return (
-    <Grid>
-      <GridItem span={12}>
-        <Form>
-          {getProtocolOptions() && getProtocolOptions().length > 0 && (
-            <FormGroup
-              fieldId="form-group-endpoint-protocol"
-              label="Protocols"
-              isRequired={true}
-            >
-              {getProtocolOptions().map(protocol => (
-                <div key={`key-protocol-${protocol.key}`}>
-                  <br />
-                  <Checkbox
-                    label={protocol.label}
-                    isChecked={isProtocolPresent(protocol.value)}
-                    onChange={onProtocolChange}
-                    value={protocol.value}
-                    aria-label={`Protocol checkbox to select ${protocol.value}`}
-                    id={`checkbox-${protocol.key}`}
-                    key={protocol.key}
-                    name={protocol.key}
-                  />
-                </div>
-              ))}
-            </FormGroup>
-          )}
-          {getCertificateOptions() && getCertificateOptions().length > 0 && (
-            <FormGroup
-              fieldId="form-group-endpoint-tls-certs"
-              label="TLS Certificates"
-              isRequired={true}
-            >
-              {getCertificateOptions().map(certificate => (
-                <div key={`key-cert-${certificate.key}`}>
-                  <br />
-                  <Radio
-                    isChecked={tlsCertificate === certificate.value}
-                    key={certificate.key}
-                    onChange={onCertificateChange}
-                    name={`radio-${certificate.key}`}
-                    label={certificate.label}
-                    id={`radio-${certificate.key}`}
-                    value={certificate.value}
-                  />
-                </div>
-              ))}
-            </FormGroup>
-          )}
+    <Form>
+      {getProtocolOptions() && getProtocolOptions().length > 0 && (
+        <FormGroup
+          fieldId="form-group-endpoint-protocol"
+          label="Protocols"
+          isRequired={true}
+        >
+          {getProtocolOptions().map(protocol => (
+            <div key={`key-protocol-${protocol.key}`}>
+              <br />
+              <Checkbox
+                label={protocol.label}
+                isChecked={isProtocolPresent(protocol.value)}
+                onChange={onProtocolChange}
+                value={protocol.value}
+                aria-label={`Protocol checkbox to select ${protocol.value}`}
+                id={`checkbox-${protocol.key}`}
+                key={protocol.key}
+                name={protocol.key}
+              />
+            </div>
+          ))}
+        </FormGroup>
+      )}
+      {getCertificateOptions() && getCertificateOptions().length > 0 && (
+        <FormGroup
+          fieldId="form-group-endpoint-tls-certs"
+          label="TLS Certificates"
+          isRequired={true}
+        >
+          {getCertificateOptions().map(certificate => (
+            <div key={`key-cert-${certificate.key}`}>
+              <br />
+              <Radio
+                isChecked={tlsCertificate === certificate.value}
+                key={certificate.key}
+                onChange={onCertificateChange}
+                name={`radio-${certificate.key}`}
+                label={certificate.label}
+                id={`radio-${certificate.key}`}
+                value={certificate.value}
+              />
+            </div>
+          ))}
+        </FormGroup>
+      )}
 
-          <FormGroup fieldId="form-group-create-routes" label="Create Routes">
-            <br />
-            <SwitchWithToggle
-              id="switch-configure-route-btn"
-              onChange={onRouteChange}
-              label={
-                "Enable routing to make the address space publicly visible"
-              }
-              isChecked={projectDetail.addRoutes}
-            />
-          </FormGroup>
-        </Form>
-      </GridItem>
-    </Grid>
+      <FormGroup fieldId="form-group-create-routes" label="Create Routes">
+        <br />
+        <SwitchWithToggle
+          id="switch-configure-route-btn"
+          onChange={onRouteChange}
+          label={"Enable routing to make the address space publicly visible"}
+          isChecked={projectDetail.addRoutes}
+        />
+      </FormGroup>
+    </Form>
   );
 };
 

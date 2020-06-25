@@ -60,6 +60,8 @@ enum DialogTypes {
   DELETE = "Delete"
 }
 
+const WIZARD_HIGHT = 400;
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -75,5 +77,6 @@ export {
   TemplateType,
   DataType,
   Protocols,
-  DialogTypes
+  DialogTypes,
+  WIZARD_HIGHT
 };
