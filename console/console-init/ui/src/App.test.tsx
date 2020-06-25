@@ -7,6 +7,14 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { MemoryRouter } from "react-router";
 import App from "./App";
+import { StyleSheetTestUtils } from "aphrodite";
+
+afterEach(() => {
+  return new Promise(resolve => {
+    StyleSheetTestUtils.clearBufferAndResumeStyleInjection();
+    return process.nextTick(resolve);
+  });
+});
 
 it("renders without crashing", () => {
   const div = document.createElement("div");
