@@ -20,6 +20,11 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     <dependency>
+      <!-- explicitly add c3p0: upstream it is included by default, downstream it is "optional". -->
+      <groupId>com.mchange</groupId>
+      <artifactId>c3p0</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
     </dependency>

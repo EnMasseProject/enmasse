@@ -73,7 +73,18 @@ public class JdbcProperties {
 
     public static SQLClient dataSource(final Vertx vertx, final JdbcProperties dataSourceProperties) {
 
+        /*
+         * In the following lines we explicitly set the "provider_class" and **must not** use
+         * the existing constant for that.
+         *
+         * The reason for this is, that the downstream version changes the value of the constant to
+         * use Agroal as the connection pool. As C3P0 is the upstream default for Vert.x and Agroal
+         * isn't even mentioned upstream, we explicitly set C3P0 here. Without using the (not so) constant.
+         */
+
         final JsonObject config = new JsonObject()
+                // set default explicitly: see comment above
+                .put("provider_class", "io.vertx.ext.jdbc.spi.impl.C3P0DataSourceProvider")
                 .put("url", dataSourceProperties.getUrl())
                 .put("user", dataSourceProperties.getUsername())
                 .put("password", dataSourceProperties.getPassword());

@@ -23,6 +23,8 @@
 
     <netty-tcnative.version>2.0.25.Final</netty-tcnative.version>
     <netty-tcnative.classifier>linux-x86_64-fedora</netty-tcnative.classifier>
+
+    <c3p0.version>0.9.5.5</c3p0.version>
   </properties>
 
   <modules>
@@ -164,6 +166,11 @@
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>${postgresql-jdbc.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.mchange</groupId>
+        <artifactId>c3p0</artifactId>
+        <version>${c3p0.version}</version>
       </dependency>
 
       <dependency>
