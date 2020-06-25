@@ -205,6 +205,9 @@ func ApplyDeployment(deployment *appsv1.Deployment) error {
 		applyImageEnv(container, "TOPIC_FORWARDER_IMAGE", "topic-forwarder")
 		applyImageEnv(container, "MQTT_GATEWAY_IMAGE", "mqtt-gateway")
 		applyImageEnv(container, "MQTT_LWT_IMAGE", "mqtt-lwt")
+		if util.IsOpenshift() {
+			install.ApplyEnvSimple(container, util.EnMasseOpenshiftEnvVar, "true")
+		}
 
 		if value, ok := os.LookupEnv("ENABLE_MONITORING_ANNOTATIONS"); ok && value == "true" {
 			deployment.ObjectMeta.Annotations["prometheus.io/scrape"] = "true"
