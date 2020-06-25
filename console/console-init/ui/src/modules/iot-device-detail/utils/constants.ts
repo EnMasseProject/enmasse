@@ -31,7 +31,7 @@ const getDefaultCredentialsFiterOption = (credentialType: string) => {
   switch (credentialType) {
     case CredentialsType.PASSWORD:
       filterOptions.push({
-        key: "all-password",
+        key: "all",
         value: "all",
         label: "All passwords"
       });
@@ -39,14 +39,14 @@ const getDefaultCredentialsFiterOption = (credentialType: string) => {
     case CredentialsType.PSK:
       filterOptions.push({
         key: "all",
-        value: "all-psk",
+        value: "all",
         label: "All PSK"
       });
       break;
     case CredentialsType.X509_CERTIFICATE:
       filterOptions.push({
         key: "all",
-        value: "all-x509-cert",
+        value: "all",
         label: "All X.590 certificates"
       });
       break;

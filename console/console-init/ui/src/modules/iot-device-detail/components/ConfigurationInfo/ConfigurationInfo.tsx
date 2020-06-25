@@ -19,7 +19,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { FilterIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "@patternfly/react-styles";
 import { AdapterList, IAdapterListProps } from "components";
 import {
   CredentialsView,
@@ -35,6 +35,9 @@ import { CredentialsType } from "constant";
 const style = StyleSheet.create({
   filter_dropdown: {
     paddingLeft: 20
+  },
+  page__main: {
+    "overflow-y": "hidden"
   }
 });
 
@@ -113,12 +116,13 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
       <Tooltip
         id="ci-help-tooltip"
         position={TooltipPosition.bottom}
+        enableFlip={false}
+        className={css(style.page__main)}
         content={
-          <div>
-            {" "}
+          <>
             This info section provides a quick view of the information needed to
             configure a device connection on the device side.
-          </div>
+          </>
         }
       >
         <Button
