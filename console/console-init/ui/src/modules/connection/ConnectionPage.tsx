@@ -27,7 +27,7 @@ import {
   getHeaderTextForCloseAll,
   getDetailTextForCloseAll
 } from "./utils";
-import { useMutationQuery } from "hooks";
+import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 import { CLOSE_CONNECTION } from "graphql-module";
 
 export default function ConnectionPage() {
@@ -43,6 +43,8 @@ export default function ConnectionPage() {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+
+  useSearchParamsPageChange([hostnames, containerIds]);
 
   const [selectedConnections, setSelectedConnections] = useState<IConnection[]>(
     []

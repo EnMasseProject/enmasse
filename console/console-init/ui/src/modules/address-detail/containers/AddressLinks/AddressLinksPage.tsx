@@ -22,6 +22,7 @@ import {
 } from "modules/address-detail/containers";
 import { TablePagination } from "components/TablePagination";
 import { IFilterValue } from "modules/address/utils";
+import { useSearchParamsPageChange } from "hooks";
 
 interface IAddressLinksListPageProps {
   addressspace_name: string;
@@ -49,6 +50,9 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
     []
   );
   const [filterRole, setFilterRole] = useState<string | null>();
+
+  useSearchParamsPageChange([filterNames, filterContainers, filterRole]);
+
   const renderPagination = () => {
     return (
       <TablePagination
