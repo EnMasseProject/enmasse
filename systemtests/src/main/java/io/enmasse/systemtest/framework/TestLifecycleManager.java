@@ -33,6 +33,12 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
     private final Kubernetes kubernetes = Kubernetes.getInstance();
     private final TestPlanInfo testInfo = TestPlanInfo.getInstance();
     private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
+    private static boolean parallelTests = false;
+
+    public static void beginOfParallelTest() {
+        parallelTests = true;
+        ResourceManager.getInstance().setClassResources();
+    }
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
@@ -55,6 +61,7 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
                 ResourceManager.getInstance().deleteClassResources();
                 KubeClusterManager.getInstance().restoreClassConfigurations();
             }
+            parallelTests = false;
             if (env.skipCleanup() || env.skipUninstall()) {
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
             }
@@ -80,8 +87,10 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
         handleCallBackError("Callback after each", extensionContext, () -> {
             LoggerUtils.logDelimiter("*");
             LOGGER.info("Teardown section: ");
-            ResourceManager.getInstance().deleteMethodResources();
-            KubeClusterManager.getInstance().restoreMethodConfigurations();
+            if (!parallelTests) {
+                ResourceManager.getInstance().deleteMethodResources();
+                KubeClusterManager.getInstance().restoreMethodConfigurations();
+            }
             LoggerUtils.logDelimiter("*");
         });
     }

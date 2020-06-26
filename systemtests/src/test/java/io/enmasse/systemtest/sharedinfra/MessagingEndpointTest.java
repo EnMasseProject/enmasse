@@ -38,7 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DefaultMessagingProject
 @ExternalClients
 public class MessagingEndpointTest extends TestBase {
-    @Test
+
+    @ParallelTest
     public void testNodePortEndpoint() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
@@ -59,7 +60,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     public void testClusterEndpoint() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
@@ -85,7 +86,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testRouteEndpoint() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -116,7 +117,7 @@ public class MessagingEndpointTest extends TestBase {
         assertMessagingOutside(client, "queue3");
     }
 
-    @Test
+    @ParallelTest
     @Kubernetes
     public void testLoadBalancerEndpoint() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -143,7 +144,7 @@ public class MessagingEndpointTest extends TestBase {
     /**
      * Test requires ingress controller with SSL passthrough enabled.
      */
-    @Test
+    @ParallelTest
     @Kubernetes
     public void testIngressEndpoint() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -176,7 +177,7 @@ public class MessagingEndpointTest extends TestBase {
         assertMessagingOutside(client, "queue5");
     }
 
-    @Test
+    @ParallelTest
     @OpenShift(version = OpenShiftVersion.OCP4)
     public void testOpenShiftCert() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -201,7 +202,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testSelfsignedCert() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -237,7 +238,7 @@ public class MessagingEndpointTest extends TestBase {
         assertMessagingOutside(client, "queue7");
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testExternalCert() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -278,7 +279,7 @@ public class MessagingEndpointTest extends TestBase {
         assertMessagingOutside(client, "queue8");
     }
 
-    @Test
+    @ParallelTest
     public void testClusterEndpointWebsockets() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
@@ -304,7 +305,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @Kubernetes
     public void testIngressEndpointWebsocket() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -326,7 +327,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testRouteEndpointWebsocket() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -347,7 +348,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testRouteEndpointWebsocketTlsPassthrough() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -372,7 +373,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift(version = OpenShiftVersion.OCP3)
     public void testRouteEndpointWebsocketTlsReencrypt() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
@@ -435,7 +436,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @OpenShift
     public void testRouteEndpointWebsocketTlsEdge() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
