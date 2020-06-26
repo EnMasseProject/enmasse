@@ -10,9 +10,9 @@ import { ISortBy } from "@patternfly/react-table";
 const RETURN_IOT_DEVICE_DETAIL = (
   iotproject: string,
   deviceId: string,
-  resolver?: string
+  queryResolver?: string
 ) => {
-  const defaultResolver = `
+  const defaultQueryResolver = `
         total
         devices{
           deviceId
@@ -22,8 +22,8 @@ const RETURN_IOT_DEVICE_DETAIL = (
           credentials 
         }`;
 
-  if (!resolver) {
-    resolver = defaultResolver;
+  if (!queryResolver) {
+    queryResolver = defaultQueryResolver;
   }
 
   const IOT_DEVICE_DETAIL = gql(
@@ -31,7 +31,7 @@ const RETURN_IOT_DEVICE_DETAIL = (
          devices(
              iotproject:"${iotproject}"
              filter: "\`$.deviceId\` = '${deviceId}'"){
-              ${resolver}
+              ${queryResolver}
           }
      }`
   );
@@ -41,8 +41,8 @@ const RETURN_IOT_DEVICE_DETAIL = (
 const RETURN_IOT_CREDENTIALS = (
   iotproject: string,
   deviceId: string,
-  property?: any,
-  filterValue?: any
+  property?: string,
+  filterValue?: string | boolean
 ) => {
   let filter = "";
   if (filterValue && property) {

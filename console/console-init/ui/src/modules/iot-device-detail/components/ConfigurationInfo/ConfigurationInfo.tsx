@@ -78,7 +78,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   const shouldDisplayChildDropdown = () => {
     if (
       credentialType === CredentialsType.PASSWORD ||
-      credentialType == CredentialsType.PSK ||
+      credentialType === CredentialsType.PSK ||
       credentialType === CredentialsType.X509_CERTIFICATE
     ) {
       return true;
