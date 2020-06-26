@@ -15,10 +15,14 @@ import (
 type Interface interface {
 	// MessagingAddresses returns a MessagingAddressInformer.
 	MessagingAddresses() MessagingAddressInformer
+	// MessagingAddressPlans returns a MessagingAddressPlanInformer.
+	MessagingAddressPlans() MessagingAddressPlanInformer
 	// MessagingEndpoints returns a MessagingEndpointInformer.
 	MessagingEndpoints() MessagingEndpointInformer
 	// MessagingInfrastructures returns a MessagingInfrastructureInformer.
 	MessagingInfrastructures() MessagingInfrastructureInformer
+	// MessagingPlans returns a MessagingPlanInformer.
+	MessagingPlans() MessagingPlanInformer
 	// MessagingTenants returns a MessagingTenantInformer.
 	MessagingTenants() MessagingTenantInformer
 }
@@ -39,6 +43,11 @@ func (v *version) MessagingAddresses() MessagingAddressInformer {
 	return &messagingAddressInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
+// MessagingAddressPlans returns a MessagingAddressPlanInformer.
+func (v *version) MessagingAddressPlans() MessagingAddressPlanInformer {
+	return &messagingAddressPlanInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // MessagingEndpoints returns a MessagingEndpointInformer.
 func (v *version) MessagingEndpoints() MessagingEndpointInformer {
 	return &messagingEndpointInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
@@ -47,6 +56,11 @@ func (v *version) MessagingEndpoints() MessagingEndpointInformer {
 // MessagingInfrastructures returns a MessagingInfrastructureInformer.
 func (v *version) MessagingInfrastructures() MessagingInfrastructureInformer {
 	return &messagingInfrastructureInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MessagingPlans returns a MessagingPlanInformer.
+func (v *version) MessagingPlans() MessagingPlanInformer {
+	return &messagingPlanInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MessagingTenants returns a MessagingTenantInformer.

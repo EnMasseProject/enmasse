@@ -21,12 +21,20 @@ func (c *FakeEnmasseV1beta2) MessagingAddresses(namespace string) v1beta2.Messag
 	return &FakeMessagingAddresses{c, namespace}
 }
 
+func (c *FakeEnmasseV1beta2) MessagingAddressPlans(namespace string) v1beta2.MessagingAddressPlanInterface {
+	return &FakeMessagingAddressPlans{c, namespace}
+}
+
 func (c *FakeEnmasseV1beta2) MessagingEndpoints(namespace string) v1beta2.MessagingEndpointInterface {
 	return &FakeMessagingEndpoints{c, namespace}
 }
 
 func (c *FakeEnmasseV1beta2) MessagingInfrastructures(namespace string) v1beta2.MessagingInfrastructureInterface {
 	return &FakeMessagingInfrastructures{c, namespace}
+}
+
+func (c *FakeEnmasseV1beta2) MessagingPlans(namespace string) v1beta2.MessagingPlanInterface {
+	return &FakeMessagingPlans{c, namespace}
 }
 
 func (c *FakeEnmasseV1beta2) MessagingTenants(namespace string) v1beta2.MessagingTenantInterface {
