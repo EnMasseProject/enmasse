@@ -69,7 +69,7 @@ export const ServerMessageAlert: React.FC = () => {
         <Alert
           variant="danger"
           title="Server Error"
-          action={<AlertActionCloseButton onClose={onClose} />}
+          actionClose={<AlertActionCloseButton onClose={onClose} />}
         >
           {getErrorMessage()}
         </Alert>

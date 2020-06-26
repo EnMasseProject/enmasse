@@ -15,12 +15,12 @@ import {
   SplitItem,
   Card,
   CardBody,
-  CardHeader,
   Title,
   Text,
-  TextVariants
+  TextVariants,
+  CardTitle
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import {
   CredentialsView,
   ICredentialsViewProps
@@ -28,14 +28,14 @@ import {
 import { SwitchWithToggle, JsonEditor, MetadataListTable } from "components";
 import { ErrorStateAlert, IErrorStateAlertProps } from "./ErrorStateAlert";
 
-const styles = StyleSheet.create({
-  card_body: {
-    paddingLeft: 0,
-    paddingRight: 0,
-    paddingBottom: 0,
-    minHeight: 336
-  }
-});
+// const styles = StyleSheet.create({
+//   card_body: {
+//     paddingLeft: 0,
+//     paddingRight: 0,
+//     paddingBottom: 0,
+//     minHeight: 336
+//   }
+// });
 
 export interface IDeviceInfoProps
   extends Pick<
@@ -93,7 +93,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
 
   return (
     <Page id={id}>
-      <PageSection noPadding>
+      <PageSection padding={{ default: "noPadding" }}>
         {errorState && (
           <>
             <ErrorStateAlert
@@ -123,14 +123,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
             value={jsonViewData && JSON.stringify(jsonViewData, undefined, 2)}
           />
         ) : (
-          <Grid gutter="sm">
+          <Grid hasGutter>
             <GridItem span={5}>
               <Card>
-                <CardHeader>
+                <CardTitle>
                   <Title id="di-header-title" headingLevel="h1" size="2xl">
                     Via gateways
                   </Title>
-                </CardHeader>
+                </CardTitle>
                 <CardBody>
                   <Grid>
                     {deviceList &&
@@ -164,12 +164,14 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
             </GridItem>
             <GridItem span={7}>
               <Card id={id}>
-                <CardHeader>
+                <CardTitle>
                   <Title headingLevel="h1" size="2xl">
                     Device metadata
                   </Title>
-                </CardHeader>
-                <CardBody className={css(styles.card_body)}>
+                </CardTitle>
+                <CardBody
+                // className={css(styles.card_body)}
+                >
                   <MetadataListTable
                     dataList={prepareMetadataList()}
                     id={"divice-info-metadata-table"}

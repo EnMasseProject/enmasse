@@ -82,7 +82,7 @@ export const UpdatePassword = () => {
     <Modal
       id="update-password-dialog"
       title={"Change password"}
-      isSmall={true}
+      variant="small"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
@@ -104,7 +104,6 @@ export const UpdatePassword = () => {
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}
     >
       <Alert variant="info" isInline title="Want to update the secrets?">
         If you want to update the secrets, you can go to the
@@ -140,7 +139,7 @@ export const UpdatePassword = () => {
             id="update-password-retype-password"
             name="retypePassword"
             onChange={onChangeInput}
-            isValid={isMatchPassword()}
+            // validated={isMatchPassword()}
           />
         </FormGroup>
       </Form>

@@ -18,7 +18,7 @@ import {
 import { css } from "@patternfly/react-styles";
 import { FormatDistance } from "use-patternfly";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/project";
+// import { StyleForTable } from "modules/project";
 import {
   AddressStatus,
   AddressErrorMessage,
@@ -253,7 +253,9 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     }
   };
   return (
-    <div className={css(StyleForTable.scroll_overflow)}>
+    <div
+    // className={css(StyleForTable.scroll_overflow)}
+    >
       <Table
         variant={TableVariant.compact}
         onSelect={onSelect}

@@ -13,7 +13,7 @@ import {
   useBreadcrumb
 } from "use-patternfly";
 import { useQuery, useApolloClient } from "@apollo/react-hooks";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import {
   PageSection,
   PageSectionVariants,
@@ -38,11 +38,11 @@ import { Routes } from "./Routes";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { IAddressSpaceDetailResponse } from "schema/ResponseTypes";
 
-const styles = StyleSheet.create({
-  no_bottom_padding: {
-    paddingBottom: 0
-  }
-});
+// const styles = StyleSheet.create({
+//   no_bottom_padding: {
+//     paddingBottom: 0
+//   }
+// });
 
 export interface IObjectMeta_v1_Input {
   name: string;
@@ -214,7 +214,7 @@ export default function AddressSpaceDetailPage() {
     <>
       <PageSection
         variant={PageSectionVariants.light}
-        className={css(styles.no_bottom_padding)}
+        // className={css(styles.no_bottom_padding)}
       >
         <AddressSpaceHeader {...addressSpaceDetails} />
         <AddressSpaceNavigation

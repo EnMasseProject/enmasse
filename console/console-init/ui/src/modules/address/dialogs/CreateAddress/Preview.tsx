@@ -18,7 +18,7 @@ import {
 import { Loading } from "use-patternfly";
 import { useQuery } from "@apollo/react-hooks";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-java";
 import "ace-builds/src-noconflict/theme-github";
@@ -32,14 +32,14 @@ export interface IAddressPreview {
   namespace: string;
   addressspace: string;
 }
-const Style = StyleSheet.create({
-  left_padding: {
-    paddingLeft: 32
-  },
-  bottom_padding: {
-    paddingBottom: 16
-  }
-});
+// const Style = StyleSheet.create({
+//   left_padding: {
+//     paddingLeft: 32
+//   },
+//   bottom_padding: {
+//     paddingBottom: 16
+//   }
+// });
 
 export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
   name,
@@ -71,10 +71,10 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and click Finish to create the new address.
         Use the Back button to make changes.
@@ -130,8 +130,15 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             )}
           </Grid>
         </GridItem>
-        <GridItem span={7} className={css(Style.left_padding)}>
-          <Title size={"lg"} className={css(Style.bottom_padding)}>
+        <GridItem
+          span={7}
+          // className={css(Style.left_padding)}
+        >
+          <Title
+            headingLevel="h2"
+            size="lg"
+            // className={css(Style.bottom_padding)}
+          >
             {`Configuration details  `}
             <Tooltip
               id="preview-addr-feedback-tooltip"

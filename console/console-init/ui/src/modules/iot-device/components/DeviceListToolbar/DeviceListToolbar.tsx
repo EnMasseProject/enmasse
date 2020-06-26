@@ -11,9 +11,9 @@ import {
   IDropdownWithBulkSelectProps
 } from "components";
 import {
-  DataToolbarContent,
-  DataToolbar,
-  DataToolbarItem,
+  ToolbarContent,
+  Toolbar,
+  ToolbarItem,
   PaginationProps
 } from "@patternfly/react-core";
 import {
@@ -48,15 +48,15 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
   items,
   kebabItems
 }) => {
-
   return (
-    <DataToolbar id="device-data-toolbar">
-      <DataToolbarContent id="device-data-toolbar-content">
-        <DataToolbarItem
+    <Toolbar id="device-data-toolbar" data-codemods="true">
+      <ToolbarContent id="device-data-toolbar-content">
+        <ToolbarItem
           variant="bulk-select"
           id="device-list-toolbar-item-1"
           key="bulk-select"
           aria-label="Select multiple devices"
+          data-codemods="true"
         >
           <DropdownWithBulkSelect
             dropdownId="device-bulk-select"
@@ -66,34 +66,37 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             isChecked={isChecked}
             onChange={onSelectAllDevices}
           />
-        </DataToolbarItem>
-        <DataToolbarItem
+        </ToolbarItem>
+        <ToolbarItem
           id="device-list-toolbar-item-2"
           key="create-device"
           aria-label="Create device button"
+          data-codemods="true"
         >
           <CreateDeviceButton
             handleInputDeviceInfo={handleInputDeviceInfo}
             handleJSONUpload={handleJSONUpload}
           />
-        </DataToolbarItem>
-        <DataToolbarItem
+        </ToolbarItem>
+        <ToolbarItem
           id="device-list-toolbar-item-3"
           key="kebab-dropdown"
           aria-label="Device list kebab dropdown"
+          data-codemods="true"
         >
           <DropdownWithKebabToggle
             isPlain={true}
             dropdownItems={kebabItems}
             id="device-list-toolbar-kebab"
           />
-        </DataToolbarItem>
-        <DataToolbarItem
+        </ToolbarItem>
+        <ToolbarItem
           id="device-list-toolbar-item-4"
           variant="pagination"
           key="pagination"
-          breakpointMods={[{ modifier: "align-right", breakpoint: "md" }]}
+          align={{ md: "alignRight" }}
           aria-label="Device List pagination"
+          data-codemods="true"
         >
           <TablePagination
             id="device-list-pagination"
@@ -103,8 +106,8 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             onSetPage={onSetPage}
             onPerPageSelect={onPerPageSelect}
           />
-        </DataToolbarItem>
-      </DataToolbarContent>
-    </DataToolbar>
+        </ToolbarItem>
+      </ToolbarContent>
+    </Toolbar>
   );
 };

@@ -15,7 +15,7 @@ import {
   IRowData,
   SortByDirection
 } from "@patternfly/react-table";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
 export interface IDeviceListProps
   extends Pick<TableProps, "actionResolver" | "sortBy"> {
@@ -35,11 +35,11 @@ export interface IDevice {
   jsonData?: string;
 }
 
-export const StyleForFooteredTable = StyleSheet.create({
-  scroll_overflow: {
-    overflowY: "auto"
-  }
-});
+// export const StyleForFooteredTable = StyleSheet.create({
+//   scroll_overflow: {
+//     overflowY: "auto"
+//   }
+// });
 
 export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
   deviceRows,
@@ -69,7 +69,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
 
   return (
     <div
-      className={css(StyleForFooteredTable.scroll_overflow)}
+      // className={css(StyleForFooteredTable.scroll_overflow)}
       id="device-list-table"
     >
       <Table

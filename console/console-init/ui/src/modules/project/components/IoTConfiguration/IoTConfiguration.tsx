@@ -60,7 +60,9 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
             >
               <TextInput
                 isRequired={true}
-                isValid={name.trim() === "" || isNameValid}
+                validated={
+                  name.trim() === "" || isNameValid ? "default" : "error"
+                }
                 type="text"
                 id="iot-name"
                 name="iot-name"
@@ -80,7 +82,7 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               />
             </FormGroup>
             <FormGroup isInline label="Enable" fieldId="iot-enabled">
-              <Split gutter="md">
+              <Split hasGutter>
                 <SplitItem>
                   Enable the connections between IoT project and devices
                 </SplitItem>

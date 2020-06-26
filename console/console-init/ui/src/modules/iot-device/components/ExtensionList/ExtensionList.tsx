@@ -16,17 +16,17 @@ import { MinusCircleIcon } from "@patternfly/react-icons";
 import { css } from "@patternfly/react-styles";
 import { DropdownWithToggle, DividerWithTitle } from "components";
 import { ISelectOption } from "utils";
-import { dropdown_item_styles } from "modules/iot-device";
-import { StyleSheet } from "@patternfly/react-styles";
+// import { dropdown_item_styles } from "modules/iot-device";
+// import { StyleSheet } from "@patternfly/react-styles";
 
-const styles = StyleSheet.create({
-  type_margin: {
-    marginLeft: 10
-  },
-  delete_button_margin: {
-    marginTop: 32
-  }
-});
+// const styles = StyleSheet.create({
+//   type_margin: {
+//     marginLeft: 10
+//   },
+//   delete_button_margin: {
+//     marginTop: 32
+//   }
+// });
 
 export interface IExtension {
   id: string;
@@ -108,15 +108,15 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   <FormGroup
                     fieldId={"el-type-dropdown-" + id}
                     label="Type"
-                    className={styles.type_margin}
+                    // className={styles.type_margin}
                   >
                     <DropdownWithToggle
                       id={"el-type-dropdwon-" + id}
                       name="type"
-                      className={css(dropdown_item_styles.dropdown_align)}
-                      toggleClass={css(
-                        dropdown_item_styles.dropdown_toggle_align
-                      )}
+                      // className={css(dropdown_item_styles.dropdown_align)}
+                      // toggleClass={css(
+                      //   dropdown_item_styles.dropdown_toggle_align
+                      // )}
                       position={DropdownPosition.left}
                       dropdownItems={typeOptions}
                       value={ext["type"] || ""}
@@ -149,7 +149,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={1}>
                   <Button
-                    className={styles.delete_button_margin}
+                    // className={styles.delete_button_margin}
                     variant="link"
                     type="button"
                     icon={

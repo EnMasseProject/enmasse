@@ -14,12 +14,12 @@ import {
   DropdownToggleProps,
   DropdownSeparator
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
-export const dropdown_styles = StyleSheet.create({
-  format_description: { whiteSpace: "normal", textAlign: "justify" },
-  dropdown_alignment: { minHeight: "37px" }
-});
+// export const dropdown_styles = StyleSheet.create({
+//   format_description: { whiteSpace: "normal", textAlign: "justify" },
+//   dropdown_alignment: { minHeight: "37px" }
+// });
 
 export interface IDropdownOption {
   value: string;
@@ -67,10 +67,10 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
   const dropdowItemCss = classNames(dropdownItemClass);
-  const dropdownClass = classNames(
-    css(dropdown_styles.dropdown_alignment),
-    className
-  );
+  // const dropdownClass = classNames(
+  //   css(dropdown_styles.dropdown_alignment),
+  //   className
+  // );
 
   const onToggle = (isOpen: boolean) => {
     setIsOpen(isOpen);
@@ -117,7 +117,9 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
           <span className={dropdowItemCss}>{option.label || option.value}</span>
           <div>{option.value}</div>
           {option.description && (
-            <div className={css(dropdown_styles.format_description)}>
+            <div
+            // className={css(dropdown_styles.format_description)}
+            >
               {option.description}
             </div>
           )}
@@ -129,7 +131,9 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
       <>
         <span className={dropdowItemCss}>{option.label || option.value}</span>
         {option.description && (
-          <div className={css(dropdown_styles.format_description)}>
+          <div
+          // className={css(dropdown_styles.format_description)}
+          >
             {option.description}
           </div>
         )}
@@ -176,7 +180,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
     <Dropdown
       id={id}
       name={name}
-      className={dropdownClass}
+      // className={dropdownClass}
       position={position || DropdownPosition.left}
       onSelect={onSelect}
       isOpen={isOpen}

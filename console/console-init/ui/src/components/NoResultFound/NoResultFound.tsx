@@ -25,7 +25,7 @@ export const NoResultFound: React.FunctionComponent<INoResultFound> = ({
   return (
     <EmptyState variant={EmptyStateVariant.full} id="no-result-state">
       <EmptyStateIcon icon={SearchIcon} id="no-result-icon" />
-      <Title id="no-result-title" size="lg">
+      <Title headingLevel="h2" id="no-result-title" size="lg">
         No results found
       </Title>
       <EmptyStateBody id="no-result-body">

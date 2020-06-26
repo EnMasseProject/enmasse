@@ -185,8 +185,6 @@ export const CreateAddress: React.FunctionComponent = () => {
     <Wizard
       id="create-addr-wizard"
       isOpen={true}
-      isFullHeight={true}
-      isFullWidth={true}
       onClose={onCloseDialog}
       title="Create new Address"
       steps={steps}

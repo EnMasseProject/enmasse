@@ -4,21 +4,21 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 
 export interface ProjectNavigationProps {
   activeItem: string;
 }
 
-const styles = StyleSheet.create({
-  navlink: {
-    color: "black",
-    paddingLeft: 10,
-    paddingRight: 10
-  }
-});
+// const styles = StyleSheet.create({
+//   navlink: {
+//     color: "black",
+//     paddingLeft: 10,
+//     paddingRight: 10,
+//   },
+// });
 
 export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> = ({
   activeItem
@@ -28,13 +28,13 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
     setActive(result.itemId);
   };
   return (
-    <Nav onSelect={onSelect1}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect1}>
+      <NavList>
         <NavItem key="detail" itemId="detail" isActive={active === "detail"}>
           <NavLink
             id="ad-space-nav-detail"
             to={`detail`}
-            className={css(styles.navlink)}
+            // className={css(styles.navlink)}
           >
             Detail
           </NavLink>
@@ -43,7 +43,7 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
           <NavLink
             id="ad-space-nav-devices"
             to={`devices`}
-            className={css(styles.navlink)}
+            // className={css(styles.navlink)}
           >
             Devices
           </NavLink>
@@ -56,7 +56,7 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
           <NavLink
             id="ad-space-nav-certificates"
             to={`certificates`}
-            className={css(styles.navlink)}
+            // className={css(styles.navlink)}
           >
             Certificates
           </NavLink>

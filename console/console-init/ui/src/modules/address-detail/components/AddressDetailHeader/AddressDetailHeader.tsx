@@ -15,7 +15,7 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { TypeBadge } from "modules/address-detail/components";
 import { AddressTypes } from "constant";
 import { DropdownWithKebabToggle } from "components";
@@ -30,33 +30,33 @@ export interface IAddressDetailHeaderProps {
   onDelete: (name: string) => void;
   onPurge: (name: string) => void;
 }
-const styles = StyleSheet.create({
-  flex_left_border: {
-    paddingLeft: "1em",
-    borderLeft: "0.05em solid",
-    borderRightColor: "lightgrey"
-  },
-  address_space_icon_margin: {
-    backgroundColor: "#EC7A08",
-    fontSize: 25
-  },
-  address_icon_align: {
-    paddingTop: 5,
-    paddingRight: 16
-  },
-  kebab_toggle_margin: {
-    marginTop: 20,
-    marginLeft: 10,
-    fontSize: 15
-  },
-  namespace_info_margin: {
-    marginTop: 16,
-    marginBottom: 24
-  },
-  no_bottom_padding: {
-    paddingBottom: 0
-  }
-});
+// const styles = StyleSheet.create({
+//   flex_left_border: {
+//     paddingLeft: "1em",
+//     borderLeft: "0.05em solid",
+//     borderRightColor: "lightgrey"
+//   },
+//   address_space_icon_margin: {
+//     backgroundColor: "#EC7A08",
+//     fontSize: 25
+//   },
+//   address_icon_align: {
+//     paddingTop: 5,
+//     paddingRight: 16
+//   },
+//   kebab_toggle_margin: {
+//     marginTop: 20,
+//     marginLeft: 10,
+//     fontSize: 15
+//   },
+//   namespace_info_margin: {
+//     marginTop: 16,
+//     marginBottom: 24
+//   },
+//   no_bottom_padding: {
+//     paddingBottom: 0
+//   }
+// });
 
 export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderProps> = ({
   type,
@@ -69,7 +69,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   onPurge
 }) => {
   const AddressTitle = () => (
-    <Split gutter="md">
+    <Split hasGutter>
       <SplitItem>
         <Title headingLevel="h1" size="4xl" id="adheader-name">
           {name}
@@ -79,14 +79,16 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   );
 
   const AddressDetailInFlex = () => (
-    <Flex className={css(styles.namespace_info_margin)}>
+    <Flex
+    // className={css(styles.namespace_info_margin)}
+    >
       <FlexItem id="adheader-plans">
         Plan : <b>{plan}</b>
       </FlexItem>
       {topic && topic !== null && (
         <FlexItem
           id="adheader-subscription-topic"
-          className={css(styles.flex_left_border)}
+          // className={css(styles.flex_left_border)}
         >
           Topic : <b>{topic}</b>
         </FlexItem>
@@ -96,7 +98,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
       ) : (
         <FlexItem
           id="adheader-stored-messages"
-          className={css(styles.flex_left_border)}
+          // className={css(styles.flex_left_border)}
         >
           <b>{storedMessages && storedMessages !== "" ? storedMessages : 0}</b>{" "}
           stored messages
@@ -107,7 +109,9 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
 
   const AddressDetailLayout = () => (
     <>
-      <SplitItem className={css(styles.address_icon_align)}>
+      <SplitItem
+      // className={css(styles.address_icon_align)}
+      >
         <TypeBadge type={type} />
       </SplitItem>
       <SplitItem>
@@ -166,12 +170,14 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   return (
     <PageSection
       variant={PageSectionVariants.light}
-      className={css(styles.no_bottom_padding)}
+      // className={css(styles.no_bottom_padding)}
     >
       <Split>
         <AddressDetailLayout />
         <SplitItem isFilled />
-        <SplitItem className={css(styles.kebab_toggle_margin)}>
+        <SplitItem
+        // className={css(styles.kebab_toggle_margin)}
+        >
           <KebabOptionsLayout />
         </SplitItem>
       </Split>

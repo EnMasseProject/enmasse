@@ -6,9 +6,9 @@
 import React from "react";
 import { TablePagination } from "components";
 import {
-  DataToolbarContent,
-  DataToolbar,
-  DataToolbarItem,
+  ToolbarContent,
+  Toolbar,
+  ToolbarItem,
   PaginationProps
 } from "@patternfly/react-core";
 
@@ -20,14 +20,15 @@ export const DeviceListFooterToolbar: React.FunctionComponent<PaginationProps> =
   onPerPageSelect
 }) => {
   return (
-    <DataToolbar id="device-footer-toolbar">
-      <DataToolbarContent id="device-footer-toolbar-content">
-        <DataToolbarItem
+    <Toolbar id="device-footer-toolbar" data-codemods="true">
+      <ToolbarContent id="device-footer-toolbar-content">
+        <ToolbarItem
           id="device-footer-toolbar-item-1"
           variant="pagination"
           key="pagination"
-          breakpointMods={[{ modifier: "align-right", breakpoint: "md" }]}
+          align={{ md: "alignRight" }}
           aria-label="Device List pagination"
+          data-codemods="true"
         >
           <TablePagination
             id="device-list-footer-pagination"
@@ -37,8 +38,8 @@ export const DeviceListFooterToolbar: React.FunctionComponent<PaginationProps> =
             onSetPage={onSetPage}
             onPerPageSelect={onPerPageSelect}
           />
-        </DataToolbarItem>
-      </DataToolbarContent>
-    </DataToolbar>
+        </ToolbarItem>
+      </ToolbarContent>
+    </Toolbar>
   );
 };

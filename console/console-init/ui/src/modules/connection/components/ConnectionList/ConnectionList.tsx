@@ -19,7 +19,7 @@ import { FormatDistance } from "use-patternfly";
 import { css } from "@patternfly/react-styles";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/project";
+// import { StyleForTable } from "modules/project";
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -193,7 +193,9 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
 
   return (
-    <div className={css(StyleForTable.scroll_overflow)}>
+    <div
+    // className={css(StyleForTable.scroll_overflow)}
+    >
       <Table
         variant={TableVariant.compact}
         cells={tableColumns}

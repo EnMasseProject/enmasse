@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Title, FormGroup, Radio } from "@patternfly/react-core";
+import { Form, Title, Radio } from "@patternfly/react-core";
 
 interface IConnectionTypeProps {
   connectionType?: string;

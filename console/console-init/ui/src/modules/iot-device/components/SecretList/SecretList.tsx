@@ -13,19 +13,19 @@ import {
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { css } from "@patternfly/react-styles";
 import { hasOwnProperty } from "utils";
 
-export const dropdown_item_styles = StyleSheet.create({
-  format_item: { whiteSpace: "normal", textAlign: "justify" },
-  dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" }
-});
+// export const dropdown_item_styles = StyleSheet.create({
+//   format_item: { whiteSpace: "normal", textAlign: "justify" },
+//   dropdown_align: { display: "flex", marginRight: 10 },
+//   dropdown_toggle_align: { flex: "1" }
+// });
 
-const styles = StyleSheet.create({
-  delete_secret: { float: "right" },
-  not_before: { marginRight: 10 }
-});
+// const styles = StyleSheet.create({
+//   delete_secret: { float: "right" },
+//   not_before: { marginRight: 10 }
+// });
 
 export interface ISecret {
   id?: string;
@@ -142,7 +142,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
             <FormGroup
               fieldId={"sc-not-before-textinput-" + id}
               label="Not before"
-              className={css(styles.not_before)}
+              // className={css(styles.not_before)}
             >
               <TextInput
                 id={"sc-not-before-textinput-" + id}
@@ -182,7 +182,7 @@ export const SecretList: React.FC<ISecretListProps> = ({
         {secrets.length > 1 && (
           <GridItem span={12}>
             <Button
-              className={css(styles.delete_secret)}
+              // className={css(styles.delete_secret)}
               variant="link"
               type="button"
               icon={<MinusCircleIcon />}

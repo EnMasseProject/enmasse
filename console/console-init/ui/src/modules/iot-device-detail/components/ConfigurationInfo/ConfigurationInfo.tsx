@@ -19,7 +19,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { FilterIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { AdapterList, IAdapterListProps } from "components";
 import {
   CredentialsView,
@@ -131,7 +131,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
       </Tooltip>
       <Page id={id}>
         <PageSection>
-          <Grid gutter="sm">
+          <Grid hasGutter>
             <GridItem span={6}>
               <Card>
                 <CardBody>
@@ -144,7 +144,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
               </Card>
             </GridItem>
             <GridItem span={6}>
-              <Grid gutter="sm">
+              <Grid hasGutter>
                 <GridItem>
                   <Card>
                     <CardBody>
@@ -172,7 +172,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                           dropdownItems={filterOptions}
                           value={selectedFilterValue}
                           isLabelAndValueNotSame={true}
-                          className={style.filter_dropdown}
+                          className={css(style.filter_dropdown)}
                         />
                       )}
                     </CardBody>
