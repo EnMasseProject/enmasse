@@ -55,7 +55,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
 }) => {
   const [credentialType, setCredentialType] = useState<string>("all");
   const [filterOptions, setFilterOptions] = useState<IDropdownOption[]>([]);
-  const [selectedFilterValue, setSelectedFilterValue] = useState();
+  const [selectedFilterValue, setSelectedFilterValue] = useState<string>("");
 
   useEffect(() => {
     getFilterOptions();
