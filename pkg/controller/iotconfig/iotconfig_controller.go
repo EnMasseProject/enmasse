@@ -7,14 +7,18 @@ package iotconfig
 
 import (
 	"context"
+	"time"
+
+	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/util/iot"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"github.com/pkg/errors"
 
 	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 
-	"k8s.io/client-go/tools/record"
 	"reflect"
+
+	"k8s.io/client-go/tools/record"
 
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
@@ -30,7 +34,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -75,12 +79,14 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager, infraNamespace string, configName string) *ReconcileIoTConfig {
+	certController := cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour)
 	return &ReconcileIoTConfig{
-		client:     mgr.GetClient(),
-		scheme:     mgr.GetScheme(),
-		namespace:  infraNamespace,
-		configName: configName,
-		recorder:   mgr.GetEventRecorderFor(ControllerName),
+		client:         mgr.GetClient(),
+		scheme:         mgr.GetScheme(),
+		namespace:      infraNamespace,
+		configName:     configName,
+		recorder:       mgr.GetEventRecorderFor(ControllerName),
+		certController: certController,
 	}
 }
 
@@ -153,6 +159,9 @@ type ReconcileIoTConfig struct {
 	client   client.Client
 	scheme   *runtime.Scheme
 	recorder record.EventRecorder
+
+	// Manages certificates for messaging infrastructure.
+	certController *cert.CertController
 
 	// The name of the configuration we are watching
 	// we are watching only one config, in our own namespace
@@ -255,6 +264,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAdapterPskCredentials(ctx, config, configTracker)
+	})
+	rc.Process(func() (reconcile.Result, error) {
+		return r.processAdapterInfraCert(ctx, config, configTracker)
 	})
 
 	// start normal reconcile
