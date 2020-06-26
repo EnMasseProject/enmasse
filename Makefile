@@ -8,15 +8,6 @@ GO_DIRS = \
 	broker-plugin
 
 DOCKER_DIRS = \
-	agent \
-	topic-forwarder \
-	address-space-controller \
-	none-authservice \
-	standard-controller \
-	keycloak-plugin \
-	mqtt-gateway \
-	mqtt-lwt \
-	service-broker \
 	console/console-init \
 	olm-manifest \
 	iot/iot-tenant-service \

@@ -176,17 +176,6 @@ Use this command to change environment variables values for the deployment
 
 Where $CMD is `oc` or `kubectl` command depends of the environment.
 
-The following deployment names are available depending on their types and EnMasse configuration:
-
-   * `address-space-controller`
-   * `admin`
-   * `keycloak-controller`
-   * `standard-controller`
-   * `service-broker`
-   * `topic-forwarder`
-   * `mqtt-gateway`
-   * `mqtt-lwt`
-
 For forwarding port from the remote pod to the local host invoke following command (it will lock terminal) and then
 connect with development tool to the forwarded port on localhost
 

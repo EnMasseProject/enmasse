@@ -14,8 +14,6 @@
     <maven.compiler.target>8</maven.compiler.target>
   </properties>
   <modules>
-     <module>amqp-connector</module>
-     <module>sasl-delegation</module>
      <module>tcnative</module>
      <module>broker-cli</module>
      <module>plugin</module>

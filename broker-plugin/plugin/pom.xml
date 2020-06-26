@@ -15,14 +15,6 @@
   <dependencies>
     <dependency>
       <groupId>io.enmasse</groupId>
-      <artifactId>amqp-connector</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
-      <artifactId>sasl-delegation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.enmasse</groupId>
       <artifactId>broker-cli</artifactId>
     </dependency>
   </dependencies>
