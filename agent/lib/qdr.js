@@ -53,12 +53,12 @@ var Router = function (connection, router, agent) {
         this.timer = setInterval(function () {
             self.health_check();
         }, interval);
+
+        this.connection.on('receiver_open', this.ready.bind(this));
+        this.connection.on('disconnected', this.disconnected.bind(this));
+        this.connection.on('sender_error', this.on_sender_error.bind(this));
     }
 
-    this.connection.setMaxListeners(0);
-    this.connection.on('receiver_open', this.ready.bind(this));
-    this.connection.on('disconnected', this.disconnected.bind(this));
-    this.connection.on('sender_error', this.on_sender_error.bind(this));
 };
 
 Router.prototype.get_id = function () {
@@ -162,8 +162,11 @@ Router.prototype.on_sender_error = function (context) {
 
 Router.prototype.disconnected = function (context) {
     this.address = undefined;
-    log.info('[%s] router disconnected %s, abort_idle: %s', this.get_id(), this.target, context.connection.abort_idle);
+    log.info('[%s] router disconnected %s, abort_idle: %s, reconnecting: %s', this.get_id(), this.target, context.connection.abort_idle, context.reconnecting);
     this._abort_requests('disconnected');
+    if (!context.reconnecting) {
+        this._clear_timer();
+    }
 }
 
 Router.prototype.ready = function (context) {
@@ -309,7 +312,7 @@ Router.prototype.get_all_routers = function (current) {
 
 Router.prototype.incoming = function (context) {
     log.debug('recv: %j', context.message);
-    this.tracking.recv++
+    this.tracking.recv++;
     this.tracking.outstanding--;
     var message = context.message;
     var handler = this.handlers[message.correlation_id];
