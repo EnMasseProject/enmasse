@@ -18,10 +18,12 @@ import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 export interface IActionManagerProps {
   actionType: DeviceActionType;
+  viaGateway?: boolean;
 }
 
 export const ActionManager: React.FC<IActionManagerProps> = ({
-  actionType
+  actionType,
+  viaGateway
 }) => {
   const { deviceid } = useParams();
 
@@ -38,6 +40,11 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
       case DeviceActionType.ADD_CREDENTIALS:
         return <AddCredentialsContainer />;
       case DeviceActionType.ADD_GATEWAYS:
+        return <AddGatewaysContainer />;
+      case DeviceActionType.CHANGE_CONNECTION_TYPE:
+        if (viaGateway) {
+          return <AddCredentialsContainer />;
+        }
         return <AddGatewaysContainer />;
       default:
         return null;
