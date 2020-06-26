@@ -7,7 +7,7 @@ package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.core.json.JsonArray;
 import org.slf4j.Logger;
 
@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 
 public class ExternalMessagingClient implements AutoCloseable {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static Logger LOGGER = LoggerUtils.getLogger();
 
     private AbstractClient client;
     private ClientArgumentMap arguments;

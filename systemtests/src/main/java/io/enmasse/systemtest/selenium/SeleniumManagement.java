@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.selenium;
 
 
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class SeleniumManagement {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     public static void deployFirefoxApp() throws Exception {
         String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.CREATE_SELENIUM_CONTAINER);

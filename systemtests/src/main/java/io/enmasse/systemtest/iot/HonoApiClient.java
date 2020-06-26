@@ -8,7 +8,7 @@ package io.enmasse.systemtest.iot;
 import com.google.common.net.HttpHeaders;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public abstract class HonoApiClient extends ApiClient {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private final String authzString;
 
     protected HonoApiClient(final Vertx vertx, final Supplier<Endpoint> endpointSupplier, final String token) {

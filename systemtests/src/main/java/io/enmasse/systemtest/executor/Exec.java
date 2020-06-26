@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.executor;
 
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * Class provide execution of external command
  */
 public class Exec {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
     private Process process;
     private String stdOut;
     private String stdErr;

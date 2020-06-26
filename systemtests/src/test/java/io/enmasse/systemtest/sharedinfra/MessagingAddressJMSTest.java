@@ -11,8 +11,8 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
 import io.enmasse.systemtest.utils.JmsProvider;
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DefaultMessagingInfrastructure
 @ExtendWith(JmsProviderParameterResolver.class)
 public class MessagingAddressJMSTest extends TestBase {
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
 
     private MessagingProject project;
     private MessagingEndpoint endpoint;

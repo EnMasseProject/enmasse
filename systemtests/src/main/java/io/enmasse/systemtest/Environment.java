@@ -7,7 +7,7 @@ package io.enmasse.systemtest;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.fabric8.kubernetes.client.Config;
 import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 public class Environment {
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
     private static JsonNode jsonEnv;
     private final List<Map.Entry<String, String>> values = new ArrayList<>();
 

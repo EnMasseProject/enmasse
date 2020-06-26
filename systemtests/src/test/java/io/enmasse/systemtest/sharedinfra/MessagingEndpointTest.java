@@ -10,21 +10,20 @@ import io.enmasse.api.model.MessagingAddressCondition;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointCondition;
-import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingProject;
-import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.Kubernetes;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
+import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
@@ -63,7 +62,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-node")
                 .endMetadata()
                 .editOrNewSpec()
                 .withHost(kubernetes.getHost())
@@ -75,7 +74,8 @@ public class MessagingEndpointTest extends TestBase {
 
         createEndpointAndAddress(endpoint, "queue1");
 
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP", endpoint), "queue1", false, false);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint), "queue1", false, false);
+
     }
 
     @Test
@@ -84,7 +84,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-cluster-endpoint")
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewTls()
@@ -97,10 +97,10 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue2");
 
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP", endpoint), "queue1", false, false);
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, false);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint), "queue2", false, false);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue2", true, false);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-route")
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewRoute()
@@ -123,13 +123,13 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue3");
 
         endpoint = MessagingEndpointResourceType.getOperation().inNamespace(endpoint.getMetadata().getNamespace()).withName(endpoint.getMetadata().getName()).get();
         assertNotNull(endpoint.getStatus().getTls());
         assertNotNull(endpoint.getStatus().getTls().getCaCertificate());
 
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, true, endpoint.getStatus().getTls().getCaCertificate());
+        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue3", true, true, endpoint.getStatus().getTls().getCaCertificate());
     }
 
     @Test
@@ -139,7 +139,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-load-balancer")
                 .endMetadata()
                 .editOrNewSpec()
                 .withHost(kubernetes.getHost())
@@ -149,9 +149,9 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue4");
 
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQP", endpoint), "queue1", false, false, null);
+        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint), "queue4", false, false, null);
     }
 
     /**
@@ -164,7 +164,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-ingress")
                 .endMetadata()
                 .editOrNewSpec()
                 .addToAnnotations("nginx.ingress.kubernetes.io/ssl-passthrough", "true")
@@ -179,13 +179,13 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue5");
 
         endpoint = MessagingEndpointResourceType.getOperation().inNamespace(endpoint.getMetadata().getNamespace()).withName(endpoint.getMetadata().getName()).get();
         assertNotNull(endpoint.getStatus().getTls());
         assertNotNull(endpoint.getStatus().getTls().getCaCertificate());
 
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, true, endpoint.getStatus().getTls().getCaCertificate());
+        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue5", true, true, endpoint.getStatus().getTls().getCaCertificate());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-ocp-cert")
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewTls()
@@ -208,8 +208,8 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, false);
+        createEndpointAndAddress(endpoint, "queue6");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue6", true, false);
     }
 
     @Test
@@ -219,7 +219,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-self-signed")
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewRoute()
@@ -232,7 +232,7 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue7");
 
         endpoint = MessagingEndpointResourceType.getOperation().inNamespace(endpoint.getMetadata().getNamespace()).withName(endpoint.getMetadata().getName()).get();
         assertNotNull(endpoint.getStatus().getTls());
@@ -243,7 +243,7 @@ public class MessagingEndpointTest extends TestBase {
         assertFalse(endpoint.getStatus().getTls().getCertificateValidity().getNotBefore().isEmpty());
         assertFalse(endpoint.getStatus().getTls().getCertificateValidity().getNotAfter().isEmpty());
 
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, true, endpoint.getStatus().getTls().getCaCertificate());
+        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue7", true, true, endpoint.getStatus().getTls().getCaCertificate());
     }
 
     @Test
@@ -254,7 +254,7 @@ public class MessagingEndpointTest extends TestBase {
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
-                .withName("app")
+                .withName("app-external-cert")
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewRoute()
@@ -273,7 +273,7 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue8");
 
         endpoint = MessagingEndpointResourceType.getOperation().inNamespace(endpoint.getMetadata().getNamespace()).withName(endpoint.getMetadata().getName()).get();
         assertNotNull(endpoint.getStatus().getTls());
@@ -282,7 +282,7 @@ public class MessagingEndpointTest extends TestBase {
         assertNotNull(endpoint.getStatus().getTls().getCertificateValidity().getNotAfter());
 
         // Disable host verification as we cant verify that. However as long as cert is valid that should be sufficient to validate it is being set correctly.
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQPS", endpoint), "queue1", true, false, messagingCert.getCaCert());
+        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue8", true, false, messagingCert.getCaCert());
     }
 
     @Test
@@ -304,10 +304,10 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
+        createEndpointAndAddress(endpoint, "queue9");
 
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WS", endpoint), "queue1", false, true);
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WSS", endpoint), "queue1", true, true);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WS", endpoint), "queue9", false, true);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WSS", endpoint), "queue9", true, true);
     }
 
     @Test
@@ -327,8 +327,8 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WS", endpoint), "queue1", false, true);
+        createEndpointAndAddress(endpoint, "queue10");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WS", endpoint), "queue10", false, true);
     }
 
     @Test
@@ -347,8 +347,8 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WS", endpoint), "queue1", false, true);
+        createEndpointAndAddress(endpoint, "queue11");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WS", endpoint), "queue11", false, true);
     }
 
     @Test
@@ -371,8 +371,8 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WSS", endpoint), "queue1", true, true);
+        createEndpointAndAddress(endpoint, "queue12");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WSS", endpoint), "queue12", true, true);
     }
 
     @Test
@@ -396,8 +396,8 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WSS", endpoint), "queue1", true, true);
+        createEndpointAndAddress(endpoint, "queue13");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WSS", endpoint), "queue13", true, true);
     }
 
     @Test
@@ -417,20 +417,11 @@ public class MessagingEndpointTest extends TestBase {
                 .endSpec()
                 .build();
 
-        createEndpointAndAddress(endpoint, "queue1");
-        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP-WSS", endpoint), "queue1", true, true);
+        createEndpointAndAddress(endpoint, "queue14");
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP-WSS", endpoint), "queue14", true, true);
     }
 
-    private static int getPort(String protocol, MessagingEndpoint endpoint) {
-        for (MessagingEndpointPort port : endpoint.getStatus().getPorts()) {
-            if (protocol.equals(port.getProtocol()))  {
-                return port.getPort();
-            }
-        }
-        return 0;
-    }
-
-    void doTestSendReceiveOutsideCluster(String host, int port, String address, boolean tls, boolean verifyHost, String caCert) throws Exception {
+    private void doTestSendReceiveOutsideCluster(String host, int port, String address, boolean tls, boolean verifyHost, String caCert) throws Exception {
         ProtonClientOptions protonClientOptions = new ProtonClientOptions();
         if (tls) {
             protonClientOptions.setSsl(true);
@@ -453,6 +444,7 @@ public class MessagingEndpointTest extends TestBase {
         var result = client.recvMessages(address, 1).get();
         assertEquals(1, result.size());
         assertEquals("hello", ((AmqpValue) result.get(0).getBody()).getValue());
+        client.close();
     }
 
     static void doTestSendReceiveOnCluster(String host, int port, String address, boolean enableTls, boolean websockets) throws Exception {

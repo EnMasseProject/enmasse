@@ -13,8 +13,8 @@ import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.ThrowableRunner;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.ThrowableRunner;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
@@ -28,6 +28,7 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Predicate;
@@ -40,17 +41,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class ResourceManager {
 
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
     private static boolean verbose = true;
 
-    private static Stack<ThrowableRunner> classResources = new Stack<>();
-    private static Stack<ThrowableRunner> methodResources = new Stack<>();
+    private static final Stack<ThrowableRunner> classResources = new Stack<>();
+    private static final Stack<ThrowableRunner> methodResources = new Stack<>();
     private static Stack<ThrowableRunner> pointerResources = classResources;
 
     private MessagingInfrastructure defaultInfra;
     private MessagingProject defaultProject;
 
-    private Kubernetes kubeClient = Kubernetes.getInstance();
+    private final Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
     private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(new UserCredentials("dummy", "dummy"));
 
@@ -78,22 +79,32 @@ public class ResourceManager {
     }
 
     public void deleteClassResources() throws Exception {
+        LoggerUtils.logDelimiter("-");
         LOGGER.info("Going to clear all class resources");
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        if (classResources.isEmpty()) {
+            LOGGER.info("Nothing to delete");
+        }
         while (!classResources.empty()) {
             classResources.pop().run();
         }
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        LOGGER.info("");
         classResources.clear();
     }
 
     public void deleteMethodResources() throws Exception {
+        LoggerUtils.logDelimiter("-");
         LOGGER.info("Going to clear all method resources");
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        if (methodResources.isEmpty()) {
+            LOGGER.info("Nothing to delete");
+        }
         while (!methodResources.empty()) {
             methodResources.pop().run();
         }
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        LOGGER.info("");
         methodResources.clear();
         pointerResources = classResources;
     }
@@ -265,6 +276,7 @@ public class ResourceManager {
     }
 
     private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+
     public static <T extends HasMetadata> String resourceToString(T resource) {
         if (resource == null) {
             return "null";

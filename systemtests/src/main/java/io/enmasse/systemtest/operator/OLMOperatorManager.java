@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -26,7 +26,7 @@ import java.util.List;
 public class OLMOperatorManager {
 
     private static final String DEFAULT_NAME_ENMASSE_SOURCE = "enmasse-source";
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private String clusterExternalImageRegistry;
     private String clusterInternalImageRegistry;

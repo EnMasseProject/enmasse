@@ -8,7 +8,7 @@ package io.enmasse.systemtest.utils;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.time.TimeoutBudget;
@@ -61,7 +61,7 @@ public class TestUtils {
     }
 
     private static final Random R = new Random();
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     public static void waitForNReplicas(int expectedReplicas, String namespace, Map<String, String> labelSelector, TimeoutBudget budget) throws InterruptedException {
         waitForNReplicas(expectedReplicas, namespace, labelSelector, Collections.emptyMap(), budget);
@@ -506,7 +506,7 @@ public class TestUtils {
      * @param expectedPods optional list if you want to be sure all pods from this list are deployed
      */
     public static void waitUntilDeployed(String namespace, List<String> expectedPods) {
-        log.info("-------------------------------------------------------------");
+        LoggerUtils.logDelimiter("-");
         TestUtils.waitUntilCondition("All Deployments, StatefulSets, ReplicaSets and Pods are ready", waitPhase -> {
             List<Deployment> deployments = Kubernetes.getInstance().listDeployments(namespace);
             for (Deployment deployment : deployments) {
@@ -564,7 +564,7 @@ public class TestUtils {
             }
             return false;
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
-        log.info("-------------------------------------------------------------");
+        LoggerUtils.logDelimiter("-");
     }
 
     public static void waitForConsoleRollingUpdate(String namespace) throws Exception {

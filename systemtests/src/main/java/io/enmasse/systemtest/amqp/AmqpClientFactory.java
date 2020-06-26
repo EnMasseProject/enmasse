@@ -6,7 +6,7 @@ package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class AmqpClientFactory {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new CopyOnWriteArrayList<>();

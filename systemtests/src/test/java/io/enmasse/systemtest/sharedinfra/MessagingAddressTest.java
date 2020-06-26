@@ -15,12 +15,11 @@ import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingProject;
-import io.enmasse.systemtest.annotations.ExternalClients;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
+import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
-import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
@@ -50,6 +49,7 @@ public class MessagingAddressTest extends TestBase {
 
     private MessagingProject project;
     private MessagingEndpoint endpoint;
+
     @BeforeAll
     public void createEndpoint() {
         project = resourceManager.getDefaultMessagingProject();
@@ -278,39 +278,39 @@ public class MessagingAddressTest extends TestBase {
     @Test
     public void testSubscription() throws Exception {
         resourceManager.createResource(new MessagingAddressBuilder()
-                .editOrNewMetadata()
-                .withName("topic1")
-                .withNamespace(project.getMetadata().getNamespace())
-                .endMetadata()
-                .editOrNewSpec()
-                .editOrNewTopic()
-                .endTopic()
-                .endSpec()
-                .build(),
+                        .editOrNewMetadata()
+                        .withName("topic1")
+                        .withNamespace(project.getMetadata().getNamespace())
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .editOrNewTopic()
+                        .endTopic()
+                        .endSpec()
+                        .build(),
                 new MessagingAddressBuilder()
-                .editOrNewMetadata()
-                .withName("sub1")
-                .withNamespace(project.getMetadata().getNamespace())
-                .endMetadata()
-                .editOrNewSpec()
-                .editOrNewSubscription()
-                .withTopic("topic1")
-                .endSubscription()
-                .endSpec()
-                .build(),
+                        .editOrNewMetadata()
+                        .withName("sub1")
+                        .withNamespace(project.getMetadata().getNamespace())
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .editOrNewSubscription()
+                        .withTopic("topic1")
+                        .endSubscription()
+                        .endSpec()
+                        .build(),
                 new MessagingAddressBuilder()
-                .editOrNewMetadata()
-                .withName("sub2")
-                .withNamespace(project.getMetadata().getNamespace())
-                .endMetadata()
-                .editOrNewSpec()
-                .editOrNewSubscription()
-                .withTopic("topic1")
-                .endSubscription()
-                .endSpec()
-                .build());
+                        .editOrNewMetadata()
+                        .withName("sub2")
+                        .withNamespace(project.getMetadata().getNamespace())
+                        .endMetadata()
+                        .editOrNewSpec()
+                        .editOrNewSubscription()
+                        .withTopic("topic1")
+                        .endSubscription()
+                        .endSpec()
+                        .build());
 
-        clientRunner.sendAndReceive(endpoint,"topic1", "sub1", "sub2");
+        clientRunner.sendAndReceive(endpoint, "topic1", "sub1", "sub2");
         assertDefaultMessaging(clientRunner.getClients());
     }
 

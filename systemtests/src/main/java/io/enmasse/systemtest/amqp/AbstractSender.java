@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonSender;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSender<T> extends ClientHandlerBase<T> {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     public AbstractSender(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);

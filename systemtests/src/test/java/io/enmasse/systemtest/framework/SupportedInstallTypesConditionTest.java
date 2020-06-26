@@ -6,7 +6,6 @@ package io.enmasse.systemtest.framework;
 
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.OLMInstallationType;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
 import org.junit.jupiter.api.Tag;

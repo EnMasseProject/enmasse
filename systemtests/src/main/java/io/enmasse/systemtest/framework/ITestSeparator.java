@@ -2,9 +2,8 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.bases;
+package io.enmasse.systemtest.framework;
 
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.resolvers.ExtensionContextParameterResolver;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -15,21 +14,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
-import java.util.Collections;
 import java.util.Map;
 
 @ExtendWith(ExtensionContextParameterResolver.class)
 public interface ITestSeparator {
-    Logger testSeparatorLogger = CustomLogger.getLogger();
-    String separatorChar = "#";
+    Logger testSeparatorLogger = LoggerUtils.getLogger();
 
     static void printThreadDump() {
         Map<Thread, StackTraceElement[]> allThreads = Thread.getAllStackTraces();
         for (Thread thread : allThreads.keySet()) {
             StringBuilder sb = new StringBuilder();
-            Thread key = thread;
-            StackTraceElement[] trace = allThreads.get(key);
-            sb.append(key).append("\r\n");
+            StackTraceElement[] trace = allThreads.get(thread);
+            sb.append(thread).append("\r\n");
             for (StackTraceElement aTrace : trace) {
                 sb.append(" ").append(aTrace).append("\r\n");
             }
@@ -41,8 +37,10 @@ public interface ITestSeparator {
     default void beforeEachTest(TestInfo testInfo) {
         TimeMeasuringSystem.setTestName(testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
         TimeMeasuringSystem.startOperation(SystemtestsOperation.TEST_EXECUTION);
-        testSeparatorLogger.info(String.join("", Collections.nCopies(100, separatorChar)));
-        testSeparatorLogger.info(String.format("%s.%s-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
+        LoggerUtils.logDelimiter("#");
+        testSeparatorLogger.info("[TEST-START] {}.{}-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
+        LoggerUtils.logDelimiter("#");
+        testSeparatorLogger.info("");
     }
 
     @AfterEach
@@ -57,7 +55,9 @@ public interface ITestSeparator {
             }
         }
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
-        testSeparatorLogger.info(String.format("%s.%s-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName()));
-        testSeparatorLogger.info(String.join("", Collections.nCopies(100, separatorChar)));
+        testSeparatorLogger.info("");
+        LoggerUtils.logDelimiter("#");
+        testSeparatorLogger.info("[TEST-END] {}.{}-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
+        LoggerUtils.logDelimiter("#");
     }
 }

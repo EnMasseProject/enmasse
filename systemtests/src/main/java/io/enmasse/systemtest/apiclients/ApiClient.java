@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.apiclients;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.HttpResponse;
@@ -21,7 +21,7 @@ import java.util.function.Supplier;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public abstract class ApiClient implements AutoCloseable {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     protected final Vertx vertx;
     private final Vertx vertxToClose;

@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.platform.cluster;
 
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import org.eclipse.hono.util.Strings;
 import org.slf4j.Logger;
 
@@ -20,7 +20,7 @@ public interface KubeCluster {
     String getKubeCmd();
 
     static KubeCluster detect() {
-        Logger LOGGER = CustomLogger.getLogger();
+        Logger LOGGER = LoggerUtils.getLogger();
 
         KubeCluster[] clusters = new KubeCluster[]{new MinikubeCluster(), new KubernetesCluster(), new CRCCluster(), new OpenShiftCluster()};
         KubeCluster cluster = null;

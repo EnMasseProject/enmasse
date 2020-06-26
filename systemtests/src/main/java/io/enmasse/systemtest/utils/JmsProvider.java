@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.utils;
 
 import io.enmasse.api.model.MessagingAddress;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 public class JmsProvider {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
     private Context context;
     private Connection connection;
 

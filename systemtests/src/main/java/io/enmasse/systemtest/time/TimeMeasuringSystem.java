@@ -7,7 +7,7 @@ package io.enmasse.systemtest.time;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import org.slf4j.Logger;
 
 import java.io.BufferedReader;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 
 public class TimeMeasuringSystem {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private static TimeMeasuringSystem instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private Map<String, Map<String, Map<String, MeasureRecord>>> measuringMap;
@@ -147,11 +147,11 @@ public class TimeMeasuringSystem {
     private void printResults() {
         if (verboseLog) {
             measuringMap.forEach((testClassID, testClassRecords) -> {
-                log.info("================================================");
-                log.info("================================================");
+                LoggerUtils.logDelimiter("=");
+                LoggerUtils.logDelimiter("=");
                 log.info(testClassID);
                 testClassRecords.forEach((testID, testRecord) -> {
-                    log.info("---------------------------------------------");
+                    LoggerUtils.logDelimiter("-");
                     log.info(testID);
                     testRecord.forEach((operationID, record) -> {
                         log.info("Operation id: {} duration: {} started: {} ended: {}",

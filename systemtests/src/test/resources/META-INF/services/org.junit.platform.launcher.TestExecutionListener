@@ -1,1 +1,1 @@
-io.enmasse.systemtest.listener.JunitExecutionListener
+io.enmasse.systemtest.framework.TestPlanExecutionListener

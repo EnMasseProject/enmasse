@@ -2,14 +2,13 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.info;
+package io.enmasse.systemtest.framework;
 
 import io.enmasse.systemtest.EnmasseInstallType;
 import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
-import io.enmasse.systemtest.logs.CustomLogger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
@@ -32,20 +31,20 @@ import java.util.stream.Collectors;
 /**
  * Class for store and query information about test plan and tests
  */
-public class TestInfo {
-    private static final Logger LOGGER = CustomLogger.getLogger();
-    private static TestInfo testInfo = null;
+public class TestPlanInfo {
+    private static final Logger LOGGER = LoggerUtils.getLogger();
+    private static TestPlanInfo testPlanInfo = null;
     private List<TestIdentifier> testClasses;
     private List<TestIdentifier> tests;
     private ExtensionContext currentTest;
     private ExtensionContext currentTestClass;
     private List<String> testRunTags;
 
-    public static synchronized TestInfo getInstance() {
-        if (testInfo == null) {
-            testInfo = new TestInfo();
+    public static synchronized TestPlanInfo getInstance() {
+        if (testPlanInfo == null) {
+            testPlanInfo = new TestPlanInfo();
         }
-        return testInfo;
+        return testPlanInfo;
     }
 
     public void setTestPlan(TestPlan testPlan) {
@@ -62,7 +61,7 @@ public class TestInfo {
                             try {
                                 Optional<Method> testMethod = ReflectionUtils.findMethod(Class.forName(testSource.getClassName()), testSource.getMethodName(), testSource.getMethodParameterTypes());
                                 if (testMethod.isPresent()) {
-                                    MethodBasedExtensionContext extensionContext = new MethodBasedExtensionContext(Class.forName(testSource.getClassName()), testMethod);
+                                    TestMethodExtensionContext extensionContext = new TestMethodExtensionContext(Class.forName(testSource.getClassName()), testMethod);
                                     ExecutionCondition[] conditions = new ExecutionCondition[]{this::disabledCondition, new SupportedInstallTypeCondition(), new AssumeKubernetesCondition(), new AssumeOpenshiftCondition()};
                                     if (evaluateTestDisabled(extensionContext, conditions)) {
                                         LOGGER.debug("Test {}.{} is disabled", testSource.getClassName(), testSource.getMethodName());
@@ -70,7 +69,7 @@ public class TestInfo {
                                         tests.add(test);
                                     }
                                 } else {
-                                    LOGGER.error("Missing method: {}#{}",testSource.getClassName(), testSource.getMethodName() );
+                                    LOGGER.error("Missing method: {}#{}", testSource.getClassName(), testSource.getMethodName());
                                 }
                             } catch (ClassNotFoundException e) {
                                 throw new IllegalArgumentException(e);
@@ -82,36 +81,36 @@ public class TestInfo {
         });
         LOGGER.debug("Final tests are {}", tests);
         List<String> finalClasses = tests.stream()
-            .map(test -> (MethodSource) test.getSource().get())
-            .map(MethodSource::getClassName)
-            .map(t -> {
-                 try {
-                     return Class.forName(t);
-                 } catch ( ClassNotFoundException e ) {
-                     throw new IllegalArgumentException(e);
-                 }
-             })
-            .map(Class::getSimpleName)
-            .distinct()
-            .collect(Collectors.toList());
+                .map(test -> (MethodSource) test.getSource().get())
+                .map(MethodSource::getClassName)
+                .map(t -> {
+                    try {
+                        return Class.forName(t);
+                    } catch (ClassNotFoundException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                })
+                .map(Class::getSimpleName)
+                .distinct()
+                .collect(Collectors.toList());
 
         testClasses = testPlanClasses.stream()
-            .filter(testClass -> {
-               return finalClasses.stream()
-               .anyMatch(testClassName -> {
-                   return testClassName.equals(testClass.getDisplayName());
-               });
-            })
-            .collect(Collectors.toList());
+                .filter(testClass -> {
+                    return finalClasses.stream()
+                            .anyMatch(testClassName -> {
+                                return testClassName.equals(testClass.getDisplayName());
+                            });
+                })
+                .collect(Collectors.toList());
 
         testRunTags = testClasses.stream()
-            .map(t -> {
-                return t.getTags();
-            })
-            .flatMap(Set::stream)
-            .distinct()
-            .map(t -> t.getName())
-            .collect(Collectors.toList());
+                .map(t -> {
+                    return t.getTags();
+                })
+                .flatMap(Set::stream)
+                .distinct()
+                .map(t -> t.getName())
+                .collect(Collectors.toList());
     }
 
     private ConditionEvaluationResult disabledCondition(ExtensionContext ctx) {
@@ -131,12 +130,12 @@ public class TestInfo {
 
     public void printTestClasses() {
         if (testClasses != null) {
-            LOGGER.info("****************************************************************************");
-            LOGGER.info("                 Following test classes will run                            ");
-            LOGGER.info("****************************************************************************");
+            LoggerUtils.logDelimiter("*");
+            LOGGER.info("                     Following test classes will run");
+            LoggerUtils.logDelimiter("*");
             testClasses.forEach(testIdentifier -> LOGGER.info(testIdentifier.getLegacyReportingName()));
-            LOGGER.info("****************************************************************************");
-            LOGGER.info("****************************************************************************");
+            LoggerUtils.logDelimiter("*");
+            LoggerUtils.logDelimiter("*");
         }
     }
 

@@ -7,7 +7,7 @@ package io.enmasse.systemtest.platform;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 public class Minikube extends Kubernetes {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     private static final String OLM_NAMESPACE = "operators";
 

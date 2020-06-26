@@ -10,11 +10,11 @@ import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingProject;
-import io.enmasse.systemtest.annotations.SkipResourceLogging;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.TestPlanInfo;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
+import io.enmasse.systemtest.framework.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.TestTag.SCALE;
+import static io.enmasse.systemtest.framework.TestTag.SCALE;
 
 @Tag(SCALE)
 @SkipResourceLogging
 public class MessagingAddressPerfTest extends TestBase {
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
 
     /**
      * Simple performance test to be able to track create and delete performance of addresses.
@@ -106,7 +106,7 @@ public class MessagingAddressPerfTest extends TestBase {
         results.put("delete", TimeUnit.NANOSECONDS.toSeconds(endDelete - startDelete));
         LOGGER.info("Result: {}", results);
 
-        ResultWriter resultWriter = new ResultWriter(TestUtils.getPerformanceTestLogsPath(TestInfo.getInstance().getActualTest()));
+        ResultWriter resultWriter = new ResultWriter(TestUtils.getPerformanceTestLogsPath(TestPlanInfo.getInstance().getActualTest()));
         resultWriter.write(results);
     }
 }
