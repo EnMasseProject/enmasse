@@ -928,11 +928,11 @@ public class SystemtestsKubernetesApps {
                 } catch (Exception ex) {
                     return false;
                 }
-            }, new TimeoutBudget(15, TimeUnit.SECONDS));
+            }, new TimeoutBudget(60, TimeUnit.SECONDS));
             kubeClient.waitPodUntilCondition(pod, p -> {
                 String reason = containerReasonGetter.apply(p);
                 return reason.equals("Completed") || reason.equals("Error");
-            }, 3, TimeUnit.MINUTES);
+            }, 5, TimeUnit.MINUTES);
             Pod podRes = kubeClient.getPod(CONTAINER_BUILDS_PROJECT, pod.getMetadata().getName());
             String reason = containerReasonGetter.apply(podRes);
             if (reason.equals("Error")) {

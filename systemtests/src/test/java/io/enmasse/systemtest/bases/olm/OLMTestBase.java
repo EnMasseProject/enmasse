@@ -31,7 +31,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
@@ -51,7 +50,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class OLMTestBase extends TestBase implements ITestIsolatedStandard {
     private static Logger log = CustomLogger.getLogger();
-    private Exception ex = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     private static final int CR_TIMEOUT_MILLIS = 30000;
     private List<JsonObject> exampleResources = new ArrayList<>();
@@ -62,46 +60,36 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
 
     @BeforeAll
     void setupExampleResources() throws Exception {
-        try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", getInstallationNamespace(), "-o", "json", "-l", "app=enmasse");
-            JsonObject csvList = new JsonObject(result.getStdOut());
-            JsonObject csv = csvList.getJsonArray("items").getJsonObject(0);
-            String almExamples = csv.getJsonObject("metadata").getJsonObject("annotations").getString("alm-examples");
-            JsonArray examples = new JsonArray(almExamples);
-            exampleResources = examples.stream().map(o -> (JsonObject) o).collect(Collectors.toList());
+        ExecutionResultData result = KubeCMDClient.runOnCluster("get", "csv", "-n", getInstallationNamespace(), "-o", "json", "-l", "app=enmasse");
+        JsonObject csvList = new JsonObject(result.getStdOut());
+        JsonObject csv = csvList.getJsonArray("items").getJsonObject(0);
+        String almExamples = csv.getJsonObject("metadata").getJsonObject("annotations").getString("alm-examples");
+        JsonArray examples = new JsonArray(almExamples);
+        exampleResources = examples.stream().map(o -> (JsonObject) o).collect(Collectors.toList());
 
-            Set<String> infraKinds = Set.of("StandardInfraConfig", "BrokeredInfraConfig", "AddressPlan", "AddressSpacePlan", "AuthenticationService");
+        Set<String> infraKinds = Set.of("StandardInfraConfig", "BrokeredInfraConfig", "AddressPlan", "AddressSpacePlan", "AuthenticationService");
 
-            for (JsonObject example : exampleResources) {
-                LOGGER.info("Example: {}", example);
-                String kind = example.getString("kind");
-                if (kind.equals("AuthenticationService") && kubernetes.getCluster() instanceof CRCCluster) {
-                    log.info("Creating standard-authservice with no persistence because of CRC cluster");
-                    AuthenticationService authService = AuthServiceUtils.createStandardAuthServiceObject("standard-authservice", false);
-                    authService.getMetadata().setNamespace(getInstallationNamespace());
-                    kubernetes.getAuthenticationServiceClient(getInstallationNamespace()).create(authService);
-                } else if (infraKinds.contains(kind)) {
-                    log.info("Creating {}", example.toString());
-                    createCR(getInstallationNamespace(), example);
-                }
+        for (JsonObject example : exampleResources) {
+            LOGGER.info("Example: {}", example);
+            String kind = example.getString("kind");
+            if (kind.equals("AuthenticationService") && kubernetes.getCluster() instanceof CRCCluster) {
+                log.info("Creating standard-authservice with no persistence because of CRC cluster");
+                AuthenticationService authService = AuthServiceUtils.createStandardAuthServiceObject("standard-authservice", false);
+                authService.getMetadata().setNamespace(getInstallationNamespace());
+                kubernetes.getAuthenticationServiceClient(getInstallationNamespace()).create(authService);
+            } else if (infraKinds.contains(kind)) {
+                log.info("Creating {}", example.toString());
+                createCR(getInstallationNamespace(), example);
             }
-            TestUtils.waitUntilDeployed(getInstallationNamespace());
-            TestUtils.waitForPodReady("standard-authservice", getInstallationNamespace());
-            TestUtils.waitForSchemaInSync("standard-small");
-            var addressSpacePlanClient = kubernetes.getAddressSpacePlanClient(getInstallationNamespace());
-            TestUtils.waitUntilCondition("AddressSpacePlan standard-small visible",
-                    phase -> addressSpacePlanClient.withName("standard-small").get() != null,
-                    new TimeoutBudget(2, TimeUnit.MINUTES));
-        } catch (Exception exception){ //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            ex = exception;
         }
-    }
+        TestUtils.waitUntilDeployed(getInstallationNamespace());
+        TestUtils.waitForPodReady("standard-authservice", getInstallationNamespace());
+        TestUtils.waitForSchemaInSync("standard-small");
+        var addressSpacePlanClient = kubernetes.getAddressSpacePlanClient(getInstallationNamespace());
+        TestUtils.waitUntilCondition("AddressSpacePlan standard-small visible",
+                phase -> addressSpacePlanClient.withName("standard-small").get() != null,
+                new TimeoutBudget(2, TimeUnit.MINUTES));
 
-    @BeforeEach
-    void removeMe() throws Exception { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-        if (ex != null) {
-            throw ex;
-        }
     }
 
     @AfterEach
@@ -122,7 +110,6 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
 
     @AfterAll
     void teardownExampleResources() throws Exception {
-        ex = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         if (!environment.skipCleanup()) {
             for (JsonObject example : exampleResources) {
                 log.info("Deleting {}", example.toString());
@@ -143,20 +130,20 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
 
     private void createdUserResources(String addressSpaceNamespace) throws Exception {
         JsonObject exampleAddressSpace = exampleResources.stream()
-            .filter(example -> example.getString("kind").equals("AddressSpace"))
-            .findFirst()
-            .orElseThrow(()-> new IllegalStateException("Example resources don't contain an address space"));
+                .filter(example -> example.getString("kind").equals("AddressSpace"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Example resources don't contain an address space"));
         log.info("Creating {}", exampleAddressSpace.getString("kind"));
         createCR(addressSpaceNamespace, exampleAddressSpace);
         var client = kubernetes.getAddressSpaceClient(addressSpaceNamespace);
         TestUtils.waitUntilCondition("Address space visible",
-                phase -> client.withName("myspace").get() != null,new TimeoutBudget(30, TimeUnit.SECONDS));
+                phase -> client.withName("myspace").get() != null, new TimeoutBudget(30, TimeUnit.SECONDS));
         resourcesManager.waitForAddressSpaceReady(client.withName("myspace").get());
 
 
-        for(JsonObject example : exampleResources) {
+        for (JsonObject example : exampleResources) {
             String kind = example.getString("kind");
-            if(kind.equals("Address") || kind.equals("MessagingUser")) {
+            if (kind.equals("Address") || kind.equals("MessagingUser")) {
                 log.info("Creating {}", kind);
                 createCR(addressSpaceNamespace, example);
             }
@@ -191,7 +178,7 @@ public abstract class OLMTestBase extends TestBase implements ITestIsolatedStand
 
     private void createCR(String namespace, JsonObject cr) throws IOException {
         ExecutionResultData res = KubeCMDClient.createCR(namespace, cr.toString(), CR_TIMEOUT_MILLIS);
-        if(!res.getRetCode()) {
+        if (!res.getRetCode()) {
             Assertions.fail(res.getStdErr());
         }
     }

@@ -26,7 +26,9 @@ import io.enmasse.systemtest.monitoring.MonitoringQueries;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.AddressUtils;
+
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,37 +46,24 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Tag(ACCEPTANCE)
 class MonitoringTest extends TestBase implements ITestIsolatedStandard {
     String testNamespace = "monitoring-test";
-    private static Exception beforeAllException; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
 
     private MonitoringClient monitoring;
 
     @BeforeAll
-    void installMonitoring() {
-        try { //TODO remove it after upgrade to surefire plugin 3.0.0-M5
-            EnmasseOperatorManager.getInstance().enableMonitoring();
-            Endpoint metricsEndpoint;
-            if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
-                metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("thanos-querier", "openshift-monitoring");
-            } else {
-                metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
-            }
-            monitoring = new MonitoringClient(metricsEndpoint);
-            kubernetes.createNamespace(testNamespace);
-        } catch (Exception e) {
-            beforeAllException = e;
+    void installMonitoring() throws Exception {
+        EnmasseOperatorManager.getInstance().enableMonitoring();
+        Endpoint metricsEndpoint;
+        if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
+            metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("thanos-querier", "openshift-monitoring");
+        } else {
+            metricsEndpoint = Kubernetes.getInstance().getExternalEndpoint("prometheus-route", environment.getMonitoringNamespace());
         }
-    }
-
-    @BeforeEach
-    void catchBeforeAllException() throws Exception {
-        if (beforeAllException != null) {
-            throw beforeAllException;
-        }
+        monitoring = new MonitoringClient(metricsEndpoint);
+        kubernetes.createNamespace(testNamespace);
     }
 
     @AfterAll
     void uninstallMonitoring() throws Exception {
-        beforeAllException = null; //TODO remove it after upgrade to surefire plugin 3.0.0-M5
         EnmasseOperatorManager.getInstance().removeIoT();
         if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
             EnmasseOperatorManager.getInstance().deleteMonitoringOperator();

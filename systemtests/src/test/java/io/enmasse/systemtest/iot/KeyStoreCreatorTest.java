@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Duration;
 import java.time.Instant;

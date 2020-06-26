@@ -104,11 +104,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>io.github.artsok</groupId>
-            <artifactId>rerunner-jupiter</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <exclusions>
@@ -160,6 +155,7 @@
                     <groups>${groups}</groups>
                     <excludedGroups>${excludeGroups}</excludedGroups>
                     <skipTests>${skip.tests}</skipTests>
+                    <forkCount>0</forkCount>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                         <enmasse.docs>${application.docs}</enmasse.docs>

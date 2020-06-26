@@ -7,7 +7,7 @@ package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.TestTag.FRAMEWORK;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
