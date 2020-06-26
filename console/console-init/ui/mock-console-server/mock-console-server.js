@@ -2353,11 +2353,14 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     credentials: (parent, args, context, info) => {
       var iotProject = args.iotproject;
       var deviceId = args.deviceId;
-
+      var filterer = buildFilterer(args.filter);
       var creds = getIotCredentials(iotProject, deviceId);
+      var copy = clone(creds);
+      var copyCreds = JSON.parse(copy);
+      var resultCreds = copyCreds.filter(me => filterer.evaluate(me));
       return {
         total: creds.length,
-        credentials: creds
+        credentials: JSON.stringify(resultCreds)
       };
     },
     allProjects: (parent, args, context, info) => {

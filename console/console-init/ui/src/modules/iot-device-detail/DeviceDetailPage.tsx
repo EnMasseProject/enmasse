@@ -34,6 +34,7 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { NoDataFound } from "components";
 import { ActionManager } from "modules/iot-device-detail/components";
+import "./pf-overrides.css";
 
 export default function DeviceDetailPage() {
   const { projectname, namespace, deviceid, subList } = useParams();
@@ -67,7 +68,9 @@ export default function DeviceDetailPage() {
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
-  const { enabled, deviceId } = devices?.devices[0] || {};
+  const { enabled, deviceId, viaGateway, credentials } =
+    devices?.devices[0] || {};
+  const parseCredentials = credentials && JSON.parse(credentials);
 
   const breadcrumb = useMemo(
     () => (
@@ -146,7 +149,7 @@ export default function DeviceDetailPage() {
     <>
       {actionType ? (
         <PageSection variant={PageSectionVariants.light}>
-          <ActionManager actionType={actionType} />
+          <ActionManager actionType={actionType} viaGateway={viaGateway} />
         </PageSection>
       ) : (
         <>
@@ -159,6 +162,8 @@ export default function DeviceDetailPage() {
               onDelete={onDeleteDevice}
               onClone={onCloneDevice}
               deviceStatus={enabled}
+              credentials={parseCredentials}
+              viaGateway={viaGateway}
             />
             <DeviceDetailNavigation activeItem={subList || "device-info"} />
           </PageSection>
