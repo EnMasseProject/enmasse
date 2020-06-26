@@ -1109,7 +1109,7 @@ public abstract class Kubernetes {
             return "api.crc.testing";
         }
         List<NodeAddress> addresses = client.nodes().list().getItems().stream()
-                .peek(n -> LoggerUtils.getLogger().info("Found node: {}", n))
+                .peek(n -> LoggerUtils.getLogger().info("Found node: {}", n.getMetadata().getName()))
                 .flatMap(n -> n.getStatus().getAddresses().stream()
                         .peek(a -> LoggerUtils.getLogger().info("Found address: {}", a))
                         .filter(a -> a.getType().equals("InternalIP") || a.getType().equals("ExternalIP")))

@@ -1,1 +1,1 @@
-io.enmasse.systemtest.framework.TestPlanExecutionListener
+io.enmasse.systemtest.framework.TestPlanExecutionManager
