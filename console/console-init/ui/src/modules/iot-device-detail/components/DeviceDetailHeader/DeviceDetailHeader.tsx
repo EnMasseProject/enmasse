@@ -28,6 +28,8 @@ interface IDeviceDetailHeaderProps {
   onChange: (enabled: boolean) => void;
   onDelete: () => void;
   onClone: () => void;
+  viaGateway?: boolean;
+  credentials?: any[];
 }
 
 const styles = StyleSheet.create({
@@ -57,7 +59,9 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   onDelete,
   onChange,
   onClone,
-  deviceStatus
+  deviceStatus,
+  credentials = [],
+  viaGateway = false
 }) => {
   const { dispatch } = useStoreContext();
 
@@ -72,6 +76,27 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     dispatch({
       type: types.SET_DEVICE_ACTION_TYPE,
       payload: { actionType: DeviceActionType.EDIT_DEVICE_IN_JSON }
+    });
+  };
+
+  const onSelctEditGateways = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_GATEWAYS }
+    });
+  };
+
+  const onSelectEditCredentials = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.EDIT_CREDENTIALS }
+    });
+  };
+
+  const onSelectChangeConnectionType = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.CHANGE_CONNECTION_TYPE }
     });
   };
 
@@ -106,8 +131,54 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     </>
   );
 
+  const additionalKebebOptions = () => {
+    const additionalKebabOptions: React.ReactNode[] = [];
+    if (!(credentials.length > 0) && viaGateway) {
+      additionalKebabOptions.push(
+        <DropdownItem
+          id="device-detail-header-kebab-option-edit-gateways"
+          key="edit-gateways"
+          aria-label="edit gateways"
+          onClick={onSelctEditGateways}
+        >
+          Edit gateways
+        </DropdownItem>
+      );
+    } else if (!viaGateway && credentials?.length > 0) {
+      additionalKebabOptions.push(
+        <DropdownItem
+          id="device-detail-header-kebab-option-edit-credentials"
+          key="edit-credentials"
+          aria-label="edit credentials"
+          onClick={onSelectEditCredentials}
+        >
+          Edit credentials
+        </DropdownItem>
+      );
+    }
+
+    if (
+      (!(credentials.length > 0) && viaGateway) ||
+      (!viaGateway && credentials?.length > 0)
+    ) {
+      additionalKebabOptions.push(
+        <DropdownItem
+          id="device-detail-header-kebab-option-change-connection-type"
+          key="change-connection-type"
+          aria-label="change connection type"
+          onClick={onSelectChangeConnectionType}
+        >
+          Change connection type
+        </DropdownItem>
+      );
+    }
+
+    return additionalKebabOptions;
+  };
+
   const KebabOptionsLayout = () => {
     const dropdownItems: React.ReactNode[] = [
+      ...additionalKebebOptions(),
       <DropdownItem
         id="device-detail-header-kebab-option-edit-metadata"
         key="edit-metadata"

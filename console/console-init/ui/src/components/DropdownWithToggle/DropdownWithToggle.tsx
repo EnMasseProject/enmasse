@@ -11,7 +11,8 @@ import {
   DropdownItem,
   DropdownProps,
   DropdownPosition,
-  DropdownToggleProps
+  DropdownToggleProps,
+  DropdownSeparator
 } from "@patternfly/react-core";
 import { css, StyleSheet } from "@patternfly/react-styles";
 
@@ -26,6 +27,7 @@ export interface IDropdownOption {
   disabled?: boolean;
   description?: string;
   key?: string;
+  separator?: boolean;
 }
 
 export interface IDropdownWithToggleProps
@@ -138,18 +140,24 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   const getDropdownItems = () => {
     let items: React.ReactElement<IDropdownOption>[] = [];
     if (dropdownItems && dropdownItems.length > 0) {
-      items = dropdownItems.map((option: IDropdownOption) => (
-        <DropdownItem
-          id={`${dropdownItemIdPrefix || id}${option.key}`}
-          key={option.key}
-          value={option.value}
-          itemID={option.key}
-          component={component || "button"}
-          label={option.label}
-        >
-          {getItems(option)}
-        </DropdownItem>
-      ));
+      items = dropdownItems.map((option: IDropdownOption) => {
+        const { key, value, label, separator } = option;
+        return (
+          <>
+            <DropdownItem
+              id={`${dropdownItemIdPrefix || id}${key}`}
+              key={key}
+              value={value}
+              itemID={key}
+              component={component || "button"}
+              label={label}
+            >
+              {getItems(option)}
+            </DropdownItem>
+            {separator && <DropdownSeparator key="dropdown separator" />}
+          </>
+        );
+      });
     }
     return items;
   };
