@@ -3,7 +3,7 @@ set -e
 
 DOCVERSION=master
 if [ "${RELEASE}" == "true" ]; then
-    DOCVERSION=${VERSION}
+    DOCVERSION=${TAG}
 fi
 
 echo "Publishing docs for version ${DOCVERSION}"
