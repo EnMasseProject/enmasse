@@ -1,0 +1,40 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: enmasse.io:enmasse-operator
+  labels:
+    app: enmasse
+rules:
+  - apiGroups: [ "oauth.openshift.io" ]
+    resources: [ "oauthclients" ]
+    verbs: [ "create", "get", "update", "list", "watch" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "messagingaddresses", "messagingaddresses/finalizers", "messagingaddresses/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "messagingendpoints", "messagingendpoints/finalizers", "messagingendpoints/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "messagingtenants", "messagingtenants/finalizers", "messagingtenants/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "messaginginfrastructures", "messaginginfrastructures/finalizers", "messaginginfrastructures/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "user.enmasse.io" ]
+    resources: [ "messagingusers", "messagingusers/finalizers", "messagingusers/status" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
+    verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "addressspaces", "addresses" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "monitoring.coreos.com" ]
+    resources: [ "prometheusrules", "servicemonitors" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "integreatly.org" ]
+    resources: [ "grafanadashboards", "grafanadashboards/finalizers" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+  - apiGroups: [ "console.openshift.io" ]
+    resources: [ "consolelinks" ]
+    verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
