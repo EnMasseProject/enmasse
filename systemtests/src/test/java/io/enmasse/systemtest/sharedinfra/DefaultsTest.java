@@ -27,9 +27,11 @@ public class DefaultsTest extends TestBase {
     public void testDefaultInfra() {
         MessagingInfrastructure infra = resourceManager.getDefaultInfra();
 
-        MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(infra.getStatus().getConditions(), "Ready");
-        assertNotNull(condition);
-        assertEquals("True", condition.getStatus());
+        infraResourceManager.waitResourceCondition(infra, i -> {
+            MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(i.getStatus().getConditions(), "Ready");
+            return condition != null && "True".equals(condition.getStatus());
+        });
+
 
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
@@ -43,9 +45,10 @@ public class DefaultsTest extends TestBase {
         MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
 
         assertNotNull(tenant);
-        MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(tenant.getStatus().getConditions(), "Ready");
-        assertNotNull(condition);
-        assertEquals("True", condition.getStatus());
+        infraResourceManager.waitResourceCondition(tenant, t -> {
+            MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(t.getStatus().getConditions(), "Ready");
+            return condition != null && "True".equals(condition.getStatus());
+        });
         assertEquals(infra.getMetadata().getName(), tenant.getStatus().getMessagingInfrastructureRef().getName());
         assertEquals(infra.getMetadata().getNamespace(), tenant.getStatus().getMessagingInfrastructureRef().getNamespace());
     }
