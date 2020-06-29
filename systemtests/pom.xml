@@ -223,7 +223,7 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>systemtests &amp; !upgrade</groups>
+                <groups>systemtests &amp; !upgrade &amp; !scale</groups>
             </properties>
         </profile>
         <profile>
@@ -231,6 +231,13 @@
             <properties>
                 <skip.tests>false</skip.tests>
                 <groups>systemtests &amp; !upgrade</groups>
+            </properties>
+        </profile>
+        <profile>
+            <id>scale</id>
+            <properties>
+                <skip.tests>false</skip.tests>
+                <groups>scale</groups>
             </properties>
         </profile>
         <profile>
