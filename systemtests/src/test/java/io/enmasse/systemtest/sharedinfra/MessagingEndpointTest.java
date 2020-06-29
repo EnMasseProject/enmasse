@@ -42,9 +42,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -457,43 +455,50 @@ public class MessagingEndpointTest extends TestBase {
     static void doTestSendReceiveOnCluster(String host, int port, String address, boolean enableTls, boolean websockets) throws Exception {
         assertTrue(port > 0);
         int expectedMsgCount = 10;
-        Endpoint e = new Endpoint(host, port);
-        ExternalMessagingClient senderClient = new ExternalMessagingClient(enableTls)
-                .withClientEngine(websockets ? new RheaClientSender() : new ProtonJMSClientSender())
-                .withMessagingRoute(e)
-                .withAddress(address)
-                .withCount(expectedMsgCount)
-                .withMessageBody("msg no. %d")
-                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                .withTimeout(30);
 
-        ExternalMessagingClient receiverClient = new ExternalMessagingClient(enableTls)
-                .withClientEngine(websockets ? new RheaClientReceiver() : new ProtonJMSClientReceiver())
-                .withMessagingRoute(e)
-                .withAddress(address)
-                .withCount(expectedMsgCount)
-                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                .withTimeout(30);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Endpoint e = new Endpoint(host, port);
+            ExternalMessagingClient senderClient = new ExternalMessagingClient(enableTls)
+                    .withClientEngine(websockets ? new RheaClientSender() : new ProtonJMSClientSender())
+                    .withMessagingRoute(e)
+                    .withAddress(address)
+                    .withCount(expectedMsgCount)
+                    .withMessageBody("msg no. %d")
+                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                    .withTimeout(30);
+
+            ExternalMessagingClient receiverClient = new ExternalMessagingClient(enableTls)
+                    .withClientEngine(websockets ? new RheaClientReceiver() : new ProtonJMSClientReceiver())
+                    .withMessagingRoute(e)
+                    .withAddress(address)
+                    .withCount(expectedMsgCount)
+                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                    .withTimeout(30);
 
 /*        if (enableTls) {
             senderClient.withAdditionalArgument(ClientArgument.CONN_SSL_VERIFY_PEER_NAME, true);
         }*/
-        if (websockets) {
-            senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
-            receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
-            senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
-            receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+            if (websockets) {
+                senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
+                receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
+                senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+                receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+            }
+
+            List<Future<Boolean>> results = executor.invokeAll(List.of(senderClient::run, receiverClient::run));
+
+            assertTrue(results.get(0).get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
+            assertTrue(results.get(1).get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
+
+            assertEquals(expectedMsgCount, senderClient.getMessages().size(),
+                    String.format("Expected %d sent messages", expectedMsgCount));
+            assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
+                    String.format("Expected %d received messages", expectedMsgCount));
+        } finally {
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.MINUTES);
         }
-
-        List<Future<Boolean>> results = ForkJoinPool.commonPool().invokeAll(List.of(senderClient::run, receiverClient::run));
-
-        assertTrue(results.get(0).get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
-        assertTrue(results.get(1).get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
-
-        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
-                String.format("Expected %d sent messages", expectedMsgCount));
-        assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
-                String.format("Expected %d received messages", expectedMsgCount));
     }
 
     private void createEndpointAndAddress(MessagingEndpoint endpoint, String addressName) {
