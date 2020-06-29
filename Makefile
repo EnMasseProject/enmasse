@@ -96,13 +96,13 @@ coverage_go:
 buildpush:
 	$(MAKE)
 	$(MAKE) docker_build
-	$(MAKE) docker_tag
-	$(MAKE) docker_push
+	$(MAKE) -j 4 docker_tag
+	$(MAKE) -j 4 docker_push
 
 buildpushkind:
 	$(MAKE)
 	$(MAKE) docker_build
-	$(MAKE) docker_tag
+	$(MAKE) -j 4 docker_tag
 	$(MAKE) kind_load_image
 
 clean_java:
