@@ -66,7 +66,7 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse")); //TODO change it once it will be moved
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", env.getProductName()));
         TestUtils.waitUntilDeployed(kube.getInfraNamespace());
         LOGGER.info("***********************************************************");
     }
@@ -77,15 +77,6 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         olm.install(installation);
         waitUntilOperatorReadyOlm(installation);
-        LOGGER.info("***********************************************************");
-    }
-
-    public void installIoTOperator() {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                Enmasse IoT operator install");
-        LOGGER.info("***********************************************************");
-        LOGGER.info("Installing enmasse IoT operator from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         LOGGER.info("***********************************************************");
     }
 
@@ -341,7 +332,6 @@ public class EnmasseOperatorManager {
 
     public void removeIoT() {
         LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "iot"));
         KubeCMDClient.runOnCluster("delete", "iotconfigs", "--all", "-n", kube.getInfraNamespace());
     }
 
