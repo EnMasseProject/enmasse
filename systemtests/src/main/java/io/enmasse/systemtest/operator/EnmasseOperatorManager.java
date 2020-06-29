@@ -63,21 +63,11 @@ public class EnmasseOperatorManager {
 
     public void installEnmasseBundle() throws Exception {
         LOGGER.info("***********************************************************");
-        LOGGER.info("                  Enmasse operator install");
-        LOGGER.info("***********************************************************");
-        installOperators();
-        installExamplesBundle(kube.getInfraNamespace());
-        waitUntilOperatorReady(kube.getInfraNamespace());
-        LOGGER.info("***********************************************************");
-    }
-
-    public void installEnmasseSharedInfraBundle() throws Exception {
-        LOGGER.info("***********************************************************");
         LOGGER.info("         Enmasse operator shared infra install");
         LOGGER.info("***********************************************************");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
-        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse"));
+        KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "preview-bundles", "enmasse")); //TODO change it once it will be moved
         TestUtils.waitUntilDeployed(kube.getInfraNamespace());
         LOGGER.info("***********************************************************");
     }

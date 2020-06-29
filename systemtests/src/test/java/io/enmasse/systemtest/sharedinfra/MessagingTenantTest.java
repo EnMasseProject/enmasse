@@ -9,19 +9,15 @@ import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(TestTag.ISOLATED_SHARED_INFRA)
-public class MessagingTenantTest extends TestBase implements ITestIsolatedSharedInfra {
+public class MessagingTenantTest extends TestBase {
 
     @Test
     public void testMultipleMessagingTenants() {
@@ -48,7 +44,7 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
                 .endMetadata()
                 .build();
 
-        infraResourceManager.createResource(infra, t1, t2);
+        resourceManager.createResource(infra, t1, t2);
 
         t1 = MessagingTenantResourceType.getOperation().inNamespace(t1.getMetadata().getNamespace()).withName(t1.getMetadata().getName()).get();
         assertNotNull(t1);
@@ -95,10 +91,10 @@ public class MessagingTenantTest extends TestBase implements ITestIsolatedShared
                 .endMetadata()
                 .build();
 
-        infraResourceManager.createResource(infra, t1);
-        infraResourceManager.createResource(false, t2);
+        resourceManager.createResource(infra, t1);
+        resourceManager.createResource(false, t2);
 
-        assertTrue(infraResourceManager.waitResourceCondition(t2, messagingTenant ->
+        assertTrue(resourceManager.waitResourceCondition(t2, messagingTenant ->
                 messagingTenant != null &&
                         messagingTenant.getStatus() != null &&
                         MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound") != null &&

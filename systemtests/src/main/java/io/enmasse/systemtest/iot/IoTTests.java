@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_PROJECT_NAMESPACE;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +37,7 @@ public interface IoTTests extends ITestSeparator {
 
     @BeforeEach
     default void createNamespace() {
-        Kubernetes.getInstance().createNamespace(IOT_PROJECT_NAMESPACE);
+        Kubernetes.getInstance().createNamespace("iot-project-ns");
     }
 
 }

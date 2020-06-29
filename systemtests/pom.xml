@@ -223,130 +223,14 @@
             <id>systemtests</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated | soak | shared-iot | isolated-iot | isolated-shared-infra) &amp; !upgrade</groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared</id>
-            <properties>
-                <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered) &amp; !isolated &amp; !smoke &amp; !soak
-                    &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
-                </groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-shared-infra</id>
-            <properties>
-                <groups>(isolated-shared-infra) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated</id>
-            <properties>
-                <groups>(isolated | isolated-broker | isolated-standard) &amp; !soak &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
+                <groups>systemtests &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>
             <id>pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>(shared-standard | shared-brokered | isolated) &amp; !nonPR &amp; !smoke &amp; !soak
-                    &amp; !shared-iot &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework
-                </groups>
-            </properties>
-        </profile>
-        <profile>
-            <id>iot</id>
-            <properties>
-                <groups>(isolated-iot | shared-iot) &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>shared-iot</id>
-            <properties>
-                <groups>shared-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>isolated-iot</id>
-            <properties>
-                <groups>isolated-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>smoke-iot</id>
-            <properties>
-                <groups>(shared-iot | isolated-iot) &amp; smoke &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>soak</id>
-            <properties>
-                <groups>soak</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>smoke</id>
-            <properties>
-                <groups>smoke &amp; !shared-iot &amp; !isolated-iot &amp; !soak &amp; !olm &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>upgrade</id>
-            <properties>
-                <groups>upgrade &amp; !soak &amp; !olm &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>olm</id>
-            <properties>
-                <groups>olm</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>olm-pr</id>
-            <properties>
-                <groups>olm &amp; !nonPR</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>iot-release</id>
-            <properties>
-                <groups>(shared-iot | isolated-iot) &amp; !noneAuth &amp; !smoke &amp; !soak &amp; !olm &amp; !upgrade &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>acceptance</id>
-            <properties>
-                <groups>acceptance &amp; !soak &amp; !upgrade &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>acceptance-no-iot</id>
-            <properties>
-                <groups>acceptance &amp; !soak &amp; !upgrade &amp; !shared-iot &amp; !isolated-iot &amp; !scale &amp; !framework</groups>
-                <skip.tests>false</skip.tests>
-            </properties>
-        </profile>
-        <profile>
-            <id>scale</id>
-            <properties>
-                <groups>scale</groups>
-                <skip.tests>false</skip.tests>
+                <groups>systemtests &amp; !upgrade</groups>
             </properties>
         </profile>
         <profile>

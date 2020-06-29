@@ -102,10 +102,8 @@ public class Environment {
     private final String clusterInternalImageRegistry = getOrDefault(jsonEnv, OCP4_INTERNAL_IMAGE_REGISTRY, "");
 
     //Default values
-    private final UserCredentials managementCredentials = new UserCredentials(null, null);
-    private final UserCredentials defaultCredentials = new UserCredentials(null, null);
-    private final UserCredentials sharedManagementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
-    private final UserCredentials sharedDefaultCredentials = new UserCredentials("test", "test");
+    private final UserCredentials managementCredentials = new UserCredentials("artemis-admin", "artemis-admin");
+    private final UserCredentials defaultCredentials = new UserCredentials("test", "test");
 
     //Collectings properties
     private final String enmasseVersion = System.getProperty(ENMASSE_VERSION_SYSTEM_PROPERTY);
@@ -265,14 +263,6 @@ public class Environment {
 
     public UserCredentials getDefaultCredentials() {
         return defaultCredentials;
-    }
-
-    public UserCredentials getSharedManagementCredentials() {
-        return sharedManagementCredentials;
-    }
-
-    public UserCredentials getSharedDefaultCredentials() {
-        return sharedDefaultCredentials;
     }
 
     public boolean isSkipSaveState() {

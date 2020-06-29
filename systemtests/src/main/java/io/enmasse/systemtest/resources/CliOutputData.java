@@ -172,7 +172,7 @@ public class CliOutputData {
         private String phase;
         private String status;
 
-        AddressSpaceRow(String[] parsedData) {
+        public AddressSpaceRow(String[] parsedData) {
             expectColumns(7, parsedData);
             this.name = parsedData[0];
             this.type = parsedData[1];
@@ -242,7 +242,7 @@ public class CliOutputData {
         private String phase;
         private String status;
 
-        AddressRow(String[] parsedData) {
+        public AddressRow(String[] parsedData) {
             expectColumns(8, parsedData);
             this.name = parsedData[0];
             this.address = parsedData[1];
@@ -317,7 +317,7 @@ public class CliOutputData {
         private String username;
         private String phase;
 
-        UserRow(String[] parsedData) {
+        public UserRow(String[] parsedData) {
             expectColumns(5, parsedData);
             this.name = parsedData[0];
             this.username = parsedData[1];
