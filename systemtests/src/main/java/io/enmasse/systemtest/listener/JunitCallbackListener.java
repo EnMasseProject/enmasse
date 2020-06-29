@@ -46,9 +46,11 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
         KubeClusterManager.getInstance().setClassConfigurations();
         handleCallBackError("Callback before all", context, () -> {
             if (operatorManager.isEnmasseBundleDeployed()) {
-                operatorManager.deleteEnmasseBundle();
+                //todo: need to rewrite this func to enable deployment
+                //operatorManager.deleteEnmasseBundle();
             } else if (operatorManager.isEnmasseOlmDeployed()) {
-                operatorManager.deleteEnmasseOlm();
+                //todo: need to rewrite this func to enable deployment OLM
+                //operatorManager.deleteEnmasseOlm();
             }
             operatorManager.installEnmasseBundle();
         });
@@ -67,7 +69,8 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
             } else if (env.installType() == EnmasseInstallType.BUNDLE) {
                 if (operatorManager.isEnmasseOlmDeployed()) {
-                    operatorManager.deleteEnmasseOlm();
+                    //todo: need to rewrite this func to enable deployment OLM
+                    //operatorManager.deleteEnmasseOlm();
                 }
             }
         });

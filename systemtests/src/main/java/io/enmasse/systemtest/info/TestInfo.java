@@ -30,7 +30,6 @@ import io.enmasse.systemtest.condition.AssumeKubernetesCondition;
 import io.enmasse.systemtest.condition.AssumeOpenshiftCondition;
 import io.enmasse.systemtest.condition.SupportedInstallType;
 import io.enmasse.systemtest.condition.SupportedInstallTypeCondition;
-import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.logs.CustomLogger;
 
 /**
@@ -144,16 +143,6 @@ public class TestInfo {
         }
     }
 
-    public boolean isAddressSpaceDeleteable() {
-        boolean isDeleteable = true;
-        int currentTestIndex = getCurrentTestIndex();
-        if (currentTestIndex + 1 < tests.size()) {
-            isDeleteable = !isSameSharedTag(tests.get(currentTestIndex + 1), currentTest);
-        }
-        LOGGER.info("AddressSpace isDeleteable: {}", isDeleteable);
-        return isDeleteable;
-    }
-
     public ExtensionContext getActualTest() {
         return currentTest;
     }
@@ -174,112 +163,9 @@ public class TestInfo {
         return testRunTags;
     }
 
-    public boolean isTestShared() {
-        for (String tag : currentTest.getTags()) {
-            if (TestTag.SHARED_TAGS.contains(tag)) {
-                LOGGER.info("Test is shared");
-                return true;
-            }
-        }
-        LOGGER.info("Test is not shared!");
-        return false;
-    }
-
-    public boolean isTestIoT() {
-        for (String tag : currentTest.getTags()) {
-            if (TestTag.IOT_TAGS.contains(tag)) {
-                LOGGER.info("Test is IoT");
-                return true;
-            }
-        }
-        LOGGER.info("Test is not IoT!");
-        return false;
-    }
-
-    /**
-     * Checks the test framework should clean up after the test ran.
-     * @return {@code true} if the test framework should clean up, {@code false} otherwise.
-     */
-    public boolean needsIoTCleanup() {
-        return currentTestClass
-                .getTestClass()
-                // the current indicator of "self cleanup" is inheritance from "IoTTests"
-                .map(IoTTests.class::isAssignableFrom).map(b -> !b)
-                // if there is no test class, there is no need to clean up
-                .orElse(false);
-    }
-
-    public boolean isClassIoT() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.IOT_TAGS::contains);
-    }
-
-    public boolean isEndOfIotTests() {
-        int currentClassIndex = getCurrentClassIndex();
-        if (currentClassIndex + 1 < testClasses.size()) {
-            return getTags(testClasses.get(currentClassIndex + 1)).stream().noneMatch(TestTag.IOT_TAGS::contains);
-        }
-        return true;
-    }
-
-    public boolean isUpgradeTest() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.UPGRADE::equals);
-    }
-
     public boolean isOLMTest() {
         return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
                 .map(a -> a.value() == EnmasseInstallType.OLM)
                 .orElse(false);
     }
-
-    public OLMInstallationType getOLMInstallationType() {
-        return AnnotationSupport.findAnnotation(currentTestClass.getElement(), SupportedInstallType.class)
-                .filter(a -> a.value() == EnmasseInstallType.OLM)
-                .map(SupportedInstallType::olmInstallType)
-                .orElseThrow();
-    }
-
-    private List<String> getTags(TestIdentifier test) {
-        return test.getTags().stream().map(org.junit.platform.engine.TestTag::getName).collect(Collectors.toList());
-    }
-
-    private boolean isSameSharedTag(TestIdentifier test1, ExtensionContext test2) {
-        List<String> nextTestTags = getTags(test1);
-        Set<String> currentTestTags = test2.getTags();
-
-        return (nextTestTags.contains(TestTag.SHARED_BROKERED) && currentTestTags.contains(TestTag.SHARED_BROKERED))
-                || (nextTestTags.contains(TestTag.SHARED_STANDARD) && currentTestTags.contains(TestTag.SHARED_STANDARD))
-                || (nextTestTags.contains(TestTag.SHARED_IOT) && currentTestTags.contains(TestTag.SHARED_IOT));
-    }
-
-    private int getCurrentTestIndex() {
-        if (currentTest != null && tests.size() > 0) {
-            TestIdentifier test = tests.stream()
-                    .filter(testIdentifier -> isSameTestMethod(testIdentifier, currentTest) && isSameClass(testIdentifier, currentTest))
-                    .findFirst()
-                    .get();
-            return tests.indexOf(test);
-        }
-        return 0;
-    }
-
-    private int getCurrentClassIndex() {
-        if (currentTestClass != null && testClasses.size() > 0) {
-            TestIdentifier test = testClasses.stream()
-                    .filter(testClass -> isSameClass(testClass, currentTestClass))
-                    .findFirst()
-                    .get();
-            return testClasses.indexOf(test);
-        }
-        return 0;
-    }
-
-    private boolean isSameClass(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getUniqueId().contains(test2.getRequiredTestClass().getName());
-    }
-
-    private boolean isSameTestMethod(TestIdentifier test1, ExtensionContext test2) {
-        return test1 != null && test2 != null && test1.getDisplayName().replace("()", "").replaceAll("\\s+", "")
-                .equals(test2.getDisplayName().replace("()", "").replaceAll("\\s+", ""));
-    }
-
 }
