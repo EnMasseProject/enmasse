@@ -297,7 +297,7 @@ public class MessagingAddressTest extends TestBase {
 
         if (waitReceivers) {
             // To ensure receivers are attached and ready
-            Thread.sleep(10_000);
+            Thread.sleep(30_000);
         }
 
         Future<Boolean> senderResult = ForkJoinPool.commonPool().submit((Callable<Boolean>) senderClient::run);
