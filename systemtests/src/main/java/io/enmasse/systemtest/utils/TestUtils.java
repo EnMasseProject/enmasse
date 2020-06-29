@@ -82,34 +82,6 @@ public class TestUtils {
     }
 
     /**
-     * wait for expected count of Destination replicas in address space
-     */
-    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, boolean readyRequired,
-            Address destination, TimeoutBudget budget, long checkInterval) throws Exception {
-        Address address = Kubernetes.getInstance().getAddressClient(addressSpace.getMetadata().getNamespace()).withName(destination.getMetadata().getName()).get();
-        Map<String, String> labels = new HashMap<>();
-        labels.put("role", "broker");
-        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-
-        for (BrokerStatus brokerStatus : address.getStatus().getBrokerStatuses()) {
-            if (brokerStatus.getState().equals(BrokerState.Active)) {
-                waitForNReplicas(
-                        expectedReplicas,
-                        readyRequired,
-                        Kubernetes.getInstance().getInfraNamespace(),
-                        labels,
-                        Collections.singletonMap("cluster_id", brokerStatus.getClusterId()),
-                        budget,
-                        checkInterval);
-            }
-        }
-    }
-
-    public static void waitForNBrokerReplicas(AddressSpace addressSpace, int expectedReplicas, Address destination, TimeoutBudget budget) throws Exception {
-        waitForNBrokerReplicas(addressSpace, expectedReplicas, true, destination, budget, 5000);
-    }
-
-    /**
      * Wait for expected count of replicas
      *
      * @param expectedReplicas count of expected replicas
@@ -192,7 +164,7 @@ public class TestUtils {
     }
 
     /**
-     * Wait for expected count of pods within AddressSpace
+     * Wait for expected count of pods within namespace
      *
      * @param client client for manipulation with kubernetes cluster
      * @param numExpected count of expected pods
@@ -240,19 +212,6 @@ public class TestUtils {
     }
 
     /**
-     * Get list of all running pods from specific AddressSpace
-     *
-     * @param kubernetes client for manipulation with kubernetes cluster
-     * @param addressSpace
-     * @return
-     */
-    public static List<Pod> listRunningPods(Kubernetes kubernetes, AddressSpace addressSpace) throws Exception {
-        return kubernetes.listPods(Collections.singletonMap("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace))).stream()
-                .filter(pod -> pod.getStatus().getPhase().equals("Running"))
-                .collect(Collectors.toList());
-    }
-
-    /**
      * Get list of all ready pods
      *
      * @param kubernetes client for manipulation with kubernetes cluster
@@ -262,37 +221,6 @@ public class TestUtils {
         return kubernetes.listPods(namespace).stream()
                 .filter(pod -> pod.getStatus().getContainerStatuses().stream().allMatch(ContainerStatus::getReady))
                 .collect(Collectors.toList());
-    }
-
-    public static List<Pod> listBrokerPods(Kubernetes kubernetes, AddressSpace addressSpace) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("role", "broker");
-        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        return kubernetes.listPods(labels);
-    }
-
-    public static List<Pod> listRouterPods(Kubernetes kubernetes, AddressSpace addressSpace) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("capability", "router");
-        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        return kubernetes.listPods(labels);
-    }
-
-    public static List<Pod> listAdminConsolePods(Kubernetes kubernetes, AddressSpace addressSpace) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        if (addressSpace.getSpec().getType().equals(AddressSpaceType.STANDARD.toString())) {
-            labels.put("name", "admin");
-        } else {
-            labels.put("name", "agent");
-        }
-        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        return kubernetes.listPods(labels);
-    }
-
-    public static List<PersistentVolumeClaim> listPersistentVolumeClaims(Kubernetes kubernetes, AddressSpace addressSpace) {
-        Map<String, String> labels = new LinkedHashMap<>();
-        labels.put("infraUuid", AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-        return kubernetes.listPersistentVolumeClaims(labels);
     }
 
     /**
@@ -370,18 +298,6 @@ public class TestUtils {
             return null;
         });
     }
-
-    public static void deleteAddressSpaceCreatedBySC(Kubernetes kubernetes, AddressSpace addressSpace, GlobalLogCollector logCollector) throws Exception {
-        String operationID = TimeMeasuringSystem.startOperation(SystemtestsOperation.DELETE_ADDRESS_SPACE);
-        logCollector.collectEvents();
-        logCollector.collectLogsTerminatedPods();
-        logCollector.collectRouterState("deleteAddressSpaceCreatedBySC");
-        kubernetes.deleteNamespace(addressSpace.getMetadata().getNamespace());
-        waitForNamespaceDeleted(kubernetes, addressSpace.getMetadata().getNamespace());
-        AddressSpaceUtils.waitForAddressSpaceDeleted(addressSpace);
-        TimeMeasuringSystem.stopOperation(operationID);
-    }
-
     public static RemoteWebDriver getFirefoxDriver() throws Exception {
         Endpoint endpoint = SystemtestsKubernetesApps.getFirefoxSeleniumAppEndpoint(Kubernetes.getInstance());
         FirefoxOptions options = new FirefoxOptions();
@@ -434,20 +350,6 @@ public class TestUtils {
                 urlConnection.disconnect();
             }
         }
-    }
-
-    public static void waitUntilCondition(Callable<String> fn, String expected, TimeoutBudget budget) throws Exception {
-        String actual = "Too small time out budget!!";
-        while (!budget.timeoutExpired()) {
-            actual = fn.call();
-            log.debug(actual);
-            if (actual.contains(expected)) {
-                return;
-            }
-            log.debug("next iteration, remaining time: {}", budget.timeLeft());
-            Thread.sleep(2000);
-        }
-        throw new IllegalStateException(String.format("Expected: '%s' in content, but was: '%s'", expected, actual));
     }
 
     public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) {
@@ -579,11 +481,6 @@ public class TestUtils {
 
     }
 
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String namespace, final String name, final String currentResourceVersion) throws Exception {
-        waitForChangedResourceVersion(budget, currentResourceVersion,
-                () -> Kubernetes.getInstance().getAddressSpaceClient(namespace).withName(name).get().getMetadata().getResourceVersion());
-    }
-
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
@@ -598,11 +495,6 @@ public class TestUtils {
                 throw new RuntimeException(e);
             }
         }, budget);
-    }
-
-    public static String getGlobalConsoleRoute() {
-        return Kubernetes.getInstance().getConsoleServiceClient().withName("console").get().getStatus().getUrl();
-
     }
 
     /**
@@ -708,29 +600,6 @@ public class TestUtils {
         }, new TimeoutBudget(10, TimeUnit.MINUTES));
     }
 
-    public static void waitForSchemaInSync(String addressSpacePlan) throws Exception {
-        TestUtils.waitUntilCondition(String.format("Address space plan %s is applied", addressSpacePlan),
-                waitPhase -> Kubernetes.getInstance().getSchemaClient().inAnyNamespace().list().getItems().stream()
-                        .anyMatch(schema -> schema.getSpec().getPlans().stream()
-                                .anyMatch(plan -> plan.getName().contains(addressSpacePlan))),
-                new TimeoutBudget(5, TimeUnit.MINUTES));
-    }
-
-    public static void waitForRoutersInSync(AddressSpace addressSpace) throws Exception {
-        String appliedConfig = addressSpace.getAnnotation(AnnotationKeys.APPLIED_CONFIGURATION);
-        TestUtils.waitUntilCondition(String.format("Router configuration in sync for %s/%s", addressSpace.getMetadata().getNamespace(), addressSpace.getMetadata().getName()),
-                waitPhase -> {
-                    int inSync = 0;
-                    List<Pod> routerPods = listRouterPods(Kubernetes.getInstance(), addressSpace);
-                    for (Pod pod : routerPods) {
-                        if (appliedConfig.equals(pod.getMetadata().getAnnotations().get(AnnotationKeys.APPLIED_CONFIGURATION))) {
-                            inSync++;
-                        }
-                    }
-                    return inSync == routerPods.size();
-                }, new TimeoutBudget(10, TimeUnit.MINUTES));
-    }
-
     public static Path getFailedTestLogsPath(ExtensionContext extensionContext) {
         return getLogsPath(extensionContext, "failed_test_logs");
     }
@@ -760,7 +629,7 @@ public class TestUtils {
     /**
      * Encode an X509 certificate into PEM format.
      *
-     * @param certificate The certificate to encode.
+     * @param certificates The certificates to encode.
      * @return the PEM encoded certificate, or {@code null} if the input was {@code null}.
      */
     public static String toPem(final X509Certificate... certificates) {

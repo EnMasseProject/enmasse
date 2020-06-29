@@ -143,16 +143,6 @@ public class ResourceManager {
     //------------------------------------------------------------------------------------------------
 
 
-    public void initFactories(AddressSpace addressSpace, UserCredentials cred) {
-        amqpClientFactory = new AmqpClientFactory(addressSpace, cred);
-    }
-
-    public void initFactories(IoTProject project, UserCredentials credentials) {
-        String addSpaceName = project.getSpec().getDownstreamStrategy().getManagedStrategy().getAddressSpace().getName();
-        initFactories(kubeClient.getAddressSpaceClient(project.getMetadata()
-                .getNamespace()).withName(addSpaceName).get(), credentials);
-    }
-
     public void closeAmqpFactory() throws Exception {
         if (amqpClientFactory != null) {
             amqpClientFactory.close();

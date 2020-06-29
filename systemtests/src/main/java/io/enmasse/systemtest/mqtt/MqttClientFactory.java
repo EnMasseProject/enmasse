@@ -56,7 +56,6 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 
 public class MqttClientFactory {
@@ -175,15 +174,6 @@ public class MqttClientFactory {
 
             return this;
 
-        }
-
-        public Builder endpointFromAddressSpace(final AddressSpace addressSpace) {
-            this.endpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
-            if (this.endpoint == null) {
-                String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                this.endpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-            }
-            return this;
         }
 
         public Builder mqttConnectionOptions(final Consumer<MqttConnectOptions> mqttConnectOptions) {

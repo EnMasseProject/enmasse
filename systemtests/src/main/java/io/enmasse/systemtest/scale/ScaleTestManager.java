@@ -77,16 +77,6 @@ public class ScaleTestManager {
     private final AtomicBoolean monitorFlag = new AtomicBoolean(true);
     private final PerformanceResults performanceResults = new PerformanceResults();
 
-    public ScaleTestManager(Endpoint addressSpaceEndpoint, UserCredentials credentials) {
-        this.clientProvider = () -> {
-            ScaleTestClientConfiguration client = new ScaleTestClientConfiguration();
-            client.setHostname(addressSpaceEndpoint.getHost());
-            client.setPort(addressSpaceEndpoint.getPort());
-            client.setUsername(credentials.getUsername());
-            client.setPassword(credentials.getPassword());
-            return client;
-        };
-    }
 
     public int getConnections() {
         return totalExpectedConnections;
