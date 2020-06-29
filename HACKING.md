@@ -21,23 +21,6 @@ The EnMasse java and node modules are built using maven. All docker images are b
 To run EnMasse you need a Kubernetes cluster. Most EnMasse developers use [OKD](https://www.okd.io/)
 for running tests on their machine.
 
-## Checking out for Go
-
-If you want to work with the Go parts of this repository, you will need to perform the
-following steps.
-
-### Create a Go workspace
-
-Create a new directory and set the `GOPATH` environment variable:
-
-    export GOPATH=/home/user/my-enmasse-gobase
-    mkdir -p $GOPATH/src/github.com/enmasseproject
-
-### Clone the git repository into this workspace
-
-    cd $GOPATH/src/github.com/enmasseproject
-    git clone https://github.com/enmasseproject/enmasse
-
 ## Building
 
 ### Pre-installation
@@ -85,20 +68,6 @@ external registries.
     kubectl config set-context $(kubectl config current-context) --namespace=enmasse-infra
     
     kubectl apply -f templates/build/enmasse-latest/install/bundles/enmasse
-    kubectl apply -f templates/build/enmasse-latest/install/components/example-plans
-    kubectl apply -f templates/build/enmasse-latest/install/components/example-authservices
-
-#### Deploying to an OKD instance assuming already logged in with cluster-admin permissions
-
-    oc new-project enmasse-infra || oc project enmasse-infra
-    oc apply -f templates/build/enmasse-latest/install/bundles/enmasse
-    oc apply -f templates/build/enmasse-latest/install/components/example-plans
-    oc apply -f templates/build/enmasse-latest/install/components/example-authservices
-
-
-#### Running smoketests against a deployed instance
-
-    make PROFILE=smoke systemtests
 
 ### Running full systemtest suite
 
@@ -219,18 +188,6 @@ container.
 - env:
  - name: _JAVA_OPTIONS
    value: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005
-```
-
-#### NodeJS components
-
-If you have a NodeJS component running in a pod that you wish to debug, temporarily edit the deployment and add the
-NodeJS debug option `--inspect` to a `_NODE_OPTIONS` environment variable to the container.  By default, NodeJS
-will listen on port 9229.
-
-```yaml
-- env:
- - name: _NODE_OPTIONS
-   value: --inspect
 ```
 
 #### Port Forwarding
