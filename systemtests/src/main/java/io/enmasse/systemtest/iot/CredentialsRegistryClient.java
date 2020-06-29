@@ -174,8 +174,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
         // create credentials
 
-        var credentials = new PasswordCredential();
-        credentials.setAuthId(authId);
+        var credentials = new PasswordCredential(authId);
         credentials.setSecrets(Collections.singletonList(secret));
 
         return credentials;
@@ -188,8 +187,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
         // create credentials
 
-        var credentials = new PasswordCredential();
-        credentials.setAuthId(authId);
+        var credentials = new PasswordCredential(authId);
         credentials.setSecrets(Collections.singletonList(secret));
 
         return credentials;
@@ -202,8 +200,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
         // create credentials
 
-        var credentials = new PskCredential();
-        credentials.setAuthId(authId);
+        var credentials = new PskCredential(authId);
         credentials.setSecrets(Collections.singletonList(secret));
 
         return credentials;
@@ -216,8 +213,7 @@ public class CredentialsRegistryClient extends HonoApiClient {
 
         // create credentials
 
-        var credentials = new X509CertificateCredential();
-        credentials.setAuthId(authId);
+        var credentials = new X509CertificateCredential(authId);
         credentials.setSecrets(Collections.singletonList(secret));
 
         return credentials;

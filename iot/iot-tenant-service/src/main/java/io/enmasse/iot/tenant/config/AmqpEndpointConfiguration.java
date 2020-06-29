@@ -12,6 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import io.enmasse.iot.tenant.impl.TenantAmqpService;
 import io.enmasse.iot.utils.ConfigBase;
 
 @Configuration
@@ -22,6 +23,11 @@ public class AmqpEndpointConfiguration {
     @ConfigurationProperties(ConfigBase.CONFIG_BASE + ".amqp")
     public ServiceConfigProperties amqpEndpointProperties() {
         return new ServiceConfigProperties();
+    }
+
+    @Bean
+    public TenantAmqpService amqpServer() {
+        return new TenantAmqpService();
     }
 
 }

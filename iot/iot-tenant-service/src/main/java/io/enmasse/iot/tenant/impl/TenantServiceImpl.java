@@ -25,8 +25,6 @@ import org.eclipse.hono.util.TenantConstants;
 import org.eclipse.hono.util.TenantResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -36,8 +34,6 @@ import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-@Service
-@Qualifier("backend")
 public class TenantServiceImpl extends AbstractTenantService {
 
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);

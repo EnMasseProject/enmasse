@@ -616,7 +616,7 @@ public final class IoTTestSession implements AutoCloseable {
                 if (log.isDebugEnabled()) {
                     log.debug("Caught exception during deployment", e);
                 } else {
-                    log.info("Caught exception during deployment, running exception handler");
+                    log.info("Caught exception during deployment, running exception handler", e);
                 }
 
                 // first run exception handler
