@@ -117,25 +117,11 @@
     <modules>
         <module>api-model-annotator</module>
         <module>api-model</module>
-        <module>metrics-api</module>
-        <module>keycloak-user-api</module>
-        <module>documentation</module>
-        <module>agent</module>
-        <module>k8s-api</module>
-        <module>k8s-api-testutil</module>
-        <module>amqp-utils</module>
         <module>api-common</module>
-        <module>discovery-lib</module>
-        <module>topic-forwarder</module>
-        <module>mqtt-gateway</module>
-        <module>none-authservice</module>
-        <module>mqtt-lwt</module>
-        <module>standard-controller</module>
-        <module>address-space-controller</module>
-        <module>keycloak-plugin</module>
+        <module>amqp-utils</module>
+        <module>documentation</module>
         <module>systemtests</module>
         <module>broker-plugin</module>
-        <module>service-broker</module>
         <module>bundle</module>
         <module>iot</module>
         <module>controller-manager</module>

@@ -26,7 +26,6 @@ import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -35,7 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -255,63 +255,71 @@ public class MessagingAddressTest extends TestBase {
     void doTestSendReceive(boolean waitReceivers, Map<ClientArgument, Object> extraSenderArgs, Map<ClientArgument, Object> extraReceiverArgs, String senderAddress, String ... receiverAddresses) throws Exception {
         int expectedMsgCount = 10;
 
-        Endpoint e = new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint));
-        ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
-                .withClientEngine(new RheaClientSender())
-                .withMessagingRoute(e)
-                .withAddress(senderAddress)
-                .withCount(expectedMsgCount)
-                .withMessageBody("msg no. %d")
-                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                .withTimeout(60);
+        ExecutorService executor = Executors.newFixedThreadPool(1 + receiverAddresses.length);
 
-        if (extraSenderArgs != null) {
-            for (Map.Entry<ClientArgument, Object> arg : extraSenderArgs.entrySet()) {
-                senderClient.withAdditionalArgument(arg.getKey(), arg.getValue());
-            }
-        }
+        try {
 
-        List<ExternalMessagingClient> receiverClients = new ArrayList<>();
-        for (String receiverAddress : receiverAddresses) {
-            ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                    .withClientEngine(new RheaClientReceiver())
+            Endpoint e = new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint));
+            ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
+                    .withClientEngine(new RheaClientSender())
                     .withMessagingRoute(e)
-                    .withAddress(receiverAddress)
+                    .withAddress(senderAddress)
                     .withCount(expectedMsgCount)
+                    .withMessageBody("msg no. %d")
                     .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                     .withTimeout(60);
 
-            if (extraReceiverArgs != null) {
-                for (Map.Entry<ClientArgument, Object> arg : extraReceiverArgs.entrySet()) {
-                    receiverClient.withAdditionalArgument(arg.getKey(), arg.getValue());
+            if (extraSenderArgs != null) {
+                for (Map.Entry<ClientArgument, Object> arg : extraSenderArgs.entrySet()) {
+                    senderClient.withAdditionalArgument(arg.getKey(), arg.getValue());
                 }
             }
 
-            receiverClients.add(receiverClient);
-        }
+            List<ExternalMessagingClient> receiverClients = new ArrayList<>();
+            for (String receiverAddress : receiverAddresses) {
+                ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
+                        .withClientEngine(new RheaClientReceiver())
+                        .withMessagingRoute(e)
+                        .withAddress(receiverAddress)
+                        .withCount(expectedMsgCount)
+                        .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                        .withTimeout(60);
 
-        List<Future<Boolean>> receiverResults = new ArrayList<>();
-        for (ExternalMessagingClient receiverClient : receiverClients) {
-            receiverResults.add(ForkJoinPool.commonPool().submit((Callable<Boolean>) receiverClient::run));
-        }
+                if (extraReceiverArgs != null) {
+                    for (Map.Entry<ClientArgument, Object> arg : extraReceiverArgs.entrySet()) {
+                        receiverClient.withAdditionalArgument(arg.getKey(), arg.getValue());
+                    }
+                }
 
-        if (waitReceivers) {
-            // To ensure receivers are attached and ready
-            Thread.sleep(10_000);
-        }
+                receiverClients.add(receiverClient);
+            }
 
-        Future<Boolean> senderResult = ForkJoinPool.commonPool().submit((Callable<Boolean>) senderClient::run);
+            List<Future<Boolean>> receiverResults = new ArrayList<>();
+            for (ExternalMessagingClient receiverClient : receiverClients) {
+                receiverResults.add(executor.submit((Callable<Boolean>) receiverClient::run));
+            }
 
-        assertTrue(senderResult.get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
-        for (Future<Boolean> receiverResult : receiverResults) {
-            assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
-        }
+            if (waitReceivers) {
+                // To ensure receivers are attached and ready
+                Thread.sleep(10_000);
+            }
 
-        assertEquals(expectedMsgCount, senderClient.getMessages().size(),
-                String.format("Expected %d sent messages", expectedMsgCount));
-        for (ExternalMessagingClient receiverClient : receiverClients) {
-            assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
-                    String.format("Expected %d received messages", expectedMsgCount));
+            Future<Boolean> senderResult = executor.submit((Callable<Boolean>) senderClient::run);
+
+            assertTrue(senderResult.get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
+            for (Future<Boolean> receiverResult : receiverResults) {
+                assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
+            }
+
+            assertEquals(expectedMsgCount, senderClient.getMessages().size(),
+                    String.format("Expected %d sent messages", expectedMsgCount));
+            for (ExternalMessagingClient receiverClient : receiverClients) {
+                assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
+                        String.format("Expected %d received messages", expectedMsgCount));
+            }
+        } finally {
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.MINUTES);
         }
     }
 
