@@ -131,47 +131,34 @@ func main() {
 		}()
 	}
 
-	globalGvks := []schema.GroupVersionKind{
-		schema.GroupVersionKind{
-			Group:   "user.enmasse.io",
-			Version: "v1beta1",
-			Kind:    "MessagingUser",
-		},
-		schema.GroupVersionKind{
-			Group:   "user.enmasse.io",
-			Version: "v1beta1",
-			Kind:    "MessagingUserList",
-		},
-		schema.GroupVersionKind{
-			Group:   "enmasse.io",
-			Version: "v1beta1",
-			Kind:    "AddressSpace",
-		},
-		schema.GroupVersionKind{
-			Group:   "enmasse.io",
-			Version: "v1beta1",
-			Kind:    "AddressSpaceList",
-		},
-		schema.GroupVersionKind{
-			Group:   "enmasse.io",
-			Version: "v1beta1",
-			Kind:    "Address",
-		},
-		schema.GroupVersionKind{
-			Group:   "enmasse.io",
-			Version: "v1beta1",
-			Kind:    "AddressList",
-		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProject",
-		},
-		schema.GroupVersionKind{
-			Group:   "iot.enmasse.io",
-			Version: "v1alpha1",
-			Kind:    "IoTProjectList",
-		},
+	globalGvks := make([]schema.GroupVersionKind, 0)
+
+	if util.IsModuleEnabled("IOT_CONFIG") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "iot.enmasse.io",
+				Version: "v1alpha1",
+				Kind:    "IoTConfig",
+			},
+			schema.GroupVersionKind{
+				Group:   "iot.enmasse.io",
+				Version: "v1alpha1",
+				Kind:    "IoTConfigList",
+			})
+	}
+
+	if util.IsModuleEnabled("IOT_PROJECT") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "iot.enmasse.io",
+				Version: "v1alpha1",
+				Kind:    "IoTProject",
+			},
+			schema.GroupVersionKind{
+				Group:   "iot.enmasse.io",
+				Version: "v1alpha1",
+				Kind:    "IoTProjectList",
+			})
 	}
 
 	if util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") {
