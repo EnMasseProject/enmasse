@@ -27,7 +27,7 @@ public class DefaultsTest extends TestBase {
     public void testDefaultInfra() {
         MessagingInfrastructure infra = resourceManager.getDefaultInfra();
 
-        infraResourceManager.waitResourceCondition(infra, i -> {
+        resourceManager.waitResourceCondition(infra, i -> {
             MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(i.getStatus().getConditions(), "Ready");
             return condition != null && "True".equals(condition.getStatus());
         });
@@ -45,7 +45,7 @@ public class DefaultsTest extends TestBase {
         MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
 
         assertNotNull(tenant);
-        infraResourceManager.waitResourceCondition(tenant, t -> {
+        resourceManager.waitResourceCondition(tenant, t -> {
             MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(t.getStatus().getConditions(), "Ready");
             return condition != null && "True".equals(condition.getStatus());
         });
