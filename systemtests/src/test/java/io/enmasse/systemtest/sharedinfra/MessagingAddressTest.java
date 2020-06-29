@@ -12,28 +12,19 @@ import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
-import io.enmasse.systemtest.amqp.DeliveryHandler;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
-import io.enmasse.systemtest.condition.Kubernetes;
-import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
-import io.vertx.proton.ProtonDelivery;
 import io.vertx.proton.ProtonQoS;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
 import org.apache.qpid.proton.amqp.messaging.Source;
-import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -48,24 +39,21 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(ISOLATED_SHARED_INFRA)
 @DefaultMessagingInfrastructure
 @DefaultMessagingTenant
 @ExternalClients
-public class MessagingAddressTest extends TestBase implements ITestIsolatedSharedInfra {
+public class MessagingAddressTest extends TestBase {
 
     private MessagingTenant tenant;
     private MessagingEndpoint endpoint;
 
     @BeforeAll
     public void createEndpoint() {
-        tenant = infraResourceManager.getDefaultMessagingTenant();
+        tenant = resourceManager.getDefaultMessagingTenant();
         endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -81,12 +69,12 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .addToProtocols("AMQP", "AMQPS")
                 .endSpec()
                 .build();
-        infraResourceManager.createResource(endpoint);
+        resourceManager.createResource(endpoint);
     }
 
     @Test
     public void testAnycast() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("addr1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -101,7 +89,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
 
     @Test
     public void testMulticast() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("multicast1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -116,7 +104,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
 
     @Test
     public void testQueue() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -131,7 +119,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
 
     @Test
     public void testDeadLetterExpiry() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -141,7 +129,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .endDeadLetter()
                 .endSpec()
                 .build());
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -170,8 +158,8 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .addToProtocols("AMQP")
                 .endSpec()
                 .build();
-        infraResourceManager.createResource(ingress);
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(ingress);
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -181,7 +169,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .endDeadLetter()
                 .endSpec()
                 .build());
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -194,7 +182,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
                 .build());
 
 
-        AmqpClient client = infraResourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+        AmqpClient client = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setEndpoint(new Endpoint(ingress.getStatus().getHost(), ingress.getStatus().getPorts().get(0).getPort()))
@@ -211,7 +199,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
 
     @Test
     public void testTopic() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("topic1")
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -226,7 +214,7 @@ public class MessagingAddressTest extends TestBase implements ITestIsolatedShare
 
     @Test
     public void testSubscription() throws Exception {
-        infraResourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("topic1")
                 .withNamespace(tenant.getMetadata().getNamespace())

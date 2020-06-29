@@ -14,9 +14,9 @@ import java.util.Set;
  * This class defines all the tags used in the test suite.
  */
 public class TestTag {
+    public static final String SYSTEMTEST = "systemtests";
     public static final String ISOLATED = "isolated";
     public static final String ISOLATED_STANDARD = "isolated-standard";
-    public static final String ISOLATED_SHARED_INFRA = "isolated-shared-infra";
     public static final String ISOLATED_BROKER = "isolated-broker";
     public static final String SHARED_STANDARD = "shared-standard";
     public static final String SHARED_BROKERED = "shared-brokered";
@@ -32,5 +32,4 @@ public class TestTag {
     public static final String FRAMEWORK = "framework";
     public static final Set<String> SHARED_TAGS = new HashSet<>(Arrays.asList(SHARED_BROKERED, SHARED_STANDARD, SHARED_IOT));
     public static final Set<String> IOT_TAGS = new HashSet<>(Arrays.asList(SHARED_IOT, ISOLATED_IOT));
-    public static final Set<String> SHARED_INFRA_TAGS = new HashSet<>(Arrays.asList(ISOLATED_SHARED_INFRA));
 }

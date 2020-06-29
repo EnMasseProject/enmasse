@@ -185,10 +185,6 @@ public class TestInfo {
         return false;
     }
 
-    public boolean isTestSharedInfra() {
-        return currentTestClass.getTags().stream().anyMatch(TestTag.SHARED_INFRA_TAGS::contains);
-    }
-
     public boolean isTestIoT() {
         for (String tag : currentTest.getTags()) {
             if (TestTag.IOT_TAGS.contains(tag)) {

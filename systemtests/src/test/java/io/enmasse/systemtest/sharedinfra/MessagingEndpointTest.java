@@ -20,7 +20,6 @@ import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.Kubernetes;
@@ -34,13 +33,11 @@ import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
-import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -49,21 +46,19 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag(ISOLATED_SHARED_INFRA)
 @DefaultMessagingInfrastructure
 @DefaultMessagingTenant
 @ExternalClients
-public class MessagingEndpointTest extends TestBase implements ITestIsolatedSharedInfra {
+public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testNodePortEndpoint() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -84,7 +79,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
 
     @Test
     public void testClusterEndpoint() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -110,7 +105,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testRouteEndpoint() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -139,7 +134,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @Kubernetes
     public void testLoadBalancerEndpoint() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -164,7 +159,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @Kubernetes
     public void testIngressEndpoint() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -195,7 +190,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift(version = OpenShiftVersion.OCP4)
     public void testOpenShiftCert() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -219,7 +214,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testSelfsignedCert() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -253,7 +248,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testExternalCert() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         CertBundle messagingCert = OpenSSLUtil.createCertBundle("messaging.example.com");
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -291,7 +286,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
 
     @Test
     public void testClusterEndpointWebsockets() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -317,7 +312,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @Kubernetes
     public void testIngressEndpointWebsocket() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -338,7 +333,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testRouteEndpointWebsocket() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -358,7 +353,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsPassthrough() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -382,7 +377,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift(version = OpenShiftVersion.OCP3)
     public void testRouteEndpointWebsocketTlsReencrypt() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -407,7 +402,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsEdge() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -446,7 +441,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
                         .addCertValue(Buffer.buffer(caCert)));
             }
         }
-        AmqpClient client = infraResourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+        AmqpClient client = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setEndpoint(new Endpoint(host, port))
@@ -513,7 +508,7 @@ public class MessagingEndpointTest extends TestBase implements ITestIsolatedShar
                 .endSpec()
                 .build();
 
-        infraResourceManager.createResource(endpoint, address);
+        resourceManager.createResource(endpoint, address);
 
         endpoint = MessagingEndpointResourceType.getOperation().inNamespace(endpoint.getMetadata().getNamespace()).withName(endpoint.getMetadata().getName()).get();
         MessagingEndpointCondition endpointCondition = MessagingEndpointResourceType.getCondition(endpoint.getStatus().getConditions(), "Ready");

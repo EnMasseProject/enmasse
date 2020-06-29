@@ -8,14 +8,11 @@ import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureCondition;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantCondition;
-import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -23,13 +20,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-@Tag(TestTag.ISOLATED_SHARED_INFRA)
-public class DefaultsTest extends TestBase implements ITestIsolatedSharedInfra {
+public class DefaultsTest extends TestBase {
 
     @Test
     @DefaultMessagingInfrastructure
     public void testDefaultInfra() {
-        MessagingInfrastructure infra = infraResourceManager.getDefaultInfra();
+        MessagingInfrastructure infra = resourceManager.getDefaultInfra();
 
         MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(infra.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
@@ -43,8 +39,8 @@ public class DefaultsTest extends TestBase implements ITestIsolatedSharedInfra {
     @DefaultMessagingInfrastructure
     @DefaultMessagingTenant
     public void testDefaultTenant() {
-        MessagingInfrastructure infra = infraResourceManager.getDefaultInfra();
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingInfrastructure infra = resourceManager.getDefaultInfra();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
 
         assertNotNull(tenant);
         MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(tenant.getStatus().getConditions(), "Ready");

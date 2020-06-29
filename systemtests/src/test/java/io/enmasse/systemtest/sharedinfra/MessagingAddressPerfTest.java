@@ -13,14 +13,15 @@ import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.bases.TestBase;
-import io.enmasse.systemtest.bases.isolated.ITestIsolatedSharedInfra;
 import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,14 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static io.enmasse.systemtest.TestTag.ISOLATED_SHARED_INFRA;
 import static io.enmasse.systemtest.TestTag.SCALE;
 
-@Tag(ISOLATED_SHARED_INFRA)
 @Tag(SCALE)
 @Disabled("will be enabled in enmasse 1.0")
 @SkipResourceLogging
-public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedSharedInfra {
+public class MessagingAddressPerfTest extends TestBase {
+    private static final Logger LOGGER = CustomLogger.getLogger();
     /**
      * Simple performance test to be able to track create and delete performance of addresses.
      */
@@ -43,7 +43,7 @@ public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedS
     @DefaultMessagingInfrastructure
     @DefaultMessagingTenant
     public void testCreateDelete() throws Exception {
-        MessagingTenant tenant = infraResourceManager.getDefaultMessagingTenant();
+        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(tenant.getMetadata().getNamespace())
@@ -55,7 +55,7 @@ public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedS
                 .endNodePort()
                 .endSpec()
                 .build();
-        infraResourceManager.createResource(endpoint);
+        resourceManager.createResource(endpoint);
 
         int numAnycast = 1000;
         int numQueues = 300;
@@ -90,11 +90,11 @@ public class MessagingAddressPerfTest extends TestBase implements ITestIsolatedS
         MessagingAddress[] toCreate = addresses.toArray(new MessagingAddress[0]);
 
         long start = System.nanoTime();
-        infraResourceManager.createResource(true, toCreate);
+        resourceManager.createResource(true, toCreate);
         long end = System.nanoTime();
 
         long startDelete = System.nanoTime();
-        infraResourceManager.deleteResource(toCreate);
+        resourceManager.deleteResource(toCreate);
         for (MessagingAddress next : addresses) {
             while (MessagingAddressResourceType.getOperation().inNamespace(next.getMetadata().getNamespace()).withName(next.getMetadata().getName()).get() != null) {
                 Thread.sleep(1000);

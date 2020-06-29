@@ -5,8 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_EVENT;
-import static io.enmasse.systemtest.bases.iot.ITestIoTBase.IOT_ADDRESS_TELEMETRY;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
@@ -55,7 +53,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.bases.iot.ITestIoTBase;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
@@ -581,10 +578,10 @@ public final class IoTTestSession implements AutoCloseable {
                         .withAuthorization(
                                 Collections.singletonList(new UserAuthorizationBuilder()
                                         .withAddresses(
-                                                IOT_ADDRESS_TELEMETRY + "/" + tenantId,
-                                                IOT_ADDRESS_TELEMETRY + "/" + tenantId + "/*",
-                                                IOT_ADDRESS_EVENT + "/" + tenantId,
-                                                IOT_ADDRESS_EVENT + "/" + tenantId + "/*")
+                                                "telemetry" + "/" + tenantId,
+                                                "telemetry" + "/" + tenantId + "/*",
+                                                "event" + "/" + tenantId,
+                                                "event" + "/" + tenantId + "/*")
                                         .withOperations(Operation.recv)
                                         .build()))
                         .endSpec()
@@ -657,7 +654,7 @@ public final class IoTTestSession implements AutoCloseable {
         var project = new IoTProjectBuilder(
                 IoTUtils.getBasicIoTProjectObject(
                         name, name,
-                        ITestIoTBase.IOT_PROJECT_NAMESPACE,
+                        "iot-project-ns",
                         AddressSpacePlans.STANDARD_SMALL));
 
         // done

@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.enmasse.systemtest.bases.ITestBase;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.slf4j.Logger;
@@ -418,14 +417,5 @@ public class KubeCMDClient {
         command.add(CMD);
         command.addAll(Arrays.asList(args));
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
-    }
-
-    public static void awaitRollout(TimeoutBudget budget, String namespace, String deploymentName) {
-        TestUtils.waitUntilCondition(String.format("Wait for deployment %s in namespace %s rollout to complete", deploymentName, namespace), waitPhase -> {
-            ExecutionResultData rollout = Exec.execute(Arrays.asList(ITestBase.kubernetes.getCluster().getKubeCmd(), "rollout",
-                    "status", "deployment", deploymentName,
-                    "--namespace", namespace), true);
-            return rollout.getRetCode();
-        }, budget);
     }
 }

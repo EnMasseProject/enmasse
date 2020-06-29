@@ -2,9 +2,10 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.resources;
+package io.enmasse.systemtest.framework;
 
 import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.resources.CliOutputData.CliOutputDataType;
 
 import org.junit.jupiter.api.Tag;

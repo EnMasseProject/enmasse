@@ -142,9 +142,6 @@ public class ResourceManager {
     // Client factories
     //------------------------------------------------------------------------------------------------
 
-    public void initFactories(AddressSpace addressSpace) {
-        amqpClientFactory = new AmqpClientFactory(addressSpace, environment.getSharedDefaultCredentials());
-    }
 
     public void initFactories(AddressSpace addressSpace, UserCredentials cred) {
         amqpClientFactory = new AmqpClientFactory(addressSpace, cred);
