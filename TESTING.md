@@ -42,17 +42,11 @@ make PROFILE=${PROFILE} TESTCASE="**.SmokeTest" systemtests
 ```
 
 Where $PROFILE can be:
+
 * systemtests
-* soak
-* iot
-* shared
-* isolated
-* shared-iot
-* isolated-iot
-* smoke
-* smoke-iot
+* acceptance
 * upgrade
-* olm
+* soak
 
 ## Running upgrade test
 
