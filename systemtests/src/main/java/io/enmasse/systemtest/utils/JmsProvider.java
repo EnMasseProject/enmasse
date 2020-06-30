@@ -27,7 +27,6 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,12 +67,10 @@ public class JmsProvider {
             identification = "topic.";
         }
 
-        return new HashMap<>() {{
-            put(identification + getAddress(destination), getAddress(destination));
-        }};
+        return Map.of(identification + getAddress(destination), getAddress(destination));
     }
 
-    private HashMap<String, String> createAddressMap(Address destination) {
+    private Map<String, String> createAddressMap(Address destination) {
         String identification;
         if (destination.getSpec().getType().equals(AddressType.QUEUE.toString())) {
             identification = "queue.";
@@ -81,9 +78,7 @@ public class JmsProvider {
             identification = "topic.";
         }
 
-        return new HashMap<String, String>() {{
-            put(identification + destination.getSpec().getAddress(), destination.getSpec().getAddress());
-        }};
+        return Map.of(identification + destination.getSpec().getAddress(), destination.getSpec().getAddress());
     }
 
     public Context createContext(String host, int port, boolean tls, String username, String password, String clientID, MessagingAddress address) throws NamingException {
