@@ -1,6 +1,10 @@
 
 ## 1.0.0
 
+## 0.33.0
+
+* #4839: Agent leaks memory if qdrouter is restarted. 
+
 ## 0.32.0
 
 
