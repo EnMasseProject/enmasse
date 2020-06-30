@@ -17,7 +17,6 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/state"
-	"github.com/enmasseproject/enmasse/pkg/state/broker"
 	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	utilerrors "github.com/enmasseproject/enmasse/pkg/util/errors"
@@ -100,27 +99,6 @@ func add(mgr manager.Manager, r *ReconcileMessagingAddress) error {
 	return err
 }
 
-/*
- * Very dumb scheduler that doesn't look at broker capacity.
- */
-type DummyScheduler struct {
-}
-
-var _ state.Scheduler = &DummyScheduler{}
-
-func (s *DummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*broker.BrokerState) error {
-	if len(brokers) > 0 {
-		broker := brokers[0]
-		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
-			State: v1beta2.MessagingAddressBrokerScheduled,
-			Host:  broker.Host().Hostname,
-		})
-	} else {
-		return fmt.Errorf("no available broker")
-	}
-	return nil
-}
-
 func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
@@ -198,7 +176,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 						return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingAddress")
 					}
 
-					infra, err := messaginginfra.LookupInfra(ctx, r.client, address.Namespace)
+					_, infra, err := messaginginfra.LookupInfra(ctx, r.client, address.Namespace)
 					if err != nil {
 						// Not bound - allow dropping finalizer
 						if utilerrors.IsNotBound(err) || utilerrors.IsNotFound(err) {
@@ -271,7 +249,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	var infra *v1beta2.MessagingInfrastructure
 	// Retrieve the MessagingInfra for this MessagingAddress
 	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
-		i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
+		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
 			foundTenant.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
@@ -356,22 +334,20 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
 		// TODO: Handle changes to partitions etc.
+		// We're already scheduled so just make sure scheduler is synced
 		if len(address.Status.Brokers) > 0 {
-			// We're already scheduled so don't change
 			scheduled.SetStatus(corev1.ConditionTrue, "", "")
 			return processorResult{}, nil
 		}
 
 		// These addresses don't require scheduling
 		if address.Spec.Anycast != nil || address.Spec.Multicast != nil {
+			scheduled.SetStatus(corev1.ConditionTrue, "", "")
 			return processorResult{}, nil
 		}
 
-		// TODO: Make configurable and a better scheduler
-		scheduler := &DummyScheduler{}
-
 		client := r.clientManager.GetClient(infra)
-		err := client.ScheduleAddress(address, scheduler)
+		err := client.ScheduleAddress(address)
 		if err != nil {
 			scheduled.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()

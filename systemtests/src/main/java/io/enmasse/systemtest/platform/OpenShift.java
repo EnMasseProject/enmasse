@@ -161,15 +161,6 @@ public class OpenShift extends Kubernetes {
     }
 
     @Override
-    public String getHost() {
-        if (isCRC()) {
-            return "api.crc.testing";
-        } else {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    @Override
     public List<Route> listRoutes(String namespace, Map<String, String> labels) {
         return client.adapt(OpenShiftClient.class).routes().inNamespace(namespace).withLabels(labels).list().getItems();
     }

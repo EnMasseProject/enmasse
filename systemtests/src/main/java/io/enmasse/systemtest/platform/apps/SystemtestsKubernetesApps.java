@@ -216,7 +216,7 @@ public class SystemtestsKubernetesApps {
     public static String deployMessagingClientApp() throws Exception {
         kube.createNamespace(MESSAGING_PROJECT);
         kube.createDeploymentFromResource(MESSAGING_PROJECT, getMessagingAppDeploymentResource());
-        TestUtils.waitForExpectedReadyPods(kube, MESSAGING_PROJECT, 1, new TimeoutBudget(1, TimeUnit.MINUTES));
+        TestUtils.waitForExpectedReadyPods(kube, MESSAGING_PROJECT, 1, new TimeoutBudget(5, TimeUnit.MINUTES));
         return getMessagingAppPodName();
     }
 
@@ -1051,6 +1051,7 @@ public class SystemtestsKubernetesApps {
                 .addNewContainer()
                 .withName(MESSAGING_CLIENTS)
                 .withImage("quay.io/enmasse/systemtests-clients:latest")
+                .withImagePullPolicy(env.getImagePullPolicy())
                 .withCommand("sleep")
                 .withArgs("infinity")
                 .withEnv(new EnvVarBuilder().withName("PN_TRACE_FRM").withValue("true").build())

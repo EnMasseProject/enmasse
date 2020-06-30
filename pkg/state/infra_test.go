@@ -57,14 +57,14 @@ func TestUpdateBrokers(t *testing.T) {
 	}, &testClock{})
 	assert.NotNil(t, i)
 
-	err := i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.1"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}})
+	err := i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.1"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}}, true)
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(i.brokers))
 	assert.Equal(t, 2, len(i.hostMap))
 	assertBroker(t, i, "b1.example.com", "10.0.0.1")
 	assertBroker(t, i, "b2.example.com", "10.0.0.2")
 
-	err = i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.3"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}})
+	err = i.updateBrokers(context.TODO(), []Host{{Hostname: "b1.example.com", Ip: "10.0.0.3"}, {Hostname: "b2.example.com", Ip: "10.0.0.2"}}, true)
 	assert.Nil(t, err)
 	assertBroker(t, i, "b1.example.com", "10.0.0.3")
 	assertBroker(t, i, "b2.example.com", "10.0.0.2")

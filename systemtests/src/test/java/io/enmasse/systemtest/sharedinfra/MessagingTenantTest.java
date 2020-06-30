@@ -94,6 +94,4 @@ public class MessagingTenantTest extends TestBase {
                         MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus() != null &&
                         MessagingTenantResourceType.getCondition(messagingTenant.getStatus().getConditions(), "Bound").getStatus().equals("False")));
     }
-
-
 }

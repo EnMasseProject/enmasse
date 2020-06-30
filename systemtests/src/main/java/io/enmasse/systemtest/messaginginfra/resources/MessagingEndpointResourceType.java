@@ -71,4 +71,10 @@ public class MessagingEndpointResourceType implements ResourceType<MessagingEndp
         }
         return null;
     }
+
+    public static int getPort(String protocol, MessagingEndpoint endpoint) {
+        return endpoint.getStatus().getPorts().stream()
+                .filter(p -> p.getProtocol().equals(protocol))
+                .findAny().orElseThrow().getPort();
+    }
 }

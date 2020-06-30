@@ -7,6 +7,7 @@ package broker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -15,7 +16,9 @@ import (
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
+	"github.com/enmasseproject/enmasse/pkg/state"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
+	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 
@@ -34,13 +37,16 @@ type BrokerController struct {
 	client         client.Client
 	scheme         *runtime.Scheme
 	certController *cert.CertController
+	clientManager  state.ClientManager
 }
 
 func NewBrokerController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *BrokerController {
+	clientManager := state.GetClientManager()
 	return &BrokerController{
 		client:         client,
 		scheme:         scheme,
 		certController: certController,
+		clientManager:  clientManager,
 	}
 }
 
@@ -96,17 +102,30 @@ func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Log
 
 	}
 
+	infraClient := b.clientManager.GetClient(infra)
 	toDelete := numBrokersToDelete(infra.Spec.Broker.ScalingStrategy, brokers.Items)
+	newSize := len(brokers.Items) - toDelete
 	if toDelete > 0 {
 		logger.Info("Removing brokers", "toDelete", toDelete)
-		for i := len(brokers.Items) - 1; toDelete > 0; i-- {
-			err := b.client.Delete(ctx, &brokers.Items[i])
+		for i := len(brokers.Items) - 1; toDelete > 0 && i > 0; i-- {
+			err := infraClient.DeleteBroker(toHost(&brokers.Items[i]))
+			if err != nil {
+				if errors.Is(err, stateerrors.BrokerInUseError) {
+					continue
+				}
+				return nil, err
+			}
+			err = b.client.Delete(ctx, &brokers.Items[i])
 			if err != nil {
 				return nil, err
 			}
 			delete(hosts, toHost(&brokers.Items[i]))
 			toDelete--
 		}
+	}
+	// TODO: Depending on scaling strategy, support migrating queues
+	if toDelete > 0 {
+		return nil, fmt.Errorf("unable to scale down to %d brokers: %d brokers are still needed", newSize, newSize+toDelete)
 	}
 
 	// Update discoverable brokers

@@ -1350,6 +1350,11 @@ func (in *MessagingTenantSpec) DeepCopyInto(out *MessagingTenantSpec) {
 		*out = new(MessagingInfrastructureReference)
 		**out = **in
 	}
+	if in.Capabilities != nil {
+		in, out := &in.Capabilities, &out.Capabilities
+		*out = make([]MessagingCapability, len(*in))
+		copy(*out, *in)
+	}
 	return
 }
 
@@ -1373,6 +1378,16 @@ func (in *MessagingTenantStatus) DeepCopyInto(out *MessagingTenantStatus) {
 		for i := range *in {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
+	}
+	if in.Capabilities != nil {
+		in, out := &in.Capabilities, &out.Capabilities
+		*out = make([]MessagingCapability, len(*in))
+		copy(*out, *in)
+	}
+	if in.Broker != nil {
+		in, out := &in.Broker, &out.Broker
+		*out = new(MessagingAddressBroker)
+		**out = **in
 	}
 	return
 }

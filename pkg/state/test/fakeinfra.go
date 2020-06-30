@@ -52,6 +52,10 @@ func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error
 func (i *FakeClient) Start() {
 }
 
+func (i *FakeClient) DeleteBroker(host string) error {
+	return nil
+}
+
 func (i *FakeClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]state.ConnectorStatus, error) {
 	i.Routers = routers
 	i.Brokers = brokers
@@ -73,7 +77,11 @@ func (i *FakeClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
 	return nil
 }
 
-func (i *FakeClient) ScheduleAddress(address *v1beta2.MessagingAddress, scheduler state.Scheduler) error {
+func (i *FakeClient) ScheduleTenant(tenant *v1beta2.MessagingTenant) error {
+	return nil
+}
+
+func (i *FakeClient) ScheduleAddress(address *v1beta2.MessagingAddress) error {
 	return nil
 }
 
@@ -82,6 +90,14 @@ func (i *FakeClient) SyncAddress(address *v1beta2.MessagingAddress) error {
 }
 
 func (i *FakeClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
+	return nil
+}
+
+func (i *FakeClient) SyncTenant(tenant *v1beta2.MessagingTenant) error {
+	return nil
+}
+
+func (i *FakeClient) DeleteTenant(tenant *v1beta2.MessagingTenant) error {
 	return nil
 }
 
