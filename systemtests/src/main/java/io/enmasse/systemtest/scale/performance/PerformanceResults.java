@@ -4,11 +4,11 @@
  */
 package io.enmasse.systemtest.scale.performance;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @JsonInclude(Include.NON_NULL)
 public class PerformanceResults {

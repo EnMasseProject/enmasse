@@ -4,11 +4,10 @@
  */
 package io.enmasse.systemtest.scale.metrics;
 
-import java.io.IOException;
-
+import io.enmasse.systemtest.Endpoint;
 import org.hawkular.agent.prometheus.types.Counter;
 
-import io.enmasse.systemtest.Endpoint;
+import java.io.IOException;
 
 public class ProbeClientMetricsClient extends ScaleTestClientMetricsClient {
 

@@ -4,26 +4,11 @@
  */
 package io.enmasse.systemtest.utils;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.address.model.AddressStatusForwarder;
 import io.enmasse.address.model.BrokerState;
 import io.enmasse.address.model.BrokerStatus;
@@ -33,7 +18,6 @@ import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientReceiver;
 import io.enmasse.systemtest.messagingclients.mqtt.PahoMQTTClientSender;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
-import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeMeasuringSystem;
@@ -44,6 +28,17 @@ import io.fabric8.kubernetes.client.Watch;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListMultiDeletable;
 import io.vertx.core.json.JsonObject;
+import org.slf4j.Logger;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class AddressUtils {
     private static Logger log = CustomLogger.getLogger();

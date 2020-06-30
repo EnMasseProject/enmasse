@@ -4,6 +4,12 @@
  */
 package io.enmasse.systemtest.scale.metrics;
 
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.model.address.AddressType;
+import org.hawkular.agent.prometheus.types.Counter;
+import org.hawkular.agent.prometheus.types.Histogram;
+import org.hawkular.agent.prometheus.types.MetricFamily;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,13 +17,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import org.hawkular.agent.prometheus.types.Counter;
-import org.hawkular.agent.prometheus.types.Histogram;
-import org.hawkular.agent.prometheus.types.MetricFamily;
-
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.model.address.AddressType;
 
 //works for messaging client and tenant client
 public class MessagingClientMetricsClient extends ScaleTestClientMetricsClient {

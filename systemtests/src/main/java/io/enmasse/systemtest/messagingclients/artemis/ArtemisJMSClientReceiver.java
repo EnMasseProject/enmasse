@@ -4,13 +4,13 @@
  */
 package io.enmasse.systemtest.messagingclients.artemis;
 
-import java.nio.file.Path;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+
+import java.nio.file.Path;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class ArtemisJMSClientReceiver extends ProtonJMSClientReceiver {
 

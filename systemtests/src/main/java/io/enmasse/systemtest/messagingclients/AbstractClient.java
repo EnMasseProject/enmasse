@@ -4,9 +4,9 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;

@@ -5,24 +5,11 @@
 package io.enmasse.systemtest.messaginginfra;
 
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.time.Duration;
-import java.util.Objects;
-import java.util.Stack;
-import java.util.function.Predicate;
-
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -38,6 +25,15 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import org.slf4j.Logger;
+
+import java.time.Duration;
+import java.util.Objects;
+import java.util.Stack;
+import java.util.function.Predicate;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Managing resources

@@ -4,10 +4,6 @@
  */
 package io.enmasse.systemtest;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * This test suite is organized using different test profiles and those test profiles use a different set of tags.
  *

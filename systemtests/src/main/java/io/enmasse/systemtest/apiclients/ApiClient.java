@@ -4,15 +4,6 @@
  */
 package io.enmasse.systemtest.apiclients;
 
-import static java.net.HttpURLConnection.HTTP_OK;
-
-import java.net.HttpURLConnection;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.core.AsyncResult;
@@ -20,6 +11,14 @@ import io.vertx.core.Vertx;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import org.slf4j.Logger;
+
+import java.net.HttpURLConnection;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+
+import static java.net.HttpURLConnection.HTTP_OK;
 
 public abstract class ApiClient implements AutoCloseable {
     private static final Logger log = CustomLogger.getLogger();

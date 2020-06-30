@@ -8,7 +8,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.transport.LinkError;
 import org.apache.qpid.proton.message.Message;

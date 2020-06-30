@@ -11,12 +11,11 @@ import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonArray;
+import org.slf4j.Logger;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-
-import org.slf4j.Logger;
 
 public class ExternalMessagingClient implements AutoCloseable {
 

@@ -5,24 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.math.BigInteger;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.spec.AlgorithmParameterSpec;
-import java.security.spec.ECGenParameterSpec;
-import java.security.spec.RSAKeyGenParameterSpec;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
-
-import javax.security.auth.x500.X500Principal;
-
 import org.bouncycastle.asn1.oiw.OIWObjectIdentifiers;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
@@ -44,6 +26,23 @@ import org.bouncycastle.operator.DigestCalculator;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.bc.BcDigestCalculatorProvider;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
+
+import javax.security.auth.x500.X500Principal;
+import java.math.BigInteger;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.ECGenParameterSpec;
+import java.security.spec.RSAKeyGenParameterSpec;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 public class DeviceCertificateManager {
 

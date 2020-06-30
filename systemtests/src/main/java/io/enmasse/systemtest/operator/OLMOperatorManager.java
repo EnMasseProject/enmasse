@@ -4,18 +4,7 @@
  */
 package io.enmasse.systemtest.operator;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import org.slf4j.Logger;
-
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.executor.Exec;
@@ -24,6 +13,15 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class OLMOperatorManager {
 

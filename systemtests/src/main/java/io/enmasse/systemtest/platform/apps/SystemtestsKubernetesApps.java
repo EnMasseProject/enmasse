@@ -5,39 +5,6 @@
 
 package io.enmasse.systemtest.platform.apps;
 
-import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.Assertions;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
@@ -96,6 +63,38 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 public class SystemtestsKubernetesApps {
 
