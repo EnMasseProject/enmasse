@@ -133,12 +133,7 @@ export const deviceToolbar = () => {
   return (
     <MemoryRouter>
       <DeviceListToolbar
-        itemCount={100}
-        perPage={10}
-        page={1}
         kebabItems={kebabItems}
-        onSetPage={action("Pagination change page number")}
-        onPerPageSelect={action("Pagination change items per page")}
         handleInputDeviceInfo={action("input device info handler clicked")}
         handleJSONUpload={action("json upload handler clicked")}
         isOpen={boolean("is Open", true)}

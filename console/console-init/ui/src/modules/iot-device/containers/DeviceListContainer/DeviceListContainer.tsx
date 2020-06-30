@@ -33,6 +33,8 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { NoResultFound } from "components";
 
 export interface IDeviceListContainerProps {
+  page: number;
+  perPage: number;
   setTotalDevices: (val: number) => void;
   onSelectDevice: (
     data: IDevice,
@@ -49,6 +51,8 @@ export interface IDeviceListContainerProps {
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
+  page,
+  perPage,
   setTotalDevices,
   onSelectDevice,
   selectedDevices,
@@ -66,7 +70,13 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   const { dispatch } = useStoreContext();
 
   const { loading, data } = useQuery<IIoTDevicesResponse>(
-    RETURN_ALL_DEVICES_FOR_IOT_PROJECT(projectname, sortBy, appliedFilter),
+    RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
+      page,
+      perPage,
+      projectname,
+      sortBy,
+      appliedFilter
+    ),
     { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   );
 
