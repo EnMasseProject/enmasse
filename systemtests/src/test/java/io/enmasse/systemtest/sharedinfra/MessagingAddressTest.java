@@ -32,7 +32,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -269,64 +274,6 @@ public class MessagingAddressTest extends TestBase {
 
         assertThat("Wrong count of messages received",
                 recvResults.get(1, TimeUnit.MINUTES).size(), is(msgs.size() * 2));
-        /*
-        int count = 4;
-
-        ExternalMessagingClient receiver = new ExternalMessagingClient(false)
-                .withClientEngine(new RheaClientReceiver())
-                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                .withTimeout(60)
-                .withAddress("topic/#")
-                .withCount(count * 3)
-                .withMessagingRoute(new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint)));
-
-        Future<Boolean> receiverResult = ForkJoinPool.commonPool().submit((Callable<Boolean>) receiver::run);
-
-        for (String suffix : List.of("foo", "bar", "baz/foobar")) {
-            try (ExternalMessagingClient sender = new ExternalMessagingClient(false)
-                    .withClientEngine(new RheaClientSender())
-                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                    .withTimeout(60)
-                    .withMessageBody("hello")
-                    .withCount(count)
-                    .withAddress(String.format("%s/%s", t0.getMetadata().getName(), suffix))
-                    .withMessagingRoute(new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint)))) {
-
-                sender.run();
-            }
-        }
-
-        assertTrue(receiverResult.get(1, TimeUnit.MINUTES));
-        receiver.close();
-
-
-        receiver = new ExternalMessagingClient(false)
-                .withClientEngine(new RheaClientReceiver())
-                .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                .withTimeout(60)
-                .withCount(count * 2)
-                .withAddress("topic/world/+")
-                .withMessagingRoute(new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint)));
-
-        receiverResult = ForkJoinPool.commonPool().submit((Callable<Boolean>) receiver::run);
-
-        for (String suffix : List.of("world/africa", "world/europe", "world/asia/maldives")) {
-            try (ExternalMessagingClient sender = new ExternalMessagingClient(false)
-                    .withClientEngine(new RheaClientSender())
-                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                    .withTimeout(60)
-                    .withMessageBody("hello")
-                    .withCount(count)
-                    .withAddress(String.format("%s/%s", t0.getMetadata().getName(), suffix))
-                    .withMessagingRoute(new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint)))) {
-
-                sender.run();
-            }
-        }
-
-        assertTrue(receiverResult.get(1, TimeUnit.MINUTES));
-        receiver.close();
-         */
     }
 
     @Test
