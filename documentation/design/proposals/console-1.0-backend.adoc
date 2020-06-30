@@ -1,7 +1,8 @@
-== Console changes for 1.0
+== Console changes to adopt to 1.0 shared infra
 
 === Scope
 
+* Console changes related to 1.0 shared infrastructure - IoT is covered separately
 * Features available in 1.0
 * Features not available in 1.0
 * Changes required to console APIs for 1.0
