@@ -1,0 +1,70 @@
+== Console changes for 1.0
+
+=== Scope
+
+* Changes required to console APIs for 1.0
+* Changes required to console UIs for 1.0
+* Features available in 1.0
+* Features not available in 1.0
+* List of tasks for backend to support 1.0 UI
+
+
+=== Changes
+
+==== AddressSpace workflow
+
+* AddressSpace is removed and replaced by MessagingTenant and there can now only be a single MessagingTenant per Kubernetes namespace.
+* Create new workflow for creating MessagingEndpoints
+* Disallow customizing endpoints as part of creating MessagingTenant (enmasse-operator may create default endpoint specified in a MessagingPlan)
+
+==== Address workflow
+
+* Mostly renaming elements from what we already have from 1.x. Address -> MessagingAddress
+* type: queue => queue: {}
+
+
+=== Features
+
+For 1.0, the minimum set of EnMasse resources that the user must be able to maintain from the UI is:
+
+* MessagingTenant
+* MessagingAddress
+* MessagingEndpoint
+* MessagingUser
+* MessagingRole
+* MessagingRoleBinding
+* IoTProject
+
+Given the timelines, service admin console is probably not in scope for 1.0
+
+=== Backend changes
+
+==== Metrics
+
+At the moment console-server queries connections/links from the address space agents.
+
+For 1.0, the agent disappears, so information must be gathered differently.
+
+
+* Deploy an EnMasse-owned ephemeral Prometheus instance as planned in initial console work.
+* Configure prometheus to scrape router and broker metrics
+* Console-server querying the routers directly to build the list of connections and their links
+* Console server querying the prometheus instance for address and connection metrics
+* Console-server eventually also becomes backend for the CLI.
+
+
+==== Management commands
+
+Tracked in https://github.com/EnMasseProject/enmasse/pull/4545 .
+
+For 1.0 the supported management tasks will be close connection and purge queue.
+
+(Console-server becomes the operator responsible for actioning the ManagementTasks.)
+
+== Testing
+
+What is the test plan/what test cases are important to cover this component/feature?
+
+== Documentation
+
+What documentation will be created?
