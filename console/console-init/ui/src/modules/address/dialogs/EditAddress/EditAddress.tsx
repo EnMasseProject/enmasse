@@ -108,7 +108,7 @@ export const EditAddress: React.FunctionComponent = () => {
     <Modal
       id="al-modal-edit-address"
       title="Edit"
-      isSmall
+      variant="small"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
@@ -129,7 +129,6 @@ export const EditAddress: React.FunctionComponent = () => {
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned
     >
       <Form>
         <FormGroup label="Name" fieldId="simple-form-name">

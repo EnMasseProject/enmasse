@@ -6,17 +6,17 @@
 import React from "react";
 import {
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
 import {
@@ -47,8 +47,8 @@ export interface IProjectToolbarToggleGroupProps {
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeNameSpaceInput?: (value: string) => Promise<any>;
@@ -97,10 +97,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
   };
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -109,8 +107,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectName}
                 onClear={onClearName}
                 selected={nameSelected}
@@ -129,12 +127,10 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNamespaces.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Namespace"
@@ -143,8 +139,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-namespace"
-                ariaLabelTypeAhead={"Select namespace"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select namespace"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectNamespace}
                 onClear={onClearNamespace}
                 selected={namespaceSelected}
@@ -163,12 +159,10 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
@@ -183,14 +177,14 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               value={typeSelected || "Select Type"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
@@ -206,12 +200,12 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
   return (
     <>
-      <DataToolbarToggleGroup
+      <ToolbarToggleGroup
         toggleIcon={
           <>
             <FilterIcon />
@@ -224,11 +218,12 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         }
         breakpoint="xl"
       >
-        <DataToolbarItem
+        <ToolbarItem
           variant="bulk-select"
           id="device-list-toolbar-item-1"
           key="bulk-select"
           aria-label="Select multiple devices"
+          data-codemods="true"
         >
           <DropdownWithBulkSelect
             dropdownId="device-bulk-select"
@@ -238,9 +233,9 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
             isChecked={isAllProjectSelected}
             onChange={onSelectAll}
           />
-        </DataToolbarItem>
+        </ToolbarItem>
         {toggleGroupItems}
-      </DataToolbarToggleGroup>
+      </ToolbarToggleGroup>
     </>
   );
 };

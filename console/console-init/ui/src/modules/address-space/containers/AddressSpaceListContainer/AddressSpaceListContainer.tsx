@@ -207,7 +207,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
     addressSpacesList && addressSpacesList.map(row => getTableCells(row));
 
   const onSelect = async (
-    event: React.MouseEvent,
+    event: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number,
     rowData: IRowData,

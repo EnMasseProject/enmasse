@@ -5,7 +5,7 @@
 
 import React from "react";
 import { TextInput, TextInputProps } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import classNames from "classnames";
 
 export interface IPasswordLabelProps extends TextInputProps {
@@ -24,7 +24,7 @@ export const PasswordLabel: React.FC<IPasswordLabelProps> = ({
   className,
   value
 }) => {
-  const cssClass = classNames(className, styles.textinput);
+  const cssClass = classNames(className, css(styles.textinput));
 
   return (
     <TextInput

@@ -14,7 +14,7 @@ import {
   DropdownToggleProps,
   DropdownSeparator
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export const dropdown_styles = StyleSheet.create({
   format_description: { whiteSpace: "normal", textAlign: "justify" },

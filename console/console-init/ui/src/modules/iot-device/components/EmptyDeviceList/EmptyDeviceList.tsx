@@ -27,7 +27,7 @@ export const EmptyDeviceList: React.FunctionComponent<IEmptyDeviceListProps> = (
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-device">
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title id="empty-device-title" size="lg">
+      <Title headingLevel="h2" id="empty-device-title" size="lg">
         No Devices
       </Title>
       <EmptyStateBody id="empty-device-body">

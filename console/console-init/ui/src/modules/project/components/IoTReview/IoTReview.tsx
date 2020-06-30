@@ -16,7 +16,7 @@ import {
   ButtonVariant,
   PageSectionVariants
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 
 export interface IIoTReviewProps {
@@ -54,10 +54,10 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new iot
         project. Use the Back button to make changes.
@@ -113,7 +113,11 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
         </GridItem>
         {isExpanded && (
           <GridItem span={7} className={css(styles.left_padding_with_border)}>
-            <Title size="lg" className={css(styles.bottom_padding)}>
+            <Title
+              headingLevel="h2"
+              size="lg"
+              className={css(styles.bottom_padding)}
+            >
               {`Configuration details  `}
               <Tooltip
                 id="iot-preview-feedback"

@@ -6,17 +6,17 @@
 import React from "react";
 import {
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -37,8 +37,8 @@ export interface IAddressToggleGroupProps {
   onStatusSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   setNameInput?: (value: string) => void;
@@ -96,10 +96,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
 
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -107,8 +105,8 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -127,12 +125,10 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
@@ -147,12 +143,10 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
               value={typeSelected || "Select Type"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={statusSelected ? [statusSelected] : []}
           deleteChip={onDelete}
           categoryName="Status"
@@ -167,14 +161,14 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
               value={statusSelected || "Select Status"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
@@ -191,12 +185,12 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
 
   return (
-    <DataToolbarToggleGroup
+    <ToolbarToggleGroup
       toggleIcon={
         <>
           <FilterIcon />
@@ -210,7 +204,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       breakpoint="xl"
     >
       {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    </ToolbarToggleGroup>
   );
 };
 export { AddressToggleGroup };

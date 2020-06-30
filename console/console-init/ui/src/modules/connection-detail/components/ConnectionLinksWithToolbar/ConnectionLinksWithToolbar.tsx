@@ -13,12 +13,13 @@ import {
   Divider
 } from "@patternfly/react-core";
 import { useLocation } from "react-router";
-import { css } from "@patternfly/react-styles";
+import { css } from "aphrodite";
 import { ISortBy } from "@patternfly/react-table";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import { ConnectionLinksContainer } from "modules/connection-detail/containers";
 import { TablePagination } from "components";
 import { ConnectionLinksToolbarContainer } from "modules/connection-detail/containers";
+import { useSearchParamsPageChange } from "hooks";
 interface IConnectionDetailToolbarProps {
   name?: string;
   namespace?: string;
@@ -39,6 +40,8 @@ export const ConnectionLinksWithToolbar: React.FunctionComponent<IConnectionDeta
   const [filterRole, setFilterRole] = useState<string | null>();
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
 
+  useSearchParamsPageChange([filterNames, filterAddresses, filterRole]);
+
   const renderPagination = (page: number, perPage: number) => {
     return (
       <TablePagination
@@ -53,7 +56,8 @@ export const ConnectionLinksWithToolbar: React.FunctionComponent<IConnectionDeta
   return (
     <PageSection variant={PageSectionVariants.light}>
       <Title
-        size={"lg"}
+        headingLevel="h2"
+        size="lg"
         className={css(GridStylesForTableHeader.filter_left_margin)}
       >
         Links for connection - {connectionName}

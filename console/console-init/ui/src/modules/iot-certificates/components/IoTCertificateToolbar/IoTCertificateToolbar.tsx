@@ -5,9 +5,9 @@
 
 import React from "react";
 import {
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
   Button
 } from "@patternfly/react-core";
 import { SwitchWithToggle } from "components";
@@ -32,17 +32,17 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
   };
 
   return (
-    <DataToolbar id="pct-data-toolbar">
-      <DataToolbarContent>
-        <DataToolbarItem>
+    <Toolbar id="pct-data-toolbar" data-codemods="true">
+      <ToolbarContent>
+        <ToolbarItem data-codemods="true">
           <Button
             id="pct-add-certificate-button"
             onClick={handleAddCertificateClick}
           >
             Add certificate
           </Button>
-        </DataToolbarItem>
-        <DataToolbarItem>
+        </ToolbarItem>
+        <ToolbarItem data-codemods="true">
           <Button
             id="pct-upload-certificate-button"
             variant="link"
@@ -50,18 +50,16 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
           >
             Upload certificate
           </Button>
-        </DataToolbarItem>
-        <DataToolbarItem
-          breakpointMods={[{ modifier: "align-right", breakpoint: "md" }]}
-        >
+        </ToolbarItem>
+        <ToolbarItem alignment={{ md: "alignRight" }} data-codemods="true">
           <SwitchWithToggle
             id="pct-edit-json-switch"
             label="Edit in Json"
             isChecked={isJsonView}
             onChange={handleJsonViewChange}
           />
-        </DataToolbarItem>
-      </DataToolbarContent>
-    </DataToolbar>
+        </ToolbarItem>
+      </ToolbarContent>
+    </Toolbar>
   );
 };

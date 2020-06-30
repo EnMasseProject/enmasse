@@ -17,7 +17,7 @@ export const EmptyAddressLinks = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-link">
       <EmptyStateIcon icon={GlobeRouteIcon} />
-      <Title id="empty-link-title" size="lg">
+      <Title headingLevel="h2" id="empty-link-title" size="lg">
         No Links
       </Title>
       <EmptyStateBody id="empty-link-body">

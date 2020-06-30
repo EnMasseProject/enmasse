@@ -13,14 +13,8 @@ import {
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { hasOwnProperty } from "utils";
-
-export const dropdown_item_styles = StyleSheet.create({
-  format_item: { whiteSpace: "normal", textAlign: "justify" },
-  dropdown_align: { display: "flex", marginRight: 10 },
-  dropdown_toggle_align: { flex: "1" }
-});
 
 const styles = StyleSheet.create({
   delete_secret: { float: "right" },

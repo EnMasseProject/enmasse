@@ -41,7 +41,7 @@ export const AddCredential: React.FC<{}> = () => {
     getCredentialsFieldsInitialState()
   ]);
   const [type, setType] = useState<string>("hashed-password");
-  const [activeCredentialFormId, setActiveCredentialFormId] = useState();
+  const [activeCredentialFormId, setActiveCredentialFormId] = useState("");
 
   const getSecretsFieldsInitialState = () => {
     let initialState: ISecret = {};

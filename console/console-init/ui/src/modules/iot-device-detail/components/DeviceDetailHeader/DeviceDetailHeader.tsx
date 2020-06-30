@@ -14,7 +14,7 @@ import {
   DropdownPosition,
   DropdownSeparator
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";
@@ -103,7 +103,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   const DeviceDetailLayout = () => (
     <>
       <SplitItem>
-        <Split gutter="md">
+        <Split hasGutter>
           <SplitItem>
             <Title headingLevel="h1" size="4xl" id="title-device-name">
               {deviceName}

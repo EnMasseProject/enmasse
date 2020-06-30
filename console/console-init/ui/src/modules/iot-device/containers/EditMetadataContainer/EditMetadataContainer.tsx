@@ -13,7 +13,7 @@ import {
   FlexItem,
   Title
 } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { CreateMetadata } from "modules/iot-device/components";
 import { useStoreContext, types } from "context-state-reducer";
 
@@ -52,10 +52,12 @@ export const EditMetadataContainer: React.FC<IEditMetadataContainerProps> = ({
 
   return (
     <>
-      <div className={styles.header}>
-        <Title size={"2xl"}>Edit device metadata</Title>
+      <div className={css(styles.header)}>
+        <Title headingLevel="h2" size="xl">
+          Edit device metadata
+        </Title>
         <br />
-        <Grid gutter="sm">
+        <Grid hasGutter>
           <GridItem span={6}>
             <CreateMetadata />
           </GridItem>
