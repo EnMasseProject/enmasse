@@ -60,7 +60,7 @@ public class JmsProvider {
         return address.getMetadata().getName();
     }
 
-    private HashMap<String, String> createAddressMap(MessagingAddress destination) {
+    private Map<String, String> createAddressMap(MessagingAddress destination) {
         String identification;
         if (destination.getSpec().getQueue() != null) {
             identification = "queue.";
