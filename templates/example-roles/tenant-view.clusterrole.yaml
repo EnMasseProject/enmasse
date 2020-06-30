@@ -7,11 +7,8 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-view: "true"
 rules:
   - apiGroups: [ "enmasse.io" ]
-    resources: [ "addresses", "addressspaces" ]
+    resources: [ "messagingaddresses", "messagingtenants", "messagingendpoints" ]
     verbs: [ "get", "list", "watch" ]
-  - apiGroups: [ "enmasse.io" ]
-    resources: [ "addressspaceschemas" ]
-    verbs: [ "get", "list" ]
-  - apiGroups: [ "user.enmasse.io" ]
-    resources: [ "messagingusers" ]
+  - apiGroups: [ "iot.enmasse.io" ]
+    resources: [ "iotprojects" ]
     verbs: [ "get", "list", "watch" ]

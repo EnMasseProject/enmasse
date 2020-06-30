@@ -5,8 +5,8 @@ metadata:
     app: enmasse
   name: enmasse.io:console-server
 rules:
-  - apiGroups: [ "admin.enmasse.io" ]
-    resources: [ "authenticationservices", "addressplans", "addressspaceplans" ]
+  - apiGroups: [ "enmasse.io" ]
+    resources: [ "messaginginfrastructures", "messagingplans", "messagingaddressplans" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "services" ]

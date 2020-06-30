@@ -13,37 +13,30 @@ PACKAGE_INSTALL_DIR=$(INSTALLDIR)/install
 HASHMARK = $(shell echo "\#")
 
 IOT_MODULES=\
-	iot/api \
 	iot/common \
 	iot/operator \
 
 MODULES=\
 	$(IOT_MODULES) \
-	shared-infra \
 	enmasse-operator \
 	crds \
-	address-space-controller \
 	console-server \
 	example-roles \
 	example-plans \
 	example-console \
-	example-authservices \
 	example-olm \
 	iot/examples \
 	monitoring-operator \
 	monitoring-deployment \
-	service-broker \
-	cluster-service-broker \
 	kube-state-metrics
 
 prepare:
 	mkdir -p $(PACKAGE_INSTALL_DIR)
 	mkdir -p $(PACKAGE_INSTALL_DIR)/bundles
-	mkdir -p $(PACKAGE_INSTALL_DIR)/preview-bundles
 	mkdir -p $(PACKAGE_INSTALL_DIR)/components
 
 replace_images: prepare
-	mkdir -p $(BUILDDIR)/replaced
+	rm -rf $(BUILDDIR)/replaced; mkdir -p $(BUILDDIR)/replaced
 	for i in `find $(MODULES) -type f`; do \
 		D=`dirname $$i`; \
 		mkdir -p $(BUILDDIR)/replaced/$$D ; \
@@ -54,8 +47,7 @@ replace_images: prepare
 		mv $$i $(BUILDDIR)/replaced/crds/010-$$F ; \
 	done
 	for i in `find $(BUILDDIR)/replaced -name "*.yaml"`; do \
-		cat $$i | sed -e 's,\$${ADDRESS_SPACE_CONTROLLER_IMAGE},$(ADDRESS_SPACE_CONTROLLER_IMAGE),g' \
-					  -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
+		cat $$i | sed -e 's,\$${MAVEN_VERSION},$(MAVEN_VERSION),g' \
 					  -e 's,\$${REVISION},$(REVISION),g' \
 					  -e 's,\$${NAMESPACE},$(DEFAULT_PROJECT),g' \
 					  -e 's,\$${VERSION},$(VERSION),g' \
@@ -66,20 +58,9 @@ replace_images: prepare
 					  -e 's,\$${OLM_PACKAGE_CHANNEL},$(OLM_PACKAGE_CHANNEL),g' \
 					  -e 's,\$${APP_BUNDLE_PREFIX},$(APP_BUNDLE_PREFIX),g' \
 					  -e 's,\$${IMAGE_PULL_POLICY},$(IMAGE_PULL_POLICY),g' \
-					  -e 's,\$${STANDARD_CONTROLLER_IMAGE},$(STANDARD_CONTROLLER_IMAGE),g' \
 					  -e 's,\$${ROUTER_IMAGE},$(ROUTER_IMAGE),g' \
-					  -e 's,\$${NONE_AUTHSERVICE_IMAGE},$(NONE_AUTHSERVICE_IMAGE),g' \
-					  -e 's,\$${KEYCLOAK_IMAGE},$(KEYCLOAK_IMAGE),g' \
-					  -e 's,\$${KEYCLOAK_PLUGIN_IMAGE},$(KEYCLOAK_PLUGIN_IMAGE),g' \
-					  -e 's,\$${TOPIC_FORWARDER_IMAGE},$(TOPIC_FORWARDER_IMAGE),g' \
 					  -e 's,\$${BROKER_IMAGE},$(BROKER_IMAGE),g' \
 					  -e 's,\$${BROKER_PLUGIN_IMAGE},$(BROKER_PLUGIN_IMAGE),g' \
-					  -e 's,\$${SUBSERV_IMAGE},$(SUBSERV_IMAGE),g' \
-					  -e 's,\$${API_SERVER_IMAGE},$(API_SERVER_IMAGE),g' \
-					  -e 's,\$${SERVICE_BROKER_IMAGE},$(SERVICE_BROKER_IMAGE),g' \
-					  -e 's,\$${AGENT_IMAGE},$(AGENT_IMAGE),g' \
-					  -e 's,\$${MQTT_GATEWAY_IMAGE},$(MQTT_GATEWAY_IMAGE),g' \
-					  -e 's,\$${MQTT_LWT_IMAGE},$(MQTT_LWT_IMAGE),g' \
 					  -e 's,\$${APPLICATION_MONITORING_OPERATOR_IMAGE},$(APPLICATION_MONITORING_OPERATOR_IMAGE),g' \
 					  -e 's,\$${KUBE_STATE_METRICS_IMAGE},$(KUBE_STATE_METRICS_IMAGE),g' \
 					  -e 's,\$${HONO_IMAGE},$(HONO_IMAGE),g' \
@@ -119,25 +100,11 @@ scripts_install:
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
-	for i in crds address-space-controller enmasse-operator console-server; do \
+	for i in crds enmasse-operator console-server $(IOT_MODULES); do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-ENMASSE_PREVIEW_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/enmasse
-$(ENMASSE_PREVIEW_BUNDLE): replace_images
-	mkdir -p $(ENMASSE_PREVIEW_BUNDLE)
-	for i in shared-infra; do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_PREVIEW_BUNDLE)/; \
-	done
-
-IOT_BUNDLE=$(PACKAGE_INSTALL_DIR)/preview-bundles/iot
-$(IOT_BUNDLE): replace_images
-	mkdir -p $(IOT_BUNDLE)
-	for i in $(IOT_MODULES); do \
-		cp $(BUILDDIR)/replaced/$$i/*.yaml $(IOT_BUNDLE)/; \
-	done
-
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)
+install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -145,4 +112,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(IOT_BUNDLE) $(ENMASSE_PREVIEW_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE)
