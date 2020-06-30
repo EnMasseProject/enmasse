@@ -33,7 +33,7 @@ const adapters: any = [
 ];
 
 export const AdapterListPage = () => (
-  <Grid gutter="sm">
+  <Grid hasGutter>
     <GridItem span={6}>
       <Card>
         <CardBody>

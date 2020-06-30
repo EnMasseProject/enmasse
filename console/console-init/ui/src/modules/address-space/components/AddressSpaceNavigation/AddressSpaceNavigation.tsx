@@ -4,9 +4,9 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export interface AddressSpaceNavigationProps {
   activeItem: string;
@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
     color: "var(--pf-global--palette--black-1000)"
   }
 });
+
 export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({
   activeItem
 }) => {
@@ -25,8 +26,8 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
     setActive(result.itemId);
   };
   return (
-    <Nav onSelect={onSelect1}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect1}>
+      <NavList>
         <NavItem
           key="addresses"
           itemId="addresses"

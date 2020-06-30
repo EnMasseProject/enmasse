@@ -18,7 +18,7 @@ import {
 } from "components";
 import { AppRoutes } from "Routes";
 import brandImg from "./assets/images/logo.svg";
-import avatarImg from "./img_avatar.svg";
+import avatarImg from "./assets/images/img_avatar.svg";
 import "./App.css";
 import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
@@ -35,13 +35,6 @@ const client = new ApolloClient({
     onServerError(error, dispactAction, states);
   }
 });
-
-const avatar = (
-  <React.Fragment>
-    <Avatar src={avatarImg} alt="avatar" />
-  </React.Fragment>
-);
-
 const logo = <Brand src={brandImg} alt="Console Logo" />;
 
 const AppLayout: React.FC = () => {
@@ -56,15 +49,19 @@ const AppLayout: React.FC = () => {
     []
   );
 
+  const HeaderTools = () => {
+    return (
+      <div className="pf-c-page__header-tools">
+        <NavToolBar />
+        <Avatar src={avatarImg} alt="avatar" />
+      </div>
+    );
+  };
+
   return (
     <ApolloProvider client={client}>
       <RootModal />
-      <Layout
-        logoProps={logoProps}
-        logo={logo}
-        avatar={avatar}
-        toolbar={<NavToolBar />}
-      >
+      <Layout logoProps={logoProps} logo={logo} headerTools={<HeaderTools />}>
         <NetworkStatusAlert />
         <ServerMessageAlert />
         <AppRoutes />

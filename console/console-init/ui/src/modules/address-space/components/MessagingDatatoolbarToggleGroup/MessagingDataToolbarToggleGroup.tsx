@@ -6,17 +6,17 @@
 import React from "react";
 import {
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -49,8 +49,8 @@ export interface IMessagingToolbarToggleGroupProps {
   onDeleteAll: () => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeNameSpaceInput?: (value: string) => Promise<any>;
@@ -115,10 +115,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
   };
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -127,8 +125,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -147,12 +145,10 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNamespaces.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Namespace"
@@ -161,8 +157,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
             <InputGroup>
               <TypeAheadSelect
                 id="al-filter-input-namespace"
-                ariaLabelTypeAhead={"Select namespace"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select namespace"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
                 onClear={onNamespaceClear}
                 selected={namespaceSelected}
@@ -181,12 +177,10 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
@@ -201,12 +195,10 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
               value={typeSelected || "Select Type"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={statusSelected ? [statusSelected] : []}
           deleteChip={onDelete}
           categoryName="Status"
@@ -221,14 +213,14 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
               value={statusSelected || "Select Status"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="al-filter-dropdown"
           toggleId={"al-filter-dropdown"}
@@ -244,12 +236,12 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
 
   return (
-    <DataToolbarToggleGroup
+    <ToolbarToggleGroup
       toggleIcon={
         <>
           <FilterIcon />
@@ -263,7 +255,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
       breakpoint="xl"
     >
       {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    </ToolbarToggleGroup>
   );
 };
 export { MessagingToolbarToggleGroup };

@@ -5,11 +5,11 @@
 
 import React from "react";
 import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps,
-  DropdownItem
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  DropdownItem,
+  ToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
@@ -31,7 +31,7 @@ export interface IConnectionsToolbarProps extends IConnectionsToggleGroupProps {
   onCloseAll: () => void;
 }
 const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   hostnameSelected,
@@ -110,7 +110,7 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
         onChangeContainerInput={onChangeContainerInput}
         setHostNameInput={setHostNameInput}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -118,8 +118,8 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
-      <DataToolbarItem>
+      </ToolbarItem>
+      <ToolbarItem data-codemods="true">
         <DropdownWithKebabToggle
           id="cl-select-kebab-overflow-dropdown-"
           toggleId="cl-filter-overflow-kebab"
@@ -127,19 +127,20 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
           dropdownItems={dropdownItems}
           isPlain
         />
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { ConnectionsToolbar };

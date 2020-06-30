@@ -8,12 +8,12 @@ import {
   Card,
   CardBody,
   Divider,
-  CardHeader,
   PageSection,
-  Title
+  Title,
+  CardTitle
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { Link } from "react-router-dom";
 
 const styles = StyleSheet.create({
@@ -50,11 +50,11 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
   return (
     <PageSection>
       <Card>
-        <CardHeader className={css(styles.font_size)}>
+        <CardTitle className={css(styles.font_size)}>
           <Title size="xl" headingLevel="h2">
             General Info
           </Title>
-        </CardHeader>
+        </CardTitle>
         <CardBody>
           <b className={css(styles.style_margin)}>Address space</b>
           <Link
@@ -69,8 +69,8 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Events address name</b>
           {eventAddresses &&
             eventAddresses.length > 0 &&
-            eventAddresses.map((address: string) => (
-              <>
+            eventAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -80,14 +80,14 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <b className={css(styles.style_margin)}>Telemetry address name</b>
           {telemetryAddresses &&
             telemetryAddresses.length > 0 &&
-            telemetryAddresses.map((address: string) => (
-              <>
+            telemetryAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -97,14 +97,14 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <b className={css(styles.style_margin)}>Command address name</b>
           {commandAddresses &&
             commandAddresses.length > 0 &&
-            commandAddresses.map((address: string) => (
-              <>
+            commandAddresses.map((address: string, index: number) => (
+              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
                 <Link
                   //TODO:=modify route
                   to={""}
@@ -114,7 +114,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                 >
                   {address}
                 </Link>{" "}
-              </>
+              </React.Fragment>
             ))}
           <br />
           <br />

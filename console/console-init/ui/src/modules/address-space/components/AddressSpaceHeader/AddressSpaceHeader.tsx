@@ -15,7 +15,7 @@ import {
   Badge
 } from "@patternfly/react-core";
 import { FormatDistance } from "use-patternfly";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { AddressSpaceType } from "modules/address-space/utils";
 import { DropdownWithKebabToggle } from "components";
 
@@ -95,7 +95,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
           <Badge className={css(styles.address_space_icon_margin)}>AS</Badge>
         </SplitItem>
         <SplitItem>
-          <Split gutter="md">
+          <Split hasGutter>
             <SplitItem>
               <Title headingLevel="h1" size="4xl" id="as-header-title">
                 {name}

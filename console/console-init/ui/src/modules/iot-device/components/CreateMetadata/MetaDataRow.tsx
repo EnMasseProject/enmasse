@@ -75,7 +75,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   //TODO: Increase width of type dropdown
   return (
     <>
-      <Grid gutter="sm">
+      <Grid hasGutter>
         <GridItem span={5}>
           <InputGroup>
             <TextInput

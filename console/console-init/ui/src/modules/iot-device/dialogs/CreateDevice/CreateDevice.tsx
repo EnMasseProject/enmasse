@@ -198,7 +198,6 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
       {isWizardOpen ? (
         <>
           <Wizard
-            isInPage
             isOpen={isWizardOpen}
             onClose={onToggle}
             footer={CustomFooter}

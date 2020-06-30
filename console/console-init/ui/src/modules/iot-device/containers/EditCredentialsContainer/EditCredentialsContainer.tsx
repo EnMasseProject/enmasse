@@ -37,7 +37,9 @@ export const EditCredentialsContainer = () => {
 
   return (
     <>
-      <Title size={"2xl"}>Edit credentials</Title>
+      <Title headingLevel="h2" size="xl">
+        Edit credentials
+      </Title>
       <br />
       <AddCredential />
       <br />

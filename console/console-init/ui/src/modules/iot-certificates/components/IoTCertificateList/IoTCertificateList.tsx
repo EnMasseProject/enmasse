@@ -15,7 +15,7 @@ import {
   PageSection,
   PageSectionVariants
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export interface IIoTCertificate {
   "subject-dn"?: string | null;
@@ -43,6 +43,7 @@ const style = StyleSheet.create({
     paddingBottom: 0
   }
 });
+
 export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProps> = ({
   certificates,
   onSave,
@@ -62,7 +63,10 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
   };
 
   return (
-    <PageSection noPadding variant={PageSectionVariants.default}>
+    <PageSection
+      padding={{ default: "noPadding" }}
+      variant={PageSectionVariants.default}
+    >
       <Grid key={"iiid"}>
         <GridItem span={7}>
           <PageSection className={css(style.no_top_bottom_padding)}>

@@ -13,8 +13,8 @@ import {
   GridItem
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
-import { css } from "@patternfly/react-styles";
+import { Divider } from "@patternfly/react-core";
+import { css } from "aphrodite";
 import { GridStylesForTableHeader } from "modules/address/AddressPage";
 import {
   AddressLinksContainer,
@@ -22,6 +22,7 @@ import {
 } from "modules/address-detail/containers";
 import { TablePagination } from "components/TablePagination";
 import { IFilterValue } from "modules/address/utils";
+import { useSearchParamsPageChange } from "hooks";
 
 interface IAddressLinksListPageProps {
   addressspace_name: string;
@@ -49,6 +50,9 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
     []
   );
   const [filterRole, setFilterRole] = useState<string | null>();
+
+  useSearchParamsPageChange([filterNames, filterContainers, filterRole]);
+
   const renderPagination = () => {
     return (
       <TablePagination
@@ -63,7 +67,8 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
     <PageSection>
       <PageSection variant={PageSectionVariants.light}>
         <Title
-          size={"lg"}
+          headingLevel="h2"
+          size="lg"
           className={css(GridStylesForTableHeader.filter_left_margin)}
         >
           Links for address - {addressDisplayName}

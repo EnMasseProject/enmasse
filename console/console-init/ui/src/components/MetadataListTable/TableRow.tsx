@@ -13,7 +13,7 @@ import {
   DataListItemCells
 } from "@patternfly/react-core";
 import classNames from "classnames";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { uniqueId } from "utils";
 import { DataType } from "constant";
 
@@ -68,13 +68,13 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
   };
 
   const cssClassKey = classNames({
-    [styles.key_cell_toogle]: shouldDisplayDataListToggle(type),
-    [styles.key_cell]: !shouldDisplayDataListToggle(type)
+    [css(styles.key_cell_toogle)]: shouldDisplayDataListToggle(type),
+    [css(styles.key_cell)]: !shouldDisplayDataListToggle(type)
   });
 
   const cssClassType = classNames({
-    [styles.type_cell_toggle]: shouldDisplayDataListToggle(type),
-    [styles.type_cell]: !shouldDisplayDataListToggle(type)
+    [css(styles.type_cell_toggle)]: shouldDisplayDataListToggle(type),
+    [css(styles.type_cell)]: !shouldDisplayDataListToggle(type)
   });
 
   const cssClassValue = classNames([styles.value_cell]);
@@ -137,7 +137,7 @@ export const TableRow: React.FC<ITableRowProps> = ({ rowData }) => {
               aria-label={key + " data list content"}
               id={key + "-" + index}
               isHidden={!expandedList.includes(key)}
-              noPadding
+              hasNoPadding
               key={"data-list-content-" + index}
             >
               <TableRow rowData={row} id={"table-row-" + key} />

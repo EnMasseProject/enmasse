@@ -83,12 +83,12 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
             isRequired
             helperTextInvalid="Age has to be a number"
             fieldId="device-id"
-            isValid={true}
+            validated="default"
           >
             <Flex>
               <FlexItem>
                 <TextInput
-                  isValid={true}
+                  validated="default"
                   value={inputID}
                   id="ag-text-input-id"
                   aria-label="Input device ID"

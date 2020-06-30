@@ -10,7 +10,9 @@ import {
   ButtonVariant,
   Form,
   FormGroup,
-  Alert
+  Alert,
+  AlertActionLink,
+  ValidatedOptions
 } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { PasswordInputFieldWithToggle } from "components";
@@ -59,13 +61,15 @@ export const UpdatePassword = () => {
   const isMatchPassword = () => {
     const { password, retypePassword } = formData;
     if (password.trim() === retypePassword.trim()) {
-      return true;
+      return ValidatedOptions.success;
+    } else if (password.trim() !== retypePassword.trim()) {
+      return ValidatedOptions.error;
     }
-    return false;
+    return ValidatedOptions.default;
   };
 
   const getHelperText = () => {
-    if (!isMatchPassword()) {
+    if (isMatchPassword() === ValidatedOptions.error) {
       return <span>Passwords don't match. Please try again.</span>;
     }
   };
@@ -82,7 +86,7 @@ export const UpdatePassword = () => {
     <Modal
       id="update-password-dialog"
       title={"Change password"}
-      isSmall={true}
+      variant="small"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
@@ -104,17 +108,21 @@ export const UpdatePassword = () => {
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}
     >
-      <Alert variant="info" isInline title="Want to update the secrets?">
-        If you want to update the secrets, you can go to the
-        <Button
-          id="up-edit-credentials-button"
-          variant={"link"}
-          onClick={onClickEditCredentials}
-        >
-          Edit Credentials
-        </Button>
+      <Alert
+        variant="info"
+        isInline
+        title="Want to update the secrets?"
+        actionLinks={
+          <Button
+            variant={ButtonVariant.secondary}
+            onClick={onClickEditCredentials}
+          >
+            <AlertActionLink>Edit Credentials</AlertActionLink>
+          </Button>
+        }
+      >
+        If you want to update the secrets, you can go to the Edit credentials
         function for advanced setting.
       </Alert>
       <br />
@@ -140,7 +148,7 @@ export const UpdatePassword = () => {
             id="update-password-retype-password"
             name="retypePassword"
             onChange={onChangeInput}
-            isValid={isMatchPassword()}
+            validated={isMatchPassword()}
           />
         </FormGroup>
       </Form>

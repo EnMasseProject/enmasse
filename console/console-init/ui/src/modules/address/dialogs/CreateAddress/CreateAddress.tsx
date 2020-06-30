@@ -17,7 +17,7 @@ import { IDropdownOption } from "components";
 import { dnsSubDomainRfc1123NameRegexp } from "utils";
 import { useStoreContext, types } from "context-state-reducer";
 import { IAddressSpacesResponse } from "schema/ResponseTypes";
-import { FetchPolicy } from "constant";
+import { FetchPolicy, WIZARD_HEIGHT } from "constant";
 
 export const CreateAddress: React.FunctionComponent = () => {
   const { dispatch, state } = useStoreContext();
@@ -181,17 +181,17 @@ export const CreateAddress: React.FunctionComponent = () => {
       nextButtonText: "Finish"
     }
   ];
+
   return (
     <Wizard
       id="create-addr-wizard"
       isOpen={true}
-      isFullHeight={true}
-      isFullWidth={true}
       onClose={onCloseDialog}
       title="Create new Address"
       steps={steps}
       onNext={() => {}}
       onSave={handleSave}
+      height={WIZARD_HEIGHT}
     />
   );
 };

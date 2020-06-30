@@ -13,7 +13,7 @@ import {
   TableProps,
   SortByDirection
 } from "@patternfly/react-table";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const StyleForTable = StyleSheet.create({
   scroll_overflow: {
