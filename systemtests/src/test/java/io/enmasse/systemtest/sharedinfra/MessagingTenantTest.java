@@ -9,6 +9,7 @@ import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.api.model.MessagingTenantCondition;
+import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.bases.TestBase;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import org.junit.jupiter.api.Test;
@@ -20,16 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MessagingTenantTest extends TestBase {
 
     @Test
+    @DefaultMessagingInfrastructure
     public void testMultipleMessagingTenants() {
-        MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
-                .withNewMetadata()
-                .withName("default-infra")
-                .withNamespace(environment.namespace())
-                .endMetadata()
-                .withNewSpec()
-                .endSpec()
-                .build();
-
         MessagingTenant t1 = new MessagingTenantBuilder()
                 .editOrNewMetadata()
                 .withName("default")
@@ -44,7 +37,7 @@ public class MessagingTenantTest extends TestBase {
                 .endMetadata()
                 .build();
 
-        resourceManager.createResource(infra, t1, t2);
+        resourceManager.createResource(t1, t2);
 
         t1 = MessagingTenantResourceType.getOperation().inNamespace(t1.getMetadata().getNamespace()).withName(t1.getMetadata().getName()).get();
         assertNotNull(t1);

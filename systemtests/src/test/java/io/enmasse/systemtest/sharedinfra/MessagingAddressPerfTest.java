@@ -18,7 +18,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -32,10 +31,10 @@ import java.util.concurrent.TimeUnit;
 import static io.enmasse.systemtest.TestTag.SCALE;
 
 @Tag(SCALE)
-@Disabled("will be enabled in enmasse 1.0")
 @SkipResourceLogging
 public class MessagingAddressPerfTest extends TestBase {
     private static final Logger LOGGER = CustomLogger.getLogger();
+
     /**
      * Simple performance test to be able to track create and delete performance of addresses.
      */
