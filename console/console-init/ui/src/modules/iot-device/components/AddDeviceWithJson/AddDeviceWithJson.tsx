@@ -11,7 +11,7 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { JsonEditor } from "components";
 import {
   AddJsonUsingTemplate,

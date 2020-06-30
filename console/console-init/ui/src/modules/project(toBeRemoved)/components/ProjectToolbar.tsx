@@ -28,7 +28,7 @@ export const ProjectToolbar: React.FunctionComponent<{}> = () => {
         <DropdownToggle
           id="toggle-id"
           onToggle={onToggle}
-          iconComponent={CaretDownIcon}
+          toggleIndicator={CaretDownIcon}
         >
           Add Device
         </DropdownToggle>

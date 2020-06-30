@@ -17,7 +17,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { endpointProtocolOptions } from "modules/address-space/utils";
 
 export interface IAddressSpaceReviewProps {
@@ -40,7 +40,7 @@ const style = StyleSheet.create({
     paddingLeft: 32
   },
   left_padding_for_endpoints: {
-    paddingLeft: 40
+    paddingLeft: 20
   },
   bottom_padding: {
     paddingBottom: 16
@@ -120,16 +120,16 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new address
         space. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem span={5} className={style.grid_border}>
+        <GridItem span={5} className={css(style.grid_border)}>
           <Grid>
             <ReviewGridItem
               valueId="preview-addr-name"
@@ -158,22 +158,19 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             />
             {customizeEndpoint && (
               <>
-                <ReviewGridItem
-                  valueId="preview-addr-cutom-endpoint"
-                  value={""}
-                  labelText="Endpoint customization"
-                />
-
+                <GridItem span={12} className={css(style.left_margin_gridItem)}>
+                  Endpoint customization
+                </GridItem>
                 {protocolOptions.length > 0 && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       Protocols
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {protocolOptions &&
@@ -189,13 +186,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 {certificate && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       TLS Certificates
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {certificate}
@@ -204,13 +201,13 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                 )}
                 <>
                   <GridItem
-                    span={5}
+                    span={6}
                     className={css(style.left_padding_for_endpoints)}
                   >
                     Create Routes
                   </GridItem>
                   <GridItem
-                    span={7}
+                    span={6}
                     className={css(style.preview_info_gridItem)}
                   >
                     {addRoutes ? "True" : "False"}
@@ -222,7 +219,11 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
           </Grid>
         </GridItem>
         <GridItem span={7} className={css(style.left_padding)}>
-          <Title size={"lg"} className={css(style.bottom_padding)}>
+          <Title
+            headingLevel="h2"
+            size="lg"
+            className={css(style.bottom_padding)}
+          >
             {`Configuration details  `}
             <Tooltip
               id="preview-as-feedback-tooltip"

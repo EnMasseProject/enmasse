@@ -15,7 +15,7 @@ import {
   PageSectionVariants,
   PageSection
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { TypeBadge } from "modules/address-detail/components";
 import { AddressTypes } from "constant";
 import { DropdownWithKebabToggle } from "components";
@@ -69,7 +69,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   onPurge
 }) => {
   const AddressTitle = () => (
-    <Split gutter="md">
+    <Split hasGutter>
       <SplitItem>
         <Title headingLevel="h1" size="4xl" id="adheader-name">
           {name}

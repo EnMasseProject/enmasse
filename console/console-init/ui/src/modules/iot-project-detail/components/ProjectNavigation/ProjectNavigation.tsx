@@ -4,9 +4,9 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavVariants, NavItem } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export interface ProjectNavigationProps {
   activeItem: string;
@@ -28,8 +28,8 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
     setActive(result.itemId);
   };
   return (
-    <Nav onSelect={onSelect1}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect1}>
+      <NavList>
         <NavItem key="detail" itemId="detail" isActive={active === "detail"}>
           <NavLink
             id="ad-space-nav-detail"

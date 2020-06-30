@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Divider } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   container: {
@@ -24,9 +24,9 @@ export interface IDividerWithTitle {
 
 export const DividerWithTitle: React.FC<IDividerWithTitle> = ({ title }) => {
   return (
-    <div className={styles.container}>
+    <div className={css(styles.container)}>
       {title}
-      <Divider className={styles.divider_align} />
+      <Divider className={css(styles.divider_align)} />
     </div>
   );
 };

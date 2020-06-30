@@ -12,7 +12,7 @@ import {
   Grid,
   GridItem
 } from "@patternfly/react-core";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { Divider } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { IAddressSpace } from "./components";
 import {
@@ -24,7 +24,7 @@ import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { getHeaderForDeleteDialog, getDetailForDeleteDialog } from "./utils";
 import { TablePagination } from "components";
-import { useMutationQuery } from "hooks";
+import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 
 export default function AddressSpacePage() {
   const { dispatch } = useStoreContext();
@@ -50,6 +50,13 @@ export default function AddressSpacePage() {
     DELETE_ADDRESS_SPACE,
     refetchQueries
   );
+
+  useSearchParamsPageChange([
+    filterType,
+    filterStatus,
+    filterNamespaces,
+    filterNames
+  ]);
 
   const onDeleteAll = () => {
     dispatch({

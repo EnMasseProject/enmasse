@@ -13,7 +13,7 @@ import {
   DataListItemCells,
   Title
 } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { convertJsonToMetadataOptions } from "utils";
 import { TableRow, IRowOption } from "./TableRow";
 import { NoMetadataFound } from "./NoMetadataFound";
@@ -52,8 +52,8 @@ const TableHeader: React.FC<IHeaderProps> = ({
     headers &&
     headers.map((header: string, index: number) => {
       const cssClass = classNames({
-        [styles.header_magin_left]: index === 0,
-        [styles.header_text_align_center]: index === 1 || index === 2
+        [css(styles.header_magin_left)]: index === 0,
+        [css(styles.header_text_align_center)]: index === 1 || index === 2
       });
 
       return (

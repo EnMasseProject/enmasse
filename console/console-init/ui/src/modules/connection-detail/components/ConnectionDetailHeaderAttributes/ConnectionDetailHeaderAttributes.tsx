@@ -5,7 +5,7 @@
 
 import React from "react";
 import { Flex, FlexItem } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   flex_right_border_with_padding: {
@@ -36,7 +36,7 @@ export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnecti
 }) => {
   return (
     <Flex
-      breakpointMods={[{ modifier: "column", breakpoint: "sm" }]}
+      direction={{ sm: "column" }}
       className={
         !isMobileView
           ? css(styles.flex_right_border_with_padding)
@@ -57,12 +57,7 @@ export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnecti
           <b>Platform</b>
         </FlexItem>
         <FlexItem>
-          <Flex
-            breakpointMods={[
-              { modifier: "row", breakpoint: "lg" },
-              { modifier: "column", breakpoint: "sm" }
-            ]}
-          >
+          <Flex direction={{ lg: "row", sm: "column" }}>
             <FlexItem>
               <b>JVM: </b>
               {jvm || "-"}

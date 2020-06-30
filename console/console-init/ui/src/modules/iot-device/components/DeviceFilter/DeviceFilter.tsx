@@ -18,7 +18,7 @@ import {
   KebabToggle,
   Dropdown
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle } from "components";
 import { compareObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/iot-device";

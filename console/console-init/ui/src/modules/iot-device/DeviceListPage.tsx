@@ -265,7 +265,7 @@ export default function DeviceListPage() {
   }
 
   return (
-    <Grid gutter="md">
+    <Grid hasGutter>
       <GridItem span={3}>
         <Card>
           <CardBody>

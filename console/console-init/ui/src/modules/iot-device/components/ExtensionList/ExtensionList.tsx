@@ -13,11 +13,9 @@ import {
   Button
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
 import { DropdownWithToggle, DividerWithTitle } from "components";
 import { ISelectOption } from "utils";
-import { dropdown_item_styles } from "modules/iot-device";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   type_margin: {
@@ -25,7 +23,9 @@ const styles = StyleSheet.create({
   },
   delete_button_margin: {
     marginTop: 32
-  }
+  },
+  dropdown_align: { display: "flex", marginRight: 10 },
+  dropdown_toggle_align: { flex: "1" }
 });
 
 export interface IExtension {
@@ -108,15 +108,13 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   <FormGroup
                     fieldId={"el-type-dropdown-" + id}
                     label="Type"
-                    className={styles.type_margin}
+                    className={css(styles.type_margin)}
                   >
                     <DropdownWithToggle
                       id={"el-type-dropdwon-" + id}
                       name="type"
-                      className={css(dropdown_item_styles.dropdown_align)}
-                      toggleClass={css(
-                        dropdown_item_styles.dropdown_toggle_align
-                      )}
+                      className={css(styles.dropdown_align)}
+                      toggleClass={css(styles.dropdown_toggle_align)}
                       position={DropdownPosition.left}
                       dropdownItems={typeOptions}
                       value={ext["type"] || ""}
@@ -149,7 +147,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={1}>
                   <Button
-                    className={styles.delete_button_margin}
+                    className={css(styles.delete_button_margin)}
                     variant="link"
                     type="button"
                     icon={

@@ -5,7 +5,7 @@ import {
   TextContent,
   DropdownPosition
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { IDeviceFilter } from "./DeviceFilter";
 import { DropdownWithToggle } from "components";
 import { ISelectOption } from "utils";
