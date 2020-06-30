@@ -4,42 +4,10 @@
  */
 package io.enmasse.systemtest.platform;
 
-import io.enmasse.address.model.Address;
-import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.address.model.AddressSpaceList;
-import io.enmasse.address.model.AddressSpaceSchema;
-import io.enmasse.address.model.AddressSpaceSchemaList;
-import io.enmasse.address.model.CoreCrd;
-import io.enmasse.address.model.DoneableAddress;
-import io.enmasse.address.model.DoneableAddressSpace;
-import io.enmasse.address.model.DoneableAddressSpaceSchema;
-import io.enmasse.admin.model.v1.AddressPlan;
-import io.enmasse.admin.model.v1.AddressPlanList;
-import io.enmasse.admin.model.v1.AddressSpacePlan;
-import io.enmasse.admin.model.v1.AddressSpacePlanList;
 import io.enmasse.admin.model.v1.AdminCrd;
-import io.enmasse.admin.model.v1.AuthenticationService;
-import io.enmasse.admin.model.v1.AuthenticationServiceList;
-import io.enmasse.admin.model.v1.BrokeredInfraConfig;
-import io.enmasse.admin.model.v1.BrokeredInfraConfigList;
 import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceList;
-import io.enmasse.admin.model.v1.DoneableAddressPlan;
-import io.enmasse.admin.model.v1.DoneableAddressSpacePlan;
-import io.enmasse.admin.model.v1.DoneableAuthenticationService;
-import io.enmasse.admin.model.v1.DoneableBrokeredInfraConfig;
 import io.enmasse.admin.model.v1.DoneableConsoleService;
-import io.enmasse.admin.model.v1.DoneableStandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfig;
-import io.enmasse.admin.model.v1.StandardInfraConfigList;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
-import io.enmasse.iot.model.v1.IoTCrd;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
@@ -55,10 +23,6 @@ import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
-import io.enmasse.user.model.v1.DoneableUser;
-import io.enmasse.user.model.v1.User;
-import io.enmasse.user.model.v1.UserCrd;
-import io.enmasse.user.model.v1.UserList;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
@@ -294,98 +258,6 @@ public abstract class Kubernetes {
     // client and crd clients
     ///////////////////////////////////////////////////////////////////////////////
 
-    public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient() {
-        return getAddressSpaceClient(infraNamespace);
-    }
-
-    public MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace,
-            Resource<AddressSpace, DoneableAddressSpace>> getAddressSpaceClient(String namespace) {
-        return (MixedOperation<AddressSpace, AddressSpaceList, DoneableAddressSpace, Resource<AddressSpace, DoneableAddressSpace>>) client.customResources(CoreCrd.addressSpaces(), AddressSpace.class, AddressSpaceList.class, DoneableAddressSpace.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient() {
-        return getAddressClient(infraNamespace);
-    }
-
-    public MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>> getAddressClient(String namespace) {
-        return (MixedOperation<Address, AddressList, DoneableAddress, Resource<Address, DoneableAddress>>) client.customResources(CoreCrd.addresses(), Address.class, AddressList.class, DoneableAddress.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>> getUserClient() {
-        return getUserClient(infraNamespace);
-    }
-
-    public MixedOperation<User, UserList, DoneableUser,
-            Resource<User, DoneableUser>> getUserClient(String namespace) {
-        return (MixedOperation<User, UserList, DoneableUser, Resource<User, DoneableUser>>) client.customResources(UserCrd.messagingUser(), User.class, UserList.class, DoneableUser.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-            Resource<AddressSpacePlan, DoneableAddressSpacePlan>> getAddressSpacePlanClient() {
-        return getAddressSpacePlanClient(infraNamespace);
-    }
-
-    public MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-            Resource<AddressSpacePlan, DoneableAddressSpacePlan>> getAddressSpacePlanClient(String namespace) {
-        return (MixedOperation<AddressSpacePlan, AddressSpacePlanList, DoneableAddressSpacePlan,
-                Resource<AddressSpacePlan, DoneableAddressSpacePlan>>) client.customResources(AdminCrd.addressSpacePlans(), AddressSpacePlan.class, AddressSpacePlanList.class, DoneableAddressSpacePlan.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-            Resource<AddressPlan, DoneableAddressPlan>> getAddressPlanClient() {
-        return getAddressPlanClient(infraNamespace);
-    }
-
-    public MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-            Resource<AddressPlan, DoneableAddressPlan>> getAddressPlanClient(String namespace) {
-        return (MixedOperation<AddressPlan, AddressPlanList, DoneableAddressPlan,
-                Resource<AddressPlan, DoneableAddressPlan>>) client.customResources(AdminCrd.addressPlans(), AddressPlan.class, AddressPlanList.class, DoneableAddressPlan.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-            Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>> getBrokeredInfraConfigClient() {
-        return getBrokeredInfraConfigClient(infraNamespace);
-    }
-
-    public MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-            Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>> getBrokeredInfraConfigClient(String namespace) {
-        return (MixedOperation<BrokeredInfraConfig, BrokeredInfraConfigList, DoneableBrokeredInfraConfig,
-                Resource<BrokeredInfraConfig, DoneableBrokeredInfraConfig>>) client.customResources(AdminCrd.brokeredInfraConfigs(), BrokeredInfraConfig.class, BrokeredInfraConfigList.class, DoneableBrokeredInfraConfig.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-            Resource<StandardInfraConfig, DoneableStandardInfraConfig>> getStandardInfraConfigClient() {
-        return getStandardInfraConfigClient(infraNamespace);
-    }
-
-    public MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-            Resource<StandardInfraConfig, DoneableStandardInfraConfig>> getStandardInfraConfigClient(String namespace) {
-        return (MixedOperation<StandardInfraConfig, StandardInfraConfigList, DoneableStandardInfraConfig,
-                Resource<StandardInfraConfig, DoneableStandardInfraConfig>>) client.customResources(AdminCrd.standardInfraConfigs(), StandardInfraConfig.class, StandardInfraConfigList.class, DoneableStandardInfraConfig.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-            Resource<AuthenticationService, DoneableAuthenticationService>> getAuthenticationServiceClient() {
-        return getAuthenticationServiceClient(infraNamespace);
-    }
-
-    public MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-            Resource<AuthenticationService, DoneableAuthenticationService>> getAuthenticationServiceClient(String namespace) {
-        return (MixedOperation<AuthenticationService, AuthenticationServiceList, DoneableAuthenticationService,
-                Resource<AuthenticationService, DoneableAuthenticationService>>) client.customResources(AdminCrd.authenticationServices(), AuthenticationService.class, AuthenticationServiceList.class, DoneableAuthenticationService.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-            Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>> getSchemaClient() {
-        return getSchemaClient(infraNamespace);
-    }
-
-    public MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-            Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>> getSchemaClient(String namespace) {
-        return (MixedOperation<AddressSpaceSchema, AddressSpaceSchemaList, DoneableAddressSpaceSchema,
-                Resource<AddressSpaceSchema, DoneableAddressSpaceSchema>>) client.customResources(CoreCrd.addresseSpaceSchemas(), AddressSpaceSchema.class, AddressSpaceSchemaList.class, DoneableAddressSpaceSchema.class).inNamespace(namespace);
-    }
-
     public MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
             Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient() {
         return getConsoleServiceClient(infraNamespace);
@@ -395,26 +267,6 @@ public abstract class Kubernetes {
             Resource<ConsoleService, DoneableConsoleService>> getConsoleServiceClient(String namespace) {
         return (MixedOperation<ConsoleService, ConsoleServiceList, DoneableConsoleService,
                 Resource<ConsoleService, DoneableConsoleService>>) client.customResources(AdminCrd.consoleServices(), ConsoleService.class, ConsoleServiceList.class, DoneableConsoleService.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient() {
-        return getIoTConfigClient(infraNamespace);
-    }
-
-    public MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> getIoTConfigClient(String namespace) {
-        return (MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>>) client.customResources(IoTCrd.config(), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class).inNamespace(namespace);
-    }
-
-    public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getNonNamespacedIoTProjectClient() {
-        return getIoTProjectClient(null);
-    }
-
-    public MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> getIoTProjectClient(String namespace) {
-        if (namespace == null) {
-            return client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
-        } else {
-            return (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) client.customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class).inNamespace(namespace);
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////////

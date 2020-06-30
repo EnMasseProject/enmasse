@@ -50,7 +50,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                 //operatorManager.deleteEnmasseBundle();
             } else if (operatorManager.isEnmasseOlmDeployed()) {
                 //todo: need to rewrite this func to enable deployment OLM
-                //operatorManager.deleteEnmasseOlm();
+                operatorManager.deleteEnmasseOlm();
             }
             operatorManager.installEnmasseBundle();
         });

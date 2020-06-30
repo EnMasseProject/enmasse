@@ -6,10 +6,7 @@ package io.enmasse.systemtest.time;
 
 public enum SystemtestsOperation {
     TEST_EXECUTION,
-    CREATE_USER,
     CREATE_ADDRESS,
-    DELETE_USER,
-    UPDATE_USER,
     DELETE_ADDRESS,
     APPEND_ADDRESS,
     ADDRESS_WAIT_READY,
