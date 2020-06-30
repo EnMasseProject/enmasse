@@ -9,8 +9,12 @@ package v1beta2
 
 type MessagingAddressExpansion interface{}
 
+type MessagingAddressPlanExpansion interface{}
+
 type MessagingEndpointExpansion interface{}
 
 type MessagingInfrastructureExpansion interface{}
+
+type MessagingPlanExpansion interface{}
 
 type MessagingTenantExpansion interface{}

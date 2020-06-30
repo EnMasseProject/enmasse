@@ -16,8 +16,10 @@ import (
 type EnmasseV1beta2Interface interface {
 	RESTClient() rest.Interface
 	MessagingAddressesGetter
+	MessagingAddressPlansGetter
 	MessagingEndpointsGetter
 	MessagingInfrastructuresGetter
+	MessagingPlansGetter
 	MessagingTenantsGetter
 }
 
@@ -30,12 +32,20 @@ func (c *EnmasseV1beta2Client) MessagingAddresses(namespace string) MessagingAdd
 	return newMessagingAddresses(c, namespace)
 }
 
+func (c *EnmasseV1beta2Client) MessagingAddressPlans(namespace string) MessagingAddressPlanInterface {
+	return newMessagingAddressPlans(c, namespace)
+}
+
 func (c *EnmasseV1beta2Client) MessagingEndpoints(namespace string) MessagingEndpointInterface {
 	return newMessagingEndpoints(c, namespace)
 }
 
 func (c *EnmasseV1beta2Client) MessagingInfrastructures(namespace string) MessagingInfrastructureInterface {
 	return newMessagingInfrastructures(c, namespace)
+}
+
+func (c *EnmasseV1beta2Client) MessagingPlans(namespace string) MessagingPlanInterface {
+	return newMessagingPlans(c, namespace)
 }
 
 func (c *EnmasseV1beta2Client) MessagingTenants(namespace string) MessagingTenantInterface {

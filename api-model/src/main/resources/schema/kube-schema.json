@@ -161,6 +161,145 @@
         "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingAddress\u003e"
       ]
     },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlan": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "description": "",
+          "default": "enmasse.io/v1beta2",
+          "required": true
+        },
+        "kind": {
+          "type": "string",
+          "description": "",
+          "default": "MessagingAddressPlan",
+          "required": true
+        },
+        "metadata": {
+          "$ref": "#/definitions/kubernetes_apimachinery_ObjectMeta",
+          "existingJavaType": "io.fabric8.kubernetes.api.model.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanSpec",
+          "javaType": "MessagingAddressPlanSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanStatus",
+          "javaType": "MessagingAddressPlanStatus"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingAddressPlan",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.HasMetadata"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanCondition": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "lastTransitionTime": {
+          "$ref": "#/definitions/kubernetes_apimachinery_Time",
+          "existingJavaType": "java.lang.String"
+        },
+        "message": {
+          "type": "string",
+          "description": ""
+        },
+        "reason": {
+          "type": "string",
+          "description": ""
+        },
+        "status": {
+          "type": "string",
+          "description": ""
+        },
+        "type": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingAddressPlanCondition",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanList": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "description": "",
+          "default": "enmasse.io/v1beta2",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "description": "",
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlan",
+            "javaType": "MessagingAddressPlan"
+          }
+        },
+        "kind": {
+          "type": "string",
+          "description": "",
+          "default": "MessagingAddressPlanList",
+          "required": true
+        },
+        "metadata": {
+          "$ref": "#/definitions/kubernetes_apimachinery_ListMeta",
+          "existingJavaType": "io.fabric8.kubernetes.api.model.ListMeta"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingAddressPlanList",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource",
+        "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingAddressPlan\u003e"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanSpec": {
+      "type": "object",
+      "description": "",
+      "additionalProperties": true,
+      "javaType": "MessagingAddressPlanSpec",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanStatus": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanCondition",
+            "javaType": "MessagingAddressPlanCondition"
+          }
+        },
+        "message": {
+          "type": "string",
+          "description": ""
+        },
+        "phase": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingAddressPlanStatus",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressSpec": {
       "type": "object",
       "description": "",
@@ -1029,6 +1168,145 @@
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
     },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlan": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "description": "",
+          "default": "enmasse.io/v1beta2",
+          "required": true
+        },
+        "kind": {
+          "type": "string",
+          "description": "",
+          "default": "MessagingPlan",
+          "required": true
+        },
+        "metadata": {
+          "$ref": "#/definitions/kubernetes_apimachinery_ObjectMeta",
+          "existingJavaType": "io.fabric8.kubernetes.api.model.ObjectMeta"
+        },
+        "spec": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanSpec",
+          "javaType": "MessagingPlanSpec"
+        },
+        "status": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanStatus",
+          "javaType": "MessagingPlanStatus"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingPlan",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.HasMetadata"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanCondition": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "lastTransitionTime": {
+          "$ref": "#/definitions/kubernetes_apimachinery_Time",
+          "existingJavaType": "java.lang.String"
+        },
+        "message": {
+          "type": "string",
+          "description": ""
+        },
+        "reason": {
+          "type": "string",
+          "description": ""
+        },
+        "status": {
+          "type": "string",
+          "description": ""
+        },
+        "type": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingPlanCondition",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanList": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "description": "",
+          "default": "enmasse.io/v1beta2",
+          "required": true
+        },
+        "items": {
+          "type": "array",
+          "description": "",
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlan",
+            "javaType": "MessagingPlan"
+          }
+        },
+        "kind": {
+          "type": "string",
+          "description": "",
+          "default": "MessagingPlanList",
+          "required": true
+        },
+        "metadata": {
+          "$ref": "#/definitions/kubernetes_apimachinery_ListMeta",
+          "existingJavaType": "io.fabric8.kubernetes.api.model.ListMeta"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingPlanList",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource",
+        "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingPlan\u003e"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanSpec": {
+      "type": "object",
+      "description": "",
+      "additionalProperties": true,
+      "javaType": "MessagingPlanSpec",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanStatus": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "conditions": {
+          "type": "array",
+          "description": "",
+          "javaOmitEmpty": true,
+          "items": {
+            "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanCondition",
+            "javaType": "MessagingPlanCondition"
+          }
+        },
+        "message": {
+          "type": "string",
+          "description": ""
+        },
+        "phase": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingPlanStatus",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingTenant": {
       "type": "object",
       "description": "",
@@ -1538,6 +1816,14 @@
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressList",
       "javaType": "MessagingAddressList"
     },
+    "MessagingAddressPlan": {
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlan",
+      "javaType": "MessagingAddressPlan"
+    },
+    "MessagingAddressPlanList": {
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingAddressPlanList",
+      "javaType": "MessagingAddressPlanList"
+    },
     "MessagingEndpoint": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingEndpoint",
       "javaType": "MessagingEndpoint"
@@ -1553,6 +1839,14 @@
     "MessagingInfrastructureList": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingInfrastructureList",
       "javaType": "MessagingInfrastructureList"
+    },
+    "MessagingPlan": {
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlan",
+      "javaType": "MessagingPlan"
+    },
+    "MessagingPlanList": {
+      "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingPlanList",
+      "javaType": "MessagingPlanList"
     },
     "MessagingTenant": {
       "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1beta2_MessagingTenant",

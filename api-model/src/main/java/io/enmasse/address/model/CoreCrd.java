@@ -24,6 +24,8 @@ public class CoreCrd {
     private static final CustomResourceDefinition MESSAGING_TENANT_CRD;
     private static final CustomResourceDefinition MESSAGING_ADDRESS_CRD;
     private static final CustomResourceDefinition MESSAGING_ENDPOINT_CRD;
+    private static final CustomResourceDefinition MESSAGING_PLAN_CRD;
+    private static final CustomResourceDefinition MESSAGING_ADDRESS_PLAN_CRD;
 
     static {
         ADDRESS_CRD = CustomResources.createCustomResource(GROUP, VERSION, Address.KIND);
@@ -33,6 +35,8 @@ public class CoreCrd {
         MESSAGING_TENANT_CRD = CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingTenant");
         MESSAGING_ADDRESS_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingAddress");
         MESSAGING_ENDPOINT_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingEndpoint");
+        MESSAGING_PLAN_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingPlan");
+        MESSAGING_ADDRESS_PLAN_CRD= CustomResources.createCustomResource(GROUP, VERSION_BETA2, "MessagingAddressPlan");
     }
 
     public static void registerCustomCrds() {
@@ -56,6 +60,12 @@ public class CoreCrd {
 
         KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingEndpoint", MessagingEndpoint.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingEndpointList", MessagingEndpointList.class);
+
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingPlan", MessagingPlan.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingPlanList", MessagingPlanList.class);
+
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingAddressPlan", MessagingAddressPlan.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION_BETA2, "MessagingAddressPlanList", MessagingAddressPlanList.class);
     }
     public static CustomResourceDefinition addresses() {
         return ADDRESS_CRD;
@@ -83,5 +93,13 @@ public class CoreCrd {
 
     public static CustomResourceDefinition messagingEndpoints() {
         return MESSAGING_ENDPOINT_CRD;
+    }
+
+    public static CustomResourceDefinition messagingPlans() {
+        return MESSAGING_PLAN_CRD;
+    }
+
+    public static CustomResourceDefinition messagingAddressPlans() {
+        return MESSAGING_ADDRESS_PLAN_CRD;
     }
 }

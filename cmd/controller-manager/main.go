@@ -221,6 +221,36 @@ func main() {
 		)
 	}
 
+	if util.IsModuleEnabled("MESSAGING_PLAN") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingPlan",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingPlanList",
+			},
+		)
+	}
+
+	if util.IsModuleEnabled("MESSAGING_ADDRESS_PLAN") {
+		globalGvks = append(globalGvks,
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingAddressPlan",
+			},
+			schema.GroupVersionKind{
+				Group:   "enmasse.io",
+				Version: "v1beta2",
+				Kind:    "MessagingAddressPlanList",
+			},
+		)
+	}
+
 	// Create a new Cmd to provide shared dependencies and start components
 	mgr, err := manager.New(cfg, manager.Options{
 		Namespace:          namespace,
@@ -339,7 +369,9 @@ func serveCRMetrics(cfg *rest.Config) error {
 		if (!util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") && strings.HasPrefix(gvk.Kind, "MessagingInfrastructure")) ||
 			(!util.IsModuleEnabled("MESSAGING_TENANT") && strings.HasPrefix(gvk.Kind, "MessagingTenant")) ||
 			(!util.IsModuleEnabled("MESSAGING_ENDPOINT") && strings.HasPrefix(gvk.Kind, "MessagingEndpoint")) ||
-			(!util.IsModuleEnabled("MESSAGING_ADDRESS") && strings.HasPrefix(gvk.Kind, "MessagingAddress")) {
+			(!util.IsModuleEnabled("MESSAGING_ADDRESS") && strings.HasPrefix(gvk.Kind, "MessagingAddress")) ||
+			(!util.IsModuleEnabled("MESSAGING_PLAN") && strings.HasPrefix(gvk.Kind, "MessagingPlan")) ||
+			(!util.IsModuleEnabled("MESSAGING_ADDRESS_PLAN") && strings.HasPrefix(gvk.Kind, "MessagingAddressPlan")) {
 			log.Info("Skipping adding metric because module is not enabled", "gkv", gvk)
 		} else {
 			filteredGVK = append(filteredGVK, gvk)
