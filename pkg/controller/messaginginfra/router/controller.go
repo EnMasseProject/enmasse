@@ -208,7 +208,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 						Port:   intstr.FromString("readiness"),
 					},
 				},
-				InitialDelaySeconds: 30,
+				InitialDelaySeconds: 10,
 			}
 
 			for i := 40000; i < 40100; i++ {
