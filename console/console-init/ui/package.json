@@ -63,9 +63,9 @@
     ]
   },
   "peerDependencies": {
-    "@patternfly/react-core": "^4.23.1",
-    "@patternfly/react-icons": "^4.4.2",
-    "@patternfly/react-styles": "^4.4.2",
+    "@patternfly/react-core": "^3.77.2",
+    "@patternfly/react-icons": "^3.10.15",
+    "@patternfly/react-styles": "^3.5.7",
     "date-fns": "^2.4.1",
     "react": ">=16",
     "react-router": "^5.1.2",
@@ -80,7 +80,7 @@
     "@storybook/addon-viewport": "^5.2.6",
     "@storybook/addons": "^5.2.6",
     "@storybook/react": "^5.2.6",
-    "@testing-library/jest-dom": "^5.11.0",
+    "@testing-library/jest-dom": "^5.3.0",
     "@testing-library/react": "^10.4.3",
     "babel-loader": "^8.0.6",
     "handlebars": "4.5.3",
