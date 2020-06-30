@@ -2107,6 +2107,14 @@ function deleteIotDevice(iotProject, deviceId) {
   iotdevices[pjIndex].devices.splice(devIndex, 1);
 }
 
+function getIotDeviceStatusSection() {
+  return {
+    created: "2020-01-01T00:00:00+01:00",
+    updated: "2020-06-10T09:45:00+01:00",
+    "last-user": "Keanu Reeves"
+  };
+}
+
 createIotDevice("iotProjectFrance", {
   deviceId: "10",
   enabled: true,
@@ -2123,7 +2131,8 @@ createIotDevice("iotProjectFrance", {
           long: "nmea"
         }
       }
-    }
+    },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2132,7 +2141,10 @@ createIotDevice("iotProjectFrance", {
   deviceId: "11",
   enabled: true,
   viaGateway: false,
-  jsonData: JSON.stringify({ ext: { ocean: "atlantic" } }),
+  jsonData: JSON.stringify({
+    ext: { ocean: "atlantic" },
+    status: getIotDeviceStatusSection()
+  }),
   credentials: []
 });
 
@@ -2142,7 +2154,8 @@ createIotDevice("iotProjectFrance", {
   viaGateway: true,
   jsonData: JSON.stringify({
     via: ["device-1", "device-2"],
-    ext: { summit: "Mt Blanc" }
+    ext: { summit: "Mt Blanc" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2169,7 +2182,8 @@ createIotDevice("iotProjectIndia", {
         },
         features: ["foo", "bar", "baz"]
       }
-    }
+    },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2180,7 +2194,8 @@ createIotDevice("iotProjectIndia", {
   viaGateway: false,
   jsonData: JSON.stringify({
     via: [],
-    ext: { summit: "Kanchenjunga" }
+    ext: { summit: "Kanchenjunga" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
