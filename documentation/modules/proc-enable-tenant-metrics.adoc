@@ -34,7 +34,7 @@ spec:
   - port: health
   namespaceSelector:
     matchNames:
-      - enmasse-infra
+      - {ProductNamespace}
 ----
 
 * Ensure the tenant's monitoring stack has read permissions for service monitors in the service monitor's namespace but not in the `{ProductNamespace}` as this would expose service-admin metrics too.
