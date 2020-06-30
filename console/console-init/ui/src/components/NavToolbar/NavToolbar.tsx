@@ -12,7 +12,7 @@ import {
 } from "@patternfly/react-core";
 import { QuestionCircleIcon } from "@patternfly/react-icons";
 import { About, User } from "components";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   navtb_dropdownitem_help: {
@@ -71,7 +71,7 @@ const NavToolBar: React.FC = () => {
         position={DropdownPosition.right}
         toggle={
           <DropdownToggle
-            iconComponent={null}
+            toggleIndicator={null}
             onToggle={onToggle}
             aria-label="Applications"
           >

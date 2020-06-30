@@ -4,9 +4,14 @@
  */
 
 import React, { useState } from "react";
-import { TextInput, TextInputProps } from "@patternfly/react-core";
+import {
+  TextInput,
+  TextInputProps,
+  ValidatedOptions,
+  TextInputTypes
+} from "@patternfly/react-core";
 import { EyeIcon, EyeSlashIcon } from "@patternfly/react-icons";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 const styles = StyleSheet.create({
   icon: {
@@ -25,40 +30,45 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
   id,
   onChange,
   name,
-  isValid = true,
   validated
 }) => {
-  const [isShowPassword, setIsShowPassword] = useState<boolean>(false);
+  const [shouldShowPassword, setshouldShowPassword] = useState<boolean>(false);
 
-  const onToggle = (isShowPassword: boolean) => {
-    setIsShowPassword(isShowPassword);
+  const onToggle = (showPassword: boolean) => {
+    setshouldShowPassword(showPassword);
   };
 
   const renderIcon = () => {
-    if (isValid) {
-      if (isShowPassword) {
+    if (validated !== ValidatedOptions.error) {
+      if (shouldShowPassword) {
         return (
-          <EyeSlashIcon
-            className={styles.icon}
+          <EyeIcon
+            className={css(styles.icon)}
             onClick={() => onToggle(false)}
           />
         );
       }
-      return <EyeIcon className={styles.icon} onClick={() => onToggle(true)} />;
+      return (
+        <EyeSlashIcon
+          className={css(styles.icon)}
+          onClick={() => onToggle(true)}
+        />
+      );
     }
   };
 
-  const type = isShowPassword ? "text" : "password";
+  const type = shouldShowPassword
+    ? TextInputTypes.text
+    : TextInputTypes.password;
 
   return (
     <>
       <TextInput
-        className={styles.textInput}
+        className={css(styles.textInput)}
         id={id}
         name={name}
         type={type}
         onChange={onChange}
-        isValid={isValid}
         validated={validated}
       />
       {renderIcon()}

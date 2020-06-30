@@ -6,8 +6,8 @@
 import React, { useState } from "react";
 import {
   SelectOptionObject,
-  DataToolbarChipGroup,
-  DataToolbarChip
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
@@ -221,8 +221,8 @@ export const ConnectionLinksToolbarContainer: React.FunctionComponent<IConnectio
     setAddressSelected(undefined);
   };
   const onDelete = (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => {
     let index;
     switch (category && category.toString().toLocaleLowerCase()) {

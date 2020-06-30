@@ -9,8 +9,7 @@ import {
   Tooltip,
   TooltipPosition,
   Flex,
-  FlexItem,
-  FlexModifiers
+  FlexItem
 } from "@patternfly/react-core";
 import { CopyIcon } from "@patternfly/react-icons";
 import { IAceEditorProps } from "react-ace";
@@ -38,7 +37,7 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
   return (
     <>
       <Flex>
-        <FlexItem breakpointMods={[{ modifier: FlexModifiers["align-right"] }]}>
+        <FlexItem align={{ default: "alignRight" }}>
           <Tooltip
             id={`tooltip-feedback-for-success-copy-${tooltipKey}`}
             position={TooltipPosition.left}

@@ -14,12 +14,12 @@ import {
   Button,
   Card,
   CardBody,
-  CardHead,
   CardActions,
-  Expandable
+  CardHeader,
+  ExpandableSection
 } from "@patternfly/react-core";
 import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import {
   DropdownWithToggle,
   SwitchWithToggle,
@@ -113,7 +113,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
         />
         {isExpandedAdvancedSetting && (
           <Grid>
-            <GridItem span={12} className={styles.addMoreScrets}>
+            <GridItem span={12} className={css(styles.addMoreScrets)}>
               {selectedType && (
                 <Button
                   variant="link"
@@ -135,7 +135,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               <br />
               <Button
                 variant="link"
-                className={styles.addMoreExt}
+                className={css(styles.addMoreExt)}
                 type="button"
                 icon={<PlusCircleIcon />}
                 onClick={addMoreExtension}
@@ -194,7 +194,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
             <Grid key={id}>
               <GridItem span={6}>
                 <Card>
-                  <CardHead>
+                  <CardHeader data-codemods="true">
                     <CardActions>
                       {credentials.length > 1 && (
                         <Button
@@ -209,7 +209,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         />
                       )}
                     </CardActions>
-                  </CardHead>
+                  </CardHeader>
                   <CardBody>
                     <Form>
                       <FormGroup
@@ -251,7 +251,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         isExpandedAdvancedSetting
                       ) && <DividerWithTitle title={"Secrets"} />}
                       {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
-                      <Expandable
+                      <ExpandableSection
                         toggleText={
                           isExpandedAdvancedSetting
                             ? HIDE_ADVANCE_SETTING
@@ -261,7 +261,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
                         isExpanded={isExpandedAdvancedSetting}
                       >
                         {""}
-                      </Expandable>
+                      </ExpandableSection>
                     </Form>
                   </CardBody>
                 </Card>

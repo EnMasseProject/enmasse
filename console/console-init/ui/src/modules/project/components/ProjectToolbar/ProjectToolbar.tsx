@@ -5,10 +5,10 @@
 
 import React from "react";
 import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
@@ -28,7 +28,7 @@ export interface IProjectToolbarProps extends IProjectToolbarToggleGroupProps {
   isAllProjectSelected: boolean;
 }
 const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
@@ -92,7 +92,7 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
         isAllProjectSelected={isAllProjectSelected}
         onSelectAllProjects={onSelectAllProjects}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -100,25 +100,26 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
-      <DataToolbarItem>
+      </ToolbarItem>
+      <ToolbarItem data-codemods="true">
         <ProjectListKebab
           onSelectDeleteAll={onSelectDeleteAll}
           isDeleteAllDisabled={isDeleteAllDisabled}
         />
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { ProjectToolbar };

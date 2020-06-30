@@ -13,9 +13,9 @@ import {
   Grid
 } from "@patternfly/react-core";
 import { useDocumentTitle, useA11yRouteChange } from "use-patternfly";
-import { Divider } from "@patternfly/react-core/dist/js/experimental";
+import { Divider } from "@patternfly/react-core";
 import { useQuery } from "@apollo/react-hooks";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet } from "aphrodite";
 import { ISortBy } from "@patternfly/react-table";
 import { AddressListContainer } from "./containers";
 import {
@@ -38,7 +38,7 @@ import { compareObject } from "utils";
 import { TablePagination } from "components/TablePagination";
 import { AddressTypes } from "constant";
 import { AddressToolbarContainer } from "modules/address/containers";
-import { useMutationQuery } from "hooks";
+import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 
 export const GridStylesForTableHeader = StyleSheet.create({
   filter_left_margin: {
@@ -78,6 +78,8 @@ export default function AddressPage() {
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
+
+  useSearchParamsPageChange([typeValue, statusValue, filterNames]);
 
   const [sortDropDownValue, setSortDropdownValue] = useState<ISortBy>();
 

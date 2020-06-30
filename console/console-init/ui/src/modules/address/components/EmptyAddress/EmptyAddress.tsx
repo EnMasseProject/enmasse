@@ -36,7 +36,7 @@ export const EmptyAddress: React.FunctionComponent<{}> = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title id="empty-address-title" size="lg">
+      <Title headingLevel="h2" id="empty-address-title" size="lg">
         Create an address
       </Title>
       <EmptyStateBody id="empty-address-text">

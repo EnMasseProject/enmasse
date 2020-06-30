@@ -20,7 +20,7 @@ export const EmptyProject: React.FunctionComponent<{}> = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-ad-space">
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title id="empty-ad-space-title" size="lg">
+      <Title headingLevel="h2" id="empty-ad-space-title" size="lg">
         Create a project
       </Title>
       <EmptyStateBody id="empty-ad-space-body">

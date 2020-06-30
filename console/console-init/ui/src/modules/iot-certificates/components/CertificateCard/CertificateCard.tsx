@@ -7,14 +7,14 @@ import React from "react";
 import {
   Card,
   CardActions,
-  CardHeader,
   GridItem,
   CardBody,
   Grid,
   Title,
-  DropdownItem
+  DropdownItem,
+  CardTitle
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { getLabelByKey } from "utils";
 import { IIoTCertificate } from "modules/iot-certificates";
@@ -83,7 +83,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
 
   return (
     <Card id={`cc-card-${id}`}>
-      <CardHeader id={`cc-dard-header-${id}`}>
+      <CardTitle id={`cc-dard-header-${id}`}>
         <CardActions className={css(styles.float_right)}>
           <DropdownWithKebabToggle
             isPlain={true}
@@ -91,7 +91,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             id={`cc-dropdown-with-kebab-${id}`}
           />
         </CardActions>
-      </CardHeader>
+      </CardTitle>
       <CardBody>
         <Grid>
           <GridItem span={2}>

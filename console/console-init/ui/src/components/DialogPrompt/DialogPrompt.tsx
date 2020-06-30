@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import { Modal, Button, Title } from "@patternfly/react-core";
+import { Modal, Button, Title, ModalVariant } from "@patternfly/react-core";
 import { useStoreContext, types } from "context-state-reducer";
 import { WarningTriangleIcon } from "@patternfly/react-icons";
 
@@ -69,7 +69,7 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
   return (
     <Modal
       id="Dialogue-prompt-modal"
-      isSmall={true}
+      variant={ModalVariant.small}
       title={""}
       isOpen={true}
       onClose={onCloseDialog}
@@ -86,7 +86,6 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned={true}
     >
       <Title headingLevel="h1" size="2xl">
         {getIcon(iconType)}

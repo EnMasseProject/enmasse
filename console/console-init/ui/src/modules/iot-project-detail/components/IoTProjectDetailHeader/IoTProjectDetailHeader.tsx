@@ -17,7 +17,7 @@ import {
   Badge,
   Switch
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithKebabToggle } from "components";
 
 interface IIoTProjectDetailHeaderProps {
@@ -74,7 +74,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   onDelete
 }) => {
   const AddressTitle = () => (
-    <Split gutter="md">
+    <Split hasGutter>
       <SplitItem>
         <Title headingLevel="h1" size="4xl" id="iot-project-name">
           {projectName}

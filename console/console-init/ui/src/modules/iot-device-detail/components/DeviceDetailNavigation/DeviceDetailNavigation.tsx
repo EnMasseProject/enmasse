@@ -4,9 +4,9 @@
  */
 
 import React, { useState } from "react";
-import { Nav, NavList, NavItem, NavVariants } from "@patternfly/react-core";
+import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export interface INavigationProps {
   activeItem: string;
@@ -36,8 +36,8 @@ const DeviceDetailNavigation: React.FunctionComponent<INavigationProps> = ({
   };
 
   return (
-    <Nav onSelect={onSelect}>
-      <NavList variant={NavVariants.tertiary}>
+    <Nav variant="tertiary" onSelect={onSelect}>
+      <NavList>
         <NavItem
           key="device-info"
           itemId="device-info"

@@ -7,17 +7,17 @@ import React from "react";
 import {
   SelectVariant,
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChipGroup,
+  ToolbarChip
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -45,8 +45,8 @@ export interface IConnectionLinksToggleGroupProps {
   onRoleSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeAddressInput?: (value: string) => Promise<any>;
@@ -98,10 +98,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
   };
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -110,8 +108,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
             <InputGroup>
               <TypeAheadSelect
                 id="cl-filter-select-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -130,12 +128,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={selectedAddresses.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Address"
@@ -143,8 +139,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select address"}
-                ariaLabelledBy={"typeahead-select-id"}
+                typeAheadAriaLabel={"Select address"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onAddressSelect}
                 onClear={onAddressClear}
                 selected={addressSelected}
@@ -163,12 +159,10 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
           chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
           categoryName="Role"
@@ -182,14 +176,14 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
               selectOptions={roleOptions}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="cl-filter-dropdown"
           toggleId="cl-filter-dropdown"
@@ -206,12 +200,12 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
 
   return (
-    <DataToolbarToggleGroup
+    <ToolbarToggleGroup
       toggleIcon={
         <>
           <FilterIcon />
@@ -225,7 +219,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
       breakpoint="xl"
     >
       {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    </ToolbarToggleGroup>
   );
 };
 export { ConnectionLinksToggleGroup };

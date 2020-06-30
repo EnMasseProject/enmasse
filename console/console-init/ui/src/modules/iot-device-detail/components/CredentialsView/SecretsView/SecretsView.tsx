@@ -9,7 +9,7 @@ import { EditAltIcon } from "@patternfly/react-icons";
 import classNames from "classnames";
 import { getLabelByKey } from "utils";
 import { ISecret } from "modules/iot-device/components";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { PasswordLabel } from "components";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 
@@ -99,7 +99,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
                   <b>{getLabelByKey(key)}</b>
                 </Title>
               </GridItem>
-              <GridItem span={9} className={styles.row_margin}>
+              <GridItem span={9} className={css(styles.row_margin)}>
                 {renderGridItemValue(value, key)}
               </GridItem>
             </Grid>
@@ -120,7 +120,10 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
     <>
       {secrets && secrets.length > 0 && (
         <Grid id={id}>
-          <GridItem span={12} className={styles.section_margin}>
+          <GridItem
+            span={12}
+            // className={styles.section_margin}
+          >
             {heading}
           </GridItem>
           {secrets.map((secret: ISecret, index: number) => (

@@ -14,7 +14,7 @@ import {
   Radio,
   Switch
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { DropdownWithToggle, IDropdownOption } from "components";
 
 export const dropdown_item_styles = StyleSheet.create({
@@ -94,7 +94,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 id="cas-dropdown-namespace"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                dropdownItemClass={dropdown_item_styles.dropdown_item}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 position={DropdownPosition.left}
                 onSelectItem={onNameSpaceSelect}
                 dropdownItems={namespaceOptions}
@@ -109,7 +109,9 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
             >
               <TextInput
                 isRequired={true}
-                isValid={name.trim() === "" || isNameValid}
+                validated={
+                  name.trim() === "" || isNameValid ? "default" : "error"
+                }
                 type="text"
                 id="address-space"
                 name="address-space"
@@ -152,7 +154,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 onSelectItem={onPlanSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                dropdownItemClass={dropdown_item_styles.dropdown_item}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 dropdownItems={planOptions}
                 isDisabled={type.trim() === ""}
                 value={plan}
@@ -170,7 +172,7 @@ export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps
                 onSelectItem={onAuthenticationServiceSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
-                dropdownItemClass={dropdown_item_styles.dropdown_item}
+                dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
                 dropdownItems={authenticationServiceOptions}
                 isDisabled={type.trim() === ""}
                 value={authenticationService}

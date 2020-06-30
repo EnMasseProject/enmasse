@@ -65,6 +65,7 @@ enum CredentialsType {
   PSK = "psk",
   X509_CERTIFICATE = "x509-cert"
 }
+const WIZARD_HEIGHT = 400;
 
 export {
   UNKNOWN,
@@ -82,5 +83,6 @@ export {
   DataType,
   Protocols,
   DialogTypes,
-  CredentialsType
+  CredentialsType,
+  WIZARD_HEIGHT
 };

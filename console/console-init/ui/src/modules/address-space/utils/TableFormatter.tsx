@@ -48,13 +48,6 @@ const getTableCells = (row: IAddressSpace) => {
             <FormatDistance date={row.creationTimestamp} /> ago
           </>
         )
-      },
-      {
-        title: (
-          <>
-            <Graph />
-          </>
-        )
       }
     ],
     originalData: row
@@ -118,8 +111,7 @@ const getTableColumns = [
   },
   "Type",
   "Status",
-  { title: "Time created", transforms: [sortable] },
-  { title: "Message Throughput" }
+  { title: "Time created", transforms: [sortable] }
 ];
 
 export { getTableCells, getActionResolver, getTableColumns };
