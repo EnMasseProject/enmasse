@@ -67,7 +67,9 @@ under the License.
 
       <global-max-size>${GLOBAL_MAX_SIZE}</global-max-size>
 
-      <metrics-plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
+      <metrics>
+         <plugin class-name="org.apache.activemq.artemis.core.server.metrics.plugins.ArtemisPrometheusMetricsPlugin" />
+      </metrics>
 
       <jmx-management-enabled>true</jmx-management-enabled>
 
