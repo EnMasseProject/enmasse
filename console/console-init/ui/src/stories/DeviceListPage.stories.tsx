@@ -86,7 +86,7 @@ const bulkSelectItems: React.ReactNode[] = [
 ];
 
 const Data = (
-  <Grid gutter="md">
+  <Grid hasGutter>
     <GridItem span={3}>
       <Card>
         <CardBody>

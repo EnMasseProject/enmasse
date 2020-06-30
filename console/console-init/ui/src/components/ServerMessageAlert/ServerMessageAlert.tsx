@@ -11,7 +11,14 @@ import {
   ListItem,
   PageSection
 } from "@patternfly/react-core";
+import { StyleSheet, css } from "aphrodite";
 import { useStoreContext, types } from "context-state-reducer";
+
+const styles = StyleSheet.create({
+  alert: {
+    backgroundColor: "var(--pf-c-alert--m-inline--BackgroundColor)"
+  }
+});
 
 export const ServerMessageAlert: React.FC = () => {
   const { state, dispatch } = useStoreContext();
@@ -69,7 +76,8 @@ export const ServerMessageAlert: React.FC = () => {
         <Alert
           variant="danger"
           title="Server Error"
-          action={<AlertActionCloseButton onClose={onClose} />}
+          actionClose={<AlertActionCloseButton onClose={onClose} />}
+          className={css(styles.alert)}
         >
           {getErrorMessage()}
         </Alert>

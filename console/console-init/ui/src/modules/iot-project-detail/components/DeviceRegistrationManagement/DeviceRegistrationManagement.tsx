@@ -7,13 +7,13 @@ import React, { useState } from "react";
 import {
   Card,
   CardBody,
-  CardHeader,
   PageSection,
   Split,
   SplitItem,
   Text,
   TextVariants,
-  Title
+  Title,
+  CardTitle
 } from "@patternfly/react-core";
 import {
   InputText,
@@ -21,7 +21,7 @@ import {
   SwitchWithToggle,
   IAdapterConfig
 } from "components";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 interface IDeviceRegistationManagementProps {
   token?: string;
@@ -157,7 +157,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
 
   const CardToDisplay = () => (
     <Card>
-      <CardHeader className={css(styles.fontSize)}>
+      <CardTitle className={css(styles.fontSize)}>
         <Split>
           <SplitItem>
             <Title size="xl" headingLevel="h2">
@@ -175,7 +175,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             />
           </SplitItem>
         </Split>
-      </CardHeader>
+      </CardTitle>
       {isHidden ? (
         <CardBody>
           <JsonEditor readOnly={true} value={JSON.stringify(data)} />

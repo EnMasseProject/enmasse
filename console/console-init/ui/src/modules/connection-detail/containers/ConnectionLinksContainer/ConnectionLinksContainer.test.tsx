@@ -5,7 +5,7 @@
 
 import React from "react";
 import ReactDom from "react-dom";
-import { render, cleanup, wait } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
 import { ConnectionLinksContainer } from "./ConnectionLinksContainer";
 import { RETURN_CONNECTION_LINKS } from "graphql-module/queries";
@@ -93,7 +93,7 @@ describe("<ConnectionLinksContainer/>", () => {
 
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
-    wait(() => expect(container).toHaveTextContent("Loading"));
+    waitFor(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -120,7 +120,7 @@ describe("<ConnectionLinksContainer/>", () => {
 
     const { container } = setup(mocks, props);
     //wait for response
-    wait(() => expect(container).not.toHaveTextContent("Loading"));
+    waitFor(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <ConnectionLinksList/> component if loading is false", async () => {
@@ -148,7 +148,7 @@ describe("<ConnectionLinksContainer/>", () => {
     const { container, getByText } = setup(mocks, props);
     //wait for response
     //check table headers
-    await wait(() => expect(container).toHaveTextContent("Role"));
+    await waitFor(() => expect(container).toHaveTextContent("Role"));
     expect(container).toHaveTextContent("Name");
     expect(container).toHaveTextContent("Address");
   });
@@ -176,7 +176,7 @@ describe("<ConnectionLinksContainer/>", () => {
     ];
 
     const { container } = setup(mocks, props);
-    await wait(() =>
+    await waitFor(() =>
       expect(container).toHaveTextContent("You currently don't have any links")
     );
   });
@@ -205,7 +205,7 @@ describe("<ConnectionLinksContainer/>", () => {
 
     const { container } = setup(mocks, props);
     cleanup();
-    await wait(() =>
+    await waitFor(() =>
       expect(container).not.toHaveTextContent(
         "You currently don't have any links"
       )

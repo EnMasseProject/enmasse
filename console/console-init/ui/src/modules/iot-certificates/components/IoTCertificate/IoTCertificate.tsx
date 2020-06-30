@@ -11,7 +11,7 @@ import {
 } from "modules/iot-certificates";
 import { PageSection } from "@patternfly/react-core";
 import { ICertificateCardProps } from "../CertificateCard";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export interface IIoTCertificateProps
   extends Pick<
@@ -20,11 +20,13 @@ export interface IIoTCertificateProps
   > {
   onEdit: (certificate: IIoTCertificate) => void;
 }
+
 const style = StyleSheet.create({
   no_bottom_padding: {
     paddingBottom: 0
   }
 });
+
 export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
   certificate,
   onEdit,

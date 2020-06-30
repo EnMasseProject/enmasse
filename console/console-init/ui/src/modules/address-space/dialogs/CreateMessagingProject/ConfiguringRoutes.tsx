@@ -233,7 +233,6 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                                   label={termination.label}
                                   id={`radio-${termination.key}-${protocol}`}
                                   value={termination.value}
-                                  style={{ marginLeft: 20 }}
                                 />
                               </div>
                             )

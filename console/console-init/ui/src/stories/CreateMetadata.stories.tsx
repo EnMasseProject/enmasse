@@ -12,7 +12,7 @@ export default {
 };
 
 export const CreateMetadataPage = () => (
-  <Grid gutter="sm">
+  <Grid hasGutter>
     <GridItem span={6}>
       <CreateMetadata />
     </GridItem>
