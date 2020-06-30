@@ -530,7 +530,7 @@ func (i *infraClient) ScheduleAddress(address *v1beta2.MessagingAddress) error {
 
 	tenant, ok := i.tenants[resourceKey{Name: "default", Namespace: address.GetNamespace()}]
 	if !ok {
-		return NotTenantError
+		return TenantNotFoundError
 	}
 
 	brokers := make([]*BrokerState, 0)
