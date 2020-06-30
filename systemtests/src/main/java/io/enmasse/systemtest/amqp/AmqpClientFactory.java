@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.address.model.AddressSpace;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -22,13 +21,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AmqpClientFactory {
     private static Logger log = CustomLogger.getLogger();
-    private final AddressSpace defaultAddressSpace;
     private final String defaultUsername;
     private final String defaultPassword;
     private final List<AmqpClient> clients = new CopyOnWriteArrayList<>();
 
-    public AmqpClientFactory(AddressSpace defaultAddressSpace, UserCredentials credentials) {
-        this.defaultAddressSpace = defaultAddressSpace;
+    public AmqpClientFactory(UserCredentials credentials) {
         this.defaultUsername = credentials.getUsername();
         this.defaultPassword = credentials.getPassword();
     }

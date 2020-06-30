@@ -4,11 +4,8 @@
  */
 package io.enmasse.systemtest.utils;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.api.model.MessagingAddress;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.model.address.AddressType;
 import org.junit.jupiter.api.Assertions;
 import org.slf4j.Logger;
 
@@ -70,41 +67,10 @@ public class JmsProvider {
         return Map.of(identification + getAddress(destination), getAddress(destination));
     }
 
-    private Map<String, String> createAddressMap(Address destination) {
-        String identification;
-        if (destination.getSpec().getType().equals(AddressType.QUEUE.toString())) {
-            identification = "queue.";
-        } else {
-            identification = "topic.";
-        }
-
-        return Map.of(identification + destination.getSpec().getAddress(), destination.getSpec().getAddress());
-    }
-
     public Context createContext(String host, int port, boolean tls, String username, String password, String clientID, MessagingAddress address) throws NamingException {
         Hashtable env = setUpEnv(host, port, tls, username, password, clientID, createAddressMap(address));
         context = new InitialContext(env);
         return context;
-    }
-
-    public Context createContext(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
-        Hashtable env = setUpEnv("amqps://" + route, 0, true, credentials.getUsername(), credentials.getPassword(), cliID,
-                createAddressMap(address));
-        context = new InitialContext(env);
-        return context;
-    }
-
-    public Context createContextForShared(String route, UserCredentials credentials, Address address) throws Exception {
-        Hashtable env = setUpEnv("amqps://" + route, credentials.getUsername(), credentials.getPassword(),
-                createAddressMap(address));
-        return new InitialContext(env);
-    }
-
-    public Connection createConnection(String route, UserCredentials credentials, String cliID, Address address) throws Exception {
-        context = createContext(route, credentials, cliID, address);
-        ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("qpidConnectionFactory");
-        connection = connectionFactory.createConnection();
-        return connection;
     }
 
     public Connection createConnection(Context context) throws Exception {

@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
