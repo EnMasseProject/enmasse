@@ -18,10 +18,7 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject: any) => {
   return filter;
 };
 
-export const RETURN_IOT_PROJECTS = (
-  filterObj?: any,
-  queryResolver?: string
-) => {
+const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
   const defaultQueryResolver = `
     total
@@ -58,3 +55,5 @@ export const RETURN_IOT_PROJECTS = (
 
   return IOT_PROJECT_DETAIL;
 };
+
+export { RETURN_IOT_PROJECTS };
