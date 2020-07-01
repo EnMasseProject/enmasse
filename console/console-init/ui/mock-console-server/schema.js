@@ -652,7 +652,7 @@ const typeDefs = gql`
       iotproject: String!
       device: Device_iot_console_input!
     ): Device
-    deleteIotDevice(iotproject: String!, deviceId: String!): Boolean
+    deleteIotDevices(iotproject: String!, deviceIds: [String!]!): Boolean
     updateIotDevice(
       iotproject: String!
       device: Device_iot_console_input!

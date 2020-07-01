@@ -2503,8 +2503,19 @@ const resolvers = {
     createIotDevice: (parent, args) => {
       return createIotDevice(args.iotproject, args.device);
     },
-    deleteIotDevice: (parent, args) => {
-      deleteIotDevice(args.iotproject, args.deviceId);
+    deleteIotDevices: (parent, args) => {
+      var errors = [];
+      args.deviceIds.forEach(i => {
+        try {
+          deleteIotDevice(args.iotproject, i);
+        } catch (e) {
+          errors.push(e);
+        }
+      });
+      if (errors) {
+        throw new MultiError("multi-operation failed", errors);
+      }
+
       return true;
     },
     updateIotDevice: (parent, args) => {
