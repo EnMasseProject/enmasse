@@ -1962,6 +1962,12 @@ function deleteIotProject(iotProject) {
   iotProjects.splice(pjIndex, 1);
 }
 
+function disableIotProject(iotProject) {
+  let pjIndex = getIotProjectIndex(iotProject.name);
+
+  iotProjects[pjIndex].enabled = false;
+}
+
 function getMockDownstreamStrategy(strategyType) {
   if (strategyType === "managed") {
     return {
@@ -2211,7 +2217,7 @@ createIotDevice("iotProjectFrance", {
   viaGateway: true,
   jsonData: JSON.stringify({
     ext: {
-      via: ["device-1", "device-2"],
+      via: ["device-1", "device-2"]
     },
     status: getIotDeviceStatusSection()
   }),
@@ -2523,8 +2529,12 @@ const resolvers = {
       patchIotProject(args.input, args.jsonPatch, args.patchType);
       return true;
     },
-    deleteIotProject: (parent, args) => {
-      deleteIotProject(args.input);
+    deleteIotProjects: (parent, args) => {
+      runOperationForAll(args.input, t => deleteIotProject(t));
+      return true;
+    },
+    disableIotProjects: (parent, args) => {
+      runOperationForAll(args.input, t => disableIotProject(t));
       return true;
     }
   },
