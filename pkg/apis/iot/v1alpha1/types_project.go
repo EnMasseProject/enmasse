@@ -64,7 +64,7 @@ type ProjectCondition struct {
 	CommonCondition `json:",inline"`
 }
 
-//region Common
+// region Common
 
 type Credentials struct {
 	Username string `json:"username"`
@@ -81,9 +81,9 @@ type ConnectionInformation struct {
 	Certificate []byte `json:"certificate,omitempty"`
 }
 
-//endregion
+// endregion
 
-//region Configuration
+// region Configuration
 
 type TenantConfiguration struct {
 	Enabled *bool `json:"enabled,omitempty"`
@@ -123,37 +123,16 @@ type TrustAnchor struct {
 	Certificate string `json:"certificate"`
 }
 
-//endregion
+// endregion
 
-//region Strategy
+// region Strategy
 
 type DownstreamStrategy struct {
-	ExternalDownstreamStrategy *ExternalDownstreamStrategy `json:"externalStrategy,omitempty"`
-	ProvidedDownstreamStrategy *ProvidedDownstreamStrategy `json:"providedStrategy,omitempty"`
-	ManagedDownstreamStrategy  *ManagedDownstreamStrategy  `json:"managedStrategy,omitempty"`
-}
-
-type ProvidedDownstreamStrategy struct {
-	Namespace        string `json:"namespace"`
-	AddressSpaceName string `json:"addressSpaceName"`
-
-	Credentials `json:",inline"`
-
-	EndpointMode *EndpointMode `json:"endpointMode,omitempty"`
-	EndpointName string        `json:"endpointName,omitempty"`
-	PortName     string        `json:"portName,omitempty"`
-	TLS          *bool         `json:"tls,omitempty"`
+	ManagedDownstreamStrategy *ManagedDownstreamStrategy `json:"managedStrategy,omitempty"`
 }
 
 type ManagedDownstreamStrategy struct {
-	AddressSpace AddressSpaceConfig `json:"addressSpace"`
-	Addresses    AddressesConfig    `json:"addresses"`
-}
-
-type AddressSpaceConfig struct {
-	Name string `json:"name"`
-	Plan string `json:"plan"`
-	Type string `json:"type,omitempty"`
+	Addresses AddressesConfig `json:"addresses"`
 }
 
 type AddressesConfig struct {
@@ -167,22 +146,18 @@ type AddressConfig struct {
 	Type string `json:"type,omitempty"`
 }
 
-type ExternalDownstreamStrategy struct {
-	ConnectionInformation `json:",inline"`
-}
+// endregion
 
-//endregion
-
-//region Managed Status
+// region Managed Status
 
 type ManagedStatus struct {
 	PasswordTime metav1.Time `json:"passwordTime,omitempty"`
 	AddressSpace string      `json:"addressSpace,omitempty"`
 }
 
-//endregion
+// endregion
 
-//region Accepted Status
+// region Accepted Status
 
 type AcceptedStatus struct {
 	Configuration AcceptedConfiguration `json:"configuration,omitempty"`
@@ -237,7 +212,7 @@ type AcceptedTrustAnchor struct {
 	AutoProvisioningEnabled *bool `json:"auto-provisioning-enabled,omitempty"`
 }
 
-//endregion
+// endregion
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 

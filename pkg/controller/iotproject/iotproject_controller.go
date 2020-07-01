@@ -281,31 +281,9 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 	// process different types
 
-	if project.Spec.DownstreamStrategy.ExternalDownstreamStrategy != nil {
+	if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
 
-		// handling as external
-		// all information has to be externally configured, we are not managing anything
-
-		reqLogger.V(2).Info("Handle as external")
-
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.reconcileExternal(ctx, &request, project)
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
-
-	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
-
-		// handling as provided
-
-		reqLogger.V(2).Info("Handle as provided")
-
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.reconcileProvided(ctx, &request, project)
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
-
-	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
-
+		// FIXME: this is the only one now
 		// handling as managed
 		// we create the addressspace, addresses and internal users
 

@@ -95,7 +95,7 @@ func cleanupManagedResources(ctx context.Context, c client.Client, project *iotv
 		rc.Process(func() (result reconcile.Result, e error) {
 
 			addressName := util.AddressName(project, a)
-			addressMetaName := util.EncodeAddressSpaceAsMetaName(managed.AddressSpace, addressName)
+			addressMetaName := util.EncodeAddressSpaceAsMetaName(addressName)
 
 			return cleanupResource(ctx, c, project, client.ObjectKey{
 				Namespace: project.Namespace,

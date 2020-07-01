@@ -143,7 +143,6 @@ type ServicesConfig struct {
 	DeviceConnection DeviceConnectionServiceConfig `json:"deviceConnection,omitempty"`
 	DeviceRegistry   DeviceRegistryServiceConfig   `json:"deviceRegistry,omitempty"`
 	Tenant           TenantServiceConfig           `json:"tenant,omitempty"`
-	Collector        CollectorConfig               `json:"collector,omitempty"`
 }
 
 type AdaptersConfig struct {
@@ -193,15 +192,6 @@ type CommonAdapterContainers struct {
 	Proxy             ContainerConfig     `json:"proxy,omitempty"`
 	ProxyConfigurator ContainerConfig     `json:"proxyConfigurator,omitempty"`
 }
-
-//region Collector
-
-// Deprecated: no longer used
-type CollectorConfig struct {
-	Container *ContainerConfig `json:"container,omitempty"`
-}
-
-//endregion
 
 //region DeviceConnection
 

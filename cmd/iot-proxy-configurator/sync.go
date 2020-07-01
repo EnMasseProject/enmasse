@@ -242,8 +242,6 @@ type RouteConfig struct {
 var routes = []RouteConfig{
 	{"t", "in", "telemetry"},
 	{"e", "in", "event"},
-	{"cl_i", "in", "control"},
-	{"cl_o", "out", "control"},
 	{"c_i", "in", "command_response"},
 	{"c_o", "out", "command"},
 }
