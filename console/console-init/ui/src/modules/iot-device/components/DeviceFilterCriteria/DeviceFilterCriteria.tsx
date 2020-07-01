@@ -18,6 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
 import { ISelectOption } from "utils";
+import "./pf-overrides.css";
 
 export enum operator {
   LTE = "lessthanequalto",
