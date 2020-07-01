@@ -18,13 +18,8 @@ import {
   CardTitle
 } from "@patternfly/react-core";
 import { DownloadIcon } from "@patternfly/react-icons";
-import {
-  InputText,
-  JsonEditor,
-  SwitchWithToggle,
-  AdapterList,
-  IAdapter
-} from "components";
+import { InputText, JsonEditor, SwitchWithToggle, IAdapter } from "components";
+import { AdapterListContainer } from "containers";
 
 export interface IIoTMessagingObject {
   url?: string;
@@ -241,7 +236,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <br />
           <Messaging />
           <br />
-          <AdapterList id="ac-adapter-list" adapters={adapters} />
+          <AdapterListContainer id="ac-adapter-list-container" />
         </CardBody>
       )}
     </Card>

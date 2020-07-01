@@ -789,6 +789,7 @@ const typeDefs = gql`
     url: String
     host: String!
     port: Int!
+    tls: Boolean
   }
 
   type Device {

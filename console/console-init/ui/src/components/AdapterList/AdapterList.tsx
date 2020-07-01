@@ -7,23 +7,19 @@ import React from "react";
 import { Title, Grid, GridItem } from "@patternfly/react-core";
 import { InputText, StatusLabelWithIcon } from "components";
 import { Protocols } from "constant";
-
-export interface IAdapterConfig {
-  url?: string;
-  host?: string;
-  port?: number;
-  tlsEnabled?: boolean;
-}
-
 export interface IAdapter {
-  type:
+  name?:
     | Protocols.HTTP
     | Protocols.HTTPS
     | Protocols.MQTT
     | Protocols.AMQP
     | Protocols.AMQPS
-    | Protocols.COAP;
-  value: IAdapterConfig;
+    | Protocols.COAP
+    | string;
+  url?: string;
+  host?: string;
+  port?: number;
+  tls?: boolean;
 }
 
 export interface IAdapterListProps {
@@ -35,23 +31,33 @@ export const AdapterList: React.FC<IAdapterListProps> = ({ id, adapters }) => {
   return (
     <div id={id}>
       {adapters &&
-        adapters.map((adapter: IAdapter, index: number) => (
-          <Adapter adapter={adapter} key={`adapter-${adapter.type}`} />
+        adapters.map((adapter: IAdapter) => (
+          <>
+            <Adapter adapter={adapter} key={`adapter-${adapter.name}`} />
+            <br />
+          </>
         ))}
     </div>
   );
 };
 
 const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
-  const { type, value } = adapter || {};
-  const { tlsEnabled, host, port, url } = value || {};
+  const { name, tls, host, port, url } = adapter || {};
+
+  const getAdapterHeader = () => {
+    const splitName = name?.split("Adapter");
+    if (splitName && splitName?.length === 2) {
+      return `${splitName[0].toUpperCase() + " Adapter"}`;
+    }
+    return name;
+  };
 
   return (
     <>
       <Title size="xl" headingLevel="h2">
-        {type?.toUpperCase() + " Adapter"}
+        {getAdapterHeader()}
       </Title>
-      {tlsEnabled && (
+      {tls && (
         <>
           <br />
           <Grid>
@@ -61,7 +67,8 @@ const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
             <GridItem span={8}>
               <StatusLabelWithIcon
                 id="adapter-list-tls-status-label"
-                isEnabled={tlsEnabled}
+                enabledTitle="Required"
+                isEnabled={tls}
               />
             </GridItem>
           </Grid>
@@ -76,9 +83,9 @@ const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
             value={url}
             isReadOnly={true}
             enableCopy={true}
-            id={`adapter-${type}-api-url-input`}
-            key={`adapter-${type}-api-url-input`}
-            ariaLabel={`adapter-${type}-api-url`}
+            id={`adapter-${name}-api-url-input`}
+            key={`adapter-${name}-api-url-input`}
+            ariaLabel={`adapter-${name}-api-url`}
             isExpandable={false}
           />
         </>
@@ -92,8 +99,8 @@ const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
             value={host}
             isReadOnly={true}
             enableCopy={true}
-            id={`adapter-${type}-api-host-input`}
-            ariaLabel={`adapter ${type} api host`}
+            id={`adapter-${name}-api-host-input`}
+            ariaLabel={`adapter ${name} api host`}
             isExpandable={false}
           />
         </>
@@ -107,8 +114,8 @@ const Adapter: React.FC<{ adapter: IAdapter }> = ({ adapter }) => {
             value={port}
             isReadOnly={true}
             enableCopy={true}
-            id={`adapter-${type}-api-port-input`}
-            ariaLabel={`adapter ${type} api port`}
+            id={`adapter-${name}-api-port-input`}
+            ariaLabel={`adapter ${name} api port`}
             isExpandable={false}
           />
         </>

@@ -6,7 +6,7 @@
 import gql from "graphql-tag";
 
 const FILTER_RETURN_IOT_PROJECTS = (filterObject: any) => {
-  const { projectName } = filterObject;
+  const { projectName } = filterObject || {};
   let filter: string = "";
 
   if (projectName && projectName.trim() !== "") {
@@ -18,10 +18,7 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject: any) => {
   return filter;
 };
 
-export const RETURN_IOT_PROJECTS = (
-  filterObj?: any,
-  queryResolver?: string
-) => {
+const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
   const defaultQueryResolver = `
     total
@@ -58,3 +55,11 @@ export const RETURN_IOT_PROJECTS = (
 
   return IOT_PROJECT_DETAIL;
 };
+
+const DELETE_IOT_PROJECT = gql(
+  `  mutation delete_iot_project($as: ObjectMeta_v1_Input!) {
+    deleteIotProject(input: $as)
+  }`
+);
+
+export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT };

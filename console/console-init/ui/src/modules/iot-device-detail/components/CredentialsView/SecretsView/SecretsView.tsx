@@ -59,7 +59,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
 
   const onConfirm = (formdata: any) => {
     /**
-     * TODOD: get secretId
+     * TODO: get secretId
      */
     const { id = "" } = secret;
     onConfirmPassword && onConfirmPassword(formdata, id);
@@ -96,7 +96,7 @@ const SecretRow: React.FC<ISecretRowProps> = ({
             <Grid key={"secrets-view-" + key}>
               <GridItem span={3}>
                 <Title headingLevel="h1" size="md">
-                  <b>{getLabelByKey(key)}</b>
+                  {getLabelByKey(key)}
                 </Title>
               </GridItem>
               <GridItem span={9} className={css(styles.row_margin)}>
@@ -120,11 +120,10 @@ export const SecretsView: React.FC<ISecretsViewProps> = ({
     <>
       {secrets && secrets.length > 0 && (
         <Grid id={id}>
-          <GridItem
-            span={12}
-            // className={styles.section_margin}
-          >
-            {heading}
+          <GridItem span={12} className={css(styles.section_margin)}>
+            <Title headingLevel="h6" size="xl">
+              {heading}
+            </Title>
           </GridItem>
           {secrets.map((secret: ISecret, index: number) => (
             <>

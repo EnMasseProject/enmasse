@@ -10,7 +10,6 @@ import { IRowData, sortable } from "@patternfly/react-table";
 import { AddressSpaceStatus, AddressSpaceIcon } from "./AddressSpaceFormatter";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
 import { getAddressSpaceLabelForType } from "utils";
-import { Graph } from "components/Graphs";
 
 const getTableCells = (row: IAddressSpace) => {
   const tableRow: IRowData = {

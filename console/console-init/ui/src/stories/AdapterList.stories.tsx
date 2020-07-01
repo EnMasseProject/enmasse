@@ -15,7 +15,7 @@ const httpAdapter = {
   url: "https://http.bosch-iot-hub.com"
 };
 const mqttAdapter = {
-  tlsEnabled: true,
+  tls: true,
   host: "mange.bosh-iot-hub.com",
   port: 8883
 };
