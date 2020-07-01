@@ -251,16 +251,17 @@ public class EnmasseOperatorManager {
         return clean();
     }
 
+    public void removeExampleRoles(String namespace) {
+        LOGGER.info("Delete enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
+        KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
+    }
+
     public void removeServiceCatalog(String namespace) {
         LOGGER.info("Delete enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
         KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
-    public void removeIoT() {
-        LOGGER.info("Delete enmasse IoT from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.runOnCluster("delete", "iotconfigs", "--all", "-n", kube.getInfraNamespace());
-    }
 
     public boolean clean() throws Exception {
         cleanCRDs();

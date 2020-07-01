@@ -52,7 +52,7 @@ public class ResourceManager {
 
     private Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
-    private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(null, new UserCredentials("dummy", "dummy"));
+    private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(new UserCredentials("dummy", "dummy"));
 
     private static ResourceManager instance;
 

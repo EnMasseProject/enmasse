@@ -84,6 +84,10 @@ public abstract class AbstractClient {
         return id;
     }
 
+    public void updateIdWithAddressName(String address) {
+        this.id = this.clientType.name() + "-" + address + "-" + UUID.randomUUID().toString();
+    }
+
     public void setPodName(String podName) {
         this.podName = podName;
     }
