@@ -10,7 +10,7 @@ import {
   DeviceListToolbar,
   IDeviceListToolbarProps
 } from "./DeviceListToolbar";
-import { DropdownItem, PaginationProps } from "@patternfly/react-core";
+import { DropdownItem } from "@patternfly/react-core";
 import { ICreateDeviceButtonProps } from "modules/iot-device";
 
 describe("<DeviceListToolbar />", () => {
@@ -19,14 +19,6 @@ describe("<DeviceListToolbar />", () => {
     <DropdownItem onClick={jest.fn()}>Disable</DropdownItem>,
     <DropdownItem onClick={jest.fn()}>Delete</DropdownItem>
   ];
-
-  const paginationProps: PaginationProps = {
-    itemCount: 100,
-    perPage: 10,
-    page: 1,
-    onSetPage: jest.fn(),
-    onPerPageSelect: jest.fn()
-  };
 
   const addDeviceBtnProps: ICreateDeviceButtonProps = {
     handleInputDeviceInfo: jest.fn(),
@@ -44,8 +36,7 @@ describe("<DeviceListToolbar />", () => {
 
   const props = {
     ...addDeviceBtnProps,
-    ...toolbarProps,
-    ...paginationProps
+    ...toolbarProps
   };
 
   it("should render the toolbar for device list", () => {
@@ -56,7 +47,6 @@ describe("<DeviceListToolbar />", () => {
     );
 
     getByText("Add device");
-    getByText("of 10");
   });
 
   it("should show appropriate options in CreateDeviceButton", () => {
