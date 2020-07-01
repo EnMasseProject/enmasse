@@ -117,6 +117,8 @@ const FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
 };
 
 const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
+  page: number,
+  perPage: number,
   iotproject: string,
   sortBy?: ISortBy,
   filterObj?: IDeviceFilter,
@@ -144,7 +146,8 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
 
   const ALL_DEVICE_LIST = gql(
     `query devices_for_iot_project {
-      devices(iotproject: "${iotproject}", orderBy:"${orderBy}", filter: "${filter}") {
+      devices(iotproject: "${iotproject}",first:${perPage}, offset:${perPage *
+      (page - 1)}, orderBy:"${orderBy}", filter: "${filter}") {
         ${queryResolver}
       }
     }`
