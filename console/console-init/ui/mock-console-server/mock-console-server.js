@@ -2186,7 +2186,8 @@ createIotDevice("iotProjectFrance", {
   viaGateway: true,
   jsonData: JSON.stringify({
     via: ["device-1", "device-2"],
-    ext: { site: "Notre dame" }
+    ext: { site: "Notre dame" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2196,7 +2197,8 @@ createIotDevice("iotProjectFrance", {
   enabled: false,
   viaGateway: false,
   jsonData: JSON.stringify({
-    ext: { author: "Jules Verne" }
+    ext: { author: "Jules Verne" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2206,7 +2208,8 @@ createIotDevice("iotProjectFrance", {
   enabled: false,
   viaGateway: false,
   jsonData: JSON.stringify({
-    ext: { city: "Nice" }
+    ext: { city: "Nice" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2216,7 +2219,8 @@ createIotDevice("iotProjectFrance", {
   enabled: true,
   viaGateway: false,
   jsonData: JSON.stringify({
-    ext: { city: "Nice" }
+    ext: { city: "Nice" },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2227,8 +2231,9 @@ createIotDevice("iotProjectFrance", {
   viaGateway: true,
   jsonData: JSON.stringify({
     ext: {
-      via: ["device-1", "device-2"]
-    }
+      via: ["device-1", "device-2"],
+    },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2240,7 +2245,8 @@ createIotDevice("iotProjectFrance", {
   jsonData: JSON.stringify({
     ext: {
       via: []
-    }
+    },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2252,7 +2258,8 @@ createIotDevice("iotProjectFrance", {
   jsonData: JSON.stringify({
     ext: {
       via: []
-    }
+    },
+    status: getIotDeviceStatusSection()
   }),
   credentials: []
 });
@@ -2262,6 +2269,7 @@ createIotDevice("iotProjectFrance", {
   enabled: true,
   viaGateway: false,
   jsonData: JSON.stringify({
+    status: getIotDeviceStatusSection(),
     ext: {
       via: []
     }
@@ -2274,6 +2282,7 @@ createIotDevice("iotProjectFrance", {
   enabled: true,
   viaGateway: false,
   jsonData: JSON.stringify({
+    status: getIotDeviceStatusSection(),
     ext: {
       via: []
     }
