@@ -170,6 +170,6 @@ type Mutation {
 
   createIotProject(input: IotProject_iot_enmasse_io_v1alpha1_input): ObjectMeta_v1!
   patchIotProject(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType: String!): Boolean
-  deleteIotProject(input: ObjectMeta_v1_Input!): Boolean
-
+  deleteIotProjects(input: ObjectMeta_v1_Input!): Boolean
+  disableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 }
