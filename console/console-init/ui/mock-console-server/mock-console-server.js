@@ -2180,6 +2180,116 @@ createIotDevice("iotProjectFrance", {
   credentials: []
 });
 
+createIotDevice("iotProjectFrance", {
+  deviceId: "13",
+  enabled: false,
+  viaGateway: true,
+  jsonData: JSON.stringify({
+    via: ["device-1", "device-2"],
+    ext: { site: "Notre dame" },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "14",
+  enabled: false,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: { author: "Jules Verne" },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "15",
+  enabled: false,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: { city: "Nice" },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "16",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: { city: "Nice" },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "17",
+  enabled: false,
+  viaGateway: true,
+  jsonData: JSON.stringify({
+    ext: {
+      via: ["device-1", "device-2"],
+    },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "18",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: {
+      via: []
+    },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "19",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    ext: {
+      via: []
+    },
+    status: getIotDeviceStatusSection()
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "50",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    status: getIotDeviceStatusSection(),
+    ext: {
+      via: []
+    }
+  }),
+  credentials: []
+});
+
+createIotDevice("iotProjectFrance", {
+  deviceId: "51",
+  enabled: true,
+  viaGateway: false,
+  jsonData: JSON.stringify({
+    status: getIotDeviceStatusSection(),
+    ext: {
+      via: []
+    }
+  }),
+  credentials: []
+});
+
 createIotDevice("iotProjectIndia", {
   deviceId: "20",
   enabled: true,

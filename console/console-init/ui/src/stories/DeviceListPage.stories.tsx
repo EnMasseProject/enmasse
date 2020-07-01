@@ -10,8 +10,7 @@ import {
   DeviceListAlert,
   DeviceList,
   IDevice,
-  DeviceListToolbar,
-  DeviceListFooterToolbar
+  DeviceListToolbar
 } from "modules/iot-device";
 import { text, boolean } from "@storybook/addon-knobs";
 import { action } from "@storybook/addon-actions";
@@ -107,12 +106,7 @@ const Data = (
       />
       <br />
       <DeviceListToolbar
-        itemCount={100}
-        perPage={10}
-        page={1}
         kebabItems={kebabItems}
-        onSetPage={action("Pagination change page number")}
-        onPerPageSelect={action("Pagination change items per page")}
         handleInputDeviceInfo={action("input device info handler clicked")}
         handleJSONUpload={action("json upload handler clicked")}
         isOpen={boolean("is Open", false)}
@@ -129,7 +123,6 @@ const Data = (
         onSelectDevice={async () => {}}
         actionResolver={actionResolver}
       />
-      <DeviceListFooterToolbar itemCount={100} perPage={10} page={1} />
     </GridItem>
   </Grid>
 );

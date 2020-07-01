@@ -11,13 +11,14 @@ import {
   Card,
   CardBody,
   DropdownItem,
-  AlertVariant
+  AlertVariant,
+  PageSectionVariants,
+  PageSection
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
   DeviceFilter,
   DeviceListAlert,
-  DeviceListFooterToolbar,
   DeviceListToolbar,
   IDevice,
   IDeviceFilter
@@ -36,14 +37,18 @@ import {
 import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
+import { TablePagination } from "components";
+import { useLocation } from "react-router";
 
 export default function DeviceListPage() {
   useDocumentTitle("Device List");
 
   const [totalDevices, setTotalDevices] = useState<number>();
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
-  // TODO: Set per page to be used once backend supports pagination
-  const [perPage, setPerPage] = useState<number>(10);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const page = parseInt(searchParams.get("page") || "", 10) || 1;
+  const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedDevices, setSelectedDevices] = useState<IDevice[]>([]);
   const [filter, setFilter] = useState<IDeviceFilter>(getInitialFilter());
   const [appliedFilter, setAppliedFilter] = useState<IDeviceFilter>(
@@ -252,6 +257,17 @@ export default function DeviceListPage() {
     // TODO: After create device is ready
   };
 
+  const renderPagination = () => {
+    return (
+      <TablePagination
+        itemCount={totalDevices || 0}
+        variant={"top"}
+        page={page}
+        perPage={perPage}
+      />
+    );
+  };
+
   const { isVisible, title, description, variant } = deviceAlert;
 
   if (totalDevices === 0 && compareObject(appliedFilter, getInitialFilter())) {
@@ -278,46 +294,46 @@ export default function DeviceListPage() {
         </Card>
       </GridItem>
       <GridItem span={9}>
-        <DeviceListAlert
-          visible={isVisible}
-          variant={variant}
-          isInline={true}
-          title={title}
-          description={description}
-        />
-        <br />
-        <DeviceListToolbar
-          itemCount={totalDevices || 0}
-          perPage={perPage}
-          page={0}
-          kebabItems={kebabItems}
-          onSetPage={() => {}}
-          onPerPageSelect={() => {}}
-          handleInputDeviceInfo={handleInputDeviceInfo}
-          handleJSONUpload={handleJSONUpload}
-          isOpen={isAllSelected}
-          isChecked={isAllSelected}
-          items={[]}
-          onChange={() => {}}
-          onSelectAllDevices={onSelectAllDevices}
-        />
-        <DeviceListContainer
-          setTotalDevices={setTotalDevices}
-          selectedDevices={selectedDevices}
-          onSelectDevice={onSelectDevice}
-          selectAllDevices={selectAllDevices}
-          areAllDevicesSelected={isAllSelected}
-          sortValue={sortDropDownValue}
-          setSortValue={setSortDropdownValue}
-          appliedFilter={appliedFilter}
-          resetFilter={resetFilter}
-        />
-        <br />
-        <DeviceListFooterToolbar
-          itemCount={totalDevices || 0}
-          perPage={perPage}
-          page={0}
-        />
+        <PageSection variant={PageSectionVariants.light}>
+          <DeviceListAlert
+            visible={isVisible}
+            variant={variant}
+            isInline={true}
+            title={title}
+            description={description}
+          />
+          <br />
+          <Grid>
+            <GridItem span={5}>
+              <DeviceListToolbar
+                kebabItems={kebabItems}
+                handleInputDeviceInfo={handleInputDeviceInfo}
+                handleJSONUpload={handleJSONUpload}
+                isOpen={isAllSelected}
+                isChecked={isAllSelected}
+                items={[]}
+                onChange={() => {}}
+                onSelectAllDevices={onSelectAllDevices}
+              />
+            </GridItem>
+            <GridItem span={7}>{renderPagination()}</GridItem>
+          </Grid>
+          <DeviceListContainer
+            page={page}
+            perPage={perPage}
+            setTotalDevices={setTotalDevices}
+            selectedDevices={selectedDevices}
+            onSelectDevice={onSelectDevice}
+            selectAllDevices={selectAllDevices}
+            areAllDevicesSelected={isAllSelected}
+            sortValue={sortDropDownValue}
+            setSortValue={setSortDropdownValue}
+            appliedFilter={appliedFilter}
+            resetFilter={resetFilter}
+          />
+          <br />
+          {renderPagination()}
+        </PageSection>
       </GridItem>
     </Grid>
   );
