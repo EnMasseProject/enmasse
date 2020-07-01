@@ -99,7 +99,7 @@ func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTP
 
 	project.Status.DownstreamEndpoint = &iotv1alpha1.ConnectionInformation{}
 
-	return reconcile.Result{}, err
+	return reconcile.Result{}, nil
 }
 
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
