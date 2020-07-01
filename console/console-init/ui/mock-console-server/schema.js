@@ -76,7 +76,7 @@ const typeDefs = gql`
     reencrypt
   }
 
-  enum MessagingEndpointType_enmasse_io_v1 {
+  enum MessagingEndpointType_enmasse_io_v1beta2 {
     Cluster
     NodePort
     LoadBalancer
@@ -84,14 +84,14 @@ const typeDefs = gql`
     Ingress
   }
 
-  enum MessagingEndpointProtocol_enmasse_io_v1 {
+  enum MessagingEndpointProtocol_enmasse_io_v1beta2 {
     AMQP
     AMQPS
     AMQP_WS
     AMQP_WSS
   }
 
-  enum MessagingEndpointPhase_enmasse_io_v1 {
+  enum MessagingEndpointPhase_enmasse_io_v1beta2 {
     Configuring
     Active
     Terminating
@@ -235,7 +235,7 @@ const typeDefs = gql`
 
   type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
     total: Int!
-    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
+    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1beta2!]!
   }
 
   #
@@ -266,13 +266,13 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
   }
 
-    type AddressSpaceSpec_enmasse_io_v1beta1 {
-        plan:      AddressSpacePlan_admin_enmasse_io_v1beta2!
-        type:      AddressSpaceType!
+  type AddressSpaceSpec_enmasse_io_v1beta1 {
+    plan: AddressSpacePlan_admin_enmasse_io_v1beta2!
+    type: AddressSpaceType!
 
-        authenticationService:  AuthenticationService_enmasse_io_v1beta1
-        endpoints:              [EndpointSpec_enmasse_io_v1beta1!]
-    }
+    authenticationService: AuthenticationService_enmasse_io_v1beta1
+    endpoints: [EndpointSpec_enmasse_io_v1beta1!]
+  }
 
   type EndpointSpec_enmasse_io_v1beta1 {
     name: String!
@@ -299,29 +299,29 @@ const typeDefs = gql`
     loadBalancerSourceRanges: [String!]
   }
 
-  type MessagingEndpoint_enmasse_io_v1 {
+  type MessagingEndpoint_enmasse_io_v1beta2 {
     metadata: ObjectMeta_v1!
-    spec: MessagingEndpointSpec_enmasse_io_v1!
-    status: MessagingEndpointStatus_enmasse_io_v1
+    spec: MessagingEndpointSpec_enmasse_io_v1beta2!
+    status: MessagingEndpointStatus_enmasse_io_v1beta2
   }
 
-  type MessagingEndpointSpec_enmasse_io_v1 {
-    protocols: [MessagingEndpointProtocol_enmasse_io_v1!]!
+  type MessagingEndpointSpec_enmasse_io_v1beta2 {
+    protocols: [MessagingEndpointProtocol_enmasse_io_v1beta2!]!
   }
 
-  type MessagingEndpointStatus_enmasse_io_v1 {
-    phase: MessagingEndpointPhase_enmasse_io_v1!
-    type: MessagingEndpointType_enmasse_io_v1!
+  type MessagingEndpointStatus_enmasse_io_v1beta2 {
+    phase: MessagingEndpointPhase_enmasse_io_v1beta2!
+    type: MessagingEndpointType_enmasse_io_v1beta2!
     message: String
     host: String
 
-    ports: [MessagingEndpointPort_enmasse_io_v1!]!
-    internalPorts: [MessagingEndpointPort_enmasse_io_v1!]!
+    ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+    internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
   }
 
-  type MessagingEndpointPort_enmasse_io_v1 {
+  type MessagingEndpointPort_enmasse_io_v1beta2 {
     name: String!
-    protocol: MessagingEndpointProtocol_enmasse_io_v1!
+    protocol: MessagingEndpointProtocol_enmasse_io_v1beta2!
     port: Int!
   }
 
@@ -356,7 +356,7 @@ const typeDefs = gql`
     address: String!
     addressSpace: String!
     type: AddressType!
-    plan: AddressPlan_admin_enmasse_io_v1!
+    plan: AddressPlan_admin_enmasse_io_v1beta2!
     topic: String
   }
 
@@ -386,12 +386,12 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
   }
 
-  type AddressPlan_admin_enmasse_io_v1 {
+  type AddressPlan_admin_enmasse_io_v1beta2 {
     metadata: ObjectMeta_v1!
-    spec: AddressPlanSpec_admin_enmasse_io_v1!
+    spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
   }
 
-  type AddressPlanSpec_admin_enmasse_io_v1 {
+  type AddressPlanSpec_admin_enmasse_io_v1beta2 {
     addressType: AddressType!
     displayName: String!
     longDescription: String!
@@ -399,13 +399,13 @@ const typeDefs = gql`
     displayOrder: Int!
   }
 
-  type AddressSpacePlan_admin_enmasse_io_v1 {
+  type AddressSpacePlan_admin_enmasse_io_v1beta2 {
     metadata: ObjectMeta_v1!
-    spec: AddressSpacePlanSpec_admin_enmasse_io_v1!
+    spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
   }
 
-  type AddressSpacePlanSpec_admin_enmasse_io_v1 {
-    addressPlans: [AddressPlan_admin_enmasse_io_v1!]!
+  type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
+    addressPlans: [AddressPlan_admin_enmasse_io_v1beta2!]!
     addressSpaceType: AddressSpaceType
     displayName: String!
     longDescription: String!
@@ -456,13 +456,13 @@ const typeDefs = gql`
     "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
     addressSpacePlans(
       addressSpaceType: AddressSpaceType
-    ): [AddressSpacePlan_admin_enmasse_io_v1!]!
+    ): [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
 
     "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
     addressPlans(
       addressSpacePlan: String
       addressType: AddressType
-    ): [AddressPlan_admin_enmasse_io_v1!]!
+    ): [AddressPlan_admin_enmasse_io_v1beta2!]!
 
     "Returns the authenticationServices"
     authenticationServices: [AuthenticationService_admin_enmasse_io_v1beta1!]!
@@ -514,8 +514,13 @@ const typeDefs = gql`
       addressSpace: String
     ): String!
 
-        "Returns the messaging endpoints for the given address space"
-        messagingEndpoints(first: Int, offset: Int, filter: String, orderBy: String): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
+    "Returns the messaging endpoints for the given address space"
+    messagingEndpoints(
+      first: Int
+      offset: Int
+      filter: String
+      orderBy: String
+    ): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
 
     # iot queries
 
@@ -544,7 +549,7 @@ const typeDefs = gql`
       iotproject: String!
       deviceId: String!
     ): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
-    }
+  }
 
   #
   # Inputs Types
@@ -640,7 +645,7 @@ const typeDefs = gql`
     "purges address(es)"
     purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
-        closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
+    closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
 
     # iot mutations
     createIotDevice(
@@ -668,8 +673,9 @@ const typeDefs = gql`
       jsonPatch: String!
       patchType: String!
     ): Boolean
-    deleteIotProject(input: ObjectMeta_v1_Input!): Boolean
-    }
+    deleteIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+    disableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+  }
 
   #
   # iot definitions
