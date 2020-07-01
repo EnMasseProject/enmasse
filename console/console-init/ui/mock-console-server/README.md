@@ -1056,9 +1056,9 @@ mutation {
 
 ```
 mutation {
-  deleteIotDevice(
+  deleteIotDevices(
     iotproject: "iotProjectFrance"
-    deviceId: "11"
+    deviceIds: ["11"]
   )
 }
 ```

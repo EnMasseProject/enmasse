@@ -162,7 +162,7 @@ input IotProject_iot_enmasse_io_v1alpha1_input {
 type Mutation {
 
   createIotDevice(iotproject: String!, device: Device_iot_console_input!): Device
-  deleteIotDevice(iotproject: String!, deviceId: String!): Boolean
+  deleteIotDevices(iotproject: String!, deviceIds: [String!]!): Boolean
   updateIotDevice(iotproject: String!, device: Device_iot_console_input!): Device
 
   setCredentialsForDevice(iotproject: String!, deviceId: String!, jsonData: [String!]!): Boolean
