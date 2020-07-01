@@ -15,7 +15,8 @@ const styles = StyleSheet.create({
     padding: 20,
     marginRight: 10
   },
-  dropdown_align: { display: "flex", marginRight: 10 },
+  dropdown_align: { display: "flex", marginRight: 5 },
+  end_dropdown_align: { display: "flex", marginRight: 10 },
   dropdown_toggle_align: { flex: "1" }
 });
 
@@ -104,7 +105,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
         onChange={onEndTimeChange}
       />
       <DropdownWithToggle
-        className={css(styles.dropdown_align)}
+        className={css(styles.end_dropdown_align)}
         id="device-filter-dropdown-last-seen-end-time-format"
         position={DropdownPosition.left}
         onSelectItem={onEndTimeFormatChange}

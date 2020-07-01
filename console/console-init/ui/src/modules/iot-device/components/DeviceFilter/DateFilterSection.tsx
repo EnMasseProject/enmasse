@@ -2,11 +2,17 @@ import React from "react";
 import { TextInput, InputGroup, InputGroupText } from "@patternfly/react-core";
 import { CalendarAltIcon } from "@patternfly/react-icons";
 import { IDeviceFilter } from "./DeviceFilter";
+import { StyleSheet, css } from "aphrodite";
 
 interface IDateFilterSectionProps {
   filter: IDeviceFilter;
   setFilter: (filter: IDeviceFilter) => void;
 }
+
+const styles = StyleSheet.create({
+  input_size: { width: 85 }
+});
+
 const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
   filter,
   setFilter
@@ -32,6 +38,7 @@ const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
         id="device-filter-text-input-added-start-date"
         type="date"
         aria-label="Added Start Date"
+        className={css(styles.input_size)}
         value={addedDate.startDate}
         onChange={onChangeStartDate}
       />
@@ -40,6 +47,7 @@ const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
         id="device-filter-text-input-added-end-date"
         type="date"
         aria-label="Added End Date"
+        className={css(styles.input_size)}
         value={addedDate.endDate}
         onChange={onChangeEndDate}
       />

@@ -25,8 +25,11 @@ export const EmptyDeviceContainer: React.FC<IEmptyDeviceContainerProps> = ({
 }) => {
   const { projectname } = useParams();
 
+  // To check if the server has atleast one device
   const { data } = useQuery<IIoTDevicesResponse>(
     RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
+      1,
+      1,
       projectname,
       undefined,
       undefined,

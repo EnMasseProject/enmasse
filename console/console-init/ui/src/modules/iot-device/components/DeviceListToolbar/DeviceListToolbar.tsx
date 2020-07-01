@@ -6,16 +6,10 @@
 import React from "react";
 import {
   DropdownWithBulkSelect,
-  TablePagination,
   DropdownWithKebabToggle,
   IDropdownWithBulkSelectProps
 } from "components";
-import {
-  ToolbarContent,
-  Toolbar,
-  ToolbarItem,
-  PaginationProps
-} from "@patternfly/react-core";
+import { ToolbarContent, Toolbar, ToolbarItem } from "@patternfly/react-core";
 import {
   CreateDeviceButton,
   ICreateDeviceButtonProps
@@ -32,20 +26,11 @@ export interface IDeviceListToolbarProps
 }
 
 export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps &
-  PaginationProps &
   ICreateDeviceButtonProps> = ({
-  itemCount,
-  perPage,
-  page,
-  onSetPage,
-  onPerPageSelect,
   handleInputDeviceInfo,
   handleJSONUpload,
-  isOpen,
-  onSelect,
   onSelectAllDevices,
   isChecked,
-  items,
   kebabItems
 }) => {
   return (
@@ -88,23 +73,6 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             isPlain={true}
             dropdownItems={kebabItems}
             id="device-list-toolbar-kebab"
-          />
-        </ToolbarItem>
-        <ToolbarItem
-          id="device-list-toolbar-item-4"
-          variant="pagination"
-          key="pagination"
-          alignment={{ md: "alignRight" }}
-          aria-label="Device List pagination"
-          data-codemods="true"
-        >
-          <TablePagination
-            id="device-list-pagination"
-            itemCount={itemCount}
-            perPage={perPage}
-            page={page}
-            onSetPage={onSetPage}
-            onPerPageSelect={onPerPageSelect}
           />
         </ToolbarItem>
       </ToolbarContent>
