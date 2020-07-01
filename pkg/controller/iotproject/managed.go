@@ -11,8 +11,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/enmasseproject/enmasse/pkg/util/install"
-
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
 	corev1 "k8s.io/api/core/v1"
@@ -28,19 +26,16 @@ import (
 
 const AddressNameTelemetry = "telemetry"
 const AddressNameEvent = "event"
-const AddressNameCommandLegacy = "control"
 const AddressNameCommand = "command"
 const AddressNameCommandResponse = "command_response"
 
 var Addresses = []string{
 	AddressNameTelemetry,
 	AddressNameEvent,
-	AddressNameCommandLegacy,
 	AddressNameCommand,
 	AddressNameCommandResponse,
 }
 
-const resourceTypeAddressSpace = "Address Space"
 const resourceTypeAdapterUser = "Adapter User"
 
 const annotationProject = annotationBase + "/project.name"
@@ -49,7 +44,6 @@ const annotationProjectUID = annotationBase + "/project.uid"
 type managedStatus struct {
 	remainingCreated map[string]bool
 	remainingReady   map[string]bool
-	addressSpace     *enmassev1beta1.AddressSpace
 }
 
 func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondition, reason string) {
@@ -101,22 +95,11 @@ func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTP
 
 	updateManagedReadyStatus(managedStatus, project)
 
-	// extract endpoint information
+	// FIXME: build downstream information
 
-	currentCredentials := project.Status.DownstreamEndpoint.Credentials.DeepCopy()
-	if managedStatus.addressSpace != nil && project.Status.Phase == iotv1alpha1.ProjectPhaseActive {
+	project.Status.DownstreamEndpoint = &iotv1alpha1.ConnectionInformation{}
 
-		forceTls := true
-		endpoint, err := extractEndpointInformation("messaging", iotv1alpha1.Service, "amqps", currentCredentials, managedStatus.addressSpace, &forceTls)
-
-		if endpoint != nil {
-			project.Status.DownstreamEndpoint = endpoint.ConnectionInformation.DeepCopy()
-		}
-
-		return reconcile.Result{}, err
-	}
-
-	return reconcile.Result{}, nil
+	return reconcile.Result{}, err
 }
 
 func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
@@ -135,9 +118,6 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile
 	managedStatus.remainingCreated[resourceTypeAdapterUser] = false
 	managedStatus.remainingReady[resourceTypeAdapterUser] = false
 
-	managedStatus.remainingCreated[resourceTypeAddressSpace] = false
-	managedStatus.remainingReady[resourceTypeAdapterUser] = false
-
 	// start reconciling
 
 	rc := recon.ReconcileContext{}
@@ -154,14 +134,6 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile
 	}
 
 	project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
-
-	// reconcile address space
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		addressSpace, result, err := r.reconcileAddressSpace(ctx, project, strategy, managedStatus)
-		managedStatus.addressSpace = addressSpace
-		return result, err
-	})
 
 	// create a set of addresses
 
@@ -217,40 +189,6 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 	changed := false
 
-	// eval address space
-
-	if project.Status.Managed.AddressSpace != project.Spec.DownstreamStrategy.ManagedDownstreamStrategy.AddressSpace.Name {
-
-		if project.Status.Managed.AddressSpace == "" {
-
-			// record change, early store and requeue
-
-			project.Status.Managed.AddressSpace = project.Spec.DownstreamStrategy.ManagedDownstreamStrategy.AddressSpace.Name
-			changed = true
-
-		} else {
-
-			// cleanup old address space first
-
-			project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
-			project.Status.Message = "Address Space changed"
-
-			result, err := cleanupManagedResources(ctx, r.client, project)
-			if err != nil {
-				// failed to clean up ... return
-				return result, err
-			}
-
-			// clear out address space, will re-set in the next iteration
-
-			project.Status.Managed.AddressSpace = ""
-			log.Info("Re-queue: Address space changed")
-			changed = true
-
-		}
-
-	}
-
 	// eval password
 
 	if val, ok := project.Annotations[annotationBase+"/resetPasswordAfter"]; ok {
@@ -299,53 +237,6 @@ func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, proj
 
 }
 
-func (r *ReconcileIoTProject) reconcileAddressSpace(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, managedStatus *managedStatus) (*enmassev1beta1.AddressSpace, reconcile.Result, error) {
-
-	addressSpace := &enmassev1beta1.AddressSpace{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: project.Namespace,
-			Name:      strategy.AddressSpace.Name,
-		},
-	}
-
-	var retryDelay time.Duration = 0
-
-	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, addressSpace, func() error {
-
-		if addressSpace.DeletionTimestamp != nil {
-			// address space is deconstructed
-			managedStatus.remainingReady[resourceTypeAddressSpace] = false
-			managedStatus.remainingCreated[resourceTypeAddressSpace] = false
-			// re-try later to re-create
-			retryDelay = 10 * time.Second
-			log.Info("Re-queue: Address space scheduled for deletion, wait before re-creating")
-			return nil
-		}
-
-		managedStatus.remainingReady[resourceTypeAddressSpace] = addressSpace.Status.IsReady
-
-		// if the address space is not ready yet
-		if !addressSpace.Status.IsReady {
-			// delay for 30 seconds
-			retryDelay = 30 * time.Second
-			log.Info("Re-queue: Address space not ready")
-		}
-
-		return r.reconcileManagedAddressSpace(project, strategy, addressSpace)
-	})
-
-	if rc != controllerutil.OperationResultNone {
-		log.V(2).Info("Created/updated address space", "op", rc, "AddressSpace", addressSpace)
-	}
-
-	if err == nil {
-		managedStatus.remainingCreated[resourceTypeAddressSpace] = true
-	}
-
-	return addressSpace, reconcile.Result{RequeueAfter: retryDelay}, err
-
-}
-
 func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, managedStatus *managedStatus) (reconcile.Result, error) {
 
 	// ensured that this is not nil
@@ -357,7 +248,7 @@ func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project 
 	adapterUser := &userv1beta1.MessagingUser{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: project.Namespace,
-			Name:      strategy.AddressSpace.Name + "." + credentials.Username,
+			Name:      credentials.Username,
 		},
 	}
 
@@ -391,7 +282,7 @@ func (r *ReconcileIoTProject) reconcileAddress(project *iotv1alpha1.IoTProject, 
 func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, addressBaseName string, plan string, typeName string, managedStatus *managedStatus) error {
 
 	addressName := util.AddressName(project, addressBaseName)
-	addressMetaName := util.EncodeAddressSpaceAsMetaName(strategy.AddressSpace.Name, addressName)
+	addressMetaName := util.EncodeAddressSpaceAsMetaName(addressName)
 
 	stateKey := "Address|" + addressName
 	managedStatus.remainingCreated[stateKey] = false
@@ -449,13 +340,6 @@ func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *
 		)
 	})
 	rc.ProcessSimple(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommandLegacy,
-			strategy.Addresses.Command.Plan,
-			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
-			managedStatus,
-		)
-	})
-	rc.ProcessSimple(func() error {
 		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommand,
 			strategy.Addresses.Command.Plan,
 			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
@@ -472,49 +356,6 @@ func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *
 
 	return rc.Result()
 
-}
-
-func (r *ReconcileIoTProject) reconcileManagedAddressSpace(project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, existing *enmassev1beta1.AddressSpace) error {
-
-	// add ourselves to the list of owners
-
-	if err := install.AddOwnerReference(project, existing, r.scheme); err != nil {
-		return err
-	}
-
-	// we must have a plan
-
-	if strategy.AddressSpace.Plan == "" {
-		return fmt.Errorf("'addressSpace.plan' must not be empty")
-	}
-
-	// eval type information
-
-	t := StringOrDefault(strategy.AddressSpace.Type, "standard")
-
-	// check if we are the only one using this space
-
-	if len(existing.OwnerReferences) == 1 {
-
-		// if so, we simply set the information
-
-		existing.Spec.Type = t
-		existing.Spec.Plan = strategy.AddressSpace.Plan
-
-	} else {
-
-		// otherwise, we must ensure we have the same setting
-
-		if existing.Spec.Type != t {
-			return fmt.Errorf("address space is already created using a different type: %s", existing.Spec.Type)
-		}
-		if existing.Spec.Plan != strategy.AddressSpace.Plan {
-			return fmt.Errorf("address space is already created using a different plan: %s", existing.Spec.Plan)
-		}
-
-	}
-
-	return nil
 }
 
 func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1.IoTProject, credentials iotv1alpha1.Credentials, existing *userv1beta1.MessagingUser) error {
@@ -543,7 +384,6 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 	telemetryName := util.AddressName(project, AddressNameTelemetry)
 	eventName := util.AddressName(project, AddressNameEvent)
 
-	commandLegacyName := util.AddressName(project, AddressNameCommandLegacy)
 	commandName := util.AddressName(project, AddressNameCommand)
 	commandResponseName := util.AddressName(project, AddressNameCommandResponse)
 
@@ -568,17 +408,6 @@ func (r *ReconcileIoTProject) reconcileAdapterMessagingUser(project *iotv1alpha1
 				commandName + "/*",
 			},
 			Operations: []userv1beta1.AuthorizationOperation{
-				userv1beta1.Recv,
-			},
-		},
-
-		{
-			Addresses: []string{
-				commandLegacyName,
-				commandLegacyName + "/*",
-			},
-			Operations: []userv1beta1.AuthorizationOperation{
-				userv1beta1.Send,
 				userv1beta1.Recv,
 			},
 		},
