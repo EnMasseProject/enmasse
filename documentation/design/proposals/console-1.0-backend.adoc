@@ -44,7 +44,7 @@ image::console_1.0_overview.png[]
 
 A new workflow for creating `MessagingEndpoints` resources is needed. This workflow should allow creating endpoints of new types that are supported in 1.0. Supported types are 'cluster', 'route', 'loadBalancer', 'ingress' and 'nodePort'.
 
-==== Address
+==== MessagingAddress
 
 Requires renaming elements from what we already have from 1.x. Address -> MessagingAddress (though UI can still display Address). In addition, each type of address have a set of additional configuration that should be possible to specify in the UI. There is also a new address type 'deadLetter' supported.
 
