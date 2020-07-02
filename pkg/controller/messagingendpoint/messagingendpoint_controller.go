@@ -14,7 +14,7 @@ import (
 	"time"
 
 	amqp "github.com/enmasseproject/enmasse/pkg/amqpcommand"
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
@@ -72,18 +72,18 @@ const (
 )
 
 var (
-	protocolToPortName = map[v1beta2.MessagingEndpointProtocol]string{
-		v1beta2.MessagingProtocolAMQP:    strings.ToLower(string(v1beta2.MessagingProtocolAMQP)),
-		v1beta2.MessagingProtocolAMQPS:   strings.ToLower(string(v1beta2.MessagingProtocolAMQPS)),
-		v1beta2.MessagingProtocolAMQPWS:  strings.ToLower(string(v1beta2.MessagingProtocolAMQPWS)),
-		v1beta2.MessagingProtocolAMQPWSS: strings.ToLower(string(v1beta2.MessagingProtocolAMQPWSS)),
+	protocolToPortName = map[v1.MessagingEndpointProtocol]string{
+		v1.MessagingProtocolAMQP:    strings.ToLower(string(v1.MessagingProtocolAMQP)),
+		v1.MessagingProtocolAMQPS:   strings.ToLower(string(v1.MessagingProtocolAMQPS)),
+		v1.MessagingProtocolAMQPWS:  strings.ToLower(string(v1.MessagingProtocolAMQPWS)),
+		v1.MessagingProtocolAMQPWSS: strings.ToLower(string(v1.MessagingProtocolAMQPWSS)),
 	}
 
-	portNameToProtocol = map[string]v1beta2.MessagingEndpointProtocol{
-		strings.ToLower(string(v1beta2.MessagingProtocolAMQP)):    v1beta2.MessagingProtocolAMQP,
-		strings.ToLower(string(v1beta2.MessagingProtocolAMQPS)):   v1beta2.MessagingProtocolAMQPS,
-		strings.ToLower(string(v1beta2.MessagingProtocolAMQPWS)):  v1beta2.MessagingProtocolAMQPWS,
-		strings.ToLower(string(v1beta2.MessagingProtocolAMQPWSS)): v1beta2.MessagingProtocolAMQPWSS,
+	portNameToProtocol = map[string]v1.MessagingEndpointProtocol{
+		strings.ToLower(string(v1.MessagingProtocolAMQP)):    v1.MessagingProtocolAMQP,
+		strings.ToLower(string(v1.MessagingProtocolAMQPS)):   v1.MessagingProtocolAMQPS,
+		strings.ToLower(string(v1.MessagingProtocolAMQPWS)):  v1.MessagingProtocolAMQPWS,
+		strings.ToLower(string(v1.MessagingProtocolAMQPWSS)): v1.MessagingProtocolAMQPWSS,
 	}
 )
 
@@ -110,7 +110,7 @@ func add(mgr manager.Manager, r *ReconcileMessagingEndpoint) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1beta2.MessagingEndpoint{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.MessagingEndpoint{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 
 	logger.Info("Reconciling MessagingEndpoint")
 
-	found := &v1beta2.MessagingEndpoint{}
+	found := &v1.MessagingEndpoint{}
 	err := r.reader.Get(ctx, request.NamespacedName, found)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
@@ -144,33 +144,33 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		client:   r.client,
 	}
 
-	rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		// First set configuring state if not set to indicate we are processing the endpoint.
 		if endpoint.Status.Phase == "" {
-			endpoint.Status.Phase = v1beta2.MessagingEndpointConfiguring
+			endpoint.Status.Phase = v1.MessagingEndpointConfiguring
 		}
 		if endpoint.Spec.Cluster != nil {
-			endpoint.Status.Type = v1beta2.MessagingEndpointTypeCluster
+			endpoint.Status.Type = v1.MessagingEndpointTypeCluster
 		} else if endpoint.Spec.NodePort != nil {
-			endpoint.Status.Type = v1beta2.MessagingEndpointTypeNodePort
+			endpoint.Status.Type = v1.MessagingEndpointTypeNodePort
 		} else if endpoint.Spec.LoadBalancer != nil {
-			endpoint.Status.Type = v1beta2.MessagingEndpointTypeLoadBalancer
+			endpoint.Status.Type = v1.MessagingEndpointTypeLoadBalancer
 		} else if endpoint.Spec.Route != nil {
-			endpoint.Status.Type = v1beta2.MessagingEndpointTypeRoute
+			endpoint.Status.Type = v1.MessagingEndpointTypeRoute
 		} else if endpoint.Spec.Ingress != nil {
-			endpoint.Status.Type = v1beta2.MessagingEndpointTypeIngress
+			endpoint.Status.Type = v1.MessagingEndpointTypeIngress
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointFoundTenant)
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointConfiguredTls)
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointAllocatedPorts)
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointCreated)
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointServiceCreated)
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointReady)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointConfiguredTls)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointAllocatedPorts)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointServiceCreated)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointReady)
 		return processorResult{}, nil
 	})
 
 	// Initialize and process finalizer
-	result, err := rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err := rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		return r.reconcileFinalizer(ctx, logger, endpoint)
 	})
 	if result.ShouldReturn(err) {
@@ -178,15 +178,15 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Retrieve the MessagingInfra for this MessagingEndpoint
-	var infra *v1beta2.MessagingInfrastructure
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	var infra *v1.MessagingInfrastructure
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
 			return processorResult{RequeueAfter: 10 * time.Second}, nil
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionTrue, "", "")
 		infra = i
 		return processorResult{}, err
 
@@ -197,17 +197,17 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 
 	// Ensure endpoint exists for tenant
 	client := r.clientManager.GetClient(infra)
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		if len(endpoint.Spec.Protocols) == 0 {
 			err := fmt.Errorf("must specify at least 1 protocol")
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
 			return processorResult{}, err
 		}
 		originalStatus := endpoint.Status.DeepCopy()
 		err := client.AllocatePorts(endpoint, endpoint.Spec.Protocols)
 		if err != nil {
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
 			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
@@ -215,7 +215,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 			client.FreePorts(endpoint)
 			return processorResult{}, err
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointAllocatedPorts).SetStatus(corev1.ConditionTrue, "", "")
 
 		return processorResult{
 			Requeue: !reflect.DeepEqual(originalStatus.InternalPorts, endpoint.Status.InternalPorts),
@@ -227,14 +227,14 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Create the Service object used by the endpoint
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		result, err := r.reconcileEndpointService(ctx, logger, infra, endpoint)
 		if err != nil {
 			endpoint.Status.Message = err.Error()
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointServiceCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointServiceCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
 			return result, err
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointServiceCreated).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointServiceCreated).SetStatus(corev1.ConditionTrue, "", "")
 		return result, nil
 	})
 	if result.ShouldReturn(err) {
@@ -242,11 +242,11 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Ensure TLS configuration is applied
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		result, err := r.reconcileEndpointTls(ctx, logger, infra, endpoint)
 		if err != nil {
 			endpoint.Status.Message = err.Error()
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointConfiguredTls).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointConfiguredTls).SetStatus(corev1.ConditionFalse, "", err.Error())
 			return result, err
 		}
 
@@ -255,12 +255,12 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 			// so some detection mechanism is needed to check that the SHA256 sum of the router pods annotations got updated.
 			// Since a simpler approach would be to wait a few seconds, which would work in 99% of the cases, do that if it its the
 			// first time the endpoint is being reconciled (phase not yet Active)
-			if endpoint.Status.Phase != v1beta2.MessagingEndpointActive {
+			if endpoint.Status.Phase != v1.MessagingEndpointActive {
 				time.Sleep(5 * time.Second)
 			}
 		}
 
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointConfiguredTls).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointConfiguredTls).SetStatus(corev1.ConditionTrue, "", "")
 		return result, nil
 	})
 	if result.ShouldReturn(err) {
@@ -268,10 +268,10 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Ensure endpoint exists
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		err := client.SyncEndpoint(endpoint)
 		if err != nil {
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
 			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
@@ -279,7 +279,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 			return processorResult{}, err
 		}
 
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointCreated).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated).SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
@@ -287,18 +287,18 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	}
 
 	// Mark endpoint status as all-OK
-	result, err = rc.Process(func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		if endpoint.Status.Host == "" {
 			err := fmt.Errorf("hostname is not yet defined")
 			endpoint.Status.Message = err.Error()
-			endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointReady).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointReady).SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{RequeueAfter: 5 * time.Second}, nil
 		}
 
 		originalStatus := endpoint.Status.DeepCopy()
-		endpoint.Status.Phase = v1beta2.MessagingEndpointActive
+		endpoint.Status.Phase = v1.MessagingEndpointActive
 		endpoint.Status.Message = ""
-		endpoint.Status.GetMessagingEndpointCondition(v1beta2.MessagingEndpointReady).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointReady).SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, endpoint.Status) {
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
@@ -312,10 +312,10 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 }
 
 // Reconcile the finalizer for the messaging endpoint, deleting the resources if the endpoint is being deleted.
-func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, logger logr.Logger, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, logger logr.Logger, endpoint *v1.MessagingEndpoint) (processorResult, error) {
 	// Handle finalizing an deletion state first
-	if endpoint.DeletionTimestamp != nil && endpoint.Status.Phase != v1beta2.MessagingEndpointTerminating {
-		endpoint.Status.Phase = v1beta2.MessagingEndpointTerminating
+	if endpoint.DeletionTimestamp != nil && endpoint.Status.Phase != v1.MessagingEndpointTerminating {
+		endpoint.Status.Phase = v1.MessagingEndpointTerminating
 		err := r.client.Status().Update(ctx, endpoint)
 		return processorResult{Requeue: true}, err
 	}
@@ -325,7 +325,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 		{
 			Name: FINALIZER_NAME,
 			Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
-				_, ok := c.Object.(*v1beta2.MessagingEndpoint)
+				_, ok := c.Object.(*v1.MessagingEndpoint)
 				if !ok {
 					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingEndpoint")
 				}
@@ -401,7 +401,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 }
 
 // Reconcile the service and external resources for a given endpoint.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) (processorResult, error) {
 	// Reconcile service
 	serviceName := getServiceName(endpoint)
 	service := &corev1.Service{
@@ -453,28 +453,28 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Contex
 			if exists {
 				continue
 			}
-			if internalPort.Protocol == v1beta2.MessagingProtocolAMQP {
+			if internalPort.Protocol == v1.MessagingProtocolAMQP {
 				service.Spec.Ports = append(service.Spec.Ports, corev1.ServicePort{
 					Port:       5672,
 					Protocol:   corev1.ProtocolTCP,
 					TargetPort: intstr.FromInt(internalPort.Port),
 					Name:       protocolToPortName[internalPort.Protocol],
 				})
-			} else if internalPort.Protocol == v1beta2.MessagingProtocolAMQPS {
+			} else if internalPort.Protocol == v1.MessagingProtocolAMQPS {
 				service.Spec.Ports = append(service.Spec.Ports, corev1.ServicePort{
 					Port:       5671,
 					Protocol:   corev1.ProtocolTCP,
 					TargetPort: intstr.FromInt(internalPort.Port),
 					Name:       protocolToPortName[internalPort.Protocol],
 				})
-			} else if internalPort.Protocol == v1beta2.MessagingProtocolAMQPWS {
+			} else if internalPort.Protocol == v1.MessagingProtocolAMQPWS {
 				service.Spec.Ports = append(service.Spec.Ports, corev1.ServicePort{
 					Port:       80,
 					Protocol:   corev1.ProtocolTCP,
 					TargetPort: intstr.FromInt(internalPort.Port),
 					Name:       protocolToPortName[internalPort.Protocol],
 				})
-			} else if internalPort.Protocol == v1beta2.MessagingProtocolAMQPWSS {
+			} else if internalPort.Protocol == v1.MessagingProtocolAMQPWSS {
 				service.Spec.Ports = append(service.Spec.Ports, corev1.ServicePort{
 					Port:       433,
 					Protocol:   corev1.ProtocolTCP,
@@ -551,7 +551,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointService(ctx context.Contex
 }
 
 // Reconcile the external endpoints of a service (Route or Ingress)
-func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) (processorResult, error) {
 	serviceName := getServiceName(endpoint)
 	service := &corev1.Service{}
 	err := r.client.Get(ctx, types.NamespacedName{Name: serviceName, Namespace: infra.Namespace}, service)
@@ -564,7 +564,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Conte
 	}
 
 	protocol := endpoint.Spec.Protocols[0]
-	if protocol == v1beta2.MessagingProtocolAMQP {
+	if protocol == v1.MessagingProtocolAMQP {
 		return processorResult{}, fmt.Errorf("route and ingress endpoints can only handle TLS-enabled AMQP protocol")
 	}
 
@@ -605,7 +605,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Conte
 					termination = *endpoint.Spec.Route.TlsTermination
 				}
 
-				if protocol == v1beta2.MessagingProtocolAMQPS && termination != routev1.TLSTerminationPassthrough {
+				if protocol == v1.MessagingProtocolAMQPS && termination != routev1.TLSTerminationPassthrough {
 					return fmt.Errorf("route endpoints require passthrough termination for AMQPS protocol")
 				}
 
@@ -615,7 +615,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Conte
 					}
 				}
 
-			} else if protocol == v1beta2.MessagingProtocolAMQPWSS {
+			} else if protocol == v1.MessagingProtocolAMQPWSS {
 				if route.Spec.TLS == nil {
 					route.Spec.TLS = &routev1.TLSConfig{
 						Termination: routev1.TLSTerminationEdge,
@@ -690,12 +690,12 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointExternal(ctx context.Conte
 }
 
 // Reconcile the TLS configuration of an endpoint. Ensure that certificates get provisioned and setup based on the configuration.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
+func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) (processorResult, error) {
 	// Ensure TLS configuration is specified if we require it
 	if endpoint.Spec.Tls == nil {
 		needTls := false
 		for _, protocol := range endpoint.Spec.Protocols {
-			if protocol == v1beta2.MessagingProtocolAMQPS || (protocol == v1beta2.MessagingProtocolAMQPWSS && !endpoint.IsEdgeTerminated()) {
+			if protocol == v1.MessagingProtocolAMQPS || (protocol == v1.MessagingProtocolAMQPWSS && !endpoint.IsEdgeTerminated()) {
 				needTls = true
 				break
 			}
@@ -726,9 +726,9 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 			return processorResult{}, err
 		}
 
-		endpoint.Status.Tls = &v1beta2.MessagingEndpointStatusTls{
+		endpoint.Status.Tls = &v1.MessagingEndpointStatusTls{
 			CaCertificate: string(secret.Data["tls.crt"]),
-			CertificateValidity: &v1beta2.MessagingEndpointCertValidity{
+			CertificateValidity: &v1.MessagingEndpointCertValidity{
 				NotBefore: metav1.Time{
 					Time: certInfo.NotBefore,
 				},
@@ -776,9 +776,9 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 		if err != nil {
 			return processorResult{}, err
 		}
-		endpoint.Status.Tls = &v1beta2.MessagingEndpointStatusTls{
+		endpoint.Status.Tls = &v1.MessagingEndpointStatusTls{
 			// TODO: Get OpenShift CA? Is it necessary?
-			CertificateValidity: &v1beta2.MessagingEndpointCertValidity{
+			CertificateValidity: &v1.MessagingEndpointCertValidity{
 				NotBefore: metav1.Time{
 					Time: certInfo.NotBefore,
 				},
@@ -808,8 +808,8 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 		if err != nil {
 			return processorResult{}, err
 		}
-		endpoint.Status.Tls = &v1beta2.MessagingEndpointStatusTls{
-			CertificateValidity: &v1beta2.MessagingEndpointCertValidity{
+		endpoint.Status.Tls = &v1.MessagingEndpointStatusTls{
+			CertificateValidity: &v1.MessagingEndpointCertValidity{
 				NotBefore: metav1.Time{
 					Time: certInfo.NotBefore,
 				},
@@ -825,7 +825,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 	return processorResult{}, nil
 }
 
-func (r *ReconcileMessagingEndpoint) getInputValue(ctx context.Context, logger logr.Logger, endpoint *v1beta2.MessagingEndpoint, input *v1beta2.InputValue) ([]byte, error) {
+func (r *ReconcileMessagingEndpoint) getInputValue(ctx context.Context, logger logr.Logger, endpoint *v1.MessagingEndpoint, input *v1.InputValue) ([]byte, error) {
 	if len(input.Value) > 0 {
 		return []byte(input.Value), nil
 	}
@@ -844,8 +844,8 @@ func (r *ReconcileMessagingEndpoint) getInputValue(ctx context.Context, logger l
 }
 
 // Update the ports of endpoint (its status section) based on that has been created.
-func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, endpoint *v1beta2.MessagingEndpoint) (processorResult, error) {
-	endpoint.Status.Ports = make([]v1beta2.MessagingEndpointPort, 0)
+func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) (processorResult, error) {
+	endpoint.Status.Ports = make([]v1.MessagingEndpointPort, 0)
 	if endpoint.Spec.NodePort != nil || endpoint.Spec.Cluster != nil || endpoint.Spec.LoadBalancer != nil {
 		serviceName := getServiceName(endpoint)
 		service := &corev1.Service{}
@@ -871,7 +871,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context,
 				port = servicePort.NodePort
 			}
 
-			endpoint.Status.Ports = append(endpoint.Status.Ports, v1beta2.MessagingEndpointPort{
+			endpoint.Status.Ports = append(endpoint.Status.Ports, v1.MessagingEndpointPort{
 				Name:     servicePort.Name,
 				Protocol: portNameToProtocol[servicePort.Name],
 				Port:     int(port),
@@ -880,10 +880,10 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context,
 	} else if endpoint.Spec.Route != nil || endpoint.Spec.Ingress != nil {
 		for _, protocol := range endpoint.Spec.Protocols {
 			ingressPort := 443
-			if protocol == v1beta2.MessagingProtocolAMQPWS {
+			if protocol == v1.MessagingProtocolAMQPWS {
 				ingressPort = 80
 			}
-			endpoint.Status.Ports = append(endpoint.Status.Ports, v1beta2.MessagingEndpointPort{
+			endpoint.Status.Ports = append(endpoint.Status.Ports, v1.MessagingEndpointPort{
 				Name:     protocolToPortName[protocol],
 				Protocol: protocol,
 				Port:     ingressPort,
@@ -893,7 +893,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointPorts(ctx context.Context,
 	return processorResult{}, nil
 }
 
-func getServiceName(endpoint *v1beta2.MessagingEndpoint) string {
+func getServiceName(endpoint *v1.MessagingEndpoint) string {
 	return fmt.Sprintf("%s-%s", endpoint.Namespace, endpoint.Name)
 }
 
@@ -907,8 +907,8 @@ func getOpenShiftCertSecret(serviceName string) string {
 type resourceContext struct {
 	ctx      context.Context
 	client   client.Client
-	status   *v1beta2.MessagingEndpointStatus
-	endpoint *v1beta2.MessagingEndpoint
+	status   *v1.MessagingEndpointStatus
+	endpoint *v1.MessagingEndpoint
 }
 
 type processorResult struct {
@@ -917,7 +917,7 @@ type processorResult struct {
 	Return       bool
 }
 
-func (r *resourceContext) Process(processor func(endpoint *v1beta2.MessagingEndpoint) (processorResult, error)) (processorResult, error) {
+func (r *resourceContext) Process(processor func(endpoint *v1.MessagingEndpoint) (processorResult, error)) (processorResult, error) {
 	result, err := processor(r.endpoint)
 	if !reflect.DeepEqual(r.status, r.endpoint.Status) {
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {

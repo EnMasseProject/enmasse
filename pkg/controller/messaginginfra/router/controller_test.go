@@ -24,14 +24,14 @@ import (
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 )
 
 func setup(t *testing.T) *RouterController {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfrastructure{})
+	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.MessagingInfrastructure{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
 	return NewRouterController(cl, s, certController)
@@ -40,12 +40,12 @@ func setup(t *testing.T) *RouterController {
 func TestReconcileRouterReplicas(t *testing.T) {
 	rc := setup(t)
 
-	infra := v1beta2.MessagingInfrastructure{
+	infra := v1.MessagingInfrastructure{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
-		Spec: v1beta2.MessagingInfrastructureSpec{
-			Router: v1beta2.MessagingInfrastructureSpecRouter{
-				ScalingStrategy: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategy{
-					Static: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategyStatic{
+		Spec: v1.MessagingInfrastructureSpec{
+			Router: v1.MessagingInfrastructureSpecRouter{
+				ScalingStrategy: &v1.MessagingInfrastructureSpecRouterScalingStrategy{
+					Static: &v1.MessagingInfrastructureSpecRouterScalingStrategyStatic{
 						Replicas: 2,
 					},
 				},

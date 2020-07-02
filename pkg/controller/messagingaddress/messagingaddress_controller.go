@@ -14,7 +14,7 @@ import (
 	"time"
 
 	amqp "github.com/enmasseproject/enmasse/pkg/amqpcommand"
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
 	"github.com/enmasseproject/enmasse/pkg/state"
 	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
@@ -91,7 +91,7 @@ func add(mgr manager.Manager, r *ReconcileMessagingAddress) error {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1beta2.MessagingAddress{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.MessagingAddress{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	logger.Info("Reconciling MessagingAddress")
 
-	found := &v1beta2.MessagingAddress{}
+	found := &v1.MessagingAddress{}
 	err := r.reader.Get(ctx, request.NamespacedName, found)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
@@ -126,42 +126,42 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	}
 
 	// Initialize phase and conditions and type
-	var foundTenant *v1beta2.MessagingAddressCondition
-	var validated *v1beta2.MessagingAddressCondition
-	var scheduled *v1beta2.MessagingAddressCondition
-	var created *v1beta2.MessagingAddressCondition
-	var ready *v1beta2.MessagingAddressCondition
-	rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	var foundTenant *v1.MessagingAddressCondition
+	var validated *v1.MessagingAddressCondition
+	var scheduled *v1.MessagingAddressCondition
+	var created *v1.MessagingAddressCondition
+	var ready *v1.MessagingAddressCondition
+	rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		if address.Status.Phase == "" {
-			address.Status.Phase = v1beta2.MessagingAddressConfiguring
+			address.Status.Phase = v1.MessagingAddressConfiguring
 		}
 		if address.Spec.Queue != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeQueue
+			address.Status.Type = v1.MessagingAddressTypeQueue
 		} else if address.Spec.Anycast != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeAnycast
+			address.Status.Type = v1.MessagingAddressTypeAnycast
 		} else if address.Spec.Multicast != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeMulticast
+			address.Status.Type = v1.MessagingAddressTypeMulticast
 		} else if address.Spec.Topic != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeTopic
+			address.Status.Type = v1.MessagingAddressTypeTopic
 		} else if address.Spec.Subscription != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeSubscription
+			address.Status.Type = v1.MessagingAddressTypeSubscription
 		} else if address.Spec.DeadLetter != nil {
-			address.Status.Type = v1beta2.MessagingAddressTypeDeadLetter
+			address.Status.Type = v1.MessagingAddressTypeDeadLetter
 		}
-		foundTenant = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressFoundTenant)
-		validated = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressValidated)
-		scheduled = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressScheduled)
-		created = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressCreated)
-		ready = address.Status.GetMessagingAddressCondition(v1beta2.MessagingAddressReady)
+		foundTenant = address.Status.GetMessagingAddressCondition(v1.MessagingAddressFoundTenant)
+		validated = address.Status.GetMessagingAddressCondition(v1.MessagingAddressValidated)
+		scheduled = address.Status.GetMessagingAddressCondition(v1.MessagingAddressScheduled)
+		created = address.Status.GetMessagingAddressCondition(v1.MessagingAddressCreated)
+		ready = address.Status.GetMessagingAddressCondition(v1.MessagingAddressReady)
 		return processorResult{}, nil
 	})
 
 	// Initialize and process finalizer
-	result, err := rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err := rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 
 		// Handle finalizing an deletion state first
-		if address.DeletionTimestamp != nil && address.Status.Phase != v1beta2.MessagingAddressTerminating {
-			address.Status.Phase = v1beta2.MessagingAddressTerminating
+		if address.DeletionTimestamp != nil && address.Status.Phase != v1.MessagingAddressTerminating {
+			address.Status.Phase = v1.MessagingAddressTerminating
 			err := r.client.Status().Update(ctx, address)
 			return processorResult{Requeue: true}, err
 		}
@@ -171,7 +171,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 			finalizer.Finalizer{
 				Name: FINALIZER_NAME,
 				Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
-					_, ok := c.Object.(*v1beta2.MessagingAddress)
+					_, ok := c.Object.(*v1.MessagingAddress)
 					if !ok {
 						return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingAddress")
 					}
@@ -189,7 +189,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 					if address.Spec.Topic != nil {
 						// For topics, make sure no subscriptions referencing this topic exists.
-						foundSub, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+						foundSub, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1.MessagingAddress) bool {
 							return a.Spec.Subscription != nil && a.Spec.Subscription.Topic == address.GetAddress()
 						})
 						if err != nil {
@@ -203,7 +203,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 					} else if address.Spec.DeadLetter != nil {
 						// For deadLetter addresses, make sure no queues are referencing it.
 						// For topics, make sure no subscriptions referencing this topic exists.
-						foundQueue, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+						foundQueue, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1.MessagingAddress) bool {
 							return a.Spec.Queue != nil && (a.Spec.Queue.DeadLetterAddress == address.GetAddress() || a.Spec.Queue.ExpiryAddress == address.GetAddress())
 						})
 						if err != nil {
@@ -246,9 +246,9 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result.Result(), err
 	}
 
-	var infra *v1beta2.MessagingInfrastructure
+	var infra *v1.MessagingInfrastructure
 	// Retrieve the MessagingInfra for this MessagingAddress
-	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
 			foundTenant.SetStatus(corev1.ConditionFalse, "", err.Error())
@@ -265,14 +265,14 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	}
 
 	// Perform validation of address
-	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		if address.Spec.Queue != nil &&
 			// Ensure any deadletter or expiry address exists
 			(address.Spec.Queue.DeadLetterAddress != "" || address.Spec.Queue.ExpiryAddress != "") {
 
 			deadLetterAddress := address.Spec.Queue.DeadLetterAddress
 			if deadLetterAddress != "" {
-				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1.MessagingAddress) bool {
 					return a.Spec.DeadLetter != nil && a.GetAddress() == deadLetterAddress
 				})
 				if err != nil {
@@ -288,7 +288,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 			expiryAddress := address.Spec.Queue.ExpiryAddress
 			if expiryAddress != "" {
-				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+				found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1.MessagingAddress) bool {
 					return a.Spec.DeadLetter != nil && a.GetAddress() == expiryAddress
 				})
 				if err != nil {
@@ -310,7 +310,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 				address.Status.Message = err.Error()
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
-			found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1beta2.MessagingAddress) bool {
+			found, err := matchAnyAddress(ctx, r.client, address.Namespace, func(a *v1.MessagingAddress) bool {
 				return a.Spec.Topic != nil && a.GetAddress() == topic
 			})
 			if err != nil {
@@ -332,7 +332,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		return result.Result(), err
 	}
 
-	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		// TODO: Handle changes to partitions etc.
 		// We're already scheduled so just make sure scheduler is synced
 		if len(address.Status.Brokers) > 0 {
@@ -367,7 +367,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	client := r.clientManager.GetClient(infra)
 	// Ensure address exists for all known endpoints. We know where the address should exist now, so just ensure it is done.
-	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		err := client.SyncAddress(address)
 		if err != nil {
 			created.SetStatus(corev1.ConditionFalse, "", err.Error())
@@ -377,7 +377,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 			}
 		} else {
 			for i, _ := range address.Status.Brokers {
-				address.Status.Brokers[i].State = v1beta2.MessagingAddressBrokerActive
+				address.Status.Brokers[i].State = v1.MessagingAddressBrokerActive
 			}
 			created.SetStatus(corev1.ConditionTrue, "", "")
 		}
@@ -388,9 +388,9 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	}
 
 	// Update address status
-	result, err = rc.Process(func(address *v1beta2.MessagingAddress) (processorResult, error) {
+	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		originalStatus := address.Status.DeepCopy()
-		address.Status.Phase = v1beta2.MessagingAddressActive
+		address.Status.Phase = v1.MessagingAddressActive
 		address.Status.Message = ""
 		ready.SetStatus(corev1.ConditionTrue, "", "")
 		if !reflect.DeepEqual(originalStatus, address.Status) {
@@ -405,10 +405,10 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	return result.Result(), err
 }
 
-type FilterFunc func(*v1beta2.MessagingAddress) bool
+type FilterFunc func(*v1.MessagingAddress) bool
 
 func matchAnyAddress(ctx context.Context, c client.Client, namespace string, filter FilterFunc) (bool, error) {
-	list := &v1beta2.MessagingAddressList{}
+	list := &v1.MessagingAddressList{}
 	err := c.List(ctx, list, client.InNamespace(namespace))
 	if err != nil {
 		return false, err
@@ -428,8 +428,8 @@ func matchAnyAddress(ctx context.Context, c client.Client, namespace string, fil
 type resourceContext struct {
 	ctx     context.Context
 	client  client.Client
-	status  *v1beta2.MessagingAddressStatus
-	address *v1beta2.MessagingAddress
+	status  *v1.MessagingAddressStatus
+	address *v1.MessagingAddress
 }
 
 type processorResult struct {
@@ -438,7 +438,7 @@ type processorResult struct {
 	Return       bool
 }
 
-func (r *resourceContext) Process(processor func(address *v1beta2.MessagingAddress) (processorResult, error)) (processorResult, error) {
+func (r *resourceContext) Process(processor func(address *v1.MessagingAddress) (processorResult, error)) (processorResult, error) {
 	result, err := processor(r.address)
 	if !reflect.DeepEqual(r.status, r.address.Status) {
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {

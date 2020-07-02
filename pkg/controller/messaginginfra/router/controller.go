@@ -15,7 +15,7 @@ import (
 
 	logr "github.com/go-logr/logr"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
@@ -50,7 +50,7 @@ func NewRouterController(client client.Client, scheme *runtime.Scheme, certContr
 /*
  * Reconciles the router instances for an instance of shared infrastructure.
  */
-func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]Host, error) {
+func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure) ([]Host, error) {
 
 	setDefaultRouterScalingStrategy(&infra.Spec.Router)
 
@@ -341,15 +341,15 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	return allHosts, nil
 }
 
-func getRouterInfraName(infra *v1beta2.MessagingInfrastructure) string {
+func getRouterInfraName(infra *v1.MessagingInfrastructure) string {
 	return fmt.Sprintf("router-%s", infra.Name)
 }
 
-func setDefaultRouterScalingStrategy(router *v1beta2.MessagingInfrastructureSpecRouter) {
+func setDefaultRouterScalingStrategy(router *v1.MessagingInfrastructureSpecRouter) {
 	if router.ScalingStrategy == nil {
 		// Set static scaler by default
-		router.ScalingStrategy = &v1beta2.MessagingInfrastructureSpecRouterScalingStrategy{
-			Static: &v1beta2.MessagingInfrastructureSpecRouterScalingStrategyStatic{
+		router.ScalingStrategy = &v1.MessagingInfrastructureSpecRouterScalingStrategy{
+			Static: &v1.MessagingInfrastructureSpecRouterScalingStrategyStatic{
 				Replicas: 1,
 			},
 		}
@@ -360,7 +360,7 @@ func int32ptr(val int32) *int32 {
 	return &val
 }
 
-func applyScalingStrategy(strategy *v1beta2.MessagingInfrastructureSpecRouterScalingStrategy, set *appsv1.StatefulSet) {
+func applyScalingStrategy(strategy *v1.MessagingInfrastructureSpecRouterScalingStrategy, set *appsv1.StatefulSet) {
 	if strategy.Static != nil {
 		set.Spec.Replicas = int32ptr(strategy.Static.Replicas)
 	}

@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v11 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -65,8 +65,8 @@ type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
 }
 
 type MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total              int                          `json:"total"`
-	MessagingEndpoints []*v1beta2.MessagingEndpoint `json:"messagingEndpoints"`
+	Total              int                      `json:"total"`
+	MessagingEndpoints []*v11.MessagingEndpoint `json:"messagingEndpoints"`
 }
 
 type MetadataConsoleapiEnmasseIoV1beta1 struct {

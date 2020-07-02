@@ -75,7 +75,7 @@ enum RouteTlsTermination_enmasse_io_v1beta1 {
   reencrypt
 }
 
-enum MessagingEndpointType_enmasse_io_v1beta2  {
+enum MessagingEndpointType_enmasse_io_v1 {
   Cluster,
   NodePort,
   LoadBalancer,
@@ -83,14 +83,14 @@ enum MessagingEndpointType_enmasse_io_v1beta2  {
   Ingress
 }
 
-enum MessagingEndpointProtocol_enmasse_io_v1beta2  {
+enum MessagingEndpointProtocol_enmasse_io_v1 {
   AMQP,
   AMQPS,
   AMQP_WS,
   AMQP_WSS,
 }
 
-enum MessagingEndpointPhase_enmasse_io_v1beta2  {
+enum MessagingEndpointPhase_enmasse_io_v1 {
   Configuring,
   Active,
   Terminating,
@@ -159,7 +159,7 @@ type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
 
 type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
   total: Int!
-  messagingEndpoints: [MessagingEndpoint_enmasse_io_v1beta2!]!
+  messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
 }
 #
 # Mirrors of Kubernetes types.  These follow the names and structure of the underlying
@@ -213,29 +213,29 @@ type ExposeSpec_enmasse_io_v1beta1 {
 }
 
 
-type MessagingEndpoint_enmasse_io_v1beta2 {
+type MessagingEndpoint_enmasse_io_v1 {
   metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
-  spec: MessagingEndpointSpec_enmasse_io_v1beta2!
-  status: MessagingEndpointStatus_enmasse_io_v1beta2
+  spec: MessagingEndpointSpec_enmasse_io_v1!
+  status: MessagingEndpointStatus_enmasse_io_v1
 }
 
-type MessagingEndpointSpec_enmasse_io_v1beta2 {
-  protocols: [MessagingEndpointProtocol_enmasse_io_v1beta2 !]!
+type MessagingEndpointSpec_enmasse_io_v1 {
+  protocols: [MessagingEndpointProtocol_enmasse_io_v1 !]!
 }
 
-type MessagingEndpointStatus_enmasse_io_v1beta2 {
-  phase: MessagingEndpointPhase_enmasse_io_v1beta2!
-  type: MessagingEndpointType_enmasse_io_v1beta2 !
+type MessagingEndpointStatus_enmasse_io_v1 {
+  phase: MessagingEndpointPhase_enmasse_io_v1 !
+  type: MessagingEndpointType_enmasse_io_v1 !
   message: String
   host: String
 
-  ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
-  internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+  ports: [MessagingEndpointPort_enmasse_io_v1!]!
+  internalPorts: [MessagingEndpointPort_enmasse_io_v1!]!
 }
 
-type MessagingEndpointPort_enmasse_io_v1beta2  {
+type MessagingEndpointPort_enmasse_io_v1 {
   name: String!
-  protocol: MessagingEndpointProtocol_enmasse_io_v1beta2 !
+  protocol: MessagingEndpointProtocol_enmasse_io_v1 !
   port: Int!
 }
 

@@ -99,20 +99,20 @@ models:
   LinkSpec_consoleapi_enmasse_io_v1beta1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.LinkSpec
 
-  MessagingEndpoint_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpoint
-  MessagingEndpointSpec_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointSpec
-  MessagingEndpointStatus_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointStatus
-  MessagingEndpointPort_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPort
-  MessagingEndpointProtocol_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointProtocol
-  MessagingEndpointType_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointType
-  MessagingEndpointPhase_enmasse_io_v1beta2:
-      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2.MessagingEndpointPhase
+  MessagingEndpoint_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpoint
+  MessagingEndpointSpec_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointSpec
+  MessagingEndpointStatus_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointStatus
+  MessagingEndpointPort_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointPort
+  MessagingEndpointProtocol_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointProtocol
+  MessagingEndpointType_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointType
+  MessagingEndpointPhase_enmasse_io_v1:
+      model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1.MessagingEndpointPhase
 
   Address:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Address

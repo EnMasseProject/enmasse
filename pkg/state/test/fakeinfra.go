@@ -11,7 +11,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/state"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 )
 
 type FakeClient struct {
@@ -32,7 +32,7 @@ func NewFakeManager() *FakeManager {
 	}
 }
 
-func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfrastructure) state.InfraClient {
+func (m *FakeManager) GetClient(infra *v1.MessagingInfrastructure) state.InfraClient {
 	client, exists := m.Clients[infra.Name]
 	if !exists {
 		client = &FakeClient{
@@ -44,7 +44,7 @@ func (m *FakeManager) GetClient(infra *v1beta2.MessagingInfrastructure) state.In
 	return client
 }
 
-func (m *FakeManager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error {
+func (m *FakeManager) DeleteClient(infra *v1.MessagingInfrastructure) error {
 	delete(m.Clients, infra.Name)
 	return nil
 }
@@ -62,42 +62,42 @@ func (i *FakeClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Conf
 	return nil, nil
 }
 
-func (i *FakeClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error {
+func (i *FakeClient) AllocatePorts(endpoint *v1.MessagingEndpoint, protocols []v1.MessagingEndpointProtocol) error {
 	return nil
 }
 
-func (i *FakeClient) FreePorts(endpoint *v1beta2.MessagingEndpoint) {
+func (i *FakeClient) FreePorts(endpoint *v1.MessagingEndpoint) {
 }
 
-func (i *FakeClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
+func (i *FakeClient) SyncEndpoint(endpoint *v1.MessagingEndpoint) error {
 	return nil
 }
 
-func (i *FakeClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
+func (i *FakeClient) DeleteEndpoint(endpoint *v1.MessagingEndpoint) error {
 	return nil
 }
 
-func (i *FakeClient) ScheduleTenant(tenant *v1beta2.MessagingTenant) error {
+func (i *FakeClient) ScheduleTenant(tenant *v1.MessagingTenant) error {
 	return nil
 }
 
-func (i *FakeClient) ScheduleAddress(address *v1beta2.MessagingAddress) error {
+func (i *FakeClient) ScheduleAddress(address *v1.MessagingAddress) error {
 	return nil
 }
 
-func (i *FakeClient) SyncAddress(address *v1beta2.MessagingAddress) error {
+func (i *FakeClient) SyncAddress(address *v1.MessagingAddress) error {
 	return nil
 }
 
-func (i *FakeClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
+func (i *FakeClient) DeleteAddress(address *v1.MessagingAddress) error {
 	return nil
 }
 
-func (i *FakeClient) SyncTenant(tenant *v1beta2.MessagingTenant) error {
+func (i *FakeClient) SyncTenant(tenant *v1.MessagingTenant) error {
 	return nil
 }
 
-func (i *FakeClient) DeleteTenant(tenant *v1beta2.MessagingTenant) error {
+func (i *FakeClient) DeleteTenant(tenant *v1.MessagingTenant) error {
 	return nil
 }
 
