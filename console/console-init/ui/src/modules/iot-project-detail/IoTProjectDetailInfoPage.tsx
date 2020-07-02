@@ -7,7 +7,7 @@ import {
   IIoTMessagingObject
 } from "modules/iot-project-detail/components";
 import { action } from "@storybook/addon-actions";
-import { IAdapterConfig, IAdapter } from "components/AdapterList";
+import { IAdapter } from "components/AdapterList";
 import { Protocols } from "constant";
 
 export default function IoTProjectDetailInfoPage() {
@@ -24,25 +24,29 @@ export default function IoTProjectDetailInfoPage() {
     telemetryAddresses: telemetryAddresses,
     commandAddresses: commandAddresses
   };
-  const httpAdapter: IAdapterConfig = {
+  const httpAdapter: IAdapter = {
+    name: Protocols.HTTP,
     url: "https://http.bosch-iot-hub.com"
   };
-  const mqttAdapter: IAdapterConfig = {
-    tlsEnabled: true,
+  const mqttAdapter: IAdapter = {
+    name: Protocols.MQTT,
+    tls: true,
     host: "mange.bosh-iot-hub.com",
     port: 8883
   };
-  const amqpAdapter: IAdapterConfig = {
+  const amqpAdapter: IAdapter = {
+    name: Protocols.AMQP,
     url: "https://http.bosch-iot-hub.com"
   };
-  const coapAdapter: IAdapterConfig = {
+  const coapAdapter: IAdapter = {
+    name: Protocols.COAP,
     url: "https://http.bosch-iot-hub.com"
   };
   const adapters: IAdapter[] = [
-    { type: Protocols.HTTP, value: httpAdapter },
-    { type: Protocols.MQTT, value: mqttAdapter },
-    { type: Protocols.AMQP, value: amqpAdapter },
-    { type: Protocols.COAP, value: coapAdapter }
+    httpAdapter,
+    mqttAdapter,
+    amqpAdapter,
+    coapAdapter
   ];
   return (
     <Grid>
