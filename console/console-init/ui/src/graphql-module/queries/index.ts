@@ -10,3 +10,4 @@ export * from "./connection";
 export * from "./name_space";
 export * from "./Endpoints";
 export * from "./iot_device";
+export * from "./iot_project";

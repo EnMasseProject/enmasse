@@ -37,21 +37,21 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
     {
       title: (
         <Title headingLevel="h1" size="md">
-          <b>Parameter</b>
+          Parameter
         </Title>
       )
     },
     {
       title: (
         <Title headingLevel="h1" size="md">
-          <b>Type</b>
+          Type
         </Title>
       )
     },
     {
       title: (
         <Title headingLevel="h1" size="md">
-          <b>Value</b>
+          Value
         </Title>
       )
     }
@@ -77,7 +77,9 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
       {extOptions && extOptions.length > 0 && (
         <Grid id={id}>
           <GridItem span={12} className={css(styles.section_margin)}>
-            {heading}
+            <Title headingLevel="h6" size="xl">
+              {heading}
+            </Title>
           </GridItem>
           <Table aria-label="extensions view table" cells={columns} rows={rows}>
             <TableHeader />

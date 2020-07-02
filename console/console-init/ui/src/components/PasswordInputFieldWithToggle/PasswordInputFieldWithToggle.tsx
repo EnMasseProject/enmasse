@@ -42,17 +42,14 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
     if (validated !== ValidatedOptions.error) {
       if (shouldShowPassword) {
         return (
-          <EyeIcon
+          <EyeSlashIcon
             className={css(styles.icon)}
             onClick={() => onToggle(false)}
           />
         );
       }
       return (
-        <EyeSlashIcon
-          className={css(styles.icon)}
-          onClick={() => onToggle(true)}
-        />
+        <EyeIcon className={css(styles.icon)} onClick={() => onToggle(true)} />
       );
     }
   };
@@ -69,7 +66,11 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
         name={name}
         type={type}
         onChange={onChange}
-        validated={validated}
+        validated={
+          validated === ValidatedOptions.error
+            ? ValidatedOptions.error
+            : ValidatedOptions.default
+        }
       />
       {renderIcon()}
     </>

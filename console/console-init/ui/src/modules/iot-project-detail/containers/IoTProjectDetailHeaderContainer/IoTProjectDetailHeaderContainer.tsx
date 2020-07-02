@@ -20,16 +20,12 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     RETURN_IOT_PROJECTS({ projectName })
   );
 
-  const {
-    spec: { downstreamStrategyType = "" },
-    enabled,
-    metadata: { name },
-    status: { phase }
-  } = data?.allProjects?.iotProjects[0] || {
-    spec: {},
-    metadata: {},
-    status: {}
+  const { allProjects } = data || {
+    allProjects: { iotProjects: [] }
   };
+
+  const { spec, metadata, status, enabled } =
+    allProjects?.iotProjects?.[0] || {};
 
   // TODO: HANDLE AFTER MOCK IS READY
   const handleDelete = () => {};
@@ -39,9 +35,9 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
 
   return (
     <IoTProjectDetailHeader
-      projectName={name}
-      type={downstreamStrategyType}
-      status={phase}
+      projectName={metadata?.name}
+      type={spec?.downstreamStrategyType}
+      status={status?.phase}
       isEnabled={enabled}
       changeEnable={handleChangeEnabled}
       onDelete={handleDelete}

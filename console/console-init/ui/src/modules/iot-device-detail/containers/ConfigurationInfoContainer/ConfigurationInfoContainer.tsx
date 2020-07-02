@@ -8,22 +8,17 @@ import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_IOT_CREDENTIALS } from "graphql-module/queries";
 import { ICredentialsReponse } from "schema";
-import {
-  ConfigurationInfo,
-  IConfigurationInfoProps
-} from "modules/iot-device-detail/components";
-import { mock_adapters } from "mock-data";
+import { ConfigurationInfo } from "modules/iot-device-detail/components";
 import {
   getCredentialFilterType,
   getCredentialFilterValue
 } from "modules/iot-device-detail/utils";
 
-export const ConfigurationInfoContainer: React.FC<Pick<
-  IConfigurationInfoProps,
-  "id"
->> = ({ id }) => {
+export const ConfigurationInfoContainer: React.FC<{ id: string }> = ({
+  id
+}) => {
   const { projectname, deviceid } = useParams();
-  const [filterType, setFilterType] = useState<string>("");
+  const [filterType, setFilterType] = useState<string>("enabled");
   const [filterValue, setFilterValue] = useState<string>("");
 
   const { data } = useQuery<ICredentialsReponse>(
@@ -35,17 +30,12 @@ export const ConfigurationInfoContainer: React.FC<Pick<
     )
   );
 
-  /**
-   * TODO: add adapters api query and remove mock adapter data
-   */
-
   const { credentials } = data?.credentials || {};
   const credentialsJson = credentials && JSON.parse(credentials);
 
   return (
     <ConfigurationInfo
       id={id}
-      adapters={mock_adapters}
       credentials={credentialsJson}
       onSelectFilterType={setFilterType}
       onSelectFilterValue={setFilterValue}
