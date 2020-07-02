@@ -8,17 +8,19 @@ package amqpcommand
 import (
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
 	"pack.ag/amqp"
+
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 var (
 	RequestTimeoutError error = fmt.Errorf("request timed out")
+	log                       = logf.Log.WithName("amqpcommand")
 )
 
 const (
@@ -84,7 +86,7 @@ func (c *CommandClient) Start() {
 	c.lastError = nil
 	go func() {
 		defer close(c.stopped)
-		defer log.Printf("Command Client %s - stopped", c.addr)
+		defer log.Info(fmt.Sprintf("Command Client %s - stopped", c.addr))
 
 		var err error
 		for {
@@ -97,7 +99,7 @@ func (c *CommandClient) Start() {
 					atomic.AddInt64(&c.reconnectCount, 1)
 					c.lastError = err
 					backoff := computeBackoff(err)
-					log.Printf("Command Client %s - restarting - backoff %s(s), %v", c.addr, backoff, err)
+					log.Info(fmt.Sprintf("Command Client %s - restarting - backoff %s(s), %v", c.addr, backoff, err))
 					if backoff > 0 {
 						time.Sleep(backoff)
 					}
@@ -123,7 +125,7 @@ func (c *CommandClient) drainRequests() bool {
 }
 
 func (c *CommandClient) doProcess() error {
-	log.Printf("Command Client - connecting %s", c.addr)
+	log.Info(fmt.Sprintf("Command Client - connecting %s", c.addr))
 
 	client, err := amqp.Dial(c.addr, c.connectOptions...)
 	if err != nil {
@@ -132,7 +134,7 @@ func (c *CommandClient) doProcess() error {
 	defer func() {
 		_ = client.Close()
 	}()
-	log.Printf("Command Client - connected %s", c.addr)
+	log.Info(fmt.Sprintf("Command Client - connected %s", c.addr))
 
 	session, err := client.NewSession()
 	if err != nil {
@@ -186,7 +188,7 @@ func (c *CommandClient) doProcess() error {
 
 			err = sender.Send(background, req.commandMessage)
 			if err != nil {
-				log.Printf("failed to accept command %+v %s", req.commandMessage, err)
+				log.Info(fmt.Sprintf("failed to accept command %+v %s", req.commandMessage, err))
 				req.response <- commandResponse{responseMessage: nil, err: err}
 			}
 		default:
@@ -206,7 +208,7 @@ func (c *CommandClient) doProcess() error {
 						req.response <- commandResponse{responseMessage: msg, err: nil}
 						continue
 					} else {
-						log.Printf("Unable to find request with id %s (ignored)", key)
+						log.Info(fmt.Sprintf("Unable to find request with id %s (ignored)", key))
 					}
 				}
 			}

@@ -10,17 +10,20 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/amqpcommand"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	. "github.com/enmasseproject/enmasse/pkg/state/errors"
 
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
 	"golang.org/x/sync/errgroup"
 
 	"pack.ag/amqp"
 )
+
+var log = logf.Log.WithName("broker")
 
 const (
 	brokerCommandAddress         = "activemq.management"
@@ -73,7 +76,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 
 	b.nextResync = nextResync
 
-	log.Printf("[Broker %s] Initializing...", b.host)
+	log.Info(fmt.Sprintf("[Broker %s] Initializing...", b.host))
 
 	b.reconnectCount = b.commandClient.ReconnectCount()
 	totalEntities := 0
@@ -86,7 +89,7 @@ func (b *BrokerState) Initialize(nextResync time.Time) error {
 		b.entities[t] = list
 		totalEntities += len(list)
 	}
-	log.Printf("[Broker %s] Initialized controller state with %d entities", b.host, totalEntities)
+	log.Info(fmt.Sprintf("[Broker %s] Initialized controller state with %d entities", b.host, totalEntities))
 	b.initialized = true
 	return nil
 }
@@ -143,7 +146,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found queues: %+v", b.host, entities)
+			log.Info(fmt.Sprintf("[broker %s] Found queues: %+v", b.host, entities))
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -177,7 +180,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found addresses: %+v", b.host, entities)
+			log.Info(fmt.Sprintf("[broker %s] Found addresses: %+v", b.host, entities))
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -211,7 +214,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 					}
 				}
 			}
-			log.Printf("[broker %s] Found diverts: %+v", b.host, entities)
+			log.Info(fmt.Sprintf("[broker %s] Found diverts: %+v", b.host, entities))
 			return entities, nil
 		default:
 			return nil, fmt.Errorf("unexpected value with type %T", v)
@@ -254,7 +257,7 @@ func (b *BrokerState) readEntities(t BrokerEntityType) (map[string]BrokerEntity,
 				return nil, fmt.Errorf("unexpected value with type %T", v)
 			}
 		}
-		log.Printf("[broker %s] Found address settings: %+v", b.host, entities)
+		log.Info(fmt.Sprintf("[broker %s] Found address settings: %+v", b.host, entities))
 		return entities, nil
 	default:
 		return nil, fmt.Errorf("Unsupported entity type %s", t)
@@ -272,7 +275,7 @@ func (b *BrokerState) EnsureEntities(ctx context.Context, entities []BrokerEntit
 		existing, ok := typeMap[entity.GetName()]
 		if ok {
 			if !existing.Equals(entity) {
-				log.Printf("Changing from '%+v' to '%+v'\n", existing, entity)
+				log.Info(fmt.Sprintf("Changing from '%+v' to '%+v'\n", existing, entity))
 				return fmt.Errorf("broker entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
 			}
 		} else {
@@ -314,7 +317,7 @@ func (b *BrokerState) EnsureEntities(ctx context.Context, entities []BrokerEntit
 		b.Reset()
 	}
 	if err != nil {
-		log.Printf("[Broker %s] EnsureQueues error: %+v", b.host, err)
+		log.Info(fmt.Sprintf("[Broker %s] EnsureQueues error: %+v", b.host, err))
 	}
 	for entity := range completed {
 		b.entities[entity.Type()][entity.GetName()] = entity
@@ -358,7 +361,7 @@ func (b *BrokerState) DeleteEntities(ctx context.Context, entities []BrokerEntit
 		b.Reset()
 	}
 	if err != nil {
-		log.Printf("[Broker %s] DeleteEntities error: %+v", b.host, err)
+		log.Info(fmt.Sprintf("[Broker %s] DeleteEntities error: %+v", b.host, err))
 	}
 	for entity := range completed {
 		delete(b.entities[entity.Type()], entity.GetName())
@@ -406,7 +409,7 @@ func newManagementMessage(resource string, operation string, attribute string, p
  */
 func (b *BrokerState) Reset() {
 	if b.commandClient != nil && b.initialized {
-		log.Printf("[Broker %s] Resetting connection", b.host)
+		log.Info(fmt.Sprintf("[Broker %s] Resetting connection", b.host))
 		b.commandClient.Stop()
 		b.initialized = false
 		b.commandClient.Start()
@@ -448,13 +451,13 @@ func (b *BrokerQueue) Create(client amqpcommand.Client) error {
 		return err
 	}
 
-	log.Printf("[Broker %s] creating queue json: '%s'", client.Addr(), string(config))
+	log.Info(fmt.Sprintf("[Broker %s] creating queue json: '%s'", client.Addr(), string(config)))
 
 	message, err := newManagementMessage("broker", "createQueue", "", string(config))
 	if err != nil {
 		return err
 	}
-	log.Printf("Creating queue %s on %s: %+v", b.Name, client.Addr(), message)
+	log.Info(fmt.Sprintf("Creating queue %s on %s: %+v", b.Name, client.Addr(), message))
 	response, err := doRequest(client, message)
 	if err != nil {
 		return err
@@ -462,7 +465,7 @@ func (b *BrokerQueue) Create(client amqpcommand.Client) error {
 	if !success(response) {
 		return fmt.Errorf("error creating queue %s: %+v", b.Name, response.Value)
 	}
-	log.Printf("Queue %s created successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Queue %s created successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -472,7 +475,7 @@ func (b *BrokerQueue) Delete(client amqpcommand.Client) error {
 		return err
 	}
 
-	log.Printf("Destroying queue %s on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Destroying queue %s on %s", b.Name, client.Addr()))
 
 	response, err := doRequest(client, message)
 	if err != nil {
@@ -483,7 +486,7 @@ func (b *BrokerQueue) Delete(client amqpcommand.Client) error {
 		return fmt.Errorf("error deleting queue %s: %+v", b.Name, response.Value)
 	}
 
-	log.Printf("Queue %s destroyed successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Queue %s destroyed successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -506,13 +509,13 @@ func (b *BrokerAddress) Equals(other BrokerEntity) bool {
 }
 
 func (b *BrokerAddress) Create(client amqpcommand.Client) error {
-	log.Printf("[Broker %s] creating address: '%s'", client.Addr(), b.Name)
+	log.Info(fmt.Sprintf("[Broker %s] creating address: '%s'", client.Addr(), b.Name))
 
 	message, err := newManagementMessage("broker", "createAddress", "", b.Name, b.RoutingType)
 	if err != nil {
 		return err
 	}
-	log.Printf("Creating address %s on %s: %+v", b.Name, client.Addr(), message)
+	log.Info(fmt.Sprintf("Creating address %s on %s: %+v", b.Name, client.Addr(), message))
 	response, err := doRequest(client, message)
 	if err != nil {
 		return err
@@ -520,7 +523,7 @@ func (b *BrokerAddress) Create(client amqpcommand.Client) error {
 	if !success(response) {
 		return fmt.Errorf("error creating address %s: %+v", b.Name, response.Value)
 	}
-	log.Printf("Address %s created successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Address %s created successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -530,7 +533,7 @@ func (b *BrokerAddress) Delete(client amqpcommand.Client) error {
 		return err
 	}
 
-	log.Printf("Deleting address %s on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Deleting address %s on %s", b.Name, client.Addr()))
 
 	response, err := doRequest(client, message)
 	if err != nil {
@@ -541,7 +544,7 @@ func (b *BrokerAddress) Delete(client amqpcommand.Client) error {
 		return fmt.Errorf("error deleting address %s: %+v", b.Name, response.Value)
 	}
 
-	log.Printf("Address %s deleted successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Address %s deleted successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -567,13 +570,13 @@ func (b *BrokerDivert) Equals(other BrokerEntity) bool {
 }
 
 func (b *BrokerDivert) Create(client amqpcommand.Client) error {
-	log.Printf("[Broker %s] creating divert: '%s'", client.Addr(), b.Name)
+	log.Info(fmt.Sprintf("[Broker %s] creating divert: '%s'", client.Addr(), b.Name))
 
 	message, err := newManagementMessage("broker", "createDivert", "", b.Name, b.RoutingName, b.Address, b.ForwardingAddress, b.Exclusive, b.FilterString, nil)
 	if err != nil {
 		return err
 	}
-	log.Printf("Creating divert %s on %s: %+v", b.Name, client.Addr(), message)
+	log.Info(fmt.Sprintf("Creating divert %s on %s: %+v", b.Name, client.Addr(), message))
 	response, err := doRequest(client, message)
 	if err != nil {
 		return err
@@ -581,7 +584,7 @@ func (b *BrokerDivert) Create(client amqpcommand.Client) error {
 	if !success(response) {
 		return fmt.Errorf("error creating divert %s: %+v", b.Name, response.Value)
 	}
-	log.Printf("Divert %s created successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Divert %s created successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -591,7 +594,7 @@ func (b *BrokerDivert) Delete(client amqpcommand.Client) error {
 		return err
 	}
 
-	log.Printf("Destroying divert %s on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Destroying divert %s on %s", b.Name, client.Addr()))
 
 	response, err := doRequest(client, message)
 	if err != nil {
@@ -602,7 +605,7 @@ func (b *BrokerDivert) Delete(client amqpcommand.Client) error {
 		return fmt.Errorf("error destroying divert %s: %+v", b.Name, response.Value)
 	}
 
-	log.Printf("Divert %s destroyed successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Divert %s destroyed successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -631,7 +634,7 @@ func (b *BrokerAddressSetting) Equals(e BrokerEntity) bool {
 }
 
 func (b *BrokerAddressSetting) Create(client amqpcommand.Client) error {
-	log.Printf("[Broker %s] creating address setting: '%s'", client.Addr(), b.Name)
+	log.Info(fmt.Sprintf("[Broker %s] creating address setting: '%s'", client.Addr(), b.Name))
 
 	message, err := newManagementMessage("broker", "addAddressSettings", "",
 		b.Name,
@@ -664,7 +667,7 @@ func (b *BrokerAddressSetting) Create(client amqpcommand.Client) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Creating address setting %s on %s: %+v", b.Name, client.Addr(), message)
+	log.Info(fmt.Sprintf("Creating address setting %s on %s: %+v", b.Name, client.Addr(), message))
 	response, err := doRequest(client, message)
 	if err != nil {
 		return err
@@ -672,7 +675,7 @@ func (b *BrokerAddressSetting) Create(client amqpcommand.Client) error {
 	if !success(response) {
 		return fmt.Errorf("error creating address setting %s: %+v", b.Name, response.Value)
 	}
-	log.Printf("Address setting %s created successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Address setting %s created successfully on %s", b.Name, client.Addr()))
 	return nil
 }
 
@@ -682,7 +685,7 @@ func (b *BrokerAddressSetting) Delete(client amqpcommand.Client) error {
 		return err
 	}
 
-	log.Printf("Removing address setting %s on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Removing address setting %s on %s", b.Name, client.Addr()))
 
 	response, err := doRequest(client, message)
 	if err != nil {
@@ -693,6 +696,6 @@ func (b *BrokerAddressSetting) Delete(client amqpcommand.Client) error {
 		return fmt.Errorf("error removing address setting %s: %+v", b.Name, response.Value)
 	}
 
-	log.Printf("Address setting %s destroyed successfully on %s", b.Name, client.Addr())
+	log.Info(fmt.Sprintf("Address setting %s destroyed successfully on %s", b.Name, client.Addr()))
 	return nil
 }

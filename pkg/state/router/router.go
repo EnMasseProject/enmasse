@@ -13,7 +13,6 @@ import (
 
 	//"errors"
 	"fmt"
-	"log"
 	"reflect"
 	"time"
 
@@ -22,8 +21,12 @@ import (
 	. "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"golang.org/x/sync/errgroup"
 
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
+
 	"pack.ag/amqp"
 )
+
+var log = logf.Log.WithName("router")
 
 const (
 	routerCommandAddress         = "$management"
@@ -99,7 +102,7 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 
 	r.nextResync = nextResync
 
-	log.Printf("[Router %s] Initializing...", r.host)
+	log.Info(fmt.Sprintf("[Router %s] Initializing...", r.host))
 	r.reconnectCount = r.commandClient.ReconnectCount()
 	totalEntities := 0
 	entityTypes := []RouterEntityType{RouterConnectorEntity, RouterListenerEntity, RouterAddressEntity, RouterAutoLinkEntity, RouterLinkRouteEntity, RouterSslProfileEntity}
@@ -112,7 +115,7 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 		totalEntities += len(list)
 	}
 
-	log.Printf("[Router %s] Initialized controller state with %d entities", r.host, totalEntities)
+	log.Info(fmt.Sprintf("[Router %s] Initialized controller state with %d entities", r.host, totalEntities))
 	r.initialized = true
 	return nil
 }
@@ -122,7 +125,7 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
  */
 func (r *RouterState) Reset() {
 	if r.commandClient != nil && r.initialized {
-		log.Printf("[Router %s] Resetting connection", r.host)
+		log.Info(fmt.Sprintf("[Router %s] Resetting connection", r.host))
 		r.commandClient.Stop()
 		r.initialized = false
 		r.commandClient.Start()
@@ -167,7 +170,7 @@ func getStatusCode(response *amqp.Message) (int32, error) {
 	case int32:
 		return v, nil
 	default:
-		log.Printf("Response: %+v", response)
+		log.Info(fmt.Sprintf("Response: %+v", response))
 		return 0, fmt.Errorf("unexpected value with type %T", v)
 	}
 }
@@ -273,7 +276,7 @@ func (r *RouterState) readEntity(entityType RouterEntityType, name string) (Rout
 	case map[string]interface{}:
 		return entityType.Decode(v)
 	default:
-		log.Printf("Response: %+v", response)
+		log.Info(fmt.Sprintf("Response: %+v", response))
 		return nil, fmt.Errorf("unexpected value with type %T", v)
 	}
 }
@@ -306,7 +309,7 @@ func (r *RouterState) queryEntities(entity RouterEntityType, attributes ...strin
 		return nil, err
 	}
 
-	// log.Printf("Got response %+v\n", response)
+	// log.Info(fmt.Sprintf("Got response %+v\n", response))
 
 	code, err := getStatusCode(response)
 	if err != nil {
@@ -321,7 +324,7 @@ func (r *RouterState) queryEntities(entity RouterEntityType, attributes ...strin
 	case map[string]interface{}:
 		return v, nil
 	default:
-		log.Printf("Response: %+v", response)
+		log.Info(fmt.Sprintf("Response: %+v", response))
 		return nil, fmt.Errorf("unexpected value with type %T", v)
 	}
 }
@@ -351,7 +354,7 @@ func (r *RouterState) ReadEntities(ctx context.Context, entities []RouterEntity)
 		r.Reset()
 	}
 	if err != nil {
-		log.Printf("[Router %s] ReadEntities error: %+v", r.host, err)
+		log.Info(fmt.Sprintf("[Router %s] ReadEntities error: %+v", r.host, err))
 	}
 
 	result := make([]RouterEntity, 0, len(entities))
@@ -373,7 +376,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 		existing, ok := typeMap[entity.GetName()]
 		if ok {
 			if !existing.Equals(entity) {
-				log.Printf("Changing from '%+v' to '%+v'\n", existing, entity)
+				log.Info(fmt.Sprintf("Changing from '%+v' to '%+v'\n", existing, entity))
 				return fmt.Errorf("router entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
 			}
 		} else {
@@ -395,7 +398,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 					return err
 				}
 				g.Go(func() error {
-					log.Printf("[Router %s] Creating entity %s %s: %+v", r.host, e.Type(), e.GetName(), value)
+					log.Info(fmt.Sprintf("[Router %s] Creating entity %s %s: %+v", r.host, e.Type(), e.GetName(), value))
 					err := r.createEntity(t, e.GetName(), value)
 					if err != nil {
 						return err
@@ -416,7 +419,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 		r.Reset()
 	}
 	if err != nil {
-		log.Printf("[Router %s] EnsureEntities error: %+v", r.host, err)
+		log.Info(fmt.Sprintf("[Router %s] EnsureEntities error: %+v", r.host, err))
 	}
 
 	// Serialize completed
@@ -436,7 +439,7 @@ func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) 
 	for _, name := range names {
 		n := name
 		g.Go(func() error {
-			log.Printf("[Router %s] Deleting entity %s %s", r.host, n.Type(), n.GetName())
+			log.Info(fmt.Sprintf("[Router %s] Deleting entity %s %s", r.host, n.Type(), n.GetName()))
 			err := r.deleteEntity(n.Type(), n.GetName())
 			if err != nil {
 				// TODO: Workaround for https://issues.apache.org/jira/browse/DISPATCH-1646, as HTTP listeners can't be deleted. We will ignore the error and
@@ -457,7 +460,7 @@ func (r *RouterState) DeleteEntities(ctx context.Context, names []RouterEntity) 
 		r.Reset()
 	}
 	if err != nil {
-		log.Printf("[Router %s] DeleteEntities error: %+v", r.host, err)
+		log.Info(fmt.Sprintf("[Router %s] DeleteEntities error: %+v", r.host, err))
 	}
 
 	// Serialize completed
@@ -686,7 +689,7 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 		case float64:
 			converted[k] = int(vt)
 		default:
-			//			log.Printf("Key %s has value type %T", k, vt)
+			//			log.Info(fmt.Sprintf("Key %s has value type %T", k, vt))
 			converted[k] = vt
 		}
 	}
