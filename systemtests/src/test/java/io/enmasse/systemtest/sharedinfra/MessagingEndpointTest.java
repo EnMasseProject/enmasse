@@ -19,7 +19,7 @@ import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
-import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.Kubernetes;
@@ -75,7 +75,7 @@ public class MessagingEndpointTest extends TestBase {
 
         createEndpointAndAddress(endpoint, "queue1");
 
-        doTestSendReceiveOutsideCluster(endpoint.getStatus().getHost(), getPort("AMQP", endpoint), "queue1", false, false, null);
+        doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), getPort("AMQP", endpoint), "queue1", false, false);
     }
 
     @Test

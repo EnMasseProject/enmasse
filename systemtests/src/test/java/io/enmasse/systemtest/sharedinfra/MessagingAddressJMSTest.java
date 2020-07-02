@@ -11,7 +11,7 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantBuilder;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.resolvers.JmsProviderParameterResolver;
