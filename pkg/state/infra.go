@@ -9,7 +9,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"log"
 	"math/rand"
 	"sync"
 	"time"
@@ -22,9 +21,12 @@ import (
 	sched "github.com/enmasseproject/enmasse/pkg/state/scheduler"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"golang.org/x/sync/errgroup"
 )
+
+var log = logf.Log.WithName("state")
 
 type routerStateFunc = func(host Host, port int32, tlsConfig *tls.Config) *RouterState
 type brokerStateFunc = func(host Host, port int32, tlsConfig *tls.Config) *BrokerState
@@ -118,7 +120,7 @@ func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, cloc
 
 func (i *infraClient) Start() {
 	go func() {
-		log.Printf("Starting syncer goroutine")
+		log.Info("Starting syncer goroutine")
 		for {
 			select {
 			case <-i.syncerStop:
@@ -131,7 +133,7 @@ func (i *infraClient) Start() {
 	}()
 
 	go func() {
-		log.Printf("Starting deleter goroutine")
+		log.Info("Starting deleter goroutine")
 		for {
 			select {
 			case <-i.deleterStop:
@@ -190,7 +192,7 @@ func (i *infraClient) updateRouters(hosts []Host) {
 
 	// Shutdown and remove unknown hosts
 	for hostname, host := range toRemove {
-		log.Printf("Removing router %+v", host)
+		log.Info(fmt.Sprintf("Removing router %+v", host))
 		i.routers[host].Shutdown()
 		delete(i.hostMap, hostname)
 		delete(i.routers, host)
@@ -198,7 +200,7 @@ func (i *infraClient) updateRouters(hosts []Host) {
 
 	// Create states for new hosts
 	for hostname, host := range toAdd {
-		log.Printf("Adding router %+v", host)
+		log.Info(fmt.Sprintf("Adding router %+v", host))
 		var routerTlsConfig *tls.Config
 		if i.tlsConfig != nil {
 			routerTlsConfig = &tls.Config{
@@ -238,7 +240,7 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host, removeRou
 
 	// Shutdown and remove unknown hosts
 	for hostname, host := range toRemove {
-		log.Printf("Removing broker %+v", host)
+		log.Info(fmt.Sprintf("Removing broker %+v", host))
 		_, foundAdded := toAdd[hostname]
 		// If it was found, it means the ip changed, but the host remains stable so there is no need to delete the connector.
 		if !foundAdded && removeRouterConnectors {
@@ -258,7 +260,7 @@ func (i *infraClient) updateBrokers(ctx context.Context, hosts []Host, removeRou
 
 	// Create states for new hosts
 	for hostname, host := range toAdd {
-		log.Printf("Adding broker %+v", host)
+		log.Info(fmt.Sprintf("Adding broker %+v", host))
 		var brokerTlsConfig *tls.Config
 		if i.tlsConfig != nil {
 			brokerTlsConfig = &tls.Config{
@@ -328,7 +330,7 @@ func (i *infraClient) DeleteBroker(host string) error {
 }
 
 func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Config) ([]ConnectorStatus, error) {
-	log.Printf("Syncing with routers: %+v, and brokers: %+v", routers, brokers)
+	log.Info(fmt.Sprintf("Syncing with routers: %+v, and brokers: %+v", routers, brokers))
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -378,14 +380,14 @@ func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Con
 		router := r
 		err := router.EnsureEntities(ctx, connectors)
 		if err != nil {
-			log.Println("Error ensuring connector", err)
+			log.Error(err, "Error ensuring connector")
 			return err
 		}
 
 		// Query for status
 		readConnectors, err := router.ReadEntities(ctx, connectors)
 		if err != nil {
-			log.Println("Error getting connector status", err)
+			log.Error(err, "Error getting connector status")
 			return err
 		}
 
@@ -443,7 +445,7 @@ func (i *infraClient) SyncAll(routers []Host, brokers []Host, tlsConfig *tls.Con
 		return nil, err
 	}
 
-	log.Printf("State synchronization complete with %d routers and %d brokers", len(i.routers), len(i.brokers))
+	log.Info(fmt.Sprintf("State synchronization complete with %d routers and %d brokers", len(i.routers), len(i.brokers)))
 	i.initialized = true
 	return allConnectors, nil
 }
@@ -606,17 +608,17 @@ func (i *infraClient) requestSync(object metav1.Object) error {
 func (i *infraClient) SyncAddress(address *v1beta2.MessagingAddress) error {
 
 	// Request sync
-	log.Printf("Syncing address %s/%s", address.Namespace, address.Name)
+	log.Info(fmt.Sprintf("Syncing address %s/%s", address.Namespace, address.Name))
 	return i.requestSync(address)
 }
 
 func (i *infraClient) SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
-	log.Printf("Syncing endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+	log.Info(fmt.Sprintf("Syncing endpoint %s/%s", endpoint.Namespace, endpoint.Name))
 	return i.requestSync(endpoint)
 }
 
 func (i *infraClient) SyncTenant(tenant *v1beta2.MessagingTenant) error {
-	log.Printf("Syncing tenant %s/%s", tenant.Namespace, tenant.Name)
+	log.Info(fmt.Sprintf("Syncing tenant %s/%s", tenant.Namespace, tenant.Name))
 	return i.requestSync(tenant)
 }
 
@@ -639,7 +641,7 @@ func (i *infraClient) AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protoco
 			}
 		}
 		if !found {
-			log.Println("Port not found, allocating")
+			log.Info("Port not found, allocating")
 			port, err := i.allocatePort(name)
 			if err != nil {
 				return err
@@ -709,7 +711,7 @@ func (i *infraClient) doSync() {
 	if len(toSync) == 0 {
 		return
 	}
-	log.Printf("Going to sync %d resources to infra", len(toSync))
+	log.Info(fmt.Sprintf("Going to sync %d resources to infra", len(toSync)))
 
 	i.lock.Lock()
 	defer i.lock.Unlock()
@@ -743,7 +745,7 @@ func (i *infraClient) doSync() {
 
 	builtRequests, routerEntities, brokerEntities := i.buildEntities(valid)
 
-	log.Printf("Syncing %d router entities", len(routerEntities))
+	log.Info(fmt.Sprintf("Syncing %d router entities", len(routerEntities)))
 	ctx := context.Background()
 	err := i.syncEntities(ctx, routerEntities, brokerEntities)
 	for _, req := range builtRequests {
@@ -767,7 +769,7 @@ func (i *infraClient) doSync() {
 		default:
 			req.done <- fmt.Errorf("unknown resource type %T", v)
 		}
-		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
+		log.Info(fmt.Sprintf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name))
 	}
 
 }
@@ -960,7 +962,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 	if tenant.Status.Broker != nil {
 		// Transactional means that we create a link route based on the tenant prefix,
 		// and all broker addresses go through that route.
-		log.Println("Tenant borkre set, using ")
+		log.Info("Tenant borkre set, using ")
 		broker := *tenant.Status.Broker
 		host := i.hostMap[broker.Host]
 		brokerState := i.brokers[host]
@@ -1242,7 +1244,7 @@ func (i *infraClient) Shutdown() error {
 }
 
 func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error {
-	log.Printf("Deleting endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+	log.Info(fmt.Sprintf("Deleting endpoint %s/%s", endpoint.Namespace, endpoint.Name))
 	req := &request{
 		resource: endpoint,
 		done:     make(chan error, 1),
@@ -1257,7 +1259,7 @@ func (i *infraClient) DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error 
 }
 
 func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
-	log.Printf("Deleting address %s/%s", address.Namespace, address.Name)
+	log.Info(fmt.Sprintf("Deleting address %s/%s", address.Namespace, address.Name))
 	req := &request{
 		resource: address,
 		done:     make(chan error, 1),
@@ -1272,7 +1274,7 @@ func (i *infraClient) DeleteAddress(address *v1beta2.MessagingAddress) error {
 }
 
 func (i *infraClient) DeleteTenant(tenant *v1beta2.MessagingTenant) error {
-	log.Printf("Deleting tenant %s/%s", tenant.Namespace, tenant.Name)
+	log.Info(fmt.Sprintf("Deleting tenant %s/%s", tenant.Namespace, tenant.Name))
 	req := &request{
 		resource: tenant,
 		done:     make(chan error, 1),
@@ -1291,7 +1293,7 @@ func (i *infraClient) doDelete() {
 	if len(toDelete) == 0 {
 		return
 	}
-	log.Printf("Going to delete %d resources in infra", len(toDelete))
+	log.Info(fmt.Sprintf("Going to delete %d resources in infra", len(toDelete)))
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -1344,7 +1346,7 @@ func (i *infraClient) doDelete() {
 		case *v1beta2.MessagingAddress:
 			if err == nil {
 				delete(i.addresses, key)
-				log.Printf("Deleted address %s/%s", key.Namespace, key.Name)
+				log.Info(fmt.Sprintf("Deleted address %s/%s", key.Namespace, key.Name))
 			}
 			req.done <- err
 		case *v1beta2.MessagingEndpoint:
@@ -1352,19 +1354,19 @@ func (i *infraClient) doDelete() {
 			if err == nil {
 				i.freePortsInternal(endpoint)
 				delete(i.endpoints, key)
-				log.Printf("Deleted endpoint %s/%s", endpoint.Namespace, endpoint.Name)
+				log.Info(fmt.Sprintf("Deleted endpoint %s/%s", endpoint.Namespace, endpoint.Name))
 			}
 			req.done <- err
 		case *v1beta2.MessagingTenant:
 			if err == nil {
 				delete(i.tenants, key)
-				log.Printf("Deleted tenant %s/%s", key.Namespace, key.Name)
+				log.Info(fmt.Sprintf("Deleted tenant %s/%s", key.Namespace, key.Name))
 			}
 			req.done <- err
 		default:
 			req.done <- fmt.Errorf("unknown resource type %T", v)
 		}
-		log.Printf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name)
+		log.Info(fmt.Sprintf("State updated to (err %+v) for %s/%s", err, key.Namespace, key.Name))
 	}
 }
 
