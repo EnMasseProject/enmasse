@@ -1825,6 +1825,18 @@ EOF
 `;
 }
 
+function iotProjectCommand(iotPj) {
+  return `apiVersion: iot.enmasse.io/v1alpha1
+oc apply -f - << EOF
+kind: IoTProject
+metadata:
+  name: ${iotPj.metadata.name}
+spec:
+  //tbd
+EOF
+`;
+}
+
 var iotProjects = [];
 var iotdevices = [];
 
@@ -1833,10 +1845,7 @@ createIotProject({
     name: "iotProjectFrance",
     namespace: availableNamespaces[0].metadata.name
   },
-  enabled: true,
-  spec: {
-    downstreamStrategyType: "managed"
-  }
+  enabled: true
 });
 
 createIotProject({
@@ -1844,10 +1853,7 @@ createIotProject({
     name: "iotProjectIndia",
     namespace: availableNamespaces[1].metadata.name
   },
-  enabled: true,
-  spec: {
-    downstreamStrategyType: "external"
-  }
+  enabled: true
 });
 
 function getMockIotEndpoints() {
@@ -1895,11 +1901,6 @@ function createIotProject(pj) {
     throw `Unrecognised namespace '${pj.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  var strategyType = pj.spec.downstreamStrategyType;
-  if (strategyType !== "managed" && strategyType !== "external") {
-    throw `Unrecognised downstream strategy type '${pj.spec.downstreamStrategyType}', known ones are : managed, external`;
-  }
-
   if (
     iotProjects.find(
       existing =>
@@ -1932,12 +1933,11 @@ function createIotProject(pj) {
     },
     enabled: pj.enabled,
     spec: {
-      downstreamStrategyType: pj.spec.downstreamStrategyType,
-      downstreamStrategy: getMockDownstreamStrategy(
-        pj.spec.downstreamStrategyType
-      ),
+      tenantId: pj.metadata.name + ".iot",
+      addresses: getMockIotDownstreamMessagingAddresses(),
       configuration: "{}"
     },
+    status: pj.status,
     endpoints: getMockIotEndpoints(),
     status: getMockIotProjectStatus()
   };
@@ -1975,52 +1975,31 @@ function enableIotProject(iotProject) {
   iotProjects[pjIndex].enabled = true;
 }
 
-function getMockDownstreamStrategy(strategyType) {
-  if (strategyType === "managed") {
-    return {
-      addressSpace: {
-        name: addressSpaces[0].metadata.name,
-        plan: addressSpaces[0].spec.plan,
-        type: addressSpaces[0].spec.type
+function getMockIotDownstreamMessagingAddresses() {
+  return {
+    Telemetry: {
+      name: "ganymede",
+      plan: "standard-small-queue",
+      type: "queue"
+    },
+    Event: {
+      name: "europa",
+      plan: "standard-small-queue",
+      type: "queue"
+    },
+    Command: [
+      {
+        name: "thebe",
+        plan: "standard-small-queue",
+        type: "queue"
       },
-      addresses: {
-        Telemetry: {
-          name: "ganymede",
-          plan: "standard-small-queue",
-          type: "queue"
-        },
-        Event: {
-          name: "europa",
-          plan: "standard-small-queue",
-          type: "queue"
-        },
-        Command: [
-          {
-            name: "thebe",
-            plan: "standard-small-queue",
-            type: "queue"
-          },
-          {
-            name: "callisto",
-            plan: "standard-small-queue",
-            type: "queue"
-          }
-        ]
+      {
+        name: "callisto",
+        plan: "standard-small-queue",
+        type: "queue"
       }
-    };
-  }
-  if (strategyType === "external") {
-    return {
-      connectionInformation: {
-        host: "messaging.external.host.tld",
-        port: 5674,
-        credentials: {
-          username: "admin",
-          password: "pasword"
-        }
-      }
-    };
-  }
+    ]
+  };
 }
 
 function patchIotProject(metadata, jsonPatch, patchType) {
@@ -2053,11 +2032,11 @@ function patchIotProject(metadata, jsonPatch, patchType) {
   }
 }
 
-function getMockIotProjectStatus() {
+function getMockIotProjectStatus(name) {
   return {
     phase: "Active",
 
-    tenantName: "tenantName.iot",
+    tenantName: name + ".iot",
     downstreamEndpoint: {
       host: "host.domain.com",
       port: 5674,
@@ -2066,7 +2045,29 @@ function getMockIotProjectStatus() {
         password: "verysecret"
       },
       tls: true,
-      certificate: "averylongString"
+      certificate: `
+----BEGIN CERTIFICATE-----
+MIIDrzCCApegAwIBAgIUSBUjPhOi9/v+7QezYF/scX+tH3IwDQYJKoZIhvcNAQEL
+BQAwQjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0eTEcMBoGA1UE
+CgwTRGVmYXVsdCBDb21wYW55IEx0ZDAgFw0yMDA1MjIwODQxNTJaGA8yMDUwMDcw
+NDA4NDE1MlowRjETMBEGA1UECgwKaW8uZW5tYXNzZTEvMC0GA1UEAwwmbWVzc2Fn
+aW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5zdmMwggEiMA0GCSqGSIb3DQEB
+AQUAA4IBDwAwggEKAoIBAQDK9JHlyeZt+WRfO7jxL5vMykIjNoC8TbrENXWA+y6E
+E4XBiJ8tWpfwWM8uFYiJeaoFeqCzjSuFnTgU/bkgKdlp5PDsZFBUOlmYH0U7tbwK
+GJedimNHquZSgGT5m4wL+5VxnHWEShn/y+4YuhnwYQBjm5zKWy9mufNuwpWYBLzJ
+Ii7E1SxjJpeD+VkakSbf8fE6QZTw4KWkfq4iuU3IevaViZZYBF7MhKQu2+JXrZnK
+ydfrCIL4HjP7Vy9ZGRsG7OJ2++VD9X17qHyChnRuOv0nHCS8LfceNEw08UuS+Kg3
+n2jYKByxPNpOZxkl+TLazSwZ3yA0cJtrs/PuwrMzhcWnAgMBAAGjgZYwgZMwgZAG
+A1UdEQSBiDCBhYImbWVzc2FnaW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5z
+dmOCM21lc3NhZ2luZy1xdWV1ZXNwYWNlLWVubWFzc2UtaW5mcmEuYXBwcy1jcmMu
+dGVzdGluZ4ImbWVzc2FnaW5nLXF1ZXVlc3BhY2UuZW5tYXNzZS1pbmZyYS5zdmMw
+DQYJKoZIhvcNAQELBQADggEBAJv5Qfhi0pLJJK4Y9go1sXF0x1YcnU5zd9Aur7aP
+0BpdZhHpiLoXuP3Um5WIMXZw1tF4H7yisb4yZTPG+vHOI3W1JzLp1sxDQC48rbAf
+vWRM3ZqORjeaBNppdsSsEecUq/6VPTmmnnxgEj4NMUaL/sKDgjoZT1alkwfk+s6v
+QzMugsw71TgwnpWtpOxHIhQuSxkIyNBHswNTq+js8I1RVqBJiwMKhsOMCssbyCaq
+iuQC6VD1peb6Eby7JeDQjPrBmJnInuBNfLlDq0jgxZB/6kLfhug8dPc7v5TSPV9E
+37Bon8FHRQit5qZNw/AGSzcPXMUeBG3pUOCuAZ5/yU7X0fc=
+-----END CERTIFICATE-----`
     }
   };
 }
@@ -2450,19 +2451,6 @@ function getAddressSpacesAndOrIotProjects(projectType) {
 
 // A map of functions which return data for the schema.
 const resolvers = {
-  IotProjectDownStreamStrategy: {
-    __resolveType(DownStreamStrategy, context, info) {
-      if (DownStreamStrategy.addressSpace) {
-        return "ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1";
-      }
-
-      if (DownStreamStrategy.connectionInformation) {
-        return "ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1";
-      }
-
-      return null;
-    }
-  },
   Mutation: {
     createAddressSpace: (parent, args) => {
       return createAddressSpace(init(args.input));
@@ -2554,11 +2542,7 @@ const resolvers = {
     disableIotProjects: (parent, args) => {
       runOperationForAll(args.input, t => disableIotProject(t));
       return true;
-    },
-    enableIotProjects: (parent, args) => {
-      runOperationForAll(args.input, t => enableIotProject(t));
-      return true;
-    },
+    }
   },
   Query: {
     hello: () => "world",
@@ -2732,6 +2716,11 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
         total: endpoints.length,
         messagingEndpoints: page
       };
+    },
+
+    iotProjectCommand: (parent, args, context, info) => {
+      var iotPj = args.input;
+      return iotProjectCommand(iotPj);
     },
 
     devices: (parent, args, context, info) => {
