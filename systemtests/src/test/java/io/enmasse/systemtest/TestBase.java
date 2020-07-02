@@ -3,12 +3,13 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.bases;
+package io.enmasse.systemtest;
 
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.bases.ITestSeparator;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;

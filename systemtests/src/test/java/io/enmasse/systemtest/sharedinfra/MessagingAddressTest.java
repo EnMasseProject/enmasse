@@ -18,7 +18,7 @@ import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
-import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;

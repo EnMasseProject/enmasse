@@ -10,7 +10,7 @@ import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.api.model.MessagingTenantCondition;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
-import io.enmasse.systemtest.bases.TestBase;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
 import org.junit.jupiter.api.Test;
