@@ -4,6 +4,7 @@
 ## 0.33.0
 
 * #4839: Agent leaks memory if qdrouter is restarted. 
+* #4860: Ensure address space controller and standard controller record stacktrace
 
 ## 0.32.0
 
