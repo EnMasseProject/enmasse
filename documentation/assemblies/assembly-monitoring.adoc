@@ -8,6 +8,10 @@
 
 You can monitor {ProductName} by deploying built-in monitoring tools or using your pre-existing monitoring infrastructure.
 
+ifeval::["{cmdcli}" == "oc"]
+include::../modules/proc-enable-ocp4-monitoring.adoc[leveloffset=+1]
+endif::[]
+
 include::../modules/proc-deploy-monitoring-operator.adoc[leveloffset=+1]
 
 include::../modules/proc-deploy-kube-state-metrics.adoc[leveloffset=+1]
