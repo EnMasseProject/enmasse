@@ -1,0 +1,8 @@
+// Module included in the following assemblies:
+//
+// assembly-monitoring.adoc
+
+[id='enable-monitoring-ocp4-{context}']
+= Enabling Monitoring on OpenShift 4
+
+In order to monitor {ProductName} on OpenShift 4 using the existing monitoring stack, user-workload monitoring must be link:https://docs.openshift.com/container-platform/4.4/monitoring/monitoring-your-own-services.html[enabled^].
