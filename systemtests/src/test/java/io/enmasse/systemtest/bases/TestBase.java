@@ -9,7 +9,6 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.clients.ClientUtils;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -33,7 +32,6 @@ import java.util.List;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Tag(TestTag.SYSTEMTEST)
 public abstract class TestBase implements ITestSeparator {
-    ClientUtils clientUtils = new ClientUtils();
     protected static final Kubernetes kubernetes = Kubernetes.getInstance();
     protected static final UserCredentials clusterUser = new UserCredentials(KubeCMDClient.getOCUser());
     protected static final Environment environment = Environment.getInstance();
@@ -86,9 +84,5 @@ public abstract class TestBase implements ITestSeparator {
         if (exception != null) {
             throw exception;
         }
-    }
-
-    protected ClientUtils getClientUtils() {
-        return clientUtils;
     }
 }

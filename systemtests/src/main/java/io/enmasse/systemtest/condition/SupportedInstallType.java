@@ -4,15 +4,14 @@
  */
 package io.enmasse.systemtest.condition;
 
+import io.enmasse.systemtest.EnmasseInstallType;
+import io.enmasse.systemtest.OLMInstallationType;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.junit.jupiter.api.extension.ExtendWith;
-
-import io.enmasse.systemtest.EnmasseInstallType;
-import io.enmasse.systemtest.OLMInstallationType;
 
 /**
  * The use of this annotation enables/disables the target test class depending if OLM is supported in the cluster where tests are run.

@@ -7,16 +7,10 @@ package io.enmasse.systemtest.amqp;
 
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonDelivery;
-import io.vertx.proton.ProtonQoS;
 import io.vertx.proton.ProtonSender;
-import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.message.Message;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;

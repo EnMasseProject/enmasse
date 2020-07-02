@@ -5,7 +5,15 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.jupiter.api.Assertions.fail;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.json.JsonObject;
+import org.apache.qpid.proton.amqp.messaging.Data;
+import org.apache.qpid.proton.message.Message;
+import org.opentest4j.AssertionFailedError;
+import org.slf4j.Logger;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -17,16 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import org.apache.qpid.proton.amqp.messaging.Data;
-import org.apache.qpid.proton.message.Message;
-import org.opentest4j.AssertionFailedError;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.json.JsonObject;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Run a message send test.

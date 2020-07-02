@@ -5,32 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import static com.google.common.net.HttpHeaders.AUTHORIZATION;
-import static io.enmasse.systemtest.iot.MessageType.EVENT;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.time.Duration.ofSeconds;
-
-import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.time.Duration;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-
-import javax.ws.rs.core.HttpHeaders;
-
-import org.apache.http.entity.ContentType;
-import org.slf4j.Logger;
-
 import com.google.common.base.Throwables;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
@@ -44,6 +19,28 @@ import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 import io.vertx.ext.web.client.WebClientOptions;
+import org.apache.http.entity.ContentType;
+import org.slf4j.Logger;
+
+import javax.ws.rs.core.HttpHeaders;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.time.Duration;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+
+import static com.google.common.net.HttpHeaders.AUTHORIZATION;
+import static io.enmasse.systemtest.iot.MessageType.EVENT;
+import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.time.Duration.ofSeconds;
 
 public class HttpAdapterClient extends ApiClient {
 

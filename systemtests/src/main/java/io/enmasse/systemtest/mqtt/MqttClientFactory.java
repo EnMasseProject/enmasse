@@ -5,33 +5,10 @@
 
 package io.enmasse.systemtest.mqtt;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.Socket;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SNIHostName;
-import javax.net.ssl.SNIServerName;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.SSLSocket;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
-
+import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.UserCredentials;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
@@ -51,13 +28,31 @@ import org.eclipse.paho.client.mqttv3.MqttTopic;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 
-import io.enmasse.address.model.AddressSpace;
-import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.utils.AddressSpaceUtils;
-import io.enmasse.systemtest.utils.TestUtils;
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SNIHostName;
+import javax.net.ssl.SNIServerName;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 public class MqttClientFactory {
 
@@ -175,15 +170,6 @@ public class MqttClientFactory {
 
             return this;
 
-        }
-
-        public Builder endpointFromAddressSpace(final AddressSpace addressSpace) {
-            this.endpoint = AddressSpaceUtils.getEndpointByServiceName(addressSpace, "mqtt");
-            if (this.endpoint == null) {
-                String externalEndpointName = AddressSpaceUtils.getExternalEndpointName(addressSpace, "mqtt");
-                this.endpoint = Kubernetes.getInstance().getExternalEndpoint(externalEndpointName + "-" + AddressSpaceUtils.getAddressSpaceInfraUuid(addressSpace));
-            }
-            return this;
         }
 
         public Builder mqttConnectionOptions(final Consumer<MqttConnectOptions> mqttConnectOptions) {

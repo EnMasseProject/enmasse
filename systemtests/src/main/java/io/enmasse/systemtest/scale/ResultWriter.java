@@ -7,7 +7,6 @@ package io.enmasse.systemtest.scale;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.utils.TestUtils;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

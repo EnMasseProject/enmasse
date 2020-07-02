@@ -5,39 +5,6 @@
 
 package io.enmasse.systemtest.platform.apps;
 
-import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Duration.ofMinutes;
-import static java.time.Duration.ofSeconds;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import org.junit.jupiter.api.Assertions;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
@@ -46,8 +13,6 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.scale.ScaleTestClientConfiguration;
-import io.enmasse.systemtest.scale.ScaleTestClientType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.ConfigMap;
@@ -96,6 +61,38 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.utils.ReplaceValueStream;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Assertions;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 public class SystemtestsKubernetesApps {
 
@@ -743,33 +740,6 @@ public class SystemtestsKubernetesApps {
         kubeClient.createNamespace(SCALE_TEST_CLIENTS_PROJECT);
     }
 
-    public static void deployScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration clientConfiguration) throws Exception {
-        String clientId = UUID.randomUUID().toString();
-        log.info("Deploying scale test client {}", clientId);
-        var labels = getScaleTestClientLabels(clientConfiguration.getClientType(), clientId);
-        kubeClient.createServiceFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientServiceResource(clientId, labels));
-        kubeClient.createDeploymentFromResource(SCALE_TEST_CLIENTS_PROJECT, getScaleTestClientDeployment(clientId, clientConfiguration, labels), 4, TimeUnit.MINUTES);
-        kubeClient.createIngressFromResource(SCALE_TEST_CLIENTS_PROJECT, getSystemtestsIngressResource(SCALE_TEST_CLIENT + "-" + clientId, 8080));
-        clientConfiguration.setClientId(clientId);
-        TestUtils.waitForNReplicas(1, SCALE_TEST_CLIENTS_PROJECT, labels, new TimeoutBudget(30, TimeUnit.SECONDS));
-    }
-
-    public static Endpoint getScaleTestClientEndpoint(Kubernetes kubeClient, String clientId) {
-        return new Endpoint(kubeClient.getIngressHost(SCALE_TEST_CLIENTS_PROJECT, SCALE_TEST_CLIENT + "-" + clientId), 80);
-    }
-
-    //TODO maybe remove
-    public static void deleteScaleTestClient(Kubernetes kubeClient, ScaleTestClientConfiguration client, Path logsPath) {
-        String resourcesName = SCALE_TEST_CLIENT + "-" + client.getClientId();
-        if (kubeClient.deploymentExists(SCALE_TEST_CLIENTS_PROJECT, resourcesName)) {
-            var labels = getScaleTestClientLabels(client.getClientType(), client.getClientId());
-            collectLogsScaleTestClient(client.getClientId(), logsPath, labels);
-            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-        }
-    }
-
     private static void collectLogsScaleTestClient(String clientId, Path logsPath, Map<String, String> labels) {
         try {
             Files.createDirectories(logsPath);
@@ -778,22 +748,6 @@ public class SystemtestsKubernetesApps {
         } catch (Exception e) {
             log.error("Failed to collect client {} logs", clientId, e);
         }
-    }
-
-    public static void cleanScaleTestEnv(Kubernetes kubeClient, Path logsPath) throws Exception {
-        log.info("Cleaning scale test env");
-        var deployments = kubeClient.getClient().apps().deployments().inNamespace(SCALE_TEST_CLIENTS_PROJECT).list().getItems();
-        for (var deployment : deployments) {
-            var clientId = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_ID_LABEL);
-            var clientType = deployment.getMetadata().getLabels().get(SCALE_TEST_CLIENT_TYPE_LABEL);
-            collectLogsScaleTestClient(clientId, logsPath, getScaleTestClientLabels(ScaleTestClientType.fromValue(clientType), clientId));
-            String resourcesName = SCALE_TEST_CLIENT + "-" + clientId;
-            kubeClient.deleteDeployment(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteService(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-            kubeClient.deleteIngress(SCALE_TEST_CLIENTS_PROJECT, resourcesName);
-        }
-
-        kubeClient.deleteNamespace(SCALE_TEST_CLIENTS_PROJECT);
     }
 
     public static void buildOperatorRegistryImage(Kubernetes kubeClient, String olmManifestsImage, String destinationImage, String destinationRegistry, Path... buildWorkspaceFiles) throws Exception {
@@ -1443,74 +1397,6 @@ public class SystemtestsKubernetesApps {
                 .endSpec()
                 .build();
     }
-
-    private static Map<String, String> getScaleTestClientLabels(ScaleTestClientType clientType, String clientId) {
-        return Map.of("app", SCALE_TEST_CLIENT,
-                SCALE_TEST_CLIENT_TYPE_LABEL, clientType.getValue(),
-                SCALE_TEST_CLIENT_ID_LABEL, clientId);
-    }
-
-    private static Deployment getScaleTestClientDeployment(String clientId, ScaleTestClientConfiguration c, Map<String, String> labels) {
-        List<EnvVar> env = new ArrayList<>();
-        env.add(new EnvVarBuilder().withName("amqp-hostname").withValue(c.getHostname()).build());
-        env.add(new EnvVarBuilder().withName("amqp-port").withValue(Integer.toString(c.getPort())).build());
-        env.add(new EnvVarBuilder().withName("amqp-username").withValue(c.getUsername()).build());
-        env.add(new EnvVarBuilder().withName("amqp-password").withValue(c.getPassword()).build());
-        env.add(new EnvVarBuilder().withName("amqp-addresses").withValue(Stream.of(c.getAddresses()).collect(Collectors.joining(","))).build());
-        if (c.getLinksPerConnection() != null) {
-            env.add(new EnvVarBuilder().withName("amqp-links-per-conn").withValue(Integer.toString(c.getLinksPerConnection())).build());
-        }
-        if (c.getAddressesPerTenant() != null) {
-            env.add(new EnvVarBuilder().withName("amqp-addr-per-tenant").withValue(Integer.toString(c.getAddressesPerTenant())).build());
-        }
-        if (c.getSendMessagePeriod() != null) {
-            env.add(new EnvVarBuilder().withName("amqp-send-msg-period").withValue(Integer.toString(c.getSendMessagePeriod())).build());
-        }
-        if (c.getReceiversPerTenant() != null) {
-            env.add(new EnvVarBuilder().withName("amqp-receivers-per-tenant").withValue(Integer.toString(c.getReceiversPerTenant())).build());
-        }
-        if (c.getSendersPerTenant() != null) {
-            env.add(new EnvVarBuilder().withName("amqp-senders-per-tenant").withValue(Integer.toString(c.getSendersPerTenant())).build());
-        }
-
-        return new DeploymentBuilder()
-                .withNewMetadata()
-                .withName(SCALE_TEST_CLIENT + "-" + clientId + "-" + System.currentTimeMillis())
-                .withLabels(labels)
-                .endMetadata()
-                .withNewSpec()
-                .withNewSelector()
-                .addToMatchLabels(labels)
-                .endSelector()
-                .withReplicas(1)
-                .withNewTemplate()
-                .withNewMetadata()
-                .addToLabels(labels)
-                .endMetadata()
-                .withNewSpec()
-                .addNewContainer()
-                .withName(SCALE_TEST_CLIENT)
-                .withImage("quay.io/enmasse/systemtests-external-client:latest")
-                .withCommand("/bin/sh")
-                .withArgs("-c", "java -jar /" + c.getClientType().getValue() + ".jar")
-                .withEnv(env)
-                .addNewPort()
-                .withContainerPort(8080)
-                .endPort()
-                .withNewLivenessProbe()
-                .withNewTcpSocket()
-                .withNewPort(8080)
-                .endTcpSocket()
-                .withInitialDelaySeconds(10)
-                .withPeriodSeconds(5)
-                .endLivenessProbe()
-                .endContainer()
-                .endSpec()
-                .endTemplate()
-                .endSpec()
-                .build();
-    }
-
     private static Service getScaleTestClientServiceResource(String clientId, Map<String, String> labels) {
         return new ServiceBuilder()
                 .withNewMetadata()

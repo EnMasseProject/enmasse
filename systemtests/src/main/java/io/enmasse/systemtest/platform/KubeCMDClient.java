@@ -4,6 +4,13 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.executor.Exec;
+import io.enmasse.systemtest.executor.ExecutionResultData;
+import io.enmasse.systemtest.logs.CustomLogger;
+import io.fabric8.kubernetes.api.model.Pod;
+import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -17,16 +24,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.TestUtils;
-import org.slf4j.Logger;
-
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.logs.CustomLogger;
-import io.fabric8.kubernetes.api.model.Pod;
 
 /**
  * Class represent abstract client which keeps common features of client
@@ -112,81 +109,11 @@ public class KubeCMDClient {
         Exec.execute(command, DEFAULT_SYNC_TIMEOUT, true);
     }
 
-    /**
-     * Use CRD for get address by addressName in 'namespace'
-     *
-     * @param namespace   name of namespace where addresses exists
-     * @param addressName name of address in appropriate format, use '-a' for all addresses
-     * @param format      output format (yaml/json accepted)
-     * @return result of execution
-     */
-    public static ExecutionResultData getAddress(String namespace, String addressName, Optional<String> format) {
-        List<String> getCmd = getRessourcesCmd("get", "addresses", namespace, addressName, format);
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData getAddress(String namespace, String addressName) {
-        return getAddress(namespace, addressName, Optional.empty());
-    }
-
-    public static ExecutionResultData getAddress(String namespace) {
-        List<String> getCmd = getRessourcesCmd("get", "addresses", namespace, Optional.of("wide"));
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
     public static void dumpPodLogs(final Pod pod) {
         // we cannot use --all-containers, since kubectl is too old
         for (var c : pod.getStatus().getContainerStatuses()) {
             Exec.execute(DEFAULT_SYNC_TIMEOUT, true, CMD, "logs", pod.getMetadata().getName(), "-c", c.getName());
         }
-    }
-
-    /**
-     * Use CRD for delete address by addressName in 'namespace'
-     *
-     * @param namespace   name of namespace where addresses exists
-     * @param addressName name of address in appropriate format; --all means remove all addresses
-     * @return result of execution
-     */
-    public static ExecutionResultData deleteAddress(String namespace, String addressName) {
-        List<String> deleteCmd = getRessourcesCmd("delete", "addresses", namespace, addressName, Optional.empty());
-        return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-
-    /**
-     * Use CRD for get addressspace by addressspace name in 'namespace'
-     *
-     * @param namespace        name of namespace where addresses exists
-     * @param addressSpaceName name of address in appropriate format
-     * @param format           output format (yaml/json accepted)
-     * @return result of execution
-     */
-    public static ExecutionResultData getAddressSpace(String namespace, String addressSpaceName, Optional<String> format) {
-        List<String> getCmd = getRessourcesCmd("get", "addressspaces", namespace, addressSpaceName, format);
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData getAddressSpace(String namespace, String addressSpaceName) {
-        return getAddressSpace(namespace, addressSpaceName, Optional.empty());
-    }
-
-    public static ExecutionResultData getAddressSpace(String namespace, Optional<String> format) {
-        List<String> getCmd = getRessourcesCmd("get", "addressspaces", namespace, format);
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-
-    /**
-     * Use CRD for delete addressspace by addressspace name in 'namespace'
-     *
-     * @param namespace        name of namespace where addresses exists
-     * @param addressSpaceName name of address in appropriate format
-     * @return result of execution
-     */
-    public static ExecutionResultData deleteAddressSpace(String namespace, String addressSpaceName) {
-        List<String> ressourcesCmd = getRessourcesCmd("delete", "addressspaces", namespace, addressSpaceName, Optional.empty());
-        return Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     private static List<String> getRessourcesCmd(String operation, String kind, String namespace, String resourceName, Optional<String> format) {
@@ -236,21 +163,6 @@ public class KubeCMDClient {
     public static void switchProject(String namespace) {
         List<String> cmd = Arrays.asList(CMD, "project", namespace);
         Exec.execute(cmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData getUser(String namespace) {
-        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, Optional.empty());
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData getUser(String namespace, String addressSpace, String username) {
-        List<String> getCmd = getRessourcesCmd("get", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
-        return Exec.execute(getCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
-    public static ExecutionResultData deleteUser(String namespace, String addressSpace, String username) {
-        List<String> deleteCmd = getRessourcesCmd("delete", "messaginguser", namespace, String.format("%s.%s", addressSpace, username), Optional.empty());
-        return Exec.execute(deleteCmd, DEFAULT_SYNC_TIMEOUT, true);
     }
 
     public static ExecutionResultData deletePodByLabel(String labelName, String labelValue) {
@@ -332,11 +244,6 @@ public class KubeCMDClient {
         return data;
     }
 
-    public static ExecutionResultData deleteIoTConfig(String namespace, String name) {
-        List<String> ressourcesCmd = getRessourcesCmd("delete", "iotconfig", namespace, name, Optional.empty());
-        return Exec.execute(ressourcesCmd, DEFAULT_SYNC_TIMEOUT, true);
-    }
-
     public static ExecutionResultData describePods(String namespace) {
         return Exec.execute(DEFAULT_SYNC_TIMEOUT, false, CMD, "-n", namespace, "describe", "pods");
     }
@@ -393,11 +300,6 @@ public class KubeCMDClient {
         List<String> command = Arrays.asList(CMD, "get", "secrets",
                 "--namespace", namespace,
                 "--output", "yaml");
-        return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
-    }
-
-    public static ExecutionResultData getIoTConfig(String namespace) {
-        List<String> command = Arrays.asList(CMD, "get", "iotconfig", "--namespace", namespace, "--output", "yaml");
         return Exec.execute(command, ONE_MINUTE_TIMEOUT, false);
     }
 

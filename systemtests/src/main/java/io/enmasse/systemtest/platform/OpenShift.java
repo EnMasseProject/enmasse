@@ -4,14 +4,6 @@
  */
 package io.enmasse.systemtest.platform;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.platform.cluster.CRCCluster;
-import org.slf4j.Logger;
-
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
@@ -29,6 +21,11 @@ import io.fabric8.openshift.client.OpenShiftClient;
 import io.fabric8.openshift.client.OpenShiftConfig;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
+import org.slf4j.Logger;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Handles interaction with openshift cluster

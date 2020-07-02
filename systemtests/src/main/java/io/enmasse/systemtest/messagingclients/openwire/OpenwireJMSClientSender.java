@@ -4,11 +4,11 @@
  */
 package io.enmasse.systemtest.messagingclients.openwire;
 
-import java.nio.file.Path;
-
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
 import io.enmasse.systemtest.messagingclients.ClientType;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
+
+import java.nio.file.Path;
 
 
 public class OpenwireJMSClientSender extends ProtonJMSClientSender {

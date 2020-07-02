@@ -5,18 +5,15 @@
 
 package io.enmasse.systemtest.messagingclients;
 
-import io.enmasse.address.model.Address;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.logs.CustomLogger;
-import io.enmasse.systemtest.utils.AddressUtils;
 import io.vertx.core.json.JsonArray;
+import org.slf4j.Logger;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-
-import org.slf4j.Logger;
 
 public class ExternalMessagingClient implements AutoCloseable {
 
@@ -68,13 +65,6 @@ public class ExternalMessagingClient implements AutoCloseable {
     public ExternalMessagingClient withAddress(String address) {
         this.arguments.put(ClientArgument.ADDRESS, address);
         this.client.updateIdWithAddressName(address);
-        return this;
-    }
-
-    public ExternalMessagingClient withAddress(Address address) {
-        this.arguments.put(ClientArgument.ADDRESS,
-                (address.getSpec().getType().equals("topic") ? AddressUtils.getTopicPrefix(client) : "") + address.getSpec().getAddress());
-        this.client.updateIdWithAddressName(address.getSpec().getAddress());
         return this;
     }
 

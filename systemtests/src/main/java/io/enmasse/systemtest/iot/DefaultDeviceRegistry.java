@@ -5,8 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
-
 import io.enmasse.iot.model.v1.DeviceConnectionServiceConfig;
 import io.enmasse.iot.model.v1.DeviceConnectionServiceConfigBuilder;
 import io.enmasse.iot.model.v1.DeviceRegistryServiceConfig;
@@ -24,6 +22,8 @@ import io.enmasse.iot.model.v1.ServicesConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+
+import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 
 public final class DefaultDeviceRegistry {
 

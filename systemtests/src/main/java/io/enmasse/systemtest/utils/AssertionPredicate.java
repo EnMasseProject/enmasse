@@ -4,10 +4,10 @@
  */
 package io.enmasse.systemtest.utils;
 
+import org.junit.jupiter.api.Assertions;
+
 import java.util.Optional;
 import java.util.function.Predicate;
-
-import org.junit.jupiter.api.Assertions;
 
 public class AssertionPredicate<T> implements Predicate<T> {
 
