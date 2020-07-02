@@ -30,6 +30,8 @@ Given the timelines, service admin console is probably not in scope for 1.0
 
 image::console_1.0_overview.png[]
 
+The arrows indicate the flow of data.
+
 * `AddressSpace` is removed and replaced by `MessagingTenant`, and there can now only be a single MessagingTenant per Kubernetes namespace. Most of the properties like plan and authentication service (now identity provider) is now optional, and the minimum information needed to create a tenant is its namespace. In addition, a tenant may have a set of capabilities such as 'transactional'.
 
 * Remove customizing endpoints as part of creating `AddressSpace`/`MessagingTenant` (enmasse-operator may create default endpoint specified in a `MessagingPlan`). In 1.0, one or more endpoints may be created independently of the tenant.
