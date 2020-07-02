@@ -169,11 +169,11 @@ func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressS
 	return AddressType(obj.Type), nil
 }
 
-func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address, addressSpace *string) (*metav1.ObjectMeta, error) {
+func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	if input.ObjectMeta.Name == "" {
-		err := defaultResourceNameFromAddress(&input, addressSpace)
+		err := defaultResourceNameFromAddress(&input)
 		if err != nil {
 			return nil, err
 		}
@@ -227,11 +227,13 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 			return &t, e
 		}
 
-		infraUid, e := r.GetInfraUid(input.Namespace, addressToks[0])
-		if e != nil {
-			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - %+v", input.Name, input.Namespace, e)
-			continue
-		}
+		/*
+			infraUid, e := r.GetInfraUid(input.Namespace, addressToks[0])
+			if e != nil {
+				graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - %+v", input.Name, input.Namespace, e)
+				continue
+			}
+		*/
 
 		addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", input.Namespace, input.Name), nil)
 		if e != nil {
@@ -253,12 +255,14 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 			continue
 		}
 
-		collector := r.GetCollector(infraUid)
-		if collector == nil {
-			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
-				input.Name, input.Namespace, infraUid)
-			continue
-		}
+		/*
+			collector := r.GetCollector(infraUid)
+			if collector == nil {
+				graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
+					input.Name, input.Namespace, infraUid)
+				continue
+			}
+		*/
 		token := requestState.UserAccessToken
 
 		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
@@ -275,25 +279,6 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 	return &t, nil
 }
 
-func (r *mutationResolver) GetInfraUid(namespace, addressSpaceName string) (string, error) {
-
-	addressSpaces, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", namespace, addressSpaceName), nil)
-	if e != nil {
-		return "", e
-	}
-
-	if len(addressSpaces) == 0 {
-		return "", fmt.Errorf("address space '%s' not found in namespace '%s'", addressSpaceName, namespace)
-	}
-
-	as := addressSpaces[0].(*consolegraphql.AddressSpaceHolder).AddressSpace
-
-	if as.ObjectMeta.Annotations == nil || as.ObjectMeta.Annotations[infraUuidAnnotation] == "" {
-		return "", fmt.Errorf("address space '%s' in namespace '%s' does not have expected '%s' annotation", addressSpaceName, namespace, infraUuidAnnotation)
-	}
-	return as.ObjectMeta.Annotations[infraUuidAnnotation], nil
-
-}
 func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address, addressSpace *string) (string, error) {
 
 	if input.TypeMeta.APIVersion == "" {

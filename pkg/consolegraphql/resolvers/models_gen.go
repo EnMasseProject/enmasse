@@ -7,49 +7,16 @@ import (
 	"io"
 	"strconv"
 
-	v11 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-type AddressQueryResultConsoleapiEnmasseIoV1beta1 struct {
+type AddressQueryResultConsoleapiEnmasseIoV1 struct {
 	Total     int                             `json:"total"`
 	Addresses []*consolegraphql.AddressHolder `json:"addresses"`
 }
 
-type AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total         int                                  `json:"total"`
-	AddressSpaces []*consolegraphql.AddressSpaceHolder `json:"addressSpaces"`
-}
-
-type AddressSpaceTypeSpecConsoleapiEnmasseIoV1beta1 struct {
-	AddressSpaceType AddressSpaceType `json:"addressSpaceType"`
-	DisplayName      string           `json:"displayName"`
-	LongDescription  string           `json:"longDescription"`
-	ShortDescription string           `json:"shortDescription"`
-	DisplayOrder     int              `json:"displayOrder"`
-}
-
-type AddressSpaceTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"metadata"`
-	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
-}
-
-type AddressTypeSpecConsoleapiEnmasseIoV1beta1 struct {
-	AddressType      AddressType      `json:"addressType"`
-	AddressSpaceType AddressSpaceType `json:"addressSpaceType"`
-	DisplayName      string           `json:"displayName"`
-	LongDescription  string           `json:"longDescription"`
-	ShortDescription string           `json:"shortDescription"`
-	DisplayOrder     int              `json:"displayOrder"`
-}
-
-type AddressTypeConsoleapiEnmasseIoV1beta1 struct {
-	ObjectMeta *v1.ObjectMeta                             `json:"metadata"`
-	Spec       *AddressTypeSpecConsoleapiEnmasseIoV1beta1 `json:"spec"`
-}
-
-type ConnectionQueryResultConsoleapiEnmasseIoV1beta1 struct {
+type ConnectionQueryResultConsoleapiEnmasseIoV1 struct {
 	Total       int                          `json:"total"`
 	Connections []*consolegraphql.Connection `json:"connections"`
 }
@@ -59,64 +26,28 @@ type KeyValue struct {
 	Value string `json:"value"`
 }
 
-type LinkQueryResultConsoleapiEnmasseIoV1beta1 struct {
+type LinkQueryResultConsoleapiEnmasseIoV1 struct {
 	Total int                    `json:"total"`
 	Links []*consolegraphql.Link `json:"links"`
 }
 
-type MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1 struct {
-	Total              int                      `json:"total"`
-	MessagingEndpoints []*v11.MessagingEndpoint `json:"messagingEndpoints"`
+type MessagingEndpointQueryResultConsoleapiEnmasseIoV1 struct {
+	Total              int                     `json:"total"`
+	MessagingEndpoints []*v1.MessagingEndpoint `json:"messagingEndpoints"`
 }
 
-type MetadataConsoleapiEnmasseIoV1beta1 struct {
+type MessagingTenantQueryResultConsoleapiEnmasseIoV1 struct {
+	Total            int                                     `json:"total"`
+	MessagingTenants []*consolegraphql.MessagingTenantHolder `json:"messagingTenants"`
+}
+
+type MetadataConsoleapiEnmasseIoV1 struct {
 	Annotations       []*KeyValue `json:"annotations"`
 	Name              string      `json:"name"`
 	Namespace         string      `json:"namespace"`
 	ResourceVersion   string      `json:"resourceVersion"`
 	CreationTimestamp string      `json:"creationTimestamp"`
 	UID               string      `json:"uid"`
-}
-
-type AddressSpaceType string
-
-const (
-	AddressSpaceTypeStandard AddressSpaceType = "standard"
-	AddressSpaceTypeBrokered AddressSpaceType = "brokered"
-)
-
-var AllAddressSpaceType = []AddressSpaceType{
-	AddressSpaceTypeStandard,
-	AddressSpaceTypeBrokered,
-}
-
-func (e AddressSpaceType) IsValid() bool {
-	switch e {
-	case AddressSpaceTypeStandard, AddressSpaceTypeBrokered:
-		return true
-	}
-	return false
-}
-
-func (e AddressSpaceType) String() string {
-	return string(e)
-}
-
-func (e *AddressSpaceType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = AddressSpaceType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid AddressSpaceType", str)
-	}
-	return nil
-}
-
-func (e AddressSpaceType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 type AddressType string
@@ -127,6 +58,7 @@ const (
 	AddressTypeSubscription AddressType = "subscription"
 	AddressTypeMulticast    AddressType = "multicast"
 	AddressTypeAnycast      AddressType = "anycast"
+	AddressTypeDeadLetter   AddressType = "deadLetter"
 )
 
 var AllAddressType = []AddressType{
@@ -135,11 +67,12 @@ var AllAddressType = []AddressType{
 	AddressTypeSubscription,
 	AddressTypeMulticast,
 	AddressTypeAnycast,
+	AddressTypeDeadLetter,
 }
 
 func (e AddressType) IsValid() bool {
 	switch e {
-	case AddressTypeQueue, AddressTypeTopic, AddressTypeSubscription, AddressTypeMulticast, AddressTypeAnycast:
+	case AddressTypeQueue, AddressTypeTopic, AddressTypeSubscription, AddressTypeMulticast, AddressTypeAnycast, AddressTypeDeadLetter:
 		return true
 	}
 	return false
@@ -163,47 +96,6 @@ func (e *AddressType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e AddressType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type AuthenticationServiceType string
-
-const (
-	AuthenticationServiceTypeNone     AuthenticationServiceType = "none"
-	AuthenticationServiceTypeStandard AuthenticationServiceType = "standard"
-)
-
-var AllAuthenticationServiceType = []AuthenticationServiceType{
-	AuthenticationServiceTypeNone,
-	AuthenticationServiceTypeStandard,
-}
-
-func (e AuthenticationServiceType) IsValid() bool {
-	switch e {
-	case AuthenticationServiceTypeNone, AuthenticationServiceTypeStandard:
-		return true
-	}
-	return false
-}
-
-func (e AuthenticationServiceType) String() string {
-	return string(e)
-}
-
-func (e *AuthenticationServiceType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = AuthenticationServiceType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid AuthenticationServiceType", str)
-	}
-	return nil
-}
-
-func (e AuthenticationServiceType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -245,6 +137,45 @@ func (e *LinkRole) UnmarshalGQL(v interface{}) error {
 }
 
 func (e LinkRole) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type MessagingTenantCapability string
+
+const (
+	MessagingTenantCapabilityTransactional MessagingTenantCapability = "transactional"
+)
+
+var AllMessagingTenantCapability = []MessagingTenantCapability{
+	MessagingTenantCapabilityTransactional,
+}
+
+func (e MessagingTenantCapability) IsValid() bool {
+	switch e {
+	case MessagingTenantCapabilityTransactional:
+		return true
+	}
+	return false
+}
+
+func (e MessagingTenantCapability) String() string {
+	return string(e)
+}
+
+func (e *MessagingTenantCapability) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MessagingTenantCapability(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MessagingTenantCapability", str)
+	}
+	return nil
+}
+
+func (e MessagingTenantCapability) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

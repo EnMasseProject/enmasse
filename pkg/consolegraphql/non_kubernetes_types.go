@@ -152,16 +152,16 @@ func (m *RateCalculatingMetric) Update(v float64, ts time.Time) {
 	return
 }
 
-type AddressSpaceHolder struct {
-	v1beta1.AddressSpace `json:",inline"`
-	Metrics              []*Metric `json:"metrics"`
+type MessagingTenantHolder struct {
+	v1.MessagingTenant `json:",inline"`
+	Metrics            []*Metric `json:"metrics"`
 }
 
-func (ash *AddressSpaceHolder) GetMetrics() []*Metric {
+func (ash *MessagingTenantHolder) GetMetrics() []*Metric {
 	return ash.Metrics
 }
 
-func (ash *AddressSpaceHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
+func (ash *MessagingTenantHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
 	gvk := ash.TypeMeta.GroupVersionKind()
 	return getResourceAttributes(gvk, ash.Namespace)
 }

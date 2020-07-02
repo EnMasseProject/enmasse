@@ -18,19 +18,19 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func (r *Resolver) AddressSpace_consoleapi_enmasse_io_v1beta1() AddressSpace_consoleapi_enmasse_io_v1beta1Resolver {
-	return &addressSpaceK8sResolver{r}
+func (r *Resolver) MessagingTenant_consoleapi_enmasse_io_v1beta1() MessagingTenant_consoleapi_enmasse_io_v1beta1Resolver {
+	return &messagingTenantK8sResolver{r}
 }
 
-func (r *Resolver) AddressSpaceSpec_enmasse_io_v1beta1() AddressSpaceSpec_enmasse_io_v1beta1Resolver {
-	return &addressSpaceSpecK8sResolver{r}
+func (r *Resolver) MessagingTenantSpec_enmasse_io_v1beta1() MessagingTenantSpec_enmasse_io_v1beta1Resolver {
+	return &messagingTenantSpecK8sResolver{r}
 }
 
 func (r *Resolver) Port_enmasse_io_v1beta1() Port_enmasse_io_v1beta1Resolver {
 	return &portK8sResolver{r}
 }
 
-func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *queryResolver) MessagingTenants(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingTenantQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
@@ -44,7 +44,7 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 		return nil, err
 	}
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s", keyElements), cache.And(viewFilter, fltrfunc))
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("MessagingTenant/%s", keyElements), cache.And(viewFilter, fltrfunc))
 	if e != nil {
 		return nil, e
 	}
@@ -56,18 +56,18 @@ func (r *queryResolver) AddressSpaces(ctx context.Context, first *int, offset *i
 
 	lower, upper := CalcLowerUpper(offset, first, len(objects))
 	paged := objects[lower:upper]
-	addressspaces := make([]*consolegraphql.AddressSpaceHolder, len(paged))
+	messagingTenants := make([]*consolegraphql.MessagingTenantHolder, len(paged))
 	for i, _ := range paged {
-		addressspaces[i] = paged[i].(*consolegraphql.AddressSpaceHolder)
+		messagingTenants[i] = paged[i].(*consolegraphql.MessagingTenantHolder)
 	}
 
-	return &AddressSpaceQueryResultConsoleapiEnmasseIoV1beta1{
-		Total:         len(objects),
-		AddressSpaces: addressspaces,
+	return &MessagingTenantQueryResultConsoleapiEnmasseIoV1beta1{
+		Total:            len(objects),
+		MessagingTenants: messagingTenants,
 	}, nil
 }
 
-func (r *addressSpaceSpecK8sResolver) AuthenticationService(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta1.AuthenticationService, error) {
+func (r *messagingTenantSpecK8sResolver) AuthenticationService(ctx context.Context, obj *v1beta1.MessagingTenantSpec) (*v1beta1.AuthenticationService, error) {
 	if obj != nil {
 		authenticationServiceName := obj.AuthenticationService.Name
 		return &v1beta1.AuthenticationService{
@@ -77,23 +77,23 @@ func (r *addressSpaceSpecK8sResolver) AuthenticationService(ctx context.Context,
 	return nil, nil
 }
 
-type addressSpaceSpecK8sResolver struct{ *Resolver }
+type messagingTenantSpecK8sResolver struct{ *Resolver }
 
-func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (*v1beta2.AddressSpacePlan, error) {
+func (r *messagingTenantSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.MessagingTenantSpec) (*v1beta2.MessagingTenantPlan, error) {
 	if obj != nil {
-		addressSpacePlan := obj.Plan
+		messagingTenantPlan := obj.Plan
 		spaceFilter := func(obj interface{}) (bool, bool, error) {
-			asp, ok := obj.(*v1beta2.AddressSpacePlan)
+			asp, ok := obj.(*v1beta2.MessagingTenantPlan)
 			if !ok {
 				return false, false, fmt.Errorf("unexpected type: %T", obj)
 			}
-			if asp.Name == addressSpacePlan {
+			if asp.Name == messagingTenantPlan {
 				return true, false, nil
 			} else {
 				return false, true, nil
 			}
 		}
-		objs, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpacePlan", spaceFilter)
+		objs, e := r.Cache.Get(cache.PrimaryObjectIndex, "MessagingTenantPlan", spaceFilter)
 		if e != nil {
 			return nil, e
 		}
@@ -101,39 +101,39 @@ func (r *addressSpaceSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.Add
 		if len(objs) == 0 {
 			// There might be a plan change in progress, or the user may have created a space referring to
 			// an unknown plan.
-			return &v1beta2.AddressSpacePlan{
+			return &v1beta2.MessagingTenantPlan{
 				ObjectMeta: metav1.ObjectMeta{
-					Name: addressSpacePlan,
+					Name: messagingTenantPlan,
 				},
-				Spec: v1beta2.AddressSpacePlanSpec{
-					AddressPlans:     make([]string, 0),
-					AddressSpaceType: obj.Type,
-					DisplayName:      addressSpacePlan,
+				Spec: v1beta2.MessagingTenantPlanSpec{
+					AddressPlans:        make([]string, 0),
+					MessagingTenantType: obj.Type,
+					DisplayName:         messagingTenantPlan,
 				},
 			}, nil
 		}
 
-		asp := objs[0].(*v1beta2.AddressSpacePlan)
+		asp := objs[0].(*v1beta2.MessagingTenantPlan)
 		return asp, nil
 	}
 	return nil, nil
 }
 
-func (r *addressSpaceSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressSpaceSpec) (AddressSpaceType, error) {
-	spaceType := AddressSpaceTypeStandard
+func (r *messagingTenantSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.MessagingTenantSpec) (MessagingTenantType, error) {
+	spaceType := MessagingTenantTypeStandard
 	if obj != nil {
-		if obj.Type == string(AddressSpaceTypeBrokered) {
-			spaceType = AddressSpaceTypeBrokered
+		if obj.Type == string(MessagingTenantTypeBrokered) {
+			spaceType = MessagingTenantTypeBrokered
 		}
 	}
 	return spaceType, nil
 }
 
-type addressSpaceK8sResolver struct{ *Resolver }
+type messagingTenantK8sResolver struct{ *Resolver }
 
-func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *messagingTenantK8sResolver) Connections(ctx context.Context, obj *consolegraphql.MessagingTenantHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
-		fltrfunc, keyElements, e := BuildFilter(filter, "$.spec.addressSpace", "$.metadata.name")
+		fltrfunc, keyElements, e := BuildFilter(filter, "$.spec.messagingTenant", "$.metadata.name")
 		if e != nil {
 			return nil, e
 		}
@@ -170,7 +170,7 @@ func (r *addressSpaceK8sResolver) Connections(ctx context.Context, obj *consoleg
 	return nil, nil
 }
 
-func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegraphql.AddressSpaceHolder, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *messagingTenantK8sResolver) Addresses(ctx context.Context, obj *consolegraphql.MessagingTenantHolder, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
 	if obj != nil {
 		requestState := server.GetRequestStateFromContext(ctx)
 		viewFilter := requestState.AccessController.ViewFilter()
@@ -221,46 +221,46 @@ func (r *addressSpaceK8sResolver) Addresses(ctx context.Context, obj *consolegra
 
 func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input metav1.ObjectMeta) (string, error) {
 
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "AddressSpace/"+input.Namespace+"/"+input.Name, nil)
+	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "MessagingTenant/"+input.Namespace+"/"+input.Name, nil)
 	if e != nil {
 		return "", e
 	}
 	if len(objects) != 1 {
 		return "", fmt.Errorf("Did not return one address space for %s %s.  Instead found: %d", input.Name, input.Namespace, len(objects))
 	}
-	return string(objects[0].(*consolegraphql.AddressSpaceHolder).AddressSpace.Status.CACertificate), nil
+	return string(objects[0].(*consolegraphql.MessagingTenantHolder).MessagingTenant.Status.CACertificate), nil
 
 }
 
-func (r *mutationResolver) CreateAddressSpace(ctx context.Context, input v1beta1.AddressSpace) (*metav1.ObjectMeta, error) {
+func (r *mutationResolver) CreateMessagingTenant(ctx context.Context, input v1beta1.MessagingTenant) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
-	nw, e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Create(&input)
+	nw, e := requestState.EnmasseV1beta1Client.MessagingTenants(input.Namespace).Create(&input)
 	if e != nil {
 		return nil, e
 	}
 	return &nw.ObjectMeta, e
 }
 
-func (r *mutationResolver) PatchAddressSpace(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
+func (r *mutationResolver) PatchMessagingTenant(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
 	pt := types.PatchType(patchType)
 	requestState := server.GetRequestStateFromContext(ctx)
 
-	_, e := requestState.EnmasseV1beta1Client.AddressSpaces(input.Namespace).Patch(input.Name, pt, []byte(patch))
+	_, e := requestState.EnmasseV1beta1Client.MessagingTenants(input.Namespace).Patch(input.Name, pt, []byte(patch))
 	b := e == nil
 	return &b, e
 }
 
-func (r *mutationResolver) DeleteAddressSpace(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	return r.DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&input})
+func (r *mutationResolver) DeleteMessagingTenant(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
+	return r.DeleteMessagingTenants(ctx, []*metav1.ObjectMeta{&input})
 }
 
-func (r *mutationResolver) DeleteAddressSpaces(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
+func (r *mutationResolver) DeleteMessagingTenants(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	t := true
 
 	for _, as := range input {
-		e := requestState.EnmasseV1beta1Client.AddressSpaces(as.Namespace).Delete(as.Name, &metav1.DeleteOptions{})
+		e := requestState.EnmasseV1beta1Client.MessagingTenants(as.Namespace).Delete(as.Name, &metav1.DeleteOptions{})
 		if e != nil {
 			graphql.AddErrorf(ctx, "failed to delete address space: '%s' in namespace: '%s', %+v", as.Name, as.Namespace, e)
 		}
@@ -268,13 +268,13 @@ func (r *mutationResolver) DeleteAddressSpaces(ctx context.Context, input []*met
 	return &t, nil
 }
 
-func (r *queryResolver) AddressSpaceCommand(ctx context.Context, input v1beta1.AddressSpace) (string, error) {
+func (r *queryResolver) MessagingTenantCommand(ctx context.Context, input v1beta1.MessagingTenant) (string, error) {
 
 	if input.TypeMeta.APIVersion == "" {
 		input.TypeMeta.APIVersion = "enmasse.io/v1beta1"
 	}
 	if input.TypeMeta.Kind == "" {
-		input.TypeMeta.Kind = "AddressSpace"
+		input.TypeMeta.Kind = "MessagingTenant"
 	}
 
 	namespace := input.Namespace

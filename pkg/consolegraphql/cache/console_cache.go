@@ -42,7 +42,7 @@ func primaryUniqueKeyCreator(obj interface{}) (b bool, s string, err error) {
 	switch o := obj.(type) {
 	case *v1.Namespace:
 		return true, o.Kind + "/" + o.Name, nil
-	case *consolegraphql.AddressSpaceHolder:
+	case *consolegraphql.MessagingTenantHolder:
 		return true, o.Kind + "/" + o.Namespace + "/" + o.Name, nil
 	case *consolegraphql.AddressHolder:
 		i := strings.Index(o.Name, ".")

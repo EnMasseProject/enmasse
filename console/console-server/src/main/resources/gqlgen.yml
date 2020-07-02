@@ -17,8 +17,7 @@ resolver:
   type: Resolver
 autobind:
   - github.com/enmasseproject/enmasse/pkg/consolegraphql
-  - github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1
-  - github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2
+  - github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1
   - k8s.io/apimachinery/pkg/apis/meta/v1
   - k8s.io/apimachinery/pkg/types
 
@@ -33,70 +32,40 @@ models:
   User_v1:
     model: github.com/openshift/api/user/v1.User
 
-  AuthenticationService_admin_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationService
-  AuthenticationServiceSpec_admin_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationServiceSpec
-  AuthenticationServiceStatus_admin_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1.AuthenticationServiceStatus
-
-  AddressSpaceSchema_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpaceSchema
-  AddressSpaceSchemaSpec_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpaceSchemaSpec
-  AuthenticationService_enmasse_io_v1beta1:
-    model: v1beta1.AuthenticationService
-  RouteServicePortDescription_enmasse_io_v1beta1:
-    model: v1beta1.RouteServicePortDescription
-  CertificateProviderTypeDescription_enmasse_io_v1beta1:
-    model: v1beta1.CertificateProviderTypeDescription
-  EndpointExposeTypeDescription_enmasse_io_v1beta1:
-    model: v1beta1.EndpointExposeTypeDescription
-
-  Address_consoleapi_enmasse_io_v1beta1:
+  Address_consoleapi_enmasse_io_v1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.AddressHolder
-  AddressSpec_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpec
-  AddressStatus_enmasse_io_v1beta1:
-    model: v1beta1.AddressStatus
-  AddressPlanStatus_enmasse_io_v1beta1:
-    model: v1beta1.AddressPlanStatus
+  AddressSpec_enmasse_io_v1:
+    model: v1.MessagingAddressSpec
+  AddressStatus_enmasse_io_v1:
+    model: v1.MessagingAddressStatus
+  MessagingAddressPlanStatus_enmasse_io_v1:
+    model: v1.MessagingAddressPlanStatus
 
-  AddressSpace_consoleapi_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.AddressSpaceHolder
-  AddressSpaceSpec_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpaceSpec
-  AddressSpaceStatus_enmasse_io_v1beta1:
-    model: v1beta1.AddressSpaceStatus
-  EndpointSpec_enmasse_io_v1beta1:
-    model: v1beta1.EndpointSpec
-  CertificateSpec_enmasse_io_v1beta1:
-    model: v1beta1.CertificateSpec
-  ExposeSpec_enmasse_io_v1beta1:
-    model: v1beta1.ExposeSpec
-  EndpointStatus_enmasse_io_v1beta1:
-    model: v1beta1.EndpointStatus
-  Port_enmasse_io_v1beta1:
-    model: v1beta1.Port
+  MessagingTenant_consoleapi_enmasse_io_v1:
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.MessagingTenantHolder
+  MessagingTenantSpec_enmasse_io_v1:
+    model: v1.MessagingTenantSpec
+  MessagingTenantStatus_enmasse_io_v1:
+    model: v1.MessagingTenantStatus
 
-  AddressPlan_admin_enmasse_io_v1beta2:
-    model: v1beta2.AddressPlan
-  AddressPlanSpec_admin_enmasse_io_v1beta2:
-    model: v1beta2.AddressPlanSpec
+  MessagingAddressPlan_admin_enmasse_io_v1:
+    model: v1.MessagingAddressPlan
+  MessagingAddressPlanSpec_admin_enmasse_io_v1:
+    model: v1.MessagingAddressPlanSpec
 
-  AddressSpacePlan_admin_enmasse_io_v1beta2:
-    model: v1beta2.AddressSpacePlan
-  AddressSpacePlanSpec_admin_enmasse_io_v1beta2:
-    model: v1beta2.AddressSpacePlanSpec
+  MessagingPlan_admin_enmasse_io_v1:
+    model: v1.MessagingPlan
+  MessagingPlanSpec_admin_enmasse_io_v1:
+    model: v1.MessagingPlanSpec
 
-  Connection_consoleapi_enmasse_io_v1beta1:
+  Connection_consoleapi_enmasse_io_v1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Connection
-  ConnectionSpec_consoleapi_enmasse_io_v1beta1:
+  ConnectionSpec_consoleapi_enmasse_io_v1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.ConnectionSpec
 
-  Link_consoleapi_enmasse_io_v1beta1:
+  Link_consoleapi_enmasse_io_v1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Link
-  LinkSpec_consoleapi_enmasse_io_v1beta1:
+  LinkSpec_consoleapi_enmasse_io_v1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.LinkSpec
 
   MessagingEndpoint_enmasse_io_v1:
@@ -120,37 +89,15 @@ models:
   ObjectMeta_v1_Input:
     model: v1.ObjectMeta
 
-  Address_enmasse_io_v1beta1_Input:
-    model: v1beta1.Address
-  AddressSpec_enmasse_io_v1beta1_Input:
-    model: v1beta1.AddressSpec
+  Address_enmasse_io_v1_Input:
+    model: v1.MessagingAddress
+  AddressSpec_enmasse_io_v1_Input:
+    model: v1.MessagingAddressSpec
 
-  AddressSpace_enmasse_io_v1beta1_Input:
-    model: v1beta1.AddressSpace
-  AddressSpaceSpec_enmasse_io_v1beta1_Input:
-    model: v1beta1.AddressSpaceSpec
-  AuthenticationService_enmasse_io_v1beta1_Input:
-    model: v1beta1.AuthenticationService
-  EndpointSpec_enmasse_io_v1beta1_Input:
-    model: v1beta1.EndpointSpec
-  CertificateSpec_enmasse_io_v1beta1_Input:
-    model: v1beta1.CertificateSpec
+  MessagingTenant_enmasse_io_v1_Input:
+    model: v1.MessagingTenant
+  MessagingTenantSpec_enmasse_io_v1_Input:
+    model: v1.MessagingTenantSpec
 
-  ExposeSpec_enmasse_io_v1beta1_Input:
-    model: v1beta1.ExposeSpec
-
-  Metric_consoleapi_enmasse_io_v1beta1:
+  Metric_consoleapi_enmasse_io_v1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Metric
-
-  CertBytes:
-    model: github.com/enmasseproject/enmasse/pkg/consolegraphql/resolvers.CertBytes
-  EndpointServiceType_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.EndpointServiceType
-  CertificateProviderType_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.CertificateProviderType
-  ExposeType_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.ExposeType
-  RouteServicePort_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.RouteServicePort
-  RouteTlsTermination_enmasse_io_v1beta1:
-    model: github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1.RouteTlsTermination
