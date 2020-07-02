@@ -1,4 +1,10 @@
-== Console changes to adopt to 1.0 shared infra
+:toc:
+:toclevels: 3
+
+# Proposal - Console changes to adopt to 1.0
+
+:toc-placement!:
+toc::[]
 
 === Scope
 
