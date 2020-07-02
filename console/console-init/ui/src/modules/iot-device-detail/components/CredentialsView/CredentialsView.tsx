@@ -15,25 +15,26 @@ import {
   TextVariants,
   CardTitle
 } from "@patternfly/react-core";
+import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
 import { SwitchWithToggle } from "components";
 import { SecretsView, ISecretsViewProps } from "./SecretsView";
 import { ExtensionsView } from "./ExtensionsView";
 import { hasOwnProperty } from "utils";
 
-// const styles = StyleSheet.create({
-//   row_margin: {
-//     marginBottom: 5
-//   },
-//   status_section_margin: {
-//     marginTop: 20,
-//     marginBottom: 10
-//   },
-//   devider_margin: {
-//     marginTop: 35,
-//     marginBottom: 35
-//   }
-// });
+const styles = StyleSheet.create({
+  row_margin: {
+    marginBottom: 5
+  },
+  status_section_margin: {
+    marginTop: 20,
+    marginBottom: 10
+  },
+  devider_margin: {
+    marginTop: 35,
+    marginBottom: 35
+  }
+});
 
 interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
   "auth-id": string;
@@ -72,24 +73,18 @@ export const Credential: React.FC<ICredentialProps> = ({
       <Grid>
         <GridItem span={3}>
           <Title headingLevel="h1" size="md">
-            <b>{getLabelByKey("auth-id")}</b>
+            {getLabelByKey("auth-id")}
           </Title>
         </GridItem>
-        <GridItem
-          span={9}
-          // className={styles.row_margin}
-        >
+        <GridItem span={9} className={css(styles.row_margin)}>
           {authId}
         </GridItem>
         <GridItem span={3}>
           <Title headingLevel="h1" size="md">
-            <b>{getLabelByKey("type")}</b>
+            {getLabelByKey("type")}
           </Title>
         </GridItem>
-        <GridItem
-          span={9}
-          // className={styles.row_margin}
-        >
+        <GridItem span={9} className={css(styles.row_margin)}>
           {getLabelByKey(type || "")}
         </GridItem>
         <SecretsView
@@ -105,15 +100,14 @@ export const Credential: React.FC<ICredentialProps> = ({
         />
         {hasOwnProperty(credential, "enabled") && (
           <>
-            <GridItem
-              span={12}
-              // className={styles.status_section_margin}
-            >
-              Status
+            <GridItem span={12} className={css(styles.status_section_margin)}>
+              <Title headingLevel="h6" size="xl">
+                Status
+              </Title>
             </GridItem>
             <GridItem span={3}>
               <Title headingLevel="h1" size="md">
-                <b>Enable</b>
+                Enable
               </Title>
             </GridItem>
             <GridItem span={9}>
@@ -149,7 +143,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
     <Card id={id}>
       <CardTitle>
         <Title id="credential-view-header" headingLevel="h1" size="2xl">
-          <b>Credentials</b>
+          Credentials
         </Title>
       </CardTitle>
       <CardBody>
@@ -165,9 +159,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
                   onConfirmPassword={onConfirmPassword}
                 />
                 {index < credentials.length - 1 && (
-                  <Divider
-                  // className={styles.devider_margin}
-                  />
+                  <Divider className={css(styles.devider_margin)} />
                 )}
               </>
             );

@@ -20,17 +20,17 @@ import {
 } from "@patternfly/react-core";
 import { FilterIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
-import { AdapterList, IAdapterListProps } from "components";
+import { DropdownWithToggle, IDropdownOption } from "components";
 import {
   CredentialsView,
   ICredentialsViewProps
 } from "modules/iot-device-detail/components";
-import { DropdownWithToggle, IDropdownOption } from "components";
 import {
   credentialsTypeOptions,
   getDefaultCredentialsFiterOption
 } from "modules/iot-device-detail/utils";
 import { CredentialsType } from "constant";
+import { AdapterListContainer } from "containers";
 
 const style = StyleSheet.create({
   filter_dropdown: {
@@ -39,8 +39,7 @@ const style = StyleSheet.create({
 });
 
 export interface IConfigurationInfoProps
-  extends Pick<IAdapterListProps, "adapters">,
-    Pick<ICredentialsViewProps, "credentials"> {
+  extends Pick<ICredentialsViewProps, "credentials"> {
   id: string;
   onSelectFilterType?: (value: string) => void;
   onSelectFilterValue?: (value: string) => void;
@@ -48,12 +47,11 @@ export interface IConfigurationInfoProps
 
 export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   id,
-  adapters,
   credentials,
   onSelectFilterType,
   onSelectFilterValue
 }) => {
-  const [credentialType, setCredentialType] = useState<string>("all");
+  const [credentialType, setCredentialType] = useState<string>("enabled");
   const [filterOptions, setFilterOptions] = useState<IDropdownOption[]>([]);
   const [selectedFilterValue, setSelectedFilterValue] = useState<string>("");
 
@@ -135,11 +133,11 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
             <GridItem span={6}>
               <Card>
                 <CardBody>
-                  <Title size="xl" headingLevel="h1">
-                    <b>Adapters</b>
+                  <Title size="2xl" headingLevel="h1">
+                    Adapters
                   </Title>
                   <br />
-                  <AdapterList id="ci-adapter" adapters={adapters} />
+                  <AdapterListContainer id="ci-adapter-container" />
                 </CardBody>
               </Card>
             </GridItem>

@@ -15,7 +15,10 @@ import {
   Divider
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
-import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
+import {
+  DELETE_ADDRESS_SPACE,
+  DELETE_IOT_PROJECT
+} from "graphql-module/queries";
 import { compareObject } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { TablePagination } from "components";
@@ -64,10 +67,25 @@ export default function ProjectPage() {
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
   const [selectedProjects, setSelectedProjects] = useState<IProject[]>([]);
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
+
+  const resetFormState = () => {
+    setIsAllSelected(false);
+    setSelectedProjects([]);
+  };
+
   const refetchQueries: string[] = ["all_address_spaces"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
-    refetchQueries
+    refetchQueries,
+    undefined,
+    resetFormState
+  );
+
+  const [setDeleteIoTProjectQueryVariables] = useMutationQuery(
+    DELETE_IOT_PROJECT,
+    ["allProjects"],
+    undefined,
+    resetFormState
   );
 
   const onDeleteAll = () => {
@@ -87,6 +105,10 @@ export default function ProjectPage() {
   };
 
   const onConfirmDeleteAll = async () => {
+    /**
+     * Todo: projectType is temporary check for demo. it will remove later;
+     */
+    const projectType = "iot";
     if (selectedProjects && selectedProjects.length > 0) {
       let queryVariables: Array<{ name: string; namespace: string }> = [];
       selectedProjects.forEach(
@@ -102,9 +124,12 @@ export default function ProjectPage() {
         const queryVariable = {
           as: queryVariables
         };
-        await setDeleteProjectQueryVariables(queryVariable);
+        if (projectType === "iot") {
+          await setDeleteIoTProjectQueryVariables(queryVariable);
+        } else {
+          await setDeleteProjectQueryVariables(queryVariable);
+        }
       }
-      setSelectedProjects([]);
     }
   };
 
