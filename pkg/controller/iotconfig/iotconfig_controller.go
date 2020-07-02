@@ -290,6 +290,9 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processDeviceRegistry(ctx, config, configTracker.authServicePskCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
+		return r.processAmqpAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+	})
+	rc.Process(func() (reconcile.Result, error) {
 		return r.processHttpAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {

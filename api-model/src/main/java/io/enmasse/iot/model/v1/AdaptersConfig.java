@@ -25,6 +25,7 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdaptersConfig {
     private AdapterOptions defaults;
+    private AdapterConfig amqp;
     private AdapterConfig http;
     private AdapterConfig mqtt;
     private AdapterConfig sigfox;
@@ -36,6 +37,13 @@ public class AdaptersConfig {
     }
     public void setDefaults(AdapterOptions defaults) {
         this.defaults = defaults;
+    }
+
+    public AdapterConfig getAmqp() {
+        return amqp;
+    }
+    public void setAmqp(AdapterConfig amqp) {
+        this.amqp = amqp;
     }
 
     public AdapterConfig getHttp() {

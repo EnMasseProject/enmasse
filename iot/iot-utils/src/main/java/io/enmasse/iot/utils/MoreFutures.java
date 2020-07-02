@@ -5,12 +5,15 @@
 
 package io.enmasse.iot.utils;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -183,6 +186,26 @@ public final class MoreFutures {
      * @throws ExecutionException When the future failed.
      */
     public static <T> T get(final Future<T> future) throws InterruptedException, ExecutionException {
+        try {
+            return await(future, null);
+        } catch (TimeoutException e) {
+            // This can never happen as the TimeoutException is only thrown when we request a timeout.
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Wait for the outcome of a "vertx" Future.
+     *
+     * @param <T> The data type.
+     * @param future The future to wait for.
+     * @param timeout The timeout. May be {@code null} if the method should wait forever.
+     * @return The value of the completed future.
+     * @throws InterruptedException When the wait got interrupted.
+     * @throws ExecutionException When the future failed.
+     * @throws TimeoutException When the wait timed out.
+     */
+    public static <T> T await(final Future<T> future, final Duration timeout) throws InterruptedException, ExecutionException, TimeoutException {
 
         final AtomicReference<AsyncResult<T>> result = new AtomicReference<>();
         final Semaphore sem = new Semaphore(0);
@@ -190,7 +213,14 @@ public final class MoreFutures {
             result.set(ar);
             sem.release();
         });
-        sem.acquire();
+        if (timeout == null) {
+            sem.acquire();
+        } else {
+            final long millis = Math.max(timeout.toMillis(), 1);
+            if (!sem.tryAcquire(millis, TimeUnit.MILLISECONDS)) {
+                throw new TimeoutException("Future did not complete after timeout period");
+            }
+        }
 
         final AsyncResult<T> ar = result.get();
         if (ar.failed()) {

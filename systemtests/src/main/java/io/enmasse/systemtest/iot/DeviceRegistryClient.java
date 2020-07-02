@@ -12,6 +12,7 @@ import java.net.HttpURLConnection;
 import org.eclipse.hono.service.management.device.Device;
 
 import io.enmasse.systemtest.Endpoint;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
@@ -22,8 +23,8 @@ public class DeviceRegistryClient extends HonoApiClient {
 
     private static final String DEVICES_PATH = "v1/devices";
 
-    public DeviceRegistryClient(final Endpoint endpoint) {
-        super(() -> endpoint, getManagementToken());
+    public DeviceRegistryClient(final Vertx vertx, final Endpoint endpoint) {
+        super(vertx, () -> endpoint, getManagementToken());
     }
 
     @Override

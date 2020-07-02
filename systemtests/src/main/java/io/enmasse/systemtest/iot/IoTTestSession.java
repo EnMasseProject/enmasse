@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot;
 
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -36,8 +38,11 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Lists;
 
 import io.enmasse.address.model.AddressSpace;
+import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
+import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent;
+import io.enmasse.iot.model.v1.AdaptersConfigFluent.AmqpNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.HttpNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.LoraWanNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.MqttNested;
@@ -45,6 +50,7 @@ import io.enmasse.iot.model.v1.AdaptersConfigFluent.SigfoxNested;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfigFluent.SpecNested;
+import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTConfigSpecFluent.AdaptersNested;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
@@ -68,13 +74,23 @@ import io.enmasse.systemtest.utils.UserUtils;
 import io.enmasse.user.model.v1.Operation;
 import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
+import io.vertx.core.Vertx;
 
 public final class IoTTestSession implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
 
     public static enum Adapter {
-        HTTP {
+        AMQP(AdaptersConfig::getAmqp) {
+            @Override
+            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+                return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewAmqp, AmqpNested::endAmqp, a -> {
+                    consumer.accept(a);
+                    return a;
+                });
+            }
+        },
+        HTTP(AdaptersConfig::getHttp) {
             @Override
             public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewHttp, HttpNested::endHttp, a -> {
@@ -83,7 +99,7 @@ public final class IoTTestSession implements AutoCloseable {
                 });
             }
         },
-        MQTT {
+        MQTT(AdaptersConfig::getMqtt) {
             @Override
             public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewMqtt, MqttNested::endMqtt, a -> {
@@ -92,7 +108,7 @@ public final class IoTTestSession implements AutoCloseable {
                 });
             }
         },
-        SIGFOX {
+        SIGFOX(AdaptersConfig::getSigfox) {
             @Override
             public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewSigfox, SigfoxNested::endSigfox, a -> {
@@ -101,7 +117,7 @@ public final class IoTTestSession implements AutoCloseable {
                 });
             }
         },
-        LORAWAN {
+        LORAWAN(AdaptersConfig::getLoraWan) {
             @Override
             public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewLoraWan, LoraWanNested::endLoraWan, a -> {
@@ -131,7 +147,25 @@ public final class IoTTestSession implements AutoCloseable {
 
         }
 
-        public abstract IoTConfigBuilder edit(final IoTConfigBuilder config, final Consumer<? super AdapterConfigFluent<?>> consumer);
+        private Adapter(final Function<AdaptersConfig, ? extends AdapterConfig> getter) {
+            this.getter = getter;
+        }
+
+        private final Function<AdaptersConfig, ? extends AdapterConfig> getter;
+
+        public abstract IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer);
+
+        public Optional<AdapterConfig> getConfig(IoTConfig config) {
+            return Optional
+                    .ofNullable(config)
+                    .map(IoTConfig::getSpec)
+                    .map(IoTConfigSpec::getAdapters)
+                    .map(adapters -> getter.apply(adapters));
+        }
+
+        public <T> T apply(final IoTConfig config, final Function<Optional<AdapterConfig>, T> function) {
+            return function.apply(getConfig(config));
+        }
 
         public IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
             return edit(config, a -> a.withEnabled(enabled));
@@ -145,6 +179,24 @@ public final class IoTTestSession implements AutoCloseable {
             return enable(config, false);
         }
 
+        /**
+         * Check if an adapter is enabled.
+         * <p>
+         * The adapter is only disabled if the field {@code enabled} is set to {@code value}.
+         * In all other cases, like null values or missing fields, the adapter is considered enabled.
+         *
+         * @param config The configuration to check.
+         * @return {@code true} if the adapter is enabled, {@code false} otherwise.
+         */
+        public boolean isEnabled(final IoTConfig config) {
+            return getConfig(config)
+                    .map(adapterConfig -> adapterConfig.getEnabled() == null || Boolean.TRUE.equals(adapterConfig.getEnabled()))
+                    .orElse(Boolean.TRUE);
+        }
+
+        public String getResourceName() {
+            return String.format("iot-%s-adapter", name().toLowerCase());
+        }
     }
 
     @FunctionalInterface
@@ -250,7 +302,6 @@ public final class IoTTestSession implements AutoCloseable {
          * @param tlsVersions The supported TLS versions.
          * @return The new instance. It will automatically be closed when the test session is being cleaned
          *         up.
-         * @throws Exception
          */
         public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) throws Exception {
             if (this.key != null) {
@@ -274,11 +325,37 @@ public final class IoTTestSession implements AutoCloseable {
             }
         }
 
+        /**
+         * Create a new AMQP adapter client.
+         *
+         * @return The new instance. It will automatically be closed when the test session is being cleaned
+         *         up.
+         */
+        public AmqpAdapterClient createAmqpAdapterClient() throws Exception {
+            return createAmqpAdapterClient(null);
+        }
+
+        /**
+         * Create a new AMQP adapter client.
+         *
+         * @param tlsVersions The supported TLS versions.
+         * @return The new instance. It will automatically be closed when the test session is being cleaned
+         *         up.
+         */
+        public AmqpAdapterClient createAmqpAdapterClient(final Set<String> tlsVersions) throws Exception {
+            if (this.key != null) {
+                return IoTTestSession.this.createAmqpAdapterClient(this.key, this.certificate, tlsVersions);
+            } else {
+                return IoTTestSession.this.createAmqpAdapterClient(this.authId, this.password, tlsVersions);
+            }
+        }
+
         public String getTenantId() {
             return IoTTestSession.this.getTenantId();
         }
     }
 
+    private final Vertx vertx;
     private final IoTConfig config;
     private final IoTProject project;
     private final Consumer<Throwable> exceptionHandler;
@@ -288,6 +365,7 @@ public final class IoTTestSession implements AutoCloseable {
     private final AmqpClient consumerClient;
 
     private IoTTestSession(
+            final Vertx vertx,
             final IoTConfig config,
             final IoTProject project,
             final DeviceRegistryClient registryClient,
@@ -295,6 +373,8 @@ public final class IoTTestSession implements AutoCloseable {
             final AmqpClient consumerClient,
             final Consumer<Throwable> exceptionHandler,
             final List<ThrowingCallable> cleanup) {
+
+        this.vertx = vertx;
 
         this.config = config;
         this.project = project;
@@ -328,7 +408,7 @@ public final class IoTTestSession implements AutoCloseable {
     private HttpAdapterClient createHttpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-http-adapter");
-        var result = new HttpAdapterClient(endpoint, key, certificate, tlsVersions);
+        var result = new HttpAdapterClient(this.vertx, endpoint, key, certificate, tlsVersions);
         this.cleanup.add(() -> result.close());
 
         return result;
@@ -338,8 +418,31 @@ public final class IoTTestSession implements AutoCloseable {
     private HttpAdapterClient createHttpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) throws Exception {
 
         var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-http-adapter");
-        var result = new HttpAdapterClient(endpoint, authId, getTenantId(), password, tlsVersions);
+        var result = new HttpAdapterClient(this.vertx, endpoint, authId, getTenantId(), password, tlsVersions);
         this.cleanup.add(() -> result.close());
+
+        return result;
+
+    }
+
+    private AmqpAdapterClient createAmqpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions)
+            throws Exception {
+
+        var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-amqp-adapter");
+        var result = new AmqpAdapterClient(this.vertx, endpoint, key, certificate, tlsVersions);
+        this.cleanup.add(() -> result.close());
+        result.connect();
+
+        return result;
+
+    }
+
+    private AmqpAdapterClient createAmqpAdapterClient(final String authId, final String password, final Set<String> tlsVersions) throws Exception {
+
+        var endpoint = Kubernetes.getInstance().getExternalEndpoint("iot-amqp-adapter");
+        var result = new AmqpAdapterClient(this.vertx, endpoint, authId, getTenantId(), password, tlsVersions);
+        this.cleanup.add(() -> result.close());
+        result.connect();
 
         return result;
 
@@ -462,6 +565,7 @@ public final class IoTTestSession implements AutoCloseable {
             }
 
             return this;
+
         }
 
         public Builder exceptionHandler(final Consumer<Throwable> exceptionHandler) {
@@ -532,13 +636,15 @@ public final class IoTTestSession implements AutoCloseable {
 
                 // create IoT config
 
+                final Vertx vertx = Vertx.factory.vertx();
+                cleanup.add(vertx::close);
+
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(Kubernetes.getInstance(), config));
                 }
                 IoTUtils.createIoTConfig(config);
 
                 // create namespace if not created
-
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(project.getMetadata().getNamespace()));
                 }
@@ -554,9 +660,9 @@ public final class IoTTestSession implements AutoCloseable {
                 // create endpoints
 
                 final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
-                final DeviceRegistryClient registryClient = new DeviceRegistryClient(deviceRegistryEndpoint);
+                final DeviceRegistryClient registryClient = new DeviceRegistryClient(vertx, deviceRegistryEndpoint);
                 cleanup.add(() -> registryClient.close());
-                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(deviceRegistryEndpoint);
+                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(vertx, deviceRegistryEndpoint);
                 cleanup.add(() -> credentialsClient.close());
 
                 // create user
@@ -606,7 +712,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 // done
 
-                return new IoTTestSession(config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
+                return new IoTTestSession(vertx, config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
 
             } catch (Throwable e) {
 
@@ -738,7 +844,7 @@ public final class IoTTestSession implements AutoCloseable {
             // MQTT: needs passthrough routes because MQTT is not HTTP
             // HTTP: needs passthrough routes because X.509 client certs are being used
 
-            config = useSystemtestKeys(config, HTTP, MQTT);
+            config = useSystemtestKeys(config, HTTP, MQTT, AMQP);
 
         } else {
 
@@ -783,21 +889,29 @@ public final class IoTTestSession implements AutoCloseable {
 
     private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
 
-        log.info("Cleaning up resources...");
+        if (!Environment.getInstance().skipCleanup()) {
 
-        for (ThrowingCallable f : Lists.reverse(cleanup)) {
-            try {
-                f.call();
-            } catch (Throwable e) {
-                if (initialException == null) {
-                    initialException = e;
-                } else {
-                    initialException.addSuppressed(e);
+            log.info("Cleaning up resources...");
+
+            for (ThrowingCallable f : Lists.reverse(cleanup)) {
+                try {
+                    f.call();
+                } catch (Throwable e) {
+                    if (initialException == null) {
+                        initialException = e;
+                    } else {
+                        initialException.addSuppressed(e);
+                    }
                 }
             }
-        }
 
-        log.info("Cleaning up resources... done!");
+            log.info("Cleaning up resources... done!");
+
+        } else {
+
+            log.warn("Skipping resource cleanup!");
+
+        }
 
         if (initialException == null || initialException instanceof Exception) {
             // return the Exception (or null)

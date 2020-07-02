@@ -4,4 +4,4 @@ die() { echo "$*" 1>&2 ; exit 1; }
 
 : ${CLI:=kubectl}
 
-IOT_SERVICES="iot-mesh-inter iot-command-mesh iot-auth-service iot-tenant-service iot-device-connection iot-device-registry iot-http-adapter iot-mqtt-adapter iot-sigfox-adapter iot-lorawan-adapter"
+IOT_SERVICES="iot-mesh-inter iot-command-mesh iot-auth-service iot-tenant-service iot-device-connection iot-device-registry iot-amqp-adapter iot-http-adapter iot-mqtt-adapter iot-sigfox-adapter iot-lorawan-adapter"

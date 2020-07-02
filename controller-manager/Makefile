@@ -17,6 +17,7 @@ build/operatorImageMap.yaml:
 	echo "iot-device-connection-jdbc: $(IOT_DEVICE_CONNECTION_JDBC_IMAGE)" >> "$@"
 	echo "iot-device-registry-infinispan: $(IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE)" >> "$@"
 	echo "iot-device-registry-jdbc: $(IOT_DEVICE_REGISTRY_JDBC_IMAGE)" >> "$@"
+	echo "iot-amqp-adapter: $(IOT_AMQP_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-http-adapter: $(IOT_HTTP_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-mqtt-adapter: $(IOT_MQTT_ADAPTER_IMAGE)" >> "$@"
 	echo "iot-lorawan-adapter: $(IOT_LORAWAN_ADAPTER_IMAGE)" >> "$@"

@@ -31,6 +31,7 @@
     <module>iot-application-base</module>
     <module>iot-service-base</module>
     <module>iot-auth-service</module>
+    <module>iot-amqp-adapter</module>
     <module>iot-http-adapter</module>
     <module>iot-lorawan-adapter</module>
     <module>iot-mqtt-adapter</module>

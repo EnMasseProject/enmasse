@@ -14,7 +14,6 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.VertxFactory;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
@@ -26,6 +25,8 @@ public abstract class ApiClient implements AutoCloseable {
     private static final Logger log = CustomLogger.getLogger();
 
     protected final Vertx vertx;
+    private final Vertx vertxToClose;
+
     protected final Endpoint endpoint;
     protected final Supplier<Endpoint> endpointSupplier;
     protected final String apiVersion;
@@ -35,8 +36,20 @@ public abstract class ApiClient implements AutoCloseable {
     protected abstract String apiClientName();
 
     protected ApiClient(final Supplier<Endpoint> endpointSupplier, final String apiVersion) {
+        this(null, endpointSupplier, apiVersion);
+    }
+
+    protected ApiClient(final Vertx vertx, final Supplier<Endpoint> endpointSupplier, final String apiVersion) {
         // connect() may be overridden, and must not be called in the constructor
-        this.vertx = VertxFactory.create();
+        if (vertx == null) {
+            // create a new vertx instance, and track it to close it
+            this.vertxToClose = Vertx.factory.vertx();
+            this.vertx = this.vertxToClose;
+        } else {
+            // use the provided instance
+            this.vertxToClose = null;
+            this.vertx = vertx;
+        }
         this.endpoint = endpointSupplier.get();
         this.endpointSupplier = endpointSupplier;
         this.apiVersion = apiVersion;
@@ -62,7 +75,9 @@ public abstract class ApiClient implements AutoCloseable {
     @Override
     public void close() {
         closeClient();
-        this.vertx.close();
+        if (this.vertxToClose != null) {
+            this.vertxToClose.close();
+        }
     }
 
     private void closeClient() {

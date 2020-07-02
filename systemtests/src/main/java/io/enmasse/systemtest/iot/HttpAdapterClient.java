@@ -36,6 +36,8 @@ import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.utils.Predicates;
+import io.enmasse.systemtest.utils.VertxUtils;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PfxOptions;
 import io.vertx.ext.web.client.HttpRequest;
@@ -83,25 +85,26 @@ public class HttpAdapterClient extends ApiClient {
 
     private Predicate<? super Throwable> exceptionFilter = DEFAULT_EXCEPTION_FILTER;
 
-    public HttpAdapterClient(final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
-        this(endpoint, null, null, null, key, certificate, tlsVersions);
+    public HttpAdapterClient(final Vertx vertx, final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
+        this(vertx, endpoint, null, null, null, key, certificate, tlsVersions);
     }
 
-    public HttpAdapterClient(final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password, final Set<String> tlsVersions) throws Exception {
-        this(endpoint, deviceAuthId, tenantId, password, null, null, tlsVersions);
+    public HttpAdapterClient(final Vertx vertx, final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password, final Set<String> tlsVersions) throws Exception {
+        this(vertx, endpoint, deviceAuthId, tenantId, password, null, null, tlsVersions);
     }
 
-    public HttpAdapterClient(final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password) throws Exception {
-        this(endpoint, deviceAuthId, tenantId, password, null, null, Collections.emptySet());
+    public HttpAdapterClient(final Vertx vertx, final Endpoint endpoint, final String deviceAuthId, final String tenantId, final String password) throws Exception {
+        this(vertx, endpoint, deviceAuthId, tenantId, password, null, null, Collections.emptySet());
     }
 
     private HttpAdapterClient(
+            final Vertx vertx,
             final Endpoint endpoint,
             final String deviceAuthId, final String tenantId, final String password,
             final PrivateKey key, final X509Certificate certificate,
             final Set<String> tlsVersions) throws Exception {
 
-        super(() -> endpoint, "");
+        super(vertx, () -> endpoint, "");
 
         this.tlsVersions = tlsVersions;
 
@@ -135,12 +138,7 @@ public class HttpAdapterClient extends ApiClient {
                 .setTrustAll(true)
                 .setVerifyHost(false);
 
-        if (this.tlsVersions != null && !this.tlsVersions.isEmpty()) {
-            // remove all current versions
-            options.getEnabledSecureTransportProtocols().forEach(options::removeEnabledSecureTransportProtocol);
-            // set new versions
-            this.tlsVersions.forEach(options::addEnabledSecureTransportProtocol);
-        }
+        VertxUtils.applyTlsVersions(options, this.tlsVersions);
 
         if (this.keyStoreBuffer != null) {
             options.setPfxKeyCertOptions(

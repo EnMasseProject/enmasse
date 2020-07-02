@@ -41,8 +41,8 @@ func TestAdapterStatus(t *testing.T) {
 	prepareAdapterStatus(config)
 	as = config.Status.Adapters
 
-	if len(as) != 4 {
-		t.Fatalf("Length must be 4, but was %d", len(as))
+	if len(as) != len(adapters) {
+		t.Fatalf("Length must be %d, but was %d", len(adapters), len(as))
 		return
 	}
 

@@ -19,6 +19,7 @@ import com.google.common.net.HttpHeaders;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.logs.CustomLogger;
+import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.HttpResponse;
@@ -31,8 +32,8 @@ public abstract class HonoApiClient extends ApiClient {
     private static final Logger log = CustomLogger.getLogger();
     private final String authzString;
 
-    protected HonoApiClient(final Supplier<Endpoint> endpointSupplier, final String token) {
-        super(endpointSupplier, "");
+    protected HonoApiClient(final Vertx vertx, final Supplier<Endpoint> endpointSupplier, final String token) {
+        super(vertx, endpointSupplier, "");
         Objects.requireNonNull(token);
         this.authzString = String.format("Bearer %s", token);
     }

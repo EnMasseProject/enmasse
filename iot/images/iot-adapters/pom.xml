@@ -19,6 +19,11 @@
 
     <dependency>
       <groupId>io.enmasse</groupId>
+      <artifactId>iot-amqp-adapter</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.enmasse</groupId>
       <artifactId>iot-http-adapter</artifactId>
       <version>${project.version}</version>
     </dependency>

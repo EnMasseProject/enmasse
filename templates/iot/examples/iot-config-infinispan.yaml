@@ -25,6 +25,8 @@ spec:
             saslServerName: hotrod
             saslRealm: ApplicationRealm
   adapters:
+    amqp:
+      enabled: false
     mqtt:
       enabled: true
       replicas: 1

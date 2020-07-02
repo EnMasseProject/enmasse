@@ -104,6 +104,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
             <exclusions>
@@ -125,6 +130,10 @@
         <dependency>
             <groupId>io.enmasse</groupId>
             <artifactId>api-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.enmasse</groupId>
+            <artifactId>iot-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>org.eclipse.hono</groupId>

@@ -689,6 +689,8 @@ spec:
                   value: ${env.IOT_DEVICE_REGISTRY_INFINISPAN_IMAGE}
                 - name: RELATED_IMAGE_IOT_DEVICE_REGISTRY_JDBC
                   value: ${env.IOT_DEVICE_REGISTRY_JDBC_IMAGE}
+                - name: RELATED_IMAGE_IOT_AMQP_ADAPTER
+                  value: ${env.IOT_AMQP_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_HTTP_ADAPTER
                   value: ${env.IOT_HTTP_ADAPTER_IMAGE}
                 - name: RELATED_IMAGE_IOT_MQTT_ADAPTER
