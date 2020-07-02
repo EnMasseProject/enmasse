@@ -384,15 +384,6 @@ const availableAddressPlans = [
         "broker": 0
       },
       7),
-  createAddressPlan("standard-small-topic",
-      "topic",
-      "Small Topic",
-      "Creates a small topic sharing underlying broker with other topics.",
-      "Creates a small topic sharing underlying broker with other topics.",
-      {
-        "broker": 0
-      },
-      8),
   createAddressPlan("standard-medium-topic",
       "topic",
       "Medium Topic",
@@ -401,7 +392,7 @@ const availableAddressPlans = [
       {
         "broker": 0
       },
-      9),
+      8),
   createAddressPlan("standard-small-subscription",
       "subscription",
       "Small Subscription",
@@ -410,7 +401,7 @@ const availableAddressPlans = [
       {
         "broker": 0
       },
-      10),
+      9),
   createAddressPlan("brokered-queue",
       "queue",
       "Brokered Queue",
