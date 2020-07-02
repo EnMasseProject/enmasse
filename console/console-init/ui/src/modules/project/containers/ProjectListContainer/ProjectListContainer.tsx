@@ -29,6 +29,7 @@ import {
 } from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
 import { IIoTProjectsResponse } from "schema/iot_project";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 
 export interface IProjectListContainerProps {
   page: number;
@@ -102,7 +103,11 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   }`;
 
   const { loading, data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS(undefined, queryResolver)
+    RETURN_IOT_PROJECTS(undefined, queryResolver),
+    {
+      fetchPolicy: FetchPolicy.NETWORK_ONLY,
+      pollInterval: POLL_INTERVAL
+    }
   );
 
   if (loading) {
@@ -166,23 +171,17 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
+      const queryVariable = {
+        as: [
+          {
+            name: project.name,
+            namespace: project.namespace
+          }
+        ]
+      };
       if (project.projectType === ProjectTypes.MESSAGING) {
-        const queryVariable = {
-          as: [
-            {
-              name: project.name,
-              namespace: project.namespace
-            }
-          ]
-        };
         setDeleteProjectQueryVariables(queryVariable);
       }
-      const queryVariable = {
-        as: {
-          name: project.name,
-          namespace: project.namespace
-        }
-      };
       setDeleteIoTProjectQueryVariables(queryVariable);
     }
   };

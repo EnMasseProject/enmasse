@@ -1977,10 +1977,7 @@ function deleteIotProject(iotProject) {
   let devIndex = getIotDevicesProjectIndex(iotProject.name);
 
   // delete iot devices for this project
-  if (devIndex >= 0 && iotdevices[devIndex].length > 0) {
-    iotdevices[devIndex].splice(devIndex, 1);
-  }
-
+  iotdevices[devIndex].splice(devIndex, 1);
   iotProjects.splice(pjIndex, 1);
 }
 

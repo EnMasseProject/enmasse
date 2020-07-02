@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { Fragment } from "react";
 import { Title, Grid, GridItem } from "@patternfly/react-core";
 import { InputText, StatusLabelWithIcon } from "components";
 import { Protocols } from "constant";
@@ -32,10 +32,10 @@ export const AdapterList: React.FC<IAdapterListProps> = ({ id, adapters }) => {
     <div id={id}>
       {adapters &&
         adapters.map((adapter: IAdapter) => (
-          <>
-            <Adapter adapter={adapter} key={`adapter-${adapter.name}`} />
+          <Fragment key={`adapter-${adapter.name}`}>
+            <Adapter adapter={adapter} />
             <br />
-          </>
+          </Fragment>
         ))}
     </div>
   );

@@ -57,8 +57,8 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
 };
 
 const DELETE_IOT_PROJECT = gql(
-  `  mutation delete_iot_project($as: ObjectMeta_v1_Input!) {
-    deleteIotProject(input: $as)
+  `  mutation delete_iot_project($as: [ObjectMeta_v1_Input!]!) {
+    deleteIotProjects(input: $as)
   }`
 );
 
