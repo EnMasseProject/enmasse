@@ -60,7 +60,7 @@ public class EnmasseOperatorManager {
         return olm;
     }
 
-    public void installEnmasseBundle() throws Exception {
+    public void installEnmasseBundle() {
         LOGGER.info("***********************************************************");
         LOGGER.info("         Enmasse operator shared infra install");
         LOGGER.info("***********************************************************");
@@ -146,7 +146,6 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
         LOGGER.info("                  Enmasse operator delete");
         LOGGER.info("***********************************************************");
-        deleteExamplesBundle(kube.getInfraNamespace());
         clean();
         LOGGER.info("***********************************************************");
     }
@@ -183,21 +182,8 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
-    public void deleteExamplesBundle(String namespace) {
-        removeExampleRoles(namespace);
-        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
-            removeServiceCatalog(namespace);
-        }
-    }
-
     public void installEnmasseOlm() throws Exception {
         installEnmasseOlm(Environment.getInstance().olmInstallType());
-    }
-
-    public void installServiceCatalog(String namespace) {
-        LOGGER.info("Installing enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
-        KubeCMDClient.applyFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
     }
 
     private void enableMonitoringForNamespace() {
@@ -266,17 +252,6 @@ public class EnmasseOperatorManager {
         return clean();
     }
 
-    public void removeExampleRoles(String namespace) {
-        LOGGER.info("Delete enmasse roles from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "example-roles"));
-    }
-
-    public void removeServiceCatalog(String namespace) {
-        LOGGER.info("Delete enmasse service catalog from: {}", Environment.getInstance().getTemplatesPath());
-        KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "service-broker"));
-        KubeCMDClient.deleteFromFile(namespace, Paths.get(Environment.getInstance().getTemplatesPath(), "install", "components", "cluster-service-broker"));
-    }
-
 
     public boolean clean() throws Exception {
         cleanCRDs();
@@ -287,7 +262,6 @@ public class EnmasseOperatorManager {
         if (kube.getOcpVersion() == OpenShiftVersion.OCP4) {
             KubeCMDClient.runOnCluster("delete", "consolelinks", "-l", "app=enmasse");
         }
-        KubeCMDClient.runOnCluster("delete", "clusterservicebrokers", "-l", "app=enmasse");
         if (!kube.getInfraNamespace().equals(kube.getOlmNamespace())) {
             kube.deleteNamespace(kube.getInfraNamespace(), Duration.ofMinutes(kube.getOcpVersion() == OpenShiftVersion.OCP4 ? 10 : 5));
         }

@@ -72,6 +72,7 @@ public class JunitCallbackListener implements TestExecutionExceptionHandler, Lif
                     //todo: need to rewrite this func to enable deployment OLM
                     //operatorManager.deleteEnmasseOlm();
                 }
+                operatorManager.deleteEnmasseBundle();
             }
         });
     }
