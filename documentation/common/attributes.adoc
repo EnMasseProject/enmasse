@@ -1,3 +1,7 @@
+// Document attributes
+
+:cmdcli: kubectl
+
 // Standard document attributes
 
 :data-uri!:

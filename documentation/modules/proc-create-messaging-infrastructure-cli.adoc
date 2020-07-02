@@ -1,0 +1,55 @@
+// Module included in the following assemblies:
+//
+// getting_started/master.adoc
+
+[id='create-messaging-infrastructure-cli-{context}']
+= Creating messaging infrastructure using the command line
+
+In {ProductName}, the messaging infrastructure creates a network of routers and brokers that can serve multiple messaging tenants.
+
+.Procedure
+
+ifeval::["{cmdcli}" == "oc"]
+. Log in as a service admin:
++
+[subs="attributes",options="nowrap"]
+----
+{cmdcli} login -u _admin_
+----
+
+. Create the project for the messaging infrastructure to be deployed:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} new-project _messaging-infra_
+----
+endif::[]
+
+. Create a messaging infrastructure definition:
++
+[source,yaml,subs="+quotes,attributes",options="nowrap"]
+----
+apiVersion: enmasse.io/v1beta2
+kind: MessagingInfrastructure
+metadata:
+  name: infra1
+spec: {}
+----
+
+. Create the messaging infrastructure:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} create -n _messaging-infra_ -f messaging-infrastructure.yaml
+----
+
+. Check the status of the messsaging infrastructure:
++
+[subs="+quotes,attributes",options="nowrap"]
+----
+{cmdcli} get msgi -n _messaging-infra_ infra1 -o wide
+----
++
+The messaging infrastructure is running when the `Phase` column of the above output is `Active`.
+
+

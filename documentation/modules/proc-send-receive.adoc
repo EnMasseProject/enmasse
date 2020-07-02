@@ -7,33 +7,37 @@
 
 .Prerequisites
 
-* Installed link:https://qpid.apache.org/proton/index.html[Apache Qpid Proton] Python bindings.
-* An address space named `myspace` must be created.
-* An address named `myqueue` must be created.
-* A user named `user1` with password `password` must be created.
+* A namespace named `myapp` with a `MessagingTenant` named `default` must be created.
+* An address named `myqueue` in a namespace named `myapp` must be created.
+* An endpoint named `cluster` in a namespace named `myapp` must be created.
 
 .Procedure
 
-. Save Python client example to a file:
+. Start messaging client sending 10 messages to `myqueue`:
 +
-[source,python,options="nowrap"]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-include::../common/client-example1.py[]
+{cmdcli} run testsender -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r sender -m 10
 ----
 
-. Retrieve the address space messaging endpoint host name:
+. View client logs to confirm messages was sent:
 +
-[source,options="nowrap",subs=attributes+]
+[options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} get addressspace myspace -o 'jsonpath={.status.endpointStatuses[?(@.name=="messaging")].externalHost}'
-----
-+
-Use the output as the host name in the following step.
-
-. Run the client:
-+
-[source,options="nowrap",subs="+quotes,attributes"]
-----
-python client-example1.py -u amqps://user1:password@_messaging.example1.com_:443/myqueue
+{cmdcli} logs testsender -n _myapp_
 ----
 
+
+. Start messaging client receiving 10 messages from `myqueue`:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} run testreceiver -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r receiver -m 10
+----
+
+. View client logs to confirm messages was received:
++
+[options="nowrap",subs="+quotes,attributes"]
+----
+{cmdcli} logs testreceiver -n myapp
+----

@@ -1,9 +1,6 @@
 // Module included in the following assemblies:
 //
-// assembly-getting-started-openshift.adoc
-// assembly-getting-started-kubernetes.adoc
-// assembly-installing-openshift.adoc
-// assembly-installing-kubernetes.adoc
+// getting_started/master.adoc
 
 [id='downloading-{context}']
 = Downloading {ProductName}
@@ -16,7 +13,7 @@ endif::Downloading[]
 ifndef::Downloading[]
 * Download and extract the `{ZipInstallFile}` file from the {ZipDownload}.
 
-NOTE: Although container images for {ProductName} are available in the {DockerRepository}, we recommend that you use the YAML files provided instead.
+NOTE: Although container images for {ProductName} are available in the {DockerRepository}, we recommend that you use the YAML files provided instead of writing your own YAML configuration.
 
 endif::Downloading[]
 

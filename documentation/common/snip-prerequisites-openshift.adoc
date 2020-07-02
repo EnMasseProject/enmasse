@@ -2,24 +2,11 @@
 .Prerequisites
 
 ifdef::Prereqs[]
-* To install {ProductName}, the OpenShift client tools are required. You can download the OpenShift
-Origin client from link:https://github.com/openshift/origin/releases[OpenShift Origin^]. {ProductName} has
-been tested to work with the latest stable release of the OpenShift Origin client.
+* To install {ProductName}, the OKD client tools are required. You can download the {OpenShiftProduct} client client from link:https://github.com/openshift/okd/releases[{OpenShiftProduct} releases^]. {ProductName} has
+been tested to work with the latest stable release of the {OpenShiftProduct} client.
 
-* An OpenShift cluster is required. If you do not have an OpenShift cluster available, see
-link:https://github.com/minishift/minishift[Minishift^] for an example of how to run a local instance of OpenShift
+* An {OpenShiftProduct} cluster is required. If you do not have an {OpenShiftProduct} cluster available, see link:https://github.com/code-ready/crc[CodeReady Containers^] for an example of how to run a local instance of {OpenShiftProduct}
 on your machine.
 
 * A user on the OpenShift cluster with `cluster-admin` permissions is required to set up the required cluster roles and API services.
 endif::Prereqs[]
-
-ifndef::Prereqs[]
-* To install {ProductName}, the OpenShift Container Platform command-line interface (CLI) is required.
-** For more information about how to install the CLI on OpenShift 3.x, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/3.11/html/cli_reference/cli-reference-get-started-cli#installing-the-cli[OpenShift Container Platform 3.11 documentation].
-** For more information about how to install the CLI on OpenShift 4.1, see the link:https://access.redhat.com/documentation/en-us/openshift_container_platform/4.1/html/cli_reference/cli-getting-started#cli-installing-cli_cli-developer-commands[OpenShift Container Platform 4.1 documentation].
-
-* An OpenShift cluster is required.
-
-* A user on the OpenShift cluster with `cluster-admin` permissions is required to set up the required cluster roles and API services.
-endif::Prereqs[]
-

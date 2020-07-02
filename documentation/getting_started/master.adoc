@@ -1,0 +1,31 @@
+include::common/attributes.adoc[]
+
+:context: enmasse-getting-started
+
+[id='getting-started-{context}']
+= Getting started with {ProductName}
+
+This guide will walk through the process of setting up {ProductName} on
+{KubePlatform} with clients for sending and receiving messages.
+
+ifeval::["{cmdcli}" == "kubectl"]
+include::common/snip-prerequisites-kubernetes.adoc[leveloffset=+1]
+endif::[]
+
+ifeval::["{cmdcli}" == "oc"]
+include::common/snip-prerequisites-openshift.adoc[leveloffset=+1]
+endif::[]
+
+include::common/proc-download-procedure.adoc[leveloffset=+1]
+
+include::modules/proc-installing-using-bundle.adoc[leveloffset=+1]
+
+include::modules/proc-create-messaging-infrastructure-cli.adoc[leveloffset=+1]
+
+include::modules/proc-create-tenant-resources-cli.adoc[leveloffset=+1]
+
+include::modules/proc-send-receive.adoc[leveloffset=+1]
+
+We have seen how to set up {ProductName} on {KubePlatform}, and how to communicate with it using an AMQP client.
+
+:context: {parent-context}

@@ -35,33 +35,11 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <id>kubernetes-guide</id>
+                        <id>getting-started-guide</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>kubernetes/master.adoc</sourceDocumentName>
-                            <outputFile>html/kubernetes-guide.html</outputFile>
-                            <headerFooter>true</headerFooter>
-                            <resources>
-                                <resource>
-                                    <directory>_images</directory>
-                                    <targetPath>html/images</targetPath>
-                                </resource>
-                            </resources>
-                            <attributes>
-                                <toc>left</toc>
-                                <toclevels>3</toclevels>
-                            </attributes>
-                        </configuration>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>openshift-guide</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <sourceDocumentName>openshift/master.adoc</sourceDocumentName>
-                            <outputFile>html/openshift-guide.html</outputFile>
+                            <sourceDocumentName>getting_started/master.adoc</sourceDocumentName>
+                            <outputFile>html/getting-started-guide.html</outputFile>
                             <headerFooter>true</headerFooter>
                             <resources>
                                 <resource>
@@ -102,29 +80,11 @@
                         </goals>
                     </execution>
                     <execution>
-                        <id>kubernetes-guide-noheader</id>
+                        <id>getting-started-guide-noheader</id>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <sourceDocumentName>kubernetes/master.adoc</sourceDocumentName>
-                            <outputFile>htmlnoheader/kubernetes-guide.html</outputFile>
-                            <headerFooter>false</headerFooter>
-                            <resources>
-                                <resource>
-                                    <directory>_images</directory>
-                                    <targetPath>htmlnoheader/images</targetPath>
-                                </resource>
-                            </resources>
-                        </configuration>
-                        <goals>
-                            <goal>process-asciidoc</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>openshift-guide-noheader</id>
-                        <phase>generate-resources</phase>
-                        <configuration>
-                            <sourceDocumentName>openshift/master.adoc</sourceDocumentName>
-                            <outputFile>htmlnoheader/openshift-guide.html</outputFile>
+                            <sourceDocumentName>getting_started/master.adoc</sourceDocumentName>
+                            <outputFile>htmlnoheader/getting-started-guide.html</outputFile>
                             <headerFooter>false</headerFooter>
                             <resources>
                                 <resource>
