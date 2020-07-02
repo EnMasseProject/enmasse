@@ -28,7 +28,7 @@ For 1.0, the set of EnMasse resources that the user must be able to maintain fro
 * MessagingRoleBinding
 * IoTProject
 
-Given the timelines, service admin console is probably not in scope for 1.0
+Given the timelines, service admin console should not be in scope for 1.0
 
 === Console API/UI changes
 
@@ -36,9 +36,7 @@ Given the timelines, service admin console is probably not in scope for 1.0
 
 image::console_1.0_overview.png[]
 
-The arrows indicate the flow of data.
-
-* `AddressSpace` is removed and replaced by `MessagingTenant`, and there can now only be a single MessagingTenant per Kubernetes namespace. Most of the properties like plan and authentication service (now identity provider) is now optional, and the minimum information needed to create a tenant is its namespace. In addition, a tenant may have a set of capabilities such as 'transactional'.
+* `AddressSpace` is removed and replaced by `MessagingTenant`, and there can now only be a single MessagingTenant named 'default' per Kubernetes namespace. Most of the properties like plan and authentication service (now identity provider) is now optional, and the minimum information needed to create a tenant is its namespace. In addition, a tenant may have a set of capabilities such as 'transactional'.
 
 * Remove customizing endpoints as part of creating `AddressSpace`/`MessagingTenant` (enmasse-operator may create default endpoint specified in a `MessagingPlan`). In 1.0, one or more endpoints may be created independently of the tenant.
 
@@ -48,9 +46,9 @@ A new workflow for creating `MessagingEndpoints` resources is needed. This workf
 
 ==== Address
 
-Required changes are renaming elements from what we already have from 1.x. Address -> MessagingAddress. In addition, each type of address have a set of additional configuration that should be possible to specify in the UI. There is also a new address type 'deadLetter' supported.
+Requires renaming elements from what we already have from 1.x. Address -> MessagingAddress (though UI can still display Address). In addition, each type of address have a set of additional configuration that should be possible to specify in the UI. There is also a new address type 'deadLetter' supported.
 
-The properties that should be possible to set are (subject to change):
+The properties that should be possible to set are (will probably be extended):
 
 * Queues: expiryAddress, deadLetterAddress, partitions, messageTtl min+max, maxConsumers
 * Topics: ...
@@ -68,7 +66,11 @@ MessagingRole and MessagingRoleBinding may be created as additional steps in thi
 
 === Backend changes
 
+==== Architecture 
+
 image::console_1.0_architecture.png[]
+
+The arrows indicate the flow of data.
 
 ==== Metrics
 
