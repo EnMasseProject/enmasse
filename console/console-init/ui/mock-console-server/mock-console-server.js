@@ -1952,8 +1952,10 @@ function createIotProject(pj) {
     },
     enabled: pj.enabled,
     spec: {
-      downstreamStrategyType: "managed",
-      downstreamStrategy: getMockDownstreamStrategy("managed"),
+      downstreamStrategyType: pj.spec.downstreamStrategyType,
+      downstreamStrategy: getMockDownstreamStrategy(
+        pj.spec.downstreamStrategyType
+      ),
       configuration: "{}"
     },
     endpoints: getMockIotEndpoints(),
