@@ -14,7 +14,7 @@ const httpAdapter = {
   url: "https://http.bosch-iot-hub.com"
 };
 const mqttAdapter = {
-  tlsEnabled: true,
+  tls: true,
   host: "mange.bosh-iot-hub.com",
   port: 8883
 };
@@ -82,9 +82,5 @@ const credentials = [
 ];
 
 export const ConfigurationInfoPage = () => (
-  <ConfigurationInfo
-    id="ci-page"
-    adapters={adapters}
-    credentials={credentials}
-  />
+  <ConfigurationInfo id="ci-page" credentials={credentials} />
 );

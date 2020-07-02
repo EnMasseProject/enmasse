@@ -1980,7 +1980,6 @@ function deleteIotProject(iotProject) {
 
   // delete iot devices for this project
   iotdevices[devIndex].splice(devIndex, 1);
-
   iotProjects.splice(pjIndex, 1);
 }
 
@@ -2357,7 +2356,7 @@ setCredentials(
   "iotProjectFrance",
   "12",
   JSON.stringify([
-    { "auth-id": "12-id", type: "password" },
+    { "auth-id": "12-id", type: "hashed-password" },
     { "auth-id": "12-id", type: "psk" }
   ])
 );
@@ -2549,7 +2548,7 @@ const resolvers = {
       return true;
     },
     deleteCredentialsForDevice: (parent, args) => {
-      setCredentials(args.iotproject, args.deviceId, []);
+      setCredentials(args.iotproject, args.deviceId, "");
       return true;
     },
     createIotProject: (parent, args) => {
@@ -2767,11 +2766,12 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var filterer = buildFilterer(args.filter);
       var creds = getIotCredentials(iotProject, deviceId);
       var copy = clone(creds);
-      var copyCreds = JSON.parse(copy);
-      var resultCreds = copyCreds.filter(me => filterer.evaluate(me));
+      var copyCreds = copy && JSON.parse(copy);
+      var resultCreds =
+        copyCreds && copyCreds.filter(me => filterer.evaluate(me));
       return {
-        total: creds.length,
-        credentials: JSON.stringify(resultCreds)
+        total: (creds && creds.length) || 0,
+        credentials: (resultCreds && JSON.stringify(resultCreds)) || ""
       };
     },
     allProjects: (parent, args, context, info) => {

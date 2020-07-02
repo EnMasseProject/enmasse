@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from "react";
-import { useA11yRouteChange, useDocumentTitle } from "use-patternfly";
+import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import { ISortBy, SortByDirection } from "@patternfly/react-table";
+import { useQuery } from "@apollo/react-hooks";
 import { compareObject } from "utils";
 import {
   IProject,
@@ -21,8 +22,14 @@ import {
 } from "modules/project/utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
-import { DELETE_ADDRESS_SPACE } from "graphql-module";
+import {
+  DELETE_ADDRESS_SPACE,
+  RETURN_IOT_PROJECTS,
+  DELETE_IOT_PROJECT
+} from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
+import { IIoTProjectsResponse } from "schema/iot_project";
+import { POLL_INTERVAL, FetchPolicy } from "constant";
 
 export interface IProjectListContainerProps {
   page: number;
@@ -77,15 +84,43 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   //   { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
   // );
 
-  // if (loading) {
-  //   return <Loading />;
-  // }
+  const [
+    setDeleteIoTProjectQueryVariables
+  ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
 
-  const { projects } = {
-    projects: { total: 0, projects: [] }
+  const queryResolver = `
+  total
+  iotProjects {
+    metadata {
+      name
+      namespace
+      creationTimestamp
+    }
+    enabled    
+    status {
+      phase
+    }
+  }`;
+
+  const { loading, data } = useQuery<IIoTProjectsResponse>(
+    RETURN_IOT_PROJECTS(undefined, queryResolver),
+    {
+      fetchPolicy: FetchPolicy.NETWORK_ONLY,
+      pollInterval: POLL_INTERVAL
+    }
+  );
+
+  if (loading) {
+    return <Loading />;
+  }
+
+  const { allProjects } = data || {
+    allProjects: { total: 0, iotProjects: [] }
   };
 
-  setTotalProjects(projects && projects.total);
+  const projects = allProjects?.iotProjects || [];
+
+  setTotalProjects(allProjects?.total || 0);
 
   if (sortValue && sortBy !== sortValue) {
     setSortBy(sortValue);
@@ -136,17 +171,18 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
+      const queryVariable = {
+        as: [
+          {
+            name: project.name,
+            namespace: project.namespace
+          }
+        ]
+      };
       if (project.projectType === ProjectTypes.MESSAGING) {
-        const queryVariable = {
-          as: [
-            {
-              name: project.name,
-              namespace: project.namespace
-            }
-          ]
-        };
         setDeleteProjectQueryVariables(queryVariable);
       }
+      setDeleteIoTProjectQueryVariables(queryVariable);
     }
   };
 
@@ -218,93 +254,28 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     console.log("disable the project", project);
   };
 
-  const projectList: IProject[] = [
-    {
-      projectType: ProjectTypes.MESSAGING,
-      name: "namespace_test1.new_space1",
-      displayName: "new_space",
-      type: "standard",
-      namespace: "namespace_test1",
-      plan: "standard-medium",
-      status: StatusTypes.FAILED,
-      authService: "none",
-      isReady: true,
-      creationTimestamp: "2020-01-20T11:44:28.607Z",
-      errorMessageRate: 3,
-      addressCount: 15,
-      connectionCount: 3
-    },
-    {
-      projectType: ProjectTypes.IOT,
-      isEnabled: true,
-      name: "devops_jbosstest1.k8s_iot1",
-      displayName: "k8s_iot",
-      namespace: "devops_jbosstest1",
-      status: StatusTypes.ACTIVE,
-      creationTimestamp: "2020-05-21T14:40:28.607Z",
-      errorMessageRate: 25,
-      deviceCount: 10500,
-      activeCount: 7100
-    },
-    {
-      projectType: ProjectTypes.MESSAGING,
-      name: "namespace_test1.new_space2",
-      displayName: "new_space",
-      type: "brokered",
-      namespace: "namespace_test1",
-      authService: "none",
-      isReady: true,
-      plan: "brokered-small",
-      status: StatusTypes.PENDING,
-      creationTimestamp: "2020-01-20T05:44:28.607Z",
-      addressCount: 27,
-      connectionCount: 3
-    },
-    {
-      projectType: ProjectTypes.IOT,
-      isEnabled: false,
-      name: "namespace_test1.k8s_iot2",
-      displayName: "k8s_iot",
-      namespace: "namespace_test1",
-      status: StatusTypes.ACTIVE,
-      creationTimestamp: "2020-01-20T05:44:28.607Z",
-      addressCount: 27,
-      connectionCount: 3,
-      errorMessages: ["error message", "pod is not ready."]
-    },
-    {
-      projectType: ProjectTypes.MESSAGING,
-      name: "namespace_test1.new_space3",
-      displayName: "new_space",
-      type: "brokered",
-      namespace: "namespace_test1",
-      plan: "brokered-medium",
-      authService: "none",
-      isReady: true,
-      status: StatusTypes.FAILED,
-      creationTimestamp: "2020-05-21T08:44:28.607Z",
-      addressCount: 27,
-      connectionCount: 3,
-      errorMessageRate: 98,
-      errorMessages: ["error message", "issue with operator"]
-    },
-    {
-      projectType: ProjectTypes.MESSAGING,
-      name: "namespace_test1.new_space4",
-      displayName: "new_space",
-      namespace: "namespace_test1",
-      plan: "standard-small",
-      type: "standard",
-      authService: "none",
-      isReady: true,
-      status: StatusTypes.CONFIGURING,
-      creationTimestamp: "2020-05-21T08:44:28.607Z",
-      addressCount: 27,
-      connectionCount: 3,
-      errorMessageRate: 98,
-      errorMessages: ["error message", "issue with operator"]
-    }
-  ];
+  const getProjects = () => {
+    return projects?.map((project: any) => {
+      const { metadata, status } = project || {};
+      return {
+        projectType: ProjectTypes.IOT,
+        name: metadata?.name,
+        displayName: metadata?.name,
+        type: "",
+        namespace: metadata?.namespace,
+        plan: "",
+        status: status?.phase,
+        authService: "none",
+        isReady: true,
+        creationTimestamp: metadata?.creationTimestamp,
+        errorMessageRate: 3,
+        addressCount: 15,
+        connectionCount: 3
+      };
+    });
+  };
+
+  const projectList: IProject[] = getProjects();
 
   setTotalProjects(projectList.length);
 
