@@ -6,12 +6,13 @@
 :toc-placement!:
 toc::[]
 
-=== Scope
+=== Scope of this document
 
 * Console changes related to 1.0 shared infrastructure - IoT is covered separately
 * Features available in 1.0
 * Features not available in 1.0
 * Changes required to console APIs for 1.0
+* Changes required to console backend for 1.0
 * Changes required to console UIs for 1.0
 
 The changes in document are subject to ... change! There are several types related to authentication and authorization that are not yet implemented. The design for these will come at a later stage.
