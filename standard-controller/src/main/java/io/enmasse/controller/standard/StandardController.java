@@ -59,10 +59,12 @@ public class StandardController {
             standardController = new StandardController(options);
             standardController.start();
         } catch (IllegalArgumentException e) {
+            log.error("Unable to parse arguments", e);
             System.out.println(String.format("Unable to parse arguments: %s", e.getMessage()));
             System.exit(1);
         } catch (Exception e) {
-            System.out.println("Error starting address space controller: " + e.getMessage());
+            log.error("Error starting standard controller", e);
+            System.out.println("Error starting standard controller: " + e.getMessage());
             System.exit(1);
         } finally {
             if (standardController != null) {
