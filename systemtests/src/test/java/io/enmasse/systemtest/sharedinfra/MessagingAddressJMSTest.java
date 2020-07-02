@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DefaultMessagingInfrastructure
 @ExtendWith(JmsProviderParameterResolver.class)
 public class MessagingAddressJMSTest extends TestBase {
-    private static Logger log = CustomLogger.getLogger();
+    private static final Logger LOGGER = CustomLogger.getLogger();
 
     private MessagingTenant tenant;
     private MessagingEndpoint endpoint;
@@ -120,7 +120,7 @@ public class MessagingAddressJMSTest extends TestBase {
         //send messages and commit
         jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
-        log.info("messages sent commit");
+        LOGGER.info("messages sent commit");
 
         //receive commit messages
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
@@ -128,23 +128,23 @@ public class MessagingAddressJMSTest extends TestBase {
             assertNotNull(message, "No message received");
         }
         session.commit();
-        log.info("messages received commit");
+        LOGGER.info("messages received commit");
 
         //send messages rollback
         jmsProvider.sendMessages(sender, listMsgs);
         session.rollback();
-        log.info("messages sent rollback");
+        LOGGER.info("messages sent rollback");
         Thread.sleep(10_000);
 
         //check if queue is empty
         javax.jms.Message received = receiver.receive(1000);
         assertNull(received, "Queue should be empty");
-        log.info("queue is empty");
+        LOGGER.info("queue is empty");
 
         //send messages
         jmsProvider.sendMessages(sender, listMsgs);
         session.commit();
-        log.info("messages sent commit");
+        LOGGER.info("messages sent commit");
 
         //receive messages rollback
         recvd.clear();
@@ -153,7 +153,7 @@ public class MessagingAddressJMSTest extends TestBase {
             assertNotNull(message, "No message received");
         }
         session.rollback();
-        log.info("messages received rollback");
+        LOGGER.info("messages received rollback");
 
         //receive messages
         recvd.clear();
@@ -162,7 +162,7 @@ public class MessagingAddressJMSTest extends TestBase {
             assertNotNull(message, "No message received");
         }
         session.commit();
-        log.info("messages received commit");
+        LOGGER.info("messages received commit");
 
         sender.close();
         receiver.close();
@@ -201,22 +201,22 @@ public class MessagingAddressJMSTest extends TestBase {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
 
         jmsProvider.sendMessages(sender, listMsgs);
-        log.info("{} messages sent", count);
+        LOGGER.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, batch, 1000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(batch));
-        log.info("{} messages received", batch);
+        LOGGER.info("{} messages received", batch);
 
         recvd2 = jmsProvider.receiveMessages(receiver, count - batch, 1000);
         assertThat("Wrong count of received messages", recvd2.size(), Matchers.is(count - batch));
-        log.info("{} messages received", count - batch);
+        LOGGER.info("{} messages received", count - batch);
 
         jmsProvider.sendMessages(sender, listMsgs);
-        log.info("{} messages sent", count);
+        LOGGER.info("{} messages sent", count);
 
         recvd = jmsProvider.receiveMessages(receiver, count, 1000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
-        log.info("{} messages received", count);
+        LOGGER.info("{} messages received", count);
         sender.close();
         receiver.close();
     }
@@ -292,10 +292,10 @@ public class MessagingAddressJMSTest extends TestBase {
         subscriber1.setMessageListener(myListener);
 
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         assertThat("Wrong count of messages received", received.get(30, TimeUnit.SECONDS).size(), is(count));
-        log.info("messages received");
+        LOGGER.info("messages received");
 
         subscriber1.close();
         messageProducer.close();
@@ -358,39 +358,39 @@ public class MessagingAddressJMSTest extends TestBase {
         String batchPrefix = "First";
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("First batch messages sent");
+        LOGGER.info("First batch messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
 
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         jmsProvider.assertMessageContent(recvd1, batchPrefix);
-        log.info(sub1ID + " :First batch messages received");
+        LOGGER.info(sub1ID + " :First batch messages received");
 
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         jmsProvider.assertMessageContent(recvd2, batchPrefix);
-        log.info(sub2ID + " :First batch messages received");
+        LOGGER.info(sub2ID + " :First batch messages received");
 
         subscriber1.close();
-        log.info(sub1ID + " : closed");
+        LOGGER.info(sub1ID + " : closed");
 
         batchPrefix = "Second";
         listMsgs = jmsProvider.generateMessages(session, batchPrefix, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("Second batch messages sent");
+        LOGGER.info("Second batch messages sent");
 
         recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         assertThat("Wrong count of messages received: by " + sub2ID, recvd2.size(), is(count));
         jmsProvider.assertMessageContent(recvd2, batchPrefix);
-        log.info(sub2ID + " :Second batch messages received");
+        LOGGER.info(sub2ID + " :Second batch messages received");
 
         subscriber1 = session.createDurableSubscriber(testTopic, sub1ID);
-        log.info(sub1ID + " :connected");
+        LOGGER.info(sub1ID + " :connected");
 
         recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count));
         jmsProvider.assertMessageContent(recvd1, batchPrefix);
-        log.info(sub1ID + " :Second batch messages received");
+        LOGGER.info(sub1ID + " :Second batch messages received");
 
         subscriber1.close();
         subscriber2.close();
@@ -458,15 +458,15 @@ public class MessagingAddressJMSTest extends TestBase {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
         session.commit();
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count);
         session.commit();
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count);
         session.commit();
 
-        log.info(sub1ID + " :messages received");
-        log.info(sub2ID + " :messages received");
+        LOGGER.info(sub1ID + " :messages received");
+        LOGGER.info(sub2ID + " :messages received");
 
         assertAll(
                 () -> assertThat("Wrong count of messages received: by " + sub1ID, recvd1.size(), is(count)),
@@ -522,23 +522,23 @@ public class MessagingAddressJMSTest extends TestBase {
 
         Topic testTopic = (Topic) jmsProvider.getDestination(topicAddress);
 
-        log.info("Creating subscriber 1");
+        LOGGER.info("Creating subscriber 1");
         MessageConsumer subscriber1 = session.createSharedDurableConsumer(testTopic, subID);
-        log.info("Creating subscriber 2");
+        LOGGER.info("Creating subscriber 2");
         MessageConsumer subscriber2 = session2.createSharedDurableConsumer(testTopic, subID);
-        log.info("Creating producer");
+        LOGGER.info("Creating producer");
         MessageProducer messageProducer = session.createProducer(testTopic);
         messageProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
 
         int count = 10;
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         List<javax.jms.Message> recvd1 = jmsProvider.receiveMessages(subscriber1, count, 1);
         List<javax.jms.Message> recvd2 = jmsProvider.receiveMessages(subscriber2, count, 1);
 
-        log.info(subID + " :messages received");
+        LOGGER.info(subID + " :messages received");
 
         assertThat("Wrong count of messages received: by both receivers",
                 recvd1.size() + recvd2.size(), is(2 * count));
@@ -595,14 +595,14 @@ public class MessagingAddressJMSTest extends TestBase {
         List<javax.jms.Message> listMsgs = jmsProvider.generateMessages(session, count);
         List<CompletableFuture<List<javax.jms.Message>>> results = jmsProvider.receiveMessagesAsync(count, subscriber1, subscriber2, subscriber3);
         jmsProvider.sendMessages(messageProducer, listMsgs);
-        log.info("messages sent");
+        LOGGER.info("messages sent");
 
         assertThat("Each message should be received only by one consumer",
                 results.get(0).get(20, TimeUnit.SECONDS).size() +
                         results.get(1).get(20, TimeUnit.SECONDS).size() +
                         results.get(2).get(20, TimeUnit.SECONDS).size(),
                 is(count));
-        log.info("messages received");
+        LOGGER.info("messages received");
 
         connection1.stop();
         connection2.stop();
@@ -684,10 +684,10 @@ public class MessagingAddressJMSTest extends TestBase {
         List<javax.jms.Message> recvd;
 
         jmsProvider.sendMessages(sender, messages, mode, javax.jms.Message.DEFAULT_PRIORITY, javax.jms.Message.DEFAULT_TIME_TO_LIVE);
-        log.info("{}MB {} message sent", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+        LOGGER.info("{}MB {} message sent", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
 
         recvd = jmsProvider.receiveMessages(receiver, count, 2000);
         assertThat("Wrong count of received messages", recvd.size(), Matchers.is(count));
-        log.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
+        LOGGER.info("{}MB {} message received", sizeInMB, mode == DeliveryMode.PERSISTENT ? "durable" : "non-durable");
     }
 }

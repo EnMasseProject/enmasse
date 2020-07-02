@@ -17,9 +17,8 @@ spec:
         type: string
       - name: kube_namespace
         type: string
-    resources:
-      - name: enmasse-repo
-        type: git
+      - name: repo_url
+        type: string
   steps:
     - name: maven-test
       securityContext:
@@ -35,7 +34,7 @@ spec:
         - -c
         - |
           apt -qq update
-          apt -qq install make gcc -y
+          apt -qq install make gcc git -y
 
           wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz -q
           tar xf go1.13.3.linux-amd64.tar.gz
@@ -47,6 +46,8 @@ spec:
           mv oc /usr/bin/oc
           oc login --token $(inputs.params.kube_token) $(inputs.params.kube_api_url) --insecure-skip-tls-verify=true
 
+          git clone $(inputs.params.repo_url)
+          cd enmasse
           export KUBERNETES_NAMESPACE=$(inputs.params.kube_namespace)
-          mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=false -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
+          mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=true -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
 
