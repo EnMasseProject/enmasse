@@ -9,9 +9,7 @@ import {
   EmptyState,
   EmptyStateIcon,
   EmptyStateBody,
-  EmptyStateVariant,
-  Button,
-  ButtonVariant
+  EmptyStateVariant
 } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { CreateProject } from "modules/project/dailogs/CreateProject";
@@ -28,9 +26,7 @@ export const EmptyProject: React.FunctionComponent<{}> = () => {
         below to create one. Learn more about this in the
         <a href={process.env.REACT_APP_DOCS}> documentation</a>
       </EmptyStateBody>
-      <Button id="empty-ad-space-create-button" variant={ButtonVariant.primary}>
-        <CreateProject />
-      </Button>
+      <CreateProject />
     </EmptyState>
   );
 };

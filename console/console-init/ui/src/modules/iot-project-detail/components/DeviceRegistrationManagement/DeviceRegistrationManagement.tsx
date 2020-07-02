@@ -15,12 +15,7 @@ import {
   Title,
   CardTitle
 } from "@patternfly/react-core";
-import {
-  InputText,
-  JsonEditor,
-  SwitchWithToggle,
-  IAdapterConfig
-} from "components";
+import { InputText, JsonEditor, SwitchWithToggle, IAdapter } from "components";
 import { StyleSheet, css } from "aphrodite";
 
 interface IDeviceRegistationManagementProps {
@@ -28,8 +23,8 @@ interface IDeviceRegistationManagementProps {
   endpoiuntUrl?: string;
   username?: string;
   password?: string;
-  registrationApi?: IAdapterConfig;
-  credentialApi?: IAdapterConfig;
+  registrationApi?: IAdapter;
+  credentialApi?: IAdapter;
 }
 
 const styles = StyleSheet.create({

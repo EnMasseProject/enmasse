@@ -199,7 +199,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
     return tableRow;
   };
 
-  const tableRows = projects.map(toTableCells);
+  const tableRows = projects?.map(toTableCells);
   const tableColumns = [
     { title: "Name", transforms: [sortable] },
     { title: "Type/Plan", transforms: [sortable] },
@@ -241,7 +241,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           <TableBody />
         </Table>
       </div>
-      {projects.length <= 0 && <EmptyProject />}
+      {projects?.length <= 0 && <EmptyProject />}
     </>
   );
 };
