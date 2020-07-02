@@ -142,6 +142,15 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
+    public void deleteEnmasseBundle() throws Exception {
+        LOGGER.info("***********************************************************");
+        LOGGER.info("                  Enmasse operator delete");
+        LOGGER.info("***********************************************************");
+        deleteExamplesBundle(kube.getInfraNamespace());
+        clean();
+        LOGGER.info("***********************************************************");
+    }
+
     public void deleteEnmasseAnsible() {
         LOGGER.info("***********************************************************");
         LOGGER.info("            Enmasse operator delete by ansible");
@@ -174,6 +183,12 @@ public class EnmasseOperatorManager {
         LOGGER.info("***********************************************************");
     }
 
+    public void deleteExamplesBundle(String namespace) {
+        removeExampleRoles(namespace);
+        if (kube.getOcpVersion() == OpenShiftVersion.OCP3) {
+            removeServiceCatalog(namespace);
+        }
+    }
 
     public void installEnmasseOlm() throws Exception {
         installEnmasseOlm(Environment.getInstance().olmInstallType());
