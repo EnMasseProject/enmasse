@@ -17,14 +17,14 @@
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} run testsender -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r sender -m 10
+{cmdcli} run producer -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r sender -m 10
 ----
 
 . View client logs to confirm messages was sent:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs testsender -n _myapp_
+{cmdcli} logs producer -n _myapp_
 ----
 
 
@@ -32,12 +32,12 @@
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} run testreceiver -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r receiver -m 10
+{cmdcli} run consumer -n _myapp_ --image=quay.io/enmasse/testclient:latest -- -a amqp://myapp-cluster.enmasse-infra.svc:5672/myqueue -r receiver -m 10
 ----
 
 . View client logs to confirm messages was received:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} logs testreceiver -n myapp
+{cmdcli} logs consumer -n myapp
 ----
