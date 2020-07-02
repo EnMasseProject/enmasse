@@ -962,7 +962,6 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1beta2.MessagingEndp
 	if tenant.Status.Broker != nil {
 		// Transactional means that we create a link route based on the tenant prefix,
 		// and all broker addresses go through that route.
-		log.Info("Tenant borkre set, using ")
 		broker := *tenant.Status.Broker
 		host := i.hostMap[broker.Host]
 		brokerState := i.brokers[host]
