@@ -549,6 +549,9 @@ const typeDefs = gql`
       iotproject: String!
       deviceId: String!
     ): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+
+    "Returns the command-line that, if executed, would create the given iotproject"
+    iotProjectCommand(input: IotProject_iot_enmasse_io_v1alpha1_input!): String!
   }
 
   #
@@ -688,11 +691,6 @@ const typeDefs = gql`
     Failed
   }
 
-  enum IotProjectType {
-    managed
-    external
-  }
-
   enum IotCredentials {
     psk
     hashed_password
@@ -708,29 +706,9 @@ const typeDefs = gql`
     DeviceCredentialManagement
   }
 
-  union IotProjectDownStreamStrategy =
-      ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1
-    | ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1
-
-  type Credentials_iot_enmasse_io_v1alpha1 {
-    username: String!
-    password: String!
-  }
-
-  type ConnectionInformation_iot_enmasse_io_v1alpha1 {
-    host: String!
-    port: Int!
-    credentials: Credentials_iot_enmasse_io_v1alpha1!
-
-    tls: Boolean!
-    certificate: String
-  }
-
   type IoTProjectStatus_iot_enmasse_io_v1alpha1 {
     phase: ProjectPhaseType!
     phaseReason: String
-    tenantName: String!
-    downstreamEndpoint: ConnectionInformation_iot_enmasse_io_v1alpha1!
   }
 
   type AddressSpaceConfig_iot_enmasse_io_v1alpha1 {
@@ -751,18 +729,9 @@ const typeDefs = gql`
     Command: [AddressConfig_iot_enmasse_io_v1alpha1!]!
   }
 
-  type ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-    addressSpace: AddressSpaceConfig_iot_enmasse_io_v1alpha1!
-    addresses: AddressesConfig_iot_enmasse_io_v1alpha1!
-  }
-
-  type ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-    connectionInformation: ConnectionInformation_iot_enmasse_io_v1alpha1!
-  }
-
   type IotProjectSpec_iot_enmasse_io_v1alpha1 {
-    downstreamStrategyType: IotProjectType!
-    downstreamStrategy: IotProjectDownStreamStrategy!
+    tenantId: String!
+    addresses: AddressesConfig_iot_enmasse_io_v1alpha1!
     configuration: String!
   }
 
