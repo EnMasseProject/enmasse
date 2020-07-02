@@ -488,7 +488,7 @@ query allProjects {
 ```
 query allProjects {
   allProjects(
-    filter: "`$.metadata.name`='iotProjectIndia'"
+    filter: "`$.metadata.name`='iotProjectFrance'"
     projectType: iotProject
   ) {
     total
