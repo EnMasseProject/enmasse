@@ -748,7 +748,7 @@ const typeDefs = gql`
   type AddressesConfig_iot_enmasse_io_v1alpha1 {
     Telemetry: AddressConfig_iot_enmasse_io_v1alpha1!
     Event: AddressConfig_iot_enmasse_io_v1alpha1!
-    Command: AddressConfig_iot_enmasse_io_v1alpha1!
+    Command: [AddressConfig_iot_enmasse_io_v1alpha1!]!
   }
 
   type ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
