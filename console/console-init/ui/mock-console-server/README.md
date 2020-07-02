@@ -500,15 +500,9 @@ query allProjects {
       }
       enabled
       spec {
-        downstreamStrategyType
+        tenantId
         configuration
-        downstreamStrategy {
-          __typename
-          ... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-            addressSpace {
-              name
-            }
-            addresses {
+        addresses {
               Telemetry {
                 name
               }
@@ -518,24 +512,11 @@ query allProjects {
               Command {
                 name
               }
-            }
-          }
         }
       }
       status {
         phase
         phaseReason
-        tenantName
-        downstreamEndpoint {
-          host
-          port
-          credentials {
-            username
-            password
-          }
-          tls
-          certificate
-        }
       }
       endpoints {
         name
