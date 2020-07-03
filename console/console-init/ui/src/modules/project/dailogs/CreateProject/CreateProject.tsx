@@ -28,6 +28,7 @@ import {
   RETURN_NAMESPACES,
   RETURN_ADDRESS_SPACE_SCHEMAS
 } from "graphql-module";
+import { CREATE_IOT_PROJECT } from "graphql-module/queries/iot_project";
 import { FinishedStep } from "components";
 import {
   ProjectType,
@@ -116,6 +117,7 @@ const CreateProject: React.FunctionComponent = () => {
     name: string;
     namespace: string;
     type?: string;
+    enabled?: boolean;
   }>();
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProject
@@ -148,6 +150,13 @@ const CreateProject: React.FunctionComponent = () => {
 
   const [setMessagingVariables] = useMutationQuery(
     CREATE_ADDRESS_SPACE,
+    refetchQueries,
+    resetForm,
+    resetFormState
+  );
+
+  const [setIoTVariables] = useMutationQuery(
+    CREATE_IOT_PROJECT,
     refetchQueries,
     resetForm,
     resetFormState
@@ -191,11 +200,24 @@ const CreateProject: React.FunctionComponent = () => {
   });
 
   const handleIoTProjectSave = async () => {
-    console.log("iot created");
-    setRouteDetail({
-      name: iotProjectDetail.iotProjectName || "",
-      namespace: iotProjectDetail.namespace || ""
-    });
+    if (iotProjectDetail && isIoTProjectValid(iotProjectDetail)) {
+      const variables = {
+        project: {
+          metadata: {
+            name: iotProjectDetail.iotProjectName,
+            namespace: iotProjectDetail.namespace
+          },
+          enabled: iotProjectDetail.isEnabled
+        }
+      };
+      setIoTVariables(variables);
+      setRouteDetail({
+        name: iotProjectDetail.iotProjectName || "",
+        namespace: iotProjectDetail.namespace || "",
+        enabled: iotProjectDetail.isEnabled
+      });
+      resetForm();
+    }
     resetForm();
   };
 
