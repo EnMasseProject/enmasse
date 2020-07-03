@@ -24,12 +24,9 @@ For 1.0, the set of EnMasse resources that the user must be able to maintain fro
 * MessagingTenant
 * MessagingAddress
 * MessagingEndpoint
-* MessagingUser
-* MessagingRole
-* MessagingRoleBinding
 * IoTProject
 
-Given the timelines, service admin console should not be in scope for 1.0
+Given the timelines, authentication and authorization-related resources, as well as the service admin console is not in scope for 1.0
 
 === Console API/UI changes
 
@@ -58,13 +55,6 @@ The properties that should be possible to set are (will probably be extended):
 * Multicast: ...
 * DeadLetter: ...
 
-
-==== MessagingUser, MessagingRole and MessagingRoleBinding
-
-A new flow to create a MessagingUser is needed. This resources is based on https://github.com/EnMasseProject/enmasse/blob/master/documentation/design/proposals/authn_authz_for_1.0.adoc#messaginguser .
-
-MessagingRole and MessagingRoleBinding may be created as additional steps in this flow for simplicity, or as a separate flow.
-
 === Backend changes
 
 ==== Architecture 
@@ -84,13 +74,13 @@ For 1.0, the agent disappears, so information must be gathered differently:
 * Console-server querying the routers directly to build the list of connections and their links
 * Console server querying the prometheus instance for address and connection metrics
 * Console-server eventually also becomes backend for the CLI.
+* Expose GraphQL API (with auth) to be used from systemtests
 * Future: use metrics from prometheus to drive router/broker scaling
 * Future: use prometheus to drive IoT/Hono scaling and request throttling
 
 ==== Management commands
 
 Design tracked in https://github.com/EnMasseProject/enmasse/pull/4545 .
-
 For 1.0 the supported management tasks will be close connection and purge queue. The console-backend will invoke management commands using the API described in the PR.
 
 == Tasks
@@ -101,6 +91,7 @@ For 1.0 the supported management tasks will be close connection and purge queue.
 * Deploy ephemeral prometheus when console is deployed. Unless its too much effort, make it optional, which would prevent some stats being displayed by the console, but allow installing with a lower footprint.
 * Modify console backend to retrieve connections and links directly from routers
 * Modify console backend to retrieve router statistics and broker metrics from prometheus
+* Modify console backend to trigger management commands.
 
 == Testing
 
