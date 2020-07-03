@@ -9,22 +9,18 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
-import static io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType.getPort;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingClientRunner {
@@ -53,7 +49,7 @@ public class MessagingClientRunner {
         executor = Executors.newFixedThreadPool(1 + receiverAddresses.length);
         List<ExternalMessagingClient> clients = new ArrayList<>();
         try {
-            Endpoint e = new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint));
+            Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
             ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
                     .withClientEngine(new RheaClientSender())
                     .withMessagingRoute(e)

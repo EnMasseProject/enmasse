@@ -10,6 +10,7 @@ import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
@@ -17,11 +18,10 @@ import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
-import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
@@ -30,7 +30,6 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +39,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType.getPort;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -254,7 +252,7 @@ public class MessagingAddressTest extends TestBase {
         AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
-                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), getPort("AMQP", nodePort)))
+                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", nodePort)))
                 .setProtonClientOptions(new ProtonClientOptions())
                 .setTerminusFactory(new TopicTerminusFactory()));
 
