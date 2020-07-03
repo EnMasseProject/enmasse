@@ -453,12 +453,8 @@ public abstract class AbstractClient {
                     || clientType == ClientType.CLI_JAVA_PROTON_JMS_RECEIVER) {
                 args.put(ClientArgument.BROKER, "amqps://" + args.getValues(ClientArgument.BROKER).get(0));
             }
-            if (clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_RECEIVER
-                    || clientType == ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER) {
-                args.put(ClientArgument.BROKER, "ssl://" + args.getValues(ClientArgument.BROKER).get(0));
-            }
             args.put(ClientArgument.CONN_SSL_TRUST_ALL, "true");
-            args.put(ClientArgument.CONN_SSL_VERIFY_HOST, (clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_RECEIVER || clientType == ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ? "true" : "false");
+            args.put(ClientArgument.CONN_SSL_VERIFY_HOST, "false");
             if (args.getValues(ClientArgument.CONN_AUTH_MECHANISM) == null) {
                 args.put(ClientArgument.CONN_AUTH_MECHANISM, "PLAIN");
             }

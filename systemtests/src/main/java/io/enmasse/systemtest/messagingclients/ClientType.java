@@ -11,15 +11,7 @@ public enum ClientType {
     CLI_PROTON_PYTHON_SENDER,
     CLI_PROTON_PYTHON_RECEIVER,
     CLI_JAVA_PROTON_JMS_SENDER,
-    CLI_JAVA_PROTON_JMS_RECEIVER,
-    CLI_JAVA_ARTEMIS_JMS_SENDER,
-    CLI_JAVA_ARTEMIS_JMS_RECEIVER,
-    CLI_JAVA_OPENWIRE_JMS_SENDER,
-    CLI_JAVA_OPENWIRE_JMS_RECEIVER,
-    CLI_JAVA_PAHO_MQTT_SENDER,
-    CLI_JAVA_PAHO_MQTT_RECEIVER,
-    CLI_STOMP_SENDER,
-    CLI_STOMP_RECEIVER;
+    CLI_JAVA_PROTON_JMS_RECEIVER;
 
     /**
      * Get bind client type to client executable
@@ -42,18 +34,6 @@ public enum ClientType {
             case CLI_JAVA_PROTON_JMS_SENDER:
             case CLI_JAVA_PROTON_JMS_RECEIVER:
                 return "./client_executable/cli-qpid-jms.jar";
-            case CLI_JAVA_ARTEMIS_JMS_SENDER:
-            case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
-                return "./client_executable/cli-artemis-jms.jar";
-            case CLI_JAVA_OPENWIRE_JMS_SENDER:
-            case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
-                return "./client_executable/cli-activemq.jar";
-            case CLI_JAVA_PAHO_MQTT_SENDER:
-            case CLI_JAVA_PAHO_MQTT_RECEIVER:
-                return "./client_executable/cli-paho-java.jar";
-            case CLI_STOMP_SENDER:
-            case CLI_STOMP_RECEIVER:
-                return "./client_executable/stomp-client.py";
             default:
                 return "";
         }
@@ -71,18 +51,6 @@ public enum ClientType {
             case CLI_JAVA_PROTON_JMS_SENDER:
             case CLI_JAVA_PROTON_JMS_RECEIVER:
                 return "cli-jms";
-            case CLI_JAVA_ARTEMIS_JMS_SENDER:
-            case CLI_JAVA_ARTEMIS_JMS_RECEIVER:
-                return "cli-artemis";
-            case CLI_JAVA_OPENWIRE_JMS_SENDER:
-            case CLI_JAVA_OPENWIRE_JMS_RECEIVER:
-                return "cli-openwire";
-            case CLI_STOMP_SENDER:
-            case CLI_STOMP_RECEIVER:
-                return "cli-stomp";
-            case CLI_JAVA_PAHO_MQTT_SENDER:
-            case CLI_JAVA_PAHO_MQTT_RECEIVER:
-                return "cli-paho";
             default:
                 return "";
         }
