@@ -26,8 +26,8 @@ export interface IIoTMessagingObject {
   username?: string;
   password?: string;
   addressSpace?: string;
-  eventsAddresses?: Array<string>;
-  telemetryAddresses?: Array<string>;
+  eventAddress?: string;
+  telemetryAddress: string;
   commandAddresses?: Array<string>;
 }
 export interface IAccessCredentialsProps {
@@ -78,8 +78,8 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       password,
       addressSpace,
       commandAddresses,
-      eventsAddresses,
-      telemetryAddresses
+      eventAddress,
+      telemetryAddress
     } = messaging || {};
     return (
       <>
@@ -134,27 +134,25 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           />
         )}
         <br />
-        {eventsAddresses && eventsAddresses.length > 0 && (
+        {eventAddress && (
           <InputText
             label={"Events address name"}
             type={"text"}
-            value={eventsAddresses.join(", ")}
+            value={eventAddress}
             isReadOnly={true}
             enableCopy={true}
-            isExpandable={eventsAddresses.length > 1}
             id={"messaging-event-address-name-input"}
             ariaLabel={"messaging event Address Name"}
           />
         )}
         <br />
-        {telemetryAddresses && telemetryAddresses.length > 0 && (
+        {telemetryAddress && (
           <InputText
             label={"Telemetry address name"}
             type={"text"}
-            value={telemetryAddresses.join(", ")}
+            value={telemetryAddress}
             isReadOnly={true}
             enableCopy={true}
-            isExpandable={telemetryAddresses.length > 1}
             id={"messaging-telemetry-address-name-input"}
             ariaLabel={"messaging telemetry Address Name"}
           />
