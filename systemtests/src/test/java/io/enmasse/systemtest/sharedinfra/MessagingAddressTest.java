@@ -18,6 +18,7 @@ import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.TestBase;
+import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
@@ -29,6 +30,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,11 +40,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType.getPort;
+import static io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType.getPort;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DefaultMessagingInfrastructure
 @DefaultMessagingTenant
@@ -317,18 +318,22 @@ public class MessagingAddressTest extends TestBase {
         assertDefaultMessaging(messagingClients);
     }
 
-    private void assertDefaultMessaging(List<ExternalMessagingClient> clients) {
+    private void assertDefaultMessaging(List<ExternalMessagingClient> clients) throws InterruptedException {
         int expectedMsgCount = 10;
-
-        for (ExternalMessagingClient client : clients) {
-            if (client.isSender()) {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d sent messages", expectedMsgCount));
-            } else {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount));
+        try {
+            for (ExternalMessagingClient client : clients) {
+                if (client.isSender()) {
+                    assertEquals(expectedMsgCount, client.getMessages().size(),
+                            String.format("Expected %d sent messages", expectedMsgCount));
+                } else {
+                    assertEquals(expectedMsgCount, client.getMessages().size(),
+                            String.format("Expected %d received messages", expectedMsgCount));
+                }
             }
+        } finally {
+            Logger LOGGER = CustomLogger.getLogger();
+            clients.clear();
+            clientRunner.shutdown_clients();
         }
-        clients.clear();
     }
 }

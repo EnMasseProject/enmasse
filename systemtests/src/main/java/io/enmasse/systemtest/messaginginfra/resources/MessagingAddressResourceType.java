@@ -72,13 +72,4 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
         }
         return null;
     }
-
-    public static int getPort(String protocol, MessagingEndpoint endpoint) {
-        for (MessagingEndpointPort port : endpoint.getStatus().getPorts()) {
-            if (protocol.equals(port.getProtocol()))  {
-                return port.getPort();
-            }
-        }
-        return 0;
-    }
 }
