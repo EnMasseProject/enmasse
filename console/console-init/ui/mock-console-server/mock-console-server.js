@@ -1793,6 +1793,60 @@ function makeAddressSpaceMetrics(as) {
   ];
 }
 
+function makeIotProjectMetrics(pj) {
+  var devices =
+    iotdevices[getIotDevicesIndexForProjectName(pj.metadata.name)].devices;
+  var cons =
+    as.metadata.uid in addressspace_connection
+      ? addressspace_connection[as.metadata.uid]
+      : [];
+
+  return [
+    {
+      name: "Max connection",
+      type: "counter",
+      value: cons.length,
+      units: "connections"
+    },
+    {
+      name: "Data volume",
+      type: "counter",
+      value: devices.length * 1000,
+      units: "bytes"
+    },
+    {
+      name: "Start date",
+      type: "counter",
+      value: getRandomCreationDate(),
+      units: "Date"
+    },
+    {
+      name: "End date",
+      type: "counter",
+      value: getRandomCreationDate(),
+      units: "Date"
+    },
+    {
+      name: "Events rate",
+      type: "gauge",
+      value: devices.length * 10,
+      units: "messages"
+    },
+    {
+      name: "Telemetry rate",
+      type: "gauge",
+      value: devices.length * 105,
+      units: "messages"
+    },
+    {
+      name: "Command rate",
+      type: "gauge",
+      value: devices.length * 2,
+      units: "messages"
+    }
+  ];
+}
+
 function addressCommand(addr, addressSpaceName) {
   if (addr.metadata.name) {
     // pass
@@ -1965,7 +2019,7 @@ function createIotProject(pj) {
 
 function deleteIotProject(iotProject) {
   let pjIndex = getIotProjectIndex(iotProject.name);
-  let devIndex = getIotDevicesProjectIndex(iotProject.name);
+  let devIndex = getIotDevicesIndexForProjectName(iotProject.name);
 
   // delete iot devices for this project
   iotdevices.splice(devIndex, 1);
@@ -2010,7 +2064,7 @@ function getMockIotDownstreamMessagingAddresses() {
 }
 
 function patchIotProject(metadata, jsonPatch, patchType) {
-  var index = getIotDevicesProjectIndex(metadata.name);
+  var index = getIotDevicesIndexForProjectName(metadata.name);
 
   verifyPatchType(patchType);
 
@@ -2089,7 +2143,7 @@ function getIotProjectIndex(projectName) {
   return index;
 }
 
-function getIotDevicesProjectIndex(projectName) {
+function getIotDevicesIndexForProjectName(projectName) {
   let devIndex = iotdevices.findIndex(
     existing => projectName === existing.project
   );
@@ -2101,7 +2155,7 @@ function getIotDevicesProjectIndex(projectName) {
 
 function createIotDevice(iotProject, newDevice) {
   getIotProjectIndex(iotProject);
-  let devIndex = getIotDevicesProjectIndex(iotProject);
+  let devIndex = getIotDevicesIndexForProjectName(iotProject);
 
   if (
     iotdevices[devIndex].devices.find(
@@ -2117,7 +2171,7 @@ function createIotDevice(iotProject, newDevice) {
 
 function deleteIotDevice(iotProject, deviceId) {
   getIotProjectIndex(iotProject);
-  let pjIndex = getIotDevicesProjectIndex(iotProject);
+  let pjIndex = getIotDevicesIndexForProjectName(iotProject);
 
   let devIndex = iotdevices[pjIndex].devices.findIndex(
     d => d.deviceId === deviceId
@@ -2795,6 +2849,9 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       if (projectType === undefined || projectType === "iotProject") {
         // fetch iot projects
         resultPj = clone(iotProjects);
+        resultPj.forEach(pj => {
+          pj.status.metrics = makeIotProjectMetrics(pj);
+        });
         var pj = resultPj.filter(pj => filterer.evaluate(pj)).sort(orderBy);
         var paginationBounds = calcLowerUpper(
           args.offset,
