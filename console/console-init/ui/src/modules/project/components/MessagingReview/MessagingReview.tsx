@@ -17,7 +17,7 @@ import {
   ButtonVariant
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { endpointProtocolOptions } from "modules/project/utils";
 
 export interface IMessagingReviewProps {
@@ -126,10 +126,10 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
         Review your configuration
       </Title>
-      <Title size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
         {" "}
         Review the information below and Click Finish to create the new address
         space. Use the Back button to make changes.
@@ -242,7 +242,11 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
         </GridItem>
         {isExpanded && (
           <GridItem span={7} className={css(style.left_padding_with_border)}>
-            <Title size={"lg"} className={css(style.bottom_padding)}>
+            <Title
+              headingLevel="h2"
+              size={"lg"}
+              className={css(style.bottom_padding)}
+            >
               {`Configuration details  `}
               <Tooltip
                 id="preview-as-feedback-tooltip"

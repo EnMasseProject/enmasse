@@ -4,14 +4,7 @@
  */
 
 import React from "react";
-import {
-  Grid,
-  GridItem,
-  Form,
-  Checkbox,
-  FormGroup,
-  Radio
-} from "@patternfly/react-core";
+import { Form, Checkbox, FormGroup, Radio } from "@patternfly/react-core";
 import { IMessagingProject, IRouteConf } from "modules/address-space/dialogs";
 import { TlsCertificateType } from "modules/address-space/utils";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";

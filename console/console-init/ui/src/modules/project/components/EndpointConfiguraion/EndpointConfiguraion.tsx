@@ -13,11 +13,11 @@ import {
   Radio,
   Switch
 } from "@patternfly/react-core";
-import { StyleSheet, css } from "@patternfly/react-styles";
 import { IMessagingProject, IRouteConf } from "modules/project/dailogs";
 import { TlsCertificateType } from "modules/project/utils";
 import { IAddressSpaceSchema } from "schema/ResponseTypes";
 import { IDropdownOption } from "components";
+import { StyleSheet, css } from "aphrodite";
 
 const style = StyleSheet.create({
   margin_left: {
