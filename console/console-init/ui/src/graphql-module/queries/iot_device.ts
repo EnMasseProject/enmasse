@@ -64,8 +64,8 @@ const RETURN_IOT_CREDENTIALS = (
 };
 
 const DELETE_IOT_DEVICE = gql(
-  `mutation delete_iot_device($iotproject: String!, $deviceId: String!) {
-    deleteIotDevice(iotproject: $iotproject, deviceId: $deviceId)
+  `mutation delete_iot_device($iotproject: String!, $deviceId: [String!]!) {
+    deleteIotDevices(iotproject: $iotproject, deviceIds: $deviceId)
   }`
 );
 
