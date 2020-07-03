@@ -250,7 +250,11 @@ export default function DeviceListPage() {
   };
 
   const handleInputDeviceInfo = () => {
-    // TODO: After create device is ready
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.CREATE_DEVICE,
+      modalProps: {}
+    });
   };
 
   const handleJSONUpload = () => {
