@@ -14,6 +14,8 @@ import {
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
 import { AddGateways } from "modules/iot-device/components";
+import { useStoreContext, types } from "context-state-reducer";
+import { AddCredentials } from "stories/AddCredential.stories";
 
 export interface IDeviceInfo {
   onPropertySelect: (e: any, selection: SelectOptionObject) => void;
@@ -32,19 +34,19 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
   propertyInput,
   setPropertyInput
 }) => {
-  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(true);
+  const { dispatch, state } = useStoreContext();
+  const { modalProps } = (state && state.modal) || {};
+  const { onConfirm, onClose } = modalProps || {};
   const [connectionType, setConnectionType] = useState<string>();
   const [addedGateways, setAddedGateways] = useState<string[]>([]);
 
-  const onToggle = () => {
-    setIsWizardOpen(!isWizardOpen);
-    resetForm();
-  };
-
-  const resetForm = () => {};
-
   const getGateways = (gateways: string[]) => {
     setAddedGateways(gateways);
+  };
+
+  const onCloseDialog = () => {
+    dispatch({ type: types.HIDE_MODAL });
+    onClose && onClose();
   };
 
   const addGateway = {
@@ -54,7 +56,7 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
 
   const addCredentials = {
     name: "Add credentials",
-    component: <p>Add credentials</p>
+    component: <AddCredentials />
   };
 
   const reviewForm = {
@@ -67,6 +69,34 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
     if (data) {
       setConnectionType(data);
     }
+  };
+
+  const handleSave = async () => {
+    // if (name) {
+    //   const getVariables = () => {
+    // let variable: any = {
+    //   metadata: {
+    //     namespace: namespace
+    //   },
+    //   spec: {
+    //     type: addressType.toLowerCase(),
+    //     plan: plan,
+    //     address: addressName
+    //   }
+    // };
+    // if (addressType && addressType.trim().toLowerCase() === "subscription")
+    //   variable.spec.topic = topic;
+    // return variable;
+    // };
+    // const variables = {
+    // a: getVariables(),
+    // as: name
+    // };
+    // await setAddressQueryVariables(variables);
+    // }
+
+    onCloseDialog();
+    onConfirm && onConfirm();
   };
 
   const steps = [
@@ -194,22 +224,13 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
   );
 
   return (
-    <>
-      {isWizardOpen ? (
-        <>
-          <Wizard
-            isOpen={isWizardOpen}
-            onClose={onToggle}
-            footer={CustomFooter}
-            steps={steps}
-          />
-        </>
-      ) : (
-        <Button variant="primary" onClick={onToggle}>
-          Create
-        </Button>
-      )}
-    </>
+    <Wizard
+      isOpen={true}
+      onClose={onCloseDialog}
+      onSave={handleSave}
+      footer={CustomFooter}
+      steps={steps}
+    />
   );
 };
 
