@@ -6,8 +6,6 @@
 export * from "./ProjectTypeConfigurationStep";
 export * from "./IoTConfiguration";
 export * from "./IoTConfigurationStep";
-export * from "./MessagingConfigurationStep";
-export * from "./MessagingReviewStep";
 export * from "./IoTReview";
 export * from "./IoTReviewStep";
 export * from "./ProjectList";
@@ -16,3 +14,7 @@ export * from "./ProjectDatatoolbarToggleGroup";
 export * from "./ProjectToolbar";
 export * from "./EmptyProject";
 export * from "./ProjectHeaderCard";
+export * from "./EndpointCertificateConfiguration";
+export * from "./EndpointConfiguraion";
+export * from "./MessagingReview";
+export * from "./MessagingConfiguration";
