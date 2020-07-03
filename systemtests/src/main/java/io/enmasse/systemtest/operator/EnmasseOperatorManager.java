@@ -269,6 +269,14 @@ public class EnmasseOperatorManager {
     }
 
     private void cleanCRDs() {
+        //TODO remove this WORKAROUND when -l app=enmasse will be available
+        KubeCMDClient.runOnCluster("delete", "crd",
+                "messagingaddresses.enmasse.io",
+                "messagingendpoints.enmasse.io",
+                "messagingtenants.enmasse.io",
+                "messagingaddressplans.enmasse.io",
+                "messaginginfrastructures.enmasse.io",
+                "messagingplans.enmasse.io");
         KubeCMDClient.runOnCluster("delete", "crd", "-l", "app=enmasse,enmasse-component=iot");
         KubeCMDClient.runOnClusterWithTimeout(600_000, "delete", "crd", "-l", "app=enmasse", "--timeout=600s");
     }
