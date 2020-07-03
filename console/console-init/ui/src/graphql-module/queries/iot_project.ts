@@ -5,12 +5,12 @@
 
 import gql from "graphql-tag";
 
-const FILTER_RETURN_IOT_PROJECTS = (filterObject: any) => {
-  const { projectName } = filterObject || {};
+const FILTER_RETURN_IOT_PROJECTS = (filterObject?: any) => {
+  const { projectname } = filterObject;
   let filter: string = "";
 
-  if (projectName && projectName.trim() !== "") {
-    filter += "`$.metadata.name` = '" + projectName + "'";
+  if (projectname && projectname.trim() !== "") {
+    filter += "`$.metadata.name` = '" + projectname + "'";
   }
 
   // TODO: Filters to be incrementally added
@@ -25,6 +25,7 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
     iotProjects {
       metadata {
         name
+        namespace
       }
       enabled
       spec {
@@ -40,7 +41,11 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
     queryResolver = defaultQueryResolver;
   }
 
-  let filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
+  let filter: string = "";
+
+  if(filterObj){
+    filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
+  }
 
   const IOT_PROJECT_DETAIL = gql(
     `query allProjects {
@@ -73,4 +78,16 @@ export const CREATE_IOT_PROJECT = gql`
   }
 `;
 
-export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT };
+const ENABLE_IOT_PROJECTS = gql(
+  `mutation enable_iotProjects($a:[ObjectMeta_v1_Input!]!) {
+    enableIotProjects(input:$a)
+  }`
+);
+
+const DISABLE_IOT_PROJECTS = gql(
+  `mutation disable_iotProjects($a:[ObjectMeta_v1_Input!]!) {
+    disableIotProjects(input:$a)
+  }`
+)
+
+export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, ENABLE_IOT_PROJECTS, DISABLE_IOT_PROJECTS };

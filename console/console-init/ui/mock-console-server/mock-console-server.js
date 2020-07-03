@@ -1989,6 +1989,12 @@ function disableIotProject(iotProject) {
   iotProjects[pjIndex].enabled = false;
 }
 
+function enableIotProject(iotProject) {
+  let pjIndex = getIotProjectIndex(iotProject.name);
+
+  iotProjects[pjIndex].enabled = true;
+}
+
 function getMockDownstreamStrategy(strategyType) {
   if (strategyType === "managed") {
     return {
@@ -1999,23 +2005,23 @@ function getMockDownstreamStrategy(strategyType) {
       },
       addresses: {
         Telemetry: {
-          name: "telemetry-c127edbe-0242ac130003",
+          name: "ganymede",
           plan: "standard-small-queue",
           type: "queue"
         },
         Event: {
-          name: "event-c127edbe-0242ac130003",
+          name: "europa",
           plan: "standard-small-queue",
           type: "queue"
         },
         Command: [
           {
-            name: "command-c127edbe-0242ac130003",
+            name: "thebe",
             plan: "standard-small-queue",
             type: "queue"
           },
           {
-            name: "command-receiver",
+            name: "callisto",
             plan: "standard-small-queue",
             type: "queue"
           }
@@ -2568,7 +2574,11 @@ const resolvers = {
     disableIotProjects: (parent, args) => {
       runOperationForAll(args.input, t => disableIotProject(t));
       return true;
-    }
+    },
+    enableIotProjects: (parent, args) => {
+      runOperationForAll(args.input, t => enableIotProject(t));
+      return true;
+    },
   },
   Query: {
     hello: () => "world",

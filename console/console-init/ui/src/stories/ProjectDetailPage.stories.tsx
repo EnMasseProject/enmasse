@@ -28,13 +28,11 @@ export default {
 };
 
 export const IoTProjectDetailInfoPage = () => {
-  const eventAddresses: Array<string> = [
-    text("Event Address Name", "event_address"),
-    text("Event Address Name 1", "event_address1")
-  ];
-  const telemetryAddresses: Array<string> = [
-    text("Telemetry Address Name", "telemetry_address")
-  ];
+  const eventAddress: string = text("Event Address Name", "event_address");
+  const telemetryAddress: string = text(
+    "Telemetry Address Name",
+    "telemetry_address"
+  );
   const commandAddresses: Array<string> = [
     text("Command Address Name", "command_address")
   ];
@@ -44,8 +42,8 @@ export const IoTProjectDetailInfoPage = () => {
     username: text("username", "username"),
     password: text("password", "password"),
     addressSpace: text("Address space", "devops-iottest"),
-    eventsAddresses: eventAddresses,
-    telemetryAddresses: telemetryAddresses,
+    eventAddress,
+    telemetryAddress,
     commandAddresses: commandAddresses
   };
   const httpAdapter: IAdapter = {
@@ -78,8 +76,8 @@ export const IoTProjectDetailInfoPage = () => {
       <GridItem span={6}>
         <GeneralInfo
           addressSpace={text("addressSpace", "devops_iot")}
-          eventAddresses={eventAddresses}
-          telemetryAddresses={telemetryAddresses}
+          eventAddress={eventAddress}
+          telemetryAddress={telemetryAddress}
           commandAddresses={commandAddresses}
           maxConnection={number("Max connections", 50000)}
           dataVolume={number("Data volume", 50000)}
