@@ -1,8 +1,8 @@
 include::common/attributes.adoc[]
 
-:context: enmasse-getting-started
+:context: getting-started
 
-[id='getting-started-{context}']
+[id='{context}']
 = Getting started with {ProductName}
 
 This guide will walk through the process of setting up {ProductName} on

@@ -1,0 +1,4 @@
+:context: con-monitoring-{parent-context}
+
+[id='{context}']
+= Operator

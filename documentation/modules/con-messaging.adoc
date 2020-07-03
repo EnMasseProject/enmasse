@@ -1,0 +1,32 @@
+:context: con-messaging-{parent-context}
+
+[id='{context}']
+= Messaging
+
+In {ProductName} the messaging system consists of one or more `routers` and `brokers`:
+
+image::enmasse_messaging_architecture_1.0.png[Messaging architecture]
+
+Broker:: The broker writes messages to persistent storage (if desired), and provides temporal decoupling of producers and consumers. The broker is based on {BrokerProductName}.
+
+Router:: The router is a stateless proxy with capability to do message forwarding and to virtualize the underlying brokers. The router is based on {RouterProductName}.
+
+Producers and consumers:: One or more producers send messages to addresses via one or more routers. The messages may be routed to one or more brokers, or directly to one or more consumers, depending on the particular address type. The consumers receive messages via the routers.
+
+Address:: At the heart of the messaging system is the `address`. Addresses are a logical desination or origin for messages, and the router routes messages to the configured destination for a particular address. There are different types of addresses, and each address type have different semantics.
+
+AMQP:: AMQP is a specification for interoperable messaging. It also defines a wire format, so any AMQP client can work with any messaging system that supports AMQP. AMQP clients are available in many different programming languages.
+
+== Address types
+
+Queue:: The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. Tenants with the `transactional` capability set supports JMS features such as selectors, message groups and transactions. For tenants without the `transactional` capability, a queue may be partitioned across multiple brokers to increase availability and performance at the cost of ordering guarantees.
+
+Topic:: The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
+
+Subscription:: Using the subscription address type you can create a subscription for a topic that holds messages published to the topic even if the subscriber is not attached. 
+
+Anycast:: The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
+
+Multicast:: The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.
+
+:context: {parent-context}

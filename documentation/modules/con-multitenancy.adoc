@@ -1,0 +1,14 @@
+:context: con-multitenancy-{parent-context}
+
+[id='{context}']
+= Multitenancy
+
+image::enmasse_multitenancy_architecture_1.0.png[Multitenancy]
+
+{ProductName} supports sharing the same messaging system between multiple isolated tenants. This allows the operations team to monitor and manage a predictable footprint of routers and brokers, and improves resource utilization.
+
+As {KubePlatform} namespaces are used to isolate different messaging tenants, each tenant will have a unique prefix for its addresses internally. However, when connecting to the messaging system from applications, the application does not need to be aware of this prefix.
+
+Self-service:: {ProductName} allows development teams to provision messaging resources as if they were using a public cloud service.
+
+:context: {parent-context}

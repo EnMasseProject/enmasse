@@ -1,0 +1,16 @@
+:context: con-authn-authz-{parent-context}
+
+[id='{context}']
+
+= Authentication and authorization
+
+
+image::enmasse_authentication_architecture_1.0.png[Authentication and authorization]
+
+Access Control Server:: An Access Control Server is created for each `MessagingInfrastructure` in {ProductName}. The access control server supports multiple identity providers, and each messaging tenant sharing the same infrastructure may use multiple different identity provides, depending on the configuration.
+
+Identity provider:: Configures authentication and authorization policies for a particular messaging tenant.
+
+Client:: For each connection made to the messaging system by a producer or consumer, the router authenticates and authorizes the connection using the Access Control Server. The identity provider used depends on the identity providers and the SASL mechanism selected by the application.
+
+:context: {parent-context}
