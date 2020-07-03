@@ -143,7 +143,7 @@ public class ExternalMessagingClient implements AutoCloseable {
     }
 
     public boolean isSender() {
-        return this.client.getCapability().equals(ClientCapability.SENDER);
+        return this.client.getCapability().equals(ClientRole.SENDER);
     }
 
     //===================================================================

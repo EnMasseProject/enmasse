@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.messagingclients;
 
-public enum ClientCapability {
+public enum ClientRole {
     SENDER,
     RECEIVER,
     CONNECTOR

@@ -40,7 +40,7 @@ public abstract class AbstractClient {
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Exec executor;
     private ClientType clientType;
-    private ClientCapability capability;
+    private ClientRole capability;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     private Path logPath;
@@ -53,19 +53,19 @@ public abstract class AbstractClient {
      */
     private String id;
 
-    protected AbstractClient(ClientType clientType, ClientCapability capability) throws Exception {
+    protected AbstractClient(ClientType clientType, ClientRole capability) throws Exception {
         this(clientType, capability, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
-    protected AbstractClient(ClientType clientType, ClientCapability capability, String podNamespace) throws Exception {
+    protected AbstractClient(ClientType clientType, ClientRole capability, String podNamespace) throws Exception {
         this(clientType, capability, null, podNamespace);
     }
 
-    protected AbstractClient(ClientType clientType, ClientCapability capability, Path logPath) throws Exception {
+    protected AbstractClient(ClientType clientType, ClientRole capability, Path logPath) throws Exception {
         this(clientType, capability, logPath, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
-    private AbstractClient(ClientType clientType, ClientCapability capability, Path logPath, String podNamespace) throws Exception {
+    private AbstractClient(ClientType clientType, ClientRole capability, Path logPath, String podNamespace) throws Exception {
         this.id = clientType.name() + "-" + UUID.randomUUID().toString();
         this.clientType = clientType;
         this.capability = capability;
@@ -108,10 +108,10 @@ public abstract class AbstractClient {
     }
 
     /**
-     * Get client capability such as sender/receiver.
+     * Get client role such as sender/receiver.
      * @return client capability
      */
-    public ClientCapability getCapability() {
+    public ClientRole getCapability() {
         return capability;
     }
 
