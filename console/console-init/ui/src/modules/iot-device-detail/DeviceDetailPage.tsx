@@ -61,7 +61,7 @@ export default function DeviceDetailPage() {
   const [setIotDeviceQueryVariables] = useMutationQuery(
     DELETE_IOT_DEVICE,
     refetchQueries,
-    changePageState,
+    undefined,
     changePageState
   );
 
@@ -114,7 +114,7 @@ export default function DeviceDetailPage() {
   const onConfirmDeleteDevice = async () => {
     const variable = {
       iotproject: projectname,
-      deviceId: deviceid
+      deviceId: [deviceid]
     };
     await setIotDeviceQueryVariables(variable);
   };
