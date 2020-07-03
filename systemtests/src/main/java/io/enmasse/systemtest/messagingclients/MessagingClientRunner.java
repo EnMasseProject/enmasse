@@ -106,9 +106,11 @@ public class MessagingClientRunner {
     }
 
     public void cleanClients() throws InterruptedException {
-        clients.clear();
-        executor.shutdown();
-        executor.awaitTermination(1, TimeUnit.MINUTES);
+        if (clients.size() > 0) {
+            clients.clear();
+            executor.shutdown();
+            executor.awaitTermination(1, TimeUnit.MINUTES);
+        }
     }
 
     public List<ExternalMessagingClient> getClients() {
