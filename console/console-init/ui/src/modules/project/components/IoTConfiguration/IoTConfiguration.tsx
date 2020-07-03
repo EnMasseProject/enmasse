@@ -13,7 +13,9 @@ import {
   Split,
   SplitItem,
   SelectVariant,
-  Switch
+  Switch,
+  Title,
+  TitleSizes
 } from "@patternfly/react-core";
 import { IDropdownOption, SelectWithToggle } from "components";
 
@@ -40,65 +42,75 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
 }) => {
   return (
     <>
-      <Grid>
-        <GridItem span={6}>
-          <Form>
-            <FormGroup
-              label="Project name"
-              isRequired={true}
-              fieldId="iot"
-              helperText={
-                name.trim() !== "" && !isNameValid ? (
-                  <small>
-                    Only lowercase alphanumeric characters, -, and . allowed,
-                    and should start and end with an alpha-numeric character.
-                  </small>
-                ) : (
-                  ""
-                )
-              }
-            >
-              <TextInput
+      <div style={{ paddingLeft: 20 }}>
+        <Grid>
+          <GridItem span={6}>
+            <Title headingLevel="h2" size={TitleSizes["2xl"]}>
+              Configure your project
+            </Title>
+            <br />
+            <Form>
+              <FormGroup
+                label="Project name"
                 isRequired={true}
-                validated={
-                  name.trim() === "" || isNameValid ? "default" : "error"
+                fieldId="iot"
+                helperText={
+                  name.trim() !== "" && !isNameValid ? (
+                    <small>
+                      Only lowercase alphanumeric characters, -, and . allowed,
+                      and should start and end with an alpha-numeric character.
+                    </small>
+                  ) : (
+                    ""
+                  )
                 }
-                type="text"
-                id="iot-name"
-                name="iot-name"
-                onChange={handleNameChange}
-                value={name}
-              />
-            </FormGroup>
-            <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
-              <SelectWithToggle
-                selectOptions={namespaceOptions}
-                onSelectItem={onNameSpaceSelect}
-                selections={namespace}
-                ariaLabel={"iot namespace"}
-                id="iot-config-select-namespace"
-                optionId="iot-namespace-select-option"
-                variant={SelectVariant.typeahead}
-              />
-            </FormGroup>
-            <FormGroup isInline label="Enable" fieldId="iot-enabled">
-              <Split hasGutter>
-                <SplitItem>
-                  Enable the connections between IoT project and devices
-                </SplitItem>
-                <SplitItem isFilled> </SplitItem>
-                <SplitItem>
-                  <Switch
-                    id="iot-enable-switch"
-                    isChecked={isEnabled}
-                    onChange={() => handleEnabledChange(!isEnabled)}
-                  />
-                </SplitItem>
-              </Split>
-            </FormGroup>
-          </Form>
-        </GridItem>
-      </Grid>
+              >
+                <TextInput
+                  isRequired={true}
+                  validated={
+                    name.trim() === "" || isNameValid ? "default" : "error"
+                  }
+                  type="text"
+                  id="iot-name"
+                  name="iot-name"
+                  onChange={handleNameChange}
+                  value={name}
+                />
+              </FormGroup>
+              <FormGroup
+                label="Namespace"
+                isRequired={true}
+                fieldId="name-space"
+              >
+                <SelectWithToggle
+                  selectOptions={namespaceOptions}
+                  onSelectItem={onNameSpaceSelect}
+                  selections={namespace}
+                  ariaLabel={"iot namespace"}
+                  id="iot-config-select-namespace"
+                  optionId="iot-namespace-select-option"
+                  variant={SelectVariant.typeahead}
+                />
+              </FormGroup>
+              <FormGroup isInline label="Enable" fieldId="iot-enabled">
+                <Split hasGutter>
+                  <SplitItem>
+                    Enable the connections between IoT project and devices
+                  </SplitItem>
+                  <SplitItem isFilled> </SplitItem>
+                  <SplitItem>
+                    <Switch
+                      id="iot-enable-switch"
+                      isChecked={isEnabled}
+                      onChange={() => handleEnabledChange(!isEnabled)}
+                    />
+                  </SplitItem>
+                </Split>
+              </FormGroup>
+            </Form>
+          </GridItem>
+        </Grid>
+      </div>
     </>
   );
 };

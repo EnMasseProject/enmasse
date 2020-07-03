@@ -22,7 +22,6 @@ describe("IoT Review", () => {
     );
     getByText("Project name");
     getByText("Namespace");
-    getByText("Enabled");
     getByText(props.name);
     getByText(props.namespace);
     getByText(props.isEnabled.toString());

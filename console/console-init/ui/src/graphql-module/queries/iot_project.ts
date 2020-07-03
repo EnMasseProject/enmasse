@@ -62,4 +62,15 @@ const DELETE_IOT_PROJECT = gql(
   }`
 );
 
+export const CREATE_IOT_PROJECT = gql`
+  mutation createIotProject(
+    $project: IotProject_iot_enmasse_io_v1alpha1_input!
+  ) {
+    createIotProject(input: $project) {
+      name
+      namespace
+    }
+  }
+`;
+
 export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT };
