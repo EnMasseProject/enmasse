@@ -141,7 +141,7 @@ const CreateProject: React.FunctionComponent = () => {
     setFirstSelectedStep(undefined);
   };
 
-  const refetchQueries: string[] = ["all_address_spaces"];
+  const refetchQueries: string[] = ["allProjects"];
 
   const resetFormState = () => {
     setMessagingProjectDetail(initialMessageProject);
