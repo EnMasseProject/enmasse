@@ -33,6 +33,7 @@ import io.enmasse.user.model.v1.User;
 import io.enmasse.user.model.v1.UserAuthorizationBuilder;
 import io.enmasse.user.model.v1.UserBuilder;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
@@ -42,6 +43,7 @@ import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.platform.KubeCMDClient.createCR;
 import static io.enmasse.systemtest.platform.KubeCMDClient.patchCR;
 import static io.enmasse.systemtest.platform.KubeCMDClient.updateCR;
@@ -424,6 +426,7 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
     }
 
     @Test
+    @Tag(ACCEPTANCE)
     void testAddressSpaceWithAdditionalFieldsBecomesReady() throws Exception {
         String name = "addprops-space";
 

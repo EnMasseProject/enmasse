@@ -24,6 +24,7 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -191,6 +193,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @ParameterizedTest(name = "testAddressWithAdditionalFieldsBecomesReady-{0}-space")
     @ValueSource(strings = {"standard", "brokered"})
+    @Tag(ACCEPTANCE)
     void testAddressWithAdditionalFieldsBecomesReady(String type) throws Exception {
         boolean standard = type.equals(AddressSpaceType.STANDARD.toString());
         AddressSpace addressSpace = new AddressSpaceBuilder()
