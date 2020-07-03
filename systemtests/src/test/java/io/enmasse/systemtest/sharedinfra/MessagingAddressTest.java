@@ -50,8 +50,6 @@ public class MessagingAddressTest extends TestBase {
 
     private MessagingTenant tenant;
     private MessagingEndpoint endpoint;
-    private MessagingClientRunner clientRunner = new MessagingClientRunner();
-    List<ExternalMessagingClient> messagingClients;
     @BeforeAll
     public void createEndpoint() {
         tenant = resourceManager.getDefaultMessagingTenant();
@@ -85,8 +83,8 @@ public class MessagingAddressTest extends TestBase {
                 .endAnycast()
                 .endSpec()
                 .build());
-        messagingClients = clientRunner.sendAndReceive(endpoint, "addr1", "addr1");
-        assertDefaultMessaging(messagingClients);
+        clientRunner.sendAndReceive(endpoint, "addr1", "addr1");
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     @Test
@@ -101,8 +99,8 @@ public class MessagingAddressTest extends TestBase {
                 .endMulticast()
                 .endSpec()
                 .build());
-        messagingClients = clientRunner.sendAndReceive(endpoint, true, "multicast1", "multicast1", "multicast1", "multicast1");
-        assertDefaultMessaging(messagingClients);
+        clientRunner.sendAndReceive(endpoint, true, "multicast1", "multicast1", "multicast1", "multicast1");
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     @Test
@@ -117,8 +115,8 @@ public class MessagingAddressTest extends TestBase {
                 .endQueue()
                 .endSpec()
                 .build());
-        messagingClients = clientRunner.sendAndReceive(endpoint, "queue1", "queue1");
-        assertDefaultMessaging(messagingClients);
+        clientRunner.sendAndReceive(endpoint, "queue1", "queue1");
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     @Test
@@ -145,10 +143,10 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
 
-        messagingClients = clientRunner.sendAndReceive(endpoint, false,
+        clientRunner.sendAndReceive(endpoint, false,
                 Collections.singletonMap(ClientArgument.MSG_TTL, "100"),
                 null, "queue1", "dlq1");
-        assertDefaultMessaging(messagingClients);
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     @Test
@@ -216,8 +214,8 @@ public class MessagingAddressTest extends TestBase {
                 .endTopic()
                 .endSpec()
                 .build());
-        messagingClients = clientRunner.sendAndReceive(endpoint, true, "topic1", "topic1", "topic1", "topic1");
-        assertDefaultMessaging(messagingClients);
+        clientRunner.sendAndReceive(endpoint, true, "topic1", "topic1", "topic1", "topic1");
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     @Test
@@ -312,25 +310,20 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
 
-        messagingClients =clientRunner.sendAndReceive(endpoint,"topic1", "sub1", "sub2");
-        assertDefaultMessaging(messagingClients);
+        clientRunner.sendAndReceive(endpoint,"topic1", "sub1", "sub2");
+        assertDefaultMessaging(clientRunner.getClients());
     }
 
     private void assertDefaultMessaging(List<ExternalMessagingClient> clients) throws InterruptedException {
         int expectedMsgCount = 10;
-        try {
-            for (ExternalMessagingClient client : clients) {
-                if (client.isSender()) {
-                    assertEquals(expectedMsgCount, client.getMessages().size(),
-                            String.format("Expected %d sent messages", expectedMsgCount));
-                } else {
-                    assertEquals(expectedMsgCount, client.getMessages().size(),
-                            String.format("Expected %d received messages", expectedMsgCount));
-                }
+        for (ExternalMessagingClient client : clients) {
+            if (client.isSender()) {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
+                        String.format("Expected %d sent messages", expectedMsgCount));
+            } else {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
+                        String.format("Expected %d received messages", expectedMsgCount));
             }
-        } finally {
-            clients.clear();
-            clientRunner.shutdown_clients();
         }
     }
 }

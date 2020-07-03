@@ -27,27 +27,28 @@ public class MessagingClientRunner {
     Logger LOGGER;
     ExecutorService executor;
 
+    private List<ExternalMessagingClient> clients = new ArrayList<>();
+
     public MessagingClientRunner() {
         LOGGER = CustomLogger.getLogger();
     }
 
-    public List<ExternalMessagingClient> sendAndReceive(MessagingEndpoint endpoint, boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
-        return sendAndReceive(endpoint, waitReceivers, null, null, senderAddress, receiverAddresses);
+    public void sendAndReceive(MessagingEndpoint endpoint, boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
+        sendAndReceive(endpoint, waitReceivers, null, null, senderAddress, receiverAddresses);
     }
 
-    public List<ExternalMessagingClient> sendAndReceive(MessagingEndpoint endpoint, String senderAddress, String ... receiverAddresses) throws Exception {
-        return sendAndReceive(endpoint, false, null, null, senderAddress, receiverAddresses);
+    public void sendAndReceive(MessagingEndpoint endpoint, String senderAddress, String ... receiverAddresses) throws Exception {
+        sendAndReceive(endpoint, false, null, null, senderAddress, receiverAddresses);
     }
 
     /**
      * Send 10 messages on sender address, and receive 10 messages on each receiver address.
      */
-    public List<ExternalMessagingClient> sendAndReceive(MessagingEndpoint endpoint, boolean waitReceivers, Map<ClientArgument, Object> extraSenderArgs,
+    public void sendAndReceive(MessagingEndpoint endpoint, boolean waitReceivers, Map<ClientArgument, Object> extraSenderArgs,
                            Map<ClientArgument, Object> extraReceiverArgs, String senderAddress, String ... receiverAddresses) throws InterruptedException {
         int expectedMsgCount = 10;
 
         executor = Executors.newFixedThreadPool(1 + receiverAddresses.length);
-        List<ExternalMessagingClient> clients = new ArrayList<>();
         try {
             Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
             ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
@@ -100,14 +101,17 @@ public class MessagingClientRunner {
                 assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
             }
         } catch (Exception e) {
-            clients.clear();
-            shutdown_clients();
+            clean_clients();
         }
-        return clients;
     }
 
-    public void shutdown_clients() throws InterruptedException {
+    public void clean_clients() throws InterruptedException {
+        clients.clear();
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.MINUTES);
+    }
+
+    public List<ExternalMessagingClient> getClients() {
+        return clients;
     }
 }
