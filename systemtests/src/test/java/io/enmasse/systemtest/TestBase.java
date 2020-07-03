@@ -11,6 +11,7 @@ import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.ITestSeparator;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Base class for all tests

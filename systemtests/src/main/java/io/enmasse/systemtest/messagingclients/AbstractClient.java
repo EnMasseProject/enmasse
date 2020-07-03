@@ -467,5 +467,4 @@ public abstract class AbstractClient {
     protected Supplier<Predicate<String>> linkAttachedProbeFactory() {
         return null;
     }
-
 }

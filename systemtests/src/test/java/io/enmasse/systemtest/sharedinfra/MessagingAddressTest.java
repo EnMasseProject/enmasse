@@ -8,7 +8,6 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
-import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingTenant;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -21,8 +20,7 @@ import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
-import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
@@ -32,15 +30,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,7 +50,8 @@ public class MessagingAddressTest extends TestBase {
 
     private MessagingTenant tenant;
     private MessagingEndpoint endpoint;
-
+    private MessagingClientRunner clientRunner = new MessagingClientRunner();
+    List<ExternalMessagingClient> messagingClients;
     @BeforeAll
     public void createEndpoint() {
         tenant = resourceManager.getDefaultMessagingTenant();
@@ -91,7 +85,8 @@ public class MessagingAddressTest extends TestBase {
                 .endAnycast()
                 .endSpec()
                 .build());
-        doTestSendReceive("addr1", "addr1");
+        messagingClients = clientRunner.sendAndReceive(endpoint, "addr1", "addr1");
+        assertDefaultMessaging(messagingClients);
     }
 
     @Test
@@ -106,7 +101,8 @@ public class MessagingAddressTest extends TestBase {
                 .endMulticast()
                 .endSpec()
                 .build());
-        doTestSendReceive(true, "multicast1", "multicast1", "multicast1", "multicast1");
+        messagingClients = clientRunner.sendAndReceive(endpoint, true, "multicast1", "multicast1", "multicast1", "multicast1");
+        assertDefaultMessaging(messagingClients);
     }
 
     @Test
@@ -121,7 +117,8 @@ public class MessagingAddressTest extends TestBase {
                 .endQueue()
                 .endSpec()
                 .build());
-        doTestSendReceive("queue1", "queue1");
+        messagingClients = clientRunner.sendAndReceive(endpoint, "queue1", "queue1");
+        assertDefaultMessaging(messagingClients);
     }
 
     @Test
@@ -148,7 +145,10 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
 
-        doTestSendReceive(false, Collections.singletonMap(ClientArgument.MSG_TTL, "100"), null, "queue1", "dlq1");
+        messagingClients = clientRunner.sendAndReceive(endpoint, false,
+                Collections.singletonMap(ClientArgument.MSG_TTL, "100"),
+                null, "queue1", "dlq1");
+        assertDefaultMessaging(messagingClients);
     }
 
     @Test
@@ -216,7 +216,8 @@ public class MessagingAddressTest extends TestBase {
                 .endTopic()
                 .endSpec()
                 .build());
-        doTestSendReceive(true, "topic1", "topic1", "topic1", "topic1");
+        messagingClients = clientRunner.sendAndReceive(endpoint, true, "topic1", "topic1", "topic1", "topic1");
+        assertDefaultMessaging(messagingClients);
     }
 
     @Test
@@ -251,7 +252,7 @@ public class MessagingAddressTest extends TestBase {
         AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
-                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), getPort("AMQP", nodePort)))
+                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), clientRunner.getPort("AMQP", nodePort)))
                 .setProtonClientOptions(new ProtonClientOptions())
                 .setTerminusFactory(new TopicTerminusFactory()));
 
@@ -310,97 +311,23 @@ public class MessagingAddressTest extends TestBase {
                 .endSubscription()
                 .endSpec()
                 .build());
-        doTestSendReceive("topic1", "sub1", "sub2");
+
+        messagingClients =clientRunner.sendAndReceive(endpoint,"topic1", "sub1", "sub2");
+        assertDefaultMessaging(messagingClients);
     }
 
-    /**
-     * Send 10 messages on sender address, and receive 10 messages on each receiver address.
-     */
-    void doTestSendReceive(boolean waitReceivers, Map<ClientArgument, Object> extraSenderArgs, Map<ClientArgument, Object> extraReceiverArgs, String senderAddress, String ... receiverAddresses) throws Exception {
+    private void assertDefaultMessaging(List<ExternalMessagingClient> clients) {
         int expectedMsgCount = 10;
 
-        ExecutorService executor = Executors.newFixedThreadPool(1 + receiverAddresses.length);
-
-        try {
-
-            Endpoint e = new Endpoint(endpoint.getStatus().getHost(), getPort("AMQP", endpoint));
-            ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
-                    .withClientEngine(new RheaClientSender())
-                    .withMessagingRoute(e)
-                    .withAddress(senderAddress)
-                    .withCount(expectedMsgCount)
-                    .withMessageBody("msg no. %d")
-                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                    .withTimeout(60);
-
-            if (extraSenderArgs != null) {
-                for (Map.Entry<ClientArgument, Object> arg : extraSenderArgs.entrySet()) {
-                    senderClient.withAdditionalArgument(arg.getKey(), arg.getValue());
-                }
-            }
-
-            List<ExternalMessagingClient> receiverClients = new ArrayList<>();
-            for (String receiverAddress : receiverAddresses) {
-                ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                        .withClientEngine(new RheaClientReceiver())
-                        .withMessagingRoute(e)
-                        .withAddress(receiverAddress)
-                        .withCount(expectedMsgCount)
-                        .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
-                        .withTimeout(60);
-
-                if (extraReceiverArgs != null) {
-                    for (Map.Entry<ClientArgument, Object> arg : extraReceiverArgs.entrySet()) {
-                        receiverClient.withAdditionalArgument(arg.getKey(), arg.getValue());
-                    }
-                }
-
-                receiverClients.add(receiverClient);
-            }
-
-            List<Future<Boolean>> receiverResults = new ArrayList<>();
-            for (ExternalMessagingClient receiverClient : receiverClients) {
-                receiverResults.add(executor.submit((Callable<Boolean>) receiverClient::run));
-            }
-
-            if (waitReceivers) {
-                // To ensure receivers are attached and ready
-                Thread.sleep(10_000);
-            }
-
-            Future<Boolean> senderResult = executor.submit((Callable<Boolean>) senderClient::run);
-
-            assertTrue(senderResult.get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
-            for (Future<Boolean> receiverResult : receiverResults) {
-                assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
-            }
-
-            assertEquals(expectedMsgCount, senderClient.getMessages().size(),
-                    String.format("Expected %d sent messages", expectedMsgCount));
-            for (ExternalMessagingClient receiverClient : receiverClients) {
-                assertEquals(expectedMsgCount, receiverClient.getMessages().size(),
+        for (ExternalMessagingClient client : clients) {
+            if (client.isSender()) {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
+                        String.format("Expected %d sent messages", expectedMsgCount));
+            } else {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
                         String.format("Expected %d received messages", expectedMsgCount));
             }
-        } finally {
-            executor.shutdown();
-            executor.awaitTermination(1, TimeUnit.MINUTES);
         }
-    }
-
-    void doTestSendReceive(boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
-        doTestSendReceive(waitReceivers, null, null, senderAddress, receiverAddresses);
-    }
-
-    void doTestSendReceive(String senderAddress, String ... receiverAddresses) throws Exception {
-        doTestSendReceive(false, senderAddress, receiverAddresses);
-    }
-
-    private static int getPort(String protocol, MessagingEndpoint endpoint) {
-        for (MessagingEndpointPort port : endpoint.getStatus().getPorts()) {
-            if (protocol.equals(port.getProtocol()))  {
-                return port.getPort();
-            }
-        }
-        return 0;
+        clients.clear();
     }
 }
