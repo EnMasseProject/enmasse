@@ -68,7 +68,7 @@ public abstract class TestBase implements ITestSeparator {
 
     @AfterEach
     void cleanup() throws Exception {
-        clientRunner.clean_clients();
+        clientRunner.cleanClients();
         Exception exception = null;
         for (ThrowingCallable cleanup : this.cleanup) {
             try {

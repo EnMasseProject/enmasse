@@ -101,11 +101,11 @@ public class MessagingClientRunner {
                 assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
             }
         } catch (Exception e) {
-            clean_clients();
+            cleanClients();
         }
     }
 
-    public void clean_clients() throws InterruptedException {
+    public void cleanClients() throws InterruptedException {
         clients.clear();
         executor.shutdown();
         executor.awaitTermination(1, TimeUnit.MINUTES);
