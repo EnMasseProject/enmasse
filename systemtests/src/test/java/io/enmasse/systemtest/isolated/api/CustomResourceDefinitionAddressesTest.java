@@ -24,13 +24,14 @@ import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.json.JsonObject;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,8 +43,7 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
     private AddressSpace brokered;
     private UserCredentials userCredentials;
 
-    @BeforeEach
-    void setUpSelenium() throws Exception {
+    private void createAddressSpace() throws Exception {
         brokered = new AddressSpaceBuilder()
                 .withNewMetadata()
                 .withName("crd-address-space")
@@ -64,6 +64,8 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @Test
     void testAddressCreateViaAgentApiRemoveViaCmd() throws Exception {
+        createAddressSpace();
+
         Address dest1 = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(brokered.getMetadata().getNamespace())
@@ -113,6 +115,8 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
 
     @Test
     void testAddressCreateViaCmdRemoveViaAgentApi() throws Exception {
+        createAddressSpace();
+
         Address dest1 = new AddressBuilder()
                 .withNewMetadata()
                 .withNamespace(brokered.getMetadata().getNamespace())
@@ -183,5 +187,43 @@ public class CustomResourceDefinitionAddressesTest extends TestBase implements I
             ExecutionResultData addresses = KubeCMDClient.getAddress(environment.namespace());
             return addresses.getStdOut() + addresses.getStdErr();
         }, "No resources found", new TimeoutBudget(30, TimeUnit.SECONDS));
+    }
+
+    @ParameterizedTest(name = "testAddressWithAdditionalFieldsBecomesReady-{0}-space")
+    @ValueSource(strings = {"standard", "brokered"})
+    void testAddressWithAdditionalFieldsBecomesReady(String type) throws Exception {
+        boolean standard = type.equals(AddressSpaceType.STANDARD.toString());
+        AddressSpace addressSpace = new AddressSpaceBuilder()
+                .withNewMetadata()
+                .withName("test-addr-space" + type)
+                .withNamespace(kubernetes.getInfraNamespace())
+                .endMetadata()
+                .withNewSpec()
+                .withType(standard ? AddressSpaceType.STANDARD.toString() : AddressSpaceType.BROKERED.toString())
+                .withPlan(standard ? AddressSpacePlans.STANDARD_UNLIMITED : AddressSpacePlans.BROKERED)
+                .endSpec()
+                .build();
+
+        resourcesManager.createAddressSpace(addressSpace);
+
+        String name = "addprops-queue";
+        String fullQualifiedName = String.format("%s.%s", addressSpace.getMetadata().getName(), name);
+
+        JsonObject space = new JsonObject();
+        space.put("apiVersion", "enmasse.io/v1beta1");
+        space.put("kind", "Address");
+        space.put("foo", "unexpected");
+        space.put("unexpected", "toplevelelement");
+        space.put("metadata", Map.of("bar", "unexpected",
+                "name", fullQualifiedName));
+        space.put("spec", Map.of("baz", "unexpected",
+                "type", "queue",
+                "address", name,
+                "plan", standard ? DestinationPlan.STANDARD_SMALL_QUEUE : DestinationPlan.BROKERED_QUEUE));
+
+        KubeCMDClient.createCR(kubernetes.getInfraNamespace(), space.toString());
+
+        Address read = isolatedResourcesManager.getAddress(fullQualifiedName);
+        AddressUtils.waitForDestinationsReady(read);
     }
 }

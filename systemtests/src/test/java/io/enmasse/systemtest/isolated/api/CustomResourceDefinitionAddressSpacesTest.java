@@ -21,6 +21,7 @@ import io.enmasse.systemtest.model.addressplan.DestinationPlan;
 import io.enmasse.systemtest.model.addressspace.AddressSpacePlans;
 import io.enmasse.systemtest.model.addressspace.AddressSpaceType;
 import io.enmasse.systemtest.platform.KubeCMDClient;
+import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
 import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -419,5 +421,27 @@ class CustomResourceDefinitionAddressSpacesTest extends TestBase implements ITes
             KubeCMDClient.loginUser(environment.getApiToken());
             KubeCMDClient.switchProject(environment.namespace());
         }
+    }
+
+    @Test
+    void testAddressSpaceWithAdditionalFieldsBecomesReady() throws Exception {
+        String name = "addprops-space";
+
+        JsonObject space = new JsonObject();
+        space.put("apiVersion", "enmasse.io/v1beta1");
+        space.put("kind", "AddressSpace");
+        space.put("foo", "unexpected");
+        space.put("unexpected", "toplevelelement");
+        space.put("metadata", Map.of("bar", "unexpected",
+                "name", name));
+        space.put("spec", Map.of("baz", "unexpected",
+                "type", AddressSpaceType.STANDARD.toString(),
+                "plan", AddressSpacePlans.STANDARD_SMALL));
+
+        KubeCMDClient.createCR(kubernetes.getInfraNamespace(), space.toString());
+
+        AddressSpace read = isolatedResourcesManager.getAddressSpace(name);
+        isolatedResourcesManager.addToAddressSpaces(read);
+        isolatedResourcesManager.waitForAddressSpaceReady(read);
     }
 }

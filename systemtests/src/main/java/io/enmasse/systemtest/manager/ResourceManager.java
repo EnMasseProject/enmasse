@@ -419,6 +419,10 @@ public abstract class ResourceManager {
         return kubernetes.getAddressClient().inNamespace(namespace).withName(destination.getMetadata().getName()).get();
     }
 
+    public Address getAddress(String addressName) {
+        return kubernetes.getAddressClient().withName(addressName).get();
+    }
+
     //================================================================================================
     //======================================= User methods ===========================================
     //================================================================================================
