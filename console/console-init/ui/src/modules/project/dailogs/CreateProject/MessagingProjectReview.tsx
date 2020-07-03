@@ -9,7 +9,7 @@ import { useQuery } from "@apollo/react-hooks";
 import { ADDRESS_SPACE_COMMAND_REVIEW_DETAIL } from "graphql-module/queries";
 import { MessagingReview } from "modules/project/components";
 import { IMessagingProject } from "./CreateProject";
-import { getQueryVariableForCreateAddressSpace } from "modules/project/utils";
+import { getQueryVariableForCreateMessagingProject } from "modules/project/utils";
 
 interface IMessagingProjectReviewProps {
   projectDetail: IMessagingProject;
@@ -31,7 +31,7 @@ export const MessagingProjectReview: React.FunctionComponent<IMessagingProjectRe
   } = projectDetail || {};
 
   const queryVariable = {
-    variables: getQueryVariableForCreateAddressSpace(projectDetail)
+    variables: getQueryVariableForCreateMessagingProject(projectDetail)
   };
 
   const { data, loading } = useQuery(

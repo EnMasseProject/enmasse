@@ -31,7 +31,7 @@ import {
 import { FinishedStep } from "components";
 import {
   ProjectType,
-  getQueryVariableForCreateAddressSpace,
+  getQueryVariableForCreateMessagingProject,
   isEnabledCertificateStep,
   isRouteStepValid
 } from "modules/project/utils";
@@ -163,7 +163,7 @@ const CreateProject: React.FunctionComponent = () => {
       isMessagingProjectValid(messagingProjectDetail)
     ) {
       await setMessagingVariables(
-        getQueryVariableForCreateAddressSpace(messagingProjectDetail)
+        getQueryVariableForCreateMessagingProject(messagingProjectDetail)
       );
       setRouteDetail({
         name: messagingProjectDetail.name || "",
@@ -192,6 +192,10 @@ const CreateProject: React.FunctionComponent = () => {
 
   const handleIoTProjectSave = async () => {
     console.log("iot created");
+    setRouteDetail({
+      name: iotProjectDetail.iotProjectName || "",
+      namespace: iotProjectDetail.namespace || ""
+    });
     resetForm();
   };
 
@@ -221,7 +225,7 @@ const CreateProject: React.FunctionComponent = () => {
         success={isCreatedSuccessfully}
         routeDetail={routeDetail}
         projectType={
-          messagingProjectDetail
+          firstSelectedStep === "messaging"
             ? ProjectType.MESSAGING_PROJECT
             : ProjectType.IOT_PROJECT
         }

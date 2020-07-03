@@ -177,10 +177,8 @@ const isMessagingProjectValid = (messagingProject: IMessagingProject) => {
         messagingProject.tlsCertificate &&
         messagingProject.tlsCertificate.trim() !== ""))
   ) {
-    console.log("TRUE");
     return true;
   }
-  console.log("FALSE");
   return false;
 };
 
@@ -199,7 +197,7 @@ const isRouteStepValid = (messagingProject: IMessagingProject) => {
   }
 };
 
-const getQueryVariableForCreateAddressSpace = (
+const getQueryVariableForCreateMessagingProject = (
   messagingProject: IMessagingProject
 ) => {
   const {
@@ -216,7 +214,6 @@ const getQueryVariableForCreateAddressSpace = (
     addRoutes,
     routesConf
   } = messagingProject;
-
   const queryVariables: IExposeMessagingProject = {
     as: {
       metadata: {
@@ -301,5 +298,5 @@ export {
   isEnabledCertificateStep,
   isRouteStepValid,
   isMessagingProjectConfigurationValid,
-  getQueryVariableForCreateAddressSpace
+  getQueryVariableForCreateMessagingProject
 };

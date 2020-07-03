@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { CogsIcon, CheckCircleIcon } from "@patternfly/react-icons";
+import React from "react";
+import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
 import {
   EmptyState,
   EmptyStateVariant,
@@ -7,8 +7,6 @@ import {
   Title,
   EmptyStateBody,
   Button,
-  Progress,
-  ProgressSize,
   ButtonVariant
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
@@ -24,7 +22,8 @@ interface IFinishedStepProps {
 const styles = StyleSheet.create({
   empty_state: { padding: 100 },
   cog_green_color: { color: "green" },
-  cog_black_color: { color: "black" }
+  cog_black_color: { color: "black" },
+  cog_red_color: { color: "red" }
 });
 
 const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
@@ -33,59 +32,42 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   success,
   projectType
 }) => {
-  const [percent, setPercent] = useState<number>(0);
-  const [isCompleted, setIsCompleted] = useState<boolean>(false);
-
   const { namespace, name, type } = routeDetail || {};
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (percent < 100) {
-        setPercent(percent + 20);
-      } else {
-        if (!isCompleted) {
-          setIsCompleted(true);
-        }
-      }
-    }, 500);
-    return () => clearInterval(interval);
-  }, [percent, isCompleted]);
-
   const projectDetailUrl = () => {
     if (routeDetail && projectType === ProjectType.IOT_PROJECT) {
-      return `/iot-projects/${namespace}/${name}`;
+      return `/iot-projects/${namespace}/${name}/detail`;
     } else {
       return `/messaging-projects/${namespace}/${name}/${type}/addresses`;
     }
   };
   return (
     <>
-      {!isCompleted || !success ? (
+      {!success ? (
         <EmptyState
           variant={EmptyStateVariant.full}
           className={css(styles.empty_state)}
         >
           <EmptyStateIcon
-            icon={CogsIcon}
-            className={css(styles.cog_black_color)}
+            icon={ErrorCircleOIcon}
+            className={css(styles.cog_red_color)}
           />
           <Title headingLevel="h5" size="xl">
-            Configuration in Progress
+            Creation error
           </Title>
+          <br />
           <EmptyStateBody>
-            <Progress value={percent} size={ProgressSize.lg} />
-            <br />
-            Wait a moment for your configuration progress or back to the project
-            list
+            Error occured while {projectType} Project creation for management,
+            or return to homepage to view all projects
           </EmptyStateBody>
-          <br />
-          <br />
-          <Button variant={ButtonVariant.secondary} onClick={onClose}>
-            Back to list
+          {/* <Link to={projectDetailUrl()}>
+          <Button variant={ButtonVariant.primary} component="a">
+            View the project
           </Button>
+        </Link> */}
           <br />
           <br />
           <Button variant="link" onClick={onClose}>
-            Close
+            Back to list
           </Button>
         </EmptyState>
       ) : (
@@ -100,10 +82,12 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
           <Title headingLevel="h5" size="xl">
             Creation successful
           </Title>
+          <br />
           <EmptyStateBody>
             Enter your {projectType} Project for management, or return to
             homepage to view all projects.
           </EmptyStateBody>
+          <br />
           <Link to={projectDetailUrl()}>
             <Button variant={ButtonVariant.primary} component="a">
               View the project
