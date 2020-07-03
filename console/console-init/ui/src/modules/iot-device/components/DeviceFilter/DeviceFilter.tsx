@@ -14,12 +14,10 @@ import {
   ButtonVariant,
   Split,
   SplitItem,
-  DropdownItem,
-  KebabToggle,
-  Dropdown
+  DropdownItem
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
-import { DropdownWithToggle } from "components";
+import { DropdownWithToggle, DropdownWithKebabToggle } from "components";
 import { compareObject, createDeepCopy } from "utils";
 import { IDeviceFilterCriteria } from "modules/iot-device";
 import { AddCriteria } from "./AddCriteria";
@@ -64,12 +62,14 @@ export interface IDeviceFilterProps {
   filter: IDeviceFilter;
   setFilter: (filter: IDeviceFilter) => void;
   runFilter?: (filter: IDeviceFilter) => void;
+  resetFilter?: () => void;
 }
 
 const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   filter,
   setFilter,
-  runFilter
+  runFilter,
+  resetFilter
 }) => {
   const [lastAppliedFilter, setLastAppliedFilter] = useState<IDeviceFilter[]>([
     getInitialFilter()
@@ -77,7 +77,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   const [isKebabOpen, setIsKebabOpen] = useState<boolean>(false);
   const [isRedoEnabled, setIsRedoEnabled] = useState<boolean>(false);
   const onClearFilter = () => {
-    setFilter(getInitialFilter());
+    resetFilter && resetFilter();
     setIsKebabOpen(false);
   };
   const onRedoFilter = () => {
@@ -163,15 +163,13 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       </SplitItem>
       <SplitItem>&nbsp;</SplitItem>
       <SplitItem>
-        <Dropdown
+        <DropdownWithKebabToggle
           id="filter-kebab-dropdown"
-          position={DropdownPosition.left}
-          isPlain
+          isPlain={true}
+          toggleId="device-filter-kebab"
           dropdownItems={kebabDropdownItems}
           isOpen={isKebabOpen}
-          toggle={
-            <KebabToggle id="filter-kebab-toggle" onToggle={onKebabToggle} />
-          }
+          position={DropdownPosition.left}
         />
       </SplitItem>
     </Split>

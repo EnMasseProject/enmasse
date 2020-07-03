@@ -63,16 +63,16 @@ export const getTableCells = (row: IDevice) => {
         )
       },
       {
-        title: row.lastUpdated && (
+        title: row.updated && (
           <>
-            <FormatDistance date={row.lastUpdated} /> ago
+            <FormatDistance date={row.updated} /> ago
           </>
         )
       },
       {
-        title: row.creationTimeStamp && (
+        title: row.created && (
           <>
-            <FormatDistance date={row.creationTimeStamp} /> ago
+            <FormatDistance date={row.created} /> ago
           </>
         )
       }
