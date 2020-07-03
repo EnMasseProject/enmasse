@@ -63,12 +63,7 @@ export const AppRoutes = () => (
   //   />
   // </SwitchWith404>
   <SwitchWith404>
-    <Redirect path="/" to="/messaging-projects" exact={true} />
-    <LazyRoute
-      path="/messaging-projects"
-      exact={true}
-      getComponent={getAddressSpaceListPage}
-    />
+    <Redirect path="/" to="/projects" exact={true} />
     <LazyRoute
       path="/projects"
       exact={true}

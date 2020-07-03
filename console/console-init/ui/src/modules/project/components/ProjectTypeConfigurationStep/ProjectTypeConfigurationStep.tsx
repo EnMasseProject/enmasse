@@ -1,5 +1,5 @@
 import React from "react";
-import { Radio, Title } from "@patternfly/react-core";
+import { Radio, Title, TitleSizes } from "@patternfly/react-core";
 
 interface IProjectTypeConfigurationStepProps {
   selectedStep?: string | "messaging" | "iot";
@@ -17,9 +17,14 @@ const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigur
       setSelectedStep("iot");
     }
   };
+
+  if (selectedStep === undefined) {
+    setSelectedStep("iot");
+  }
+
   return (
     <div style={{ paddingLeft: 20 }}>
-      <Title headingLevel="h2" size="3xl">
+      <Title headingLevel="h2" size={TitleSizes["2xl"]}>
         Choose project type
       </Title>
       <br />
@@ -29,8 +34,8 @@ const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigur
           isChecked={selectedStep === "iot"}
           onChange={onChange}
           label={
-            <Title headingLevel="h5" size="lg">
-              <b>Create a IoT Project</b>
+            <Title headingLevel="h5" size={TitleSizes.lg}>
+              IoT Project
             </Title>
           }
           description="Manages millions of devices and messaging to everywhere"
@@ -45,8 +50,8 @@ const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigur
           isChecked={selectedStep === "messaging"}
           onChange={onChange}
           label={
-            <Title headingLevel="h5" size="lg">
-              <b>Create a Messaging Project</b>
+            <Title headingLevel="h5" size={TitleSizes.lg}>
+              Messaging Project
             </Title>
           }
           description="Developers can provision messaging with Messaging Project"

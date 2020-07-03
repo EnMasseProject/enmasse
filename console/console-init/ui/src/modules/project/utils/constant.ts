@@ -15,5 +15,46 @@ enum ProjectTypes {
   IOT = "IOT",
   MESSAGING = "MSG"
 }
+enum TlsCertificateType {
+  AUTO_GENERATE = "selfsigned",
+  UPLOAD_CERT = "certBundle",
+  USE_OPENSHIFT_CERT = "openshift"
+}
 
-export { StatusTypes, ProjectTypes };
+enum EndPointProtocol {
+  AMQPS = "amqps",
+  AMQP_WSS = "https"
+}
+
+enum TlsTerminationType {
+  RE_ENCRYPT = "reencrypt",
+  PASSTHROUGH = "passthrough"
+}
+
+export interface IOptionForKeyValueLabel {
+  key: string;
+  value: string;
+  label: string;
+}
+
+const endpointProtocolOptions: IOptionForKeyValueLabel[] = [
+  {
+    key: EndPointProtocol.AMQPS,
+    value: EndPointProtocol.AMQPS,
+    label: "Messaging (AMQPS)"
+  },
+  {
+    key: EndPointProtocol.AMQP_WSS,
+    value: EndPointProtocol.AMQP_WSS,
+    label: "Websocket Messaging (AMQP-WSS)"
+  }
+];
+
+export {
+  StatusTypes,
+  ProjectTypes,
+  TlsCertificateType,
+  endpointProtocolOptions,
+  EndPointProtocol,
+  TlsTerminationType
+};
