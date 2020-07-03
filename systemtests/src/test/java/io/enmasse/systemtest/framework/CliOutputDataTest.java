@@ -7,7 +7,6 @@ package io.enmasse.systemtest.framework;
 import io.enmasse.systemtest.TestTag;
 import io.enmasse.systemtest.resources.CliOutputData;
 import io.enmasse.systemtest.resources.CliOutputData.CliOutputDataType;
-
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

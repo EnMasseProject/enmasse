@@ -40,6 +40,7 @@ public abstract class AbstractClient {
     protected ArrayList<ClientArgument> allowedArgs = new ArrayList<>();
     private Exec executor;
     private ClientType clientType;
+    private ClientRole role;
     private JsonArray messages = new JsonArray();
     private ArrayList<String> arguments = new ArrayList<>();
     private Path logPath;
@@ -52,21 +53,22 @@ public abstract class AbstractClient {
      */
     private String id;
 
-    protected AbstractClient(ClientType clientType) throws Exception {
-        this(clientType, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
+    protected AbstractClient(ClientType clientType, ClientRole role) throws Exception {
+        this(clientType, role, null, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
-    protected AbstractClient(ClientType clientType, String podNamespace) throws Exception {
-        this(clientType, null, podNamespace);
+    protected AbstractClient(ClientType clientType, ClientRole role, String podNamespace) throws Exception {
+        this(clientType, role, null, podNamespace);
     }
 
-    protected AbstractClient(ClientType clientType, Path logPath) throws Exception {
-        this(clientType, logPath, SystemtestsKubernetesApps.MESSAGING_PROJECT);
+    protected AbstractClient(ClientType clientType, ClientRole role, Path logPath) throws Exception {
+        this(clientType, role, logPath, SystemtestsKubernetesApps.MESSAGING_PROJECT);
     }
 
-    private AbstractClient(ClientType clientType, Path logPath, String podNamespace) throws Exception {
+    private AbstractClient(ClientType clientType, ClientRole role, Path logPath, String podNamespace) throws Exception {
         this.id = clientType.name() + "-" + UUID.randomUUID().toString();
         this.clientType = clientType;
+        this.role = role;
         if (logPath != null) {
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSSS");
             this.logPath = Paths.get(logPath.toString(), clientType.toString() + "_" + dateFormat.format(new Date()));
@@ -103,6 +105,14 @@ public abstract class AbstractClient {
      */
     public JsonArray getMessages() {
         return messages;
+    }
+
+    /**
+     * Get client role such as sender/receiver.
+     * @return client role
+     */
+    public ClientRole getRole() {
+        return role;
     }
 
     /**
@@ -467,5 +477,4 @@ public abstract class AbstractClient {
     protected Supplier<Predicate<String>> linkAttachedProbeFactory() {
         return null;
     }
-
 }

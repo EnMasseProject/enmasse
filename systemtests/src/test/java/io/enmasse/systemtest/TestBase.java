@@ -5,12 +5,10 @@
 
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.IndicativeSentences;
-import io.enmasse.systemtest.TestTag;
-import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.bases.ITestSeparator;
 import io.enmasse.systemtest.listener.JunitCallbackListener;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -39,6 +37,7 @@ public abstract class TestBase implements ITestSeparator {
     protected UserCredentials defaultCredentials = environment.getDefaultCredentials();
     protected UserCredentials managementCredentials = environment.getManagementCredentials();
     protected ResourceManager resourceManager = ResourceManager.getInstance();
+    protected MessagingClientRunner clientRunner = new MessagingClientRunner();
 
 
     protected List<ThrowingCallable> cleanup = new LinkedList<>();
@@ -69,6 +68,7 @@ public abstract class TestBase implements ITestSeparator {
 
     @AfterEach
     void cleanup() throws Exception {
+        clientRunner.cleanClients();
         Exception exception = null;
         for (ThrowingCallable cleanup : this.cleanup) {
             try {
