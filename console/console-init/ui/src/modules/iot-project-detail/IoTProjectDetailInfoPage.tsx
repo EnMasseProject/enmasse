@@ -9,20 +9,86 @@ import {
 import { action } from "@storybook/addon-actions";
 import { IAdapter } from "components/AdapterList";
 import { Protocols } from "constant";
+import { useParams } from "react-router";
+import { useQuery } from "@apollo/react-hooks";
+import { RETURN_IOT_PROJECTS } from "graphql-module/queries/iot_project";
+import { IIoTProjectsResponse } from "schema/iot_project";
 
 export default function IoTProjectDetailInfoPage() {
-  const eventAddresses: Array<string> = ["event_address", "event_address1"];
-  const telemetryAddresses: Array<string> = ["telemetry_address"];
-  const commandAddresses: Array<string> = ["command_address"];
+  const { projectname } = useParams();
+
+  const queryResolver = `
+  iotProjects {
+    metadata{
+      namespace
+    }
+    spec {
+      downstreamStrategy {
+        ... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
+          addressSpace {
+            name
+          }
+          addresses {
+            Telemetry {
+              name
+            }
+            Event {
+              name
+            }
+            Command {
+              name
+            }
+          }
+        }
+      }
+    }
+    status {
+      tenantName
+      downstreamEndpoint {
+        host
+        port
+        credentials {
+          username
+          password
+        }
+      }
+    }
+    endpoints {
+      name
+      url
+      host
+    }
+  }
+`;
+
+  const { data } = useQuery<IIoTProjectsResponse>(
+    RETURN_IOT_PROJECTS({ projectname }, queryResolver)
+  );
+
+  const { allProjects } = data || {
+    allProjects: {
+      iotProjects : []
+    }
+  };
+
+  const { spec, metadata, status } = allProjects?.iotProjects?.[0] || {};
+  const { name: addressSpace } = spec?.downstreamStrategy?.addressSpace || { name : "" };
+  const { username, password } = status?.downstreamEndpoint?.credentials || {};
+
+  const { Telemetry, Event, Command } = spec?.downstreamStrategy?.addresses || {};
+
+  const telemetryAddress = Telemetry?.name || "";
+  const eventAddress = Event?.name || "";
+  const commandAddresses = Command || [];
 
   const messaging: IIoTMessagingObject = {
     url: "https://http.bosch-iot-hub.com",
-    username: "username",
-    password: "password",
-    addressSpace: "devops-iottest",
-    eventsAddresses: eventAddresses,
-    telemetryAddresses: telemetryAddresses,
-    commandAddresses: commandAddresses
+    username,
+    password,
+    addressSpace,
+    eventAddress,
+    telemetryAddress,
+    commandAddresses: []
   };
   const httpAdapter: IAdapter = {
     name: Protocols.HTTP,
@@ -52,17 +118,18 @@ export default function IoTProjectDetailInfoPage() {
     <Grid>
       <GridItem span={6}>
         <GeneralInfo
-          addressSpace={"devops_iot"}
-          eventAddresses={eventAddresses}
-          telemetryAddresses={telemetryAddresses}
-          commandAddresses={commandAddresses}
+          addressSpace={addressSpace}
+          eventAddress={eventAddress}
+          telemetryAddress={telemetryAddress}
+          commandAddresses={commandAddresses.map((as: any) => as.name)}
           maxConnection={50000}
           dataVolume={50000}
           startDate={"start Date"}
           endDate={"end Date"}
-          namespace={"namespace"}
+          namespace={metadata?.namespace}
         />
         <DeviceRegistationManagement
+          // To be replaced with the OAuth token
           token={"username"}
           endpoiuntUrl={"https://http.bosch-iot-hub.com"}
         />

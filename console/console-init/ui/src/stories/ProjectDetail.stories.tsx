@@ -34,8 +34,8 @@ export const projectDetailHeaderNavigation = () => {
     </MemoryRouter>
   );
 };
-const eventAddresses: Array<string> = ["qpid-jms:sender"];
-const telemetryAddresses: Array<string> = ["qpid-jms:sender"];
+const eventAddress: string = "qpid-jms:sender";
+const telemetryAddress: string = "qpid-jms:sender";
 const commandAddresses: Array<string> = ["qpid-jms:sender", "Reciever-156458"];
 
 export const projectGeneralInfo = () => {
@@ -46,9 +46,9 @@ export const projectGeneralInfo = () => {
           <GridItem span={6}>
             <GeneralInfo
               addressSpace={text("addressSpace", "devops_iot")}
-              eventAddresses={eventAddresses}
+              eventAddress={eventAddress}
               namespace={""}
-              telemetryAddresses={telemetryAddresses}
+              telemetryAddress={telemetryAddress}
               commandAddresses={commandAddresses}
               maxConnection={number("Max connections", 50000)}
               dataVolume={number("Data volume", 50000)}
@@ -96,8 +96,8 @@ export const projectAccessCredentials = () => {
     username: text("username", "username"),
     password: text("password", "password"),
     addressSpace: text("Address space", "devops-iottest"),
-    eventsAddresses: eventAddresses,
-    telemetryAddresses: telemetryAddresses,
+    eventAddress: eventAddress,
+    telemetryAddress: telemetryAddress,
     commandAddresses: commandAddresses
   };
   const httpAdapter: IAdapter = {
