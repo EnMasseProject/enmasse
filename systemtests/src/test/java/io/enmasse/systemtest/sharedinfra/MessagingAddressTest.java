@@ -331,7 +331,6 @@ public class MessagingAddressTest extends TestBase {
                 }
             }
         } finally {
-            Logger LOGGER = CustomLogger.getLogger();
             clients.clear();
             clientRunner.shutdown_clients();
         }
