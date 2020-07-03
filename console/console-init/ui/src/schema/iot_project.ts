@@ -27,9 +27,9 @@ export interface IIoTProjectsResponse {
             Event?: {
               name?: string;
             };
-            Command?: {
-              name?: string;
-            };
+            Command: Array<{
+              name: string;
+            }>;
           };
         };
       };
