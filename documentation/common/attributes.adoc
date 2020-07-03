@@ -1,6 +1,8 @@
 // Document attributes
 
 :cmdcli: kubectl
+:KubePlatform: Kubernetes
+
 
 // Standard document attributes
 
@@ -35,7 +37,6 @@
 :ExampleQueue: myqueue
 :ExampleAuthInstruction: Enable anonymous access.
 :OnlineBookURL: http://enmasse.io/documentation/
-:Title: Using {ProductName}
 :cpp: C++
 :BaseProductVersion: master
 :ConsoleName: {ProductName} Console
@@ -43,6 +44,8 @@
 :OCPProductVersion: 4.4
 
 // Component attributes
+:RouterProductName: Apache Qpid Dispatch Router
+:BrokerProductName: Apache ActiveMQ Artemis
 :BrokerName: Apache ActiveMQ Artemis
 :BrokerCLI: /opt/apache-artemis/bin/artemis
 :ClientAmqpJmsName: Apache Qpid JMS

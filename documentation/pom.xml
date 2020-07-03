@@ -35,6 +35,28 @@
                 </configuration>
                 <executions>
                     <execution>
+                        <id>overview-guide</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <sourceDocumentName>overview/master.adoc</sourceDocumentName>
+                            <outputFile>html/overview-guide.html</outputFile>
+                            <headerFooter>true</headerFooter>
+                            <resources>
+                                <resource>
+                                    <directory>_images</directory>
+                                    <targetPath>html/images</targetPath>
+                                </resource>
+                            </resources>
+                            <attributes>
+                                <toc>left</toc>
+                                <toclevels>3</toclevels>
+                            </attributes>
+                        </configuration>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                    </execution>
+                    <execution>
                         <id>getting-started-guide</id>
                         <phase>generate-resources</phase>
                         <configuration>
@@ -74,6 +96,24 @@
                                 <toc>left</toc>
                                 <toclevels>3</toclevels>
                             </attributes>
+                        </configuration>
+                        <goals>
+                            <goal>process-asciidoc</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>overview-guide-noheader</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <sourceDocumentName>overview/master.adoc</sourceDocumentName>
+                            <outputFile>htmlnoheader/overview-guide.html</outputFile>
+                            <headerFooter>false</headerFooter>
+                            <resources>
+                                <resource>
+                                    <directory>_images</directory>
+                                    <targetPath>htmlnoheader/images</targetPath>
+                                </resource>
+                            </resources>
                         </configuration>
                         <goals>
                             <goal>process-asciidoc</goal>

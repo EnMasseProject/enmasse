@@ -1,0 +1,121 @@
+include::common/attributes.adoc[]
+
+:Title: {ProductName} overview
+:context: enmasse-overview
+
+[id='getting-started-{context}']
+= {ProductName} overview
+
+This guide is intended as a starting point for understanding {ProductName}. The guide introduces some key concepts to {ProductName} and messaging systems in general, and how {ProductName} works at a high level. 
+
+== Key features
+
+* Built-in console and cloud-native tooling for management and monitoring.
+* Monitor messaging infrastructure with built-in metrics and alerts.
+* Built-in multitenancy to share messaging infrastructure among multiple applications.
+* Scale from small to large messaging deployments.
+* Hides complexities of messaging infrastructure from development teams.
+* Support for AMQP 1.0 and JMS.
+* Support for IoT using HTTP, MQTT, Sigfox or LoRaWAN protocols.
+* Supports federation of messaging addresses and forwarding messages to and from any AMQP 1.0 provider.
+* Built-in device management for IoT.
+
+=== Why messaging?
+
+Messaging systems allow you to loosely couple heterogeneous systems together, whilst typically providing reliability, transactions and many other features.
+
+Designing systems to be asynchronous from end-to-end allows you to really take advantage of your hardware resources, minimizing the amount of threads blocking on IO operations, and to use your network bandwidth to its full capacity. With an RPC approach you have to wait for a response for each request you make so are limited by the network round trip time, or latency of your network. With an asynchronous system you can pipeline flows of messages in different directions, so are limited by the network bandwidth not the latency. This typically allows you to create much higher performance applications.
+
+Messaging systems decouple the senders of messages from the consumers of messages. The senders and consumers of messages can be completely independent and know nothing of each other. This allows you to create flexible, loosely coupled systems. {ProductName} supports both the coupled and decoupled model of writing applications.
+
+== Concepts
+
+Knowing some concepts around messaging and {KubePlatform} is important to understand how {ProductName} works.
+
+Personas:: In {ProductName}, the persona responsible for managing the messaging infrastructure is named the "service admin" (or just "admin"), and the persona requesting messaging resources is named the "messaging tenant" (or just "tenant").
+
+=== Messaging
+
+In {ProductName} the messaging system consists of one or more `routers` and `brokers`:
+
+image::enmasse_messaging_architecture_1.0.png[Messaging architecture]
+
+Broker:: The broker writes messages to persistent storage (if desired), and provides temporal decoupling of producers and consumers. The broker is based on {BrokerProductName}.
+
+Router:: The router is a stateless proxy with capability to do message forwarding and to virtualize the underlying brokers. The router is based on {RouterProductName}.
+
+Producers and consumers:: One or more producers send messages to addresses via one or more routers. The messages may be routed to one or more brokers, or directly to one or more consumers, depending on the particular address type. The consumers receive messages via the routers.
+
+Address:: At the heart of the messaging system is the `address`. Addresses are a logical desination or origin for messages, and the router routes messages to the configured destination for a particular address. There are different types of addresses, and each address type have different semantics.
+
+==== Address types
+
+Queue:: The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases when you want to decouple the producer and consumer. Tenants with the `transactional` capability set supports JMS features such as selectors, message groups and transactions. For tenants without the `transactional` capability, a queue may be partitioned across multiple brokers to increase availability and performance at the cost of ordering guarantees.
+
+Topic:: The topic address type supports the publish-subscribe messaging pattern where there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.
+
+Subscription:: Using the subscription address type you can create a subscription for a topic that holds messages published to the topic even if the subscriber is not attached. 
+
+Anycast:: The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.
+
+Multicast:: The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.
+
+=== Operator
+
+{ProductName} is a Kubernetes Operator, managing the lifecycle of the routers, brokers and access control server of the messaging system. The operator may manage multiple independent messaging infrastructures, ensuring that the routers and brokers contain the desired configuration based on custom resources. {ProductName} uses {KubePlatform} namespaces as a way to group messaging applications sharing the same set of addresses and endpoints.
+
+image::enmasse_operator_architecture_1.0.png[Operator architecture]
+
+Namespace:: {KubePlatform} supports multiple virtual clusters backed by the same physical cluster. These virtual clusters are called namespaces. {ProductName} is built for, but does not require, using separate namespaces for the messaging infrastructure and for the messaging tenants.
+
+
+Custom resources:: {ProductName} provides a set of custom resources that can be grouped into `admin` resources and `tenant` resources. In a larger organization, the `admin` resources are owned by the operations team, whereas the `tenant` resources are owned by the development teams. This makes it easy to create large-scale messaging installations in a scalable manner.
+
+`MessagingInfrastructure`:: An "admin" resource for deploying and managing a set of routers, brokers and access control servers.
+`IoTInfrastructure`:: An "admin" resource for deployng and managing the IoT connectivity layer, including protocol adapters and device registries.
+`ConsoleService`:: An "admin" resource for deploying the {ProductName} console to easily manage and configure the messaging system.
+`MessagingTenant`:: A "tenant" resource that enables messaging for a {KubePlatform} namespace and binds it to a `MessagingInfrastructure`.
+`MessagingAddress`:: A "tenant" resource that configures the messaging infrastructures bound to the tenant with addresses.
+`MessagingEndpoint`:: A "tenant" resource that exposes endpoints on the router for access by messaging applications.
+`IoTProject`:: A "tenant" resource that configures a project entity on the IoT infrastructure.
+
+=== Monitoring
+
+All components in {ProductName} integrates with the Prometheus ecosystem for metrics and alerts
+
+Metrics:: Metrics can be enabled and disabled per {ProductName} component. Metrics can be scraped by Prometheus and presented as Grafana dashboards if desired.
+
+Alerts:: Alerts may be turned on and off, and their threshold can be adjusted. With every alert follows documentation on what actions that are required by the operations team. 
+
+=== Multitenancy
+
+image::enmasse_multitenancy_architecture_1.0.png[Multitenancy]
+
+{ProductName} supports sharing the same messaging system between multiple isolated tenants. This allows the operations team to monitor and manage a predictable footprint of routers and brokers, and improves resource utilization.
+
+As {KubePlatform} namespaces are used to isolate different messaging tenants, each tenant will have a unique prefix for its addresses internally. However, when connecting to the messaging system from applications, the application does not need to be aware of this prefix.
+
+Self-service:: {ProductName} allows development teams to provision messaging resources as if they were using a public cloud service.
+
+=== Authentication and authorization
+
+
+image::enmasse_authentication_architecture_1.0.png[Authentication and authorization]
+
+Access Control Server:: An Access Control Server is created for each `MessagingInfrastructure` in {ProductName}. The access control server supports multiple identity providers, and each messaging tenant sharing the same infrastructure may use multiple different identity provides, depending on the configuration.
+
+Identity provider:: Configures authentication and authorization policies for a particular messaging tenant.
+
+Client:: For each connection made to the messaging system by a producer or consumer, the router authenticates and authorizes the connection using the Access Control Server. The identity provider used depends on the identity providers and the SASL mechanism selected by the application.
+
+=== IoT
+
+{ProductName} has first class support for being used as an IoT platform using Eclipse Hono™, which provides a remote service interfaces for connecting large numbers of IoT devices to a back end and interacting with them in a uniform way regardless of the device communication protocol. 
+
+image::enmasse_iot_architecture_1.0.png[IoT]
+
+Device management:: Device management provides the ability to enable and configure access for IoT devices using a REST API or using the {ProductName} console.
+
+Protocol adapters:: {ProductName} can run different protocol adapters to support different protocol commonly used by IoT devices.
+
+:context: {parent-context}
