@@ -1959,7 +1959,7 @@ function deleteIotProject(iotProject) {
   let devIndex = getIotDevicesProjectIndex(iotProject.name);
 
   // delete iot devices for this project
-  iotdevices[devIndex].splice(devIndex, 1);
+  iotdevices.splice(devIndex, 1);
   iotProjects.splice(pjIndex, 1);
 }
 
