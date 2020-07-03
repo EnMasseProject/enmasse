@@ -14,7 +14,10 @@ import {
   TooltipPosition,
   Button,
   ButtonVariant,
-  PageSectionVariants
+  PageSectionVariants,
+  TitleSizes,
+  Text,
+  TextVariants
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
@@ -36,7 +39,7 @@ const styles = StyleSheet.create({
   },
   item_grid_margin: { marginBottom: 16, marginRight: 5 },
   editor: {
-    width: 700,
+    width: 400,
     border: "1px solid",
     borderColor: "lightgrey"
   },
@@ -54,62 +57,64 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
+      <Title
+        headingLevel="h2"
+        size={TitleSizes["2xl"]}
+        style={{ marginBottom: 32 }}
+      >
         Review your configuration
       </Title>
-      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
-        {" "}
-        Review the information below and Click Finish to create the new iot
-        project. Use the Back button to make changes.
-      </Title>
+      <Text component={TextVariants.h2}>
+        Review the information below and click Finish to create the new iot
+        project, use the Back button to make changes.
+      </Text>
+      <br />
       <Grid>
         <GridItem span={5}>
-          <Grid>
-            {name && name.trim() !== "" && (
-              <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
-                  Project name
-                </GridItem>
-                <GridItem id="preview-iot-name" span={7}>
-                  {name}
-                </GridItem>
-              </>
-            )}
-            {namespace && namespace.trim() !== "" && (
-              <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
-                  Namespace
-                </GridItem>
-                <GridItem id="preview-iot-namespace" span={7}>
-                  {namespace}
-                </GridItem>
-              </>
-            )}
-            {isEnabled !== undefined && (
-              <>
-                <GridItem span={5} className={css(styles.item_grid_margin)}>
-                  Enabled
-                </GridItem>
-                <GridItem id="preview-iot-enabled" span={7}>
-                  {isEnabled ? "true" : "false"}
-                </GridItem>
-              </>
-            )}
-            <br />
-            <span>
-              Click here to{" "}
-              <Button
-                variant={ButtonVariant.link}
-                isInline
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {" "}
-                {!isExpanded
-                  ? "show equivalent command"
-                  : "hide the command"}{" "}
-              </Button>
-            </span>
-          </Grid>
+          {name && name.trim() !== "" && (
+            <Grid>
+              <GridItem span={5} className={css(styles.item_grid_margin)}>
+                Project name
+              </GridItem>
+              <GridItem id="preview-iot-name" span={7}>
+                {name}
+              </GridItem>
+            </Grid>
+          )}
+          {namespace && namespace.trim() !== "" && (
+            <Grid>
+              <GridItem span={5} className={css(styles.item_grid_margin)}>
+                Namespace
+              </GridItem>
+              <GridItem id="preview-iot-namespace" span={7}>
+                {namespace}
+              </GridItem>
+            </Grid>
+          )}
+          {isEnabled !== undefined && (
+            <Grid>
+              <GridItem span={5} className={css(styles.item_grid_margin)}>
+                Enable
+              </GridItem>
+              <GridItem id="preview-iot-enabled" span={7}>
+                {isEnabled ? "true" : "false"}
+              </GridItem>
+            </Grid>
+          )}
+          <br />
+          <span>
+            Click here to{" "}
+            <Button
+              variant={ButtonVariant.link}
+              isInline
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {" "}
+              {!isExpanded
+                ? "show equivalent command"
+                : "hide the command"}{" "}
+            </Button>
+          </span>
         </GridItem>
         {isExpanded && (
           <GridItem span={7} className={css(styles.left_padding_with_border)}>

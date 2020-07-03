@@ -18,17 +18,98 @@ import {
   IIoTProjectInput,
   IoTConfigurationStep,
   IoTReviewStep,
-  MessagingConfigurationStep,
   isMessagingProjectValid,
   isIoTProjectValid,
-  MessagingReviewStep,
-  IMessagingProjectInput
+  isMessagingProjectConfigurationValid
 } from "modules/project";
 import { useMutationQuery } from "hooks";
-import { CREATE_ADDRESS_SPACE, RETURN_NAMESPACES } from "graphql-module";
+import {
+  CREATE_ADDRESS_SPACE,
+  RETURN_NAMESPACES,
+  RETURN_ADDRESS_SPACE_SCHEMAS
+} from "graphql-module";
+import { CREATE_IOT_PROJECT } from "graphql-module/queries/iot_project";
 import { FinishedStep } from "components";
-import { INamespaces } from "modules/address-space";
-import { ProjectType } from "modules/project/utils";
+import {
+  ProjectType,
+  getQueryVariableForCreateMessagingProject,
+  isEnabledCertificateStep,
+  isRouteStepValid
+} from "modules/project/utils";
+import { IAddressSpaceSchema } from "schema";
+import {
+  INamespaces,
+  MessagingProjectConfiguration,
+  MessagingProjectReview,
+  ConfiguringRoutes,
+  ConfiguringCertificates
+} from "modules/project/dailogs";
+import { EndpointConfiguration } from "modules/project/components";
+
+export interface IRouteConf {
+  protocol: string;
+  hostname?: string;
+  tlsTermination?: string;
+}
+export interface IMessagingProject {
+  namespace: string;
+  name: string;
+  type?: string;
+  plan?: string;
+  authService?: string;
+  customizeEndpoint: boolean;
+  isNameValid: boolean;
+  certValue?: string;
+  addCertificate: boolean;
+  tlsCertificate?: string;
+  protocols?: string[];
+  privateKey?: string;
+  addRoutes: boolean;
+  routesConf?: IRouteConf[];
+}
+
+export interface IExposeEndPoint {
+  name?: string;
+  service?: string;
+  certificate?: {
+    provider: string;
+    tlsKey?: string;
+    tlsCert?: string;
+  };
+  expose?: IExposeRoute;
+}
+export interface IExposeRoute {
+  routeHost?: string;
+  type?: string;
+  routeServicePort?: string;
+  routeTlsTermination?: string;
+}
+export interface IExposeMessagingProject {
+  as: {
+    metadata: {
+      name: string;
+      namespace: string;
+    };
+    spec: {
+      type?: string;
+      plan?: string;
+      authenticationService: {
+        name?: string;
+      };
+      endpoints?: IExposeEndPoint[];
+    };
+  };
+}
+
+const initialMessageProject: IMessagingProject = {
+  name: "",
+  namespace: "",
+  type: "",
+  isNameValid: true,
+  addCertificate: false,
+  customizeEndpoint: false,
+  addRoutes: false
+};
 
 const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
@@ -36,10 +117,11 @@ const CreateProject: React.FunctionComponent = () => {
     name: string;
     namespace: string;
     type?: string;
+    enabled?: boolean;
   }>();
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
-    IMessagingProjectInput
-  >({ isNameValid: true });
+    IMessagingProject
+  >(initialMessageProject);
   const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
     isNameValid: true,
     isEnabled: true
@@ -55,14 +137,14 @@ const CreateProject: React.FunctionComponent = () => {
   };
 
   const resetForm = () => {
-    setMessagingProjectDetail({ isNameValid: true });
+    setMessagingProjectDetail(initialMessageProject);
     setFirstSelectedStep(undefined);
   };
 
-  const refetchQueries: string[] = ["all_address_spaces"];
+  const refetchQueries: string[] = ["allProjects"];
 
   const resetFormState = () => {
-    setMessagingProjectDetail({ isNameValid: true });
+    setMessagingProjectDetail(initialMessageProject);
     setIsCreatedSuccessfully(true);
   };
 
@@ -73,35 +155,29 @@ const CreateProject: React.FunctionComponent = () => {
     resetFormState
   );
 
-  const handleMessagingProjectSave = () => {
+  const [setIoTVariables] = useMutationQuery(
+    CREATE_IOT_PROJECT,
+    refetchQueries,
+    resetForm,
+    resetFormState
+  );
+
+  const { data: addressSpaceSchema } = useQuery<IAddressSpaceSchema>(
+    RETURN_ADDRESS_SPACE_SCHEMAS
+  ) || { data: { addressSpaceSchema: [] } };
+
+  const handleMessagingProjectSave = async () => {
     if (
       messagingProjectDetail &&
       isMessagingProjectValid(messagingProjectDetail)
     ) {
-      const variables = {
-        as: {
-          metadata: {
-            name: messagingProjectDetail.messagingProjectName,
-            namespace: messagingProjectDetail.namespace
-          },
-          spec: {
-            type:
-              messagingProjectDetail.messagingProjectType &&
-              messagingProjectDetail.messagingProjectType.toLowerCase(),
-            plan:
-              messagingProjectDetail.messagingProjectPlan &&
-              messagingProjectDetail.messagingProjectPlan.toLowerCase(),
-            authenticationService: {
-              name: messagingProjectDetail.authenticationService
-            }
-          }
-        }
-      };
-      setMessagingVariables(variables);
+      await setMessagingVariables(
+        getQueryVariableForCreateMessagingProject(messagingProjectDetail)
+      );
       setRouteDetail({
-        name: messagingProjectDetail.messagingProjectName || "",
+        name: messagingProjectDetail.name || "",
         namespace: messagingProjectDetail.namespace || "",
-        type: messagingProjectDetail.messagingProjectType
+        type: messagingProjectDetail.type
       });
       resetForm();
     }
@@ -118,12 +194,30 @@ const CreateProject: React.FunctionComponent = () => {
   const namespaceOptions = namespaces.map(namespace => {
     return {
       value: namespace.metadata.name,
-      label: namespace.metadata.name
+      label: namespace.metadata.name,
+      key: namespace.metadata.name
     };
   });
 
   const handleIoTProjectSave = async () => {
-    console.log("iot created");
+    if (iotProjectDetail && isIoTProjectValid(iotProjectDetail)) {
+      const variables = {
+        project: {
+          metadata: {
+            name: iotProjectDetail.iotProjectName,
+            namespace: iotProjectDetail.namespace
+          },
+          enabled: iotProjectDetail.isEnabled
+        }
+      };
+      setIoTVariables(variables);
+      setRouteDetail({
+        name: iotProjectDetail.iotProjectName || "",
+        namespace: iotProjectDetail.namespace || "",
+        enabled: iotProjectDetail.isEnabled
+      });
+      resetForm();
+    }
     resetForm();
   };
 
@@ -145,13 +239,6 @@ const CreateProject: React.FunctionComponent = () => {
 
   const finalStepForIot = IoTReviewStep(iotProjectDetail);
 
-  const configurationStepForMessaging = MessagingConfigurationStep(
-    setMessagingProjectDetail,
-    messagingProjectDetail
-  );
-
-  const finalStepForMessaging = MessagingReviewStep(messagingProjectDetail);
-
   const finishedStep = {
     name: "Finish",
     component: (
@@ -160,7 +247,7 @@ const CreateProject: React.FunctionComponent = () => {
         success={isCreatedSuccessfully}
         routeDetail={routeDetail}
         projectType={
-          messagingProjectDetail
+          firstSelectedStep === "messaging"
             ? ProjectType.MESSAGING_PROJECT
             : ProjectType.IOT_PROJECT
         }
@@ -169,15 +256,95 @@ const CreateProject: React.FunctionComponent = () => {
     isFinishedStep: true
   };
 
-  const steps = [step1];
+  let steps: any[] = [step1];
+
+  const messagingConfigurationStep = {
+    name: "Configuration",
+    component: (
+      <MessagingProjectConfiguration
+        projectDetail={messagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        setProjectDetail={setMessagingProjectDetail}
+        namespaces={namespaceOptions}
+      />
+    ),
+    enableNext: isMessagingProjectConfigurationValid(messagingProjectDetail)
+  };
+
+  const endpointConfiguringStep = {
+    name: "Configuring",
+    component: (
+      <EndpointConfiguration
+        setProjectDetail={setMessagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        projectDetail={messagingProjectDetail}
+      />
+    ),
+    enableNext: isMessagingProjectValid(messagingProjectDetail)
+  };
+
+  const endpointCertificatesStep = {
+    name: "Certificates",
+    component: (
+      <ConfiguringCertificates
+        projectDetail={messagingProjectDetail}
+        setProjectDetail={setMessagingProjectDetail}
+      />
+    ),
+    enableNext:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail)
+  };
+
+  const endpointRoutesStep = {
+    name: "Routes",
+    component: (
+      <ConfiguringRoutes
+        projectDetail={messagingProjectDetail}
+        addressSpaceSchema={addressSpaceSchema}
+        setProjectDetail={setMessagingProjectDetail}
+      />
+    ),
+    enableNext:
+      isMessagingProjectValid(messagingProjectDetail) &&
+      isEnabledCertificateStep(messagingProjectDetail) &&
+      isRouteStepValid(messagingProjectDetail)
+  };
+
+  const endpointCustomizationStep = {
+    name: "Endpoint customization",
+    steps: [
+      ...[endpointConfiguringStep],
+      ...(messagingProjectDetail.addCertificate
+        ? [endpointCertificatesStep]
+        : []),
+      ...(messagingProjectDetail.addRoutes ? [endpointRoutesStep] : [])
+    ],
+    enableNext: isMessagingProjectValid(messagingProjectDetail),
+    canJumpTo: isMessagingProjectValid(messagingProjectDetail)
+  };
+
+  const messagingReviewStep = {
+    name: "Review",
+    component: (
+      <MessagingProjectReview projectDetail={messagingProjectDetail} />
+    ),
+    enableNext: isMessagingProjectValid(messagingProjectDetail),
+    canJumpTo: isMessagingProjectValid(messagingProjectDetail),
+    nextButtonText: "Finish"
+  };
 
   if (firstSelectedStep) {
     if (firstSelectedStep === "iot") {
       steps.push(configurationStepForIot);
       steps.push(finalStepForIot);
     } else {
-      steps.push(configurationStepForMessaging);
-      steps.push(finalStepForMessaging);
+      steps.push(messagingConfigurationStep);
+      if (messagingProjectDetail.customizeEndpoint) {
+        steps = [...steps, endpointCustomizationStep];
+      }
+      // messagingSteps.forEach(step=>steps.push(step));
+      steps.push(messagingReviewStep);
     }
   }
   steps.push(finishedStep);
@@ -185,7 +352,7 @@ const CreateProject: React.FunctionComponent = () => {
   const handleNextIsEnabled = () => {
     if (firstSelectedStep) {
       if (firstSelectedStep === "messaging") {
-        if (isMessagingProjectValid(messagingProjectDetail)) {
+        if (isMessagingProjectConfigurationValid(messagingProjectDetail)) {
           return true;
         } else {
           return false;

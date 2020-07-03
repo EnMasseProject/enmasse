@@ -21,7 +21,7 @@ const IoTConfigurationStep = (
   projectDetail: IIoTProjectInput
 ) => {
   const isReviewEnabled = () => {
-    isIoTProjectValid(projectDetail);
+    return isIoTProjectValid(projectDetail);
   };
   const setData = (value?: string, type?: string, booleanValue?: boolean) => {
     let newProject: IIoTProjectInput = Object.assign({}, projectDetail);
