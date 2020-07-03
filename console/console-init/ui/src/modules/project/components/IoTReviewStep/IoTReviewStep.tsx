@@ -12,7 +12,7 @@ import {
 
 const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
   const isEnabled = () => {
-    isIoTProjectValid(projectDetail);
+    return isIoTProjectValid(projectDetail);
   };
   return {
     name: "Review",
@@ -25,7 +25,6 @@ const IoTReviewStep = (projectDetail?: IIoTProjectInput) => {
       />
     ),
     enableNext: isEnabled(),
-    canJumpTo: isEnabled(),
     nextButtonText: "Finish"
   };
 };
