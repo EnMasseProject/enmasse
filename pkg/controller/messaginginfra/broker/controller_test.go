@@ -23,13 +23,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 )
 
 func setup(t *testing.T) *BrokerController {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1beta2.SchemeGroupVersion, &v1beta2.MessagingInfrastructure{})
+	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.MessagingInfrastructure{})
 	cl := fake.NewFakeClientWithScheme(s)
 	certController := cert.NewCertController(cl, s, 1*time.Hour, 1*time.Hour)
 	return NewBrokerController(cl, s, certController)
@@ -38,12 +38,12 @@ func setup(t *testing.T) *BrokerController {
 func TestReconcileBrokerPool(t *testing.T) {
 	bc := setup(t)
 
-	infra := v1beta2.MessagingInfrastructure{
+	infra := v1.MessagingInfrastructure{
 		ObjectMeta: metav1.ObjectMeta{Name: "infra1", Namespace: "test"},
-		Spec: v1beta2.MessagingInfrastructureSpec{
-			Broker: v1beta2.MessagingInfrastructureSpecBroker{
-				ScalingStrategy: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy{
-					Static: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
+		Spec: v1.MessagingInfrastructureSpec{
+			Broker: v1.MessagingInfrastructureSpecBroker{
+				ScalingStrategy: &v1.MessagingInfrastructureSpecBrokerScalingStrategy{
+					Static: &v1.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
 						PoolSize: 2,
 					},
 				},

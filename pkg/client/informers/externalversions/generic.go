@@ -12,8 +12,8 @@ import (
 
 	v1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
 	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	v1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -58,6 +58,20 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	case v1beta2.SchemeGroupVersion.WithResource("addressspaceplans"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta2().AddressSpacePlans().Informer()}, nil
 
+		// Group=enmasse.io, Version=v1
+	case v1.SchemeGroupVersion.WithResource("messagingaddresses"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingAddresses().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingaddressplans"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingAddressPlans().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingendpoints"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingEndpoints().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messaginginfrastructures"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingInfrastructures().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingplans"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingPlans().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingtenants"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingTenants().Informer()}, nil
+
 		// Group=enmasse.io, Version=v1beta1
 	case enmassev1beta1.SchemeGroupVersion.WithResource("addresses"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().Addresses().Informer()}, nil
@@ -67,20 +81,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AddressSpaceSchemas().Informer()}, nil
 	case enmassev1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta1().AuthenticationServices().Informer()}, nil
-
-		// Group=enmasse.io, Version=v1beta2
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingaddresses"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingAddresses().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingaddressplans"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingAddressPlans().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingendpoints"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingEndpoints().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messaginginfrastructures"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingInfrastructures().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingplans"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingPlans().Informer()}, nil
-	case enmassev1beta2.SchemeGroupVersion.WithResource("messagingtenants"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1beta2().MessagingTenants().Informer()}, nil
 
 		// Group=iot.enmasse.io, Version=v1alpha1
 	case v1alpha1.SchemeGroupVersion.WithResource("iotconfigs"):

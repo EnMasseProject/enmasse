@@ -13,7 +13,7 @@ import (
 
 	logr "github.com/go-logr/logr"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
 	"github.com/enmasseproject/enmasse/pkg/state"
@@ -50,7 +50,7 @@ func NewBrokerController(client client.Client, scheme *runtime.Scheme, certContr
 	}
 }
 
-func getBrokerLabels(infra *v1beta2.MessagingInfrastructure) map[string]string {
+func getBrokerLabels(infra *v1.MessagingInfrastructure) map[string]string {
 	labels := make(map[string]string, 0)
 	labels[common.LABEL_INFRA] = infra.Name
 	labels["component"] = "broker"
@@ -64,7 +64,7 @@ func getBrokerLabels(infra *v1beta2.MessagingInfrastructure) map[string]string {
  *
  * Each instance of a broker is created as a statefulset. If we want to support HA in the future, each statefulset can use replicas to configure HA.
  */
-func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure) ([]Host, error) {
+func (b *BrokerController) ReconcileBrokers(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure) ([]Host, error) {
 	setDefaultBrokerScalingStrategy(&infra.Spec.Broker)
 	logger.Info("Reconciling brokers", "broker", infra.Spec.Broker)
 
@@ -163,7 +163,7 @@ func toNamespacedHost(broker *appsv1.StatefulSet) string {
 	return fmt.Sprintf("%s-0", broker.Name)
 }
 
-func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1beta2.MessagingInfrastructure, statefulset *appsv1.StatefulSet) error {
+func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, statefulset *appsv1.StatefulSet) error {
 	logger.Info("Creating broker", "name", statefulset.Name)
 
 	certSecretName := cert.GetCertSecretName(statefulset.Name)
@@ -340,18 +340,18 @@ func int32ptr(v int32) *int32 {
 	return &v
 }
 
-func setDefaultBrokerScalingStrategy(broker *v1beta2.MessagingInfrastructureSpecBroker) {
+func setDefaultBrokerScalingStrategy(broker *v1.MessagingInfrastructureSpecBroker) {
 	// Set static scaler by default
 	if broker.ScalingStrategy == nil {
-		broker.ScalingStrategy = &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy{
-			Static: &v1beta2.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
+		broker.ScalingStrategy = &v1.MessagingInfrastructureSpecBrokerScalingStrategy{
+			Static: &v1.MessagingInfrastructureSpecBrokerScalingStrategyStatic{
 				PoolSize: 1,
 			},
 		}
 	}
 }
 
-func numBrokersToCreate(strategy *v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
+func numBrokersToCreate(strategy *v1.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
 	if strategy.Static != nil {
 		if int(strategy.Static.PoolSize) > len(brokers) {
 			return int(strategy.Static.PoolSize) - len(brokers)
@@ -361,7 +361,7 @@ func numBrokersToCreate(strategy *v1beta2.MessagingInfrastructureSpecBrokerScali
 	return 0
 }
 
-func numBrokersToDelete(strategy *v1beta2.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
+func numBrokersToDelete(strategy *v1.MessagingInfrastructureSpecBrokerScalingStrategy, brokers []appsv1.StatefulSet) int {
 	if strategy.Static != nil {
 		if int(strategy.Static.PoolSize) < len(brokers) {
 			return len(brokers) - int(strategy.Static.PoolSize)

@@ -8,14 +8,14 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	v12 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 )
 
@@ -70,22 +70,22 @@ func TestQueryMessagingEndpointClusterOnly(t *testing.T) {
 
 	assert.Equal(t, 1, objs.Total, "Unexpected number of messagingEndpoints")
 
-	messagingEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	messagingEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
 		},
 	}
@@ -124,43 +124,43 @@ func TestQueryMessagingEndpointAmqpsRouteAndCluster(t *testing.T) {
 
 	assert.Equal(t, 2, objs.Total, "Unexpected number of endpoints")
 
-	clusterEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	clusterEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
 		},
 	}
 	assert.Equal(t, clusterEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoints")
 
-	routeEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	routeEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Route:     &v1beta2.MessagingEndpointSpecRoute{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			Route:     &v1.MessagingEndpointSpecRoute{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeRoute,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeRoute,
 			Host:  "messaging-queuespace-enmasse-infra.apps-crc.testing",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 443},
 			},
 		},
 	}
@@ -199,46 +199,46 @@ func TestQueryMessagingEndpointAmqpWssRouteAndCluster(t *testing.T) {
 
 	assert.Equal(t, 2, objs.Total, "Unexpected number of endpoints")
 
-	clusterEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	clusterEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPWSS},
+		Spec: v1.MessagingEndpointSpec{
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPWSS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqp-wss", Protocol: v1beta2.MessagingProtocolAMQPWSS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqp-wss", Protocol: v1.MessagingProtocolAMQPWSS, Port: 443},
 			},
 		},
 	}
 	assert.Equal(t, clusterEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoints")
 
 	reencrypt := v12.TLSTerminationReencrypt
-	routeEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	routeEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging-wss",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging-wss"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Route: &v1beta2.MessagingEndpointSpecRoute{
+		Spec: v1.MessagingEndpointSpec{
+			Route: &v1.MessagingEndpointSpecRoute{
 				TlsTermination: &reencrypt,
 			},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPWSS},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPWSS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeRoute,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeRoute,
 			Host:  "messaging-wss-queuespace-enmasse-infra.apps-crc.testing",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqp-wss", Protocol: v1beta2.MessagingProtocolAMQPWSS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqp-wss", Protocol: v1.MessagingProtocolAMQPWSS, Port: 443},
 			},
 		},
 	}
@@ -304,69 +304,69 @@ func TestQueryMessagingEndpointSharedServiceAndTwoRoutes(t *testing.T) {
 
 	assert.Equal(t, 3, objs.Total, "Unexpected number of endpoints")
 
-	clusterEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	clusterEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS, v1beta2.MessagingProtocolAMQP, v1beta2.MessagingProtocolAMQPWSS},
+		Spec: v1.MessagingEndpointSpec{
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS, v1.MessagingProtocolAMQP, v1.MessagingProtocolAMQPWSS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  serviceHost,
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
-				{Name: "amqp", Protocol: v1beta2.MessagingProtocolAMQP, Port: 5672},
-				{Name: "amqp-wss", Protocol: v1beta2.MessagingProtocolAMQPWSS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
+				{Name: "amqp", Protocol: v1.MessagingProtocolAMQP, Port: 5672},
+				{Name: "amqp-wss", Protocol: v1.MessagingProtocolAMQPWSS, Port: 443},
 			},
 		},
 	}
 	assert.Equal(t, clusterEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoints")
 
-	amqpsRouteEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	amqpsRouteEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Route:     &v1beta2.MessagingEndpointSpecRoute{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			Route:     &v1.MessagingEndpointSpecRoute{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeRoute,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeRoute,
 			Host:  "messaging-queuespace-enmasse-infra.apps-crc.testing",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 443},
 			},
 		},
 	}
 	assert.Equal(t, amqpsRouteEndpoint, objs.MessagingEndpoints[1], "Unexpected messagingEndpoints")
 
 	reencrypt := v12.TLSTerminationReencrypt
-	amqpwssRouteEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	amqpwssRouteEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging-wss",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging-wss"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Route: &v1beta2.MessagingEndpointSpecRoute{
+		Spec: v1.MessagingEndpointSpec{
+			Route: &v1.MessagingEndpointSpecRoute{
 				TlsTermination: &reencrypt,
 			},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPWSS},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPWSS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeRoute,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeRoute,
 			Host:  "messaging-wss-queuespace-enmasse-infra.apps-crc.testing",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqp-wss", Protocol: v1beta2.MessagingProtocolAMQPWSS, Port: 443},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqp-wss", Protocol: v1.MessagingProtocolAMQPWSS, Port: 443},
 			},
 		},
 	}
@@ -405,42 +405,42 @@ func TestQueryMessagingEndpointLoadbalancerAndCluster(t *testing.T) {
 
 	assert.Equal(t, 2, objs.Total, "Unexpected number of endpoints")
 
-	clusterEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	clusterEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
 		},
 	}
 	assert.Equal(t, clusterEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoints")
 
-	loadbalancerEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	loadbalancerEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			LoadBalancer: &v1beta2.MessagingEndpointSpecLoadBalancer{},
-			Protocols:    []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
+		Spec: v1.MessagingEndpointSpec{
+			LoadBalancer: &v1.MessagingEndpointSpecLoadBalancer{},
+			Protocols:    []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeLoadBalancer,
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 443},
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeLoadBalancer,
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 443},
 			},
 		},
 	}
@@ -502,27 +502,27 @@ func TestQueryMessagingEndpointTlsSelfSigned(t *testing.T) {
 
 	assert.Equal(t, 1, objs.Total, "Unexpected number of messagingEndpoints")
 
-	messagingEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	messagingEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Tls: &v1beta2.MessagingEndpointSpecTls{
-				Selfsigned: &v1beta2.MessagingEndpointSpecTlsSelfsigned{},
+		Spec: v1.MessagingEndpointSpec{
+			Tls: &v1.MessagingEndpointSpecTls{
+				Selfsigned: &v1.MessagingEndpointSpecTlsSelfsigned{},
 			},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
-			Tls: &v1beta2.MessagingEndpointStatusTls{
+			Tls: &v1.MessagingEndpointStatusTls{
 				CaCertificate: "cacert",
 			},
 		},
@@ -557,27 +557,27 @@ func TestQueryMessagingEndpointTlsOpenShift(t *testing.T) {
 
 	assert.Equal(t, 1, objs.Total, "Unexpected number of messagingEndpoints")
 
-	messagingEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	messagingEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Tls: &v1beta2.MessagingEndpointSpecTls{
-				Openshift: &v1beta2.MessagingEndpointSpecTlsOpenshift{},
+		Spec: v1.MessagingEndpointSpec{
+			Tls: &v1.MessagingEndpointSpecTls{
+				Openshift: &v1.MessagingEndpointSpecTlsOpenshift{},
 			},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
-			Tls: &v1beta2.MessagingEndpointStatusTls{},
+			Tls: &v1.MessagingEndpointStatusTls{},
 		},
 	}
 	assert.Equal(t, messagingEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoint")
@@ -612,34 +612,34 @@ func TestQueryMessagingEndpointTlsExternal(t *testing.T) {
 
 	assert.Equal(t, 1, objs.Total, "Unexpected number of messagingEndpoints")
 
-	messagingEndpoint := &v1beta2.MessagingEndpoint{
-		ObjectMeta: v1.ObjectMeta{
+	messagingEndpoint := &v1.MessagingEndpoint{
+		ObjectMeta: metav1.ObjectMeta{
 			Namespace: addressSpace.Namespace,
 			Name:      "myas.messaging.cluster",
 			UID:       createStableUuidV5(addressSpace.ObjectMeta, "myas.messaging.cluster"),
 		},
-		Spec: v1beta2.MessagingEndpointSpec{
-			Tls: &v1beta2.MessagingEndpointSpecTls{
-				External: &v1beta2.MessagingEndpointSpecTlsExternal{
-					Key: v1beta2.InputValue{
+		Spec: v1.MessagingEndpointSpec{
+			Tls: &v1.MessagingEndpointSpecTls{
+				External: &v1.MessagingEndpointSpecTlsExternal{
+					Key: v1.InputValue{
 						Value: string(endpointSpec.Certificate.TlsKey),
 					},
-					Certificate: v1beta2.InputValue{
+					Certificate: v1.InputValue{
 						Value: string(endpointSpec.Certificate.TlsCert),
 					},
 				},
 			},
-			Protocols: []v1beta2.MessagingEndpointProtocol{v1beta2.MessagingProtocolAMQPS},
-			Cluster:   &v1beta2.MessagingEndpointSpecCluster{},
+			Protocols: []v1.MessagingEndpointProtocol{v1.MessagingProtocolAMQPS},
+			Cluster:   &v1.MessagingEndpointSpecCluster{},
 		},
-		Status: v1beta2.MessagingEndpointStatus{
-			Phase: v1beta2.MessagingEndpointActive,
-			Type:  v1beta2.MessagingEndpointTypeCluster,
+		Status: v1.MessagingEndpointStatus{
+			Phase: v1.MessagingEndpointActive,
+			Type:  v1.MessagingEndpointTypeCluster,
 			Host:  "messaging-queuespace.enmasse-infra.svc",
-			Ports: []v1beta2.MessagingEndpointPort{
-				{Name: "amqps", Protocol: v1beta2.MessagingProtocolAMQPS, Port: 5671},
+			Ports: []v1.MessagingEndpointPort{
+				{Name: "amqps", Protocol: v1.MessagingProtocolAMQPS, Port: 5671},
 			},
-			Tls: &v1beta2.MessagingEndpointStatusTls{},
+			Tls: &v1.MessagingEndpointStatusTls{},
 		},
 	}
 	assert.Equal(t, messagingEndpoint, objs.MessagingEndpoints[0], "Unexpected messagingEndpoint")

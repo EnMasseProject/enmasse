@@ -166,7 +166,7 @@ manifests:
 	@echo "Skipping generating manifests from source"
 else
 manifests: controller-gen
-	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1beta2 output:dir=./templates/crds
+	$(CONTROLLER_GEN) crd paths=./pkg/apis/enmasse/v1 output:dir=./templates/crds
 endif
 
 #endregion

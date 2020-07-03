@@ -9,7 +9,7 @@ import (
 	"crypto/tls"
 	"time"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/state/common"
 )
 
@@ -19,10 +19,10 @@ import (
 type ClientManager interface {
 	// Retrieve a client handle for communicating with messaging infrastructure. Client is thread
 	// safe and shared with multiple threads.
-	GetClient(infra *v1beta2.MessagingInfrastructure) InfraClient
+	GetClient(infra *v1.MessagingInfrastructure) InfraClient
 
 	// Remove client from manager. This will take care to call client.Shutdown() to cleanup client resources.
-	DeleteClient(infra *v1beta2.MessagingInfrastructure) error
+	DeleteClient(infra *v1.MessagingInfrastructure) error
 }
 
 /**
@@ -38,25 +38,25 @@ type InfraClient interface {
 	// Check if broker is in use by any address or tenant and delete it
 	DeleteBroker(host string) error
 	// Schedule tenant
-	ScheduleTenant(tenant *v1beta2.MessagingTenant) error
+	ScheduleTenant(tenant *v1.MessagingTenant) error
 	// Schedule durable address for tenant
-	ScheduleAddress(address *v1beta2.MessagingAddress) error
+	ScheduleAddress(address *v1.MessagingAddress) error
 	// Synchronize address
-	SyncAddress(address *v1beta2.MessagingAddress) error
+	SyncAddress(address *v1.MessagingAddress) error
 	// Delete address
-	DeleteAddress(address *v1beta2.MessagingAddress) error
+	DeleteAddress(address *v1.MessagingAddress) error
 	// Synchronize tenant
-	SyncTenant(tenant *v1beta2.MessagingTenant) error
+	SyncTenant(tenant *v1.MessagingTenant) error
 	// Delete tenant
-	DeleteTenant(tenant *v1beta2.MessagingTenant) error
+	DeleteTenant(tenant *v1.MessagingTenant) error
 	// Allocate endpoint ports
-	AllocatePorts(endpoint *v1beta2.MessagingEndpoint, protocols []v1beta2.MessagingEndpointProtocol) error
+	AllocatePorts(endpoint *v1.MessagingEndpoint, protocols []v1.MessagingEndpointProtocol) error
 	// Free endpoint ports
-	FreePorts(endpoint *v1beta2.MessagingEndpoint)
+	FreePorts(endpoint *v1.MessagingEndpoint)
 	// Synchronize endpoint
-	SyncEndpoint(endpoint *v1beta2.MessagingEndpoint) error
+	SyncEndpoint(endpoint *v1.MessagingEndpoint) error
 	// Synchronize endpoint
-	DeleteEndpoint(endpoint *v1beta2.MessagingEndpoint) error
+	DeleteEndpoint(endpoint *v1.MessagingEndpoint) error
 }
 
 /**

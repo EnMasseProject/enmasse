@@ -8,7 +8,7 @@ package scheduler
 import (
 	"fmt"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/state/broker"
 )
 
@@ -24,11 +24,11 @@ func NewDummyScheduler() Scheduler {
 	return &dummyScheduler{}
 }
 
-func (s *dummyScheduler) ScheduleTenant(tenant *v1beta2.MessagingTenant, brokers []*broker.BrokerState) error {
+func (s *dummyScheduler) ScheduleTenant(tenant *v1.MessagingTenant, brokers []*broker.BrokerState) error {
 	if len(brokers) > 0 {
 		broker := brokers[0]
-		tenant.Status.Broker = &v1beta2.MessagingAddressBroker{
-			State: v1beta2.MessagingAddressBrokerScheduled,
+		tenant.Status.Broker = &v1.MessagingAddressBroker{
+			State: v1.MessagingAddressBrokerScheduled,
 			Host:  broker.Host().Hostname,
 		}
 	} else {
@@ -37,11 +37,11 @@ func (s *dummyScheduler) ScheduleTenant(tenant *v1beta2.MessagingTenant, brokers
 	return nil
 }
 
-func (s *dummyScheduler) ScheduleAddress(address *v1beta2.MessagingAddress, brokers []*broker.BrokerState) error {
+func (s *dummyScheduler) ScheduleAddress(address *v1.MessagingAddress, brokers []*broker.BrokerState) error {
 	if len(brokers) > 0 {
 		broker := brokers[0]
-		address.Status.Brokers = append(address.Status.Brokers, v1beta2.MessagingAddressBroker{
-			State: v1beta2.MessagingAddressBrokerScheduled,
+		address.Status.Brokers = append(address.Status.Brokers, v1.MessagingAddressBroker{
+			State: v1.MessagingAddressBrokerScheduled,
 			Host:  broker.Host().Hostname,
 		})
 	} else {

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/state/broker"
 	"github.com/enmasseproject/enmasse/pkg/state/router"
 )
@@ -58,7 +58,7 @@ const (
 )
 
 // Signal that an instance of infrastructure is updated
-func (m *manager) GetClient(i *v1beta2.MessagingInfrastructure) InfraClient {
+func (m *manager) GetClient(i *v1.MessagingInfrastructure) InfraClient {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	key := clientKey{Name: i.Name, Namespace: i.Namespace}
@@ -71,7 +71,7 @@ func (m *manager) GetClient(i *v1beta2.MessagingInfrastructure) InfraClient {
 	return client
 }
 
-func (m *manager) DeleteClient(infra *v1beta2.MessagingInfrastructure) error {
+func (m *manager) DeleteClient(infra *v1.MessagingInfrastructure) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
 	key := clientKey{Name: infra.Name, Namespace: infra.Namespace}

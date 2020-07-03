@@ -165,12 +165,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingInfrastructure",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingInfrastructureList",
 			},
 		)
@@ -180,12 +180,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingTenant",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingTenantList",
 			},
 		)
@@ -195,12 +195,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingAddress",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingAddressList",
 			},
 		)
@@ -210,12 +210,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingEndpoint",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingEndpointList",
 			},
 		)
@@ -225,12 +225,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingPlan",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingPlanList",
 			},
 		)
@@ -240,12 +240,12 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingAddressPlan",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
-				Version: "v1beta2",
+				Version: "v1",
 				Kind:    "MessagingAddressPlanList",
 			},
 		)

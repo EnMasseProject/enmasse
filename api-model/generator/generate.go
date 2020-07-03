@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	enmasseapi "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmasseapi "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"log"
 	"reflect"
 	"strings"
@@ -103,7 +103,7 @@ func main() {
 		{"k8s.io/metrics/pkg/apis/metrics/v1beta1", "metrics.k8s.io", "io.fabric8.kubernetes.api.model.metrics.v1beta1", "kubernetes_metrics_v1beta1_"},
 		// EnMasse model
 		{"github.com/enmasseproject/pkg/apis/enmasse/v1beta1", "", "io.enmasse.api.model", "enmasse_model_"},
-		{"github.com/enmasseproject/pkg/apis/enmasse/v1beta2", "", "io.enmasse.api.model", "enmasse_model_"},
+		{"github.com/enmasseproject/pkg/apis/enmasse/v1", "", "io.enmasse.api.model", "enmasse_model_"},
 	}
 
 	typeMap := map[reflect.Type]reflect.Type{
@@ -148,7 +148,7 @@ func main() {
 	result = strings.Replace(result, "\"javaType\":\"String", "\"existingJavaType\":\"java.lang.String", -1)
 
 	// Replace api version for now
-	result = strings.Replace(result, "enmasse/v1beta2", "enmasse.io/v1beta2", -1)
+	result = strings.Replace(result, "enmasse/v1", "enmasse.io/v1", -1)
 
 	var out bytes.Buffer
 	err = json.Indent(&out, []byte(result), "", "  ")

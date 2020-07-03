@@ -8,14 +8,14 @@ package router
 import (
 	"encoding/json"
 
-	v1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 )
 
 type routerConfig struct {
 	entities [][]interface{}
 }
 
-func generateConfig(router *v1beta2.MessagingInfrastructureSpecRouter) routerConfig {
+func generateConfig(router *v1.MessagingInfrastructureSpecRouter) routerConfig {
 	return routerConfig{
 		entities: [][]interface{}{
 			[]interface{}{
