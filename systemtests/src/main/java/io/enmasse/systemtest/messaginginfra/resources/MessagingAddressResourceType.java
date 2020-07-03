@@ -10,6 +10,8 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingAddressCondition;
 import io.enmasse.api.model.MessagingAddressList;
+import io.enmasse.api.model.MessagingEndpoint;
+import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -69,5 +71,14 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
             }
         }
         return null;
+    }
+
+    public static int getPort(String protocol, MessagingEndpoint endpoint) {
+        for (MessagingEndpointPort port : endpoint.getStatus().getPorts()) {
+            if (protocol.equals(port.getProtocol()))  {
+                return port.getPort();
+            }
+        }
+        return 0;
     }
 }

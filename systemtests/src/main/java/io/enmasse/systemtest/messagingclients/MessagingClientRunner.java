@@ -6,6 +6,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType.getPort;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -97,15 +99,5 @@ public class MessagingClientRunner {
             assertTrue(receiverResult.get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
         }
         return clients;
-    }
-
-
-    public int getPort(String protocol, MessagingEndpoint endpoint) {
-        for (MessagingEndpointPort port : endpoint.getStatus().getPorts()) {
-            if (protocol.equals(port.getProtocol()))  {
-                return port.getPort();
-            }
-        }
-        return 0;
     }
 }

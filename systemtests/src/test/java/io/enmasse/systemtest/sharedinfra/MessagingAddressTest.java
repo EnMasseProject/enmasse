@@ -38,6 +38,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType.getPort;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -252,7 +253,7 @@ public class MessagingAddressTest extends TestBase {
         AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
-                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), clientRunner.getPort("AMQP", nodePort)))
+                .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), getPort("AMQP", nodePort)))
                 .setProtonClientOptions(new ProtonClientOptions())
                 .setTerminusFactory(new TopicTerminusFactory()));
 
