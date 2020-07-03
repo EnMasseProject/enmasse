@@ -144,13 +144,9 @@ public class ExternalMessagingClient implements AutoCloseable {
 
     public boolean isSender() {
         ClientType clientType = this.client.getClientType();
-        return clientType.equals(ClientType.CLI_JAVA_ARTEMIS_JMS_SENDER) ||
-                clientType.equals(ClientType.CLI_JAVA_OPENWIRE_JMS_SENDER) ||
-                clientType.equals(ClientType.CLI_JAVA_PAHO_MQTT_SENDER) ||
-                clientType.equals(ClientType.CLI_JAVA_PROTON_JMS_SENDER) ||
+        return  clientType.equals(ClientType.CLI_JAVA_PROTON_JMS_SENDER) ||
                 clientType.equals(ClientType.CLI_PROTON_PYTHON_SENDER) ||
-                clientType.equals(ClientType.CLI_RHEA_SENDER) ||
-                clientType.equals(ClientType.CLI_STOMP_SENDER);
+                clientType.equals(ClientType.CLI_RHEA_SENDER)
     }
 
     //===================================================================
