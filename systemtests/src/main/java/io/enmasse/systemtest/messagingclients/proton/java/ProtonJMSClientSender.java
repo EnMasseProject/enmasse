@@ -7,6 +7,7 @@ package io.enmasse.systemtest.messagingclients.proton.java;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientCapability;
 import io.enmasse.systemtest.messagingclients.ClientType;
 
 import java.nio.file.Path;
@@ -25,7 +26,7 @@ public class ProtonJMSClientSender extends AbstractClient {
     }
 
     protected ProtonJMSClientSender(ClientType type, Path logPath) throws Exception {
-        super(type, logPath);
+        super(type, ClientCapability.SENDER, logPath);
     }
 
     @Override

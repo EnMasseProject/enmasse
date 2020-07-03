@@ -7,6 +7,7 @@ package io.enmasse.systemtest.messagingclients.proton.python;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientCapability;
 import io.enmasse.systemtest.messagingclients.ClientType;
 
 import java.nio.file.Path;
@@ -17,11 +18,11 @@ import java.util.function.Supplier;
 
 public class PythonClientReceiver extends AbstractClient {
     public PythonClientReceiver() throws Exception {
-        super(ClientType.CLI_PROTON_PYTHON_RECEIVER);
+        super(ClientType.CLI_PROTON_PYTHON_RECEIVER, ClientCapability.RECEIVER);
     }
 
     public PythonClientReceiver(Path logPath) throws Exception {
-        super(ClientType.CLI_PROTON_PYTHON_RECEIVER, logPath);
+        super(ClientType.CLI_PROTON_PYTHON_RECEIVER, ClientCapability.RECEIVER, logPath);
     }
 
     @Override

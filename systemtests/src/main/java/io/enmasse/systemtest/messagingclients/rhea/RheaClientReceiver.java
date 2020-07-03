@@ -7,6 +7,7 @@ package io.enmasse.systemtest.messagingclients.rhea;
 import io.enmasse.systemtest.messagingclients.AbstractClient;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ClientArgumentMap;
+import io.enmasse.systemtest.messagingclients.ClientCapability;
 import io.enmasse.systemtest.messagingclients.ClientType;
 
 import java.nio.file.Path;
@@ -17,15 +18,15 @@ import java.util.function.Supplier;
 
 public class RheaClientReceiver extends AbstractClient {
     public RheaClientReceiver() throws Exception {
-        super(ClientType.CLI_RHEA_RECEIVER);
+        super(ClientType.CLI_RHEA_RECEIVER, ClientCapability.RECEIVER);
     }
 
     public RheaClientReceiver(String namespace) throws Exception {
-        super(ClientType.CLI_RHEA_RECEIVER, namespace);
+        super(ClientType.CLI_RHEA_RECEIVER, ClientCapability.RECEIVER, namespace);
     }
 
     public RheaClientReceiver(Path logPath) throws Exception {
-        super(ClientType.CLI_RHEA_RECEIVER, logPath);
+        super(ClientType.CLI_RHEA_RECEIVER, ClientCapability.RECEIVER, logPath);
     }
 
     @Override
