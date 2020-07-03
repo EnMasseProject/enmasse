@@ -10,11 +10,12 @@ import {
   Divider,
   PageSection,
   Title,
-  CardTitle
+  CardTitle,
+  Button
 } from "@patternfly/react-core";
 import { kFormatter } from "utils";
 import { StyleSheet, css } from "aphrodite";
-import { Link } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 
 const styles = StyleSheet.create({
   style_margin: {
@@ -25,21 +26,21 @@ const styles = StyleSheet.create({
   }
 });
 interface IGeneralInfoProps {
-  addressSpace: string;
-  eventAddresses: Array<string>;
-  telemetryAddresses: Array<string>;
-  commandAddresses: Array<string>;
+  addressSpace?: string;
+  eventAddress?: string;
+  telemetryAddress?: string;
+  commandAddresses?: Array<string>;
   maxConnection: number;
   dataVolume: number;
   startDate: string | Date;
   endDate: Date | string;
-  namespace: string;
+  namespace?: string;
 }
 
 const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
   addressSpace,
-  eventAddresses,
-  telemetryAddresses,
+  eventAddress,
+  telemetryAddress,
   commandAddresses,
   maxConnection,
   dataVolume,
@@ -47,6 +48,20 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
   endDate,
   namespace
 }) => {
+  const history = useHistory();
+
+  const navigateToAdressSpace = () => {
+    history.push(
+      `/messaging-projects/${namespace}/${addressSpace}/standard/addresses`
+    );
+  };
+
+  const navigateToAddress = (address: string) => {
+    history.push(
+      `/messaging-projects/${namespace}/${addressSpace}/standard/addresses/${addressSpace}.${address}`
+    );
+  };
+
   return (
     <PageSection>
       <Card>
@@ -57,63 +72,44 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
         </CardTitle>
         <CardBody>
           <b className={css(styles.style_margin)}>Address space</b>
-          <Link
-            //TODO:=modify route
-            to={`/messaging-projects/${namespace}/${addressSpace}/standard/addresses`}
-            className="pf-c-nav__link"
-            id={`navlink-as-${addressSpace}`}
-          >
+          <Button variant="link" isInline onClick={navigateToAdressSpace}>
             {addressSpace}
-          </Link>{" "}
+          </Button>
           <br />
           <b className={css(styles.style_margin)}>Events address name</b>
-          {eventAddresses &&
-            eventAddresses.length > 0 &&
-            eventAddresses.map((address: string, index: number) => (
-              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
-                <Link
-                  //TODO:=modify route
-                  to={""}
-                  className="pf-c-nav__link"
-                  id={`navlink-gi-event-${address}`}
-                  key={`navlink-gi-event-${address}`}
-                >
-                  {address}
-                </Link>{" "}
-              </React.Fragment>
-            ))}
+          {eventAddress && (
+            <Button
+              variant="link"
+              onClick={() => navigateToAddress(eventAddress)}
+              isInline
+            >
+              {eventAddress}
+            </Button>
+          )}
           <br />
           <b className={css(styles.style_margin)}>Telemetry address name</b>
-          {telemetryAddresses &&
-            telemetryAddresses.length > 0 &&
-            telemetryAddresses.map((address: string, index: number) => (
-              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
-                <Link
-                  //TODO:=modify route
-                  to={""}
-                  className="pf-c-nav__link"
-                  id={`navlink-gi-telemetry-${address}`}
-                  key={`navlink-gi-telemetry-${address}`}
-                >
-                  {address}
-                </Link>{" "}
-              </React.Fragment>
-            ))}
+          {telemetryAddress && (
+            <Button
+              variant="link"
+              onClick={() => navigateToAddress(telemetryAddress)}
+              isInline
+            >
+              {telemetryAddress}
+            </Button>
+          )}
           <br />
           <b className={css(styles.style_margin)}>Command address name</b>
           {commandAddresses &&
             commandAddresses.length > 0 &&
             commandAddresses.map((address: string, index: number) => (
               <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
-                <Link
-                  //TODO:=modify route
-                  to={""}
-                  className="pf-c-nav__link"
-                  id={`navlink-gi-command-${address}`}
-                  key={`navlink-gi-command-${address}`}
+                <Button
+                  variant="link"
+                  isInline
+                  onClick={() => navigateToAddress(address)}
                 >
                   {address}
-                </Link>{" "}
+                </Button>{" "}
               </React.Fragment>
             ))}
           <br />

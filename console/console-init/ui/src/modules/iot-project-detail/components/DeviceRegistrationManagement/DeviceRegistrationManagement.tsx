@@ -143,10 +143,11 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
 
   const data = {
     device_registry: {
-      username: username,
-      password: password,
-      registrationApi: registrationApi,
-      credentialApi: credentialApi
+      // TODO: modify after integration
+      token: token,
+      endpoint: {
+        url: endpoiuntUrl
+      }
     }
   };
 
@@ -173,7 +174,10 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       </CardTitle>
       {isHidden ? (
         <CardBody>
-          <JsonEditor readOnly={true} value={JSON.stringify(data)} />
+          <JsonEditor
+            readOnly={true}
+            value={JSON.stringify(data, undefined, 2)}
+          />
         </CardBody>
       ) : (
         <CardBody>

@@ -675,6 +675,7 @@ const typeDefs = gql`
     ): Boolean
     deleteIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
     disableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+    enableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
   }
 
   #
