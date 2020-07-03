@@ -49,6 +49,14 @@ jobs:
       - name: Setup OLM
         run: ./.github/scripts/setup-olm.sh
 
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
       - name: Build
         run: ./.github/scripts/build.sh
 
@@ -79,11 +87,3 @@ jobs:
         with:
           name: smoke-test-logs
           path: test-logs.zip
-
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-
