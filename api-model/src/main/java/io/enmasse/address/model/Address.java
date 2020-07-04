@@ -10,6 +10,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressName;
@@ -35,6 +36,7 @@ import io.sundr.builder.annotations.Inline;
         )
 @DefaultCustomResource
 @SuppressWarnings("serial")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @AddressName
 public class Address extends AbstractHasMetadata<Address> {
 
