@@ -9,6 +9,7 @@ import java.util.Objects;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.enmasse.common.model.AbstractHasMetadata;
 import io.enmasse.common.model.DefaultCustomResource;
 import io.enmasse.model.validation.AddressSpaceName;
@@ -36,6 +37,7 @@ import io.sundr.builder.annotations.Inline;
 @SuppressWarnings("serial")
 @AddressSpaceName
 @KubeMetadataName
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AddressSpace extends AbstractHasMetadata<AddressSpace> {
 
     public static final String KIND = "AddressSpace";
