@@ -1,6 +1,4 @@
-FROM quay.io/enmasse/java-base:11-5
-
-RUN microdnf install which python gettext hostname iputils && microdnf clean all && mkdir -p /var/run/artemis/
+FROM centos:8
 
 ARG version
 ARG maven_version

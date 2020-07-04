@@ -3,7 +3,7 @@
 # License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
 #
 
-FROM quay.io/enmasse/fedora-minimal:31
+FROM scratch
 
 ARG version
 ARG revision
@@ -12,4 +12,4 @@ ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision} ENMAS
 
 ADD target/controller-manager-${maven_version}-dist.tar.gz /
 
-ENTRYPOINT /controller-manager
+ENTRYPOINT ["/controller-manager"]

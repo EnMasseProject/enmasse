@@ -5,7 +5,6 @@
 # makefiles.
 include ../Makefile.common
 
-PACKAGE_ANSIBLE_DIR=$(TOPDIR)/ansible
 BUILDDIR=build
 INSTALLNAME=enmasse-$(TAG)
 INSTALLDIR=$(BUILDDIR)/$(INSTALLNAME)
@@ -91,10 +90,6 @@ replace_images: prepare
 component_install: replace_images
 	cp -r $(BUILDDIR)/replaced/* $(PACKAGE_INSTALL_DIR)/components/
 
-ansible_install: component_install
-	cp -r $(PACKAGE_ANSIBLE_DIR) $(INSTALLDIR)/
-	$(LN) -srfT $(INSTALLDIR)/install/components $(INSTALLDIR)/ansible/playbooks/openshift/components
-
 scripts_install:
 	cp -r scripts $(INSTALLDIR)/
 
@@ -105,7 +100,7 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-install: ansible_install scripts_install component_install $(ENMASSE_BUNDLE)
+install: scripts_install component_install $(ENMASSE_BUNDLE)
 	@echo "Preparing installation bundle"
 
 package: prepare install

@@ -1,4 +1,0 @@
----
-dependencies:
-  - { role: project }
-  - { role: defaults }
