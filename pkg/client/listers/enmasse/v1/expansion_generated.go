@@ -23,6 +23,14 @@ type MessagingAddressPlanListerExpansion interface{}
 // MessagingAddressPlanNamespaceLister.
 type MessagingAddressPlanNamespaceListerExpansion interface{}
 
+// MessagingConsoleListerExpansion allows custom methods to be added to
+// MessagingConsoleLister.
+type MessagingConsoleListerExpansion interface{}
+
+// MessagingConsoleNamespaceListerExpansion allows custom methods to be added to
+// MessagingConsoleNamespaceLister.
+type MessagingConsoleNamespaceListerExpansion interface{}
+
 // MessagingEndpointListerExpansion allows custom methods to be added to
 // MessagingEndpointLister.
 type MessagingEndpointListerExpansion interface{}

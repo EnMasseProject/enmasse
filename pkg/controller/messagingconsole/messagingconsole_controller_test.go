@@ -3,32 +3,32 @@
 * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package consoleservice
+package messagingconsole
 
 import (
 	"fmt"
-	adminv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 	"testing"
 )
 
-func setup(t *testing.T, consoleservice *adminv1beta1.ConsoleService) *ReconcileConsoleService {
+func setup(t *testing.T, consoleservice *v1.MessagingConsole) *ReconcileMessagingConsole {
 	s := scheme.Scheme
-	s.AddKnownTypes(adminv1beta1.SchemeGroupVersion, consoleservice)
+	s.AddKnownTypes(v1.SchemeGroupVersion, consoleservice)
 	objs := []runtime.Object{
 		consoleservice,
 	}
 	cl := fake.NewFakeClient(objs...)
-	r := &ReconcileConsoleService{client: cl, scheme: s}
+	r := &ReconcileMessagingConsole{client: cl, scheme: s}
 	return r
 }
 
-func TestConsoleService(t *testing.T) {
-	//consoleservice := &adminv1beta1.ConsoleService{
+func TestMessagingConsole(t *testing.T) {
+	//consoleservice := &v1.MessagingConsole{
 	//	ObjectMeta: metav1.ObjectMeta{Namespace: "infra", Name: "myconsole"},
-	//	Spec: adminv1beta1.ConsoleServiceSpec{
+	//	Spec: v1.MessagingConsoleSpec{
 	//		CertificateSecret: &corev1.SecretReference{Name: "consoleserver-cert"},
 	//	},
 	//}

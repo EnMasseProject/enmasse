@@ -11,6 +11,8 @@ type MessagingAddressExpansion interface{}
 
 type MessagingAddressPlanExpansion interface{}
 
+type MessagingConsoleExpansion interface{}
+
 type MessagingEndpointExpansion interface{}
 
 type MessagingInfrastructureExpansion interface{}

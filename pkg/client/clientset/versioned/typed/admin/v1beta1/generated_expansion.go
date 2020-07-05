@@ -8,5 +8,3 @@
 package v1beta1
 
 type AuthenticationServiceExpansion interface{}
-
-type ConsoleServiceExpansion interface{}

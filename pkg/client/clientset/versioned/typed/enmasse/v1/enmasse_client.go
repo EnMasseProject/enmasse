@@ -17,6 +17,7 @@ type EnmasseV1Interface interface {
 	RESTClient() rest.Interface
 	MessagingAddressesGetter
 	MessagingAddressPlansGetter
+	MessagingConsolesGetter
 	MessagingEndpointsGetter
 	MessagingInfrastructuresGetter
 	MessagingPlansGetter
@@ -34,6 +35,10 @@ func (c *EnmasseV1Client) MessagingAddresses(namespace string) MessagingAddressI
 
 func (c *EnmasseV1Client) MessagingAddressPlans(namespace string) MessagingAddressPlanInterface {
 	return newMessagingAddressPlans(c, namespace)
+}
+
+func (c *EnmasseV1Client) MessagingConsoles(namespace string) MessagingConsoleInterface {
+	return newMessagingConsoles(c, namespace)
 }
 
 func (c *EnmasseV1Client) MessagingEndpoints(namespace string) MessagingEndpointInterface {

@@ -49,8 +49,6 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 	// Group=admin.enmasse.io, Version=v1beta1
 	case v1beta1.SchemeGroupVersion.WithResource("authenticationservices"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().AuthenticationServices().Informer()}, nil
-	case v1beta1.SchemeGroupVersion.WithResource("consoleservices"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Admin().V1beta1().ConsoleServices().Informer()}, nil
 
 		// Group=admin.enmasse.io, Version=v1beta2
 	case v1beta2.SchemeGroupVersion.WithResource("addressplans"):
@@ -63,6 +61,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingAddresses().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("messagingaddressplans"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingAddressPlans().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingconsoles"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingConsoles().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("messagingendpoints"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingEndpoints().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("messaginginfrastructures"):

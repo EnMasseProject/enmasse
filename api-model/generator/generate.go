@@ -43,6 +43,8 @@ type Schema struct {
 	MessagingPlanList           enmasseapi.MessagingPlanList
 	MessagingAddressPlan        enmasseapi.MessagingAddressPlan
 	MessagingAddressPlanList    enmasseapi.MessagingAddressPlanList
+	MessagingConsole            enmasseapi.MessagingConsole
+	MessagingConsoleList        enmasseapi.MessagingConsoleList
 }
 
 func main() {

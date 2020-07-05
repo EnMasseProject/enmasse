@@ -25,6 +25,10 @@ func (c *FakeEnmasseV1) MessagingAddressPlans(namespace string) v1.MessagingAddr
 	return &FakeMessagingAddressPlans{c, namespace}
 }
 
+func (c *FakeEnmasseV1) MessagingConsoles(namespace string) v1.MessagingConsoleInterface {
+	return &FakeMessagingConsoles{c, namespace}
+}
+
 func (c *FakeEnmasseV1) MessagingEndpoints(namespace string) v1.MessagingEndpointInterface {
 	return &FakeMessagingEndpoints{c, namespace}
 }

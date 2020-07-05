@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package consoleservice
+package messagingconsole
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	oauthv1 "github.com/openshift/api/oauth/v1"
@@ -46,7 +46,7 @@ import (
 
 const CONSOLE_NAME = "console"
 
-var log = logf.Log.WithName("controller_consoleservice")
+var log = logf.Log.WithName("controller_messagingconsole")
 
 var consoleLinkGVK = schema.GroupVersionKind{
 	Group:   "console.openshift.io",
@@ -71,27 +71,27 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
 
-func newReconciler(mgr manager.Manager) *ReconcileConsoleService {
-	return &ReconcileConsoleService{config: mgr.GetConfig(), client: mgr.GetClient(), reader: mgr.GetAPIReader(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
+func newReconciler(mgr manager.Manager) *ReconcileMessagingConsole {
+	return &ReconcileMessagingConsole{config: mgr.GetConfig(), client: mgr.GetClient(), reader: mgr.GetAPIReader(), scheme: mgr.GetScheme(), namespace: util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")}
 }
 
-func add(mgr manager.Manager, r *ReconcileConsoleService) error {
+func add(mgr manager.Manager, r *ReconcileMessagingConsole) error {
 
 	// Create a new controller
-	c, err := controller.New("consoleservice-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("messagingconsole-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource ConsoleService
-	err = c.Watch(&source.Kind{Type: &v1beta1.ConsoleService{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource MessagingConsole
+	err = c.Watch(&source.Kind{Type: &v1.MessagingConsole{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
 
 	err = c.Watch(&source.Kind{Type: &appsv1.Deployment{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1beta1.ConsoleService{},
+		OwnerType:    &v1.MessagingConsole{},
 	})
 	if err != nil {
 		return err
@@ -99,7 +99,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.Service{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1beta1.ConsoleService{},
+		OwnerType:    &v1.MessagingConsole{},
 	})
 	if err != nil {
 		return err
@@ -107,7 +107,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 
 	err = c.Watch(&source.Kind{Type: &corev1.ConfigMap{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &v1beta1.ConsoleService{},
+		OwnerType:    &v1.MessagingConsole{},
 	})
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 		// Changes to the secret or routes potentially need to be written to the oauthclient
 		err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &v1beta1.ConsoleService{},
+			OwnerType:    &v1.MessagingConsole{},
 		})
 		if err != nil {
 			return err
@@ -125,17 +125,17 @@ func add(mgr manager.Manager, r *ReconcileConsoleService) error {
 	}
 
 	// Currently we need a single instance of console called "console", ensure that it exists.
-	err = ensureSingletonConsoleService(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client, r.reader)
+	err = ensureSingletonMessagingConsole(context.TODO(), metav1.ObjectMeta{Namespace: r.namespace, Name: CONSOLE_NAME}, r.client, r.reader)
 	if err != nil {
-		log.Error(err, "Failed create singleton ConsoleService instance")
+		log.Error(err, "Failed create singleton MessagingConsole instance")
 	}
 
 	return nil
 }
 
-var _ reconcile.Reconciler = &ReconcileConsoleService{}
+var _ reconcile.Reconciler = &ReconcileMessagingConsole{}
 
-type ReconcileConsoleService struct {
+type ReconcileMessagingConsole struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	config    *rest.Config
@@ -148,30 +148,30 @@ type ReconcileConsoleService struct {
 // Reconcile by reading the console service spec and making required changes
 //
 // returning an error will get the request re-queued
-func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
-	reqLogger.Info("Reconciling ConsoleService")
+	reqLogger.Info("Reconciling MessagingConsole")
 
 	ctx := context.TODO()
-	consoleservice := &v1beta1.ConsoleService{}
+	consoleservice := &v1.MessagingConsole{}
 	err := r.reader.Get(ctx, request.NamespacedName, consoleservice)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
 			if CONSOLE_NAME == request.NamespacedName.Name {
-				err = ensureSingletonConsoleService(ctx, metav1.ObjectMeta{Namespace: request.NamespacedName.Namespace,
+				err = ensureSingletonMessagingConsole(ctx, metav1.ObjectMeta{Namespace: request.NamespacedName.Namespace,
 					Name: request.NamespacedName.Name}, r.client, r.reader)
 				return reconcile.Result{}, err
 			} else {
-				reqLogger.Info("ConsoleService resource not found. Ignoring since object must be deleted")
+				reqLogger.Info("MessagingConsole resource not found. Ignoring since object must be deleted")
 				return reconcile.Result{}, nil
 			}
 		}
 		// Error reading the object - requeue the request
-		reqLogger.Error(err, "Failed to get ConsoleService")
+		reqLogger.Error(err, "Failed to get MessagingConsole")
 		return reconcile.Result{}, err
 	}
 
-	rewritten, err := applyConsoleServiceDefaults(ctx, r.client, r.scheme, consoleservice)
+	rewritten, err := applyMessagingConsoleDefaults(ctx, r.client, r.scheme, consoleservice)
 	if err != nil || rewritten {
 		return reconcile.Result{}, err
 	}
@@ -179,7 +179,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	// Validate we have sufficient information to proceed with the deployment.  On OpenShift, the defaults
 	// will satisfy these requirements. On Kubernetes the user will have to supply the details.
 	if consoleservice.Spec.DiscoveryMetadataURL == nil || consoleservice.Spec.OauthClientSecret == nil {
-		reqLogger.Info("Cannot deploy console as ConsoleService does not define DiscoveryMetadataURL " +
+		reqLogger.Info("Cannot deploy console as MessagingConsole does not define DiscoveryMetadataURL " +
 			"and OauthClientSecret.")
 		return reconcile.Result{}, nil
 	} else {
@@ -194,7 +194,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 			err := r.client.Get(ctx, secretName, oauthsecret)
 			if err != nil {
 				if k8errors.IsNotFound(err) {
-					reqLogger.Info("Cannot deploy console as ConsoleService OauthClientSecret does not " +
+					reqLogger.Info("Cannot deploy console as MessagingConsole OauthClientSecret does not " +
 						"refer to a secret.")
 					return reconcile.Result{}, nil
 				} else {
@@ -257,7 +257,7 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	}
 	requeue = requeue || result.Requeue
 
-	result, err = r.updateService(ctx, consoleservice, func(status *v1beta1.ConsoleServiceStatus) error {
+	result, err = r.updateService(ctx, consoleservice, func(status *v1.MessagingConsoleStatus) error {
 
 		if route != nil && len(route.Status.Ingress) > 0 {
 			status.Host = route.Status.Ingress[0].Host
@@ -295,12 +295,12 @@ func (r *ReconcileConsoleService) Reconcile(request reconcile.Request) (reconcil
 	return reconcile.Result{Requeue: requeue}, err
 }
 
-type UpdateStatusFn func(status *v1beta1.ConsoleServiceStatus) error
+type UpdateStatusFn func(status *v1.MessagingConsoleStatus) error
 type UpdateDomainFn func() (*string, error)
 
-func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleservice *v1beta1.ConsoleService, updateFn UpdateStatusFn, fn UpdateDomainFn) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) updateService(ctx context.Context, consoleservice *v1.MessagingConsole, updateFn UpdateStatusFn, fn UpdateDomainFn) (reconcile.Result, error) {
 
-	newStatus := v1beta1.ConsoleServiceStatus{}
+	newStatus := v1.MessagingConsoleStatus{}
 	if err := updateFn(&newStatus); err != nil {
 		return reconcile.Result{}, err
 	}
@@ -327,7 +327,7 @@ func (r *ReconcileConsoleService) updateService(ctx context.Context, consoleserv
 	return reconcile.Result{}, nil
 }
 
-func applyConsoleServiceDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, consoleservice *v1beta1.ConsoleService) (bool, error) {
+func applyMessagingConsoleDefaults(ctx context.Context, client client.Client, scheme *runtime.Scheme, consoleservice *v1.MessagingConsole) (bool, error) {
 	var dirty = false
 
 	if consoleservice.Spec.CertificateSecret == nil {
@@ -429,7 +429,7 @@ func applyConsoleServiceDefaults(ctx context.Context, client client.Client, sche
 	return false, nil
 }
 
-func (r *ReconcileConsoleService) reconcileCabundleConfigMap(ctx context.Context, consoleService *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcileCabundleConfigMap(ctx context.Context, consoleService *v1.MessagingConsole) (reconcile.Result, error) {
 	if !util.IsOpenshift() {
 		return reconcile.Result{}, nil
 	}
@@ -454,7 +454,7 @@ func (r *ReconcileConsoleService) reconcileCabundleConfigMap(ctx context.Context
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileConsoleService) reconcileService(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcileService(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, error) {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: consoleservice.Namespace, Name: consoleservice.Name},
 	}
@@ -473,7 +473,7 @@ func (r *ReconcileConsoleService) reconcileService(ctx context.Context, consoles
 	return reconcile.Result{}, nil
 }
 
-func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Service) error {
+func applyService(consoleService *v1.MessagingConsole, service *corev1.Service) error {
 
 	install.ApplyServiceDefaults(service, "consoleservice", consoleService.Name)
 	service.Spec.Selector = install.CreateDefaultLabels(nil, "consoleservice", consoleService.Name)
@@ -499,7 +499,7 @@ func applyService(consoleService *v1beta1.ConsoleService, service *corev1.Servic
 	return nil
 }
 
-func (r *ReconcileConsoleService) reconcilePrometheusRule(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcilePrometheusRule(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, error) {
 
 	monitoringEnabled := util.GetBooleanEnv("ENABLE_MONITORING")
 
@@ -543,7 +543,7 @@ func (r *ReconcileConsoleService) reconcilePrometheusRule(ctx context.Context, c
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, *routev1.Route, error) {
+func (r *ReconcileMessagingConsole) reconcileRoute(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, *routev1.Route, error) {
 
 	if !util.IsOpenshift() {
 		// we have routes only in OpenShift
@@ -578,7 +578,7 @@ func (r *ReconcileConsoleService) reconcileRoute(ctx context.Context, consoleser
 	return reconcile.Result{}, route, nil
 }
 
-func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, caCertificate string) error {
+func applyRoute(consoleservice *v1.MessagingConsole, route *routev1.Route, caCertificate string) error {
 
 	install.ApplyDefaultLabels(&route.ObjectMeta, "consoleservice", consoleservice.Name)
 
@@ -602,7 +602,7 @@ func applyRoute(consoleservice *v1beta1.ConsoleService, route *routev1.Route, ca
 	return nil
 }
 
-func (r *ReconcileConsoleService) reconcileConsoleLink(ctx context.Context, consoleservice *v1beta1.ConsoleService, route *routev1.Route) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcileConsoleLink(ctx context.Context, consoleservice *v1.MessagingConsole, route *routev1.Route) (reconcile.Result, error) {
 
 	if !util.HasApi(consoleLinkGVK) {
 		return reconcile.Result{}, nil
@@ -672,7 +672,7 @@ func applyConsoleLink(consoleLink *unstructured.Unstructured, host string, name 
 	consoleLink.SetLabels(install.CreateDefaultLabels(consoleLink.GetLabels(), "console", name))
 }
 
-func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcileSsoCookieSecret(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, error) {
 	secretref := consoleservice.Spec.SsoCookieSecret
 
 	secret := &corev1.Secret{
@@ -699,7 +699,7 @@ func (r *ReconcileConsoleService) reconcileSsoCookieSecret(ctx context.Context, 
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, error) {
+func (r *ReconcileMessagingConsole) reconcileDeployment(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, error) {
 
 	key := client.ObjectKey{Namespace: consoleservice.Namespace, Name: getCustomCaConfigMapName(consoleservice)}
 	caBundle := &corev1.ConfigMap{}
@@ -732,7 +732,7 @@ func (r *ReconcileConsoleService) reconcileDeployment(ctx context.Context, conso
 	return reconcile.Result{}, nil
 }
 
-func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.Deployment, caBundleKeys []string) error {
+func applyDeployment(consoleservice *v1.MessagingConsole, deployment *appsv1.Deployment, caBundleKeys []string) error {
 
 	install.ApplyDeploymentDefaults(deployment, "consoleservice", consoleservice.Name)
 
@@ -960,11 +960,11 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	return nil
 }
 
-func getCustomCaConfigMapName(consoleservice *v1beta1.ConsoleService) string {
+func getCustomCaConfigMapName(consoleservice *v1.MessagingConsole) string {
 	return consoleservice.Name + "-trusted-ca-bundle"
 }
 
-func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1beta1.ConsoleService, path string) {
+func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1.MessagingConsole, path string) {
 	install.ApplyVolumeMountSimple(container, "apps", "/apps", false)
 	install.ApplyVolumeMountSimple(container, "console-tls", "/etc/tls/private", true)
 	if consoleservice.Spec.OauthClientSecret != nil {
@@ -1006,7 +1006,7 @@ func applyOauthProxyContainer(container *corev1.Container, consoleservice *v1bet
 	}
 }
 
-func (r *ReconcileConsoleService) reconcileOauthClient(ctx context.Context, consoleservice *v1beta1.ConsoleService) (reconcile.Result, []url.URL, error) {
+func (r *ReconcileMessagingConsole) reconcileOauthClient(ctx context.Context, consoleservice *v1.MessagingConsole) (reconcile.Result, []url.URL, error) {
 	if util.IsOpenshift() {
 
 		secretref := consoleservice.Spec.OauthClientSecret
@@ -1145,9 +1145,9 @@ func applySsoCookieSecret(secret *corev1.Secret) error {
 	return nil
 }
 
-func ensureSingletonConsoleService(ctx context.Context, objectMeta metav1.ObjectMeta, c client.Client, r client.Reader) error {
+func ensureSingletonMessagingConsole(ctx context.Context, objectMeta metav1.ObjectMeta, c client.Client, r client.Reader) error {
 
-	consoleservice := &v1beta1.ConsoleService{
+	consoleservice := &v1.MessagingConsole{
 		ObjectMeta: objectMeta,
 	}
 

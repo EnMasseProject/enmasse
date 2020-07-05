@@ -51,7 +51,7 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_MESSAGING_ENDPOINT
           value: "true"
-        - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
+        - name: CONTROLLER_ENABLE_MESSAGING_CONSOLE
           value: "false"
         - name: IOT_CONFIG_NAME
           value: "default"

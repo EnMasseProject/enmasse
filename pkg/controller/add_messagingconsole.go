@@ -6,7 +6,7 @@
 package controller
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/controller/consoleservice"
+	"github.com/enmasseproject/enmasse/pkg/controller/messagingconsole"
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
@@ -14,7 +14,7 @@ func init() {
 
 	// add ourselves to the list of controllers
 
-	if util.IsModuleEnabled("CONSOLE_SERVICE") {
-		AddToManagerFuncs = append(AddToManagerFuncs, consoleservice.Add)
+	if util.IsModuleEnabled("MESSAGING_CONSOLE") {
+		AddToManagerFuncs = append(AddToManagerFuncs, messagingconsole.Add)
 	}
 }
