@@ -55,6 +55,24 @@ public class MessagingClientRunner {
         sendAndReceive(endpoint, false, null, null, senderAddress, receiverAddresses);
     }
 
+    public void send(MessagingEndpoint endpoint, String address) throws Exception {
+        sendAndReceive(endpoint, address);
+    }
+
+    public void receive(MessagingEndpoint endpoint, String address) throws Exception {
+        Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
+        try (ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
+                .withClientEngine(new RheaClientReceiver())
+                    .withMessagingRoute(e)
+                    .withAddress(address)
+                    .withCount(10)
+                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                    .withTimeout(60)) {
+            clients.add(receiverClient);
+            assertTrue(receiverClient.run());
+        }
+    }
+
     /**
      * Send 10 messages on sender address, and receive 10 messages on each receiver address.
      */
