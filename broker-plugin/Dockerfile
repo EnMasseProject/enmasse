@@ -7,7 +7,6 @@ ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${vers
 
 ADD ./plugin/target/plugin-${maven_version}-dist.tar.gz /
 
-RUN chgrp -R 0 /opt/broker-plugin && \
-    chmod -R g=u /opt/broker-plugin
+RUN dnf install -y which python gettext hostname iputils && dnf clean all -y && chgrp -R 0 /opt/broker-plugin && chmod -R g=u /opt/broker-plugin
 
 CMD ["/opt/broker-plugin/bin/init-broker.sh"]
