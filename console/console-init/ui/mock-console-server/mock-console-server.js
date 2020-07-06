@@ -327,7 +327,7 @@ function createMessagingAddressPlan(name, displayName, shortDescription, longDes
 ];
 
 
-const availableAddressSpacePlans = [
+const availableMessagingProjectPlans = [
   {
     metadata: {
       name: "standard-small",
@@ -396,18 +396,18 @@ function getRandomCreationDate(floor) {
   return date;
 }
 
-function scheduleSetMessagingTenantStatus(messagingTenant, phase, message) {
+function scheduleSetMessagingProjectStatus(messagingProject, phase, message) {
   return new Promise(resolve => {
     setTimeout(() => {
-      if (!messagingTenant.status) {
-        messagingTenant.status = {};
+      if (!messagingProject.status) {
+        messagingProject.status = {};
       }
 
-      messagingTenant.status.message = message;
-      messagingTenant.status.phase = phase;
+      messagingProject.status.message = message;
+      messagingProject.status.phase = phase;
 
       if (phase !== "Active") {
-        scheduleSetMessagingTenantStatus(messagingTenant, "Active", "");
+        scheduleSetMessagingProjectStatus(messagingProject, "Active", "");
       } else {
         resolve();
       }
@@ -415,49 +415,49 @@ function scheduleSetMessagingTenantStatus(messagingTenant, phase, message) {
   });
 }
 
-function createMessagingTenant(tenant) {
+function createMessagingProject(project) {
   var namespace = availableNamespaces.find(
-    n => n.metadata.name === tenant.metadata.namespace
+    n => n.metadata.name === project.metadata.namespace
   );
   if (namespace === undefined) {
     var knownNamespaces = availableNamespaces.map(p => p.metadata.name);
-    throw `Unrecognised namespace '${tenant.metadata.namespace}', known ones are : ${knownNamespaces}`;
+    throw `Unrecognised namespace '${project.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
   /*
-  var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === as.spec.plan && as.spec.type === o.spec.messagingTenantType);
+  var spacePlan = availableMessagingProjectPlans.find(o => o.metadata.name === as.spec.plan && as.spec.type === o.spec.messagingProjectType);
   if (spacePlan === undefined) {
-    var knownPlansNames = availableAddressSpacePlans.filter(p => as.spec.type === p.spec.messagingTenantType).map(p => p.metadata.name);
+    var knownPlansNames = availableMessagingProjectPlans.filter(p => as.spec.type === p.spec.messagingProjectType).map(p => p.metadata.name);
     throw `Unrecognised address space plan '${as.spec.plan}', known plans for type '${as.spec.type}' are : ${knownPlansNames}`;
   }
   */
 
   if (
-    messagingTenants.find(
+    messagingProjects.find(
       existing =>
-        tenant.metadata.name === existing.metadata.name &&
-        tenant.metadata.namespace === existing.metadata.namespace
+        project.metadata.name === existing.metadata.name &&
+        project.metadata.namespace === existing.metadata.namespace
     ) !== undefined
   ) {
-    throw `Messaging tenant with name  '${tenant.metadata.name} already exists in namespace ${tenant.metadata.namespace}`;
+    throw `Messaging project with name  '${project.metadata.name} already exists in namespace ${project.metadata.namespace}`;
   }
 
   var phase = "Active";
   var message = "";
-  if (tenant.status && tenant.status.phase) {
-    phase = tenant.status.phase;
+  if (project.status && project.status.phase) {
+    phase = project.status.phase;
   }
   if (phase !== "Active") {
     message = "Not yet bound to infrastructure";
   }
 
-  var messagingTenant = {
+  var messagingProject = {
     metadata: {
-      name: tenant.metadata.name,
+      name: project.metadata.name,
       namespace: namespace.metadata.name,
       uid: uuidv1(),
-      creationTimestamp: tenant.metadata.creationTimestamp
-        ? tenant.metadata.creationTimestamp
+      creationTimestamp: project.metadata.creationTimestamp
+        ? project.metadata.creationTimestamp
         : getRandomCreationDate()
     },
     spec: {},
@@ -467,13 +467,13 @@ function createMessagingTenant(tenant) {
     }
   };
 
-  messagingTenants.push(messagingTenant);
-  active[messagingTenant.metadata] = scheduleSetMessagingTenantStatus(
-    messagingTenant,
+  messagingProjects.push(messagingProject);
+  active[messagingProject.metadata] = scheduleSetMessagingProjectStatus(
+    messagingProject,
     phase,
     message
   );
-  return messagingTenant.metadata;
+  return messagingProject.metadata;
 }
 
 function createDefaultEndpoints() {
@@ -505,10 +505,10 @@ function createDefaultEndpoints() {
   ];
 }
 
-function createEndpointStatuses(messagingTenant) {
+function createEndpointStatuses(messagingProject) {
   var endpointStatuses = [];
 
-  messagingTenant.spec.endpoints.forEach(e => {
+  messagingProject.spec.endpoints.forEach(e => {
     var endpointStatus = {
       name: e.name
     };
@@ -546,7 +546,7 @@ iuQC6VD1peb6Eby7JeDQjPrBmJnInuBNfLlDq0jgxZB/6kLfhug8dPc7v5TSPV9E
 37Bon8FHRQit5qZNw/AGSzcPXMUeBG3pUOCuAZ5/yU7X0fc=
 -----END CERTIFICATE-----`;
       if (e.certificate.provider === "selfsigned") {
-        messagingTenant.status.caCertificate = `-----BEGIN CERTIFICATE-----
+        messagingProject.status.caCertificate = `-----BEGIN CERTIFICATE-----
 MIIDZzCCAk+gAwIBAgIUdLEKQr2fin9g5ZI+Fr5GOyvWNtowDQYJKoZIhvcNAQEL
 BQAwQjELMAkGA1UEBhMCWFgxFTATBgNVBAcMDERlZmF1bHQgQ2l0eTEcMBoGA1UE
 CgwTRGVmYXVsdCBDb21wYW55IEx0ZDAgFw0yMDA1MjIwODQxNTJaGA8yMDUwMDcw
@@ -574,7 +574,7 @@ s5YkUqynapz1Meo=
       if (e.expose.type === "route") {
         endpointStatus.externalHost = e.expose.routeHost
           ? e.expose.routeHost
-          : `${e.name}-${messagingTenant.metadata.name}.${messagingTenant.metadata.namespace}.apps-crc.testing`;
+          : `${e.name}-${messagingProject.metadata.name}.${messagingProject.metadata.namespace}.apps-crc.testing`;
         endpointStatus.externalPorts = [
           { name: e.expose.routeServicePort, port: 443 }
         ];
@@ -588,7 +588,7 @@ s5YkUqynapz1Meo=
     }
 
     if (e.service) {
-      endpointStatus.serviceHost = `${e.service}-${messagingTenant.metadata.name}.${messagingTenant.metadata.namespace}.svc`;
+      endpointStatus.serviceHost = `${e.service}-${messagingProject.metadata.name}.${messagingProject.metadata.namespace}.svc`;
       endpointStatus.servicePorts = [
         { name: "amqps", port: 5671 },
         { name: "amqp", port: 5672 },
@@ -632,7 +632,7 @@ function makeMessagingEndpoints() {
   }
 
   var messagingEndpoints = [];
-  messagingTenants.forEach(as => {
+  messagingProjects.forEach(as => {
     var serviceAdded = false;
     as.spec.endpoints.forEach(ep => {
       var endpointStatus =
@@ -718,14 +718,14 @@ function makeMessagingEndpoints() {
   return messagingEndpoints;
 }
 
-function patchMessagingTenant(metadata, jsonPatch, patchType) {
-  var index = messagingTenants.findIndex(
+function patchMessagingProject(metadata, jsonPatch, patchType) {
+  var index = messagingProjects.findIndex(
     existing =>
       metadata.name === existing.metadata.name &&
       metadata.namespace === existing.metadata.namespace
   );
   if (index < 0) {
-    throw `Messaging tenant with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
+    throw `Messaging project with name  '${metadata.name}' in namespace ${metadata.namespace} does not exist`;
   }
 
   var knownPatchTypes = [
@@ -740,61 +740,61 @@ function patchMessagingTenant(metadata, jsonPatch, patchType) {
   }
 
   var patch = JSON.parse(jsonPatch);
-  var current = JSON.parse(JSON.stringify(messagingTenants[index]));
+  var current = JSON.parse(JSON.stringify(messagingProjects[index]));
   var patched = applyPatch(JSON.parse(JSON.stringify(current)), patch);
   if (patched.newDocument) {
     var replacement = patched.newDocument;
     /*
     if (!_.isEqual(replacement.spec.plan, current.spec.plan)) {
       var replacementPlan = typeof(replacement.spec.plan) === "string" ? replacement.spec.plan : replacement.metadata.name;
-      var spacePlan = availableAddressSpacePlans.find(o => o.metadata.name === replacementPlan);
+      var spacePlan = availableMessagingProjectPlans.find(o => o.metadata.name === replacementPlan);
       if (spacePlan === undefined) {
-        var knownPlansNames = availableAddressSpacePlans.map(p => p.metadata.name);
+        var knownPlansNames = availableMessagingProjectPlans.map(p => p.metadata.name);
         throw `Unrecognised address space plan '${replacementPlan}', known ones are : ${knownPlansNames}`;
       }
       replacement.spec.plan = spacePlan;
     }
     */
 
-    messagingTenants[index].spec = replacement.spec;
-    return messagingTenants[index];
+    messagingProjects[index].spec = replacement.spec;
+    return messagingProjects[index];
   } else {
-    throw `Failed to patch messaging tenant with name  '${metadata.name}' in namespace ${metadata.namespace}`;
+    throw `Failed to patch messaging project with name  '${metadata.name}' in namespace ${metadata.namespace}`;
   }
 }
 
-function deleteMessagingTenant(objectmeta) {
-  var index = messagingTenants.findIndex(
+function deleteMessagingProject(objectmeta) {
+  var index = messagingProjects.findIndex(
     existing =>
       objectmeta.name === existing.metadata.name &&
       objectmeta.namespace === existing.metadata.namespace
   );
   if (index < 0) {
-    throw `Messaging tenant with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
+    throw `Messaging project with name  '${objectmeta.name}' in namespace ${objectmeta.namespace} does not exist`;
   }
-  var tenant = messagingTenants[index];
-  delete messagingtenant_connection[tenant.metadata.uid];
+  var project = messagingProjects[index];
+  delete messagingproject_connection[project.metadata.uid];
 
-  messagingTenants.splice(index, 1);
+  messagingProjects.splice(index, 1);
 }
 
-var messagingTenants = [];
+var messagingProjects = [];
 
-createMessagingTenant({
+createMessagingProject({
   metadata: {
     name: "default",
     namespace: availableNamespaces[0].metadata.name
   },
   spec: {}
 });
-createMessagingTenant({
+createMessagingProject({
   metadata: {
     name: "default",
     namespace: availableNamespaces[1].metadata.name
   },
   spec: {}
 });
-createMessagingTenant({
+createMessagingProject({
   metadata: {
     name: "default",
     namespace: availableNamespaces[2].metadata.name
@@ -804,7 +804,7 @@ createMessagingTenant({
 var connections = [];
 
 var users = ["guest", "bob", "alice"];
-function createConnection(messagingTenant, hostname) {
+function createConnection(messagingProject, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
   var encrypted = port % 2 === 0;
@@ -827,13 +827,13 @@ function createConnection(messagingTenant, hostname) {
     metadata: {
       name: hostport,
       uid: uuidv1() + "",
-      namespace: messagingTenant.metadata.namespace,
+      namespace: messagingProject.metadata.namespace,
       creationTimestamp: getRandomCreationDate(
-        messagingTenant.metadata.creationTimestamp
+        messagingProject.metadata.creationTimestamp
       )
     },
     spec: {
-      messagingTenant: messagingTenant.metadata.name,
+      messagingProject: messagingProject.metadata.name,
       hostname: hostport,
       containerId: uuidv1() + "",
       protocol: encrypted ? "amqps" : "amqp",
@@ -868,11 +868,11 @@ connections = connections.concat(
     "rosetta",
     "yinghuo1",
     "pathfinder"
-  ].map(n => createConnection(messagingTenants[0], n))
+  ].map(n => createConnection(messagingProjects[0], n))
 );
 
 connections = connections.concat(
-  ["dragonfly"].map(n => createConnection(messagingTenants[1], n))
+  ["dragonfly"].map(n => createConnection(messagingProjects[1], n))
 );
 
 connections = connections.concat(
@@ -886,13 +886,13 @@ connections = connections.concat(
     "rosetta",
     "yinghuo1",
     "pathfinder"
-  ].map(n => createConnection(messagingTenants[2], n))
+  ].map(n => createConnection(messagingProjects[2], n))
 );
 
-var messagingtenant_connection = {};
-messagingTenants.forEach(tenant => {
-  messagingtenant_connection[tenant.metadata.uid] = connections.filter(
-    c => c.spec.namespace === tenant.metadata.namespace
+var messagingproject_connection = {};
+messagingProjects.forEach(project => {
+  messagingproject_connection[project.metadata.uid] = connections.filter(
+    c => c.spec.namespace === project.metadata.namespace
   );
 });
 
@@ -910,14 +910,14 @@ function scheduleSetAddressStatus(address, phase, message) {
   }, stateChangeTimeout);
 }
 
-function defaultResourceNameFromAddress(address, messagingTenantName) {
+function defaultResourceNameFromAddress(address, messagingProjectName) {
   var clean = address.toLowerCase();
-  var maxLength = 253 - messagingTenantName.length - 1;
+  var maxLength = 253 - messagingProjectName.length - 1;
   if (
     /^[a-z0-9][-a-z0-9_.]*[a-z0-9]$/.test(clean) &&
-    messagingTenantName.length < maxLength
+    messagingProjectName.length < maxLength
   ) {
-    return messagingTenantName + "." + clean;
+    return messagingProjectName + "." + clean;
   } else {
     clean = clean.replace(/[^-a-z0-9_.]/g, "");
     if (
@@ -933,13 +933,13 @@ function defaultResourceNameFromAddress(address, messagingTenantName) {
     )
       clean = clean.substring(0, clean.length - 1);
     var uid = "" + uuidv1();
-    maxLength = 253 - messagingTenantName.length - uid.length - 2;
+    maxLength = 253 - messagingProjectName.length - uid.length - 2;
     if (clean.length > maxLength) clean = clean.substring(0, maxLength);
-    return messagingTenantName + "." + clean + "." + uid;
+    return messagingProjectName + "." + clean + "." + uid;
   }
 }
 
-function createAddress(addr, messagingTenantName) {
+function createAddress(addr, messagingProjectName) {
   var namespace = availableNamespaces.find(
     n => n.metadata.name === addr.metadata.namespace
   );
@@ -948,31 +948,31 @@ function createAddress(addr, messagingTenantName) {
     throw `Unrecognised namespace '${addr.metadata.namespace}', known ones are : ${knownNamespaces}`;
   }
 
-  var messagingTenantsInNamespace = messagingTenants.filter(
+  var messagingProjectsInNamespace = messagingProjects.filter(
     as => as.metadata.namespace === addr.metadata.namespace
   );
   if (addr.metadata.name) {
-    messagingTenantName = addr.metadata.namespace;
+    messagingProjectName = addr.metadata.namespace;
   } else if (addr.spec.address) {
-    if (!messagingTenantName) {
-      throw `messagingTenant is not provided, cannot default resource name from address '${addr.spec.address}'`;
+    if (!messagingProjectName) {
+      throw `messagingProject is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
     addr.metadata.name = defaultResourceNameFromAddress(
       addr.spec.address,
-      messagingTenantName
+      messagingProjectName
     );
   } else {
     throw `address is undefined, cannot default resource name`;
   }
 
-  var messagingTenant = messagingTenantsInNamespace.find(
-    as => as.metadata.namespace === messagingTenantName
+  var messagingProject = messagingProjectsInNamespace.find(
+    as => as.metadata.namespace === messagingProjectName
   );
-  if (messagingTenant === undefined) {
-    var addressspacenames = messagingTenantsInNamespace.map(
+  if (messagingProject === undefined) {
+    var addressspacenames = messagingProjectsInNamespace.map(
       p => p.metadata.Namespace
     );
-    throw `Unrecognised address space '${messagingTenantName}', known ones are : ${addressspacenames}`;
+    throw `Unrecognised address space '${messagingProjectName}', known ones are : ${addressspacenames}`;
   }
 
   /*
@@ -997,7 +997,7 @@ function createAddress(addr, messagingTenantName) {
   if (addr.spec.subscription !== undefined) {
     var topics = addresses.filter(
       a =>
-        a.metadata.name.startsWith(messagingTenantName) &&
+        a.metadata.name.startsWith(messagingProjectName) &&
         a.spec.topic !== undefined
     );
     if (!addr.spec.subscription.topic) {
@@ -1023,7 +1023,7 @@ function createAddress(addr, messagingTenantName) {
         addr.metadata.namespace === existing.metadata.namespace
     ) !== undefined
   ) {
-    throw `Address with name  '${addr.metadata.name} already exists in address space ${messagingTenantName}`;
+    throw `Address with name  '${addr.metadata.name} already exists in address space ${messagingProjectName}`;
   }
 
   var phase = "Active";
@@ -1037,7 +1037,7 @@ function createAddress(addr, messagingTenantName) {
 
   /*
   var planStatus = null;
-  if (messagingTenant.spec.type === "standard") {
+  if (messagingProject.spec.type === "standard") {
     planStatus = {
       name: plan.metadata.name,
       partitions: 1
@@ -1056,7 +1056,7 @@ function createAddress(addr, messagingTenantName) {
     },
     spec: addr.spec,
     //    address: addr.spec.address,
-    // messagingTenant: addr.spec.messagingTenant,
+    // messagingProject: addr.spec.messagingProject,
     // plan: plan,
     //   type: addr.spec.type,
     //   topic: addr.spec.topic
@@ -1164,9 +1164,9 @@ function closeConnection(objectmeta) {
   }
   var targetCon = connections[index];
 
-  var messagingTenantName = connections[index].spec.messagingTenant;
-  var as = messagingTenants.find(
-    as => as.metadata.name === messagingTenantName
+  var messagingProjectName = connections[index].spec.messagingProject;
+  var as = messagingProjects.find(
+    as => as.metadata.name === messagingProjectName
   );
 
   var as_cons = addressspace_connection[as.metadata.uid];
@@ -1192,12 +1192,12 @@ function closeConnection(objectmeta) {
 ].map(n =>
   createAddress({
     metadata: {
-      name: messagingTenants[0].metadata.name + "." + n,
-      namespace: messagingTenants[0].metadata.namespace
+      name: messagingProjects[0].metadata.name + "." + n,
+      namespace: messagingProjects[0].metadata.namespace
     },
     spec: {
       address: n,
-      messagingTenant: messagingTenants[0].metadata.name,
+      messagingProject: messagingProjects[0].metadata.name,
       plan: "standard-small-queue",
       type: "queue"
     },
@@ -1211,15 +1211,15 @@ function closeConnection(objectmeta) {
   })
 );
 
-function createTopicWithSub(messagingTenant, topicName) {
+function createTopicWithSub(messagingProject, topicName) {
   createAddress({
     metadata: {
-      name: messagingTenant.metadata.name + "." + topicName,
-      namespace: messagingTenant.metadata.namespace
+      name: messagingProject.metadata.name + "." + topicName,
+      namespace: messagingProject.metadata.namespace
     },
     spec: {
       address: topicName,
-      messagingTenant: messagingTenant.metadata.name,
+      messagingProject: messagingProject.metadata.name,
       plan: "standard-small-topic",
       type: "topic"
     },
@@ -1234,12 +1234,12 @@ function createTopicWithSub(messagingTenant, topicName) {
   var subname = topicName + "-sub";
   createAddress({
     metadata: {
-      name: messagingTenants[0].metadata.name + "." + subname,
-      namespace: messagingTenant.metadata.namespace
+      name: messagingProjects[0].metadata.name + "." + subname,
+      namespace: messagingProject.metadata.namespace
     },
     spec: {
       address: subname,
-      messagingTenant: messagingTenant.metadata.name,
+      messagingProject: messagingProject.metadata.name,
       plan: "standard-small-subscription",
       type: "subscription",
       topic: topicName
@@ -1255,17 +1255,17 @@ function createTopicWithSub(messagingTenant, topicName) {
 }
 
 // Topic with a subscription
-["themisto"].map(n => createTopicWithSub(messagingTenants[0], n));
+["themisto"].map(n => createTopicWithSub(messagingProjects[0], n));
 
 ["titan", "rhea", "iapetus", "dione", "tethys", "enceladus", "mimas"].map(n =>
   createAddress({
     metadata: {
       name: n,
-      namespace: messagingTenants[1].metadata.namespace
+      namespace: messagingProjects[1].metadata.namespace
     },
     spec: {
       address: n,
-      messagingTenant: messagingTenants[1].metadata.name,
+      messagingProject: messagingProjects[1].metadata.name,
       plan: "standard-small-queue",
       type: "queue"
     }
@@ -1275,12 +1275,12 @@ function createTopicWithSub(messagingTenant, topicName) {
 ["phobos", "deimous"].map(n =>
   createAddress({
     metadata: {
-      name: messagingTenants[2].metadata.name + "." + n,
-      namespace: messagingTenants[2].metadata.namespace
+      name: messagingProjects[2].metadata.name + "." + n,
+      namespace: messagingProjects[2].metadata.namespace
     },
     spec: {
       address: n,
-      messagingTenant: messagingTenants[2].metadata.name,
+      messagingProject: messagingProjects[2].metadata.name,
       plan: "brokered-queue",
       type: "queue"
     }
@@ -1301,7 +1301,7 @@ function* makeAddrIter(namespace, addressspace) {
 }
 
 var addressItrs = {};
-messagingTenants.forEach(as => {
+messagingProjects.forEach(as => {
   addressItrs[as.metadata.uid] = makeAddrIter(
     as.metadata.namespace,
     as.metadata.name
@@ -1310,11 +1310,11 @@ messagingTenants.forEach(as => {
 
 var links = [];
 connections.forEach(c => {
-  var messagingTenantName = c.spec.messagingTenant;
-  var messagingTenant = messagingTenants.find(
-    as => as.metadata.name === messagingTenantName
+  var messagingProjectName = c.spec.messagingProject;
+  var messagingProject = messagingProjects.find(
+    as => as.metadata.name === messagingProjectName
   );
-  var uid = messagingTenant.metadata.uid;
+  var uid = messagingProject.metadata.uid;
   var addr = addressItrs[uid].next().value;
 
   for (var i = 0; i < addr.metadata.name.length; i++) {
@@ -1426,9 +1426,9 @@ function makeMockLinkMetrics(is_addr_query, link) {
       }
     ];
   } else {
-    var messagingTenantName = link.spec.connection.spec.messagingTenant;
-    var as = messagingTenants.find(
-      as => as.metadata.name === messagingTenantName
+    var messagingProjectName = link.spec.connection.spec.messagingProject;
+    var as = messagingProjects.find(
+      as => as.metadata.name === messagingProjectName
     );
     if (as.spec.type === "brokered") {
       return [
@@ -1488,7 +1488,7 @@ function makeMockLinkMetrics(is_addr_query, link) {
   }
 }
 
-function makeAddressSpaceMetrics(as) {
+function makeMessagingProjectMetrics(as) {
   var cons =
     as.metadata.uid in addressspace_connection
       ? addressspace_connection[as.metadata.uid]
@@ -1515,43 +1515,40 @@ function makeAddressSpaceMetrics(as) {
   ];
 }
 
-function addressCommand(addr, messagingTenantName) {
+function addressCommand(addr, messagingProjectName) {
   if (addr.metadata.name) {
     // pass
   } else if (addr.spec.address) {
-    if (!messagingTenantName) {
-      throw `messagingTenant is not provided, cannot default resource name from address '${addr.spec.address}'`;
+    if (!messagingProjectName) {
+      throw `messagingProject is not provided, cannot default resource name from address '${addr.spec.address}'`;
     }
     addr.metadata.name = defaultResourceNameFromAddress(
       addr.spec.address,
-      messagingTenantName
+      messagingProjectName
     );
   } else {
     throw `address is undefined, cannot default resource name`;
   }
 
-  return `apiVersion: enmasse.io/v1beta1
+  return `apiVersion: enmasse.io/v1
 oc apply -f - << EOF
-kind: Address
+kind: MessagingAddress
 metadata:
   name: ${addr.metadata.name}
 spec:
   address: ${addr.spec.address}
-  type: ${addr.spec.type}
-  plan: ${addr.spec.plan}
+  queue: ${addr.spec.queue}
 EOF
 `;
 }
 
-function messagingTenantCommand(as) {
-  return `apiVersion: enmasse.io/v1beta1
+function messagingProjectCommand(as) {
+  return `apiVersion: enmasse.io/v1
 oc apply -f - << EOF
-kind: AddressSpace
+kind: MessagingProject
 metadata:
   name: ${as.metadata.name}
-spec:
-  type: ${as.spec.type}
-  plan: ${as.spec.plan}
+spec: {}
 EOF
 `;
 }
@@ -1559,23 +1556,23 @@ EOF
 // A map of functions which return data for the schema.
 const resolvers = {
   Mutation: {
-    createAddressSpace: (parent, args) => {
-      return createAddressSpace(init(args.input));
+    createMessagingProject: (parent, args) => {
+      return createMessagingProject(init(args.input));
     },
-    patchAddressSpace: (parent, args) => {
-      patchAddressSpace(args.input, args.jsonPatch, args.patchType);
+    patchMessagingProject: (parent, args) => {
+      patchMessagingProject(args.input, args.jsonPatch, args.patchType);
       return true;
     },
-    deleteAddressSpace: (parent, args) => {
-      deleteAddressSpace(args.input);
+    deleteMessagingProject: (parent, args) => {
+      deleteMessagingProject(args.input);
       return true;
     },
-    deleteAddressSpaces: (parent, args) => {
-      runOperationForAll(args.input, t => deleteAddressSpace(t));
+    deleteMessagingProjects: (parent, args) => {
+      runOperationForAll(args.input, t => deleteMessagingProject(t));
       return true;
     },
     createAddress: (parent, args) => {
-      return createAddress(init(args.input), args.messagingTenant);
+      return createAddress(init(args.input), args.messagingProject);
     },
     patchAddress: (parent, args) => {
       patchAddress(args.input, args.jsonPatch, args.patchType);
@@ -1589,10 +1586,6 @@ const resolvers = {
       runOperationForAll(args.input, t => deleteAddress(t));
       return true;
     },
-    purgeAddress: (parent, args) => {
-      purgeAddress(args.input);
-      return true;
-    },
     purgeAddresses: (parent, args) => {
       runOperationForAll(args.input, t => purgeAddress(t));
       return true;
@@ -1603,8 +1596,6 @@ const resolvers = {
     }
   },
   Query: {
-    hello: () => "world",
-
     messagingCertificateChain: () => `-----BEGIN CERTIFICATE-----
 MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
 A1UEChMGR251VExTMSUwIwYDVQQLExxHbnVUTFMgY2VydGlmaWNhdGUgYXV0aG9y
@@ -1620,28 +1611,18 @@ SM49BAMCA0gAMEUCIDGuwD1KPyG+hRf88MeyMQcqOFZD0TbVleF+UsAGQ4enAiEA
 l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 -----END CERTIFICATE-----`,
 
-    messagingTenantCommand: (parent, args, context, info) => {
+    messagingProjectCommand: (parent, args, context, info) => {
       var as = args.input;
-      return messagingTenantCommand(as);
+      return messagingProjectCommand(as);
     },
 
     addressCommand: (parent, args, context, info) => {
       var addr = args.input;
-      var messagingTenantName = args.messagingTenant;
-      return addressCommand(addr, messagingTenantName);
+      var messagingProjectName = args.messagingProject;
+      return addressCommand(addr, messagingProjectName);
     },
 
     namespaces: () => availableNamespaces,
-
-    authenticationServices: () => availableAuthenticationServices,
-    messagingTenantSchema: () => availableAddressSpaceSchemas,
-    messagingTenantSchema_v2: (parent, args, context, info) => {
-      return availableAddressSpaceSchemas.filter(
-        o =>
-          args.messagingTenantType === undefined ||
-          o.metadata.name === args.messagingTenantType
-      );
-    },
 
     addressTypes: () => [
       "queue",
@@ -1650,58 +1631,19 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       "multicast",
       "anycast"
     ],
-    addressTypes_v2: (parent, args, context, info) => {
-      return availableAddressTypes
-        .filter(
-          o =>
-            args.messagingTenantType === undefined ||
-            o.spec.messagingTenantType === args.messagingTenantType
-        )
-        .sort(o => o.spec.displayOrder);
+    messagingPlans: (parent, args, context, info) => {
+      return availableMessagingPlans.sort(o => o.spec.displayOrder);
     },
-    messagingTenantTypes: () => ["standard", "brokered"],
-    messagingTenantTypes_v2: (parent, args, context, info) => {
-      return availableAddressSpaceTypes.sort(o => o.spec.displayOrder);
+    messagingAddressPlans: (parent, args, context, info) => {
+      return availableAddressPlans.sort(o => o.spec.displayOrder);
     },
-    messagingTenantPlans: (parent, args, context, info) => {
-      return availableAddressSpacePlans
-        .filter(
-          o =>
-            args.messagingTenantType === undefined ||
-            o.spec.messagingTenantType === args.messagingTenantType
-        )
-        .sort(o => o.spec.displayOrder);
-    },
-    addressPlans: (parent, args, context, info) => {
-      var plans = availableAddressPlans;
-      if (args.messagingTenantPlan) {
-        var spacePlan = availableAddressSpacePlans.find(
-          o => o.metadata.name === args.messagingTenantPlan
-        );
-        if (spacePlan === undefined) {
-          var knownPlansNames = availableAddressSpacePlans.map(
-            p => p.metadata.name
-          );
-          throw `Unrecognised address space plan '${args.messagingTenantPlan}', known ones are : ${knownPlansNames}`;
-        }
-        plans = spacePlan.spec.addressPlans;
-      }
-
-      return plans
-        .filter(
-          p =>
-            args.addressType === undefined ||
-            p.spec.addressType === args.addressType
-        )
-        .sort(o => o.spec.displayOrder);
-    },
-    messagingTenants: (parent, args, context, info) => {
+    messagingProjects: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
-      var copy = clone(messagingTenants);
+      var copy = clone(messagingProjects);
       copy.forEach(as => {
-        as.metrics = makeAddressSpaceMetrics(as);
+        as.metrics = makeMessagingProjectMetrics(as);
       });
       var as = copy.filter(as => filterer.evaluate(as)).sort(orderBy);
       var paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
@@ -1709,7 +1651,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       return {
         total: as.length,
-        messagingTenants: page
+        messagingProjects: page
       };
     },
     addresses: (parent, args, context, info) => {
@@ -1776,7 +1718,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     }
   },
 
-  AddressSpace_consoleapi_enmasse_io_v1beta1: {
+  MessagingProject_consoleapi_enmasse_io_v1: {
     connections: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
@@ -1829,7 +1771,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       return { total: addrs.length, addresses: page };
     }
   },
-  Address_consoleapi_enmasse_io_v1beta1: {
+  Address_consoleapi_enmasse_io_v1: {
     links: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
@@ -1840,7 +1782,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
           l =>
             l.spec.connection.metadata.namespace === addr.metadata.namespace &&
             addr.metadata.name.startsWith(
-              l.spec.connection.spec.messagingTenant + "."
+              l.spec.connection.spec.messagingProject + "."
             )
         )
       );
@@ -1865,7 +1807,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       };
     }
   },
-  Connection_consoleapi_enmasse_io_v1beta1: {
+  Connection_consoleapi_enmasse_io_v1: {
     links: (parent, args, context, info) => {
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
@@ -1895,16 +1837,16 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       };
     }
   },
-  ConnectionSpec_consoleapi_enmasse_io_v1beta1: {
-    messagingTenant: (parent, args, context, info) => {
-      var as = messagingTenants.find(
-        as => as.metadata.name === parent.AddressSpace
+  ConnectionSpec_consoleapi_enmasse_io_v1: {
+    messagingProject: (parent, args, context, info) => {
+      var as = messagingProjects.find(
+        as => as.metadata.name === parent.MessagingProject
       );
       return as;
     }
   },
 
-  Link_consoleapi_enmasse_io_v1beta1: {},
+  Link_consoleapi_enmasse_io_v1: {},
   ObjectMeta_v1: {
     creationTimestamp: (parent, args, context, info) => {
       var meta = parent;
@@ -1967,9 +1909,9 @@ if (require.main === module) {
 }
 
 module.exports.createAddress = createAddress;
-module.exports.createAddressSpace = createAddressSpace;
+module.exports.createMessagingProject = createMessagingProject;
 module.exports.patchAddress = patchAddress;
-module.exports.patchAddressSpace = patchAddressSpace;
+module.exports.patchMessagingProject = patchMessagingProject;
 module.exports.addressCommand = addressCommand;
 module.exports.whenActive = whenActive;
 module.exports.setStateChangeTimeout = setStateChangeTimeout;

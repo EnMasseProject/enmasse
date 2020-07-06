@@ -92,6 +92,12 @@ const typeDefs = gql`
     encrypted: Boolean!
     properties: [KeyValue!]!
     principal: String!
+    messagingProject(
+      first: Int
+      offset: Int
+      filter: String
+      orderBy: String
+    ): MessagingProjectQueryResult_consoleapi_enmasse_io_v1
   }
 
   type Link_consoleapi_enmasse_io_v1 {
@@ -110,9 +116,9 @@ const typeDefs = gql`
   #  Types used to facilitate the paginated model queries
   #
 
-  type MessagingTenantQueryResult_consoleapi_enmasse_io_v1 {
+  type MessagingProjectQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
-    messagingTenants: [MessagingTenant_consoleapi_enmasse_io_v1!]!
+    messagingProjects: [MessagingProject_consoleapi_enmasse_io_v1!]!
   }
 
   type AddressQueryResult_consoleapi_enmasse_io_v1 {
@@ -143,10 +149,10 @@ const typeDefs = gql`
   # done below for the address.spec.plan and type fields.
   #
 
-  type MessagingTenant_consoleapi_enmasse_io_v1 {
+  type MessagingProject_consoleapi_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: MessagingTenantSpec_enmasse_io_v1!
-    status: MessagingTenantStatus_enmasse_io_v1
+    spec: MessagingProjectSpec_enmasse_io_v1!
+    status: MessagingProjectStatus_enmasse_io_v1
     connections(
       first: Int
       offset: Int
@@ -162,8 +168,16 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1!]
   }
 
-  type MessagingTenantSpec_enmasse_io_v1 {
-    capabilities: [MessagingTenantCapability]
+  type MessagingPlan_consoleapi_enmasse_io_v1 {
+    metadata: ObjectMeta_v1!
+  }
+
+  type MessagingAddressPlan_consoleapi_enmasse_io_v1 {
+    metadata: ObjectMeta_v1!
+  }
+
+  type MessagingProjectSpec_enmasse_io_v1 {
+    capabilities: [MessagingProjectCapability]
   }
 
   type MessagingEndpoint_enmasse_io_v1 {
@@ -192,7 +206,7 @@ const typeDefs = gql`
     port: Int!
   }
 
-  type MessagingTenantStatus_enmasse_io_v1 {
+  type MessagingProjectStatus_enmasse_io_v1 {
     message: String!
     phase: String!
   }
@@ -255,27 +269,34 @@ const typeDefs = gql`
   }
 
   type Query {
+    "Returns the address types defined by the system"
+    addressTypes: [AddressType!]!
+
     # "Returns the address spaces plans defined by the system optionally filtering for plans available for a given namespace"
-    # messagingPlans(namespace: String): [MessagingPlan_enmasse_io_v1!]!
+    messagingPlans(
+      namespace: String
+    ): [MessagingPlan_consoleapi_enmasse_io_v1!]!
 
     # "Returns the address plans defined by the system optionally filtering those for a matching namespaec"
-    # messagingAddressPlans(namespace: String): [MessagingAddressPlan_enmasse_io_v1!]!
+    messagingAddressPlans(
+      namespace: String
+    ): [MessagingAddressPlan_consoleapi_enmasse_io_v1!]!
 
     "Returns the current logged on user"
     whoami: User_v1!
     "Returns the namespaces visible to this user"
     namespaces: [Namespace_v1!]!
 
-    "Returns the messaging tenants visible to this user,  optionally filtering"
-    messagingTenants(
+    "Returns the messaging projects visible to this user,  optionally filtering"
+    messagingProjects(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): MessagingTenantQueryResult_consoleapi_enmasse_io_v1
+    ): MessagingProjectQueryResult_consoleapi_enmasse_io_v1
 
     "Returns the addresses visible to this user,  optionally filtering"
-    messagingAddresses(
+    addresses(
       first: Int
       offset: Int
       filter: String
@@ -294,10 +315,12 @@ const typeDefs = gql`
     messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
 
     "Returns the command-line that, if executed, would create the given address space"
-    messagingTenantCommand(input: MessagingTenant_enmasse_io_v1_Input!): String!
+    messagingProjectCommand(
+      input: MessagingProject_enmasse_io_v1_Input!
+    ): String!
 
     "Returns the command-line command, if executed, would create the given address."
-    messagingAddressCommand(input: Address_enmasse_io_v1_Input!): String!
+    addressCommand(input: Address_enmasse_io_v1_Input!): String!
 
     "Returns the messaging endpoints for the given address space"
     messagingEndpoints(
@@ -318,17 +341,17 @@ const typeDefs = gql`
     resourceVersion: String
   }
 
-  input MessagingTenantSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingTenantCapability]
+  input MessagingProjectSpec_enmasse_io_v1_Input {
+    capabilities: [MessagingProjectCapability]
   }
 
-  enum MessagingTenantCapability {
+  enum MessagingProjectCapability {
     transactional
   }
 
-  input MessagingTenant_enmasse_io_v1_Input {
+  input MessagingProject_enmasse_io_v1_Input {
     metadata: ObjectMeta_v1_Input
-    spec: MessagingTenantSpec_enmasse_io_v1_Input
+    spec: MessagingProjectSpec_enmasse_io_v1_Input
   }
 
   input AddressSpec_enmasse_io_v1_Input {
@@ -342,17 +365,17 @@ const typeDefs = gql`
   }
 
   type Mutation {
-    createMessagingTenant(
-      input: MessagingTenant_enmasse_io_v1_Input!
+    createMessagingProject(
+      input: MessagingProject_enmasse_io_v1_Input!
     ): ObjectMeta_v1!
-    patchMessagingTenant(
+    patchMessagingProject(
       input: ObjectMeta_v1_Input!
       jsonPatch: String!
       patchType: String!
     ): Boolean
-    deleteMessagingTenant(input: ObjectMeta_v1_Input!): Boolean @deprecated
-    "deletes messagingtenants (s)"
-    deleteMessagingTenants(input: [ObjectMeta_v1_Input!]!): Boolean
+    deleteMessagingProject(input: ObjectMeta_v1_Input!): Boolean @deprecated
+    "deletes messagingprojects (s)"
+    deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
     createAddress(
       input: Address_enmasse_io_v1_Input!
