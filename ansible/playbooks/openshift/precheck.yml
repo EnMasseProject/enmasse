@@ -1,4 +1,0 @@
-- name: "Upgrade precheck"
-  hosts: enmasse
-  roles:
-    - upgrade_precheck

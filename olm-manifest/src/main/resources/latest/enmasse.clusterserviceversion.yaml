@@ -19,141 +19,57 @@ metadata:
     alm-examples: |-
       [
         {
-          "apiVersion": "admin.enmasse.io/v1beta1",
-          "kind": "StandardInfraConfig",
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingInfrastructure",
           "metadata": {
             "name": "default"
           },
-          "spec": {
-            "broker": {
-              "resources": {
-                "memory": "1Gi",
-                "storage": "5Gi"
-              },
-              "addressFullPolicy": "FAIL"
-            },
-            "router": {
-              "linkCapacity": 50,
-              "resources": {
-                "memory": "512Mi"
-              }
-            }
-          }
+          "spec": {}
         },
         {
-          "apiVersion": "admin.enmasse.io/v1beta1",
-          "kind": "BrokeredInfraConfig",
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingTenant",
           "metadata": {
             "name": "default"
           },
+          "spec": {}
+        },
+        {
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingEndpoint",
+          "metadata": {
+            "name": "on-cluster"
+          },
           "spec": {
-            "broker": {
-              "resources": {
-                "memory": "4Gi"
-              }
-            }
+            "cluster": {},
+            "protocols": ["AMQP"]
           }
         },
         {
-          "apiVersion": "admin.enmasse.io/v1beta2",
-          "kind": "AddressPlan",
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingAddress",
           "metadata": {
-            "name": "standard-small-queue"
+            "name": "myqueue"
           },
           "spec": {
-            "addressType": "queue",
-            "shortDescription": "Small Queue",
-            "resources": {
-              "router": 0.01,
-              "broker": 0.1
-            }
+            "queue": {}
           }
         },
         {
-          "apiVersion": "admin.enmasse.io/v1beta2",
-          "kind": "AddressSpacePlan",
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingPlan",
           "metadata": {
-            "name": "standard-small"
+            "name": "plan"
           },
-          "spec": {
-            "addressSpaceType": "standard",
-            "infraConfigRef": "default",
-            "shortDescription": "Small Address Space Plan",
-            "resourceLimits": {
-              "router": 1.0,
-              "broker": 2.0,
-              "aggregate": 2.0
-            },
-            "addressPlans": [
-              "standard-small-queue"
-            ]
-          }
+          "spec": {}
         },
         {
-          "apiVersion": "admin.enmasse.io/v1beta1",
-          "kind": "AuthenticationService",
+          "apiVersion": "enmasse.io/v1",
+          "kind": "MessagingAddressPlan",
           "metadata": {
-            "name": "standard-authservice"
+            "name": "plan"
           },
-          "spec": {
-            "type": "standard",
-            "standard": {
-              "storage": {
-                "claimName": "standard-authservice",
-                "deleteClaim": true,
-                "size": "1Gi",
-                "type": "persistent-claim"
-              }
-            }
-          }
-        },
-        {
-          "apiVersion": "enmasse.io/v1beta1",
-          "kind": "AddressSpace",
-          "metadata": {
-            "name": "myspace"
-          },
-          "spec": {
-            "plan": "standard-small",
-            "type": "standard"
-          }
-        },
-        {
-          "apiVersion": "enmasse.io/v1beta1",
-          "kind": "Address",
-          "metadata": {
-            "name": "myspace.myqueue"
-          },
-          "spec": {
-            "address": "myqueue",
-            "plan": "standard-small-queue",
-            "type": "queue"
-          }
-        },
-        {
-          "apiVersion": "user.enmasse.io/v1beta1",
-          "kind": "MessagingUser",
-          "metadata": {
-            "name": "myspace.user"
-          },
-          "spec": {
-            "authentication": {
-              "password": "ZW5tYXNzZQ==",
-              "type": "password"
-            },
-            "authorization": [
-              {
-                "addresses": [
-                  "myqueue"
-                ],
-                "operations": [
-                  "send",
-                  "recv"
-                ]
-              }
-            ],
-            "username": "user"
-          }
+          "spec": {}
         },
         {
           "apiVersion": "iot.enmasse.io/v1alpha1",
@@ -224,7 +140,7 @@ spec:
 
     **The core capabilities include:**
 
-      * **Built-in authentication and authorization** - Use the built-in authentication service or
+      * **Built-in authentication and authorization** - Use the built-in access control server or
         plug in your own authentication service for authentication and
         authorization of messaging clients.
 
@@ -241,12 +157,8 @@ spec:
     To fully use ${olm.csv.name.short}, you need to create a few
     infrastructure components after the installation, including:
 
-      * An authentication service
-      * Infrastructure configuration for the standard and brokered address space
-      * Address and address space plans
-      * (Optional) Create RBAC roles to allow users to discover available plans
-      * (Optional) Create RBAC roles to allow users to self-manage addresses and
-        address spaces.
+      * A messaging infrastructure
+      * (Optional) Create RBAC roles to allow users to self-manage addresses and endpoints.
 
     For a complete overview of how to configure ${olm.csv.name.short}, see
     [Configuring ${olm.csv.name.short}](${olm.csv.doc.configure.url}).
@@ -260,82 +172,11 @@ spec:
 
     ~~~yaml
     ---
-    apiVersion: admin.enmasse.io/v1beta1
-    kind: StandardInfraConfig
+    apiVersion: enmasse.io/v1
+    kind: MessagingInfrastructure
     metadata:
       name: default
-    ---
-    apiVersion: admin.enmasse.io/v1beta2
-    kind: AddressPlan
-    metadata:
-      name: standard-small-queue
-    spec:
-      addressType: queue
-      resources:
-        router: 0.01
-        broker: 0.1
-    ---
-    apiVersion: admin.enmasse.io/v1beta2
-    kind: AddressSpacePlan
-    metadata:
-      name: standard-small
-    spec:
-      addressSpaceType: standard
-      infraConfigRef: default
-      addressPlans:
-      - standard-small-queue
-      resourceLimits:
-        router: 2.0
-        broker: 3.0
-        aggregate: 4.0
-    ---
-    apiVersion: admin.enmasse.io/v1beta1
-    kind: AuthenticationService
-    metadata:
-      name: standard-authservice
-    spec:
-      type: standard
-      standard:
-        storage:
-          claimName: standard-authservice
-          deleteClaim: true
-          size: 1Gi
-          type: persistent-claim
-    ~~~
-
-    ### Create RBAC roles to allow users to discover available plans
-
-    For users to discover the available plans, cluster-wide roles to read the available
-    schema can be created.  Import the following YAML by saving the content to a file and apply it by running the 
-    `oc apply -f <file>` command. You can also split the content (at the `---` marker)
-    and import the single YAML document using the Web UI: 
-
-    ~~~yaml
-    ---
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRole
-    metadata:
-      name: enmasse.io:schema
-      labels:
-        app: enmasse
-    rules:
-      - apiGroups: [ "enmasse.io" ]
-        resources: [ "addressspaceschemas" ]
-        verbs: [ "get", "list", "watch" ]
-    ---
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRoleBinding
-    metadata:
-      name: "enmasse.io:schema"
-      labels:
-        app: enmasse
-    roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: enmasse.io:schema
-    subjects:
-    - kind: Group
-      name: system:authenticated
+    spec: {}
     ~~~
 
     ### Creating infrastructure using the Web UI
@@ -344,17 +185,7 @@ spec:
     use the example data directly, which is provided when using the
     Web UI:
 
-      * *Authentication Service* – Create an authentication service.
-      * *Brokered Infra Config* – Create the broker infrastructure configuration.
-      * *Standard Infra Config* – Create the standard infrastructure
-        configuration.
-
-    You must also create at least one address space plan and one address plan.
-
-    *Note*: The name of the address space plan and address plan is required
-    later when creating new addresses. Some examples use specific plan
-    names, which might not be available in your environment. You can
-    create those plans, or edit the examples to use different plan names.
+      * *MessagingInfrastructure* – Create an instance of messaging infrastructure.
 
     ## Configuration for messaging tenants
 
@@ -363,11 +194,11 @@ spec:
 
     You need to create those resources to satisfy your particular use case.
 
-      * *Address space* – A container for addresses
-      * *Address* – A messaging address (address, topic, queue, and so on)
-      * *Messaging user* – Manages access to an address
+      * *MessagingTenant* – Marks a namespace enabled for messaging.
+      * *MessagingAddress* – A messaging address (address, topic, queue, and so on)
+      * *MessagingEndpoint* – Manages endpoints that messaging clients can connect to.
 
-    ## Enabling the IoT messaging layer (tech-preview)
+    ## Enabling the IoT messaging layer
 
     ${olm.csv.name.short} contains an IoT messaging layer, which is not enabled
     by default. You may enable it by creating an `IoTConfig` resource, in the
@@ -430,11 +261,14 @@ spec:
       - serviceAccountName: enmasse-operator
         rules:
         - apiGroups: [ "apps" ]
-          resources: [ "deployments", "deployments/finalizers", "replicasets", "statefulsets" ]
+          resources: [ "statefulsets", "statefulsets/finalizers", "deployments", "deployments/finalizers", "replicasets" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
         - apiGroups: [ "" ]
-          resources: [ "configmaps", "secrets", "persistentvolumeclaims", "services", "services/finalizers", "pods" ]
+          resources: [ "configmaps", "secrets", "secrets/finalizers", "persistentvolumeclaims", "services", "services/finalizers", "pods" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete", "deletecollection" ]
+        - apiGroups: [ "extensions", "networking.k8s.io" ]
+          resources: [ "ingresses", "ingresses/status"]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "", "route.openshift.io" ]
           resources: [ "routes", "routes/custom-host", "routes/status"]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
@@ -445,7 +279,7 @@ spec:
           resources: ["servicemonitors"]
           verbs: ["create", "update", "patch", "get", "list", "watch", "delete"]
         - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "authenticationservices", "authenticationservices/finalizers", "consoleservices", "consoleservices/finalizers", "addressplans", "addressplans/finalizers", "addressspaceplans", "addressspaceplans/finalizers" ]
+          resources: [ "consoleservices", "consoleservices/finalizers" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch" ]
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status", "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
@@ -455,8 +289,8 @@ spec:
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
       - serviceAccountName: console-server
         rules:
-        - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "authenticationservices", "addressplans", "addressspaceplans" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messaginginfrastructures", "messagingplans", "messagingaddressplans" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "services" ]
@@ -464,101 +298,27 @@ spec:
         - apiGroups: [ "" ]
           resources: [ "secrets" ]
           verbs: [ "get" ]
-      - serviceAccountName: address-space-controller
-        rules:
-        - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices"]
-          verbs: [ "patch", "get", "list", "watch" ]
-        - apiGroups: [ "" ]
-          resources: [ "pods" ]
-          verbs: [ "get", "list" ]
-        - apiGroups: [ "" ]
-          resources: [ "configmaps", "configmaps/finalizers" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "" ]
-          resources: [ "events" ]
-          verbs: [ "create", "update", "patch", "get", "list" ]
-        - apiGroups: [ "" ]
-          resources: [ "services", "secrets", "persistentvolumeclaims" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
-        - apiGroups: [ "networking.k8s.io", "extensions" ]
-          resources: [ "networkpolicies" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
-        - apiGroups: [ "route.openshift.io", "" ]
-          resources: [ "routes", "routes/custom-host", "routes/status" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
-        - apiGroups: [ "apps", "extensions" ]
-          resources: [ "statefulsets", "deployments", "replicasets" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
-        - apiGroups: [ "policy" ]
-          resources: [ "poddisruptionbudgets" ]
-          verbs: [ "create", "update", "get", "patch", "list", "watch", "delete" ]
-      - serviceAccountName: address-space-admin
-        rules:
-        - apiGroups: [ "admin.enmasse.io" ]
-          resources: [ "addressplans", "addressspaceplans", "brokeredinfraconfigs", "standardinfraconfigs", "authenticationservices"]
-          verbs: [ "get", "list", "watch" ]
-        - apiGroups: [ "" ]
-          resources: [ "pods", "secrets" ]
-          verbs: [ "get", "list", "watch" ]
-        - apiGroups: [ "" ]
-          resources: [ "configmaps", "configmaps/finalizers" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "" ]
-          resources: [ "events" ]
-          verbs: [ "create", "update", "patch", "get", "list" ]
-        - apiGroups: [ "" ]
-          resources: [ "persistentvolumeclaims", "services" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
-        - apiGroups: [ "apps" ]
-          resources: [ "statefulsets", "deployments" ]
-          verbs: [ "create", "update", "patch", "get", "list", "delete" ]
       clusterPermissions:
-      - serviceAccountName: address-space-controller
-        rules:
-        - apiGroups: [ "enmasse.io" ]
-          resources: [ "addressspaces", "addresses", "addressspaceschemas", "addressspaces/finalizers", "addresses/finalizers" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "user.enmasse.io" ]
-          resources: [ "messagingusers" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-      - serviceAccountName: address-space-admin
-        rules:
-        - apiGroups: [ "enmasse.io" ]
-          resources: [ "addressspaces" ]
-          verbs: [ "get", "list", "watch" ]
-        - apiGroups: [ "enmasse.io" ]
-          resources: [ "addresses", "addresses/finalizers", "addressspaces/finalizers" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "authentication.k8s.io" ]
-          resources: [ "tokenreviews" ]
-          verbs: [ "create" ]
-      - serviceAccountName: standard-authservice
-        rules:
-        - apiGroups: [ "authentication.k8s.io" ]
-          resources: [ "tokenreviews" ]
-          verbs: [ "create" ]
       - serviceAccountName: enmasse-operator
         rules:
-        - apiGroups: [ "" ]
-          resources: [ "events" ]
-          verbs: [ "create", "update", "patch", "get", "list" ]
         - apiGroups: [ "oauth.openshift.io" ]
           resources: [ "oauthclients" ]
           verbs: [ "create", "get", "update", "list", "watch" ]
-        - apiGroups: [ "user.enmasse.io" ]
-          resources: [ "messagingusers", "messagingusers/finalizers", "messagingusers/status" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messagingaddresses", "messagingaddresses/finalizers", "messagingaddresses/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messagingendpoints", "messagingendpoints/finalizers", "messagingendpoints/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messagingtenants", "messagingtenants/finalizers", "messagingtenants/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messaginginfrastructures", "messaginginfrastructures/finalizers", "messaginginfrastructures/status" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
-        - apiGroups: [ "enmasse.io" ]
-          resources: [ "addressspaces", "addresses" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
-        - apiGroups: [ "apiregistration.k8s.io" ]
-          resources: [ "apiservices" ]
-          resourceNames: [ "v1alpha1.enmasse.io", "v1beta1.enmasse.io", "v1alpha1.user.enmasse.io", "v1beta1.user.enmasse.io" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "monitoring.coreos.com" ]
           resources: [ "prometheusrules", "servicemonitors" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
@@ -567,11 +327,10 @@ spec:
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "console.openshift.io" ]
           resources: [ "consolelinks" ]
-          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: console-server
         rules:
         - apiGroups: [ "enmasse.io" ]
-          resources: [ "addressspaces", "addresses", "addressspaceschemas" ]
+          resources: [ "messagingtenants", "messagingendpoints", "messagingaddresses" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "namespaces" ]
@@ -653,30 +412,26 @@ spec:
                   value: "${env.REVISION}"
                 - name: VERSION
                   value: "${env.VERSION}"
-                - name: SHARED_INFRA
+                - name: CONTROLLER_DISABLE_ALL
+                  value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE
+                  value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_TENANT
+                  value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_ADDRESS
+                  value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_ENDPOINT
+                  value: "true"
+                - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
                   value: "false"
                 - name: IOT_CONFIG_NAME
                   value: "default"
                 - name: OPERATOR_NAME
                   value: "enmasse-operator"
                 - name: IMAGE_PULL_POLICY
-                  value: "${env.IMAGE_PULL_POLICY}"
-                - name: CONTROLLER_DISABLE_ALL
-                  value: "true"
-                - name: CONTROLLER_ENABLE_UPGRADER
-                  value: "true"
-                - name: CONTROLLER_ENABLE_IOT_PROJECT
-                  value: "true"
-                - name: CONTROLLER_ENABLE_IOT_CONFIG
-                  value: "true"
-                - name: CONTROLLER_ENABLE_AUTHENTICATION_SERVICE
-                  value: "true"
-                - name: CONTROLLER_ENABLE_ADDRESS_SPACE_CONTROLLER
-                  value: "true"
-                - name: CONTROLLER_ENABLE_MESSAGING_USER
-                  value: "true"
-                - name: RELATED_IMAGE_ADDRESS_SPACE_CONTROLLER
-                  value: ${env.ADDRESS_SPACE_CONTROLLER_IMAGE}
+                  value: "${IMAGE_PULL_POLICY}"
+                - name: ENABLE_MONITORING
+                  value: "false"
                 - name: RELATED_IMAGE_CONTROLLER_MANAGER
                   value: ${env.CONTROLLER_MANAGER_IMAGE}
                 - name: RELATED_IMAGE_IOT_AUTH_SERVICE
@@ -707,28 +462,10 @@ spec:
                   value: ${env.IOT_PROXY_CONFIGURATOR_IMAGE}
                 - name: RELATED_IMAGE_ROUTER
                   value: ${env.ROUTER_IMAGE}
-                - name: RELATED_IMAGE_STANDARD_CONTROLLER
-                  value: ${env.STANDARD_CONTROLLER_IMAGE}
-                - name: RELATED_IMAGE_AGENT
-                  value: ${env.AGENT_IMAGE}
                 - name: RELATED_IMAGE_BROKER
                   value: ${env.BROKER_IMAGE}
                 - name: RELATED_IMAGE_BROKER_PLUGIN
                   value: ${env.BROKER_PLUGIN_IMAGE}
-                - name: RELATED_IMAGE_TOPIC_FORWARDER
-                  value: ${env.TOPIC_FORWARDER_IMAGE}
-                - name: RELATED_IMAGE_MQTT_GATEWAY
-                  value: ${env.MQTT_GATEWAY_IMAGE}
-                - name: RELATED_IMAGE_MQTT_LWT
-                  value: ${env.MQTT_LWT_IMAGE}
-                - name: RELATED_IMAGE_NONE_AUTHSERVICE
-                  value: ${env.NONE_AUTHSERVICE_IMAGE}
-                - name: RELATED_IMAGE_KEYCLOAK
-                  value: ${env.KEYCLOAK_IMAGE}
-                - name: RELATED_IMAGE_KEYCLOAK_PLUGIN
-                  value: ${env.KEYCLOAK_PLUGIN_IMAGE}
-                - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
-                  value: "true"
                 - name: RELATED_IMAGE_CONSOLE_INIT
                   value: "${env.CONSOLE_INIT_IMAGE}"
                 - name: RELATED_IMAGE_CONSOLE_SERVER
@@ -749,240 +486,113 @@ spec:
                   value: "data:${olm.csv.logo.mediatype};base64,${olm.csv.logo.base64}"
   customresourcedefinitions:
     owned:
-      - group: user.enmasse.io
-        version: v1beta1
-        kind: MessagingUser
-        name: messagingusers.user.enmasse.io
-        displayName: Messaging User
-        description: A messaging user that can connect to an Address Space
-        specDescriptors:
-          - description: The user name.
-            displayName: Username
-            path: username
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The authentication type
-            displayName: Authentication type
-            path: authentication.type
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The password
-            displayName: Password
-            path: authentication.password
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
       - group: enmasse.io
-        version: v1beta1
-        kind: AddressSpaceSchema
-        name: addressspaceschemas.enmasse.io
-        displayName: AddressSpaceSchema
-        description: A resource representing the available schema of plans and authentication services
-      - group: enmasse.io
-        version: v1beta1
-        kind: AddressSpace 
-        name: addressspaces.enmasse.io
-        displayName: Address Space
-        description: A group of messaging addresses that can be accessed via the same endpoint
-        specDescriptors:
-          - description: The address space type.
-            displayName: Type
-            path: type
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The address space plan.
-            displayName: Plan
-            path: plan
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
+        version: v1
+        kind: MessagingInfrastructure
+        name: messaginginfrastructures.enmasse.io
+        displayName: Messaging Infrastructure
+        description: Infrastructure configuration
         statusDescriptors:
-          - description: Address space ready.
-            displayName: Ready
-            path: isReady
+          - description: Infrastructure phase
+            displayName: Phase
+            path: phase
+            x-descriptors:
+              - 'urn:alm:descriptor:text'
+          - description: Infrastructure message
+            displayName: Message
+            path: message
             x-descriptors:
               - 'urn:alm:descriptor:text'
       - group: enmasse.io
-        version: v1beta1
-        kind: Address
-        name: addresses.enmasse.io
-        displayName: Address
+        version: v1
+        kind: MessagingAddress
+        name: messagingaddresses.enmasse.io
+        displayName: Messaging Address
         description: A messaging address that can be used to send/receive messages to/from
-        specDescriptors:
+        statusDescriptors:
           - description: The address type.
             displayName: Type
             path: type
             x-descriptors:
               - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The address plan.
-            displayName: Plan
-            path: plan
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-        statusDescriptors:
-          - description: Address ready.
-            displayName: Ready
-            path: isReady
-            x-descriptors:
-              - 'urn:alm:descriptor:text'
           - description: Address phase
             displayName: Phase
             path: phase
             x-descriptors:
               - 'urn:alm:descriptor:text'
-      - group: admin.enmasse.io
-        version: v1beta1
-        kind: StandardInfraConfig
-        name: standardinfraconfigs.admin.enmasse.io
-        displayName: Standard Infra Config
-        description: Infrastructure configuration template for the standard address space type
-        specDescriptors:
-          - description: The minimal number of AMQP router replicas to create.
-            displayName: Minimum Router Replicas
-            path: router.minReplicas
+          - description: Address message
+            displayName: Message
+            path: message
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:podCount'
-          - description: The link capacity of AMQP producer links attached to the routers.
-            displayName: Link capacity
-            path: router.linkCapacity
+              - 'urn:alm:descriptor:text'
+      - group: enmasse.io
+        version: v1
+        kind: MessagingEndpoint
+        name: messagingendpoints.enmasse.io
+        displayName: Messaging Endpoint
+        description: Endpoint configuration
+        statusDescriptors:
+          - description: Endpoint phase
+            displayName: Phase
+            path: phase
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of memory to configure for AMQP router pods.
-            displayName: Router Memory
-            path: router.resources.memory
+              - 'urn:alm:descriptor:text'
+          - description: Endpoint message
+            displayName: Message
+            path: message
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of memory to configure for message brokers.
-            displayName: Broker Memory
-            path: broker.resources.memory
+              - 'urn:alm:descriptor:text'
+      - group: enmasse.io
+        version: v1
+        kind: MessagingTenant
+        name: messagingtenants.enmasse.io
+        displayName: Messaging Tenant
+        description: Tenant configuration
+        statusDescriptors:
+          - description: Tenant phase
+            displayName: Phase
+            path: phase
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of storage to configure for message brokers.
-            displayName: Broker Storage
-            path: broker.resources.storage
+              - 'urn:alm:descriptor:text'
+          - description: Tenant message
+            displayName: Message
+            path: message
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The storage class name to use for message broker persistent volumes.
-            displayName: Broker Storage Class
-            path: broker.storageClassName
+              - 'urn:alm:descriptor:text'
+      - group: enmasse.io
+        version: v1
+        kind: MessagingPlan
+        name: messagingplans.enmasse.io
+        displayName: Messaging Plan
+        description: Plan configuration
+        statusDescriptors:
+          - description: Plan phase
+            displayName: Phase
+            path: phase
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The policy to apply when message queues are full.
-            displayName: Broker Address Full Policy
-            path: broker.addressFullPolicy
+              - 'urn:alm:descriptor:text'
+          - description: Plan message
+            displayName: Message
+            path: message
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of memory to configure for the admin operator.
-            displayName: Admin Memory
-            path: admin.resources.memory
+              - 'urn:alm:descriptor:text'
+      - group: enmasse.io
+        version: v1
+        kind: MessagingAddressPlan
+        name: messagingaddressplans.enmasse.io
+        displayName: Messaging Address Plan
+        description: Address Plan configuration
+        statusDescriptors:
+          - description: Address plan phase
+            displayName: Phase
+            path: phase
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-      - group: admin.enmasse.io
-        version: v1beta1
-        kind: BrokeredInfraConfig
-        name: brokeredinfraconfigs.admin.enmasse.io
-        displayName: Brokered Infra Config
-        description: Infrastructure configuration template for the brokered address space type
-        specDescriptors:
-          - description: The amount of memory to configure for message brokers.
-            displayName: Broker Memory
-            path: broker.resources.memory
+              - 'urn:alm:descriptor:text'
+          - description: Address plan message
+            displayName: Message
+            path: message
             x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of storage to configure for message brokers.
-            displayName: Broker Storage
-            path: broker.resources.storage
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The storage class name to use for message broker persistent volumes.
-            displayName: Broker Storage Class
-            path: broker.storageClassName
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The policy to apply when message queues are full.
-            displayName: Broker Address Full Policy
-            path: broker.addressFullPolicy
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The amount of memory to configure for the admin operator.
-            displayName: Admin Memory
-            path: admin.resources.memory
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-      - group: admin.enmasse.io
-        version: v1beta2
-        kind: AddressPlan
-        name: addressplans.admin.enmasse.io
-        displayName: Address Plan
-        description: Plan describing the resource usage of a given address type
-        specDescriptors:
-          - description: The name to be displayed in the console UI.
-            displayName: Display Name
-            path: displayName
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The description to be shown in the console UI.
-            displayName: Short Description
-            path: shortDescription
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The broker resource usage.
-            displayName: Broker Usage
-            path: resources.broker
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The router resource usage.
-            displayName: Router Usage
-            path: resources.router
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-      - group: admin.enmasse.io
-        version: v1beta2
-        kind: AddressSpacePlan
-        name: addressspaceplans.admin.enmasse.io
-        displayName: Address Space Plan
-        description: Plan describing the capabilities and resource limits of a given address space type
-        specDescriptors:
-          - description: The name to be displayed in the console UI.
-            displayName: Display Name
-            path: displayName
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The reference to the infrastructure config used by this plan.
-            displayName: InfraConfig Reference
-            path: infraConfigRef
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The description to be shown in the console UI.
-            displayName: Short Description
-            path: shortDescription
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The quota for broker resources
-            displayName: Broker Quota
-            path: resourceLimits.broker
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The quota for router resources
-            displayName: Router Quota
-            path: resourceLimits.router
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-          - description: The aggregate quota for all resources
-            displayName: Aggregate Quota
-            path: resourceLimits.aggregate
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
-      - group: admin.enmasse.io
-        version: v1beta1
-        kind: AuthenticationService
-        name: authenticationservices.admin.enmasse.io
-        displayName: Authentication Service
-        description: Authentication service configuration available to address spaces.
-        specDescriptors:
-          - description: The type of authentication service
-            displayName: Type
-            path: type
-            x-descriptors:
-              - 'urn:alm:descriptor:com.tectonic.ui:text'
+              - 'urn:alm:descriptor:text'
       - group: admin.enmasse.io
         version: v1beta1
         kind: ConsoleService

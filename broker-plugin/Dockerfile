@@ -1,6 +1,4 @@
-FROM quay.io/enmasse/java-base:11-5
-
-RUN microdnf install which python gettext hostname iputils && microdnf clean all && mkdir -p /var/run/artemis/
+FROM centos:8
 
 ARG version
 ARG maven_version
@@ -9,7 +7,6 @@ ENV ARTEMIS_HOME=/opt/apache-artemis PATH=$ARTEMIS_HOME/bin:$PATH VERSION=${vers
 
 ADD ./plugin/target/plugin-${maven_version}-dist.tar.gz /
 
-RUN chgrp -R 0 /opt/broker-plugin && \
-    chmod -R g=u /opt/broker-plugin
+RUN dnf install -y gettext hostname && dnf clean all -y && chgrp -R 0 /opt/broker-plugin && chmod -R g=u /opt/broker-plugin
 
 CMD ["/opt/broker-plugin/bin/init-broker.sh"]

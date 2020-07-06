@@ -17,22 +17,6 @@ mkdir -p $BROKER_CONF_DIR
 cp -r ${BROKER_PLUGIN_DIR}/lib $BROKER_CUSTOM
 cp -r ${BROKER_PLUGIN_DIR}/bin $BROKER_CUSTOM
 
-function configure_brokered() {
-    DISABLE_AUTHORIZATION=$(echo ${DISABLE_AUTHORIZATION-false} | tr '[:upper:]' '[:lower:]')
-    if [ "${DISABLE_AUTHORIZATION}" == "true" ]
-    then
-        export KEYCLOAK_GROUP_PERMISSIONS=false
-        echo "export KEYCLOAK_GROUP_PERMISSIONS=false" >> $BROKER_CUSTOM/bin/env.sh
-    else
-        export KEYCLOAK_GROUP_PERMISSIONS=true
-        echo "export KEYCLOAK_GROUP_PERMISSIONS=true" >> $BROKER_CUSTOM/bin/env.sh
-    fi
-    cp $CONFIG_TEMPLATES/brokered/broker.xml /tmp/broker.xml
-    cp $CONFIG_TEMPLATES/brokered/login.config /tmp/login.config
-    cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
-    export HAWTIO_ROLE=manage
-}
-
 function configure_shared() {
     cp $CONFIG_TEMPLATES/shared/broker.xml /tmp/broker.xml
     cp $CONFIG_TEMPLATES/shared/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
@@ -41,20 +25,6 @@ function configure_shared() {
     cp $CONFIG_TEMPLATES/shared/artemis-users.properties $BROKER_CONF_DIR/artemis-users.properties
     cp $CONFIG_TEMPLATES/shared/cert-roles.properties $BROKER_CONF_DIR/cert-roles.properties
     cp $CONFIG_TEMPLATES/shared/cert-users.properties /tmp/cert-users.properties
-    export HAWTIO_ROLE=manage
-}
-
-function configure_standard() {
-    if [ -n "$TOPIC_NAME" ]; then
-        cp $CONFIG_TEMPLATES/standard/sharded-topic/broker.xml /tmp/broker.xml
-    elif [ -n "$QUEUE_NAME" ] && [ "$QUEUE_NAME" != "" ]; then
-        cp $CONFIG_TEMPLATES/standard/sharded-queue/broker.xml /tmp/broker.xml
-    else
-        cp $CONFIG_TEMPLATES/standard/colocated/broker.xml /tmp/broker.xml
-    fi
-
-    cp $CONFIG_TEMPLATES/standard/login.config /tmp/login.config    
-    cp $CONFIG_TEMPLATES/bootstrap.xml $BROKER_CONF_DIR/bootstrap.xml
     export HAWTIO_ROLE=manage
 }
 
@@ -69,13 +39,8 @@ function pre_configuration() {
     echo "export AMQ_ROLE=admin" >> $BROKER_CUSTOM/bin/env.sh
     echo "export ARTEMIS_HOME=$ARTEMIS_HOME" >> $BROKER_CUSTOM/bin/env.sh
     echo "export CONTAINER_ID=$HOSTNAME" >> $BROKER_CUSTOM/bin/env.sh
-    if [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
-        echo "export KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
-        echo "export TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12" >> $BROKER_CUSTOM/bin/env.sh
-    else
-        echo "export KEYSTORE_PATH=$instanceDir/etc/enmasse-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
-        echo "export TRUSTSTORE_PATH=$instanceDir/etc/enmasse-truststore.jks" >> $BROKER_CUSTOM/bin/env.sh
-    fi
+    echo "export KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12" >> $BROKER_CUSTOM/bin/env.sh
+    echo "export TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12" >> $BROKER_CUSTOM/bin/env.sh
     echo "export AUTH_TRUSTSTORE_PATH=$instanceDir/etc/enmasse-authtruststore.jks" >> $BROKER_CUSTOM/bin/env.sh
     echo "export EXTERNAL_KEYSTORE_PATH=$instanceDir/etc/external-keystore.jks" >> $BROKER_CUSTOM/bin/env.sh
 
@@ -105,14 +70,8 @@ function pre_configuration() {
         export QUEUE_SCHEDULER_SERVICE_PORT=$ADMIN_SERVICE_PORT_QUEUE_SCHEDULER
     fi
 
-    if [ "$ADDRESS_SPACE_TYPE" == "brokered" ]; then
-        configure_brokered
-    elif [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
-        configure_shared
-        envsubst < /tmp/cert-users.properties > $BROKER_CONF_DIR/cert-users.properties
-    else
-        configure_standard
-    fi
+    configure_shared
+    envsubst < /tmp/cert-users.properties > $BROKER_CONF_DIR/cert-users.properties
 
     envsubst < /tmp/login.config > $BROKER_CONF_DIR/login.config
     envsubst < /tmp/broker.xml > $BROKER_CONF_DIR/broker.xml
@@ -135,39 +94,10 @@ function configure_ssl() {
     TRUSTSTORE_PASS=enmasse
     KEYSTORE_PASS=enmasse
 
-    if [ "$ADDRESS_SPACE_TYPE" == "shared" ]; then
-        # Use pre-generated store
-        mkdir -p $BROKER_CUSTOM/certs
-        export CUSTOM_KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12
-        export CUSTOM_TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12
-    else
-        export CUSTOM_KEYSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-keystore.jks
-        export CUSTOM_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-truststore.jks
-        export CUSTOM_AUTH_TRUSTSTORE_PATH=$BROKER_CUSTOM/certs/enmasse-authtruststore.jks
-        export CUSTOM_EXTERNAL_KEYSTORE_PATH=$BROKER_CUSTOM/certs/external-keystore.jks
-        mkdir -p $BROKER_CUSTOM/certs
-
-        # Recreate certs in case they have been updated
-        rm -rf ${CUSTOM_TRUSTSTORE_PATH} ${CUSTOM_KEYSTORE_PATH} ${CUSTOM_AUTH_TRUSTSTORE_PATH} ${CUSTOM_EXTERNAL_KEYSTORE_PATH}
-
-        # Convert certs
-        openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/enmasse-certs/tls.crt -inkey /etc/enmasse-certs/tls.key -chain -CAfile /etc/enmasse-certs/ca.crt -name "io.enmasse" -out /tmp/enmasse-keystore.p12
-
-        keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_KEYSTORE_PATH -srckeystore /tmp/enmasse-keystore.p12 -srcstoretype PKCS12
-        keytool -import -noprompt -file /etc/enmasse-certs/ca.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_TRUSTSTORE_PATH
-
-        cp /etc/pki/java/cacerts ${CUSTOM_AUTH_TRUSTSTORE_PATH}
-
-        chmod 644 ${CUSTOM_AUTH_TRUSTSTORE_PATH}
-        keytool -storepasswd -storepass changeit -new ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
-        keytool -import -noprompt -file /etc/authservice-ca/tls.crt -alias firstCA -deststorepass ${TRUSTSTORE_PASS} -keystore $CUSTOM_AUTH_TRUSTSTORE_PATH
-
-        if [ -d /etc/external-certs ]
-        then
-            openssl pkcs12 -export -passout pass:${KEYSTORE_PASS} -in /etc/external-certs/tls.crt -inkey /etc/external-certs/tls.key -name "io.enmasse" -out /tmp/external-keystore.p12
-            keytool -importkeystore -srcstorepass ${KEYSTORE_PASS} -deststorepass ${KEYSTORE_PASS} -destkeystore $CUSTOM_EXTERNAL_KEYSTORE_PATH -srckeystore /tmp/external-keystore.p12 -srcstoretype PKCS12
-        fi
-    fi
+    # Use pre-generated store
+    mkdir -p $BROKER_CUSTOM/certs
+    export CUSTOM_KEYSTORE_PATH=/etc/enmasse-certs/keystore.p12
+    export CUSTOM_TRUSTSTORE_PATH=/etc/enmasse-certs/truststore.p12
 }
 
 pre_configuration

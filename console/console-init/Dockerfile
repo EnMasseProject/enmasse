@@ -1,5 +1,5 @@
-FROM quay.io/enmasse/fedora-minimal:31
-RUN microdnf install gettext python findutils coreutils tar && microdnf clean all
+FROM centos:8
+RUN dnf install -y gettext python3 findutils tar && dnf clean all -y
 
 ARG version
 ARG maven_version

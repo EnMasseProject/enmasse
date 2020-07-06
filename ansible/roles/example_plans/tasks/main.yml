@@ -1,3 +1,0 @@
----
-- name: Install the example plans
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/example-plans

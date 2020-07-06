@@ -4,7 +4,7 @@ include $(TOPDIR)/Makefile.common
 GOOPTS          ?= -mod=vendor
 
 build/$(CMD): build_deps
-	GO111MODULE=on GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build $(GOOPTS) -o $(abspath $@) $(abspath $(TOPDIR)/cmd/$(@F))
+	GO111MODULE=on CGO_ENABLED=0 GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build $(GOOPTS) -o $(abspath $@) $(abspath $(TOPDIR)/cmd/$(@F))
 ifneq ($(FULL_BUILD),true)
 	mvn $(MAVEN_ARGS) package
 endif
