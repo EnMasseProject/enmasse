@@ -85,7 +85,7 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     });
   };
 
-  const handleChangeEnabled = (checked: boolean) => {
+  const handleChangeStatus = async (checked: boolean) => {
     const queryVariable = {
       a: [
         {
@@ -95,7 +95,7 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
       ],
       status: checked
     };
-    setToggleIoTProjectQueryVariables(queryVariable);
+    await setToggleIoTProjectQueryVariables(queryVariable);
   };
 
   return (
@@ -104,7 +104,7 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
       type={spec?.downstreamStrategyType}
       status={status?.phase}
       isEnabled={enabled}
-      changeEnable={handleChangeEnabled}
+      changeStatus={handleChangeStatus}
       onDelete={handleDelete}
     />
   );

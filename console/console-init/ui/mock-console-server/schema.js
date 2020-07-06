@@ -679,7 +679,7 @@ const typeDefs = gql`
     deleteIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
     toggleIoTProjectsStatus(
       input: [ObjectMeta_v1_Input!]!
-      state: Boolean!
+      status: Boolean!
     ): Boolean
   }
 

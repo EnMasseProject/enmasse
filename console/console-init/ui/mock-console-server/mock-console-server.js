@@ -2555,7 +2555,7 @@ const resolvers = {
     },
     toggleIoTProjectsStatus: (parents, args) => {
       runOperationForAll(args.input, t =>
-        toggleIoTProjectStatus(t, args.state)
+        toggleIoTProjectStatus(t, args.status)
       );
       return true;
     }

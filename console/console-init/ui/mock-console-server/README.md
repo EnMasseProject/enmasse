@@ -977,8 +977,8 @@ args:
 ## Toggle Iot project status
 
 ```
-mutation projectsstatustoggle($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
-  toggleIoTProjectsStatus(input: $a, state: $status)
+mutation toggle_iot_project_status($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
+  toggleIoTProjectsStatus(input: $a, status: $status)
 }
 ```
 
