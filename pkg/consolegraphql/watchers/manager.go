@@ -8,13 +8,14 @@ package watchers
 
 import (
 	"crypto/tls"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"k8s.io/client-go/rest"
-	"log"
-	"sync"
-	"time"
 )
 
 type WatcherManager interface {
@@ -73,27 +74,24 @@ func (rm *resourceManager) Start() {
 
 	rm.creators = []func() (ResourceWatcher, error){
 		func() (ResourceWatcher, error) {
-			return NewAddressSpaceWatcher(rm.objectCache, &rm.resyncInterval, AddressSpaceWatcherConfig(rm.config),
-				AddressSpaceWatcherFactory(AddressSpaceCreate, AddressSpaceUpdate))
+			return NewMessagingProjectWatcher(rm.objectCache, &rm.resyncInterval, MessagingProjectWatcherConfig(rm.config),
+				MessagingProjectWatcherFactory(MessagingProjectCreate, MessagingProjectUpdate))
 		},
 		func() (ResourceWatcher, error) {
-			return NewAddressWatcher(rm.objectCache, &rm.resyncInterval, AddressWatcherConfig(rm.config),
-				AddressWatcherFactory(AddressCreate, AddressUpdate))
+			return NewMessagingAddressWatcher(rm.objectCache, &rm.resyncInterval, MessagingAddressWatcherConfig(rm.config),
+				MessagingAddressWatcherFactory(AddressCreate, AddressUpdate))
+		},
+		func() (ResourceWatcher, error) {
+			return NewMessagingEndpointWatcher(rm.objectCache, &rm.resyncInterval, MessagingEndpointWatcherConfig(rm.config))
 		},
 		func() (ResourceWatcher, error) {
 			return NewNamespaceWatcher(rm.objectCache, &rm.resyncInterval, NamespaceWatcherConfig(rm.config))
 		},
 		func() (ResourceWatcher, error) {
-			return NewAddressSpacePlanWatcher(rm.objectCache, &rm.resyncInterval, rm.infraNamespace, AddressSpacePlanWatcherConfig(rm.config))
+			return NewMessagingPlanWatcher(rm.objectCache, &rm.resyncInterval, MessagingPlanWatcherConfig(rm.config))
 		},
 		func() (ResourceWatcher, error) {
-			return NewAddressPlanWatcher(rm.objectCache, &rm.resyncInterval, rm.infraNamespace, AddressPlanWatcherConfig(rm.config))
-		},
-		func() (ResourceWatcher, error) {
-			return NewAuthenticationServiceWatcher(rm.objectCache, &rm.resyncInterval, rm.infraNamespace, AuthenticationServiceWatcherConfig(rm.config))
-		},
-		func() (ResourceWatcher, error) {
-			return NewAddressSpaceSchemaWatcher(rm.objectCache, &rm.resyncInterval, AddressSpaceSchemaWatcherConfig(rm.config))
+			return NewMessagingAddressPlanWatcher(rm.objectCache, &rm.resyncInterval, MessagingAddressPlanWatcherConfig(rm.config))
 		},
 		func() (ResourceWatcher, error) {
 			watcherConfigs := make([]WatcherOption, 0)

@@ -88,7 +88,6 @@ type ComplexityRoot struct {
 		ContainerId func(childComplexity int) int
 		Encrypted   func(childComplexity int) int
 		Hostname    func(childComplexity int) int
-		Namespace   func(childComplexity int) int
 		Principal   func(childComplexity int) int
 		Properties  func(childComplexity int) int
 		Protocol    func(childComplexity int) int
@@ -432,13 +431,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ConnectionSpecConsoleapiEnmasseIoV1.Hostname(childComplexity), true
-
-	case "ConnectionSpec_consoleapi_enmasse_io_v1.namespace":
-		if e.complexity.ConnectionSpecConsoleapiEnmasseIoV1.Namespace == nil {
-			break
-		}
-
-		return e.complexity.ConnectionSpecConsoleapiEnmasseIoV1.Namespace(childComplexity), true
 
 	case "ConnectionSpec_consoleapi_enmasse_io_v1.principal":
 		if e.complexity.ConnectionSpecConsoleapiEnmasseIoV1.Principal == nil {
@@ -1268,7 +1260,6 @@ type Connection_consoleapi_enmasse_io_v1 {
 }
 
 type ConnectionSpec_consoleapi_enmasse_io_v1 {
-  namespace: String!
   hostname: String!
   containerId: String!
   protocol: Protocol!
@@ -2467,40 +2458,6 @@ func (ec *executionContext) _ConnectionQueryResult_consoleapi_enmasse_io_v1_conn
 	res := resTmp.([]*consolegraphql.Connection)
 	fc.Result = res
 	return ec.marshalNConnection_consoleapi_enmasse_io_v12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐConnectionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1_namespace(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Namespace, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1_hostname(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.ConnectionSpec) (ret graphql.Marshaler) {
@@ -6961,11 +6918,6 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1(ctx context
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ConnectionSpec_consoleapi_enmasse_io_v1")
-		case "namespace":
-			out.Values[i] = ec._ConnectionSpec_consoleapi_enmasse_io_v1_namespace(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "hostname":
 			out.Values[i] = ec._ConnectionSpec_consoleapi_enmasse_io_v1_hostname(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

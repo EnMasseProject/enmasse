@@ -9,8 +9,8 @@ package watchers
 
 import (
 	"fmt"
-	tp "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	cp "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	tp "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	cp "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -21,35 +21,35 @@ import (
 	"time"
 )
 
-type AddressSpaceSchemaWatcher struct {
+type MessagingPlanWatcher struct {
 	Namespace string
 	cache.Cache
-	ClientInterface cp.EnmasseV1beta1Interface
+	ClientInterface cp.EnmasseV1Interface
 	watching        chan struct{}
 	watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
-	create          func(*tp.AddressSpaceSchema) interface{}
-	update          func(*tp.AddressSpaceSchema, interface{}) bool
+	create          func(*tp.MessagingPlan) interface{}
+	update          func(*tp.MessagingPlan, interface{}) bool
 	restartCounter  int32
 	resyncInterval  *time.Duration
 }
 
-func NewAddressSpaceSchemaWatcher(c cache.Cache, resyncInterval *time.Duration, options ...WatcherOption) (ResourceWatcher, error) {
+func NewMessagingPlanWatcher(c cache.Cache, resyncInterval *time.Duration, options ...WatcherOption) (ResourceWatcher, error) {
 
-	kw := &AddressSpaceSchemaWatcher{
+	kw := &MessagingPlanWatcher{
 		Namespace:      v1.NamespaceAll,
 		Cache:          c,
 		watching:       make(chan struct{}),
 		stopchan:       make(chan struct{}),
 		stoppedchan:    make(chan struct{}),
 		resyncInterval: resyncInterval,
-		create: func(v *tp.AddressSpaceSchema) interface{} {
+		create: func(v *tp.MessagingPlan) interface{} {
 			return v
 		},
-		update: func(v *tp.AddressSpaceSchema, e interface{}) bool {
+		update: func(v *tp.MessagingPlan, e interface{}) bool {
 			if !reflect.DeepEqual(v, e) {
-				*e.(*tp.AddressSpaceSchema) = *v
+				*e.(*tp.MessagingPlan) = *v
 				return true
 			} else {
 				return false
@@ -62,28 +62,28 @@ func NewAddressSpaceSchemaWatcher(c cache.Cache, resyncInterval *time.Duration, 
 	}
 
 	if kw.ClientInterface == nil {
-		return nil, fmt.Errorf("Client must be configured using the AddressSpaceSchemaWatcherConfig or AddressSpaceSchemaWatcherClient")
+		return nil, fmt.Errorf("Client must be configured using the MessagingPlanWatcherConfig or MessagingPlanWatcherClient")
 	}
 	return kw, nil
 }
 
-func AddressSpaceSchemaWatcherFactory(create func(*tp.AddressSpaceSchema) interface{}, update func(*tp.AddressSpaceSchema, interface{}) bool) WatcherOption {
+func MessagingPlanWatcherFactory(create func(*tp.MessagingPlan) interface{}, update func(*tp.MessagingPlan, interface{}) bool) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressSpaceSchemaWatcher)
+		w := watcher.(*MessagingPlanWatcher)
 		w.create = create
 		w.update = update
 		return nil
 	}
 }
 
-func AddressSpaceSchemaWatcherConfig(config *rest.Config) WatcherOption {
+func MessagingPlanWatcherConfig(config *rest.Config) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressSpaceSchemaWatcher)
+		w := watcher.(*MessagingPlanWatcher)
 
 		var cl interface{}
 		cl, _ = cp.NewForConfig(config)
 
-		client, ok := cl.(cp.EnmasseV1beta1Interface)
+		client, ok := cl.(cp.EnmasseV1Interface)
 		if !ok {
 			return fmt.Errorf("unexpected type %T", cl)
 		}
@@ -94,15 +94,15 @@ func AddressSpaceSchemaWatcherConfig(config *rest.Config) WatcherOption {
 }
 
 // Used to inject the fake client set for testing purposes
-func AddressSpaceSchemaWatcherClient(client cp.EnmasseV1beta1Interface) WatcherOption {
+func MessagingPlanWatcherClient(client cp.EnmasseV1Interface) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressSpaceSchemaWatcher)
+		w := watcher.(*MessagingPlanWatcher)
 		w.ClientInterface = client
 		return nil
 	}
 }
 
-func (kw *AddressSpaceSchemaWatcher) Watch() error {
+func (kw *MessagingPlanWatcher) Watch() error {
 	go func() {
 		defer close(kw.stoppedchan)
 		defer func() {
@@ -110,38 +110,38 @@ func (kw *AddressSpaceSchemaWatcher) Watch() error {
 				close(kw.watching)
 			}
 		}()
-		resource := kw.ClientInterface.AddressSpaceSchemas()
-		log.Printf("AddressSpaceSchema - Watching")
+		resource := kw.ClientInterface.MessagingPlans(kw.Namespace)
+		log.Printf("MessagingPlan - Watching")
 		running := true
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("AddressSpaceSchema - Restarting watch - %v", err)
+				log.Printf("MessagingPlan - Restarting watch - %v", err)
 				atomicInc(&kw.restartCounter)
 			} else {
 				running = false
 			}
 		}
-		log.Printf("AddressSpaceSchema - Watching stopped")
+		log.Printf("MessagingPlan - Watching stopped")
 	}()
 
 	return nil
 }
 
-func (kw *AddressSpaceSchemaWatcher) AwaitWatching() {
+func (kw *MessagingPlanWatcher) AwaitWatching() {
 	<-kw.watching
 }
 
-func (kw *AddressSpaceSchemaWatcher) Shutdown() {
+func (kw *MessagingPlanWatcher) Shutdown() {
 	close(kw.stopchan)
 	<-kw.stoppedchan
 }
 
-func (kw *AddressSpaceSchemaWatcher) GetRestartCount() int32 {
+func (kw *MessagingPlanWatcher) GetRestartCount() int32 {
 	return atomicGet(&kw.restartCounter)
 }
 
-func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInterface) error {
+func (kw *MessagingPlanWatcher) doWatch(resource cp.MessagingPlanInterface) error {
 	resourceList, err := resource.List(v1.ListOptions{})
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 		return err
 	}
 	curr := make(map[string]interface{}, 0)
-	_, err = kw.Cache.Get(cache.PrimaryObjectIndex, "AddressSpaceSchema/", func(obj interface{}) (bool, bool, error) {
+	_, err = kw.Cache.Get(cache.PrimaryObjectIndex, "MessagingPlan/", func(obj interface{}) (bool, bool, error) {
 		gen, key, err := keyCreator(obj)
 		if err != nil {
 			return false, false, err
@@ -208,7 +208,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 		}
 	}
 	var stale = len(curr)
-	log.Printf("AddressSpaceSchema - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
+	log.Printf("MessagingPlan - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
 
 	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
@@ -239,8 +239,8 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 			}
 
 			var err error
-			log.Printf("AddressSpaceSchema - Received event type %s", event.Type)
-			res, ok := event.Object.(*tp.AddressSpaceSchema)
+			log.Printf("MessagingPlan - Received event type %s", event.Type)
+			res, ok := event.Object.(*tp.MessagingPlan)
 			if !ok {
 				err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 			} else {
@@ -267,7 +267,7 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 				return err
 			}
 		case <-kw.stopchan:
-			log.Printf("AddressSpaceSchema - Shutdown received")
+			log.Printf("MessagingPlan - Shutdown received")
 			return nil
 		}
 	}
@@ -275,8 +275,8 @@ func (kw *AddressSpaceSchemaWatcher) doWatch(resource cp.AddressSpaceSchemaInter
 
 // KubernetesRBACAccessController relies on the GVK information to be set on objects.
 // List provides GVK (https://github.com/kubernetes/kubernetes/pull/63972) but Watch does not not so we set it ourselves.
-func (kw *AddressSpaceSchemaWatcher) updateGroupVersionKind(o *tp.AddressSpaceSchema) {
+func (kw *MessagingPlanWatcher) updateGroupVersionKind(o *tp.MessagingPlan) {
 	if o.TypeMeta.Kind == "" || o.TypeMeta.APIVersion == "" {
-		o.TypeMeta.SetGroupVersionKind(tp.SchemeGroupVersion.WithKind("AddressSpaceSchema"))
+		o.TypeMeta.SetGroupVersionKind(tp.SchemeGroupVersion.WithKind("MessagingPlan"))
 	}
 }

@@ -79,7 +79,6 @@ type Connection_consoleapi_enmasse_io_v1 {
 }
 
 type ConnectionSpec_consoleapi_enmasse_io_v1 {
-  namespace: String!
   hostname: String!
   containerId: String!
   protocol: Protocol!

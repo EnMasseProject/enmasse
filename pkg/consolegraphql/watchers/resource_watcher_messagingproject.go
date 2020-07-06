@@ -9,8 +9,8 @@ package watchers
 
 import (
 	"fmt"
-	tp "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
-	cp "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
+	tp "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	cp "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
@@ -21,35 +21,35 @@ import (
 	"time"
 )
 
-type AddressPlanWatcher struct {
+type MessagingProjectWatcher struct {
 	Namespace string
 	cache.Cache
-	ClientInterface cp.AdminV1beta2Interface
+	ClientInterface cp.EnmasseV1Interface
 	watching        chan struct{}
 	watchingStarted bool
 	stopchan        chan struct{}
 	stoppedchan     chan struct{}
-	create          func(*tp.AddressPlan) interface{}
-	update          func(*tp.AddressPlan, interface{}) bool
+	create          func(*tp.MessagingProject) interface{}
+	update          func(*tp.MessagingProject, interface{}) bool
 	restartCounter  int32
 	resyncInterval  *time.Duration
 }
 
-func NewAddressPlanWatcher(c cache.Cache, resyncInterval *time.Duration, namespace string, options ...WatcherOption) (ResourceWatcher, error) {
+func NewMessagingProjectWatcher(c cache.Cache, resyncInterval *time.Duration, options ...WatcherOption) (ResourceWatcher, error) {
 
-	kw := &AddressPlanWatcher{
-		Namespace:      namespace,
+	kw := &MessagingProjectWatcher{
+		Namespace:      v1.NamespaceAll,
 		Cache:          c,
 		watching:       make(chan struct{}),
 		stopchan:       make(chan struct{}),
 		stoppedchan:    make(chan struct{}),
 		resyncInterval: resyncInterval,
-		create: func(v *tp.AddressPlan) interface{} {
+		create: func(v *tp.MessagingProject) interface{} {
 			return v
 		},
-		update: func(v *tp.AddressPlan, e interface{}) bool {
+		update: func(v *tp.MessagingProject, e interface{}) bool {
 			if !reflect.DeepEqual(v, e) {
-				*e.(*tp.AddressPlan) = *v
+				*e.(*tp.MessagingProject) = *v
 				return true
 			} else {
 				return false
@@ -62,28 +62,28 @@ func NewAddressPlanWatcher(c cache.Cache, resyncInterval *time.Duration, namespa
 	}
 
 	if kw.ClientInterface == nil {
-		return nil, fmt.Errorf("Client must be configured using the AddressPlanWatcherConfig or AddressPlanWatcherClient")
+		return nil, fmt.Errorf("Client must be configured using the MessagingProjectWatcherConfig or MessagingProjectWatcherClient")
 	}
 	return kw, nil
 }
 
-func AddressPlanWatcherFactory(create func(*tp.AddressPlan) interface{}, update func(*tp.AddressPlan, interface{}) bool) WatcherOption {
+func MessagingProjectWatcherFactory(create func(*tp.MessagingProject) interface{}, update func(*tp.MessagingProject, interface{}) bool) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressPlanWatcher)
+		w := watcher.(*MessagingProjectWatcher)
 		w.create = create
 		w.update = update
 		return nil
 	}
 }
 
-func AddressPlanWatcherConfig(config *rest.Config) WatcherOption {
+func MessagingProjectWatcherConfig(config *rest.Config) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressPlanWatcher)
+		w := watcher.(*MessagingProjectWatcher)
 
 		var cl interface{}
 		cl, _ = cp.NewForConfig(config)
 
-		client, ok := cl.(cp.AdminV1beta2Interface)
+		client, ok := cl.(cp.EnmasseV1Interface)
 		if !ok {
 			return fmt.Errorf("unexpected type %T", cl)
 		}
@@ -94,15 +94,15 @@ func AddressPlanWatcherConfig(config *rest.Config) WatcherOption {
 }
 
 // Used to inject the fake client set for testing purposes
-func AddressPlanWatcherClient(client cp.AdminV1beta2Interface) WatcherOption {
+func MessagingProjectWatcherClient(client cp.EnmasseV1Interface) WatcherOption {
 	return func(watcher ResourceWatcher) error {
-		w := watcher.(*AddressPlanWatcher)
+		w := watcher.(*MessagingProjectWatcher)
 		w.ClientInterface = client
 		return nil
 	}
 }
 
-func (kw *AddressPlanWatcher) Watch() error {
+func (kw *MessagingProjectWatcher) Watch() error {
 	go func() {
 		defer close(kw.stoppedchan)
 		defer func() {
@@ -110,38 +110,38 @@ func (kw *AddressPlanWatcher) Watch() error {
 				close(kw.watching)
 			}
 		}()
-		resource := kw.ClientInterface.AddressPlans(kw.Namespace)
-		log.Printf("AddressPlan - Watching")
+		resource := kw.ClientInterface.MessagingProjects(kw.Namespace)
+		log.Printf("MessagingProject - Watching")
 		running := true
 		for running {
 			err := kw.doWatch(resource)
 			if err != nil {
-				log.Printf("AddressPlan - Restarting watch - %v", err)
+				log.Printf("MessagingProject - Restarting watch - %v", err)
 				atomicInc(&kw.restartCounter)
 			} else {
 				running = false
 			}
 		}
-		log.Printf("AddressPlan - Watching stopped")
+		log.Printf("MessagingProject - Watching stopped")
 	}()
 
 	return nil
 }
 
-func (kw *AddressPlanWatcher) AwaitWatching() {
+func (kw *MessagingProjectWatcher) AwaitWatching() {
 	<-kw.watching
 }
 
-func (kw *AddressPlanWatcher) Shutdown() {
+func (kw *MessagingProjectWatcher) Shutdown() {
 	close(kw.stopchan)
 	<-kw.stoppedchan
 }
 
-func (kw *AddressPlanWatcher) GetRestartCount() int32 {
+func (kw *MessagingProjectWatcher) GetRestartCount() int32 {
 	return atomicGet(&kw.restartCounter)
 }
 
-func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
+func (kw *MessagingProjectWatcher) doWatch(resource cp.MessagingProjectInterface) error {
 	resourceList, err := resource.List(v1.ListOptions{})
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 		return err
 	}
 	curr := make(map[string]interface{}, 0)
-	_, err = kw.Cache.Get(cache.PrimaryObjectIndex, "AddressPlan/", func(obj interface{}) (bool, bool, error) {
+	_, err = kw.Cache.Get(cache.PrimaryObjectIndex, "MessagingProject/", func(obj interface{}) (bool, bool, error) {
 		gen, key, err := keyCreator(obj)
 		if err != nil {
 			return false, false, err
@@ -208,7 +208,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 		}
 	}
 	var stale = len(curr)
-	log.Printf("AddressPlan - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
+	log.Printf("MessagingProject - Cache initialised population added %d, updated %d, unchanged %d, stale %d", added, updated, unchanged, stale)
 
 	watchOptions := v1.ListOptions{
 		ResourceVersion: resourceList.ResourceVersion,
@@ -239,8 +239,8 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 			}
 
 			var err error
-			log.Printf("AddressPlan - Received event type %s", event.Type)
-			res, ok := event.Object.(*tp.AddressPlan)
+			log.Printf("MessagingProject - Received event type %s", event.Type)
+			res, ok := event.Object.(*tp.MessagingProject)
 			if !ok {
 				err = fmt.Errorf("Watch error - object of unexpected type, %T, received", event.Object)
 			} else {
@@ -267,7 +267,7 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 				return err
 			}
 		case <-kw.stopchan:
-			log.Printf("AddressPlan - Shutdown received")
+			log.Printf("MessagingProject - Shutdown received")
 			return nil
 		}
 	}
@@ -275,8 +275,8 @@ func (kw *AddressPlanWatcher) doWatch(resource cp.AddressPlanInterface) error {
 
 // KubernetesRBACAccessController relies on the GVK information to be set on objects.
 // List provides GVK (https://github.com/kubernetes/kubernetes/pull/63972) but Watch does not not so we set it ourselves.
-func (kw *AddressPlanWatcher) updateGroupVersionKind(o *tp.AddressPlan) {
+func (kw *MessagingProjectWatcher) updateGroupVersionKind(o *tp.MessagingProject) {
 	if o.TypeMeta.Kind == "" || o.TypeMeta.APIVersion == "" {
-		o.TypeMeta.SetGroupVersionKind(tp.SchemeGroupVersion.WithKind("AddressPlan"))
+		o.TypeMeta.SetGroupVersionKind(tp.SchemeGroupVersion.WithKind("MessagingProject"))
 	}
 }

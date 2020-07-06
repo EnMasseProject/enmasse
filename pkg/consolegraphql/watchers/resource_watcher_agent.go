@@ -8,21 +8,22 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
+	"math/rand"
+	"reflect"
+	"time"
+
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	routev1 "github.com/openshift/client-go/route/clientset/versioned/typed/route/v1"
 	tp "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/watch"
 	cp "k8s.io/client-go/kubernetes/typed/core/v1"
 	"k8s.io/client-go/rest"
-	"log"
-	"math/rand"
-	"reflect"
-	"time"
 )
 
 type AgentCollectorCreator = func(host string, port int32, infraUuid string, addressSpace string, addressSpaceNamespace string, tlsConfig *tls.Config) agent.Delegate
@@ -399,7 +400,7 @@ func (clw *AgentWatcher) handleEvent(event agent.AgentEvent) error {
 
 			currentLinks := toLinkObjects(target)
 
-			linkKey := fmt.Sprintf("Link/%s/%s/%s", con.Namespace, con.Spec.AddressSpace, con.Name)
+			linkKey := fmt.Sprintf("Link/%s/%s", con.Namespace, con.Name)
 			existingLinks, err := clw.Cache.Get(cache.PrimaryObjectIndex, linkKey, nil)
 			if err != nil {
 				return err
@@ -528,7 +529,7 @@ func updateAddressMetrics(addr *consolegraphql.AddressHolder, agentAddr *agent.A
 	sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_messages_stored", "gauge")
 	sm.Update(float64(agentAddr.Depth), now)
 
-	if addr.Spec.Type != "subscription" {
+	if addr.Spec.Subscription == nil {
 		sm, metrics = consolegraphql.FindOrCreateSimpleMetric(metrics, "enmasse_senders", "gauge")
 		sm.Update(float64(agentAddr.Senders), now)
 
@@ -610,13 +611,12 @@ func toConnectionObject(connection *agent.AgentConnection) *consolegraphql.Conne
 		},
 
 		Spec: consolegraphql.ConnectionSpec{
-			AddressSpace: connection.AddressSpace,
-			Hostname:     connection.Host,
-			ContainerId:  connection.Container,
-			Protocol:     "amqp",
-			Encrypted:    connection.Encrypted,
-			Properties:   connection.Properties,
-			Principal:    connection.User,
+			Hostname:    connection.Host,
+			ContainerId: connection.Container,
+			Protocol:    "amqp",
+			Encrypted:   connection.Encrypted,
+			Properties:  connection.Properties,
+			Principal:   connection.User,
 		},
 	}
 	if connection.Encrypted {

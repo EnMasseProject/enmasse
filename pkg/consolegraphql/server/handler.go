@@ -11,8 +11,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/gob"
+	"log"
+	"net/http"
+	"regexp"
+	"strconv"
+
 	"github.com/alexedwards/scs/v2"
-	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	v1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	userapiv1 "github.com/openshift/api/user/v1"
@@ -22,10 +27,6 @@ import (
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/clientcmd/api"
-	"log"
-	"net/http"
-	"regexp"
-	"strconv"
 )
 
 const accessControllerStateCookieName = "accessControllerState"
@@ -140,7 +141,7 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 			return
 		}
 
-		coreClient, err := v1beta1.NewForConfig(config)
+		coreClient, err := v1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -166,12 +167,12 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
 		state = &RequestState{
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     controller,
-			User:                 loggedOnUser,
-			UserAccessToken:      config.BearerToken,
-			UseSession:           useSession,
-			ImpersonatedUser:     impersonatedUser,
+			EnmasseV1Client:  coreClient,
+			AccessController: controller,
+			User:             loggedOnUser,
+			UserAccessToken:  config.BearerToken,
+			UseSession:       useSession,
+			ImpersonatedUser: impersonatedUser,
 		}
 
 		ctx := ContextWithRequestState(state, req.Context())
@@ -205,7 +206,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			return
 		}
 
-		coreClient, err := v1beta1.NewForConfig(config)
+		coreClient, err := v1.NewForConfig(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -221,12 +222,12 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 		}
 
 		requestState := &RequestState{
-			EnmasseV1beta1Client: coreClient,
-			AccessController:     accesscontroller.NewAllowAllAccessController(),
-			User:                 loggedOnUser,
-			UserAccessToken:      accessToken,
-			UseSession:           true,
-			ImpersonatedUser:     "",
+			EnmasseV1Client:  coreClient,
+			AccessController: accesscontroller.NewAllowAllAccessController(),
+			User:             loggedOnUser,
+			UserAccessToken:  accessToken,
+			UseSession:       true,
+			ImpersonatedUser: "",
 		}
 
 		ctx := ContextWithRequestState(requestState, req.Context())
