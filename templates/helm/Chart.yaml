@@ -1,0 +1,6 @@
+apiVersion: v2
+name: enmasse
+description: A Helm chart for deploying EnMasse
+type: application
+version: ${MAVEN_VERSION}
+appVersion: ${MAVEN_VERSION}
