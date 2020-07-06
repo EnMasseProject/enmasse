@@ -85,16 +85,16 @@ coverage_go:
 	GO111MODULE=on go test $(GOOPTS) -cover ./...
 
 buildpush:
-	$(MAKE)
-	$(MAKE) docker_build
-	$(MAKE) -j 4 docker_tag
-	$(MAKE) -j 4 docker_push
+	time $(MAKE)
+	time $(MAKE) docker_build
+	time $(MAKE) -j 4 docker_tag
+	time $(MAKE) -j 4 docker_push
 
 buildpushkind:
-	$(MAKE)
-	$(MAKE) docker_build
-	$(MAKE) -j 4 docker_tag
-	$(MAKE) kind_load_image
+	time $(MAKE)
+	time $(MAKE) docker_build
+	time $(MAKE) -j 4 docker_tag
+	time $(MAKE) kind_load_image
 
 clean_java:
 	mvn -q clean $(MAVEN_ARGS)
