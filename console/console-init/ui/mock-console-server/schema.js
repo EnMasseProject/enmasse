@@ -168,11 +168,11 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1!]
   }
 
-  type MessagingPlan_consoleapi_enmasse_io_v1 {
+  type MessagingPlan_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
   }
 
-  type MessagingAddressPlan_consoleapi_enmasse_io_v1 {
+  type MessagingAddressPlan_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
   }
 
@@ -273,14 +273,12 @@ const typeDefs = gql`
     addressTypes: [AddressType!]!
 
     # "Returns the address spaces plans defined by the system optionally filtering for plans available for a given namespace"
-    messagingPlans(
-      namespace: String
-    ): [MessagingPlan_consoleapi_enmasse_io_v1!]!
+    messagingPlans(namespace: String): [MessagingPlan_enmasse_io_v1!]!
 
     # "Returns the address plans defined by the system optionally filtering those for a matching namespaec"
     messagingAddressPlans(
       namespace: String
-    ): [MessagingAddressPlan_consoleapi_enmasse_io_v1!]!
+    ): [MessagingAddressPlan_enmasse_io_v1!]!
 
     "Returns the current logged on user"
     whoami: User_v1!

@@ -36,9 +36,9 @@ type MessagingEndpointQueryResultConsoleapiEnmasseIoV1 struct {
 	MessagingEndpoints []*v1.MessagingEndpoint `json:"messagingEndpoints"`
 }
 
-type MessagingTenantQueryResultConsoleapiEnmasseIoV1 struct {
-	Total            int                                     `json:"total"`
-	MessagingTenants []*consolegraphql.MessagingTenantHolder `json:"messagingTenants"`
+type MessagingProjectQueryResultConsoleapiEnmasseIoV1 struct {
+	Total             int                                      `json:"total"`
+	MessagingProjects []*consolegraphql.MessagingProjectHolder `json:"messagingProjects"`
 }
 
 type MetadataConsoleapiEnmasseIoV1 struct {
@@ -140,42 +140,42 @@ func (e LinkRole) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type MessagingTenantCapability string
+type MessagingProjectCapability string
 
 const (
-	MessagingTenantCapabilityTransactional MessagingTenantCapability = "transactional"
+	MessagingProjectCapabilityTransactional MessagingProjectCapability = "transactional"
 )
 
-var AllMessagingTenantCapability = []MessagingTenantCapability{
-	MessagingTenantCapabilityTransactional,
+var AllMessagingProjectCapability = []MessagingProjectCapability{
+	MessagingProjectCapabilityTransactional,
 }
 
-func (e MessagingTenantCapability) IsValid() bool {
+func (e MessagingProjectCapability) IsValid() bool {
 	switch e {
-	case MessagingTenantCapabilityTransactional:
+	case MessagingProjectCapabilityTransactional:
 		return true
 	}
 	return false
 }
 
-func (e MessagingTenantCapability) String() string {
+func (e MessagingProjectCapability) String() string {
 	return string(e)
 }
 
-func (e *MessagingTenantCapability) UnmarshalGQL(v interface{}) error {
+func (e *MessagingProjectCapability) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = MessagingTenantCapability(str)
+	*e = MessagingProjectCapability(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MessagingTenantCapability", str)
+		return fmt.Errorf("%s is not a valid MessagingProjectCapability", str)
 	}
 	return nil
 }
 
-func (e MessagingTenantCapability) MarshalGQL(w io.Writer) {
+func (e MessagingProjectCapability) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
@@ -28,7 +28,7 @@ var separators = []string{"_", ".", "-"}
 
 const maxKubeName = 253
 
-func (r *Resolver) Address_consoleapi_enmasse_io_v1beta1() Address_consoleapi_enmasse_io_v1beta1Resolver {
+func (r *Resolver) Address_consoleapi_enmasse_io_v1() Address_consoleapi_enmasse_io_v1 {
 	return &addressK8sResolver{r}
 }
 
@@ -36,7 +36,7 @@ type addressK8sResolver struct{ *Resolver }
 
 const infraUuidAnnotation = "enmasse.io/infra-uuid"
 
-func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1, error) {
 	if obj != nil {
 		fltrfunc, keyElements, e := BuildFilter(filter, "$.spec.address")
 		if e != nil {
@@ -76,7 +76,7 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 			})
 		}
 
-		return &LinkQueryResultConsoleapiEnmasseIoV1beta1{
+		return &LinkQueryResultConsoleapiEnmasseIoV1{
 			Total: len(links),
 			Links: consolelinks,
 		}, nil
@@ -84,13 +84,13 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 	return nil, nil
 }
 
-func (r *Resolver) AddressSpec_enmasse_io_v1beta1() AddressSpec_enmasse_io_v1beta1Resolver {
+func (r *Resolver) AddressSpec_enmasse_io_v1() AddressSpec_enmasse_io_v1Resolver {
 	return &addressSpecK8sResolver{r}
 }
 
 type addressSpecK8sResolver struct{ *Resolver }
 
-func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
@@ -122,7 +122,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 		addresses[i] = paged[i].(*consolegraphql.AddressHolder)
 	}
 
-	aqr := &AddressQueryResultConsoleapiEnmasseIoV1beta1{
+	aqr := &AddressQueryResultConsoleapiEnmasseIoV1{
 		Total:     len(objects),
 		Addresses: addresses,
 	}
@@ -130,7 +130,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	return aqr, nil
 }
 
-func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressSpec) (*v1beta2.AddressPlan, error) {
+func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1.MessagingAddressSpec) (*v1beta2.AddressPlan, error) {
 	if obj != nil {
 		addressPlanName := obj.Plan
 		planFilter := func(obj interface{}) (bool, bool, error) {
@@ -165,11 +165,11 @@ func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1beta1.AddressS
 	return nil, nil
 }
 
-func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1beta1.AddressSpec) (AddressType, error) {
+func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1.MessagingAddressSpec) (AddressType, error) {
 	return AddressType(obj.Type), nil
 }
 
-func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Address) (*metav1.ObjectMeta, error) {
+func (r *mutationResolver) CreateAddress(ctx context.Context, input v1.MessagingAddress) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	if input.ObjectMeta.Name == "" {
@@ -179,7 +179,7 @@ func (r *mutationResolver) CreateAddress(ctx context.Context, input v1beta1.Addr
 		}
 	}
 
-	nw, e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Create(&input)
+	nw, e := requestState.EnmasseV1Client.Addresses(input.Namespace).Create(&input)
 	if e != nil {
 		return nil, e
 	}
@@ -190,7 +190,7 @@ func (r *mutationResolver) PatchAddress(ctx context.Context, input metav1.Object
 	pt := types.PatchType(patchType)
 	requestState := server.GetRequestStateFromContext(ctx)
 
-	_, e := requestState.EnmasseV1beta1Client.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
+	_, e := requestState.EnmasseV1Client.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
 	b := e == nil
 	return &b, e
 }
@@ -204,7 +204,7 @@ func (r *mutationResolver) DeleteAddresses(ctx context.Context, input []*metav1.
 	t := true
 
 	for _, a := range input {
-		e := requestState.EnmasseV1beta1Client.Addresses(a.Namespace).Delete(a.Name, &metav1.DeleteOptions{})
+		e := requestState.EnmasseV1Client.Addresses(a.Namespace).Delete(a.Name, &metav1.DeleteOptions{})
 		if e != nil {
 			graphql.AddErrorf(ctx, "failed to delete address: '%s' in namespace: '%s', %+v", a.Name, a.Namespace, e)
 		}
@@ -279,13 +279,13 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 	return &t, nil
 }
 
-func (r *queryResolver) AddressCommand(ctx context.Context, input v1beta1.Address, addressSpace *string) (string, error) {
+func (r *queryResolver) AddressCommand(ctx context.Context, input v1.MessagingAddress, addressSpace *string) (string, error) {
 
 	if input.TypeMeta.APIVersion == "" {
-		input.TypeMeta.APIVersion = "enmasse.io/v1beta1"
+		input.TypeMeta.APIVersion = "enmasse.io/v1"
 	}
 	if input.TypeMeta.Kind == "" {
-		input.TypeMeta.Kind = "Address"
+		input.TypeMeta.Kind = "MessagingAddress"
 	}
 
 	namespace := input.Namespace
@@ -309,20 +309,16 @@ func tokenizeAddress(name string) ([]string, error) {
 	return addressToks, nil
 }
 
-func defaultResourceNameFromAddress(input *v1beta1.Address, addressSpace *string) error {
+func defaultResourceNameFromAddress(input *v1.MessagingAddress) error {
 	if input.Spec.Address == "" {
 		return fmt.Errorf("address is undefined, cannot default resource name")
-	}
-	if addressSpace == nil {
-		return fmt.Errorf("addressSpace is not provided, cannot default resource name from address '%s'",
-			input.Spec.Address)
 	}
 	addr := strings.ToLower(input.Spec.Address)
 	if !isValidName(addr, maxKubeName-len(*addressSpace)-1) {
 		qualifier := uuid.New().String()
 		addr = cleanName(addr, qualifier, maxKubeName-len(*addressSpace)-len(qualifier)-2)
 	}
-	input.ObjectMeta.Name = fmt.Sprintf("%s.%s", *addressSpace, addr)
+	input.ObjectMeta.Name = addr
 	return nil
 }
 

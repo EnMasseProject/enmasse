@@ -5,6 +5,8 @@
 
 directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION | FIELD_DEFINITION
 
+scalar CertBytes
+
 type KeyValue {
   key: String!
   value: String!
@@ -97,9 +99,9 @@ type LinkSpec_consoleapi_enmasse_io_v1 {
 #  Types used to facilitate the paginated model queries
 #
 
-type MessagingTenantQueryResult_consoleapi_enmasse_io_v1 {
+type MessagingProjectQueryResult_consoleapi_enmasse_io_v1 {
   total: Int!
-  messagingTenants: [MessagingTenant_consoleapi_enmasse_io_v1!]!
+  messagingProjects: [MessagingProject_consoleapi_enmasse_io_v1!]!
 }
 
 type AddressQueryResult_consoleapi_enmasse_io_v1 {
@@ -131,17 +133,17 @@ type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1{
 #
 
 
-type MessagingTenant_consoleapi_enmasse_io_v1 {
+type MessagingProject_consoleapi_enmasse_io_v1 {
   metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
-  spec: MessagingTenantSpec_enmasse_io_v1!
-  status: MessagingTenantStatus_enmasse_io_v1
+  spec: MessagingProjectSpec_enmasse_io_v1!
+  status: MessagingProjectStatus_enmasse_io_v1
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1!
   addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1!
   metrics: [Metric_consoleapi_enmasse_io_v1!]
 }
 
-type MessagingTenantSpec_enmasse_io_v1 {
-    capabilities: [MessagingTenantCapability]
+type MessagingProjectSpec_enmasse_io_v1 {
+    capabilities: [MessagingProjectCapability]
 }
 
 type MessagingEndpoint_enmasse_io_v1 {
@@ -170,9 +172,17 @@ type MessagingEndpointPort_enmasse_io_v1 {
   port: Int!
 }
 
-type MessagingTenantStatus_enmasse_io_v1 {
+type MessagingProjectStatus_enmasse_io_v1 {
   message:       String!
   phase:          String!
+}
+
+type MessagingPlan_enmasse_io_v1 {
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
+}
+
+type MessagingAddressPlan_enmasse_io_v1 {
+  metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
 }
 
 type AddressSpec_enmasse_io_v1 {
@@ -229,19 +239,19 @@ type NamespaceStatus_v1 {
 
 type Query {
 
-  # "Returns the address spaces plans defined by the system optionally filtering for plans available for a given namespace"
-  # messagingPlans(namespace: String): [MessagingPlan_enmasse_io_v1!]!
+  "Returns the address spaces plans defined by the system optionally filtering for plans available for a given namespace"
+  messagingPlans(namespace: String): [MessagingPlan_enmasse_io_v1!]!
 
-  # "Returns the address plans defined by the system optionally filtering those for a matching namespaec"
-  # messagingAddressPlans(namespace: String): [MessagingAddressPlan_enmasse_io_v1!]!
+  "Returns the address plans defined by the system optionally filtering those for a matching namespaec"
+  messagingAddressPlans(namespace: String): [MessagingAddressPlan_enmasse_io_v1!]!
 
   "Returns the current logged on user"
   whoami: User_v1!
   "Returns the namespaces visible to this user"
   namespaces : [Namespace_v1!]!
 
-  "Returns the messaging tenants visible to this user,  optionally filtering"
-  messagingTenants(first: Int, offset: Int, filter: String, orderBy: String): MessagingTenantQueryResult_consoleapi_enmasse_io_v1
+  "Returns the messaging projects visible to this user,  optionally filtering"
+  messagingProjects(first: Int, offset: Int, filter: String, orderBy: String): MessagingProjectQueryResult_consoleapi_enmasse_io_v1
 
   "Returns the addresses visible to this user,  optionally filtering"
   messagingAddresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1
@@ -253,7 +263,7 @@ type Query {
   messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
 
   "Returns the command-line that, if executed, would create the given address space"
-  messagingTenantCommand(input: MessagingTenant_enmasse_io_v1_Input!): String!
+  messagingProjectCommand(input: MessagingProject_enmasse_io_v1_Input!): String!
 
   "Returns the command-line command, if executed, would create the given address."
   messagingAddressCommand(input: Address_enmasse_io_v1_Input!): String!
@@ -272,17 +282,17 @@ input ObjectMeta_v1_Input {
   resourceVersion: String
 }
 
-input MessagingTenantSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingTenantCapability]
+input MessagingProjectSpec_enmasse_io_v1_Input {
+    capabilities: [MessagingProjectCapability]
 }
 
-enum MessagingTenantCapability {
+enum MessagingProjectCapability {
     transactional
 }
 
-input MessagingTenant_enmasse_io_v1_Input {
+input MessagingProject_enmasse_io_v1_Input {
   metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
-  spec: MessagingTenantSpec_enmasse_io_v1_Input
+  spec: MessagingProjectSpec_enmasse_io_v1_Input
 }
 
 input AddressSpec_enmasse_io_v1_Input {
@@ -297,11 +307,11 @@ input Address_enmasse_io_v1_Input {
 }
 
 type Mutation {
-  createMessagingTenant(input: MessagingTenant_enmasse_io_v1_Input!): ObjectMeta_v1!
-  patchMessagingTenant(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteMessagingTenant(input: ObjectMeta_v1_Input!): Boolean @deprecated
-  "deletes messagingtenants (s)"
-  deleteMessagingTenants(input: [ObjectMeta_v1_Input!]!): Boolean
+  createMessagingProject(input: MessagingProject_enmasse_io_v1_Input!): ObjectMeta_v1!
+  patchMessagingProject(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
+  deleteMessagingProject(input: ObjectMeta_v1_Input!): Boolean @deprecated
+  "deletes messagingprojects(s)"
+  deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
   createAddress(input: Address_enmasse_io_v1_Input!, addressSpace: String): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean

@@ -21,7 +21,7 @@ import (
 	"strings"
 )
 
-func (r *queryResolver) MessagingEndpoints(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *queryResolver) MessagingEndpoints(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingEndpointQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
@@ -84,194 +84,12 @@ func (r *queryResolver) MessagingEndpoints(ctx context.Context, first *int, offs
 	lower, upper := CalcLowerUpper(offset, first, len(endpoints))
 	paged := endpoints[lower:upper]
 
-	mer := &MessagingEndpointQueryResultConsoleapiEnmasseIoV1beta1{
+	mer := &MessagingEndpointQueryResultConsoleapiEnmasseIoV1{
 		Total:              len(endpoints),
 		MessagingEndpoints: paged,
 	}
 
 	return mer, nil
-}
-
-func buildExposedEndpoint(addressSpace v1beta1.AddressSpace, spec v1beta1.EndpointSpec, status *v1beta1.EndpointStatus, specTls *v1.MessagingEndpointSpecTls, statusTls *v1.MessagingEndpointStatusTls) *v1.MessagingEndpoint {
-	var exposeEndpoint *v1.MessagingEndpoint
-	host := ""
-	ports := make([]v1.MessagingEndpointPort, 0)
-	protocols := make([]v1.MessagingEndpointProtocol, 0)
-	phase := v1.MessagingEndpointConfiguring
-
-	var statusType v1.MessagingEndpointType
-	var route *v1.MessagingEndpointSpecRoute
-	var loadbalancer *v1.MessagingEndpointSpecLoadBalancer
-
-	if spec.Expose.Type == v1beta1.ExposeTypeRoute {
-		statusType = v1.MessagingEndpointTypeRoute
-		var termination *routev1.TLSTerminationType
-		if spec.Expose.RouteTlsTermination == v1beta1.RouteTlsTerminationReencrypt {
-			reencrypt := routev1.TLSTerminationReencrypt
-			termination = &reencrypt
-		}
-
-		route = &v1.MessagingEndpointSpecRoute{
-			TlsTermination: termination,
-		}
-		if status != nil {
-			if status.ExternalHost != "" {
-				host = status.ExternalHost
-				phase = v1.MessagingEndpointActive
-			}
-
-			if len(status.ExternalPorts) > 0 {
-				externalPort := status.ExternalPorts[0]
-				var protocol v1.MessagingEndpointProtocol
-				switch externalPort.Name {
-				case "https":
-					protocol = v1.MessagingProtocolAMQPWSS
-				default:
-					protocol = v1.MessagingProtocolAMQPS
-				}
-				port := v1.MessagingEndpointPort{
-					Name:     strings.ToLower(string(protocol)),
-					Protocol: protocol,
-					Port:     int(externalPort.Port),
-				}
-				ports = append(ports, port)
-				protocols = append(protocols, protocol)
-			}
-		}
-	} else if spec.Expose.Type == v1beta1.ExposeTypeLoadBalancer {
-		statusType = v1.MessagingEndpointTypeLoadBalancer
-
-		loadbalancer = &v1.MessagingEndpointSpecLoadBalancer{}
-
-		if status != nil {
-			for _, p := range status.ExternalPorts {
-				protocol := toMessagingEndpointProtocol(p.Name)
-				port := v1.MessagingEndpointPort{
-					Name:     p.Name,
-					Protocol: protocol,
-					Port:     int(p.Port),
-				}
-				ports = append(ports, port)
-				protocols = append(protocols, protocol)
-			}
-			phase = v1.MessagingEndpointActive
-		}
-	}
-
-	endpointName := fmt.Sprintf("%s.%s", addressSpace.Name, spec.Name)
-	exposeEndpoint = &v1.MessagingEndpoint{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      endpointName,
-			Namespace: addressSpace.Namespace,
-			UID:       createStableUuidV5(addressSpace.ObjectMeta, endpointName),
-		},
-		Spec: v1.MessagingEndpointSpec{
-			Route:        route,
-			LoadBalancer: loadbalancer,
-			Protocols:    protocols,
-			Tls:          specTls,
-		},
-		Status: v1.MessagingEndpointStatus{
-			Type:  statusType,
-			Phase: phase,
-			Host:  host,
-			Ports: ports,
-			Tls:   statusTls,
-		},
-	}
-	return exposeEndpoint
-}
-
-func buildClusterEndpoint(addressSpace v1beta1.AddressSpace, spec v1beta1.EndpointSpec, status *v1beta1.EndpointStatus, specTls *v1.MessagingEndpointSpecTls, statusTls *v1.MessagingEndpointStatusTls) *v1.MessagingEndpoint {
-	var clusterEndpoint *v1.MessagingEndpoint
-	serviceName := fmt.Sprintf("%s.%s.cluster", addressSpace.Name, spec.Service)
-	host := ""
-	ports := make([]v1.MessagingEndpointPort, 0)
-	protocols := make([]v1.MessagingEndpointProtocol, 0)
-	phase := v1.MessagingEndpointConfiguring
-	if status != nil {
-		if status.ServiceHost != "" {
-			host = status.ServiceHost
-			phase = v1.MessagingEndpointActive
-		}
-		for _, p := range status.ServicePorts {
-			protocol := toMessagingEndpointProtocol(p.Name)
-			port := v1.MessagingEndpointPort{
-				Name:     p.Name,
-				Protocol: protocol,
-				Port:     int(p.Port),
-			}
-			ports = append(ports, port)
-			protocols = append(protocols, protocol)
-		}
-	}
-	clusterEndpoint = &v1.MessagingEndpoint{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      serviceName,
-			Namespace: addressSpace.Namespace,
-			UID:       createStableUuidV5(addressSpace.ObjectMeta, serviceName),
-		},
-		Spec: v1.MessagingEndpointSpec{
-			Cluster:   &v1.MessagingEndpointSpecCluster{},
-			Protocols: protocols,
-			Tls:       specTls,
-		},
-		Status: v1.MessagingEndpointStatus{
-			Type:  v1.MessagingEndpointTypeCluster,
-			Phase: phase,
-			Host:  host,
-			Ports: ports,
-			Tls:   statusTls,
-		},
-	}
-	return clusterEndpoint
-}
-
-func buildMessagingEndpointSpecTls(endpointSpec v1beta1.EndpointSpec, status v1beta1.AddressSpaceStatus) (*v1.MessagingEndpointSpecTls, *v1.MessagingEndpointStatusTls) {
-	var specTls *v1.MessagingEndpointSpecTls
-	var statusTls *v1.MessagingEndpointStatusTls
-
-	if endpointSpec.Certificate != nil {
-
-		var tlsSelfSigned *v1.MessagingEndpointSpecTlsSelfsigned
-		var tlsOpenshift *v1.MessagingEndpointSpecTlsOpenshift
-		var tlsExternal *v1.MessagingEndpointSpecTlsExternal
-
-		switch endpointSpec.Certificate.Provider {
-		case v1beta1.CertificateProviderTypeCertSelfsigned:
-			tlsSelfSigned = &v1.MessagingEndpointSpecTlsSelfsigned{}
-		case v1beta1.CertificateProviderTypeCertOpenshift:
-			tlsOpenshift = &v1.MessagingEndpointSpecTlsOpenshift{}
-		case v1beta1.CertificateProviderTypeCertBundle:
-			var key v1.InputValue
-			var cert v1.InputValue
-			if len(endpointSpec.Certificate.TlsKey) > 0 && len(endpointSpec.Certificate.TlsCert) > 0 {
-				key = v1.InputValue{
-					Value: string(endpointSpec.Certificate.TlsKey), // Base64 decode?
-				}
-				cert = v1.InputValue{
-					Value: string(endpointSpec.Certificate.TlsCert),
-				}
-			}
-			tlsExternal = &v1.MessagingEndpointSpecTlsExternal{
-				Key:         key,
-				Certificate: cert,
-			}
-		case v1beta1.CertificateProviderTypeWildcard:
-			// TODO - wildcard secret name not accessible - it is hardcoded config to the ASC.
-		}
-		specTls = &v1.MessagingEndpointSpecTls{
-			Selfsigned: tlsSelfSigned,
-			Openshift:  tlsOpenshift,
-			External:   tlsExternal,
-		}
-
-		statusTls = &v1.MessagingEndpointStatusTls{
-			CaCertificate: string(status.CACertificate),
-			// TODO extract cert details.
-		}
-	}
-	return specTls, statusTls
 }
 
 func applyFilter(filterFunc cache.ObjectFilter, clusterEndpoint *v1.MessagingEndpoint) (bool, error) {

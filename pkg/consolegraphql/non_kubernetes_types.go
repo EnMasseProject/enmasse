@@ -7,7 +7,7 @@ package consolegraphql
 
 import (
 	"container/ring"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	authv1 "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
@@ -31,9 +31,9 @@ type Connection struct {
 
 func (c *Connection) GetControllingResourceAttributes() *authv1.ResourceAttributes {
 	return &authv1.ResourceAttributes{
-		Resource:  "addressspaces",
+		Resource:  "messagingprojects",
 		Group:     "enmasse.io",
-		Version:   "v1beta1",
+		Version:   "v1",
 		Namespace: c.ObjectMeta.Namespace,
 	}
 }
@@ -152,23 +152,23 @@ func (m *RateCalculatingMetric) Update(v float64, ts time.Time) {
 	return
 }
 
-type MessagingTenantHolder struct {
-	v1.MessagingTenant `json:",inline"`
-	Metrics            []*Metric `json:"metrics"`
+type MessagingProjectHolder struct {
+	v1.MessagingProject `json:",inline"`
+	Metrics             []*Metric `json:"metrics"`
 }
 
-func (ash *MessagingTenantHolder) GetMetrics() []*Metric {
+func (ash *MessagingProjectHolder) GetMetrics() []*Metric {
 	return ash.Metrics
 }
 
-func (ash *MessagingTenantHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
+func (ash *MessagingProjectHolder) GetControllingResourceAttributes() *authv1.ResourceAttributes {
 	gvk := ash.TypeMeta.GroupVersionKind()
 	return getResourceAttributes(gvk, ash.Namespace)
 }
 
 type AddressHolder struct {
-	v1beta1.Address `json:",inline"`
-	Metrics         []*Metric `json:"metrics"`
+	v1.MessagingAddress `json:",inline"`
+	Metrics             []*Metric `json:"metrics"`
 }
 
 func (ah *AddressHolder) GetMetrics() []*Metric {

@@ -41,21 +41,21 @@ models:
   MessagingAddressPlanStatus_enmasse_io_v1:
     model: v1.MessagingAddressPlanStatus
 
-  MessagingTenant_consoleapi_enmasse_io_v1:
-    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.MessagingTenantHolder
-  MessagingTenantSpec_enmasse_io_v1:
-    model: v1.MessagingTenantSpec
-  MessagingTenantStatus_enmasse_io_v1:
-    model: v1.MessagingTenantStatus
+  MessagingProject_consoleapi_enmasse_io_v1:
+    model: github.com/enmasseproject/enmasse/pkg/consolegraphql.MessagingProjectHolder
+  MessagingProjectSpec_enmasse_io_v1:
+    model: v1.MessagingProjectSpec
+  MessagingProjectStatus_enmasse_io_v1:
+    model: v1.MessagingProjectStatus
 
-  MessagingAddressPlan_admin_enmasse_io_v1:
+  MessagingAddressPlan_enmasse_io_v1:
     model: v1.MessagingAddressPlan
-  MessagingAddressPlanSpec_admin_enmasse_io_v1:
+  MessagingAddressPlanSpec_enmasse_io_v1:
     model: v1.MessagingAddressPlanSpec
 
-  MessagingPlan_admin_enmasse_io_v1:
+  MessagingPlan_enmasse_io_v1:
     model: v1.MessagingPlan
-  MessagingPlanSpec_admin_enmasse_io_v1:
+  MessagingPlanSpec_enmasse_io_v1:
     model: v1.MessagingPlanSpec
 
   Connection_consoleapi_enmasse_io_v1:
@@ -94,10 +94,10 @@ models:
   AddressSpec_enmasse_io_v1_Input:
     model: v1.MessagingAddressSpec
 
-  MessagingTenant_enmasse_io_v1_Input:
-    model: v1.MessagingTenant
-  MessagingTenantSpec_enmasse_io_v1_Input:
-    model: v1.MessagingTenantSpec
+  MessagingProject_enmasse_io_v1_Input:
+    model: v1.MessagingProject
+  MessagingProjectSpec_enmasse_io_v1_Input:
+    model: v1.MessagingProjectSpec
 
   Metric_consoleapi_enmasse_io_v1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Metric

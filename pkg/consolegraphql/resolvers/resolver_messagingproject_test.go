@@ -21,11 +21,11 @@ import (
 	"testing"
 )
 
-func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
+func newTestMessagingProjectResolver(t *testing.T) (*Resolver, context.Context) {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err)
 
-	clientset := fake.NewSimpleClientset(&v1beta1.AddressSpace{})
+	clientset := fake.NewSimpleClientset(&v1beta1.MessagingProject{})
 
 	resolver := Resolver{}
 	resolver.Cache = objectCache
@@ -42,90 +42,90 @@ func newTestAddressSpaceResolver(t *testing.T) (*Resolver, context.Context) {
 	return &resolver, ctx
 }
 
-func TestQueryAddressSpace(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("mynamespace", "myaddressspace")
+func TestQueryMessagingProject(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as := createMessagingProject("mynamespace", "myaddressspace")
 	err := r.Cache.Add(as)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, nil)
+	objs, err := r.Query().MessagingProjects(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 
 	expected := 1
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as.Spec, objs.AddressSpaces[0].Spec, "Unexpected address space spec")
-	assert.Equal(t, as.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as.Spec, objs.MessagingProjects[0].Spec, "Unexpected address space spec")
+	assert.Equal(t, as.ObjectMeta, objs.MessagingProjects[0].ObjectMeta, "Unexpected address space object meta")
 }
 
-func TestQueryAddressSpaceFilter(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as1 := createAddressSpace("mynamespace1", "myaddressspace")
-	as2 := createAddressSpace("mynamespace2", "myaddressspace")
+func TestQueryMessagingProjectFilter(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as1 := createMessagingProject("mynamespace1", "myaddressspace")
+	as2 := createMessagingProject("mynamespace2", "myaddressspace")
 	err := r.Cache.Add(as1, as2)
 	assert.NoError(t, err)
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", as1.ObjectMeta.Name)
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, &filter, nil)
+	objs, err := r.Query().MessagingProjects(ctx, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 
 	expected := 1
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as1.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as1.ObjectMeta, objs.MessagingProjects[0].ObjectMeta, "Unexpected address space object meta")
 }
 
-func TestQueryAddressSpaceOrder(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as1 := createAddressSpace("mynamespace1", "myaddressspace")
-	as2 := createAddressSpace("mynamespace2", "myaddressspace")
+func TestQueryMessagingProjectOrder(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as1 := createMessagingProject("mynamespace1", "myaddressspace")
+	as2 := createMessagingProject("mynamespace2", "myaddressspace")
 	err := r.Cache.Add(as1, as2)
 	assert.NoError(t, err)
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, &orderby)
+	objs, err := r.Query().MessagingProjects(ctx, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 
 	expected := 2
 	actual := objs.Total
 	assert.Equal(t, expected, actual, "Unexpected number of address spaces")
 
-	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
-	assert.Equal(t, as1.ObjectMeta, objs.AddressSpaces[1].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as2.ObjectMeta, objs.MessagingProjects[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, as1.ObjectMeta, objs.MessagingProjects[1].ObjectMeta, "Unexpected address space object meta")
 }
 
-func TestQueryAddressSpacePagination(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as1 := createAddressSpace("mynamespace1", "myaddressspace")
-	as2 := createAddressSpace("mynamespace2", "myaddressspace")
-	as3 := createAddressSpace("mynamespace3", "myaddressspace")
-	as4 := createAddressSpace("mynamespace4", "myaddressspace")
+func TestQueryMessagingProjectPagination(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as1 := createMessagingProject("mynamespace1", "myaddressspace")
+	as2 := createMessagingProject("mynamespace2", "myaddressspace")
+	as3 := createMessagingProject("mynamespace3", "myaddressspace")
+	as4 := createMessagingProject("mynamespace4", "myaddressspace")
 	err := r.Cache.Add(as1, as2, as3, as4)
 	assert.NoError(t, err)
 
-	objs, err := r.Query().AddressSpaces(ctx, nil, nil, nil, nil)
+	objs, err := r.Query().MessagingProjects(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
 
 	one := 1
 	two := 2
-	objs, err = r.Query().AddressSpaces(ctx, nil, &one, nil, nil)
+	objs, err = r.Query().MessagingProjects(ctx, nil, &one, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
-	assert.Equal(t, 3, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
-	assert.Equal(t, as2.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, 3, len(objs.MessagingProjects), "Unexpected number of address spaces in page")
+	assert.Equal(t, as2.ObjectMeta, objs.MessagingProjects[0].ObjectMeta, "Unexpected address space object meta")
 
-	objs, err = r.Query().AddressSpaces(ctx, &one, &two, nil, nil)
+	objs, err = r.Query().MessagingProjects(ctx, &one, &two, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 4, objs.Total, "Unexpected number of address spaces")
-	assert.Equal(t, 1, len(objs.AddressSpaces), "Unexpected number of address spaces in page")
-	assert.Equal(t, as3.ObjectMeta, objs.AddressSpaces[0].ObjectMeta, "Unexpected address space object meta")
+	assert.Equal(t, 1, len(objs.MessagingProjects), "Unexpected number of address spaces in page")
+	assert.Equal(t, as3.ObjectMeta, objs.MessagingProjects[0].ObjectMeta, "Unexpected address space object meta")
 }
 
-func TestQueryAddressSpaceConnections(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestQueryMessagingProjectConnections(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -134,21 +134,21 @@ func TestQueryAddressSpaceConnections(t *testing.T) {
 	err := r.Cache.Add(con1, con2)
 	assert.NoError(t, err)
 
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
 		},
 	}
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, nil)
+	objs, err := r.MessagingProject_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of connections associated with the addressspace")
 }
 
-func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestQueryMessagingProjectConnectionFilter(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -156,8 +156,8 @@ func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
 	err := r.Cache.Add(con1, con2)
 	assert.NoError(t, err)
 
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
@@ -166,14 +166,14 @@ func TestQueryAddressSpaceConnectionFilter(t *testing.T) {
 	}
 
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", con2.ObjectMeta.Name)
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, &filter, nil)
+	objs, err := r.MessagingProject_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of filtered connections associated with the addressspace")
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
-func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestQueryMessagingProjectConnectionOrder(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	con1 := createConnection("host:1234", namespace, addressspace)
@@ -181,8 +181,8 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 	err := r.Cache.Add(con1, con2)
 	assert.NoError(t, err)
 
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
@@ -191,19 +191,19 @@ func TestQueryAddressSpaceConnectionOrder(t *testing.T) {
 	}
 
 	orderby := "`$.ObjectMeta.Name` DESC"
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, &orderby)
+	objs, err := r.MessagingProject_consoleapi_enmasse_io_v1beta1().Connections(ctx, ash, nil, nil, nil, &orderby)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, objs.Total, "Unexpected number of connections associated with the addressspace")
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
 func TestMessagingCertificateChain(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	expectedCert := "the bytes"
-	as1 := createAddressSpace(addressspace, namespace)
-	as1.Status = v1beta1.AddressSpaceStatus{
+	as1 := createMessagingProject(addressspace, namespace)
+	as1.Status = v1beta1.MessagingProjectStatus{
 		CACertificate: []byte(expectedCert),
 	}
 	err := r.Cache.Add(as1)
@@ -219,29 +219,29 @@ func TestMessagingCertificateChain(t *testing.T) {
 	assert.Equal(t, expectedCert, cert, "Unexpected cert")
 }
 
-func TestQueryAddressSpaceAddress(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestQueryMessagingProjectAddress(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	addr := createAddress(namespace, fmt.Sprintf("%s.addr1", addressspace))
 	err := r.Cache.Add(addr)
 	assert.NoError(t, err)
 
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
 			},
 		},
 	}
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, nil, nil)
+	objs, err := r.MessagingProject_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of address associated with the addressspace")
 }
 
-func TestQueryAddressSpaceAddressFilter(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestQueryMessagingProjectAddressFilter(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 	addr1 := createAddress(namespace, fmt.Sprintf("%s.addr1", addressspace))
@@ -249,8 +249,8 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 	err := r.Cache.Add(addr1, addr2)
 	assert.NoError(t, err)
 
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
 				Namespace: namespace,
@@ -258,28 +258,28 @@ func TestQueryAddressSpaceAddressFilter(t *testing.T) {
 		},
 	}
 	filter := fmt.Sprintf("`$.ObjectMeta.Name` = '%s'", addr2.ObjectMeta.Name)
-	objs, err := r.AddressSpace_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, &filter, nil)
+	objs, err := r.MessagingProject_consoleapi_enmasse_io_v1beta1().Addresses(ctx, ash, nil, nil, &filter, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, objs.Total, "Unexpected number of address associated with the addressspace")
 	assert.Equal(t, 1, objs.Total, "Unexpected number of filtered addresses associated with the addressspace")
 	assert.Equal(t, addr2, objs.Addresses[0], "Unexpected connection")
 }
 
-func TestQueryAddressSpaceCommand(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("myaddressspace", "mynamespace")
+func TestQueryMessagingProjectCommand(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as := createMessagingProject("myaddressspace", "mynamespace")
 	auth := "auth"
-	as.Spec = v1beta1.AddressSpaceSpec{
+	as.Spec = v1beta1.MessagingProjectSpec{
 		AuthenticationService: &v1beta1.AuthenticationService{
 			Name: auth,
 		},
 		Plan: "standard-small-queue",
 		Type: "queue",
 	}
-	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
+	obj, err := r.Query().MessagingProjectCommand(ctx, as.MessagingProject)
 	assert.NoError(t, err)
 
-	expectedMetaData := `kind: AddressSpace
+	expectedMetaData := `kind: MessagingProject
 metadata:
   name: myaddressspace`
 	expectedSpec := `
@@ -292,11 +292,11 @@ spec:
 	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
 }
 
-func TestQueryAddressSpaceCommandWithEndpoint(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("myaddressspace", "mynamespace")
+func TestQueryMessagingProjectCommandWithEndpoint(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as := createMessagingProject("myaddressspace", "mynamespace")
 	auth := "auth"
-	as.Spec = v1beta1.AddressSpaceSpec{
+	as.Spec = v1beta1.MessagingProjectSpec{
 		Plan: "standard-small-queue",
 		Type: "queue",
 		AuthenticationService: &v1beta1.AuthenticationService{
@@ -318,10 +318,10 @@ func TestQueryAddressSpaceCommandWithEndpoint(t *testing.T) {
 			},
 		},
 	}
-	obj, err := r.Query().AddressSpaceCommand(ctx, as.AddressSpace)
+	obj, err := r.Query().MessagingProjectCommand(ctx, as.MessagingProject)
 	assert.NoError(t, err)
 
-	expectedMetaData := `kind: AddressSpace
+	expectedMetaData := `kind: MessagingProject
 metadata:
   name: myaddressspace`
 	expectedSpec := `
@@ -344,19 +344,19 @@ spec:
 	assert.Contains(t, obj, expectedSpec, "Expect spec to be set")
 }
 
-func TestDeleteAddressSpaces(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestDeleteMessagingProjects(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
-	as1 := createAddressSpace("myaddressspace1", namespace)
-	as2 := createAddressSpace("myaddressspace2", namespace)
+	as1 := createMessagingProject("myaddressspace1", namespace)
+	as2 := createMessagingProject("myaddressspace2", namespace)
 
-	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(namespace)
-	_, err := addrClient.Create(&as1.AddressSpace)
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.MessagingProjects(namespace)
+	_, err := addrClient.Create(&as1.MessagingProject)
 	assert.NoError(t, err)
-	_, err = addrClient.Create(&as2.AddressSpace)
+	_, err = addrClient.Create(&as2.MessagingProject)
 	assert.NoError(t, err)
 
-	_, err = r.Mutation().DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &as2.ObjectMeta})
+	_, err = r.Mutation().DeleteMessagingProjects(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &as2.ObjectMeta})
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(graphql.GetErrors(ctx)))
 
@@ -365,20 +365,20 @@ func TestDeleteAddressSpaces(t *testing.T) {
 	assert.Equal(t, 0, len(list.Items))
 }
 
-func TestDeleteAddressSpacesOneAddressSpaceNotFound(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
+func TestDeleteMessagingProjectsOneMessagingProjectNotFound(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"
-	as1 := createAddressSpace("myaddressspace1", namespace)
-	as2 := createAddressSpace("myaddressspace2", namespace)
-	absent := createAddressSpace("absent", namespace)
+	as1 := createMessagingProject("myaddressspace1", namespace)
+	as2 := createMessagingProject("myaddressspace2", namespace)
+	absent := createMessagingProject("absent", namespace)
 
-	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(namespace)
-	_, err := addrClient.Create(&as1.AddressSpace)
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.MessagingProjects(namespace)
+	_, err := addrClient.Create(&as1.MessagingProject)
 	assert.NoError(t, err)
-	_, err = addrClient.Create(&as2.AddressSpace)
+	_, err = addrClient.Create(&as2.MessagingProject)
 	assert.NoError(t, err)
 
-	_, err = r.Mutation().DeleteAddressSpaces(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &absent.ObjectMeta, &as2.ObjectMeta})
+	_, err = r.Mutation().DeleteMessagingProjects(ctx, []*metav1.ObjectMeta{&as1.ObjectMeta, &absent.ObjectMeta, &as2.ObjectMeta})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(graphql.GetErrors(ctx)))
 	assert.Contains(t, graphql.GetErrors(ctx)[0].Message, "failed to delete address space: 'absent' in namespace: 'mynamespace'")
@@ -388,11 +388,11 @@ func TestDeleteAddressSpacesOneAddressSpaceNotFound(t *testing.T) {
 	assert.Equal(t, 0, len(list.Items))
 }
 
-func TestCreateAddressSpace(t *testing.T) {
-	r, ctx := newTestAddressSpaceResolver(t)
-	as := createAddressSpace("myaddressspace", "mynamespace")
+func TestCreateMessagingProject(t *testing.T) {
+	r, ctx := newTestMessagingProjectResolver(t)
+	as := createMessagingProject("myaddressspace", "mynamespace")
 	auth := "auth"
-	as.Spec = v1beta1.AddressSpaceSpec{
+	as.Spec = v1beta1.MessagingProjectSpec{
 		Plan: "standard-small-queue",
 		Type: "queue",
 		AuthenticationService: &v1beta1.AuthenticationService{
@@ -414,12 +414,12 @@ func TestCreateAddressSpace(t *testing.T) {
 			},
 		},
 	}
-	obj, err := r.Mutation().CreateAddressSpace(ctx, as.AddressSpace)
+	obj, err := r.Mutation().CreateMessagingProject(ctx, as.MessagingProject)
 	assert.NoError(t, err)
 	assert.Equal(t, as.Namespace, obj.Namespace)
 	assert.Equal(t, as.Name, obj.Name)
 
-	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.AddressSpaces(as.Namespace)
+	addrClient := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.MessagingProjects(as.Namespace)
 	retrieved, err := addrClient.Get(as.Name, metav1.GetOptions{})
 	assert.NoError(t, err)
 	assert.Equal(t, "standard-small-queue", retrieved.Spec.Plan)

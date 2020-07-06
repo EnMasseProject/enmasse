@@ -17,11 +17,11 @@ import (
 
 type connectionK8sResolver struct{ *Resolver }
 
-func (r *Resolver) Connection_consoleapi_enmasse_io_v1beta1() Connection_consoleapi_enmasse_io_v1beta1Resolver {
+func (r *Resolver) Connection_consoleapi_enmasse_io_v1() Connection_consoleapi_enmasse_io_v1Resolver {
 	return &connectionK8sResolver{r}
 }
 
-func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.Connection, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.Connection, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1, error) {
 	if obj != nil {
 
 		fltrfunc, keyElements, e := BuildFilter(filter, "$.metadata.name")
@@ -57,7 +57,7 @@ func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.C
 			})
 		}
 
-		return &LinkQueryResultConsoleapiEnmasseIoV1beta1{
+		return &LinkQueryResultConsoleapiEnmasseIoV1{
 			Total: len(links),
 			Links: consolelinks,
 		}, nil
@@ -67,25 +67,25 @@ func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.C
 
 type connectionSpecK8sResolver struct{ *Resolver }
 
-func (r *Resolver) ConnectionSpec_consoleapi_enmasse_io_v1beta1() ConnectionSpec_consoleapi_enmasse_io_v1beta1Resolver {
+func (r *Resolver) ConnectionSpec_consoleapi_enmasse_io_v1() ConnectionSpec_consoleapi_enmasse_io_v1Resolver {
 	return &connectionSpecK8sResolver{r}
 }
 
-func (cs connectionSpecK8sResolver) AddressSpace(ctx context.Context, obj *consolegraphql.ConnectionSpec) (*consolegraphql.AddressSpaceHolder, error) {
+func (cs connectionSpecK8sResolver) MessagingProject(ctx context.Context, obj *consolegraphql.ConnectionSpec) (*consolegraphql.MessagingProjectHolder, error) {
 	if obj != nil {
 		conrsctx := graphql.GetResolverContext(ctx).Parent.Parent
 		con := conrsctx.Result.(**consolegraphql.Connection)
 
 		namespace := (*con).ObjectMeta.Namespace
-		objs, e := cs.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("AddressSpace/%s/%s", namespace, obj.AddressSpace), nil)
+		objs, e := cs.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("MessagingProject/%s/%s", namespace, "default"), nil)
 		if e != nil {
 			return nil, e
 		}
 		if len(objs) == 0 {
-			return nil, fmt.Errorf("address space '%s' in namespace '%s' not found", obj.AddressSpace, namespace)
+			return nil, fmt.Errorf("messaging project in namespace '%s' not found", namespace)
 		}
 
-		as := objs[0].(*consolegraphql.AddressSpaceHolder)
+		as := objs[0].(*consolegraphql.MessagingProjectHolder)
 		return as, nil
 	}
 	return nil, nil
@@ -121,11 +121,11 @@ func (cs connectionSpecK8sResolver) Properties(ctx context.Context, obj *console
 	return []*KeyValue{}, nil
 }
 
-func (r *Resolver) LinkSpec_consoleapi_enmasse_io_v1beta1() LinkSpec_consoleapi_enmasse_io_v1beta1Resolver {
+func (r *Resolver) LinkSpec_consoleapi_enmasse_io_v1() LinkSpec_consoleapi_enmasse_io_v1Resolver {
 	return &linkSpecK8sResolver{r}
 }
 
-func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1beta1, error) {
+func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
@@ -157,7 +157,7 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 		cons[i] = paged[i].(*consolegraphql.Connection)
 	}
 
-	return &ConnectionQueryResultConsoleapiEnmasseIoV1beta1{
+	return &ConnectionQueryResultConsoleapiEnmasseIoV1{
 		Total:       len(objects),
 		Connections: cons,
 	}, nil
@@ -202,18 +202,20 @@ func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.Obj
 			return nil, fmt.Errorf("unexpected type: %T", obj)
 		}
 
-		infraUid, e := r.GetInfraUid(con.Namespace, con.Spec.AddressSpace)
-		if e != nil {
-			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - %+v", con.Name, con.Namespace, e)
-			continue
-		}
+		/*
+			infraUid, e := r.GetInfraUid(con.Namespace, con.Spec.AddressSpace)
+			if e != nil {
+				graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - %+v", con.Name, con.Namespace, e)
+				continue
+			}
 
-		collector := r.GetCollector(infraUid)
-		if collector == nil {
-			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
-				con.Name, con.Namespace, infraUid)
-			continue
-		}
+			collector := r.GetCollector(infraUid)
+			if collector == nil {
+				graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
+					con.Name, con.Namespace, infraUid)
+				continue
+			}
+		*/
 
 		token := requestState.UserAccessToken
 
