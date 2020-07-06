@@ -20,7 +20,7 @@ export const ProjectDetailHeader = () => (
       type={text("Type", "Managed")}
       status={text("Status", "Ready")}
       isEnabled={boolean("Enabled", true)}
-      changeEnable={action("onEnableChange Clicked")}
+      changeStatus={action("onEnableChange Clicked")}
       onDelete={action("onDelete Clicked")}
     />
   </MemoryRouter>

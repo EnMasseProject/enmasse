@@ -38,9 +38,13 @@ import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
 import { TablePagination } from "components";
-import { useLocation } from "react-router";
+import { useLocation, useParams } from "react-router";
+import { useMutationQuery } from "hooks";
+import { DELETE_IOT_DEVICE } from "graphql-module";
 
 export default function DeviceListPage() {
+  const { projectname } = useParams();
+
   useDocumentTitle("Device List");
 
   const [totalDevices, setTotalDevices] = useState<number>();
@@ -63,6 +67,10 @@ export default function DeviceListPage() {
   }>(getInitialAlert());
 
   const { dispatch } = useStoreContext();
+
+  const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
+    "devices_for_iot_project"
+  ]);
 
   const changeDeviceAlert = () => {
     if (totalDevices && totalDevices < MAX_DEVICE_LIST_COUNT) {
@@ -147,8 +155,12 @@ export default function DeviceListPage() {
     setSelectedDevices(devices);
   };
 
-  const onConfirmDeleteSelectedDevices = () => {
-    // TODO: TO BE DONE AFTER BACKEND IS READY
+  const onConfirmDeleteSelectedDevices = async (devices: IDevice[]) => {
+    const variable = {
+      deviceId: devices.map(({ deviceId }) => deviceId),
+      iotproject: projectname
+    };
+    await setDeleteDeviceQueryVariables(variable);
   };
 
   const onConfirmEnableSelectedDevices = () => {
@@ -325,6 +337,7 @@ export default function DeviceListPage() {
           </Grid>
           <DeviceListContainer
             page={page}
+            projectname={projectname}
             perPage={perPage}
             setTotalDevices={setTotalDevices}
             selectedDevices={selectedDevices}
