@@ -10,6 +10,12 @@ import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.Target;
 
 public class TopicTerminusFactory extends QueueTerminusFactory {
+
+    final static TerminusFactory INSTANCE = new TopicTerminusFactory();
+
+    TopicTerminusFactory() {
+    }
+
     @Override
     public Source getSource(String address) {
         Source source = super.getSource(address);

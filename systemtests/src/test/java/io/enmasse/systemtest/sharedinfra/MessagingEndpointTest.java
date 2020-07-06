@@ -13,6 +13,8 @@ import io.enmasse.api.model.MessagingEndpointCondition;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpConnectOptions;
+import io.enmasse.systemtest.amqp.TerminusFactory;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
 import io.enmasse.systemtest.condition.Kubernetes;
@@ -32,7 +34,6 @@ import java.util.concurrent.ExecutionException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DefaultMessagingInfrastructure
 @DefaultMessagingProject
@@ -420,7 +421,30 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
+<<<<<<< HEAD
     private void assertMessagingOutside(AmqpClient client, String address) throws ExecutionException, InterruptedException {
+=======
+    private void doTestSendReceiveOutsideCluster(String host, int port, String address, boolean tls, boolean verifyHost, String caCert) throws Exception {
+        ProtonClientOptions protonClientOptions = new ProtonClientOptions();
+        if (tls) {
+            protonClientOptions.setSsl(true);
+            if (!verifyHost) {
+                protonClientOptions.setHostnameVerificationAlgorithm("");
+            }
+            if (caCert != null) {
+                protonClientOptions.setTrustOptions(new PemTrustOptions()
+                        .addCertValue(Buffer.buffer(caCert)));
+            }
+        }
+        AmqpClient client = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
+                .setSaslMechanism("ANONYMOUS")
+                .setQos(ProtonQoS.AT_LEAST_ONCE)
+                .setEndpoint(new Endpoint(host, port))
+                .setProtonClientOptions(protonClientOptions)
+                .setTerminusFactory(TerminusFactory.queue()));
+
+        assertEquals(1, client.sendMessages(address, Collections.singletonList("hello")).get(1, TimeUnit.MINUTES));
+>>>>>>> 5148836fa... more work
         var result = client.recvMessages(address, 1).get();
         assertEquals(1, result.size());
         assertEquals("hello", ((AmqpValue) result.get(0).getBody()).getValue());

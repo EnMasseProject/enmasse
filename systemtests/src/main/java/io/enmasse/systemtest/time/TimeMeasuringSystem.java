@@ -31,6 +31,37 @@ import java.util.concurrent.TimeUnit;
 
 public class TimeMeasuringSystem {
     private static final Logger log = LoggerUtils.getLogger();
+
+    /**
+     * Help tracking time with an auto-closable.
+     *
+     * <pre>
+     * {@code
+     * void myTest() {
+     *   try(var ignored = startOperation(MY_OPERATION)) {
+     *       // do stuff
+     *   } // calls stopOperation() automatically.
+     * }
+     * }
+     * </pre>
+     */
+    public static class Operation implements AutoCloseable {
+        private final String operationId;
+
+        private Operation(final String operationId) {
+            this.operationId = operationId;
+        }
+
+        @Override
+        public void close() {
+            stopOperation(this.operationId);
+        }
+
+        public static Operation startOperation(SystemtestsOperation operation) {
+            return new Operation(TimeMeasuringSystem.startOperation(operation));
+        }
+    }
+
     private static TimeMeasuringSystem instance;
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS");
     private Map<String, Map<String, Map<String, MeasureRecord>>> measuringMap;
