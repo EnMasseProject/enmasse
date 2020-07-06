@@ -55,9 +55,10 @@ func (r NamedResource) GetName() string {
 
 type LinkRoute struct {
 	NamedResource
-	Connection string `json:"connection"`
-	Direction  string `json:"direction"`
-	Pattern    string `json:"pattern"`
+	Connection        string `json:"connection"`
+	Direction         string `json:"direction"`
+	Pattern           string `json:"pattern"`
+	AddExternalPrefix string `json:"addExternalPrefix"`
 }
 
 func (r LinkRoute) GetType() string {

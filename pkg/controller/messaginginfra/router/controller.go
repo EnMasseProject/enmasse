@@ -56,7 +56,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 	logger.Info("Reconciling routers", "router", infra.Spec.Router)
 
-	routerInfraName := getRouterInfraName(infra)
+	routerInfraName := infra.GetRouterInfraName()
 	certSecretName := cert.GetCertSecretName(routerInfraName)
 
 	// Reconcile static router config
@@ -263,7 +263,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	// Reconcile internal cluster router service
-	internalClusterServiceName := fmt.Sprintf("%s-cluster", routerInfraName)
+	internalClusterServiceName := infra.GetInternalClusterServiceName()
 	internalClusterService := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: internalClusterServiceName},
 	}
@@ -339,10 +339,6 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	}
 
 	return allHosts, nil
-}
-
-func getRouterInfraName(infra *v1.MessagingInfrastructure) string {
-	return fmt.Sprintf("router-%s", infra.Name)
 }
 
 func setDefaultRouterScalingStrategy(router *v1.MessagingInfrastructureSpecRouter) {

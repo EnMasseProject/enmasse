@@ -1,5 +1,5 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -21,6 +21,13 @@ import (
 )
 
 const annotationBase = "iot.enmasse.io"
+
+type AddressType int
+
+const (
+	AddressTypeAnycast AddressType = iota
+	AddressTypeQueue
+)
 
 // Ensure that a controller owner is set
 // As there may only be one, we only to this when the creation timestamp is zero

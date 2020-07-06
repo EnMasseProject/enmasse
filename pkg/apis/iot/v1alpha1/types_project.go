@@ -22,16 +22,16 @@ type IoTProject struct {
 }
 
 type IoTProjectSpec struct {
-	DownstreamStrategy DownstreamStrategy  `json:"downstreamStrategy"`
-	Configuration      TenantConfiguration `json:"configuration,omitempty"`
+	Downstream    DownstreamConfig    `json:"downstream"`
+	Configuration TenantConfiguration `json:"configuration,omitempty"`
 }
 
 type IoTProjectStatus struct {
 	Phase   ProjectPhaseType `json:"phase"`
 	Message string           `json:"message,omitempty"`
 
-	TenantName         string                 `json:"tenantName"`
-	DownstreamEndpoint *ConnectionInformation `json:"downstreamEndpoint,omitempty"`
+	TenantName                    string `json:"tenantName"`
+	MessagingInfrastructurePrefix string `json:"prefix"` // FIXME: this will be gone in the future
 
 	Accepted AcceptedStatus `json:"accepted,omitempty"`
 
@@ -127,11 +127,7 @@ type TrustAnchor struct {
 
 // region Strategy
 
-type DownstreamStrategy struct {
-	ManagedDownstreamStrategy *ManagedDownstreamStrategy `json:"managedStrategy,omitempty"`
-}
-
-type ManagedDownstreamStrategy struct {
+type DownstreamConfig struct {
 	Addresses AddressesConfig `json:"addresses"`
 }
 
@@ -142,8 +138,7 @@ type AddressesConfig struct {
 }
 
 type AddressConfig struct {
-	Plan string `json:"plan"`
-	Type string `json:"type,omitempty"`
+	Plan string `json:"plan,omitempty"`
 }
 
 // endregion

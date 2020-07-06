@@ -57,9 +57,7 @@ func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result,
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
 	}
 
-	if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
-		return deconstructManagedResources(project, ctx)
-	}
+	return deconstructManagedResources(project, ctx)
 
 	// nothing to do
 

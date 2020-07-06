@@ -7,7 +7,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
@@ -122,19 +121,9 @@ func shouldQueue(obj, old interface{}) bool {
 		return false
 	}
 
-	if prj.Status.DownstreamEndpoint == nil || oldprj.Status.DownstreamEndpoint == nil {
-		// no endpoint ... no need to queue
-		return false
-	}
-
 	if prj.Status.Phase != oldprj.Status.Phase {
 		// always re-queue on phase change
 		return true
-	}
-
-	if reflect.DeepEqual(prj.Status.DownstreamEndpoint, oldprj.Status.DownstreamEndpoint) {
-		// downstream information did not change ... no change for us
-		return false
 	}
 
 	// requeue
@@ -293,8 +282,8 @@ func (c *Configurator) syncHandler(key string) error {
 
 	log.Info("Change on IoTProject: " + project.Namespace + "." + project.Name)
 
-	if project.Status.Phase != v1alpha1.ProjectPhaseActive || project.Status.DownstreamEndpoint == nil {
-		log.Info("Project is not ready yet", "Phase", project.Status.Phase, "DownstreamEndpoint", project.Status.DownstreamEndpoint)
+	if project.Status.Phase != v1alpha1.ProjectPhaseActive {
+		log.Info("Project is not ready yet", "Phase", project.Status.Phase)
 		// project is not ready yet
 		return nil
 	}

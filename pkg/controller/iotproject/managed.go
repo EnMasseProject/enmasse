@@ -7,15 +7,12 @@ package iotproject
 
 import (
 	"context"
-	"fmt"
-	"sort"
-	"time"
-
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
+	"sort"
 
 	corev1 "k8s.io/api/core/v1"
 
-	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -35,8 +32,6 @@ var Addresses = []string{
 	AddressNameCommand,
 	AddressNameCommandResponse,
 }
-
-const resourceTypeAdapterUser = "Adapter User"
 
 const annotationProject = annotationBase + "/project.name"
 const annotationProjectUID = annotationBase + "/project.uid"
@@ -91,85 +86,28 @@ func updateManagedReadyStatus(m *managedStatus, project *iotv1alpha1.IoTProject)
 
 }
 
-func updateManagedStatus(managedStatus *managedStatus, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
-
-	updateManagedReadyStatus(managedStatus, project)
-
-	// FIXME: build downstream information
-
-	project.Status.DownstreamEndpoint = &iotv1alpha1.ConnectionInformation{}
-
-	return reconcile.Result{}, nil
-}
-
-func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile.Request, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
-
-	now := time.Now()
-
-	strategy := project.Spec.DownstreamStrategy.ManagedDownstreamStrategy
+func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	managedStatus := &managedStatus{
 		remainingCreated: map[string]bool{},
 		remainingReady:   map[string]bool{},
 	}
 
-	// pre-fill maps for buildings conditions later
-
-	managedStatus.remainingCreated[resourceTypeAdapterUser] = false
-	managedStatus.remainingReady[resourceTypeAdapterUser] = false
-
 	// start reconciling
 
 	rc := recon.ReconcileContext{}
-
-	// ensure adapter credentials are set
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return r.ensureAdapterCredentials(ctx, project)
-	})
-
-	if rc.NeedRequeue() || rc.Error() != nil {
-		// return early as we need to be persisted
-		return rc.Result()
-	}
 
 	project.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
 
 	// create a set of addresses
 
 	rc.Process(func() (result reconcile.Result, e error) {
-		return r.reconcileAddressSet(ctx, project, strategy, managedStatus)
-	})
-
-	// create a new user for protocol adapters
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return r.reconcileAdapterUser(ctx, project, strategy, managedStatus)
+		return r.reconcileAddressSet(ctx, project, managedStatus)
 	})
 
 	// update status - no more changes to "managedStatus" beyond this point
 
-	rc.Process(func() (result reconcile.Result, e error) {
-		return updateManagedStatus(managedStatus, project)
-	})
-
-	// check and queue password reset
-
-	rc.Process(func() (result reconcile.Result, e error) {
-
-		if val, ok := project.Annotations[annotationBase+"/resetPasswordAfter"]; ok {
-			expires, err := time.Parse(time.RFC3339, val)
-			if err != nil {
-				return reconcile.Result{}, err
-			}
-			delay := expires.Sub(now)
-			if delay.Seconds() > 0 {
-				log.Info("Password set to expire in", "delay", delay)
-				return reconcile.Result{RequeueAfter: delay}, nil
-			}
-		}
-		return reconcile.Result{}, nil
-	})
+	updateManagedReadyStatus(managedStatus, project)
 
 	// return result
 
@@ -177,109 +115,39 @@ func (r *ReconcileIoTProject) reconcileManaged(ctx context.Context, _ *reconcile
 
 }
 
-func (r *ReconcileIoTProject) ensureAdapterCredentials(ctx context.Context, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
-
-	if project.Status.DownstreamEndpoint == nil {
-		project.Status.DownstreamEndpoint = &iotv1alpha1.ConnectionInformation{}
-	}
-
-	if project.Status.Managed == nil {
-		project.Status.Managed = &iotv1alpha1.ManagedStatus{}
-	}
-
-	changed := false
-
-	// eval password
-
-	if val, ok := project.Annotations[annotationBase+"/resetPasswordAfter"]; ok {
-		expires, err := time.Parse(time.RFC3339, val)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-		if time.Now().After(expires) && expires.After(project.Status.Managed.PasswordTime.Time) {
-			log.Info("Password expired")
-			// reset password
-			project.Status.DownstreamEndpoint.Password = ""
-		}
-	}
-
-	if project.Status.DownstreamEndpoint.Password == "" || project.Status.Managed.PasswordTime.Time.IsZero() {
-
-		project.Status.Managed.PasswordTime.Time = time.Now()
-
-		// ... we generate a new one ...
-		log.Info("Generating new password")
-		password, err := util.GeneratePassword(32)
-
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		project.Status.DownstreamEndpoint = &iotv1alpha1.ConnectionInformation{
-			Credentials: iotv1alpha1.Credentials{
-				Username: "adapter-" + string(project.UID),
-				Password: password,
-			},
-		}
-
-		// re-queue right now to ensure the password is stored
-
-		log.Info("Re-queue: adapter password changed")
-		changed = true
-
-	}
-
-	// proceed
-
-	return reconcile.Result{
-		Requeue: changed,
-	}, nil
-
-}
-
-func (r *ReconcileIoTProject) reconcileAdapterUser(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, managedStatus *managedStatus) (reconcile.Result, error) {
-
-	// ensured that this is not nil
-
-	credentials := project.Status.DownstreamEndpoint.Credentials
-
-	// construct object
-
-	adapterUser := &userv1beta1.MessagingUser{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: project.Namespace,
-			Name:      credentials.Username,
-		},
-	}
-
-	_, err := controllerutil.CreateOrUpdate(ctx, r.client, adapterUser, func() error {
-		log.V(2).Info("Reconcile messaging user", "MessagingUser", adapterUser)
-
-		return r.reconcileAdapterMessagingUser(project, credentials, adapterUser)
-	})
-
-	if err == nil {
-		managedStatus.remainingCreated[resourceTypeAdapterUser] = true
-		managedStatus.remainingReady[resourceTypeAdapterUser] = adapterUser.Status.Phase == userv1beta1.UserActive
-	}
-
-	return reconcile.Result{}, err
-}
-
-func (r *ReconcileIoTProject) reconcileAddress(project *iotv1alpha1.IoTProject, _ *iotv1alpha1.ManagedDownstreamStrategy, addressName string, plan string, typeName string, existing *enmassev1beta1.Address) error {
+func (r *ReconcileIoTProject) reconcileAddress(
+	project *iotv1alpha1.IoTProject,
+	addressName string,
+	addressType AddressType,
+	existing *enmassev1beta2.MessagingAddress,
+) error {
 
 	if err := r.ensureControllerOwnerIsSet(project, existing); err != nil {
 		return err
 	}
 
-	existing.Spec.Address = addressName
-	existing.Spec.Plan = plan
-	existing.Spec.Type = typeName
+	existing.Spec.Address = &addressName
+	switch addressType {
+	case AddressTypeAnycast:
+		existing.Spec.Anycast = &enmassev1beta2.MessagingAddressSpecAnycast{}
+		existing.Spec.DeadLetter = nil
+		existing.Spec.Multicast = nil
+		existing.Spec.Queue = nil
+		existing.Spec.Subscription = nil
+		existing.Spec.Topic = nil
+	case AddressTypeQueue:
+		existing.Spec.Anycast = nil
+		existing.Spec.DeadLetter = nil
+		existing.Spec.Multicast = nil
+		existing.Spec.Queue = &enmassev1beta2.MessagingAddressSpecQueue{}
+		existing.Spec.Subscription = nil
+		existing.Spec.Topic = nil
+	}
 
 	return nil
 }
 
-func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, addressBaseName string, plan string, typeName string, managedStatus *managedStatus) error {
+func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project *iotv1alpha1.IoTProject, addressBaseName string, addressType AddressType, managedStatus *managedStatus) error {
 
 	addressName := util.AddressName(project, addressBaseName)
 	addressMetaName := util.EncodeAddressSpaceAsMetaName(addressName)
@@ -287,7 +155,7 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	stateKey := "Address|" + addressName
 	managedStatus.remainingCreated[stateKey] = false
 
-	address := &enmassev1beta1.Address{
+	address := &enmassev1beta2.MessagingAddress{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: project.Namespace,
 			Name:      addressMetaName,
@@ -295,9 +163,9 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	}
 
 	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
-		managedStatus.remainingReady[stateKey] = address.Status.IsReady
+		managedStatus.remainingReady[stateKey] = address.Status.Phase == enmassev1beta2.MessagingAddressActive
 
-		return r.reconcileAddress(project, strategy, addressName, plan, typeName, address)
+		return r.reconcileAddress(project, addressName, addressType, address)
 	})
 
 	if rc != controllerutil.OperationResultNone {
@@ -311,45 +179,31 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	return err
 }
 
-func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *iotv1alpha1.IoTProject, strategy *iotv1alpha1.ManagedDownstreamStrategy, managedStatus *managedStatus) (reconcile.Result, error) {
-
-	if strategy.Addresses.Telemetry.Plan == "" {
-		return reconcile.Result{}, fmt.Errorf("'addresses.telemetry.plan' must not be empty")
-	}
-	if strategy.Addresses.Event.Plan == "" {
-		return reconcile.Result{}, fmt.Errorf("'addresses.event.plan' must not be empty")
-	}
-	if strategy.Addresses.Command.Plan == "" {
-		return reconcile.Result{}, fmt.Errorf("'addresses.command.plan' must not be empty")
-	}
+func (r *ReconcileIoTProject) reconcileAddressSet(ctx context.Context, project *iotv1alpha1.IoTProject, managedStatus *managedStatus) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameTelemetry,
-			strategy.Addresses.Telemetry.Plan,
-			StringOrDefault(strategy.Addresses.Telemetry.Type, "anycast"),
+		return r.createOrUpdateAddress(ctx, project, AddressNameTelemetry,
+			AddressTypeAnycast,
 			managedStatus,
 		)
 	})
 	rc.ProcessSimple(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameEvent,
-			strategy.Addresses.Event.Plan,
-			StringOrDefault(strategy.Addresses.Event.Type, "queue"),
+		return r.createOrUpdateAddress(ctx, project, AddressNameEvent,
+			AddressTypeQueue,
 			managedStatus,
 		)
 	})
 	rc.ProcessSimple(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommand,
-			strategy.Addresses.Command.Plan,
-			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
+		return r.createOrUpdateAddress(ctx, project, AddressNameCommand,
+			AddressTypeAnycast,
 			managedStatus,
 		)
 	})
 	rc.ProcessSimple(func() error {
-		return r.createOrUpdateAddress(ctx, project, strategy, AddressNameCommandResponse,
-			strategy.Addresses.Command.Plan,
-			StringOrDefault(strategy.Addresses.Command.Type, "anycast"),
+		return r.createOrUpdateAddress(ctx, project, AddressNameCommandResponse,
+			AddressTypeAnycast,
 			managedStatus,
 		)
 	})

@@ -7,11 +7,7 @@ package iotconfig
 
 import (
 	"context"
-	"fmt"
-
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
-	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra"
-	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -79,33 +75,6 @@ func (r *ReconcileIoTConfig) processAdapterPskCredentials(ctx context.Context, c
 		})
 
 	}
-
-	return rc.Result()
-
-}
-
-func (r *ReconcileIoTConfig) processAdapterInfraCert(ctx context.Context, config *iotv1alpha1.IoTConfig, configTracker *configTracker) (reconcile.Result, error) {
-
-	rc := &recon.ReconcileContext{}
-
-	// for all adapters
-
-	_, infra, err := messaginginfra.LookupInfra(ctx, r.client, config.Namespace)
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// TODO: Set desired DNS names
-	_, err = r.certController.ReconcileCert(ctx, nil, infra, config, "iot-adapters")
-	if err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// TODO: Inject the following into adapter deployments
-	certSecretName := cert.GetCertSecretName(config.Name)
-	host := fmt.Sprintf("%s-cluster", infra.Name)
-	port := 55667
-	log.Info("Reconcile adapter cert", "secret", certSecretName, "host", host, "port", port)
 
 	return rc.Result()
 
