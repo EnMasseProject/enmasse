@@ -5,6 +5,7 @@
 package v1
 
 import (
+	"fmt"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -36,4 +37,13 @@ func (c *MessagingInfrastructureCondition) SetStatus(status corev1.ConditionStat
 
 	c.Reason = reason
 	c.Message = message
+
+}
+
+func (c *MessagingInfrastructure) GetRouterInfraName() string {
+	return fmt.Sprintf("router-%s", c.Name)
+}
+
+func (c *MessagingInfrastructure) GetInternalClusterServiceName() string {
+	return fmt.Sprintf("%s-cluster", c.GetRouterInfraName())
 }

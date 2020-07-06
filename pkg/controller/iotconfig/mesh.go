@@ -25,6 +25,7 @@ import (
 const nameServiceMesh = "iot-service-mesh"
 const nameCommandMesh = "iot-command-mesh"
 const nameServiceMeshInter = "iot-mesh-inter"
+const nameSharedInfra = "shared-infra"
 
 const iotMeshUserName = "inter"
 const iotMeshDomainName = "iot"
