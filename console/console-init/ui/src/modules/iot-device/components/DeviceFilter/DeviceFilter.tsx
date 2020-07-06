@@ -164,9 +164,9 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       <SplitItem>&nbsp;</SplitItem>
       <SplitItem>
         <DropdownWithKebabToggle
-          id="filter-kebab-dropdown"
+          id="device-filter-options-dropdown"
           isPlain={true}
-          toggleId="device-filter-kebab"
+          toggleId="device-filter-options-kebab"
           dropdownItems={kebabDropdownItems}
           isOpen={isKebabOpen}
           position={DropdownPosition.left}
