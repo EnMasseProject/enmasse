@@ -9,8 +9,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta1"
-	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -65,6 +63,10 @@ func (r *queryResolver) MessagingProjects(ctx context.Context, first *int, offse
 }
 
 type messagingProjectSpecK8sResolver struct{ *Resolver }
+
+func (r *messagingProjectSpecK8sResolver) Capabilities(ctx context.Context, obj *v1.MessagingProjectSpec) ([]v1.MessagingCapability, error) {
+	return obj.Capabilities, nil
+}
 
 /*
 func (r *messagingProjectSpecK8sResolver) Plan(ctx context.Context, obj *v1.MessagingProjectSpec) (*v1beta2.MessagingProjectPlan, error) {
@@ -196,19 +198,6 @@ func (r *messagingProjectK8sResolver) Addresses(ctx context.Context, obj *consol
 		return aqr, nil
 	}
 	return nil, nil
-}
-
-func (r *queryResolver) MessagingCertificateChain(ctx context.Context, input metav1.ObjectMeta) (string, error) {
-
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "MessagingProject/"+input.Namespace+"/"+input.Name, nil)
-	if e != nil {
-		return "", e
-	}
-	if len(objects) != 1 {
-		return "", fmt.Errorf("Did not return one address space for %s %s.  Instead found: %d", input.Name, input.Namespace, len(objects))
-	}
-	return string(objects[0].(*consolegraphql.MessagingProjectHolder).MessagingProject.Status.CACertificate), nil
-
 }
 
 func (r *mutationResolver) CreateMessagingProject(ctx context.Context, input v1.MessagingProject) (*metav1.ObjectMeta, error) {

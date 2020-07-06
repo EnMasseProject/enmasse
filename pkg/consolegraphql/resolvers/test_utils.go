@@ -7,7 +7,7 @@
 package resolvers
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/google/uuid"
@@ -24,11 +24,11 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 	return nil
 }
 
-type addressSpaceHolderOption func(*consolegraphql.MessagingProjectHolder)
+type messagingProjectHolderOption func(*consolegraphql.MessagingProjectHolder)
 
-func createMessagingProject(addressspace, namespace string, addressSpaceHolderOptions ...addressSpaceHolderOption) *consolegraphql.MessagingProjectHolder {
+func createMessagingProject(addressspace, namespace string, messagingProjectHolderOptions ...messagingProjectHolderOption) *consolegraphql.MessagingProjectHolder {
 	ash := &consolegraphql.MessagingProjectHolder{
-		MessagingProject: v1beta1.MessagingProject{
+		MessagingProject: v1.MessagingProject{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "MessagingProject",
 			},
@@ -39,32 +39,19 @@ func createMessagingProject(addressspace, namespace string, addressSpaceHolderOp
 			},
 		},
 	}
-	for _, holderOptions := range addressSpaceHolderOptions {
+	for _, holderOptions := range messagingProjectHolderOptions {
 		holderOptions(ash)
 	}
 	return ash
 }
 
-func withMessagingProjectAnnotation(name, value string) addressSpaceHolderOption {
+func withMessagingProjectAnnotation(name, value string) messagingProjectHolderOption {
 	return func(ash *consolegraphql.MessagingProjectHolder) {
 
 		if ash.Annotations == nil {
 			ash.Annotations = make(map[string]string)
 		}
 		ash.Annotations[name] = value
-	}
-}
-
-func withEndpoint(spec v1beta1.EndpointSpec, status v1beta1.EndpointStatus) addressSpaceHolderOption {
-	return func(ash *consolegraphql.MessagingProjectHolder) {
-		ash.Spec.Endpoints = append(ash.Spec.Endpoints, spec)
-		ash.Status.EndpointStatus = append(ash.Status.EndpointStatus, status)
-	}
-}
-
-func withCACertificate(cACertificate []byte) addressSpaceHolderOption {
-	return func(ash *consolegraphql.MessagingProjectHolder) {
-		ash.Status.CACertificate = cACertificate
 	}
 }
 
@@ -79,7 +66,7 @@ func createConnection(host, namespace string, metrics ...*consolegraphql.Metric)
 			UID:       types.UID(uuid.New().String()),
 		},
 		Spec: consolegraphql.ConnectionSpec{
-			namespace: namespace,
+			Namespace: namespace,
 		},
 		Metrics: metrics,
 	}
@@ -109,21 +96,34 @@ func withAddressMetrics(metrics ...*consolegraphql.Metric) addressHolderOption {
 
 func withAddress(address string) addressHolderOption {
 	return func(ah *consolegraphql.AddressHolder) {
-		ah.Spec.Address = address
+		ah.Spec.Address = &address
 	}
 }
 
 func withAddressType(t string) addressHolderOption {
 	return func(ah *consolegraphql.AddressHolder) {
-		ah.Spec.Type = t
+		switch t {
+		case "queue":
+			ah.Spec.Queue = &v1.MessagingAddressSpecQueue{}
+		case "topic":
+			ah.Spec.Topic = &v1.MessagingAddressSpecTopic{}
+		case "subscription":
+			ah.Spec.Subscription = &v1.MessagingAddressSpecSubscription{}
+		case "deadLetter":
+			ah.Spec.DeadLetter = &v1.MessagingAddressSpecDeadLetter{}
+		case "anycast":
+			ah.Spec.Anycast = &v1.MessagingAddressSpecAnycast{}
+		case "multicast":
+			ah.Spec.Multicast = &v1.MessagingAddressSpecMulticast{}
+		}
 	}
 }
 
 func createAddress(namespace, name string, addressHolderOptions ...addressHolderOption) *consolegraphql.AddressHolder {
 	ah := &consolegraphql.AddressHolder{
-		Address: v1beta1.Address{
+		MessagingAddress: v1.MessagingAddress{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Address",
+				Kind: "MessagingAddress",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,

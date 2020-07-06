@@ -7,18 +7,18 @@ package server
 
 import (
 	"context"
-	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
+	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	userapiv1 "github.com/openshift/api/user/v1"
 )
 
 type RequestState struct {
-	EnmasseV1beta1Client v1beta1.EnmasseV1beta1Interface
-	AccessController     accesscontroller.AccessController
-	User                 userapiv1.User
-	UserAccessToken      string
-	UseSession           bool
-	ImpersonatedUser     string
+	EnmasseV1Client  v1.EnmasseV1Interface
+	AccessController accesscontroller.AccessController
+	User             userapiv1.User
+	UserAccessToken  string
+	UseSession       bool
+	ImpersonatedUser string
 }
 
 func ContextWithRequestState(requestState *RequestState, ctx context.Context) context.Context {

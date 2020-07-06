@@ -140,42 +140,42 @@ func (e LinkRole) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type MessagingProjectCapability string
+type MessagingCapabilityEnmasseIoV1 string
 
 const (
-	MessagingProjectCapabilityTransactional MessagingProjectCapability = "transactional"
+	MessagingCapabilityEnmasseIoV1Transactional MessagingCapabilityEnmasseIoV1 = "transactional"
 )
 
-var AllMessagingProjectCapability = []MessagingProjectCapability{
-	MessagingProjectCapabilityTransactional,
+var AllMessagingCapabilityEnmasseIoV1 = []MessagingCapabilityEnmasseIoV1{
+	MessagingCapabilityEnmasseIoV1Transactional,
 }
 
-func (e MessagingProjectCapability) IsValid() bool {
+func (e MessagingCapabilityEnmasseIoV1) IsValid() bool {
 	switch e {
-	case MessagingProjectCapabilityTransactional:
+	case MessagingCapabilityEnmasseIoV1Transactional:
 		return true
 	}
 	return false
 }
 
-func (e MessagingProjectCapability) String() string {
+func (e MessagingCapabilityEnmasseIoV1) String() string {
 	return string(e)
 }
 
-func (e *MessagingProjectCapability) UnmarshalGQL(v interface{}) error {
+func (e *MessagingCapabilityEnmasseIoV1) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = MessagingProjectCapability(str)
+	*e = MessagingCapabilityEnmasseIoV1(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid MessagingProjectCapability", str)
+		return fmt.Errorf("%s is not a valid MessagingCapability_enmasse_io_v1", str)
 	}
 	return nil
 }
 
-func (e MessagingProjectCapability) MarshalGQL(w io.Writer) {
+func (e MessagingCapabilityEnmasseIoV1) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

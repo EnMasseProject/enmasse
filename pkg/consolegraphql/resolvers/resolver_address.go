@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -92,7 +91,7 @@ func (r *Resolver) AddressSpec_enmasse_io_v1() AddressSpec_enmasse_io_v1Resolver
 
 type addressSpecK8sResolver struct{ *Resolver }
 
-func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1, error) {
+func (r *queryResolver) MessagingAddresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
 
@@ -132,6 +131,7 @@ func (r *queryResolver) Addresses(ctx context.Context, first *int, offset *int, 
 	return aqr, nil
 }
 
+/*
 func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1.MessagingAddressSpec) (*v1beta2.AddressPlan, error) {
 	if obj != nil {
 		addressPlanName := obj.Plan
@@ -170,8 +170,9 @@ func (r *addressSpecK8sResolver) Plan(ctx context.Context, obj *v1.MessagingAddr
 func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1.MessagingAddressSpec) (AddressType, error) {
 	return AddressType(obj.Type), nil
 }
+*/
 
-func (r *mutationResolver) CreateAddress(ctx context.Context, input v1.MessagingAddress) (*metav1.ObjectMeta, error) {
+func (r *mutationResolver) CreateMessagingAddress(ctx context.Context, input v1.MessagingAddress) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 
 	if input.ObjectMeta.Name == "" {
@@ -181,32 +182,28 @@ func (r *mutationResolver) CreateAddress(ctx context.Context, input v1.Messaging
 		}
 	}
 
-	nw, e := requestState.EnmasseV1Client.Addresses(input.Namespace).Create(&input)
+	nw, e := requestState.EnmasseV1Client.MessagingAddresses(input.Namespace).Create(&input)
 	if e != nil {
 		return nil, e
 	}
 	return &nw.ObjectMeta, e
 }
 
-func (r *mutationResolver) PatchAddress(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
+func (r *mutationResolver) PatchMessagingAddress(ctx context.Context, input metav1.ObjectMeta, patch string, patchType string) (*bool, error) {
 	pt := types.PatchType(patchType)
 	requestState := server.GetRequestStateFromContext(ctx)
 
-	_, e := requestState.EnmasseV1Client.Addresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
+	_, e := requestState.EnmasseV1Client.MessagingAddresses(input.Namespace).Patch(input.Name, pt, []byte(patch))
 	b := e == nil
 	return &b, e
 }
 
-func (r *mutationResolver) DeleteAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	return r.DeleteAddresses(ctx, []*metav1.ObjectMeta{&input})
-}
-
-func (r *mutationResolver) DeleteAddresses(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
+func (r *mutationResolver) DeleteMessagingAddresses(ctx context.Context, input []*metav1.ObjectMeta) (*bool, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	t := true
 
 	for _, a := range input {
-		e := requestState.EnmasseV1Client.Addresses(a.Namespace).Delete(a.Name, &metav1.DeleteOptions{})
+		e := requestState.EnmasseV1Client.MessagingAddresses(a.Namespace).Delete(a.Name, &metav1.DeleteOptions{})
 		if e != nil {
 			graphql.AddErrorf(ctx, "failed to delete address: '%s' in namespace: '%s', %+v", a.Name, a.Namespace, e)
 		}
@@ -214,28 +211,24 @@ func (r *mutationResolver) DeleteAddresses(ctx context.Context, input []*metav1.
 	return &t, nil
 }
 
-func (r *mutationResolver) PurgeAddress(ctx context.Context, input metav1.ObjectMeta) (*bool, error) {
-	return r.PurgeAddresses(ctx, []*metav1.ObjectMeta{&input})
-}
+func (r *mutationResolver) PurgeMessagingAddresses(ctx context.Context, inputs []*metav1.ObjectMeta) (*bool, error) {
+	t := false
+	/*
+			requestState := server.GetRequestStateFromContext(ctx)
 
-func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.ObjectMeta) (*bool, error) {
-	requestState := server.GetRequestStateFromContext(ctx)
 
-	t := true
+			for _, input := range inputs {
+				addressToks, e := tokenizeAddress(input.Name)
+				if e != nil {
+					return &t, e
+				}
 
-	for _, input := range inputs {
-		addressToks, e := tokenizeAddress(input.Name)
-		if e != nil {
-			return &t, e
-		}
-
-		/*
-			infraUid, e := r.GetInfraUid(input.Namespace, addressToks[0])
-			if e != nil {
-				graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - %+v", input.Name, input.Namespace, e)
-				continue
-			}
-		*/
+				/*
+					infraUid, e := r.GetInfraUid(input.Namespace, addressToks[0])
+					if e != nil {
+						graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - %+v", input.Name, input.Namespace, e)
+						continue
+					}
 
 		addresses, e := r.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Address/%s/%s", input.Namespace, input.Name), nil)
 		if e != nil {
@@ -248,40 +241,36 @@ func (r *mutationResolver) PurgeAddresses(ctx context.Context, inputs []*metav1.
 			continue
 		}
 
-		address := addresses[0].(*consolegraphql.AddressHolder).Address
-		switch address.Spec.Type {
-		case "subscription":
-		case "queue":
-		default:
-			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - address type '%s' is not supported for this operation", input.Name, input.Namespace, address.Spec.Type)
+		address := addresses[0].(*consolegraphql.AddressHolder)
+		if address.Spec.Queue == nil && address.Spec.Subscription == nil && address.Spec.DeadLetter == nil {
+			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - address type '%s' is not supported for this operation", input.Name, input.Namespace, address.Status.Type)
 			continue
 		}
 
-		/*
-			collector := r.GetCollector(infraUid)
-			if collector == nil {
-				graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
-					input.Name, input.Namespace, infraUid)
-				continue
+						collector := r.GetCollector(infraUid)
+						if collector == nil {
+							graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
+								input.Name, input.Namespace, infraUid)
+							continue
+						}
+					token := requestState.UserAccessToken
+
+					commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
+					if e != nil {
+						graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace '%s', %+v", input.Name, input.Namespace, e)
+						continue
+					}
+
+					e = commandDelegate.PurgeAddress(*input)
+					if e != nil {
+						graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace '%s', %+v", input.Name, input.Namespace, e)
+					}
 			}
-		*/
-		token := requestState.UserAccessToken
-
-		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
-		if e != nil {
-			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace '%s', %+v", input.Name, input.Namespace, e)
-			continue
-		}
-
-		e = commandDelegate.PurgeAddress(*input)
-		if e != nil {
-			graphql.AddErrorf(ctx, "failed to purge address: '%s' in namespace '%s', %+v", input.Name, input.Namespace, e)
-		}
-	}
+	*/
 	return &t, nil
 }
 
-func (r *queryResolver) AddressCommand(ctx context.Context, input v1.MessagingAddress, addressSpace *string) (string, error) {
+func (r *queryResolver) MessagingAddressCommand(ctx context.Context, input v1.MessagingAddress) (string, error) {
 
 	if input.TypeMeta.APIVersion == "" {
 		input.TypeMeta.APIVersion = "enmasse.io/v1"
@@ -294,7 +283,7 @@ func (r *queryResolver) AddressCommand(ctx context.Context, input v1.MessagingAd
 	input.Namespace = ""
 
 	if input.ObjectMeta.Name == "" {
-		err := defaultResourceNameFromAddress(&input, addressSpace)
+		err := defaultResourceNameFromAddress(&input)
 		if err != nil {
 			return "", err
 		}
@@ -312,13 +301,13 @@ func tokenizeAddress(name string) ([]string, error) {
 }
 
 func defaultResourceNameFromAddress(input *v1.MessagingAddress) error {
-	if input.Spec.Address == "" {
+	if input.Spec.Address == nil {
 		return fmt.Errorf("address is undefined, cannot default resource name")
 	}
-	addr := strings.ToLower(input.Spec.Address)
-	if !isValidName(addr, maxKubeName-len(*addressSpace)-1) {
+	addr := strings.ToLower(*input.Spec.Address)
+	if !isValidName(addr, maxKubeName-1) {
 		qualifier := uuid.New().String()
-		addr = cleanName(addr, qualifier, maxKubeName-len(*addressSpace)-len(qualifier)-2)
+		addr = cleanName(addr, qualifier, maxKubeName-len(qualifier)-2)
 	}
 	input.ObjectMeta.Name = addr
 	return nil

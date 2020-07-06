@@ -197,28 +197,6 @@ func TestQueryMessagingProjectConnectionOrder(t *testing.T) {
 	assert.Equal(t, con2, objs.Connections[0], "Unexpected connection")
 }
 
-func TestMessagingCertificateChain(t *testing.T) {
-	r, ctx := newTestMessagingProjectResolver(t)
-	namespace := "mynamespace"
-	addressspace := "myaddressspace"
-	expectedCert := "the bytes"
-	as1 := createMessagingProject(addressspace, namespace)
-	as1.Status = v1beta1.MessagingProjectStatus{
-		CACertificate: []byte(expectedCert),
-	}
-	err := r.Cache.Add(as1)
-	assert.NoError(t, err)
-
-	input := metav1.ObjectMeta{
-		Name:      addressspace,
-		Namespace: namespace,
-	}
-	cert, err := r.Query().MessagingCertificateChain(ctx, input)
-	assert.NoError(t, err)
-
-	assert.Equal(t, expectedCert, cert, "Unexpected cert")
-}
-
 func TestQueryMessagingProjectAddress(t *testing.T) {
 	r, ctx := newTestMessagingProjectResolver(t)
 	namespace := "mynamespace"

@@ -43,13 +43,13 @@ func (c *Connection) GetMetrics() []*Metric {
 }
 
 type ConnectionSpec struct {
-	AddressSpace string            `json:"addressSpace,omitempty"`
-	Hostname     string            `json:"hostname,omitempty"`
-	ContainerId  string            `json:"containerId,omitempty"`
-	Protocol     string            `json:"protocol,omitempty"`
-	Encrypted    bool              `json:"encrypted,omitempty"`
-	Properties   map[string]string `json:"properties,omitempty"`
-	Principal    string            `json:"principal,omitempty"`
+	Namespace   string            `json:"namespace,omitempty"`
+	Hostname    string            `json:"hostname,omitempty"`
+	ContainerId string            `json:"containerId,omitempty"`
+	Protocol    string            `json:"protocol,omitempty"`
+	Encrypted   bool              `json:"encrypted,omitempty"`
+	Properties  map[string]string `json:"properties,omitempty"`
+	Principal   string            `json:"principal,omitempty"`
 }
 
 type Link struct {

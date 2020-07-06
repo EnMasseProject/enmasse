@@ -45,6 +45,11 @@ enum Protocol {
     amqps
 }
 
+enum MessagingCapability_enmasse_io_v1 {
+    transactional
+}
+
+
 enum MessagingEndpointProtocol_enmasse_io_v1 {
   AMQP,
   AMQPS,
@@ -143,7 +148,7 @@ type MessagingProject_consoleapi_enmasse_io_v1 {
 }
 
 type MessagingProjectSpec_enmasse_io_v1 {
-    capabilities: [MessagingProjectCapability]
+    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 type MessagingEndpoint_enmasse_io_v1 {
@@ -259,8 +264,8 @@ type Query {
   "Returns the connections visible to this user,  optionally filtering"
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1
 
-  "Returns the messaging certificate chain for the address space identifed by input, PEM format, suitable to be offered as a download to the user"
-  messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
+ # "Returns the messaging certificate chain for the address space identifed by input, PEM format, suitable to be offered as a download to the user"
+ # messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
 
   "Returns the command-line that, if executed, would create the given address space"
   messagingProjectCommand(input: MessagingProject_enmasse_io_v1_Input!): String!
@@ -283,11 +288,7 @@ input ObjectMeta_v1_Input {
 }
 
 input MessagingProjectSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingProjectCapability]
-}
-
-enum MessagingProjectCapability {
-    transactional
+    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 input MessagingProject_enmasse_io_v1_Input {
@@ -311,12 +312,12 @@ type Mutation {
   "deletes messagingprojects(s)"
   deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
-  createAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
-  patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
+  createMessagingAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
+  patchMessagingAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   "deletes addresss(es)"
-  deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
+  deleteMessagingAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   "purges address(es)"
-  purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
+  purgeMessagingAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
   closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
 }

@@ -202,14 +202,14 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CloseConnections        func(childComplexity int, input []*v1.ObjectMeta) int
-		CreateAddress           func(childComplexity int, input v11.MessagingAddress) int
-		CreateMessagingProject  func(childComplexity int, input v11.MessagingProject) int
-		DeleteAddresses         func(childComplexity int, input []*v1.ObjectMeta) int
-		DeleteMessagingProjects func(childComplexity int, input []*v1.ObjectMeta) int
-		PatchAddress            func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
-		PatchMessagingProject   func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
-		PurgeAddresses          func(childComplexity int, input []*v1.ObjectMeta) int
+		CloseConnections         func(childComplexity int, input []*v1.ObjectMeta) int
+		CreateMessagingAddress   func(childComplexity int, input v11.MessagingAddress) int
+		CreateMessagingProject   func(childComplexity int, input v11.MessagingProject) int
+		DeleteMessagingAddresses func(childComplexity int, input []*v1.ObjectMeta) int
+		DeleteMessagingProjects  func(childComplexity int, input []*v1.ObjectMeta) int
+		PatchMessagingAddress    func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
+		PatchMessagingProject    func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
+		PurgeMessagingAddresses  func(childComplexity int, input []*v1.ObjectMeta) int
 	}
 
 	NamespaceStatusV1 struct {
@@ -231,17 +231,16 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Connections               func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
-		MessagingAddressCommand   func(childComplexity int, input v11.MessagingAddress) int
-		MessagingAddressPlans     func(childComplexity int, namespace *string) int
-		MessagingAddresses        func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
-		MessagingCertificateChain func(childComplexity int, input v1.ObjectMeta) int
-		MessagingEndpoints        func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
-		MessagingPlans            func(childComplexity int, namespace *string) int
-		MessagingProjectCommand   func(childComplexity int, input v11.MessagingProject) int
-		MessagingProjects         func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
-		Namespaces                func(childComplexity int) int
-		Whoami                    func(childComplexity int) int
+		Connections             func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
+		MessagingAddressCommand func(childComplexity int, input v11.MessagingAddress) int
+		MessagingAddressPlans   func(childComplexity int, namespace *string) int
+		MessagingAddresses      func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
+		MessagingEndpoints      func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
+		MessagingPlans          func(childComplexity int, namespace *string) int
+		MessagingProjectCommand func(childComplexity int, input v11.MessagingProject) int
+		MessagingProjects       func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
+		Namespaces              func(childComplexity int) int
+		Whoami                  func(childComplexity int) int
 	}
 
 	UserV1 struct {
@@ -259,8 +258,6 @@ type Address_consoleapi_enmasse_io_v1Resolver interface {
 	Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1, error)
 }
 type ConnectionSpec_consoleapi_enmasse_io_v1Resolver interface {
-	Namespace(ctx context.Context, obj *consolegraphql.ConnectionSpec) (string, error)
-
 	Protocol(ctx context.Context, obj *consolegraphql.ConnectionSpec) (Protocol, error)
 
 	Properties(ctx context.Context, obj *consolegraphql.ConnectionSpec) ([]*KeyValue, error)
@@ -274,7 +271,7 @@ type LinkSpec_consoleapi_enmasse_io_v1Resolver interface {
 	Role(ctx context.Context, obj *consolegraphql.LinkSpec) (LinkRole, error)
 }
 type MessagingProjectSpec_enmasse_io_v1Resolver interface {
-	Capabilities(ctx context.Context, obj *v11.MessagingProjectSpec) ([]*MessagingProjectCapability, error)
+	Capabilities(ctx context.Context, obj *v11.MessagingProjectSpec) ([]MessagingCapabilityEnmasseIoV1, error)
 }
 type MessagingProjectStatus_enmasse_io_v1Resolver interface {
 	Phase(ctx context.Context, obj *v11.MessagingProjectStatus) (string, error)
@@ -292,10 +289,10 @@ type MutationResolver interface {
 	CreateMessagingProject(ctx context.Context, input v11.MessagingProject) (*v1.ObjectMeta, error)
 	PatchMessagingProject(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
 	DeleteMessagingProjects(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
-	CreateAddress(ctx context.Context, input v11.MessagingAddress) (*v1.ObjectMeta, error)
-	PatchAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
-	DeleteAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
-	PurgeAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
+	CreateMessagingAddress(ctx context.Context, input v11.MessagingAddress) (*v1.ObjectMeta, error)
+	PatchMessagingAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
+	DeleteMessagingAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
+	PurgeMessagingAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 }
 type NamespaceStatus_v1Resolver interface {
@@ -315,7 +312,6 @@ type QueryResolver interface {
 	MessagingProjects(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingProjectQueryResultConsoleapiEnmasseIoV1, error)
 	MessagingAddresses(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*AddressQueryResultConsoleapiEnmasseIoV1, error)
 	Connections(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1, error)
-	MessagingCertificateChain(ctx context.Context, input v1.ObjectMeta) (string, error)
 	MessagingProjectCommand(ctx context.Context, input v11.MessagingProject) (string, error)
 	MessagingAddressCommand(ctx context.Context, input v11.MessagingAddress) (string, error)
 	MessagingEndpoints(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingEndpointQueryResultConsoleapiEnmasseIoV1, error)
@@ -865,17 +861,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CloseConnections(childComplexity, args["input"].([]*v1.ObjectMeta)), true
 
-	case "Mutation.createAddress":
-		if e.complexity.Mutation.CreateAddress == nil {
+	case "Mutation.createMessagingAddress":
+		if e.complexity.Mutation.CreateMessagingAddress == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createAddress_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createMessagingAddress_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAddress(childComplexity, args["input"].(v11.MessagingAddress)), true
+		return e.complexity.Mutation.CreateMessagingAddress(childComplexity, args["input"].(v11.MessagingAddress)), true
 
 	case "Mutation.createMessagingProject":
 		if e.complexity.Mutation.CreateMessagingProject == nil {
@@ -889,17 +885,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateMessagingProject(childComplexity, args["input"].(v11.MessagingProject)), true
 
-	case "Mutation.deleteAddresses":
-		if e.complexity.Mutation.DeleteAddresses == nil {
+	case "Mutation.deleteMessagingAddresses":
+		if e.complexity.Mutation.DeleteMessagingAddresses == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_deleteAddresses_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_deleteMessagingAddresses_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
+		return e.complexity.Mutation.DeleteMessagingAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
 
 	case "Mutation.deleteMessagingProjects":
 		if e.complexity.Mutation.DeleteMessagingProjects == nil {
@@ -913,17 +909,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteMessagingProjects(childComplexity, args["input"].([]*v1.ObjectMeta)), true
 
-	case "Mutation.patchAddress":
-		if e.complexity.Mutation.PatchAddress == nil {
+	case "Mutation.patchMessagingAddress":
+		if e.complexity.Mutation.PatchMessagingAddress == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_patchAddress_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_patchMessagingAddress_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PatchAddress(childComplexity, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string)), true
+		return e.complexity.Mutation.PatchMessagingAddress(childComplexity, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string)), true
 
 	case "Mutation.patchMessagingProject":
 		if e.complexity.Mutation.PatchMessagingProject == nil {
@@ -937,17 +933,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.PatchMessagingProject(childComplexity, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string)), true
 
-	case "Mutation.purgeAddresses":
-		if e.complexity.Mutation.PurgeAddresses == nil {
+	case "Mutation.purgeMessagingAddresses":
+		if e.complexity.Mutation.PurgeMessagingAddresses == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_purgeAddresses_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_purgeMessagingAddresses_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.PurgeAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
+		return e.complexity.Mutation.PurgeMessagingAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
 
 	case "NamespaceStatus_v1.phase":
 		if e.complexity.NamespaceStatusV1.Phase == nil {
@@ -1059,18 +1055,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.MessagingAddresses(childComplexity, args["first"].(*int), args["offset"].(*int), args["filter"].(*string), args["orderBy"].(*string)), true
-
-	case "Query.messagingCertificateChain":
-		if e.complexity.Query.MessagingCertificateChain == nil {
-			break
-		}
-
-		args, err := ec.field_Query_messagingCertificateChain_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.MessagingCertificateChain(childComplexity, args["input"].(v1.ObjectMeta)), true
 
 	case "Query.messagingEndpoints":
 		if e.complexity.Query.MessagingEndpoints == nil {
@@ -1273,6 +1257,11 @@ enum Protocol {
     amqps
 }
 
+enum MessagingCapability_enmasse_io_v1 {
+    transactional
+}
+
+
 enum MessagingEndpointProtocol_enmasse_io_v1 {
   AMQP,
   AMQPS,
@@ -1371,7 +1360,7 @@ type MessagingProject_consoleapi_enmasse_io_v1 {
 }
 
 type MessagingProjectSpec_enmasse_io_v1 {
-    capabilities: [MessagingProjectCapability]
+    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 type MessagingEndpoint_enmasse_io_v1 {
@@ -1487,8 +1476,8 @@ type Query {
   "Returns the connections visible to this user,  optionally filtering"
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1
 
-  "Returns the messaging certificate chain for the address space identifed by input, PEM format, suitable to be offered as a download to the user"
-  messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
+ # "Returns the messaging certificate chain for the address space identifed by input, PEM format, suitable to be offered as a download to the user"
+ # messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
 
   "Returns the command-line that, if executed, would create the given address space"
   messagingProjectCommand(input: MessagingProject_enmasse_io_v1_Input!): String!
@@ -1511,11 +1500,7 @@ input ObjectMeta_v1_Input {
 }
 
 input MessagingProjectSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingProjectCapability]
-}
-
-enum MessagingProjectCapability {
-    transactional
+    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 input MessagingProject_enmasse_io_v1_Input {
@@ -1539,12 +1524,12 @@ type Mutation {
   "deletes messagingprojects(s)"
   deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
-  createAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
-  patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
+  createMessagingAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
+  patchMessagingAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
   "deletes addresss(es)"
-  deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
+  deleteMessagingAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   "purges address(es)"
-  purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
+  purgeMessagingAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
   closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
 }
@@ -1723,7 +1708,7 @@ func (ec *executionContext) field_Mutation_closeConnections_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createMessagingAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 v11.MessagingAddress
@@ -1751,7 +1736,7 @@ func (ec *executionContext) field_Mutation_createMessagingProject_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_deleteMessagingAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []*v1.ObjectMeta
@@ -1779,7 +1764,7 @@ func (ec *executionContext) field_Mutation_deleteMessagingProjects_args(ctx cont
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_patchAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_patchMessagingAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 v1.ObjectMeta
@@ -1839,7 +1824,7 @@ func (ec *executionContext) field_Mutation_patchMessagingProject_args(ctx contex
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_purgeAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_purgeMessagingAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []*v1.ObjectMeta
@@ -1968,20 +1953,6 @@ func (ec *executionContext) field_Query_messagingAddresses_args(ctx context.Cont
 		}
 	}
 	args["orderBy"] = arg3
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_messagingCertificateChain_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 v1.ObjectMeta
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
 	return args, nil
 }
 
@@ -2542,13 +2513,13 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1_namespace(c
 		Object:   "ConnectionSpec_consoleapi_enmasse_io_v1",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ConnectionSpec_consoleapi_enmasse_io_v1().Namespace(rctx, obj)
+		return obj.Namespace, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3913,11 +3884,14 @@ func (ec *executionContext) _MessagingProjectSpec_enmasse_io_v1_capabilities(ctx
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.([]*MessagingProjectCapability)
+	res := resTmp.([]MessagingCapabilityEnmasseIoV1)
 	fc.Result = res
-	return ec.marshalOMessagingProjectCapability2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx, field.Selections, res)
+	return ec.marshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MessagingProjectStatus_enmasse_io_v1_message(ctx context.Context, field graphql.CollectedField, obj *v11.MessagingProjectStatus) (ret graphql.Marshaler) {
@@ -4657,7 +4631,7 @@ func (ec *executionContext) _Mutation_deleteMessagingProjects(ctx context.Contex
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createMessagingAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4673,7 +4647,7 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createAddress_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_createMessagingAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4681,7 +4655,7 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v11.MessagingAddress))
+		return ec.resolvers.Mutation().CreateMessagingAddress(rctx, args["input"].(v11.MessagingAddress))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4698,7 +4672,7 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 	return ec.marshalNObjectMeta_v12ᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_patchMessagingAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4714,7 +4688,7 @@ func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field gr
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_patchAddress_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_patchMessagingAddress_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4722,7 +4696,7 @@ func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PatchAddress(rctx, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string))
+		return ec.resolvers.Mutation().PatchMessagingAddress(rctx, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4736,7 +4710,7 @@ func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field gr
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_deleteAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_deleteMessagingAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4752,7 +4726,7 @@ func (ec *executionContext) _Mutation_deleteAddresses(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteAddresses_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_deleteMessagingAddresses_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4760,7 +4734,7 @@ func (ec *executionContext) _Mutation_deleteAddresses(ctx context.Context, field
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAddresses(rctx, args["input"].([]*v1.ObjectMeta))
+		return ec.resolvers.Mutation().DeleteMessagingAddresses(rctx, args["input"].([]*v1.ObjectMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4774,7 +4748,7 @@ func (ec *executionContext) _Mutation_deleteAddresses(ctx context.Context, field
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_purgeAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_purgeMessagingAddresses(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4790,7 +4764,7 @@ func (ec *executionContext) _Mutation_purgeAddresses(ctx context.Context, field 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_purgeAddresses_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_purgeMessagingAddresses_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -4798,7 +4772,7 @@ func (ec *executionContext) _Mutation_purgeAddresses(ctx context.Context, field 
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().PurgeAddresses(rctx, args["input"].([]*v1.ObjectMeta))
+		return ec.resolvers.Mutation().PurgeMessagingAddresses(rctx, args["input"].([]*v1.ObjectMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5418,47 +5392,6 @@ func (ec *executionContext) _Query_connections(ctx context.Context, field graphq
 	res := resTmp.(*ConnectionQueryResultConsoleapiEnmasseIoV1)
 	fc.Result = res
 	return ec.marshalOConnectionQueryResult_consoleapi_enmasse_io_v12ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐConnectionQueryResultConsoleapiEnmasseIoV1(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Query_messagingCertificateChain(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Query",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_messagingCertificateChain_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().MessagingCertificateChain(rctx, args["input"].(v1.ObjectMeta))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_messagingProjectCommand(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6891,7 +6824,7 @@ func (ec *executionContext) unmarshalInputMessagingProjectSpec_enmasse_io_v1_Inp
 		switch k {
 		case "capabilities":
 			var err error
-			it.Capabilities, err = ec.unmarshalOMessagingProjectCapability2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx, v)
+			it.Capabilities, err = ec.unmarshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7154,19 +7087,10 @@ func (ec *executionContext) _ConnectionSpec_consoleapi_enmasse_io_v1(ctx context
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ConnectionSpec_consoleapi_enmasse_io_v1")
 		case "namespace":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._ConnectionSpec_consoleapi_enmasse_io_v1_namespace(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+			out.Values[i] = ec._ConnectionSpec_consoleapi_enmasse_io_v1_namespace(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "hostname":
 			out.Values[i] = ec._ConnectionSpec_consoleapi_enmasse_io_v1_hostname(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -7715,6 +7639,9 @@ func (ec *executionContext) _MessagingProjectSpec_enmasse_io_v1(ctx context.Cont
 					}
 				}()
 				res = ec._MessagingProjectSpec_enmasse_io_v1_capabilities(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
 				return res
 			})
 		default:
@@ -7969,17 +7896,17 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec._Mutation_patchMessagingProject(ctx, field)
 		case "deleteMessagingProjects":
 			out.Values[i] = ec._Mutation_deleteMessagingProjects(ctx, field)
-		case "createAddress":
-			out.Values[i] = ec._Mutation_createAddress(ctx, field)
+		case "createMessagingAddress":
+			out.Values[i] = ec._Mutation_createMessagingAddress(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "patchAddress":
-			out.Values[i] = ec._Mutation_patchAddress(ctx, field)
-		case "deleteAddresses":
-			out.Values[i] = ec._Mutation_deleteAddresses(ctx, field)
-		case "purgeAddresses":
-			out.Values[i] = ec._Mutation_purgeAddresses(ctx, field)
+		case "patchMessagingAddress":
+			out.Values[i] = ec._Mutation_patchMessagingAddress(ctx, field)
+		case "deleteMessagingAddresses":
+			out.Values[i] = ec._Mutation_deleteMessagingAddresses(ctx, field)
+		case "purgeMessagingAddresses":
+			out.Values[i] = ec._Mutation_purgeMessagingAddresses(ctx, field)
 		case "closeConnections":
 			out.Values[i] = ec._Mutation_closeConnections(ctx, field)
 		default:
@@ -8242,20 +8169,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_connections(ctx, field)
-				return res
-			})
-		case "messagingCertificateChain":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_messagingCertificateChain(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
 				return res
 			})
 		case "messagingProjectCommand":
@@ -8975,6 +8888,72 @@ func (ec *executionContext) marshalNMessagingAddressPlan_enmasse_io_v12ᚖgithub
 		return graphql.Null
 	}
 	return ec._MessagingAddressPlan_enmasse_io_v1(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx context.Context, v interface{}) (MessagingCapabilityEnmasseIoV1, error) {
+	var res MessagingCapabilityEnmasseIoV1
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx context.Context, sel ast.SelectionSet, v MessagingCapabilityEnmasseIoV1) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx context.Context, v interface{}) ([]MessagingCapabilityEnmasseIoV1, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]MessagingCapabilityEnmasseIoV1, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx context.Context, sel ast.SelectionSet, v []MessagingCapabilityEnmasseIoV1) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalNMessagingEndpointPhase_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingEndpointPhase(ctx context.Context, v interface{}) (v11.MessagingEndpointPhase, error) {
@@ -9845,90 +9824,6 @@ func (ec *executionContext) marshalOMessagingEndpointQueryResult_consoleapi_enma
 
 func (ec *executionContext) marshalOMessagingEndpointStatus_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingEndpointStatus(ctx context.Context, sel ast.SelectionSet, v v11.MessagingEndpointStatus) graphql.Marshaler {
 	return ec._MessagingEndpointStatus_enmasse_io_v1(ctx, sel, &v)
-}
-
-func (ec *executionContext) unmarshalOMessagingProjectCapability2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, v interface{}) (MessagingProjectCapability, error) {
-	var res MessagingProjectCapability
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalOMessagingProjectCapability2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, sel ast.SelectionSet, v MessagingProjectCapability) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalOMessagingProjectCapability2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, v interface{}) ([]*MessagingProjectCapability, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*MessagingProjectCapability, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalOMessagingProjectCapability2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOMessagingProjectCapability2ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, sel ast.SelectionSet, v []*MessagingProjectCapability) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOMessagingProjectCapability2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) unmarshalOMessagingProjectCapability2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, v interface{}) (*MessagingProjectCapability, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOMessagingProjectCapability2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOMessagingProjectCapability2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectCapability(ctx context.Context, sel ast.SelectionSet, v *MessagingProjectCapability) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) marshalOMessagingProjectQueryResult_consoleapi_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingProjectQueryResultConsoleapiEnmasseIoV1(ctx context.Context, sel ast.SelectionSet, v MessagingProjectQueryResultConsoleapiEnmasseIoV1) graphql.Marshaler {

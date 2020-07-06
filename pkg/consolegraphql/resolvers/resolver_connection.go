@@ -34,7 +34,7 @@ func (cr connectionK8sResolver) Links(ctx context.Context, obj *consolegraphql.C
 			return nil, e
 		}
 
-		links, e := cr.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, obj.Spec.AddressSpace, obj.ObjectMeta.Name, keyElements), fltrfunc)
+		links, e := cr.Cache.Get(cache.PrimaryObjectIndex, fmt.Sprintf("Link/%s/%s/%s/%s", obj.ObjectMeta.Namespace, obj.ObjectMeta.Name, keyElements), fltrfunc)
 		if e != nil {
 			return nil, e
 		}
@@ -165,71 +165,70 @@ func (r *queryResolver) Connections(ctx context.Context, first *int, offset *int
 
 func (r *mutationResolver) CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error) {
 
-	requestState := server.GetRequestStateFromContext(ctx)
-	viewFilter := requestState.AccessController.ViewFilter()
+	t := false
 
-	t := true
+	/*
+		requestState := server.GetRequestStateFromContext(ctx)
+		viewFilter := requestState.AccessController.ViewFilter()
+			connFilter := func(obj interface{}) (bool, bool, error) {
+				con, ok := obj.(*consolegraphql.Connection)
+				if !ok {
+					return false, false, fmt.Errorf("unexpected type: %T", obj)
+				}
 
-	connFilter := func(obj interface{}) (bool, bool, error) {
-		con, ok := obj.(*consolegraphql.Connection)
-		if !ok {
-			return false, false, fmt.Errorf("unexpected type: %T", obj)
-		}
+				for i, c := range input {
+					if con.Namespace == c.Namespace && con.Name == c.Name {
+						input = append(input[:i], input[i+1:]...)
+						return true, len(input) > 0, nil
+					}
+				}
 
-		for i, c := range input {
-			if con.Namespace == c.Namespace && con.Name == c.Name {
-				input = append(input[:i], input[i+1:]...)
-				return true, len(input) > 0, nil
+				return false, len(input) > 0, nil
 			}
-		}
 
-		return false, len(input) > 0, nil
-	}
-
-	objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", cache.And(viewFilter, connFilter))
-	if e != nil {
-		return nil, e
-	}
-
-	// Connections are ephemeral - the absence of one should not prevent the closure of the others.
-	for _, notFound := range input {
-		graphql.AddErrorf(ctx, "connection: '%s' not found in namespace '%s'", notFound.Name, notFound.Namespace)
-	}
-
-	for _, obj := range objects {
-		con, ok := obj.(*consolegraphql.Connection)
-		if !ok {
-			return nil, fmt.Errorf("unexpected type: %T", obj)
-		}
-
-		/*
-			infraUid, e := r.GetInfraUid(con.Namespace, con.Spec.AddressSpace)
+			objects, e := r.Cache.Get(cache.PrimaryObjectIndex, "Connection/", cache.And(viewFilter, connFilter))
 			if e != nil {
-				graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - %+v", con.Name, con.Namespace, e)
-				continue
+				return nil, e
 			}
 
-			collector := r.GetCollector(infraUid)
-			if collector == nil {
-				graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
-					con.Name, con.Namespace, infraUid)
-				continue
+			// Connections are ephemeral - the absence of one should not prevent the closure of the others.
+			for _, notFound := range input {
+				graphql.AddErrorf(ctx, "connection: '%s' not found in namespace '%s'", notFound.Name, notFound.Namespace)
 			}
-		*/
 
-		token := requestState.UserAccessToken
+			for _, obj := range objects {
+				con, ok := obj.(*consolegraphql.Connection)
+				if !ok {
+					return nil, fmt.Errorf("unexpected type: %T", obj)
+				}
 
-		commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
-		if e != nil {
-			graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace '%s', %+v", con.Name, con.Namespace, e)
-			continue
-		}
+					infraUid, e := r.GetInfraUid(con.Namespace, con.Spec.AddressSpace)
+					if e != nil {
+						graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - %+v", con.Name, con.Namespace, e)
+						continue
+					}
 
-		e = commandDelegate.CloseConnection(con.ObjectMeta)
-		if e != nil {
-			graphql.AddErrorf(ctx, "connection: '%s' in namespace '%s' could not be closed : %+v", con.Name, con.Namespace, e)
-		}
+					collector := r.GetCollector(infraUid)
+					if collector == nil {
+						graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace: '%s' - cannot find collector for infraUuid '%s' at this time",
+							con.Name, con.Namespace, infraUid)
+						continue
+					}
 
-	}
+				token := requestState.UserAccessToken
+
+				commandDelegate, e := collector.CommandDelegate(token, requestState.ImpersonatedUser)
+				if e != nil {
+					graphql.AddErrorf(ctx, "failed to close connection: '%s' in namespace '%s', %+v", con.Name, con.Namespace, e)
+					continue
+				}
+
+				e = commandDelegate.CloseConnection(con.ObjectMeta)
+				if e != nil {
+					graphql.AddErrorf(ctx, "connection: '%s' in namespace '%s' could not be closed : %+v", con.Name, con.Namespace, e)
+				}
+
+			}
+	*/
 	return &t, nil
 }

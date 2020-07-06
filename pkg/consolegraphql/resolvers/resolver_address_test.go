@@ -395,12 +395,12 @@ func TestQueryAddressMetrics(t *testing.T) {
 	assert.Equal(t, float64(100), value, "Unexpected stored metric value")
 }
 
-func TestAddressCommand(t *testing.T) {
+func TestMessagingAddressCommand(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "myaddrspace.myaddr")
 
-	cmd, err := r.Query().AddressCommand(ctx, addr.Address, nil)
+	cmd, err := r.Query().MessagingAddressCommand(ctx, addr.Address, nil)
 
 	assert.NoError(t, err)
 	expected := `kind: Address
@@ -409,14 +409,14 @@ metadata:
 	assert.Contains(t, cmd, expected, "Expect name and namespace to be set")
 }
 
-func TestAddressCommandUsingAddressToFromResourceName(t *testing.T) {
+func TestMessagingAddressCommandUsingAddressToFromResourceName(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressSpace := "myaddrspace"
 	ah := createAddress(namespace, "",
 		withAddress("myaddr"))
 
-	cmd, err := r.Query().AddressCommand(ctx, ah.Address, &addressSpace)
+	cmd, err := r.Query().MessagingAddressCommand(ctx, ah.Address, &addressSpace)
 
 	assert.NoError(t, err)
 	expected := `kind: Address
@@ -533,7 +533,7 @@ func createAddressLink(namespace string, addressspace string, addr string, role 
 	}
 }
 
-func TestCreateAddress(t *testing.T) {
+func TestCreateMessagingAddress(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
@@ -541,7 +541,7 @@ func TestCreateAddress(t *testing.T) {
 	addr := createAddress(namespace, addrname)
 	addr.Spec.Address = "myaddr"
 
-	meta, err := r.Mutation().CreateAddress(ctx, addr.Address, nil)
+	meta, err := r.Mutation().CreateMessagingAddress(ctx, addr.Address, nil)
 	assert.NoError(t, err)
 
 	retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
@@ -550,7 +550,7 @@ func TestCreateAddress(t *testing.T) {
 	assert.Equal(t, addrname, retrieved.Name, "unexpected address resource name")
 }
 
-func TestPatchAddress(t *testing.T) {
+func TestPatchMessagingAddress(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addressspace := "myaddrspace"
@@ -562,7 +562,7 @@ func TestPatchAddress(t *testing.T) {
 	_, err := addrClient.Create(&addr.Address)
 	assert.NoError(t, err)
 
-	_, err = r.Mutation().PatchAddress(ctx, addr.Address.ObjectMeta,
+	_, err = r.Mutation().PatchMessagingAddress(ctx, addr.Address.ObjectMeta,
 		`[{"op":"replace","path":"/spec/plan","value":"standard-medium"}]`,
 		"application/json-patch+json")
 	assert.NoError(t, err)
@@ -617,7 +617,7 @@ func TestDeleteAddressesOneAddressNotFound(t *testing.T) {
 	assert.Equal(t, 0, len(list.Items))
 }
 
-func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
+func TestCreateMessagingAddressUsingAddressToFormResourceName(t *testing.T) {
 	namespace := "mynamespace"
 	addressspace := "myaddressspace"
 
@@ -707,7 +707,7 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 			ah := createAddress(namespace, "",
 				withAddress(testCase.address))
 
-			meta, err := r.Mutation().CreateAddress(ctx, ah.Address, &testCase.addressSpace)
+			meta, err := r.Mutation().CreateMessagingAddress(ctx, ah.Address, &testCase.addressSpace)
 			assert.NoError(t, err)
 
 			retrieved, err := server.GetRequestStateFromContext(ctx).EnmasseV1beta1Client.Addresses(meta.Namespace).Get(meta.Name, metav1.GetOptions{})
@@ -718,11 +718,11 @@ func TestCreateAddressUsingAddressToFormResourceName(t *testing.T) {
 	}
 }
 
-func TestCreateAddressUnableToDefaultResourceName(t *testing.T) {
+func TestCreateMessagingAddressUnableToDefaultResourceName(t *testing.T) {
 	r, ctx := newTestAddressResolver(t)
 	namespace := "mynamespace"
 	addr := createAddress(namespace, "")
 
-	_, err := r.Mutation().CreateAddress(ctx, addr.Address, nil)
+	_, err := r.Mutation().CreateMessagingAddress(ctx, addr.Address, nil)
 	assert.Error(t, err)
 }
