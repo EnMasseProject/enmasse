@@ -109,7 +109,8 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
                   onClick={() => navigateToAddress(address)}
                 >
                   {address}
-                </Button>{" "}
+                </Button>
+                {index < commandAddresses.length - 1 && ", "}
               </React.Fragment>
             ))}
           <br />
