@@ -31,7 +31,9 @@ type MessagingProject struct {
 
 type MessagingProjectSpec struct {
 	// Reference to a specific MessagingInfra to use (must be available for this project).
-	MessagingInfrastructureRef *MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
+	MessagingInfrastructureRef *ObjectReference `json:"messagingInfrastructureRef,omitempty"`
+	// Reference to a specific MessagingPlan to use (must be available for this project).
+	MessagingPlanRef *ObjectReference `json:"messagingPlanRef,omitempty"`
 	// The desired capabilities common to all addresses for this project.
 	Capabilities []MessagingCapability `json:"capabilities,omitempty"`
 }
@@ -41,12 +43,21 @@ type MessagingProjectStatus struct {
 	Phase   MessagingProjectPhase `json:"phase,omitempty"`
 	Message string                `json:"message,omitempty"`
 	// MessagingInfra this project is bound to.
-	MessagingInfrastructureRef MessagingInfrastructureReference `json:"messagingInfrastructureRef,omitempty"`
-	Conditions                 []MessagingProjectCondition      `json:"conditions,omitempty"`
+	MessagingInfrastructureRef ObjectReference `json:"messagingInfrastructureRef,omitempty"`
+	// Applied plan name.
+	MessagingPlanRef *ObjectReference `json:"messagingPlanRef,omitempty"`
+	// Applied plan configuration.
+	AppliedMessagingPlan *MessagingProjectAppliedPlan `json:"appliedMessagingPlan,omitempty"`
+	// Current project conditions.
+	Conditions []MessagingProjectCondition `json:"conditions,omitempty"`
 	// The actual capabilities common to all addresses for this project.
 	Capabilities []MessagingCapability `json:"capabilities,omitempty"`
 	// For transactional projects, the broker addresses should be scheduled todo
 	Broker *MessagingAddressBroker `json:"broker,omitempty"`
+}
+
+type MessagingProjectAppliedPlan struct {
+	Resources *MessagingPlanSpecResources `json:"resources,omitempty"`
 }
 
 type MessagingProjectCondition struct {
@@ -60,11 +71,12 @@ type MessagingProjectCondition struct {
 type MessagingProjectConditionType string
 
 const (
-	MessagingProjectBound     MessagingProjectConditionType = "Bound"
-	MessagingProjectCaCreated MessagingProjectConditionType = "CaCreated"
-	MessagingProjectScheduled MessagingProjectConditionType = "Scheduled"
-	MessagingProjectCreated   MessagingProjectConditionType = "Created"
-	MessagingProjectReady     MessagingProjectConditionType = "Ready"
+	MessagingProjectBound       MessagingProjectConditionType = "Bound"
+	MessagingProjectCaCreated   MessagingProjectConditionType = "CaCreated"
+	MessagingProjectScheduled   MessagingProjectConditionType = "Scheduled"
+	MessagingProjectPlanApplied MessagingProjectConditionType = "PlanApplied"
+	MessagingProjectCreated     MessagingProjectConditionType = "Created"
+	MessagingProjectReady       MessagingProjectConditionType = "Ready"
 )
 
 type MessagingProjectPhase string

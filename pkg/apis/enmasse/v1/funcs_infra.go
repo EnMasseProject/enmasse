@@ -47,3 +47,7 @@ func (c *MessagingInfrastructure) GetRouterInfraName() string {
 func (c *MessagingInfrastructure) GetInternalClusterServiceName() string {
 	return fmt.Sprintf("%s-cluster", c.GetRouterInfraName())
 }
+
+func (m *MessagingInfrastructure) GetSelector() *NamespaceSelector {
+	return m.Spec.NamespaceSelector
+}

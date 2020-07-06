@@ -30,6 +30,8 @@ type MessagingAddressPlan struct {
 }
 
 type MessagingAddressPlanSpec struct {
+	// A selector defining which namespaces this plan should serve. Default is all namespaces.
+	NamespaceSelector *NamespaceSelector `json:"namespaceSelector,omitempty"`
 }
 
 type MessagingAddressPlanStatus struct {

@@ -6,6 +6,7 @@ package v1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,7 +31,24 @@ type MessagingPlan struct {
 }
 
 type MessagingPlanSpec struct {
+	// A selector defining which namespaces this plan should serve. Default is all namespaces.
+	NamespaceSelector *NamespaceSelector `json:"namespaceSelector,omitempty"`
+	// Resources specified for this plan.
+	Resources  *MessagingPlanSpecResources `json:"resources,omitempty"`
 }
+
+type MessagingPlanSpecResources struct {
+	// Requests map[MessagingPlanResource]resource.Quantity
+
+	// Requested plan limits
+	Limits map[MessagingPlanResource]resource.Quantity `json:"limits,omitempty"`
+}
+
+type MessagingPlanResource string
+
+const (
+	MessagingResourceLimitsConnections MessagingPlanResource = "limits.connections"
+)
 
 type MessagingPlanStatus struct {
 	// +kubebuilder:printcolumn

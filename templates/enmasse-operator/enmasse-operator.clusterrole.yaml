@@ -8,6 +8,8 @@ rules:
   - apiGroups: [ "" ]
     resources: [ "events" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete", "deletecollection" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get" ]
   - apiGroups: [ "oauth.openshift.io" ]
     resources: [ "oauthclients" ]
     verbs: [ "create", "get", "update", "list", "watch" ]
