@@ -183,8 +183,18 @@ const availableNamespaces = [
     status: {
       phase: "Active"
     }
+  },
+  {
+    metadata: {
+      name: "app3_ns"
+    },
+    status: {
+      phase: "Active"
+    }
   }
 ];
+
+const availableAddressPlans = [];
 
 /*
 function createMessagingAddressPlan(name, displayName, shortDescription, longDescription, displayOrder)
@@ -204,7 +214,6 @@ function createMessagingAddressPlan(name, displayName, shortDescription, longDes
   };
 }
 
-const availableAddressPlans = [
   createAddressPlan("standard-small-queue",
       "queue",
       "Small Queue",
@@ -451,9 +460,7 @@ function createMessagingTenant(tenant) {
         ? tenant.metadata.creationTimestamp
         : getRandomCreationDate()
     },
-    spec: {
-      // plan: spacePlan,
-    },
+    spec: {},
     status: {
       phase: "",
       message: ""
@@ -461,7 +468,7 @@ function createMessagingTenant(tenant) {
   };
 
   messagingTenants.push(messagingTenant);
-  active[messagingTenant.metadata] = scheduleSetAddressSpaceStatus(
+  active[messagingTenant.metadata] = scheduleSetMessagingTenantStatus(
     messagingTenant,
     phase,
     message
@@ -773,25 +780,27 @@ function deleteMessagingTenant(objectmeta) {
 
 var messagingTenants = [];
 
-createMessagingTenantj({
+createMessagingTenant({
   metadata: {
     name: "default",
     namespace: availableNamespaces[0].metadata.name
   },
   spec: {}
 });
-
-createAddressSpace({
+createMessagingTenant({
   metadata: {
     name: "default",
     namespace: availableNamespaces[1].metadata.name
   },
-  spec: {},
-  status: {
-    phase: "Configuring"
-  }
+  spec: {}
 });
-
+createMessagingTenant({
+  metadata: {
+    name: "default",
+    namespace: availableNamespaces[2].metadata.name
+  },
+  spec: {}
+});
 var connections = [];
 
 var users = ["guest", "bob", "alice"];
@@ -799,24 +808,21 @@ function createConnection(messagingTenant, hostname) {
   var port = Math.floor(Math.random() * 25536) + 40000;
   var hostport = hostname + ":" + port;
   var encrypted = port % 2 === 0;
-  var properties = [];
-  if (messagingTenant.spec.Type === "standard") {
-    properties = [
-      {
-        key: "platform",
-        value:
-          "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
-      },
-      {
-        key: "product",
-        value: "QpidJMS"
-      },
-      {
-        key: "version",
-        value: "0.38.0-SNAPSHOT"
-      }
-    ];
-  }
+  var properties = [
+    {
+      key: "platform",
+      value:
+        "JVM: 1.8.0_191, 25.191-b12, Oracle Corporation, OS: Mac OS X, 10.13.6, x86_64"
+    },
+    {
+      key: "product",
+      value: "QpidJMS"
+    },
+    {
+      key: "version",
+      value: "0.38.0-SNAPSHOT"
+    }
+  ];
   return {
     metadata: {
       name: hostport,
@@ -892,16 +898,14 @@ messagingTenants.forEach(tenant => {
 
 var addresses = [];
 
-function scheduleSetAddressStatus(address, phase, messages, planStatus) {
+function scheduleSetAddressStatus(address, phase, message) {
   setTimeout(() => {
     address.status = {
-      isReady: phase === "Active",
-      messages: messages,
-      phase: phase,
-      planStatus: planStatus
+      message: message,
+      phase: phase
     };
     if (phase !== "Active") {
-      scheduleSetAddressStatus(address, "Active", [], planStatus);
+      scheduleSetAddressStatus(address, "Active", "");
     }
   }, stateChangeTimeout);
 }
@@ -948,11 +952,7 @@ function createAddress(addr, messagingTenantName) {
     as => as.metadata.namespace === addr.metadata.namespace
   );
   if (addr.metadata.name) {
-    var parts = addr.metadata.name.split(".", 2);
-    if (parts.length < 2) {
-      throw `Address name '${addr.metadata.name}' is badly formed, expected for '<addressspace>.<name>'`;
-    }
-    messagingTenantName = parts[0];
+    messagingTenantName = addr.metadata.namespace;
   } else if (addr.spec.address) {
     if (!messagingTenantName) {
       throw `messagingTenant is not provided, cannot default resource name from address '${addr.spec.address}'`;
@@ -966,15 +966,16 @@ function createAddress(addr, messagingTenantName) {
   }
 
   var messagingTenant = messagingTenantsInNamespace.find(
-    as => as.metadata.name === messagingTenantName
+    as => as.metadata.namespace === messagingTenantName
   );
   if (messagingTenant === undefined) {
     var addressspacenames = messagingTenantsInNamespace.map(
-      p => p.metadata.Name
+      p => p.metadata.Namespace
     );
     throw `Unrecognised address space '${messagingTenantName}', known ones are : ${addressspacenames}`;
   }
 
+  /*
   var knownTypes = ["queue", "topic", "subscription", "multicast", "anycast"];
   if (knownTypes.find(t => t === addr.spec.type) === undefined) {
     throw `Unrecognised address type '${addr.spec.type}', known ones are : '${knownTypes}'`;
@@ -991,24 +992,27 @@ function createAddress(addr, messagingTenantName) {
       .map(p => p.metadata.name);
     throw `Unrecognised address plan '${addr.spec.plan}', known plans for type '${addr.spec.type}' are : ${knownPlansNames}`;
   }
+  */
 
-  if (addr.spec.type === "subscription") {
+  if (addr.spec.subscription !== undefined) {
     var topics = addresses.filter(
       a =>
         a.metadata.name.startsWith(messagingTenantName) &&
-        a.spec.type === "topic"
+        a.spec.topic !== undefined
     );
-    if (!addr.spec.topic) {
-      throw `spec.topic is mandatory for the subscription type`;
+    if (!addr.spec.subscription.topic) {
+      throw `spec.subscription.topic is mandatory for the subscription type`;
     } else if (
-      topics.find(t => t.spec.address === addr.spec.topic) === undefined
+      topics.find(
+        t =>
+          t.metadata.name == addr.spec.subscription.topic ||
+          t.spec.address === addr.spec.subscription.topic
+      ) === undefined
     ) {
-      var topicNames = topics.map(t => t.spec.address);
-      throw `Unrecognised topic address '${addr.spec.topic}', known ones are : '${topicNames}'`;
-    }
-  } else {
-    if (addr.spec.topic) {
-      throw `spec.topic is not allowed for the address type '${addr.spec.type}'.`;
+      var topicNames = topics.map(t =>
+        t.spec.address !== undefined ? t.metadata.name : t.spec.address
+      );
+      throw `Unrecognised topic address '${addr.spec.subscription.topic}', known ones are : '${topicNames}'`;
     }
   }
 
@@ -1023,14 +1027,15 @@ function createAddress(addr, messagingTenantName) {
   }
 
   var phase = "Active";
-  var messages = [];
+  var message = "";
   if (addr.status && addr.status.phase) {
     phase = addr.status.phase;
   }
   if (phase !== "Active") {
-    messages.push("Address " + addr.metadata.name + " not found on qdrouterd");
+    message = "Address " + addr.metadata.name + " not found on qdrouterd";
   }
 
+  /*
   var planStatus = null;
   if (messagingTenant.spec.type === "standard") {
     planStatus = {
@@ -1038,6 +1043,7 @@ function createAddress(addr, messagingTenantName) {
       partitions: 1
     };
   }
+  */
 
   var address = {
     metadata: {
@@ -1048,19 +1054,18 @@ function createAddress(addr, messagingTenantName) {
         ? addr.metadata.creationTimestamp
         : getRandomCreationDate()
     },
-    spec: {
-      address: addr.spec.address,
-      messagingTenant: addr.spec.messagingTenant,
-      plan: plan,
-      type: addr.spec.type,
-      topic: addr.spec.topic
-    },
+    spec: addr.spec,
+    //    address: addr.spec.address,
+    // messagingTenant: addr.spec.messagingTenant,
+    // plan: plan,
+    //   type: addr.spec.type,
+    //   topic: addr.spec.topic
     status: {
       phase: "",
-      messages: []
+      message: ""
     }
   };
-  scheduleSetAddressStatus(address, phase, messages, planStatus);
+  scheduleSetAddressStatus(address, phase, message);
   addresses.push(address);
   return address.metadata;
 }
@@ -1255,7 +1260,7 @@ function createTopicWithSub(messagingTenant, topicName) {
 ["titan", "rhea", "iapetus", "dione", "tethys", "enceladus", "mimas"].map(n =>
   createAddress({
     metadata: {
-      name: messagingTenants[1].metadata.name + "." + n,
+      name: n,
       namespace: messagingTenants[1].metadata.namespace
     },
     spec: {

@@ -14,17 +14,13 @@ const typeDefs = gql`
     value: String!
   }
 
-  enum AddressSpaceType {
-    standard
-    brokered
-  }
-
   enum AddressType {
     queue
     topic
     subscription
     multicast
     anycast
+    deadLetter
   }
 
   enum AuthenticationServiceType {
@@ -45,35 +41,6 @@ const typeDefs = gql`
   enum Protocol {
     amqp
     amqps
-  }
-
-  enum EndpointServiceType_enmasse_io_v1beta1 {
-    messaging
-    mqtt @deprecated(reason: "deprecated")
-    console @deprecated(reason: "deprecated")
-  }
-
-  enum CertificateProviderType_enmasse_io_v1beta1 {
-    wildcard
-    certBundle
-    openshift
-    selfsigned
-  }
-
-  enum ExposeType_enmasse_io_v1beta1 {
-    route
-    loadbalancer
-  }
-
-  enum RouteServicePort_enmasse_io_v1beta1 {
-    amqps
-    https
-    secure_mqtt @deprecated(reason: "deprecated")
-  }
-
-  enum RouteTlsTermination_enmasse_io_v1beta1 {
-    passthrough
-    reencrypt
   }
 
   enum MessagingEndpointType_enmasse_io_v1 {
@@ -97,97 +64,28 @@ const typeDefs = gql`
     Terminating
   }
 
-  type Metric_consoleapi_enmasse_io_v1beta1 {
+  type Metric_consoleapi_enmasse_io_v1 {
     name: String!
     type: MetricType!
     value: Float!
     units: String!
   }
 
-  type AddressSpaceType_consoleapi_enmasse_io_v1beta1 {
+  type Connection_consoleapi_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
-  }
+    spec: ConnectionSpec_consoleapi_enmasse_io_v1!
 
-  type AddressSpaceTypeSpec_consoleapi_enmasse_io_v1beta1 {
-    addressSpaceType: AddressSpaceType!
-    displayName: String!
-    longDescription: String!
-    shortDescription: String!
-    displayOrder: Int!
-  }
-
-  type AddressType_consoleapi_enmasse_io_v1beta1 {
-    metadata: ObjectMeta_v1!
-    spec: AddressTypeSpec_consoleapi_enmasse_io_v1beta1!
-  }
-
-  type AddressTypeSpec_consoleapi_enmasse_io_v1beta1 {
-    addressSpaceType: AddressSpaceType!
-    displayName: String!
-    longDescription: String!
-    shortDescription: String!
-    displayOrder: Int!
-  }
-
-  type AuthenticationService_admin_enmasse_io_v1beta1 {
-    metadata: ObjectMeta_v1!
-    spec: AuthenticationServiceSpec_admin_enmasse_io_v1beta1!
-    status: AuthenticationServiceStatus_admin_enmasse_io_v1beta1!
-  }
-  type AuthenticationServiceStatus_admin_enmasse_io_v1beta1 {
-    host: String!
-    port: Int!
-  }
-  type AuthenticationServiceSpec_admin_enmasse_io_v1beta1 {
-    type: AuthenticationServiceType!
-  }
-  type AddressSpaceSchema_enmasse_io_v1beta1 {
-    metadata: ObjectMeta_v1!
-    spec: AddressSpaceSchemaSpec_enmasse_io_v1beta1!
-  }
-
-  type AddressSpaceSchemaSpec_enmasse_io_v1beta1 {
-    authenticationServices: [String!]
-    description: String
-    routeServicePorts: [RouteServicePortDescription_enmasse_io_v1beta1!]!
-    certificateProviderTypes: [CertificateProviderTypeDescription_enmasse_io_v1beta1!]!
-    endpointExposeTypes: [EndpointExposeTypeDescription_enmasse_io_v1beta1!]!
-  }
-
-  type RouteServicePortDescription_enmasse_io_v1beta1 {
-    name: RouteServicePort_enmasse_io_v1beta1!
-    displayName: String!
-    routeTlsTerminations: [RouteTlsTermination_enmasse_io_v1beta1!]!
-  }
-
-  type CertificateProviderTypeDescription_enmasse_io_v1beta1 {
-    name: CertificateProviderType_enmasse_io_v1beta1!
-    displayName: String!
-    description: String!
-  }
-
-  type EndpointExposeTypeDescription_enmasse_io_v1beta1 {
-    name: ExposeType_enmasse_io_v1beta1!
-    displayName: String!
-    description: String!
-  }
-
-  type Connection_consoleapi_enmasse_io_v1beta1 {
-    metadata: ObjectMeta_v1!
-    spec: ConnectionSpec_consoleapi_enmasse_io_v1beta1!
-
-    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!
+    metrics: [Metric_consoleapi_enmasse_io_v1!]!
     links(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
+    ): LinkQueryResult_consoleapi_enmasse_io_v1!
   }
 
-  type ConnectionSpec_consoleapi_enmasse_io_v1beta1 {
-    addressSpace: AddressSpace_consoleapi_enmasse_io_v1beta1!
+  type ConnectionSpec_consoleapi_enmasse_io_v1 {
+    namespace: String!
     hostname: String!
     containerId: String!
     protocol: Protocol!
@@ -196,48 +94,46 @@ const typeDefs = gql`
     principal: String!
   }
 
-  type Link_consoleapi_enmasse_io_v1beta1 {
+  type Link_consoleapi_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: LinkSpec_consoleapi_enmasse_io_v1beta1!
-    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!
+    spec: LinkSpec_consoleapi_enmasse_io_v1!
+    metrics: [Metric_consoleapi_enmasse_io_v1!]!
   }
 
-  type LinkSpec_consoleapi_enmasse_io_v1beta1 {
-    connection: Connection_consoleapi_enmasse_io_v1beta1!
+  type LinkSpec_consoleapi_enmasse_io_v1 {
+    connection: Connection_consoleapi_enmasse_io_v1!
     address: String!
     role: LinkRole!
-    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]!
   }
 
   #
   #  Types used to facilitate the paginated model queries
   #
 
-  type AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1 {
+  type MessagingTenantQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
-    addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]!
+    messagingTenants: [MessagingTenant_consoleapi_enmasse_io_v1!]!
   }
 
-  type AddressQueryResult_consoleapi_enmasse_io_v1beta1 {
+  type AddressQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
-    addresses: [Address_consoleapi_enmasse_io_v1beta1!]!
+    addresses: [Address_consoleapi_enmasse_io_v1!]!
   }
 
-  type ConnectionQueryResult_consoleapi_enmasse_io_v1beta1 {
+  type ConnectionQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
-    connections: [Connection_consoleapi_enmasse_io_v1beta1!]!
+    connections: [Connection_consoleapi_enmasse_io_v1!]!
   }
 
-  type LinkQueryResult_consoleapi_enmasse_io_v1beta1 {
+  type LinkQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
-    links: [Link_consoleapi_enmasse_io_v1beta1!]!
+    links: [Link_consoleapi_enmasse_io_v1!]!
   }
 
-  type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
+  type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1 {
     total: Int!
     messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
   }
-
   #
   # Mirrors of Kubernetes types.  These follow the names and structure of the underlying
   # Kubernetes object exactly.  We don't need to expose every field, just the ones that
@@ -247,56 +143,27 @@ const typeDefs = gql`
   # done below for the address.spec.plan and type fields.
   #
 
-  type AddressSpace_consoleapi_enmasse_io_v1beta1 {
+  type MessagingTenant_consoleapi_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: AddressSpaceSpec_enmasse_io_v1beta1!
-    status: AddressSpaceStatus_enmasse_io_v1beta1
+    spec: MessagingTenantSpec_enmasse_io_v1!
+    status: MessagingTenantStatus_enmasse_io_v1
     connections(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1!
+    ): ConnectionQueryResult_consoleapi_enmasse_io_v1!
     addresses(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): AddressQueryResult_consoleapi_enmasse_io_v1beta1!
-    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
+    ): AddressQueryResult_consoleapi_enmasse_io_v1!
+    metrics: [Metric_consoleapi_enmasse_io_v1!]
   }
 
-  type AddressSpaceSpec_enmasse_io_v1beta1 {
-    plan: AddressSpacePlan_admin_enmasse_io_v1!
-    type: AddressSpaceType!
-
-    authenticationService: AuthenticationService_enmasse_io_v1beta1
-    endpoints: [EndpointSpec_enmasse_io_v1beta1!]
-  }
-
-  type EndpointSpec_enmasse_io_v1beta1 {
-    name: String!
-    service: EndpointServiceType_enmasse_io_v1beta1!
-    certificate: CertificateSpec_enmasse_io_v1beta1
-    expose: ExposeSpec_enmasse_io_v1beta1
-  }
-
-  type CertificateSpec_enmasse_io_v1beta1 {
-    provider: CertificateProviderType_enmasse_io_v1beta1!
-    secretName: String
-    tlsCert: String
-    tlsKey: String
-  }
-
-  type ExposeSpec_enmasse_io_v1beta1 {
-    type: ExposeType_enmasse_io_v1beta1!
-
-    routeHost: String
-    routeServicePort: RouteServicePort_enmasse_io_v1beta1
-    routeTlsTermination: RouteTlsTermination_enmasse_io_v1beta1
-
-    loadBalancerPorts: [String!]
-    loadBalancerSourceRanges: [String!]
+  type MessagingTenantSpec_enmasse_io_v1 {
+    capabilities: [MessagingTenantCapability]
   }
 
   type MessagingEndpoint_enmasse_io_v1 {
@@ -325,92 +192,41 @@ const typeDefs = gql`
     port: Int!
   }
 
-  type AuthenticationService_enmasse_io_v1beta1 {
-    name: String!
-  }
-
-  type AddressSpaceStatus_enmasse_io_v1beta1 {
-    isReady: Boolean!
-    messages: [String!]
+  type MessagingTenantStatus_enmasse_io_v1 {
+    message: String!
     phase: String!
-    caCertificate: String
-    endpointStatus: [EndpointStatus_enmasse_io_v1beta1!]!
   }
 
-  type EndpointStatus_enmasse_io_v1beta1 {
-    name: String!
-    certificate: String
-    serviceHost: String!
-    servicePorts: [Port_enmasse_io_v1beta1!]!
-
-    externalHost: String
-    externalPorts: [Port_enmasse_io_v1beta1!]
+  type AddressSpec_enmasse_io_v1 {
+    address: String
   }
 
-  type Port_enmasse_io_v1beta1 {
-    name: String!
-    port: Int!
-  }
-
-  type AddressSpec_enmasse_io_v1beta1 {
-    address: String!
-    addressSpace: String!
-    type: AddressType!
-    plan: AddressPlan_admin_enmasse_io_v1!
-    topic: String
-  }
-
-  type AddressStatus_enmasse_io_v1beta1 {
-    isReady: Boolean!
-    messages: [String!]
+  type AddressStatus_enmasse_io_v1 {
+    message: String
     phase: String!
-    planStatus: AddressPlanStatus_enmasse_io_v1beta1
   }
 
-  type AddressPlanStatus_enmasse_io_v1beta1 {
-    name: String!
-    partitions: Int!
-  }
-
-  type Address_consoleapi_enmasse_io_v1beta1 {
+  type Address_consoleapi_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: AddressSpec_enmasse_io_v1beta1!
-    status: AddressStatus_enmasse_io_v1beta1
+    spec: AddressSpec_enmasse_io_v1!
+    status: AddressStatus_enmasse_io_v1
 
     links(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): LinkQueryResult_consoleapi_enmasse_io_v1beta1!
-    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
+    ): LinkQueryResult_consoleapi_enmasse_io_v1!
+    metrics: [Metric_consoleapi_enmasse_io_v1!]
   }
 
-  type AddressPlan_admin_enmasse_io_v1 {
-    metadata: ObjectMeta_v1!
-    spec: AddressPlanSpec_admin_enmasse_io_v1!
-  }
-
-  type AddressPlanSpec_admin_enmasse_io_v1 {
-    addressType: AddressType!
-    displayName: String!
-    longDescription: String!
-    shortDescription: String!
-    displayOrder: Int!
-  }
-
-  type AddressSpacePlan_admin_enmasse_io_v1 {
-    metadata: ObjectMeta_v1!
-    spec: AddressSpacePlanSpec_admin_enmasse_io_v1!
-  }
-
-  type AddressSpacePlanSpec_admin_enmasse_io_v1 {
-    addressPlans: [AddressPlan_admin_enmasse_io_v1!]!
-    addressSpaceType: AddressSpaceType
-    displayName: String!
-    longDescription: String!
-    shortDescription: String!
-    displayOrder: Int!
+  type Metadata_consoleapi_enmasse_io_v1 {
+    annotations: [KeyValue!]!
+    name: String!
+    namespace: String!
+    resourceVersion: String!
+    creationTimestamp: String!
+    uid: ID!
   }
 
   type ObjectMeta_v1 {
@@ -418,7 +234,7 @@ const typeDefs = gql`
     name: String!
     namespace: String!
     resourceVersion: String!
-    creationTimestamp: Date!
+    creationTimestamp: String!
     uid: ID!
   }
 
@@ -439,60 +255,32 @@ const typeDefs = gql`
   }
 
   type Query {
-    hello: String
+    # "Returns the address spaces plans defined by the system optionally filtering for plans available for a given namespace"
+    # messagingPlans(namespace: String): [MessagingPlan_enmasse_io_v1!]!
 
-    "Returns the address spaces type defined by the system (DEPRECATED)"
-    addressSpaceTypes: [AddressSpaceType!]!
-    "Returns the address spaces type defined by the system optionally filtereing for a single address space type"
-    addressSpaceTypes_v2: [AddressSpaceType_consoleapi_enmasse_io_v1beta1!]!
-
-    "Returns the address types defined by the system (DEPRECATED)"
-    addressTypes: [AddressType!]!
-    "Returns the address types defined by the system optionally filtereing for a single address space type"
-    addressTypes_v2(
-      addressSpaceType: AddressSpaceType
-    ): [AddressType_consoleapi_enmasse_io_v1beta1!]!
-
-    "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
-    addressSpacePlans(
-      addressSpaceType: AddressSpaceType
-    ): [AddressSpacePlan_admin_enmasse_io_v1!]!
-
-    "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
-    addressPlans(
-      addressSpacePlan: String
-      addressType: AddressType
-    ): [AddressPlan_admin_enmasse_io_v1!]!
-
-    "Returns the authenticationServices"
-    authenticationServices: [AuthenticationService_admin_enmasse_io_v1beta1!]!
-    "Returns the addressSpaceSchema"
-    addressSpaceSchema: [AddressSpaceSchema_enmasse_io_v1beta1!]!
-    "Returns the addressSpaceSchema optionally filtering those for a matching address space type"
-    addressSpaceSchema_v2(
-      addressSpaceType: AddressSpaceType
-    ): [AddressSpaceSchema_enmasse_io_v1beta1!]!
+    # "Returns the address plans defined by the system optionally filtering those for a matching namespaec"
+    # messagingAddressPlans(namespace: String): [MessagingAddressPlan_enmasse_io_v1!]!
 
     "Returns the current logged on user"
     whoami: User_v1!
     "Returns the namespaces visible to this user"
     namespaces: [Namespace_v1!]!
 
-    "Returns the address spaces visible to this user,  optionally filtering"
-    addressSpaces(
+    "Returns the messaging tenants visible to this user,  optionally filtering"
+    messagingTenants(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): AddressSpaceQueryResult_consoleapi_enmasse_io_v1beta1
+    ): MessagingTenantQueryResult_consoleapi_enmasse_io_v1
 
     "Returns the addresses visible to this user,  optionally filtering"
-    addresses(
+    messagingAddresses(
       first: Int
       offset: Int
       filter: String
       orderBy: String
-    ): AddressQueryResult_consoleapi_enmasse_io_v1beta1
+    ): AddressQueryResult_consoleapi_enmasse_io_v1
 
     "Returns the connections visible to this user,  optionally filtering"
     connections(
@@ -500,19 +288,16 @@ const typeDefs = gql`
       offset: Int
       filter: String
       orderBy: String
-    ): ConnectionQueryResult_consoleapi_enmasse_io_v1beta1
+    ): ConnectionQueryResult_consoleapi_enmasse_io_v1
 
     "Returns the messaging certificate chain for the address space identifed by input, PEM format, suitable to be offered as a download to the user"
     messagingCertificateChain(input: ObjectMeta_v1_Input!): String!
 
     "Returns the command-line that, if executed, would create the given address space"
-    addressSpaceCommand(input: AddressSpace_enmasse_io_v1beta1_Input!): String!
+    messagingTenantCommand(input: MessagingTenant_enmasse_io_v1_Input!): String!
 
-    "Returns the command-line command, if executed, would create the given address"
-    addressCommand(
-      input: Address_enmasse_io_v1beta1_Input!
-      addressSpace: String
-    ): String!
+    "Returns the command-line command, if executed, would create the given address."
+    messagingAddressCommand(input: Address_enmasse_io_v1_Input!): String!
 
     "Returns the messaging endpoints for the given address space"
     messagingEndpoints(
@@ -520,7 +305,7 @@ const typeDefs = gql`
       offset: Int
       filter: String
       orderBy: String
-    ): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
+    ): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1
   }
 
   #
@@ -533,76 +318,44 @@ const typeDefs = gql`
     resourceVersion: String
   }
 
-  input AddressSpaceSpec_enmasse_io_v1beta1_Input {
-    type: String!
-    plan: String!
-
-    authenticationService: AuthenticationService_enmasse_io_v1beta1_Input
-    endpoints: [EndpointSpec_enmasse_io_v1beta1_Input!]
+  input MessagingTenantSpec_enmasse_io_v1_Input {
+    capabilities: [MessagingTenantCapability]
   }
 
-  input AuthenticationService_enmasse_io_v1beta1_Input {
-    name: String!
+  enum MessagingTenantCapability {
+    transactional
   }
 
-  input AddressSpace_enmasse_io_v1beta1_Input {
+  input MessagingTenant_enmasse_io_v1_Input {
     metadata: ObjectMeta_v1_Input
-    spec: AddressSpaceSpec_enmasse_io_v1beta1_Input
+    spec: MessagingTenantSpec_enmasse_io_v1_Input
   }
 
-  input AddressSpec_enmasse_io_v1beta1_Input {
-    address: String!
-    addressSpace: String
-    type: String!
-    plan: String!
-    topic: String
+  input AddressSpec_enmasse_io_v1_Input {
+    address: String
+    type: AddressType
   }
 
-  input EndpointSpec_enmasse_io_v1beta1_Input {
-    name: String!
-    service: EndpointServiceType_enmasse_io_v1beta1!
-    certificate: CertificateSpec_enmasse_io_v1beta1_Input
-    expose: ExposeSpec_enmasse_io_v1beta1_Input
-  }
-
-  input CertificateSpec_enmasse_io_v1beta1_Input {
-    provider: CertificateProviderType_enmasse_io_v1beta1!
-    secretName: String
-    tlsCert: String
-    tlsKey: String
-  }
-
-  input ExposeSpec_enmasse_io_v1beta1_Input {
-    type: String!
-
-    routeHost: String
-    routeServicePort: RouteServicePort_enmasse_io_v1beta1
-    routeTlsTermination: RouteTlsTermination_enmasse_io_v1beta1
-
-    loadBalancerPorts: [String!]
-    loadBalancerSourceRanges: [String!]
-  }
-
-  input Address_enmasse_io_v1beta1_Input {
+  input Address_enmasse_io_v1_Input {
     metadata: ObjectMeta_v1_Input
-    spec: AddressSpec_enmasse_io_v1beta1_Input
+    spec: AddressSpec_enmasse_io_v1_Input
   }
 
   type Mutation {
-    createAddressSpace(
-      input: AddressSpace_enmasse_io_v1beta1_Input!
+    createMessagingTenant(
+      input: MessagingTenant_enmasse_io_v1_Input!
     ): ObjectMeta_v1!
-    patchAddressSpace(
+    patchMessagingTenant(
       input: ObjectMeta_v1_Input!
       jsonPatch: String!
       patchType: String!
     ): Boolean
-    deleteAddressSpace(input: ObjectMeta_v1_Input!): Boolean @deprecated
-    "deletes addressspace(s)"
-    deleteAddressSpaces(input: [ObjectMeta_v1_Input!]!): Boolean
+    deleteMessagingTenant(input: ObjectMeta_v1_Input!): Boolean @deprecated
+    "deletes messagingtenants (s)"
+    deleteMessagingTenants(input: [ObjectMeta_v1_Input!]!): Boolean
 
     createAddress(
-      input: Address_enmasse_io_v1beta1_Input!
+      input: Address_enmasse_io_v1_Input!
       addressSpace: String
     ): ObjectMeta_v1!
     patchAddress(
@@ -613,7 +366,6 @@ const typeDefs = gql`
     deleteAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
     "deletes addresss(es)"
     deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
-    purgeAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
     "purges address(es)"
     purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
