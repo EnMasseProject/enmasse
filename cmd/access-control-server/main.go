@@ -7,9 +7,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/accesscontrolserver"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"log"
-	"net"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -30,26 +33,25 @@ func main() {
 	log.SetFlags(0)
 	log.SetOutput(new(logWriter))
 
-	port := uint32(util.GetUintEnvOrDefault("PORT", 0, 32, 0))
+	sigs := make(chan os.Signal, 1)
+	done := make(chan bool, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	port := uint16(util.GetUintEnvOrDefault("PORT", 0, 16, 0))
+	bindAddress := util.GetEnvOrDefault("BIND_ADDRESS", "localhost")
+
+	server, err := accesscontrolserver.NewServer(bindAddress, port)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
-	defer listener.Close()
-
 	go func() {
-		for {
-			nc, err := listener.Accept() // Accept a net.Conn
-			if err != nil {
-				panic(err)
-			}
-			nc.Close()
-		}
+		log.Println("Shutting down")
+		_ = <-sigs
+		server.Stop()
+		done <- true
 	}()
 
-
-
-
+	<-done
+	log.Println("Done")
 }

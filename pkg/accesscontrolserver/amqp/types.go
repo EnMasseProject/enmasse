@@ -1,3 +1,11 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ *
+ */
+
+/* Reuses implementation from https://github.com/vcabbage/amqp */
+
 package amqp
 
 import (
@@ -270,6 +278,7 @@ func (nf namedField) print(w io.Writer, comma bool) bool {
 
 // IsZero reports whether v is the zero value for its type.
 // It panics if the argument is invalid.
+// TODO: Remove once we have Go 1.14
 func IsZero(v reflect.Value) bool {
 	switch v.Kind() {
 	case reflect.Bool:
@@ -307,7 +316,6 @@ func IsZero(v reflect.Value) bool {
 		panic(&reflect.ValueError{"reflect.Value.IsZero", v.Kind()})
 	}
 }
-
 
 // compositeString generates a readable string for a composite value.
 func compositeString(name string, fields []namedField) string {
@@ -1837,272 +1845,8 @@ type Message struct {
 	SendSettled bool
 
 	//receiver   *Receiver // Receiver the message was received from
-	deliveryID uint32    // used when sending disposition
-	settled    bool      // whether transfer was settled by sender
-}
-
-// NewMessage returns a *Message with data as the payload.
-//
-// This constructor is intended as a helper for basic Messages with a
-// single data payload. It is valid to construct a Message directly for
-// more complex usages.
-func NewMessage(data []byte) *Message {
-	return &Message{
-		Data: [][]byte{data},
-	}
-}
-
-// GetData returns the first []byte from the Data field
-// or nil if Data is empty.
-func (m *Message) GetData() []byte {
-	if len(m.Data) < 1 {
-		return nil
-	}
-	return m.Data[0]
-}
-
-// Accept notifies the server that the message has been
-// accepted and does not require redelivery.
-func (m *Message) Accept() error {
-	panic("")
-	//if !m.shouldSendDisposition() {
-	//	return nil
-	//}
-	//return m.receiver.messageDisposition(m.deliveryID, &stateAccepted{})
-}
-
-// Reject notifies the server that the message is invalid.
-//
-// Rejection error is optional.
-func (m *Message) Reject(e *Error) error {
-	panic("")
-	//if !m.shouldSendDisposition() {
-	//	return nil
-	//}
-	//return m.receiver.messageDisposition(m.deliveryID, &stateRejected{Error: e})
-}
-
-// Release releases the message back to the server. The message
-// may be redelivered to this or another consumer.
-func (m *Message) Release() error {
-	panic("")
-	//if !m.shouldSendDisposition() {
-	//	return nil
-	//}
-	//return m.receiver.messageDisposition(m.deliveryID, &stateReleased{})
-}
-
-// Modify notifies the server that the message was not acted upon
-// and should be modifed.
-//
-// deliveryFailed indicates that the server must consider this and
-// unsuccessful delivery attempt and increment the delivery count.
-//
-// undeliverableHere indicates that the server must not redeliver
-// the message to this link.
-//
-// messageAnnotations is an optional annotation map to be merged
-// with the existing message annotations, overwriting existing keys
-// if necessary.
-func (m *Message) Modify(deliveryFailed, undeliverableHere bool, messageAnnotations Annotations) error {
-	panic("")
-	//if !m.shouldSendDisposition() {
-	//	return nil
-	//}
-	//return m.receiver.messageDisposition(m.deliveryID, &stateModified{
-	//	DeliveryFailed:     deliveryFailed,
-	//	UndeliverableHere:  undeliverableHere,
-	//	MessageAnnotations: messageAnnotations,
-	//})
-}
-
-// MarshalBinary encodes the message into binary form.
-func (m *Message) MarshalBinary() ([]byte, error) {
-	buf := new(buffer)
-	err := m.marshal(buf)
-	return buf.b, err
-}
-
-func (m *Message) shouldSendDisposition() bool {
-	return !m.settled
-}
-
-func (m *Message) marshal(wr *buffer) error {
-	if m.Header != nil {
-		err := m.Header.marshal(wr)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.DeliveryAnnotations != nil {
-		writeDescriptor(wr, typeCodeDeliveryAnnotations)
-		err := marshal(wr, m.DeliveryAnnotations)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.Annotations != nil {
-		writeDescriptor(wr, typeCodeMessageAnnotations)
-		err := marshal(wr, m.Annotations)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.Properties != nil {
-		err := marshal(wr, m.Properties)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.ApplicationProperties != nil {
-		writeDescriptor(wr, typeCodeApplicationProperties)
-		err := marshal(wr, m.ApplicationProperties)
-		if err != nil {
-			return err
-		}
-	}
-
-	for _, data := range m.Data {
-		writeDescriptor(wr, typeCodeApplicationData)
-		err := writeBinary(wr, data)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.Value != nil {
-		writeDescriptor(wr, typeCodeAMQPValue)
-		err := marshal(wr, m.Value)
-		if err != nil {
-			return err
-		}
-	}
-
-	if m.Footer != nil {
-		writeDescriptor(wr, typeCodeFooter)
-		err := marshal(wr, m.Footer)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// UnmarshalBinary decodes the message from binary form.
-func (m *Message) UnmarshalBinary(data []byte) error {
-	buf := &buffer{
-		b: data,
-	}
-	return m.unmarshal(buf)
-}
-
-func (m *Message) unmarshal(r *buffer) error {
-	// loop, decoding sections until bytes have been consumed
-	for r.len() > 0 {
-		// determine type
-		type_, err := peekMessageType(r.bytes())
-		if err != nil {
-			return err
-		}
-
-		var (
-			section interface{}
-			// section header is read from r before
-			// unmarshaling section is set to true
-			discardHeader = true
-		)
-		switch amqpType(type_) {
-
-		case typeCodeMessageHeader:
-			discardHeader = false
-			section = &m.Header
-
-		case typeCodeDeliveryAnnotations:
-			section = &m.DeliveryAnnotations
-
-		case typeCodeMessageAnnotations:
-			section = &m.Annotations
-
-		case typeCodeMessageProperties:
-			discardHeader = false
-			section = &m.Properties
-
-		case typeCodeApplicationProperties:
-			section = &m.ApplicationProperties
-
-		case typeCodeApplicationData:
-			r.skip(3)
-
-			var data []byte
-			err = unmarshal(r, &data)
-			if err != nil {
-				return err
-			}
-
-			m.Data = append(m.Data, data)
-			continue
-
-		case typeCodeFooter:
-			section = &m.Footer
-
-		case typeCodeAMQPValue:
-			section = &m.Value
-
-		default:
-			return errorErrorf("unknown message section %#02x", type_)
-		}
-
-		if discardHeader {
-			r.skip(3)
-		}
-
-		err = unmarshal(r, section)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// peekMessageType reads the message type without
-// modifying any data.
-func peekMessageType(buf []byte) (uint8, error) {
-	if len(buf) < 3 {
-		return 0, errorNew("invalid message")
-	}
-
-	if buf[0] != 0 {
-		return 0, errorErrorf("invalid composite header %02x", buf[0])
-	}
-
-	// copied from readUlong to avoid allocations
-	t := amqpType(buf[1])
-	if t == typeCodeUlong0 {
-		return 0, nil
-	}
-
-	if t == typeCodeSmallUlong {
-		if len(buf[2:]) == 0 {
-			return 0, errorNew("invalid ulong")
-		}
-		return buf[2], nil
-	}
-
-	if t != typeCodeUlong {
-		return 0, errorErrorf("invalid type for uint32 %02x", t)
-	}
-
-	if len(buf[2:]) < 8 {
-		return 0, errorNew("invalid ulong")
-	}
-	v := binary.BigEndian.Uint64(buf[2:10])
-
-	return uint8(v), nil
+	deliveryID uint32 // used when sending disposition
+	settled    bool   // whether transfer was settled by sender
 }
 
 func tryReadNull(r *buffer) bool {

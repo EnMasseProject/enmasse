@@ -1,3 +1,11 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ *
+ */
+
+/* Reuses implementation from https://github.com/vcabbage/amqp */
+
 package amqp
 
 import (
@@ -307,27 +315,7 @@ func unmarshal(r *buffer, i interface{}) error {
 	case *map[Symbol]interface{}:
 		return (*mapSymbolAny)(t).unmarshal(r)
 	case *deliveryState:
-		type_, err := peekMessageType(r.bytes())
-		if err != nil {
-			return err
-		}
-
-		switch amqpType(type_) {
-		case typeCodeStateAccepted:
-			*t = new(stateAccepted)
-		case typeCodeStateModified:
-			*t = new(stateModified)
-		case typeCodeStateReceived:
-			*t = new(stateReceived)
-		case typeCodeStateRejected:
-			*t = new(stateRejected)
-		case typeCodeStateReleased:
-			*t = new(stateReleased)
-		default:
-			return errorErrorf("unexpected type %d for deliveryState", type_)
-		}
-		return unmarshal(r, *t)
-
+		panic("not implemented")
 	case *interface{}:
 		v, err := readAny(r)
 		if err != nil {

@@ -1,5 +1,12 @@
-package amqp
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ *
+ */
 
+/* Reuses implementation from https://github.com/vcabbage/amqp */
+
+package amqp
 
 import (
 	"bytes"
@@ -33,6 +40,7 @@ const (
 const (
 	DefaultMaxFrameSize = 512
 )
+
 type IncomingConnOption func(incomingConn *IncomingConn) error
 
 // IncomingConn represents an incoming OPEN request.
@@ -50,17 +58,17 @@ type IncomingConn struct {
 	containerID  string                 // set explicitly or randomly generated
 
 	// remote settings
-	peerMaxFrameSize uint32        // maximum frame size peer will accept
+	peerMaxFrameSize uint32 // maximum frame size peer will accept
 
 	// conn state
-	err  error         // error to return, only valid after done closes.
-	done chan struct{} // indicates the connection is done
-	connErr      chan error    // connReader/Writer notifications of an error
+	err     error         // error to return, only valid after done closes.
+	done    chan struct{} // indicates the connection is done
+	connErr chan error    // connReader/Writer notifications of an error
 
 	// connReader
-	rxProto       chan protoHeader // protoHeaders received by connReader
-	rxFrame       chan frame       // AMQP frames received by connReader
-	rxDone        chan struct{}
+	rxProto chan protoHeader // protoHeaders received by connReader
+	rxFrame chan frame       // AMQP frames received by connReader
+	rxDone  chan struct{}
 
 	// connWriter
 	txFrame chan frame    // AMQP frames to be sent by connWriter
@@ -72,7 +80,6 @@ type IncomingConn struct {
 type stateFunc func() stateFunc
 type saslStateFunc func(string, []byte) (saslStateFunc, []byte, error)
 
-
 func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn, err error) {
 	defer func() {
 		if err != nil {
@@ -80,7 +87,7 @@ func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn
 		}
 	}()
 	ic = &IncomingConn{
-		saslMechanisms: make(map[Symbol]saslStateFunc, 0),
+		saslMechanisms:   make(map[Symbol]saslStateFunc, 0),
 		net:              netConn,
 		peerMaxFrameSize: DefaultMaxFrameSize,
 		done:             make(chan struct{}),
@@ -91,7 +98,6 @@ func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn
 		txFrame:          make(chan frame),
 		txStop:           make(chan *Error),
 		txDone:           make(chan struct{}),
-
 	}
 
 	for _, f := range opts {
@@ -135,7 +141,7 @@ func (ic *IncomingConn) negotiateProto() stateFunc {
 				return nil
 			}
 
-			saslStepAbsent := fmt.Errorf("AMQP protocol %d unexpected at this time - AMQP SASL is required first", p.ProtoID);
+			saslStepAbsent := fmt.Errorf("AMQP protocol %d unexpected at this time - AMQP SASL is required first", p.ProtoID)
 			amqpError := Error{
 				Condition:   "amqp:connection:forced",
 				Description: saslStepAbsent.Error(),
@@ -160,7 +166,7 @@ func (ic *IncomingConn) saslStart() stateFunc {
 	}
 	err := ic.writeFrame(frame{
 		type_: frameTypeSASL,
-		body:  &saslMechanisms{
+		body: &saslMechanisms{
 			Mechanisms: mechanisms,
 		},
 	})
@@ -255,7 +261,6 @@ func (ic *IncomingConn) Accept() error {
 	return nil
 }
 
-
 func (c *IncomingConn) init(state stateFunc) error {
 	go c.connReader()
 	go c.connWriter()
@@ -268,7 +273,7 @@ func (c *IncomingConn) init(state stateFunc) error {
 	// check if err occurred
 	if c.err != nil {
 		//close(c.txDone) // close here since connWriter hasn't been started yet
-		c.close()       // OK to call here since mux hasn't been started yet
+		c.close() // OK to call here since mux hasn't been started yet
 		return c.err
 	}
 	return nil
@@ -404,7 +409,6 @@ func (c *IncomingConn) connWriter() {
 		c.connectTimeout = 0
 		_ = c.net.SetWriteDeadline(time.Time{})
 	}
-
 
 	var err error
 	for {

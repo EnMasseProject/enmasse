@@ -59,7 +59,7 @@ func (s Server) serve() {
 			case <-s.quit:
 				return
 			default:
-				log.Println("accept error", err)
+				log.Fatalf("accept error : %v", err)
 			}
 		} else {
 			s.wg.Add(1)

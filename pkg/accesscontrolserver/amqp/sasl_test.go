@@ -41,7 +41,6 @@ func TestAnonymous_SubsequentResponseProvidesIdentity(t *testing.T) {
 	assert.Equal(t, 0, len(challenge))
 	assert.Nil(t, next)
 
-
 	assert.NotNil(t, ic.saslOutcome)
 	assert.Equal(t, codeSASLOK, ic.saslOutcome.Code)
 }
@@ -52,7 +51,7 @@ func TestAnonymous_TooManyEmptyResponses(t *testing.T) {
 	assert.NotNil(t, next)
 
 	var i int
-	for i = 0; i < 2; i++  {
+	for i = 0; i < 2; i++ {
 		next, challenge, err := next("", []byte{})
 		assert.NoError(t, err)
 		assert.Equal(t, 0, len(challenge))
@@ -65,7 +64,7 @@ func TestAnonymous_TooManyEmptyResponses(t *testing.T) {
 
 }
 
-func getIncomingConn(options... IncomingConnOption) *IncomingConn {
+func getIncomingConn(options ...IncomingConnOption) *IncomingConn {
 	ic := &IncomingConn{
 		saslMechanisms: make(map[Symbol]saslStateFunc),
 	}
