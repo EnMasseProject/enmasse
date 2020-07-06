@@ -44,7 +44,6 @@ type ResolverRoot interface {
 	ConnectionSpec_consoleapi_enmasse_io_v1() ConnectionSpec_consoleapi_enmasse_io_v1Resolver
 	Connection_consoleapi_enmasse_io_v1() Connection_consoleapi_enmasse_io_v1Resolver
 	LinkSpec_consoleapi_enmasse_io_v1() LinkSpec_consoleapi_enmasse_io_v1Resolver
-	MessagingProjectSpec_enmasse_io_v1() MessagingProjectSpec_enmasse_io_v1Resolver
 	MessagingProjectStatus_enmasse_io_v1() MessagingProjectStatus_enmasse_io_v1Resolver
 	MessagingProject_consoleapi_enmasse_io_v1() MessagingProject_consoleapi_enmasse_io_v1Resolver
 	Metric_consoleapi_enmasse_io_v1() Metric_consoleapi_enmasse_io_v1Resolver
@@ -167,10 +166,6 @@ type ComplexityRoot struct {
 		Total             func(childComplexity int) int
 	}
 
-	MessagingProjectSpecEnmasseIoV1 struct {
-		Capabilities func(childComplexity int) int
-	}
-
 	MessagingProjectStatusEnmasseIoV1 struct {
 		Message func(childComplexity int) int
 		Phase   func(childComplexity int) int
@@ -181,7 +176,6 @@ type ComplexityRoot struct {
 		Connections func(childComplexity int, first *int, offset *int, filter *string, orderBy *string) int
 		Metrics     func(childComplexity int) int
 		ObjectMeta  func(childComplexity int) int
-		Spec        func(childComplexity int) int
 		Status      func(childComplexity int) int
 	}
 
@@ -269,9 +263,6 @@ type LinkSpec_consoleapi_enmasse_io_v1Resolver interface {
 	Connection(ctx context.Context, obj *consolegraphql.LinkSpec) (*consolegraphql.Connection, error)
 
 	Role(ctx context.Context, obj *consolegraphql.LinkSpec) (LinkRole, error)
-}
-type MessagingProjectSpec_enmasse_io_v1Resolver interface {
-	Capabilities(ctx context.Context, obj *v11.MessagingProjectSpec) ([]MessagingCapabilityEnmasseIoV1, error)
 }
 type MessagingProjectStatus_enmasse_io_v1Resolver interface {
 	Phase(ctx context.Context, obj *v11.MessagingProjectStatus) (string, error)
@@ -706,13 +697,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MessagingProjectQueryResultConsoleapiEnmasseIoV1.Total(childComplexity), true
 
-	case "MessagingProjectSpec_enmasse_io_v1.capabilities":
-		if e.complexity.MessagingProjectSpecEnmasseIoV1.Capabilities == nil {
-			break
-		}
-
-		return e.complexity.MessagingProjectSpecEnmasseIoV1.Capabilities(childComplexity), true
-
 	case "MessagingProjectStatus_enmasse_io_v1.message":
 		if e.complexity.MessagingProjectStatusEnmasseIoV1.Message == nil {
 			break
@@ -764,13 +748,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.MessagingProjectConsoleapiEnmasseIoV1.ObjectMeta(childComplexity), true
-
-	case "MessagingProject_consoleapi_enmasse_io_v1.spec":
-		if e.complexity.MessagingProjectConsoleapiEnmasseIoV1.Spec == nil {
-			break
-		}
-
-		return e.complexity.MessagingProjectConsoleapiEnmasseIoV1.Spec(childComplexity), true
 
 	case "MessagingProject_consoleapi_enmasse_io_v1.status":
 		if e.complexity.MessagingProjectConsoleapiEnmasseIoV1.Status == nil {
@@ -1352,15 +1329,10 @@ type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1{
 
 type MessagingProject_consoleapi_enmasse_io_v1 {
   metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
-  spec: MessagingProjectSpec_enmasse_io_v1!
   status: MessagingProjectStatus_enmasse_io_v1
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1!
   addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1!
   metrics: [Metric_consoleapi_enmasse_io_v1!]
-}
-
-type MessagingProjectSpec_enmasse_io_v1 {
-    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 type MessagingEndpoint_enmasse_io_v1 {
@@ -1499,13 +1471,8 @@ input ObjectMeta_v1_Input {
   resourceVersion: String
 }
 
-input MessagingProjectSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingCapability_enmasse_io_v1!]!
-}
-
 input MessagingProject_enmasse_io_v1_Input {
   metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
-  spec: MessagingProjectSpec_enmasse_io_v1_Input
 }
 
 input AddressSpec_enmasse_io_v1_Input {
@@ -3860,40 +3827,6 @@ func (ec *executionContext) _MessagingProjectQueryResult_consoleapi_enmasse_io_v
 	return ec.marshalNMessagingProject_consoleapi_enmasse_io_v12ᚕᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMessagingProjectHolderᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MessagingProjectSpec_enmasse_io_v1_capabilities(ctx context.Context, field graphql.CollectedField, obj *v11.MessagingProjectSpec) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "MessagingProjectSpec_enmasse_io_v1",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.MessagingProjectSpec_enmasse_io_v1().Capabilities(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]MessagingCapabilityEnmasseIoV1)
-	fc.Result = res
-	return ec.marshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _MessagingProjectStatus_enmasse_io_v1_message(ctx context.Context, field graphql.CollectedField, obj *v11.MessagingProjectStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3994,40 +3927,6 @@ func (ec *executionContext) _MessagingProject_consoleapi_enmasse_io_v1_metadata(
 	res := resTmp.(v1.ObjectMeta)
 	fc.Result = res
 	return ec.marshalNObjectMeta_v12k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _MessagingProject_consoleapi_enmasse_io_v1_spec(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.MessagingProjectHolder) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "MessagingProject_consoleapi_enmasse_io_v1",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(v11.MessagingProjectSpec)
-	fc.Result = res
-	return ec.marshalNMessagingProjectSpec_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingProjectSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _MessagingProject_consoleapi_enmasse_io_v1_status(ctx context.Context, field graphql.CollectedField, obj *consolegraphql.MessagingProjectHolder) (ret graphql.Marshaler) {
@@ -6816,24 +6715,6 @@ func (ec *executionContext) unmarshalInputAddress_enmasse_io_v1_Input(ctx contex
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputMessagingProjectSpec_enmasse_io_v1_Input(ctx context.Context, obj interface{}) (v11.MessagingProjectSpec, error) {
-	var it v11.MessagingProjectSpec
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "capabilities":
-			var err error
-			it.Capabilities, err = ec.unmarshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputMessagingProject_enmasse_io_v1_Input(ctx context.Context, obj interface{}) (v11.MessagingProject, error) {
 	var it v11.MessagingProject
 	var asMap = obj.(map[string]interface{})
@@ -6843,12 +6724,6 @@ func (ec *executionContext) unmarshalInputMessagingProject_enmasse_io_v1_Input(c
 		case "metadata":
 			var err error
 			it.ObjectMeta, err = ec.unmarshalOObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "spec":
-			var err error
-			it.Spec, err = ec.unmarshalOMessagingProjectSpec_enmasse_io_v1_Input2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingProjectSpec(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7619,42 +7494,6 @@ func (ec *executionContext) _MessagingProjectQueryResult_consoleapi_enmasse_io_v
 	return out
 }
 
-var messagingProjectSpec_enmasse_io_v1Implementors = []string{"MessagingProjectSpec_enmasse_io_v1"}
-
-func (ec *executionContext) _MessagingProjectSpec_enmasse_io_v1(ctx context.Context, sel ast.SelectionSet, obj *v11.MessagingProjectSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, messagingProjectSpec_enmasse_io_v1Implementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("MessagingProjectSpec_enmasse_io_v1")
-		case "capabilities":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._MessagingProjectSpec_enmasse_io_v1_capabilities(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var messagingProjectStatus_enmasse_io_v1Implementors = []string{"MessagingProjectStatus_enmasse_io_v1"}
 
 func (ec *executionContext) _MessagingProjectStatus_enmasse_io_v1(ctx context.Context, sel ast.SelectionSet, obj *v11.MessagingProjectStatus) graphql.Marshaler {
@@ -7709,11 +7548,6 @@ func (ec *executionContext) _MessagingProject_consoleapi_enmasse_io_v1(ctx conte
 			out.Values[i] = graphql.MarshalString("MessagingProject_consoleapi_enmasse_io_v1")
 		case "metadata":
 			out.Values[i] = ec._MessagingProject_consoleapi_enmasse_io_v1_metadata(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "spec":
-			out.Values[i] = ec._MessagingProject_consoleapi_enmasse_io_v1_spec(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -8890,72 +8724,6 @@ func (ec *executionContext) marshalNMessagingAddressPlan_enmasse_io_v12ᚖgithub
 	return ec._MessagingAddressPlan_enmasse_io_v1(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx context.Context, v interface{}) (MessagingCapabilityEnmasseIoV1, error) {
-	var res MessagingCapabilityEnmasseIoV1
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx context.Context, sel ast.SelectionSet, v MessagingCapabilityEnmasseIoV1) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx context.Context, v interface{}) ([]MessagingCapabilityEnmasseIoV1, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]MessagingCapabilityEnmasseIoV1, len(vSlice))
-	for i := range vSlice {
-		res[i], err = ec.unmarshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNMessagingCapability_enmasse_io_v12ᚕgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1ᚄ(ctx context.Context, sel ast.SelectionSet, v []MessagingCapabilityEnmasseIoV1) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNMessagingCapability_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐMessagingCapabilityEnmasseIoV1(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) unmarshalNMessagingEndpointPhase_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingEndpointPhase(ctx context.Context, v interface{}) (v11.MessagingEndpointPhase, error) {
 	tmp, err := graphql.UnmarshalString(v)
 	return v11.MessagingEndpointPhase(tmp), err
@@ -9203,10 +8971,6 @@ func (ec *executionContext) marshalNMessagingPlan_enmasse_io_v12ᚖgithubᚗcom�
 		return graphql.Null
 	}
 	return ec._MessagingPlan_enmasse_io_v1(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNMessagingProjectSpec_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingProjectSpec(ctx context.Context, sel ast.SelectionSet, v v11.MessagingProjectSpec) graphql.Marshaler {
-	return ec._MessagingProjectSpec_enmasse_io_v1(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNMessagingProject_consoleapi_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚐMessagingProjectHolder(ctx context.Context, sel ast.SelectionSet, v consolegraphql.MessagingProjectHolder) graphql.Marshaler {
@@ -9835,10 +9599,6 @@ func (ec *executionContext) marshalOMessagingProjectQueryResult_consoleapi_enmas
 		return graphql.Null
 	}
 	return ec._MessagingProjectQueryResult_consoleapi_enmasse_io_v1(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOMessagingProjectSpec_enmasse_io_v1_Input2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingProjectSpec(ctx context.Context, v interface{}) (v11.MessagingProjectSpec, error) {
-	return ec.unmarshalInputMessagingProjectSpec_enmasse_io_v1_Input(ctx, v)
 }
 
 func (ec *executionContext) marshalOMessagingProjectStatus_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingProjectStatus(ctx context.Context, sel ast.SelectionSet, v v11.MessagingProjectStatus) graphql.Marshaler {

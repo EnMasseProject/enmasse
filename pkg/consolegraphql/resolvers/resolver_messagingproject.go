@@ -21,10 +21,6 @@ func (r *Resolver) MessagingProject_consoleapi_enmasse_io_v1() MessagingProject_
 	return &messagingProjectK8sResolver{r}
 }
 
-func (r *Resolver) MessagingProjectSpec_enmasse_io_v1() MessagingProjectSpec_enmasse_io_v1Resolver {
-	return &messagingProjectSpecK8sResolver{r}
-}
-
 func (r *queryResolver) MessagingProjects(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingProjectQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
@@ -60,12 +56,6 @@ func (r *queryResolver) MessagingProjects(ctx context.Context, first *int, offse
 		Total:             len(objects),
 		MessagingProjects: messagingProjects,
 	}, nil
-}
-
-type messagingProjectSpecK8sResolver struct{ *Resolver }
-
-func (r *messagingProjectSpecK8sResolver) Capabilities(ctx context.Context, obj *v1.MessagingProjectSpec) ([]v1.MessagingCapability, error) {
-	return obj.Capabilities, nil
 }
 
 /*

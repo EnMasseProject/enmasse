@@ -140,15 +140,10 @@ type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1{
 
 type MessagingProject_consoleapi_enmasse_io_v1 {
   metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
-  spec: MessagingProjectSpec_enmasse_io_v1!
   status: MessagingProjectStatus_enmasse_io_v1
   connections(first: Int, offset: Int, filter: String, orderBy: String): ConnectionQueryResult_consoleapi_enmasse_io_v1!
   addresses(first: Int, offset: Int, filter: String, orderBy: String): AddressQueryResult_consoleapi_enmasse_io_v1!
   metrics: [Metric_consoleapi_enmasse_io_v1!]
-}
-
-type MessagingProjectSpec_enmasse_io_v1 {
-    capabilities: [MessagingCapability_enmasse_io_v1!]!
 }
 
 type MessagingEndpoint_enmasse_io_v1 {
@@ -287,13 +282,8 @@ input ObjectMeta_v1_Input {
   resourceVersion: String
 }
 
-input MessagingProjectSpec_enmasse_io_v1_Input {
-    capabilities: [MessagingCapability_enmasse_io_v1!]!
-}
-
 input MessagingProject_enmasse_io_v1_Input {
   metadata: ObjectMeta_v1_Input @goField(name: "ObjectMeta")
-  spec: MessagingProjectSpec_enmasse_io_v1_Input
 }
 
 input AddressSpec_enmasse_io_v1_Input {
