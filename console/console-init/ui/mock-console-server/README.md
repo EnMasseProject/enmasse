@@ -348,7 +348,7 @@ args:
 
 ## Patch messagingproject
 
-To patch an address space, pass the input object corresponding to the address space's
+To patch a messaging project, pass the input object corresponding to the messaging project's
 metadata and a JSON patch of the resource's spec describing the update
 to be made.
 
@@ -361,43 +361,21 @@ $a: ObjectMeta_v1_Input!
   $jsonPatch: String!
 $patchType: String!
 ) {
-  patchAddressSpace(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
+  patchMessagingProject(input: $a, jsonPatch: $jsonPatch, patchType: $patchType)
 }
 
 ```
 
-args:
-
-(patching a plan)
 ```
 
-{
-"a": {"name": "jupiter_as1", "namespace": "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium\"}]",
-"patchType": "application/json-patch+json"
-}
+## Delete messaging project
 
-```
-
-(patching a authentication service name)
-```
-
-{
-"a": {"name": "jupiter_as1", "namespace" : "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/authenticationService/name\",\"value\":\"foo\"}]",
-"patchType": "application/json-patch+json"
-}
-
-```
-
-## Delete address spaces
-
-To delete address spaces, call `deleteAddressSpaces` passing the ObjectMeta
-objects associated with the address space(s) to delete.
+To delete messaging projects, call `deleteMessagingProjects` passing the ObjectMeta
+objects associated with the messaging project(s) to delete.
 
 ```
 mutation delete_as($as:[ObjectMeta_v1_Input!]!) {
-  deleteAddressSpaces(input:$as)
+  deleteMessagingProjects(input:$as)
 }
 
 ```
@@ -407,7 +385,7 @@ args:
 ```
 
 {
-  "as": [{"name": "jupiter_as1", "namespace": "app1_ns" }]
+  "as": [{"namespace": "app1_ns" }]
 }
 
 ```
@@ -416,7 +394,7 @@ args:
 
 ```
 
-mutation create_addr($a:Address_enmasse_io_v1beta1_Input!) {
+mutation create_addr($a:Address_enmasse_io_v1_Input!) {
   createAddress(input: $a) {
 Name
 Namespace
@@ -431,8 +409,8 @@ args:
 ```
 
 {
-"a": { "metadata": {"name": "jupiter_as1.wiby1", "namespace": "app1_ns" },
-"spec": {"type": "queue", "plan": "standard-small-queue", "address": "wiby1", "addressSpace": "jupiter_as1"}}
+"a": { "metadata": {"name": "wiby1", "namespace": "app1_ns" },
+"spec": {"queue": {}, "address": "wiby1"}}
 }
 
 ```
@@ -442,8 +420,8 @@ from the Spec.Address:
 
 ```
 
-mutation create_addr($a:Address_enmasse_io_v1beta1_Input!, $as:String) {
-createAddress(input: $a, addressSpace: $as) {
+mutation create_addr($a:Address_enmasse_io_v1_Input!, $as:String) {
+createAddress(input: $a) {
 Name
 Namespace
 Uid
@@ -458,7 +436,7 @@ args:
 
 {
 "a": { "metadata": {"namespace": "app1_ns" },
-"spec": {"type": "queue", "plan": "standard-small-queue", "address": "foo2", "addressSpace": "jupiter_as1"}}
+"spec": {"queue": {}, "address": "foo2"}}
 }
 
 ```
@@ -486,8 +464,8 @@ args:
 ```
 
 {
-"a": {"name": "jupiter_as1.ganymede", "namespace": "app1_ns" },
-"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/plan\",\"value\":\"standard-medium-queue\"}]",
+"a": {"name": "ganymede", "namespace": "app1_ns" },
+"jsonPatch": "[{\"op\":\"replace\",\"path\":\"/spec/queue/deadLetterAddress\",\"value\":\"dlq1\"}]",
 "patchType": "application/json-patch+json"
 }
 
@@ -510,7 +488,7 @@ args:
 ```
 
 {
-  "a": [{"name": "jupiter_as1.io", "namespace": "app1_ns" }]
+  "a": [{"name": "io", "namespace": "app1_ns" }]
 }
 
 ```
@@ -581,14 +559,14 @@ query messagingCertificateChain($as:ObjectMeta_v1_Input!) {
 
 ```
 
-# Address Space / Address Command
+# MessagingProject / Address Command
 
 To get the equivalent command line that, if run, would cause the given address space or address to be created.
 
 ```
 
-query cmd($as: AddressSpace_enmasse_io_v1beta1_Input!) {
-  addressSpaceCommand(input:$as)
+query cmd($as: MessagingProject_enmasse_io_v1_Input!) {
+  messagingProjectCommand(input:$as)
 }
 
 ```
@@ -598,8 +576,8 @@ args:
 ```
 
 {
-"as": { "metadata": {"name": "wibx", "namespace": "app1_ns" },
-"spec": {"type": "standard", "plan": "standard-small"}}
+"as": { "metadata": {"name": "default", "namespace": "app1_ns" },
+"spec": {}
 }
 
 ```
@@ -610,8 +588,8 @@ is defaulted from the Spec.Address:
 
 ```
 
-query cmd($a: Address_enmasse_io_v1beta1_Input!, $as:String) {
-addressCommand(input:$a, addressSpace: $as)
+query cmd($a: Address_enmasse_io_v1_Input!) {
+addressCommand(input:$a)
 }
 
 ```
@@ -621,9 +599,8 @@ args:
 ```
 
 {
-"as": "jupiter_as",
 "a": { "metadata": {"namespace": "app1_ns" },
-"spec": {"type": "standard", "plan": "standard-small", "address":"foo"}}
+"spec": {"queue": {}, "address": "foo"}}
 }
 
 ```
