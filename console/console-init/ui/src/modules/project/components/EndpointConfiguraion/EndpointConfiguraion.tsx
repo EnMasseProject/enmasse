@@ -145,7 +145,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                 onChange={onProtocolChange}
                 value={protocol.value}
                 aria-label={`Protocol checkbox to select ${protocol.value}`}
-                id={`checkbox-${protocol.key}`}
+                id={`ec-protocol-checkbox-${protocol.key}`}
                 key={protocol.key}
                 name={protocol.key}
               />
@@ -168,7 +168,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                 onChange={onCertificateChange}
                 name={`radio-${certificate.key}`}
                 label={certificate.label}
-                id={`radio-${certificate.key}`}
+                id={`ec-cert-radio-${certificate.key}`}
                 value={certificate.value}
               />
             </div>
@@ -179,7 +179,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
       <FormGroup fieldId="form-group-create-routes" label="Create Routes">
         <br />
         <SwitchWithToggle
-          id="switch-configure-route-btn"
+          id="ec-switch-config-route-btn"
           onChange={onRouteChange}
           label={"Enable routing to make the address space publicly visible"}
           isChecked={projectDetail.addRoutes}

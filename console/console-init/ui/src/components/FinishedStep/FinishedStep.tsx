@@ -60,7 +60,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
           </Title>
           <br />
           <EmptyStateBody>
-            Error occured while {projectType} Project creation for management,
+            Error occured during {projectType} Project creation for management,
             return to homepage to view all projects
           </EmptyStateBody>
           <br />
