@@ -26,7 +26,6 @@ import { IRowData, SortByDirection, ISortBy } from "@patternfly/react-table";
 import { getTableCells } from "modules/iot-device";
 import { compareObject } from "utils";
 import { DialogTypes } from "constant";
-import { useParams } from "react-router";
 import { useMutationQuery } from "hooks";
 import { Loading } from "use-patternfly";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
@@ -48,6 +47,7 @@ export interface IDeviceListContainerProps {
   setSortValue: (value: ISortBy) => void;
   appliedFilter: IDeviceFilter;
   resetFilter: () => void;
+  projectname: string;
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
@@ -61,10 +61,9 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   sortValue,
   setSortValue,
   appliedFilter,
-  resetFilter
+  resetFilter,
+  projectname
 }) => {
-  const { projectname } = useParams();
-
   const [sortBy, setSortBy] = useState<ISortBy>();
 
   const { dispatch } = useStoreContext();

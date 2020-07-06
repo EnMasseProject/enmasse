@@ -974,11 +974,11 @@ args:
 
 ```
 
-## Disable Iot project
+## Toggle Iot project status
 
 ```
-mutation disable_iotProject($a:[ObjectMeta_v1_Input!]!) {
-  disableIotProjects(input:$a)
+mutation toggle_iot_project_status($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
+  toggleIoTProjectsStatus(input: $a, status: $status)
 }
 ```
 
@@ -986,7 +986,8 @@ args:
 
 ```
 {
-  "a": [{"name": "iotProjectFrance", "namespace": "app1_ns" }]
+  "a": [{"name": "iotProjectFrance", "namespace": "app1_ns" }],
+  "status" : true
 }
 
 ```
