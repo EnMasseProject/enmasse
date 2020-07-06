@@ -172,9 +172,9 @@ const isMessagingProjectValid = (messagingProject: IMessagingProject) => {
   if (
     isMessagingProjectConfigurationValid(messagingProject) &&
     (messagingProject.customizeEndpoint === false ||
-      (messagingProject.protocols &&
+      (messagingProject.protocols !== undefined &&
         messagingProject.protocols.length > 0 &&
-        messagingProject.tlsCertificate &&
+        messagingProject.tlsCertificate !== undefined &&
         messagingProject.tlsCertificate.trim() !== ""))
   ) {
     return true;

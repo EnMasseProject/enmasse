@@ -111,6 +111,11 @@ const initialMessageProject: IMessagingProject = {
   addRoutes: false
 };
 
+const initialIoTProject: IIoTProjectInput = {
+  isNameValid: true,
+  isEnabled: true
+};
+
 const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [routeDetail, setRouteDetail] = useState<{
@@ -122,29 +127,27 @@ const CreateProject: React.FunctionComponent = () => {
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProject
   >(initialMessageProject);
-  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
-    isNameValid: true,
-    isEnabled: true
-  });
-  const [firstSelectedStep, setFirstSelectedStep] = useState<string>();
-  const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
-    false
+  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>(
+    initialIoTProject
   );
+  const [firstSelectedStep, setFirstSelectedStep] = useState<string>("iot");
+  const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>();
 
   const onToggle = () => {
+    setFirstSelectedStep("iot");
+    setiotProjectDetail(initialIoTProject);
+    setMessagingProjectDetail(initialMessageProject);
     setIsWizardOpen(!isWizardOpen);
-    resetForm();
+    setIsCreatedSuccessfully(undefined);
   };
 
   const resetForm = () => {
-    setMessagingProjectDetail(initialMessageProject);
-    setFirstSelectedStep(undefined);
+    setIsCreatedSuccessfully(false);
   };
 
   const refetchQueries: string[] = ["allProjects"];
 
   const resetFormState = () => {
-    setMessagingProjectDetail(initialMessageProject);
     setIsCreatedSuccessfully(true);
   };
 
@@ -244,7 +247,7 @@ const CreateProject: React.FunctionComponent = () => {
     component: (
       <FinishedStep
         onClose={onToggle}
-        success={isCreatedSuccessfully}
+        success={isCreatedSuccessfully || false}
         routeDetail={routeDetail}
         projectType={
           firstSelectedStep === "messaging"
@@ -267,8 +270,7 @@ const CreateProject: React.FunctionComponent = () => {
         setProjectDetail={setMessagingProjectDetail}
         namespaces={namespaceOptions}
       />
-    ),
-    enableNext: isMessagingProjectConfigurationValid(messagingProjectDetail)
+    )
   };
 
   const endpointConfiguringStep = {
@@ -279,8 +281,7 @@ const CreateProject: React.FunctionComponent = () => {
         addressSpaceSchema={addressSpaceSchema}
         projectDetail={messagingProjectDetail}
       />
-    ),
-    enableNext: isMessagingProjectValid(messagingProjectDetail)
+    )
   };
 
   const endpointCertificatesStep = {
@@ -290,10 +291,7 @@ const CreateProject: React.FunctionComponent = () => {
         projectDetail={messagingProjectDetail}
         setProjectDetail={setMessagingProjectDetail}
       />
-    ),
-    enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail)
+    )
   };
 
   const endpointRoutesStep = {
@@ -304,11 +302,7 @@ const CreateProject: React.FunctionComponent = () => {
         addressSpaceSchema={addressSpaceSchema}
         setProjectDetail={setMessagingProjectDetail}
       />
-    ),
-    enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail) &&
-      isRouteStepValid(messagingProjectDetail)
+    )
   };
 
   const endpointCustomizationStep = {
@@ -320,7 +314,6 @@ const CreateProject: React.FunctionComponent = () => {
         : []),
       ...(messagingProjectDetail.addRoutes ? [endpointRoutesStep] : [])
     ],
-    enableNext: isMessagingProjectValid(messagingProjectDetail),
     canJumpTo: isMessagingProjectValid(messagingProjectDetail)
   };
 
@@ -329,33 +322,45 @@ const CreateProject: React.FunctionComponent = () => {
     component: (
       <MessagingProjectReview projectDetail={messagingProjectDetail} />
     ),
-    enableNext: isMessagingProjectValid(messagingProjectDetail),
     canJumpTo: isMessagingProjectValid(messagingProjectDetail),
     nextButtonText: "Finish"
   };
 
-  if (firstSelectedStep) {
-    if (firstSelectedStep === "iot") {
-      steps.push(configurationStepForIot);
-      steps.push(finalStepForIot);
-    } else {
-      steps.push(messagingConfigurationStep);
-      if (messagingProjectDetail.customizeEndpoint) {
-        steps = [...steps, endpointCustomizationStep];
+  if (isCreatedSuccessfully === undefined) {
+    if (firstSelectedStep) {
+      if (firstSelectedStep === "iot") {
+        steps.push(configurationStepForIot);
+        steps.push(finalStepForIot);
+      } else {
+        steps.push(messagingConfigurationStep);
+        if (messagingProjectDetail.customizeEndpoint) {
+          steps = [...steps, endpointCustomizationStep];
+        }
+        steps.push(messagingReviewStep);
       }
-      // messagingSteps.forEach(step=>steps.push(step));
-      steps.push(messagingReviewStep);
     }
-  }
-  steps.push(finishedStep);
+  } else steps = [finishedStep];
 
-  const handleNextIsEnabled = () => {
+  const handleNextIsEnabled = (step?: any) => {
     if (firstSelectedStep) {
       if (firstSelectedStep === "messaging") {
-        if (isMessagingProjectConfigurationValid(messagingProjectDetail)) {
-          return true;
+        if (step === "Configuration") {
+          return isMessagingProjectConfigurationValid(messagingProjectDetail);
+        } else if (step === "Configuring") {
+          return isMessagingProjectValid(messagingProjectDetail);
+        } else if (step === "Certificates") {
+          return (
+            isMessagingProjectValid(messagingProjectDetail) &&
+            isEnabledCertificateStep(messagingProjectDetail)
+          );
+        } else if (step === "Routes") {
+          return (
+            isMessagingProjectValid(messagingProjectDetail) &&
+            isEnabledCertificateStep(messagingProjectDetail) &&
+            isRouteStepValid(messagingProjectDetail)
+          );
         } else {
-          return false;
+          return isMessagingProjectConfigurationValid(messagingProjectDetail);
         }
       } else if (firstSelectedStep === "iot") {
         if (isIoTProjectValid(iotProjectDetail)) {
@@ -411,7 +416,9 @@ const CreateProject: React.FunctionComponent = () => {
                   type="submit"
                   id="submit-btn"
                   onClick={onNext}
-                  className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
+                  className={
+                    handleNextIsEnabled(activeStep.name) ? "" : "pf-m-disabled"
+                  }
                 >
                   Next
                 </Button>
