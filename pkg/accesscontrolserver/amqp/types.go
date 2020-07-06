@@ -313,7 +313,7 @@ func IsZero(v reflect.Value) bool {
 	default:
 		// This should never happens, but will act as a safeguard for
 		// later, as a default value doesn't makes sense here.
-		panic(&reflect.ValueError{"reflect.Value.IsZero", v.Kind()})
+		panic(errorErrorf("reflect.Value.IsZero : %v", v.Kind()))
 	}
 }
 
