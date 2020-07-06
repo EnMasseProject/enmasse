@@ -118,10 +118,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     return <Loading />;
   }
 
-  if (total === 0 && !compareObject(appliedFilter, getInitialFilter())) {
-    return <NoResultFound clearFilters={resetFilter} />;
-  }
-
   const onConfirmDeleteDevice = async (deviceId: string) => {
     const variable = {
       deviceId,
@@ -133,8 +129,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   const onConfirmEnableDevice = async (device: any) => {
     // TODO: to be changed according to the backend query of mock
     const variable = {
-      iotproject: projectname,
-      device
+      project: projectname,
+      deviceId: device
     };
     await setUpdateDeviceQueryVariables(variable);
   };
@@ -239,7 +235,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
         enabled,
         jsonData,
         viaGateway,
-        ...JSON.parse(jsonData)?.timestamps,
+        ...JSON.parse(jsonData)?.status,
         selected:
           selectedDevices.filter(device =>
             compareObject({ deviceId }, { deviceId: device.deviceId })
@@ -252,12 +248,19 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   }
 
   return (
-    <DeviceList
-      deviceRows={rows.map(getTableCells)}
-      onSelectDevice={onSelect}
-      actionResolver={actionResolver}
-      onSort={onSort}
-      sortBy={sortBy}
-    />
+    <>
+      <DeviceList
+        deviceRows={rows.map(getTableCells)}
+        onSelectDevice={onSelect}
+        actionResolver={actionResolver}
+        onSort={onSort}
+        sortBy={sortBy}
+      />
+      {total === 0 && !compareObject(appliedFilter, getInitialFilter()) ? (
+        <NoResultFound clearFilters={resetFilter} />
+      ) : (
+        " "
+      )}
+    </>
   );
 };

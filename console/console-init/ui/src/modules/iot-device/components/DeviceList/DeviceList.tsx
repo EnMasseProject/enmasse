@@ -30,9 +30,9 @@ export interface IDevice {
   enabled?: boolean | null;
   selected?: boolean | null;
   lastSeen?: string | null;
-  lastUpdated?: string | null;
-  creationTimeStamp?: string | null;
   jsonData?: string;
+  updated?: string | Date;
+  created?: string | Date;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({

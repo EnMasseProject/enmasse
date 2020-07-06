@@ -39,8 +39,8 @@ const rows: IDevice[] = [
     enabled: true,
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
-    lastUpdated: "2020-01-20T11:44:28.607Z",
-    creationTimeStamp: "2020-01-20T11:44:28.607Z"
+    updated: "2020-01-20T11:44:28.607Z",
+    created: "2020-01-20T11:44:28.607Z"
   },
   ...new Array(15).fill({
     deviceId: "jboss20",
@@ -48,8 +48,8 @@ const rows: IDevice[] = [
     enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
-    lastUpdated: "2020-04-29T11:44:28.607Z",
-    creationTimeStamp: "2020-04-30T11:44:28.607Z"
+    updated: "2020-04-29T11:44:28.607Z",
+    created: "2020-04-30T11:44:28.607Z"
   })
 ];
 
