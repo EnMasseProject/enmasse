@@ -25,9 +25,9 @@ The new API will consist of the following types at the infrastructure level:
 
 At the tenant level, the API will change to simplify the user experience:
 
-A restriction of 1 instance of messaging per Kubernetes namespace is mandated. New CRDs for configuring messaging endpoints, connectors and plan/authservice config is defined. The AddressSpace resource is replaced by `MessagingTenant`, `MessagingEndpoint` and `MessagingConnector` resources:
+A restriction of 1 instance of messaging per Kubernetes namespace is mandated. New CRDs for configuring messaging endpoints, connectors and plan/authservice config is defined. The AddressSpace resource is replaced by `MessagingProject`, `MessagingEndpoint` and `MessagingConnector` resources:
 
-* `MessagingTenant`: a singleton per namespace, is introduced to contain the messaging configuration of a namespace. Auto-created when initial `Address` is created. May be used to override the default `MessagingPlan` and `AuthenticationService` of a tenant.
+* `MessagingProject`: a singleton per namespace, is introduced to contain the messaging configuration of a namespace. Auto-created when initial `Address` is created. May be used to override the default `MessagingPlan` and `AuthenticationService` of a tenant.
 
 * `MessagingConnector`: similar to existing connector spec in AddressSpace. 1 instance configures 1 connector.
 
@@ -61,7 +61,7 @@ This should be available in console, APIs and through a command line tool.
 With shared infrastructure, tenants will share resources with other tenants, and it is critical that tenants can observe statistics for their 'share'. These statistics include:
 
 * Address, connection and link statistics (covered by console API?)
-* MessagingTenant status (CRD)
+* MessagingProject status (CRD)
 * MessagingEndpoint status (CRD)
 
 === IoT
@@ -211,15 +211,15 @@ For plans with the `transactions` capability, the operator will ensure that addr
 
 NOTE: If no `MessagingPlan` instances are defined, the system will still work. However, there will be no limits configured for particular vhosts.
 
-==== MessagingTenant
+==== MessagingProject
 
-The messaging tenant will create a singleton instance of `MessagingTenant` in a namespace to
-configure messaging. The MessagingTenant is created by the EnMasse operator when the initial Address
-is created. If the MessagingTenant already exists, the infra, plan and authentication services that
+The messaging tenant will create a singleton instance of `MessagingProject` in a namespace to
+configure messaging. The MessagingProject is created by the EnMasse operator when the initial Address
+is created. If the MessagingProject already exists, the infra, plan and authentication services that
 are specified will be used _only if_ those have selectors for that namespace.
 
 ```
-kind: MessagingTenant
+kind: MessagingProject
 metadata:
   name: default # Singletons can be enforced using openapi validation!
 spec:
@@ -378,7 +378,7 @@ The goal of phase 1 is to add support for shared infra and implement basic featu
 
 The `MessagingInfra` resource would be managed by the enmasse-operator, which will do a reconciliation of deployments, services etc. The router-operator should be used to deploy and manage the dispatch router to simplify the interface. Depending on the maturity of the broker-operator, it should be used to deploy the brokers.
 
-The `MessagingTenant` resource will be managed by a controller in enmasse-operator. The controller will create vhost policies in the shared router infra for each namespace with a config, and apply restrictions as specified in the messaging plan.
+The `MessagingProject` resource will be managed by a controller in enmasse-operator. The controller will create vhost policies in the shared router infra for each namespace with a config, and apply restrictions as specified in the messaging plan.
 
 The `Address` resource for `shared` infra will be managed by a controller in enmasse-operator. The controller will watch all addresses across all namespaces, and apply the needed address configuration to brokers and routers using AMQP management.
 
@@ -426,7 +426,7 @@ Important design considerations:
 The configuration can be broken down into different lifecycle 'levels':
 
 * Infra - configuration that is applied at all routers and brokers (based on the MessagingInfra config)
-* Namespace - configuration that is applied for each namespace (based on MessagingTenant, MessagingPlan, MessagingEndpoint and MessagingConnector)
+* Namespace - configuration that is applied for each namespace (based on MessagingProject, MessagingPlan, MessagingEndpoint and MessagingConnector)
 * Address - configuration that is applied for each address (based on Address and AddressPlan)
 
 For the routers, each level will involve the following configuration:
@@ -471,7 +471,7 @@ The following controllers and components must be implemented:
 
 === Plan behavior
 
-Both for MessagingTenantPlan and AddressPlans - Only MessagingTenantPlan used in examples here.
+Both for MessagingProjectPlan and AddressPlans - Only MessagingProjectPlan used in examples here.
 
 1. No default plan defined by service admin - implicit default applied
 1. Default plan defined by service admin - explicit default applied
@@ -488,7 +488,7 @@ spec: {}
 
 ```
 apiVersion: enmasse.io/v1
-kind: MessagingTenant
+kind: MessagingProject
 metadata:
   name: default
   namespace: myspace
@@ -511,14 +511,14 @@ spec: {}
 
 ```
 apiVersion: enmasse.io/v1
-kind: MessagingTenantPlan
+kind: MessagingProjectPlan
 metadata:
   name: plan1
   namespace: enmasse-plans
 spec:
    // ...
 apiVersion: enmasse.io/v1
-kind: MessagingTenantPlan
+kind: MessagingProjectPlan
 metadata:
   name: plan2
   namespace: enmasse-plans
@@ -530,7 +530,7 @@ spec:
 
 ```
 apiVersion: enmasse.io/v1
-kind: MessagingTenant
+kind: MessagingProject
 metadata:
   name: default
   namespace: myspace
@@ -545,7 +545,7 @@ NOTE:
 
 ===== Task 1: Create new CRDs (small)
 
-* Create the MessaginInfra, MessagingTenant, MessagingEndpoint CRD + OpenAPI.
+* Create the MessaginInfra, MessagingProject, MessagingEndpoint CRD + OpenAPI.
 
 ==== Task 2: Implement messaging-infra controller in controller-manager (large)
 
@@ -563,7 +563,7 @@ The controller should:
 
 A components state encapsulates the configuration state of a broker or router in memory. Whenever a router or broker is connected, a corresponding router/broker state object is initialized with configuration retrieved from querying the router/broker. If disconnected, the state object is initialized with current state, and desired state is applied.
 
-The state object has methods to apply configuration (i.e. applyAddress, applyMessagingEndpoint, applyMessagingTenant etc.). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
+The state object has methods to apply configuration (i.e. applyAddress, applyMessagingEndpoint, applyMessagingProject etc.). These methods compare the actual configuration of the underlying component to the desired configuration (transformed into autolinks etc.). If the applied configuration is different to the internal state, the underlying component is updated using AMQP management.
 
 In addition, each state object has a goroutine which periodically polls its underlying router/broker for all status information and caches it for use by controllers to update the status of their respective resources.
 
@@ -573,9 +573,9 @@ Communication between components in the shared infrastructure should be secured 
 
 ==== Task 3: Implement messaging-tenant controller in controller-manager (medium)
 
-The messaging-tenant controller manages the MessagingTenant CR
+The messaging-tenant controller manages the MessagingProject CR
 
-* Watch MessagingTenant CRs
+* Watch MessagingProject CRs
 * Use label selectors of MessagingInfra to locate the infra for namespace
 * Lookup infra state representation
 * For each router:

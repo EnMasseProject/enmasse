@@ -6,7 +6,7 @@
 package controller
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/controller/messagingtenant"
+	"github.com/enmasseproject/enmasse/pkg/controller/messagingproject"
 	"github.com/enmasseproject/enmasse/pkg/util"
 )
 
@@ -14,7 +14,7 @@ func init() {
 
 	// add ourselves to the list of controllers
 
-	if util.IsModuleEnabled("MESSAGING_TENANT") {
-		AddToManagerFuncs = append(AddToManagerFuncs, messagingtenant.Add)
+	if util.IsModuleEnabled("MESSAGING_PROJECT") {
+		AddToManagerFuncs = append(AddToManagerFuncs, messagingproject.Add)
 	}
 }

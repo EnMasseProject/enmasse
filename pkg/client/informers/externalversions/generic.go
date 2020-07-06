@@ -69,8 +69,8 @@ func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingInfrastructures().Informer()}, nil
 	case v1.SchemeGroupVersion.WithResource("messagingplans"):
 		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingPlans().Informer()}, nil
-	case v1.SchemeGroupVersion.WithResource("messagingtenants"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingTenants().Informer()}, nil
+	case v1.SchemeGroupVersion.WithResource("messagingprojects"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Enmasse().V1().MessagingProjects().Informer()}, nil
 
 		// Group=enmasse.io, Version=v1beta1
 	case enmassev1beta1.SchemeGroupVersion.WithResource("addresses"):

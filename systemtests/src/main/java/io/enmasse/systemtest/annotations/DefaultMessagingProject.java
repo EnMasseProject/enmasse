@@ -14,6 +14,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Target({ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@ExtendWith(DefaultMessagingTenantExtension.class)
-public @interface DefaultMessagingTenant {
+@ExtendWith(DefaultMessagingProjectExtension.class)
+public @interface DefaultMessagingProject {
 }

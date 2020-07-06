@@ -33,8 +33,8 @@ import (
 type Schema struct {
 	MessagingInfrastructure     enmasseapi.MessagingInfrastructure
 	MessagingInfrastructureList enmasseapi.MessagingInfrastructureList
-	MessagingTenant             enmasseapi.MessagingTenant
-	MessagingTenantList         enmasseapi.MessagingTenantList
+	MessagingProject            enmasseapi.MessagingProject
+	MessagingProjectList        enmasseapi.MessagingProjectList
 	MessagingAddress            enmasseapi.MessagingAddress
 	MessagingAddressList        enmasseapi.MessagingAddressList
 	MessagingEndpoint           enmasseapi.MessagingEndpoint

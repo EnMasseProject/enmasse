@@ -160,7 +160,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		} else if endpoint.Spec.Ingress != nil {
 			endpoint.Status.Type = v1.MessagingEndpointTypeIngress
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant)
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundProject)
 		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointConfiguredTls)
 		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointAllocatedPorts)
 		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated)
@@ -182,11 +182,11 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
-			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundProject).SetStatus(corev1.ConditionFalse, "", err.Error())
 			endpoint.Status.Message = err.Error()
 			return processorResult{RequeueAfter: 10 * time.Second}, nil
 		}
-		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundTenant).SetStatus(corev1.ConditionTrue, "", "")
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointFoundProject).SetStatus(corev1.ConditionTrue, "", "")
 		infra = i
 		return processorResult{}, err
 
@@ -195,7 +195,7 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		return result.Result(), err
 	}
 
-	// Ensure endpoint exists for tenant
+	// Ensure endpoint exists for project
 	client := r.clientManager.GetClient(infra)
 	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		if len(endpoint.Spec.Protocols) == 0 {
@@ -334,7 +334,7 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 				if err != nil {
 					// Not bound - allow dropping finalizer
 					if utilerrors.IsNotBound(err) || utilerrors.IsNotFound(err) {
-						logger.Info("[Finalizer] Messaging tenant not found or bound, ignoring!")
+						logger.Info("[Finalizer] Messaging project not found or bound, ignoring!")
 						return reconcile.Result{}, nil
 					}
 					logger.Info("[Finalizer] Error looking up infra")
@@ -719,7 +719,7 @@ func (r *ReconcileMessagingEndpoint) reconcileEndpointTls(ctx context.Context, l
 			return processorResult{}, err
 		}
 
-		caSecretName := cert.GetTenantCaSecretName(endpoint.Namespace)
+		caSecretName := cert.GetProjectCaSecretName(endpoint.Namespace)
 		secret := &corev1.Secret{}
 		err = r.client.Get(ctx, types.NamespacedName{Name: caSecretName, Namespace: infra.Namespace}, secret)
 		if err != nil {

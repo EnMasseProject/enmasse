@@ -15,7 +15,7 @@ rules:
     resources: [ "messagingendpoints", "messagingendpoints/finalizers", "messagingendpoints/status" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "enmasse.io" ]
-    resources: [ "messagingtenants", "messagingtenants/finalizers", "messagingtenants/status" ]
+    resources: [ "messagingprojects", "messagingprojects/finalizers", "messagingprojects/status" ]
     verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
   - apiGroups: [ "enmasse.io" ]
     resources: [ "messaginginfrastructures", "messaginginfrastructures/finalizers", "messaginginfrastructures/status" ]

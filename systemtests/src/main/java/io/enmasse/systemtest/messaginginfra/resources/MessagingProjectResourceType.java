@@ -5,32 +5,32 @@
 package io.enmasse.systemtest.messaginginfra.resources;
 
 import io.enmasse.address.model.CoreCrd;
-import io.enmasse.api.model.DoneableMessagingTenant;
-import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.api.model.MessagingTenantBuilder;
-import io.enmasse.api.model.MessagingTenantCondition;
-import io.enmasse.api.model.MessagingTenantList;
+import io.enmasse.api.model.DoneableMessagingProject;
+import io.enmasse.api.model.MessagingProject;
+import io.enmasse.api.model.MessagingProjectBuilder;
+import io.enmasse.api.model.MessagingProjectCondition;
+import io.enmasse.api.model.MessagingProjectList;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
 import java.util.List;
 
-public class MessagingTenantResourceType implements ResourceType<MessagingTenant> {
-    private static final MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingTenants(), MessagingTenant.class, MessagingTenantList.class, DoneableMessagingTenant.class);
+public class MessagingProjectResourceType implements ResourceType<MessagingProject> {
+    private static final MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingProjects(), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
 
     @Override
     public String getKind() {
-        return "MessagingTenant";
+        return "MessagingProject";
     }
 
     @Override
-    public MessagingTenant get(String namespace, String name) {
+    public MessagingProject get(String namespace, String name) {
         return operation.inNamespace(namespace).withName(name).get();
     }
 
-    public static MessagingTenant getDefault() {
-        return new MessagingTenantBuilder()
+    public static MessagingProject getDefault() {
+        return new MessagingProjectBuilder()
                 .editOrNewMetadata()
                 .withName("default")
                 .withNamespace(NamespaceResourceType.getDefault().getMetadata().getName())
@@ -38,13 +38,13 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
                 .build();
     }
 
-    public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> getOperation() {
+    public static MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> getOperation() {
         return operation;
     }
 
     @Override
-    public void create(MessagingTenant resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingTenantBuilder(resource)
+    public void create(MessagingProject resource) {
+        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingProjectBuilder(resource)
                 .editOrNewMetadata()
                 .withNewResourceVersion("")
                 .endMetadata()
@@ -54,26 +54,26 @@ public class MessagingTenantResourceType implements ResourceType<MessagingTenant
     }
 
     @Override
-    public void delete(MessagingTenant resource) throws InterruptedException {
+    public void delete(MessagingProject resource) throws InterruptedException {
         operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
     @Override
-    public boolean isReady(MessagingTenant infra) {
+    public boolean isReady(MessagingProject infra) {
         return infra != null &&
                 infra.getStatus() != null &&
                 "Active".equals(infra.getStatus().getPhase());
     }
 
     @Override
-    public void refreshResource(MessagingTenant existing, MessagingTenant newResource) {
+    public void refreshResource(MessagingProject existing, MessagingProject newResource) {
         existing.setMetadata(newResource.getMetadata());
         existing.setSpec(newResource.getSpec());
         existing.setStatus(newResource.getStatus());
     }
 
-    public static MessagingTenantCondition getCondition(List<MessagingTenantCondition> conditions, String type) {
-        for (MessagingTenantCondition condition : conditions) {
+    public static MessagingProjectCondition getCondition(List<MessagingProjectCondition> conditions, String type) {
+        for (MessagingProjectCondition condition : conditions) {
             if (type.equals(condition.getType())) {
                 return condition;
             }

@@ -47,10 +47,10 @@ type MessagingPlanListerExpansion interface{}
 // MessagingPlanNamespaceLister.
 type MessagingPlanNamespaceListerExpansion interface{}
 
-// MessagingTenantListerExpansion allows custom methods to be added to
-// MessagingTenantLister.
-type MessagingTenantListerExpansion interface{}
+// MessagingProjectListerExpansion allows custom methods to be added to
+// MessagingProjectLister.
+type MessagingProjectListerExpansion interface{}
 
-// MessagingTenantNamespaceListerExpansion allows custom methods to be added to
-// MessagingTenantNamespaceLister.
-type MessagingTenantNamespaceListerExpansion interface{}
+// MessagingProjectNamespaceListerExpansion allows custom methods to be added to
+// MessagingProjectNamespaceLister.
+type MessagingProjectNamespaceListerExpansion interface{}

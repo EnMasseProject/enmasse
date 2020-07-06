@@ -113,7 +113,7 @@ type MessagingAddressCondition struct {
 type MessagingAddressConditionType string
 
 const (
-	MessagingAddressFoundTenant MessagingAddressConditionType = "FoundTenant"
+	MessagingAddressFoundProject MessagingAddressConditionType = "FoundProject"
 	MessagingAddressValidated   MessagingAddressConditionType = "Validated"
 	MessagingAddressScheduled   MessagingAddressConditionType = "Scheduled"
 	MessagingAddressCreated     MessagingAddressConditionType = "Created"

@@ -20,7 +20,7 @@ type EnmasseV1Interface interface {
 	MessagingEndpointsGetter
 	MessagingInfrastructuresGetter
 	MessagingPlansGetter
-	MessagingTenantsGetter
+	MessagingProjectsGetter
 }
 
 // EnmasseV1Client is used to interact with features provided by the enmasse.io group.
@@ -48,8 +48,8 @@ func (c *EnmasseV1Client) MessagingPlans(namespace string) MessagingPlanInterfac
 	return newMessagingPlans(c, namespace)
 }
 
-func (c *EnmasseV1Client) MessagingTenants(namespace string) MessagingTenantInterface {
-	return newMessagingTenants(c, namespace)
+func (c *EnmasseV1Client) MessagingProjects(namespace string) MessagingProjectInterface {
+	return newMessagingProjects(c, namespace)
 }
 
 // NewForConfig creates a new EnmasseV1Client for the given config.

@@ -178,7 +178,7 @@ TODO: We could consider hashing the password several times. This would allow the
 mechanisms to the client.
 
 
-The EnMasse operator will watch for `MessagingTenants` resources.  For each it will and define a Kubernetes service
+The EnMasse operator will watch for `MessagingProjects` resources.  For each it will and define a Kubernetes service
 exposing the AMQP SASL endpoint of the Access Control Servcie  The `MessagingInfra` controller will configure a router listener/authServicePlugin _per endpoint_  with a reference to the correct  AMQP SASL endpoint.
 
 ==== Messaging Client

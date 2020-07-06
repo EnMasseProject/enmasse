@@ -28,7 +28,7 @@ metadata:
         },
         {
           "apiVersion": "enmasse.io/v1",
-          "kind": "MessagingTenant",
+          "kind": "MessagingProject",
           "metadata": {
             "name": "default"
           },
@@ -194,7 +194,7 @@ spec:
 
     You need to create those resources to satisfy your particular use case.
 
-      * *MessagingTenant* – Marks a namespace enabled for messaging.
+      * *MessagingProject* – Marks a namespace enabled for messaging.
       * *MessagingAddress* – A messaging address (address, topic, queue, and so on)
       * *MessagingEndpoint* – Manages endpoints that messaging clients can connect to.
 
@@ -311,7 +311,7 @@ spec:
           resources: [ "messagingendpoints", "messagingendpoints/finalizers", "messagingendpoints/status" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "enmasse.io" ]
-          resources: [ "messagingtenants", "messagingtenants/finalizers", "messagingtenants/status" ]
+          resources: [ "messagingprojects", "messagingprojects/finalizers", "messagingprojects/status" ]
           verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
         - apiGroups: [ "enmasse.io" ]
           resources: [ "messaginginfrastructures", "messaginginfrastructures/finalizers", "messaginginfrastructures/status" ]
@@ -330,7 +330,7 @@ spec:
       - serviceAccountName: console-server
         rules:
         - apiGroups: [ "enmasse.io" ]
-          resources: [ "messagingtenants", "messagingendpoints", "messagingaddresses" ]
+          resources: [ "messagingprojects", "messagingendpoints", "messagingaddresses" ]
           verbs: [ "get", "list", "watch" ]
         - apiGroups: [ "" ]
           resources: [ "namespaces" ]
@@ -416,7 +416,7 @@ spec:
                   value: "true"
                 - name: CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE
                   value: "true"
-                - name: CONTROLLER_ENABLE_MESSAGING_TENANT
+                - name: CONTROLLER_ENABLE_MESSAGING_PROJECT
                   value: "true"
                 - name: CONTROLLER_ENABLE_MESSAGING_ADDRESS
                   value: "true"
@@ -544,8 +544,8 @@ spec:
               - 'urn:alm:descriptor:text'
       - group: enmasse.io
         version: v1
-        kind: MessagingTenant
-        name: messagingtenants.enmasse.io
+        kind: MessagingProject
+        name: messagingprojects.enmasse.io
         displayName: Messaging Tenant
         description: Tenant configuration
         statusDescriptors:

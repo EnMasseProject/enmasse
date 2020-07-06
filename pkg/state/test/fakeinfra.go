@@ -77,7 +77,7 @@ func (i *FakeClient) DeleteEndpoint(endpoint *v1.MessagingEndpoint) error {
 	return nil
 }
 
-func (i *FakeClient) ScheduleTenant(tenant *v1.MessagingTenant) error {
+func (i *FakeClient) ScheduleProject(project *v1.MessagingProject) error {
 	return nil
 }
 
@@ -93,11 +93,11 @@ func (i *FakeClient) DeleteAddress(address *v1.MessagingAddress) error {
 	return nil
 }
 
-func (i *FakeClient) SyncTenant(tenant *v1.MessagingTenant) error {
+func (i *FakeClient) SyncProject(project *v1.MessagingProject) error {
 	return nil
 }
 
-func (i *FakeClient) DeleteTenant(tenant *v1.MessagingTenant) error {
+func (i *FakeClient) DeleteProject(project *v1.MessagingProject) error {
 	return nil
 }
 

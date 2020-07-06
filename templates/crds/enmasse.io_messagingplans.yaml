@@ -29,7 +29,6 @@ spec:
     listKind: MessagingPlanList
     plural: messagingplans
     shortNames:
-    - msgp
     - msgplan
     - msgplans
     singular: messagingplan

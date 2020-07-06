@@ -11,14 +11,14 @@ import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointCondition;
 import io.enmasse.api.model.MessagingEndpointPort;
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
@@ -53,16 +53,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DefaultMessagingInfrastructure
-@DefaultMessagingTenant
+@DefaultMessagingProject
 @ExternalClients
 public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testNodePortEndpoint() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -80,10 +80,10 @@ public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testClusterEndpoint() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -106,10 +106,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpoint() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -135,10 +135,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testLoadBalancerEndpoint() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -160,10 +160,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testIngressEndpoint() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -191,10 +191,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift(version = OpenShiftVersion.OCP4)
     public void testOpenShiftCert() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -215,10 +215,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testSelfsignedCert() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -249,11 +249,11 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testExternalCert() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         CertBundle messagingCert = OpenSSLUtil.createCertBundle("messaging.example.com");
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -287,10 +287,10 @@ public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testClusterEndpointWebsockets() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws1")
                 .endMetadata()
                 .editOrNewSpec()
@@ -313,10 +313,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testIngressEndpointWebsocket() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws2")
                 .endMetadata()
                 .editOrNewSpec()
@@ -334,10 +334,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocket() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws3")
                 .endMetadata()
                 .editOrNewSpec()
@@ -354,10 +354,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsPassthrough() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws4")
                 .endMetadata()
                 .editOrNewSpec()
@@ -378,10 +378,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift(version = OpenShiftVersion.OCP3)
     public void testRouteEndpointWebsocketTlsReencrypt() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws5")
                 .endMetadata()
                 .editOrNewSpec()
@@ -403,10 +403,10 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsEdge() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-ws6")
                 .endMetadata()
                 .editOrNewSpec()

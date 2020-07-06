@@ -10,18 +10,18 @@ toc::[]
 === Enable messaging for a namespace by creating a messaging tenant
 === Reference infra, plans and identity services in different namespaces
 
-To enable messaging in a Kubernetes namespace, a `MessagingTenant` resource must be created by the tenant admin.
+To enable messaging in a Kubernetes namespace, a `MessagingProject` resource must be created by the tenant admin.
 
-* The `MessagingTenant` may reference a specific `MessagingInfrastructure`, `MessagingPlan` and `IdentityProviders`
+* The `MessagingProject` may reference a specific `MessagingInfrastructure`, `MessagingPlan` and `IdentityProviders`
 that should be used for the namespace.
 * If a plan, infra or identity providers is not specified, a default will be selected based on the service admin configuration.
 * If the `namespace` field of the reference is omitted, the namespace of the operator is assumed.
-* The `MessagingTenant` must have a name set to `default`
+* The `MessagingProject` must have a name set to `default`
 
 
 ```
 apiVersion: enmasse.io/v1beta2
-kind: MessagingTenant
+kind: MessagingProject
 metadata:
   name: default
   namespace: myapp
@@ -52,13 +52,13 @@ default   Configuring   27s
 
 === Disable messaging for a namespace by deleting a messaging tenant
 
-To disable messaging for a namespace, delete the `MessagingTenant` resource:
+To disable messaging for a namespace, delete the `MessagingProject` resource:
 
 ```
 kubectl delete messagingtenant default -n myapp
 ```
 
-NOTE: If there are still addresses and endpoints left in the namespace, the `MessagingTenant` will have the phase `Terminating` until they are removed.
+NOTE: If there are still addresses and endpoints left in the namespace, the `MessagingProject` will have the phase `Terminating` until they are removed.
 
 ---
 
@@ -858,7 +858,7 @@ Configuration migration:
 * A separate cluster must be used for the 1.0 cluster
 * AddressPlan -> MessagingAddressPlan: Manual
 * AddressSpacePlan -> MessagingPlan: Manual
-* AddressSpace -> MessagingTenant, MessagingConnector and MessagingEndpoint: Script-assisted
+* AddressSpace -> MessagingProject, MessagingConnector and MessagingEndpoint: Script-assisted
 * Address -> MessagingAddress: Script-assisted
 * MessagingUser -> MessagingUser, MessagingRole, MessagingRoleBinding: Script-assited
 

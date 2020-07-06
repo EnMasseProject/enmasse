@@ -9,14 +9,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (m *MessagingTenantStatus) GetMessagingTenantCondition(t MessagingTenantConditionType) *MessagingTenantCondition {
+func (m *MessagingProjectStatus) GetMessagingProjectCondition(t MessagingProjectConditionType) *MessagingProjectCondition {
 	for i, c := range m.Conditions {
 		if c.Type == t {
 			return &m.Conditions[i]
 		}
 	}
 
-	mc := MessagingTenantCondition{
+	mc := MessagingProjectCondition{
 		Type:               t,
 		Status:             corev1.ConditionUnknown,
 		LastTransitionTime: metav1.Now(),
@@ -27,7 +27,7 @@ func (m *MessagingTenantStatus) GetMessagingTenantCondition(t MessagingTenantCon
 	return &m.Conditions[len(m.Conditions)-1]
 }
 
-func (c *MessagingTenantCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
+func (c *MessagingProjectCondition) SetStatus(status corev1.ConditionStatus, reason string, message string) {
 
 	if c.Status != status {
 		c.Status = status
@@ -38,6 +38,6 @@ func (c *MessagingTenantCondition) SetStatus(status corev1.ConditionStatus, reas
 	c.Message = message
 }
 
-func (t *MessagingTenant) IsBound() bool {
+func (t *MessagingProject) IsBound() bool {
 	return t.Status.MessagingInfrastructureRef.Name != "" && t.Status.MessagingInfrastructureRef.Namespace != ""
 }

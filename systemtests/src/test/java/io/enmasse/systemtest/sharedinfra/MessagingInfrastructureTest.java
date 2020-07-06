@@ -11,10 +11,10 @@ import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingInfrastructureCondition;
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
@@ -125,13 +125,13 @@ public class MessagingInfrastructureTest extends TestBase {
     @Test
     @ExternalClients
     @DefaultMessagingInfrastructure
-    @DefaultMessagingTenant
+    @DefaultMessagingProject
     public void testInfraRestart() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
 
         MessagingAddress queue = new MessagingAddressBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("queue1")
                 .endMetadata()
                 .editOrNewSpec()
@@ -142,7 +142,7 @@ public class MessagingInfrastructureTest extends TestBase {
 
         MessagingAddress anycast = new MessagingAddressBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("anycast1")
                 .endMetadata()
                 .editOrNewSpec()
@@ -153,7 +153,7 @@ public class MessagingInfrastructureTest extends TestBase {
 
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()

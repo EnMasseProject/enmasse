@@ -8,7 +8,7 @@ metadata:
     rbac.authorization.k8s.io/aggregate-to-edit: "true"
 rules:
   - apiGroups: [ "enmasse.io" ]
-    resources: [ "messagingaddresses", "messagingtenants", "messagingendpoints" ]
+    resources: [ "messagingaddresses", "messagingprojects", "messagingendpoints" ]
     verbs: [ "create", "get", "update", "delete", "list", "watch", "patch" ]
   - apiGroups: [ "iot.enmasse.io" ]
     resources: [ "iotprojects" ]

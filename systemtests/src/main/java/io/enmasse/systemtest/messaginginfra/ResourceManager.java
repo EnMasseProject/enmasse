@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.enmasse.api.model.MessagingInfrastructure;
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
@@ -18,7 +18,7 @@ import io.enmasse.systemtest.logs.CustomLogger;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.NamespaceResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.ResourceType;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -48,7 +48,7 @@ public class ResourceManager {
     private static Stack<ThrowableRunner> pointerResources = classResources;
 
     private MessagingInfrastructure defaultInfra;
-    private MessagingTenant defaultTenant;
+    private MessagingProject defaultProject;
 
     private Kubernetes kubeClient = Kubernetes.getInstance();
     private final Environment environment = Environment.getInstance();
@@ -102,8 +102,8 @@ public class ResourceManager {
         if (defaultInfra != null && defaultInfra.getKind().equals(resource.getKind()) && defaultInfra.getMetadata().getName().equals(resource.getMetadata().getName())) {
             defaultInfra = null;
         }
-        if (defaultTenant != null && defaultTenant.getKind().equals(resource.getKind()) && defaultTenant.getMetadata().getName().equals(resource.getMetadata().getName())) {
-            defaultTenant = null;
+        if (defaultProject != null && defaultProject.getKind().equals(resource.getKind()) && defaultProject.getMetadata().getName().equals(resource.getMetadata().getName())) {
+            defaultProject = null;
         }
     }
 
@@ -122,16 +122,16 @@ public class ResourceManager {
         return defaultInfra;
     }
 
-    public MessagingTenant getDefaultMessagingTenant() {
-        return defaultTenant;
+    public MessagingProject getDefaultMessagingProject() {
+        return defaultProject;
     }
 
     public void setDefaultInfra(MessagingInfrastructure infra) {
         defaultInfra = infra;
     }
 
-    public void setDefaultMessagingTenant(MessagingTenant tenant) {
-        defaultTenant = tenant;
+    public void setDefaultMessagingProject(MessagingProject project) {
+        defaultProject = project;
     }
 
     //------------------------------------------------------------------------------------------------
@@ -160,7 +160,7 @@ public class ResourceManager {
 
     private final ResourceType<?>[] resourceTypes = new ResourceType[]{
             new MessagingInfrastructureResourceType(),
-            new MessagingTenantResourceType(),
+            new MessagingProjectResourceType(),
             new MessagingAddressResourceType(),
             new MessagingEndpointResourceType(),
             new NamespaceResourceType(),

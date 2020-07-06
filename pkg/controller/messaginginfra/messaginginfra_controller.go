@@ -20,7 +20,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/common"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/router"
-	"github.com/enmasseproject/enmasse/pkg/controller/messagingtenant"
+	"github.com/enmasseproject/enmasse/pkg/controller/messagingproject"
 	"github.com/enmasseproject/enmasse/pkg/state"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -163,16 +163,16 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 	}
 
 	/*
-		// Watch changes to tenants to retrigger infra sync
-		err = c.Watch(&source.Kind{Type: &v1.MessagingTenant{}}, &handler.EnqueueRequestsFromMapFunc{
+		// Watch changes to projects to retrigger infra sync
+		err = c.Watch(&source.Kind{Type: &v1.MessagingProject{}}, &handler.EnqueueRequestsFromMapFunc{
 			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
-				tenant := o.Object.(*v1.MessagingTenant)
-				if tenant.Status.MessagingInfraRef != nil {
+				project := o.Object.(*v1.MessagingProject)
+				if project.Status.MessagingInfraRef != nil {
 					return []reconcile.Request{
 						{
 							NamespacedName: types.NamespacedName{
-								Name:      tenant.Status.MessagingInfraRef.Name,
-								Namespace: tenant.Status.MessagingInfraRef.Namespace,
+								Name:      project.Status.MessagingInfraRef.Name,
+								Namespace: project.Status.MessagingInfraRef.Namespace,
 							},
 						},
 					}
@@ -189,18 +189,18 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 		err = c.Watch(&source.Kind{Type: &v1.MessagingAddress{}}, &handler.EnqueueRequestsFromMapFunc{
 			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
 				address := o.Object.(*v1.MessagingAddress)
-				tenant := &v1.MessagingTenant{}
-				err := r.client.Get(context.Background(), client.ObjectKey{Name: messagingtenant.TENANT_RESOURCE_NAME, Namespace: address.Namespace}, tenant)
-				if err != nil || tenant.Status.MessagingInfraRef == nil {
-					// Skip triggering if we can't find tenant
+				project := &v1.MessagingProject{}
+				err := r.client.Get(context.Background(), client.ObjectKey{Name: messagingproject.PROJECT_RESOURCE_NAME, Namespace: address.Namespace}, project)
+				if err != nil || project.Status.MessagingInfraRef == nil {
+					// Skip triggering if we can't find project
 					return []reconcile.Request{}
 				}
 
 				return []reconcile.Request{
 					{
 						NamespacedName: types.NamespacedName{
-							Namespace: tenant.Status.MessagingInfraRef.Namespace,
-							Name:      tenant.Status.MessagingInfraRef.Name,
+							Namespace: project.Status.MessagingInfraRef.Namespace,
+							Name:      project.Status.MessagingInfraRef.Name,
 						},
 					},
 				}
@@ -214,18 +214,18 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 		err = c.Watch(&source.Kind{Type: &v1.MessagingEndpoint{}}, &handler.EnqueueRequestsFromMapFunc{
 			ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
 				endpoint := o.Object.(*v1.MessagingEndpoint)
-				tenant := &v1.MessagingTenant{}
-				err := r.client.Get(context.Background(), client.ObjectKey{Name: messagingtenant.TENANT_RESOURCE_NAME, Namespace: endpoint.Namespace}, tenant)
-				if err != nil || tenant.Status.MessagingInfraRef == nil {
-					// Skip triggering if we can't find tenant
+				project := &v1.MessagingProject{}
+				err := r.client.Get(context.Background(), client.ObjectKey{Name: messagingproject.PROJECT_RESOURCE_NAME, Namespace: endpoint.Namespace}, project)
+				if err != nil || project.Status.MessagingInfraRef == nil {
+					// Skip triggering if we can't find project
 					return []reconcile.Request{}
 				}
 
 				return []reconcile.Request{
 					{
 						NamespacedName: types.NamespacedName{
-							Namespace: tenant.Status.MessagingInfraRef.Namespace,
-							Name:      tenant.Status.MessagingInfraRef.Name,
+							Namespace: project.Status.MessagingInfraRef.Namespace,
+							Name:      project.Status.MessagingInfraRef.Name,
 						},
 					},
 				}
@@ -553,15 +553,15 @@ func (r *ReconcileMessagingInfra) reconcileFinalizers(ctx context.Context, logge
 					return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingInfra")
 				}
 
-				// Check if its in use by any tenants
-				tenants := &v1.MessagingTenantList{}
-				err := r.client.List(ctx, tenants)
+				// Check if its in use by any projects
+				projects := &v1.MessagingProjectList{}
+				err := r.client.List(ctx, projects)
 				if err != nil {
 					return reconcile.Result{}, err
 				}
-				for _, tenant := range tenants.Items {
-					if tenant.Status.MessagingInfrastructureRef.Name == infra.Name && tenant.Status.MessagingInfrastructureRef.Namespace == infra.Namespace {
-						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingInfra %s/%s: in use by MessagingTenant %s/%s", infra.Namespace, infra.Name, tenant.Namespace, tenant.Name)
+				for _, project := range projects.Items {
+					if project.Status.MessagingInfrastructureRef.Name == infra.Name && project.Status.MessagingInfrastructureRef.Namespace == infra.Namespace {
+						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingInfra %s/%s: in use by MessagingProject %s/%s", infra.Namespace, infra.Name, project.Namespace, project.Name)
 					}
 				}
 
@@ -631,26 +631,26 @@ func (r *processorResult) Result() reconcile.Result {
 }
 
 // Find the MessagingInfra servicing a given namespace
-func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1.MessagingTenant, *v1.MessagingInfrastructure, error) {
-	// Retrieve the MessagingTenant for this namespace
-	tenant := &v1.MessagingTenant{}
-	err := c.Get(ctx, types.NamespacedName{Name: messagingtenant.TENANT_RESOURCE_NAME, Namespace: namespace}, tenant)
+func LookupInfra(ctx context.Context, c client.Client, namespace string) (*v1.MessagingProject, *v1.MessagingInfrastructure, error) {
+	// Retrieve the MessagingProject for this namespace
+	project := &v1.MessagingProject{}
+	err := c.Get(ctx, types.NamespacedName{Name: messagingproject.PROJECT_RESOURCE_NAME, Namespace: namespace}, project)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			return nil, nil, utilerrors.NewNotFoundError("MessagingTenant", messagingtenant.TENANT_RESOURCE_NAME, namespace)
+			return nil, nil, utilerrors.NewNotFoundError("MessagingProject", messagingproject.PROJECT_RESOURCE_NAME, namespace)
 		}
 		return nil, nil, err
 	}
 
-	if !tenant.IsBound() {
-		return tenant, nil, utilerrors.NewNotBoundError(namespace)
+	if !project.IsBound() {
+		return project, nil, utilerrors.NewNotBoundError(namespace)
 	}
 
-	// Retrieve the MessagingInfra for this MessagingTenant
+	// Retrieve the MessagingInfra for this MessagingProject
 	infra := &v1.MessagingInfrastructure{}
-	err = c.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
+	err = c.Get(ctx, types.NamespacedName{Name: project.Status.MessagingInfrastructureRef.Name, Namespace: project.Status.MessagingInfrastructureRef.Namespace}, infra)
 	if err != nil {
-		return tenant, nil, err
+		return project, nil, err
 	}
-	return tenant, infra, nil
+	return project, infra, nil
 }

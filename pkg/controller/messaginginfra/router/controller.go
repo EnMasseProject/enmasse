@@ -85,25 +85,25 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	rawSha := sha256.Sum256(routerConfigBytes)
 	routerConfigSha := hex.EncodeToString(rawSha[:])
 
-	// Reconcile the tenant certificate secret. This secret is created by infra, but is updated by the endpoints controller.
-	tenantSecretName := cert.GetTenantSecretName(infra.Name)
-	tenantSecret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: tenantSecretName},
+	// Reconcile the project certificate secret. This secret is created by infra, but is updated by the endpoints controller.
+	projectSecretName := cert.GetProjectSecretName(infra.Name)
+	projectSecret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: projectSecretName},
 	}
 
 	certSha := sha256.New()
 
-	_, err = controllerutil.CreateOrUpdate(ctx, r.client, tenantSecret, func() error {
-		if err := controllerutil.SetControllerReference(infra, tenantSecret, r.scheme); err != nil {
+	_, err = controllerutil.CreateOrUpdate(ctx, r.client, projectSecret, func() error {
+		if err := controllerutil.SetControllerReference(infra, projectSecret, r.scheme); err != nil {
 			return err
 		}
-		keys := make([]string, 0, len(tenantSecret.Data))
-		for key, _ := range tenantSecret.Data {
+		keys := make([]string, 0, len(projectSecret.Data))
+		for key, _ := range projectSecret.Data {
 			keys = append(keys, key)
 		}
 		sort.Strings(keys)
 		for _, key := range keys {
-			value := tenantSecret.Data[key]
+			value := projectSecret.Data[key]
 			_, err := certSha.Write([]byte(key))
 			if err != nil {
 				return err
@@ -154,7 +154,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 			install.ApplyVolumeMountSimple(container, "config", "/etc/qpid-dispatch/config", false)
-			install.ApplyVolumeMountSimple(container, "tenant-certs", "/etc/enmasse-tenant-certs", false)
+			install.ApplyVolumeMountSimple(container, "project-certs", "/etc/enmasse-project-certs", false)
 
 			install.ApplyEnvSimple(container, "INFRA_NAME", infra.Name)
 			install.ApplyEnvSimple(container, "QDROUTERD_CONF", "/etc/qpid-dispatch/config/qdrouterd.json")
@@ -214,7 +214,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 			for i := 40000; i < 40100; i++ {
 				container.Ports = append(container.Ports, corev1.ContainerPort{
 					ContainerPort: int32(i),
-					Name:          fmt.Sprintf("tenant%d", i),
+					Name:          fmt.Sprintf("project%d", i),
 				})
 			}
 
@@ -228,7 +228,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 
 		install.ApplyConfigMapVolume(&statefulset.Spec.Template.Spec, "config", routerInfraName)
 		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "certs", certSecretName)
-		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "tenant-certs", tenantSecretName)
+		install.ApplySecretVolume(&statefulset.Spec.Template.Spec, "project-certs", projectSecretName)
 		return nil
 	})
 

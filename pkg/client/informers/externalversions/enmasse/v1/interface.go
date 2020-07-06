@@ -23,8 +23,8 @@ type Interface interface {
 	MessagingInfrastructures() MessagingInfrastructureInformer
 	// MessagingPlans returns a MessagingPlanInformer.
 	MessagingPlans() MessagingPlanInformer
-	// MessagingTenants returns a MessagingTenantInformer.
-	MessagingTenants() MessagingTenantInformer
+	// MessagingProjects returns a MessagingProjectInformer.
+	MessagingProjects() MessagingProjectInformer
 }
 
 type version struct {
@@ -63,7 +63,7 @@ func (v *version) MessagingPlans() MessagingPlanInformer {
 	return &messagingPlanInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
-// MessagingTenants returns a MessagingTenantInformer.
-func (v *version) MessagingTenants() MessagingTenantInformer {
-	return &messagingTenantInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+// MessagingProjects returns a MessagingProjectInformer.
+func (v *version) MessagingProjects() MessagingProjectInformer {
+	return &messagingProjectInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
