@@ -23,6 +23,7 @@ func TestAnonymous_InitResponseProvidesIdentity(t *testing.T) {
 
 	assert.NotNil(t, ic.saslOutcome)
 	assert.Equal(t, codeSASLOK, ic.saslOutcome.Code)
+	assert.Equal(t, "user", ic.saslAuthenticatedIdentity)
 }
 
 func TestAnonymous_SubsequentResponseProvidesIdentity(t *testing.T) {
@@ -43,6 +44,7 @@ func TestAnonymous_SubsequentResponseProvidesIdentity(t *testing.T) {
 
 	assert.NotNil(t, ic.saslOutcome)
 	assert.Equal(t, codeSASLOK, ic.saslOutcome.Code)
+	assert.Equal(t, "user", ic.saslAuthenticatedIdentity)
 }
 
 func TestAnonymous_TooManyEmptyResponses(t *testing.T) {

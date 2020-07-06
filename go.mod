@@ -30,7 +30,7 @@ replace (
 	k8s.io/legacy-cloud-providers => k8s.io/legacy-cloud-providers v0.0.0-20191016115753-cf0698c3a16b
 	k8s.io/metrics => k8s.io/metrics v0.0.0-20191016113814-3b1a734dba6e
 	k8s.io/sample-apiserver => k8s.io/sample-apiserver v0.0.0-20191016112829-06bb3c9d77c9
-	pack.ag/amqp => github.com/interconnectedcloud/go-amqp v0.12.6-0.20200506124159-f51e540008b5 // indirect
+	pack.ag/amqp => github.com/k-wall/go-amqp v0.12.6-0.20200706113411-abc925d8ef14
 )
 
 require (

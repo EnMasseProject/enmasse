@@ -48,6 +48,7 @@ func WithSASLAnonymous() IncomingConnOption {
 				ic.saslOutcome = &saslOutcome{
 					Code: codeSASLOK,
 				}
+				ic.saslAuthenticatedIdentity = string(r)
 				return
 			} else {
 				count++

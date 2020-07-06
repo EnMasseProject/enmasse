@@ -98,6 +98,11 @@ func New(conn net.Conn, opts ...ConnOption) (*Client, error) {
 	return &Client{conn: c}, err
 }
 
+// Additional properties received during connection open
+func (c *Client) PeerProperties() map[symbol]interface{} {
+	return c.conn.peerProperties
+}
+
 // Close disconnects the connection.
 func (c *Client) Close() error {
 	return c.conn.Close()

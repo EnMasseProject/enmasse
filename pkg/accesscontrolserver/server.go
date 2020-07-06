@@ -19,12 +19,14 @@ type Server struct {
 	address  string
 	quit     chan interface{}
 	wg       *sync.WaitGroup
+	opts     []amqp.IncomingConnOption
 }
 
-func NewServer(hostname string, port uint16) (*Server, error) {
+func NewServer(hostname string, port uint16, opts ...amqp.IncomingConnOption) (*Server, error) {
 	s := &Server{
 		quit: make(chan interface{}),
 		wg:   &sync.WaitGroup{},
+		opts: opts,
 	}
 
 	s.address = fmt.Sprintf("%s:%d", hostname, port)
@@ -64,6 +66,7 @@ func (s Server) serve() {
 		} else {
 			s.wg.Add(1)
 			go func() {
+				defer conn.Close()
 				s.handleConnection(conn)
 				s.wg.Done()
 			}()
@@ -72,17 +75,10 @@ func (s Server) serve() {
 }
 
 func (s Server) handleConnection(conn net.Conn) {
-	defer conn.Close()
-	ic, error := amqp.NewIncoming(conn, amqp.WithSASLAnonymous())
+	_, error := amqp.NewIncoming(conn, s.opts...)
 	if error != nil {
-		log.Printf("Failed to admit incoming connection: %v", error)
+		log.Printf("failed to admit incoming connection: %v", error)
 		return
 	}
-
-	// TODO calculate authorisation
-	error = ic.Accept()
-	if error != nil {
-		log.Printf("Failed to accept incoming connection: %v", error)
-	}
-
+	//defer ic.Close()
 }

@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"math"
@@ -49,16 +50,16 @@ type IncomingConn struct {
 	connectTimeout time.Duration // time to wait for reads/writes during conn establishment
 
 	// SASL
-	saslOutcome    *saslOutcome
-	saslMechanisms map[Symbol]saslStateFunc
+	saslMechanisms            map[Symbol]saslStateFunc
+	saslOutcome               *saslOutcome
+	saslAuthenticatedIdentity string
 
 	// local settings
 	maxFrameSize uint32                 // max frame size to accept
-	properties   map[Symbol]interface{} // additional properties sent upon connection open
-	containerID  string                 // set explicitly or randomly generated
 
 	// remote settings
-	peerMaxFrameSize uint32 // maximum frame size peer will accept
+	peerMaxFrameSize        uint32  // maximum frame size peer will accept
+	peerDesiredCapabilities Symbols // capabilities that the peer desires
 
 	// conn state
 	err     error         // error to return, only valid after done closes.
@@ -81,14 +82,11 @@ type stateFunc func() stateFunc
 type saslStateFunc func(string, []byte) (saslStateFunc, []byte, error)
 
 func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn, err error) {
-	defer func() {
-		if err != nil {
-			netConn.Close()
-		}
-	}()
+	defer netConn.Close()
 	ic = &IncomingConn{
 		saslMechanisms:   make(map[Symbol]saslStateFunc, 0),
 		net:              netConn,
+		maxFrameSize:     DefaultMaxFrameSize,
 		peerMaxFrameSize: DefaultMaxFrameSize,
 		done:             make(chan struct{}),
 		connErr:          make(chan error, 2), // buffered to ensure connReader/Writer won't leak
@@ -98,13 +96,14 @@ func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn
 		txFrame:          make(chan frame),
 		txStop:           make(chan *Error),
 		txDone:           make(chan struct{}),
+		connectTimeout: time.Second * 5,
 	}
 
 	for _, f := range opts {
 		f(ic)
 	}
 
-	err = ic.init(ic.negotiateProto)
+	err = ic.process(ic.negotiateProto)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +112,6 @@ func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn
 
 // negotiateProto does server side protocol negotiation.
 func (ic *IncomingConn) negotiateProto() stateFunc {
-	// Alias for brevity
 	var p protoHeader
 	if p, ic.err = ic.readProtoHeader(); ic.err != nil {
 		return nil
@@ -131,15 +129,14 @@ func (ic *IncomingConn) negotiateProto() stateFunc {
 		if ic.err = ic.writeProtoHeader(p.ProtoID); ic.err != nil {
 			return nil
 		}
-		// Read incoming open frame, but don't respond until Accept()
 		if _, ic.err = ic.recvOpen(); ic.err != nil {
 			return nil
 		}
+		if ic.err = ic.sendOpen(); ic.err != nil {
+			return nil
+		}
 		if ic.saslOutcome == nil {
-			// SASL not done - send open then organise close
-			if ic.err = ic.sendOpen(); ic.err != nil {
-				return nil
-			}
+			// SASL not done - organise close in error
 
 			saslStepAbsent := fmt.Errorf("AMQP protocol %d unexpected at this time - AMQP SASL is required first", p.ProtoID)
 			amqpError := Error{
@@ -252,37 +249,23 @@ func (ic *IncomingConn) saslNegotiate() stateFunc {
 	return ic.negotiateProto
 }
 
-func (ic *IncomingConn) Accept() error {
-
-	if ic.err = ic.sendOpen(); ic.err != nil {
-		return ic.err
-	}
-
-	return nil
-}
-
-func (c *IncomingConn) init(state stateFunc) error {
-	go c.connReader()
-	go c.connWriter()
+func (ic *IncomingConn) process(state stateFunc) error {
+	defer ic.close()
+	go ic.connReader()
+	go ic.connWriter()
 
 	// run connection establishment state machine
 	for state != nil {
 		state = state()
 	}
 
-	// check if err occurred
-	if c.err != nil {
-		//close(c.txDone) // close here since connWriter hasn't been started yet
-		c.close() // OK to call here since mux hasn't been started yet
-		return c.err
-	}
-	return nil
+	return ic.err
 }
 
 // connReader reads from the net.Conn, decodes frames, and passes them
 // up via the conn.rxFrame and conn.rxProto channels.
-func (c *IncomingConn) connReader() {
-	defer close(c.rxDone)
+func (ic *IncomingConn) connReader() {
+	defer close(ic.rxDone)
 
 	buf := new(buffer)
 
@@ -299,22 +282,22 @@ func (c *IncomingConn) connReader() {
 			buf.reset()
 
 		// Prevent excessive/unbounded growth by shifting data to beginning of buffer.
-		case int64(buf.i) > int64(c.maxFrameSize):
+		case int64(buf.i) > int64(ic.maxFrameSize):
 			buf.reclaim()
 		}
 
 		// need to read more if buf doesn't contain the complete frame
 		// or there's not enough in buf to parse the header
 		if frameInProgress || buf.len() < frameHeaderSize {
-			err := buf.readFromOnce(c.net)
+			err := buf.readFromOnce(ic.net)
 			if err != nil {
 				select {
 				// check if error was due to close in progress
-				case <-c.done:
+				case <-ic.done:
 					return
 
 				default:
-					c.connErr <- err
+					ic.connErr <- err
 					return
 				}
 			} else {
@@ -330,7 +313,7 @@ func (c *IncomingConn) connReader() {
 		if negotiating && bytes.Equal(buf.bytes()[:4], []byte{'A', 'M', 'Q', 'P'}) {
 			p, err := parseProtoHeader(buf)
 			if err != nil {
-				c.connErr <- err
+				ic.connErr <- err
 				return
 			}
 
@@ -341,9 +324,9 @@ func (c *IncomingConn) connReader() {
 
 			// send proto header
 			select {
-			case <-c.done:
+			case <-ic.done:
 				return
-			case c.rxProto <- p:
+			case ic.rxProto <- p:
 			}
 
 			continue
@@ -354,7 +337,7 @@ func (c *IncomingConn) connReader() {
 			var err error
 			currentHeader, err = parseFrameHeader(buf)
 			if err != nil {
-				c.connErr <- err
+				ic.connErr <- err
 				return
 			}
 			frameInProgress = true
@@ -362,7 +345,7 @@ func (c *IncomingConn) connReader() {
 
 		// check size is reasonable
 		if currentHeader.Size > math.MaxInt32 { // make max size configurable
-			c.connErr <- errorNew("payload too large")
+			ic.connErr <- errorNew("payload too large")
 			return
 		}
 
@@ -382,52 +365,52 @@ func (c *IncomingConn) connReader() {
 		// parse the frame
 		b, ok := buf.next(bodySize)
 		if !ok {
-			c.connErr <- io.EOF
+			ic.connErr <- io.EOF
 			return
 		}
 
 		parsedBody, err := parseFrameBody(&buffer{b: b})
 		if err != nil {
-			c.connErr <- err
+			ic.connErr <- err
 			return
 		}
 
 		// send to mux
 		select {
-		case <-c.done:
+		case <-ic.done:
 			return
-		case c.rxFrame <- frame{channel: currentHeader.Channel, body: parsedBody}:
+		case ic.rxFrame <- frame{channel: currentHeader.Channel, body: parsedBody}:
 		}
 	}
 }
 
-func (c *IncomingConn) connWriter() {
-	defer close(c.txDone)
+func (ic *IncomingConn) connWriter() {
+	defer close(ic.txDone)
 
 	// disable write timeout
-	if c.connectTimeout != 0 {
-		c.connectTimeout = 0
-		_ = c.net.SetWriteDeadline(time.Time{})
+	if ic.connectTimeout != 0 {
+		ic.connectTimeout = 0
+		_ = ic.net.SetWriteDeadline(time.Time{})
 	}
 
 	var err error
 	for {
 		if err != nil {
-			c.connErr <- err
+			ic.connErr <- err
 			return
 		}
 
 		select {
 		// frame write request
-		case fr := <-c.txFrame:
-			err = c.writeFrame(fr)
+		case fr := <-ic.txFrame:
+			err = ic.writeFrame(fr)
 			if err == nil && fr.done != nil {
 				close(fr.done)
 			}
 
-		case err := <-c.txStop:
+		case err := <-ic.txStop:
 			// send close
-			_ = c.writeFrame(frame{
+			_ = ic.writeFrame(frame{
 				type_: frameTypeAMQP,
 				body:  &performClose{err},
 			})
@@ -438,70 +421,93 @@ func (c *IncomingConn) connWriter() {
 
 // writeFrame writes a frame to the network, may only be used
 // by connWriter after initial negotiation.
-func (c *IncomingConn) writeFrame(fr frame) error {
-	debugFrame(c, "TX", &fr)
-	if c.connectTimeout != 0 {
-		_ = c.net.SetWriteDeadline(time.Now().Add(c.connectTimeout))
+func (ic *IncomingConn) writeFrame(fr frame) error {
+	debugFrame(ic, "TX", &fr)
+	if ic.connectTimeout != 0 {
+		_ = ic.net.SetWriteDeadline(time.Now().Add(ic.connectTimeout))
 	}
 
 	// writeFrame into txBuf
-	c.txBuf.reset()
-	err := writeFrame(&c.txBuf, fr)
+	ic.txBuf.reset()
+	err := writeFrame(&ic.txBuf, fr)
 	if err != nil {
 		return err
 	}
 
 	// validate the frame isn't exceeding peer's max frame size
-	requiredFrameSize := c.txBuf.len()
-	if uint64(requiredFrameSize) > uint64(c.peerMaxFrameSize) {
-		return errorErrorf("%T frame size %d larger than peer's max frame size", fr, requiredFrameSize, c.peerMaxFrameSize)
+	requiredFrameSize := ic.txBuf.len()
+	if uint64(requiredFrameSize) > uint64(ic.peerMaxFrameSize) {
+		return errorErrorf("%T frame size %d larger than peer's max frame size", fr, requiredFrameSize, ic.peerMaxFrameSize)
 	}
 
 	// write to network
-	_, err = c.net.Write(c.txBuf.bytes())
+	_, err = ic.net.Write(ic.txBuf.bytes())
 	return err
 }
 
 // writeProtoHeader writes an AMQP protocol header to the
 // network
-func (c *IncomingConn) writeProtoHeader(pID protoID) error {
-	if c.connectTimeout != 0 {
-		_ = c.net.SetWriteDeadline(time.Now().Add(c.connectTimeout))
+func (ic *IncomingConn) writeProtoHeader(pID protoID) error {
+	if ic.connectTimeout != 0 {
+		_ = ic.net.SetWriteDeadline(time.Now().Add(ic.connectTimeout))
 	}
-	_, err := c.net.Write([]byte{'A', 'M', 'Q', 'P', byte(pID), 1, 0, 0})
+	_, err := ic.net.Write([]byte{'A', 'M', 'Q', 'P', byte(pID), 1, 0, 0})
 	return err
 }
 
 // readProtoHeader reads a protocol header packet from c.rxProto.
-func (c *IncomingConn) readProtoHeader() (protoHeader, error) {
+func (ic *IncomingConn) readProtoHeader() (protoHeader, error) {
 	var deadline <-chan time.Time
-	if c.connectTimeout != 0 {
-		deadline = time.After(c.connectTimeout)
+	if ic.connectTimeout != 0 {
+		deadline = time.After(ic.connectTimeout)
 	}
 	var p protoHeader
 	select {
-	case p = <-c.rxProto:
+	case p = <-ic.rxProto:
 		return p, nil
-	case err := <-c.connErr:
+	case err := <-ic.connErr:
 		return p, err
-	case fr := <-c.rxFrame:
+	case fr := <-ic.rxFrame:
 		return p, errorErrorf("unexpected frame %#v", fr)
 	case <-deadline:
 		return p, ErrTimeout
 	}
 }
 
-func (c *IncomingConn) sendOpen() error {
+func (ic *IncomingConn) sendOpen() error {
 	open := &performOpen{
-		ContainerID:  c.containerID,
-		MaxFrameSize: c.maxFrameSize,
-		Properties:   c.properties,
+		ContainerID:         uuid.New().String(),
+		MaxFrameSize:        ic.maxFrameSize,
+		Properties:          make(map[Symbol]interface{}, 0),
+		OfferedCapabilities: make(Symbols, 0),
+		ChannelMax:          1,
 	}
-	return c.writeFrame(frame{type_: frameTypeAMQP, body: open, channel: 0})
+
+	open.Properties["product"] = "access-control-server"
+
+	if ic.saslOutcome != nil && ic.saslOutcome.Code == codeSASLOK {
+		var foundCapability = false
+		if len(ic.peerDesiredCapabilities) > 0 {
+			for _, capability := range ic.peerDesiredCapabilities {
+				if capability == addressAuthzCapability {
+					foundCapability = true
+					break
+				}
+			}
+		}
+
+		open.Properties[authenticatedIdentityProperty] = buildAuthenticatedIdentity(ic.saslAuthenticatedIdentity)
+		open.Properties[groupsProperty] = buildGroups()
+
+		if foundCapability {
+			open.OfferedCapabilities = append(open.OfferedCapabilities, addressAuthzCapability)
+		}
+	}
+	return ic.writeFrame(frame{type_: frameTypeAMQP, body: open, channel: 0})
 }
 
-func (c *IncomingConn) recvOpen() (*performOpen, error) {
-	fr, err := c.readFrame()
+func (ic *IncomingConn) recvOpen() (*performOpen, error) {
+	fr, err := ic.readFrame()
 	if err != nil {
 		return nil, err
 	}
@@ -511,64 +517,73 @@ func (c *IncomingConn) recvOpen() (*performOpen, error) {
 	}
 
 	if o.MaxFrameSize > 0 {
-		c.peerMaxFrameSize = o.MaxFrameSize
+		ic.peerMaxFrameSize = o.MaxFrameSize
+
 	}
+	ic.peerDesiredCapabilities = o.DesiredCapabilities
 	return o, nil
 }
 
-func (c *IncomingConn) readFrame() (frame, error) {
+func (ic *IncomingConn) readFrame() (frame, error) {
 	var deadline <-chan time.Time
-	if c.connectTimeout != 0 {
-		deadline = time.After(c.connectTimeout)
+	if ic.connectTimeout != 0 {
+		deadline = time.After(ic.connectTimeout)
 	}
 
 	var fr frame
 	select {
-	case fr = <-c.rxFrame:
-		debugFrame(c, "RX", &fr)
+	case fr = <-ic.rxFrame:
+		debugFrame(ic, "RX", &fr)
 		return fr, nil
-	case err := <-c.connErr:
+	case err := <-ic.connErr:
 		return fr, err
-	case p := <-c.rxProto:
+	case p := <-ic.rxProto:
 		return fr, errorErrorf("unexpected protocol header %#v", p)
 	case <-deadline:
 		return fr, ErrTimeout
 	}
 }
 
-func (c *IncomingConn) Close() error {
-	<-c.done
-	<-c.txDone
-	<-c.rxDone
-	if c.err == ErrConnClosed {
+func (ic *IncomingConn) Close() error {
+	<-ic.done
+	<-ic.txDone
+	<-ic.rxDone
+	if ic.err == ErrConnClosed {
 		return nil
 	}
-	return c.err
+	return ic.err
 }
 
 // close should only be called by conn.mux.
-func (c *IncomingConn) close() {
+func (ic *IncomingConn) close() {
 	// wait for writing to stop, allows it to send the final close frame
-	close(c.txStop)
-	<-c.txDone
+	close(ic.txStop)
+	<-ic.txDone
 
-	// Set c.err first, before closing c.done
-	err := c.net.Close()
+	// Set ic.err first, before closing ic.done
+	err := ic.net.Close()
 	switch {
 	// conn.err already set
-	case c.err != nil:
+	case ic.err != nil:
 
-	// conn.err not set and c.net.Close() returned a non-nil error
+	// conn.err not set and ic.net.Close() returned a non-nil error
 	case err != nil:
-		c.err = err
+		ic.err = err
 
 	// no errors
 	default:
-		c.err = ErrConnClosed
+		ic.err = ErrConnClosed
 	}
-	close(c.done) // notify goroutines and blocked functions to exit
+	close(ic.done) // notify goroutines and blocked functions to exit
 
 	// check rxDone after closing net, otherwise may block
-	// for up to c.idleTimeout
-	<-c.rxDone
+	// for up to ic.idleTimeout
+	<-ic.rxDone
+}
+
+func WithConnTimeout(connTimeout time.Duration) IncomingConnOption {
+	return func(ic *IncomingConn) error {
+		ic.connectTimeout = connTimeout
+		return nil
+	}
 }
