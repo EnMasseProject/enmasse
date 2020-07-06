@@ -7,6 +7,7 @@
 package accesscontrolserver
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/accesscontrolserver/amqp"
 	"log"
@@ -15,22 +16,30 @@ import (
 )
 
 type Server struct {
+	opts []amqp.IncomingConnOption
+
 	listener net.Listener
 	address  string
 	quit     chan interface{}
 	wg       *sync.WaitGroup
-	opts     []amqp.IncomingConnOption
 }
 
-func NewServer(hostname string, port uint16, opts ...amqp.IncomingConnOption) (*Server, error) {
+func NewServer(tlsConfig *tls.Config, hostname string, port uint16, opts ...amqp.IncomingConnOption) (*Server, error) {
 	s := &Server{
+		opts: opts,
+
 		quit: make(chan interface{}),
 		wg:   &sync.WaitGroup{},
-		opts: opts,
 	}
 
 	s.address = fmt.Sprintf("%s:%d", hostname, port)
-	listener, err := net.Listen("tcp", s.address)
+	var listener net.Listener
+	var err error
+	if tlsConfig != nil {
+		listener, err = tls.Listen("tcp", s.address, tlsConfig)
+	} else {
+		listener, err = net.Listen("tcp", s.address)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -80,5 +89,4 @@ func (s Server) handleConnection(conn net.Conn) {
 		log.Printf("failed to admit incoming connection: %v", error)
 		return
 	}
-	//defer ic.Close()
 }

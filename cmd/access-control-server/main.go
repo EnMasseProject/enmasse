@@ -6,6 +6,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/accesscontrolserver"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -39,8 +40,21 @@ func main() {
 
 	port := uint16(util.GetUintEnvOrDefault("PORT", 0, 16, 0))
 	bindAddress := util.GetEnvOrDefault("BIND_ADDRESS", "localhost")
+	tlsCertFile := util.GetEnvOrDefault("TLS_CERT_FILE", "")
+	tlsKeyFile := util.GetEnvOrDefault("TLS_KEY_FILE", "")
 
-	server, err := accesscontrolserver.NewServer(bindAddress, port)
+	// TODO watch the file and restart in the event of change.
+	var tlsConfig *tls.Config
+	if tlsCertFile != "" && tlsKeyFile != "" {
+		cer, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		tlsConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
+	}
+
+	server, err := accesscontrolserver.NewServer(tlsConfig, bindAddress, port)
 	if err != nil {
 		log.Panic(err)
 	}
