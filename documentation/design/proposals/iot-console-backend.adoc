@@ -1,0 +1,78 @@
+== Overview
+
+The iot console backend should provide a graphQL api that allows the console UI to :
+* list, create, update, delete iot projects.
+* list, create, update, delete devices and their credentials in iot projects the user have access to.
+* list addresses and connection details of the downstream messaging endpoints.
+* list hono protocols adapter the user have access to, and their connection details.
+* get metrics for iot projects and devices.
+
+
+== Design
+
+The above requirements involves two kind of resources :
+* kubernetes resources.
+* Hono resources that are accessed through the device registry service.
+
+=== Kubernetes Object
+
+The existing console back end will be updated to access the relevant kubernetes objects
+(iot projects, routes for protocol adapters, messaging endpoint).
+The existing approach of permissions will be used : it is the backend's responsibility to
+filter the user's view so it fits the user's permissions.
+For write operations, console-server propagates the user's bearer token made available by oauth-proxy.
+
+=== Hono devices & Credentials
+
+The iot devices and their credentials needs to be accessed through the device registry REST api.
+Therefore, a rest client must be used in the console backend. For this part, the internal cache
+of the console-backend will not be used. Also, the token verification can be ignored, as the device registry
+already verify the bearer token in HTTP requests.
+In this scope the backend acts as a simple REST to graphQL translator. Some details are pulled from the Json
+data and flatened into the graphQL object for convenience when querying.
+The original Json structure will be returned as well in the graphQL object.
+
+
+=== Metrics
+
+Metrics will be scraped from the ephemeral enmasse prometheus instance.
+
+The following metrics are needed for the iot console :
+
+- Max connections for iot project
+- Total data volume for iot project
+- Start date and end date for the 2 above metrics
+- Event rate for the last n minutes for iot project
+- Telemetry rate for the last n minutes for iot project
+- Command rate for the last n minutes for iot project
+
+==== GraphQL queries
+
+  Returns the messaging tenants and iotprojects visible to this user, optionaly filtered by project type
+  This extends the existing "addressSpaces" query
+  ```
+  allProjects(first: Int, offset: Int, filter: String, orderBy: String, projectType: ProjectQueryType): AddressSpaceAndIotProjectsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+  devices(iotproject: String!, first: Int, offset: Int, filter: String, orderBy: String): DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1
+  credentials(iotproject: String!, deviceId: String!): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+  ```
+  Returns the command-line that, if executed, would create the given iotproject
+  ```
+  iotProjectCommand(input: IotProject_iot_enmasse_io_v1alpha1_input!): String!
+  ```
+
+==== GraphQL mutations
+```
+ createIotDevice(iotproject: String!, device: Device_iot_console_input!): Device
+  deleteIotDevices(iotproject: String!, deviceIds: [String!]!): Boolean
+  updateIotDevice(iotproject: String!, device: Device_iot_console_input!): Device
+  setCredentialsForDevice(iotproject: String!, deviceId: String!, jsonData: [String!]!): Boolean
+  deleteCredentialsForDevice(iotproject: String!, deviceId: String!): Boolean
+  createIotProject(input: IotProject_iot_enmasse_io_v1alpha1_input): ObjectMeta_v1!
+  patchIotProject(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType: String!): Boolean
+  deleteIotProjects(input: ObjectMeta_v1_Input!): Boolean
+  disableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+```
+
+Mutations will interact directly the API backends (Kubernetes for iot projects, device registry for devices and credentials).
+It will perform this interaction using the user's bearer token.
+
