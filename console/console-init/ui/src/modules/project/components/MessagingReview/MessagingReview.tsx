@@ -18,7 +18,7 @@ import {
 } from "@patternfly/react-core";
 import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
-import { endpointProtocolOptions } from "modules/project/utils";
+import { endpointProtocolOptions } from "modules/address-space/utils";
 
 export interface IMessagingReviewProps {
   name?: string;
@@ -36,16 +36,11 @@ export interface IMessagingReviewProps {
 }
 
 const style = StyleSheet.create({
-  left_padding_with_border: {
-    paddingLeft: 32,
-    borderLeft: "0.1em solid",
-    borderLeftColor: "lightgrey"
-  },
   left_padding: {
     paddingLeft: 32
   },
   left_padding_for_endpoints: {
-    paddingLeft: 40
+    paddingLeft: 20
   },
   bottom_padding: {
     paddingBottom: 16
@@ -66,6 +61,9 @@ const style = StyleSheet.create({
   editor: {
     border: "1px solid",
     borderColor: "lightgrey"
+  },
+  bottom_margin: {
+    marginBottom: 32
   }
 });
 interface IReviewGridProps {
@@ -113,7 +111,6 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
   tlsCertificate
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
   const certificate = tlsCertificate;
   let protocolOptions = [];
   if (protocols) {
@@ -126,16 +123,16 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
 
   return (
     <PageSection variant={PageSectionVariants.light}>
-      <Title headingLevel="h2" size="3xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="3xl" className={css(style.bottom_margin)}>
         Review your configuration
       </Title>
-      <Title headingLevel="h2" size="xl" style={{ marginBottom: 32 }}>
+      <Title headingLevel="h2" size="xl" className={css(style.bottom_margin)}>
         {" "}
         Review the information below and Click Finish to create the new address
         space. Use the Back button to make changes.
       </Title>
       <Grid>
-        <GridItem span={5}>
+        <GridItem span={5} className={css(style.grid_border)}>
           <Grid>
             <ReviewGridItem
               valueId="preview-addr-name"
@@ -164,22 +161,19 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
             />
             {customizeEndpoint && (
               <>
-                <ReviewGridItem
-                  valueId="preview-addr-cutom-endpoint"
-                  value={""}
-                  labelText="Endpoint customization"
-                />
-
+                <GridItem span={12} className={css(style.left_margin_gridItem)}>
+                  Endpoint customization
+                </GridItem>
                 {protocolOptions.length > 0 && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       Protocols
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {protocolOptions &&
@@ -195,13 +189,13 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                 {certificate && (
                   <>
                     <GridItem
-                      span={5}
+                      span={6}
                       className={css(style.left_padding_for_endpoints)}
                     >
                       TLS Certificates
                     </GridItem>
                     <GridItem
-                      span={7}
+                      span={6}
                       className={css(style.preview_info_gridItem)}
                     >
                       {certificate}
@@ -210,13 +204,13 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                 )}
                 <>
                   <GridItem
-                    span={5}
+                    span={6}
                     className={css(style.left_padding_for_endpoints)}
                   >
                     Create Routes
                   </GridItem>
                   <GridItem
-                    span={7}
+                    span={6}
                     className={css(style.preview_info_gridItem)}
                   >
                     {addRoutes ? "True" : "False"}
@@ -225,76 +219,61 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
               </>
             )}
             <br />
-            <span>
-              Click here to{" "}
-              <Button
-                variant={ButtonVariant.link}
-                isInline
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {" "}
-                {!isExpanded
-                  ? "show equivalent command"
-                  : "hide the command"}{" "}
-              </Button>
-            </span>
           </Grid>
         </GridItem>
-        {isExpanded && (
-          <GridItem span={7} className={css(style.left_padding_with_border)}>
-            <Title
-              headingLevel="h2"
-              size={"lg"}
-              className={css(style.bottom_padding)}
+        <GridItem span={7} className={css(style.left_padding)}>
+          <Title
+            headingLevel="h2"
+            size="lg"
+            className={css(style.bottom_padding)}
+          >
+            {`Configuration details  `}
+            <Tooltip
+              id="preview-as-feedback-tooltip"
+              position={TooltipPosition.top}
+              enableFlip={false}
+              trigger={"manual"}
+              content={<div>Successfully copied to the clipboard</div>}
+              isVisible={isCopied}
             >
-              {`Configuration details  `}
-              <Tooltip
-                id="preview-as-feedback-tooltip"
-                position={TooltipPosition.top}
-                enableFlip={false}
-                trigger={"manual"}
-                content={<div>Successfully copied to the clipboard</div>}
-                isVisible={isCopied}
-              >
-                <span>
-                  <Tooltip
-                    id="preview-as-copy-tooltip"
-                    position={TooltipPosition.top}
-                    enableFlip={false}
-                    content={
-                      <div>Copy the configuration details to the clipboard</div>
-                    }
+              <span>
+                <Tooltip
+                  id="preview-as-copy-tooltip"
+                  position={TooltipPosition.top}
+                  enableFlip={false}
+                  content={
+                    <div>Copy the configuration details to the clipboard</div>
+                  }
+                >
+                  <Button
+                    id="preview-addr-copy-configuration-button"
+                    variant={ButtonVariant.link}
+                    aria-label="copy-configuration"
+                    onClick={() => {
+                      navigator.clipboard.writeText(data.addressSpaceCommand);
+                      setIsCopied(true);
+                    }}
+                    onMouseLeave={() => {
+                      setIsCopied(false);
+                    }}
                   >
-                    <Button
-                      id="preview-addr-copy-configuration-button"
-                      variant={ButtonVariant.link}
-                      aria-label="copy-configuration"
-                      onClick={() => {
-                        navigator.clipboard.writeText(data.addressSpaceCommand);
-                        setIsCopied(true);
-                      }}
-                      onMouseLeave={() => {
-                        setIsCopied(false);
-                      }}
-                    >
-                      <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
-                    </Button>
-                  </Tooltip>
-                </span>
-              </Tooltip>
-            </Title>
-            <AceEditor
-              mode="xml"
-              theme="github"
-              width="auto"
-              fontSize={14}
-              value={data.addressSpaceCommand}
-              name="UNIQUE_ID_OF_DIV"
-              editorProps={{ $blockScrolling: true }}
-              className={css(style.editor)}
-            />
-          </GridItem>
-        )}
+                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                  </Button>
+                </Tooltip>
+              </span>
+            </Tooltip>
+          </Title>
+          <AceEditor
+            mode="xml"
+            theme="github"
+            width="auto"
+            fontSize={14}
+            value={data.addressSpaceCommand}
+            name="UNIQUE_ID_OF_DIV"
+            editorProps={{ $blockScrolling: true }}
+            className={css(style.editor)}
+          />
+        </GridItem>
       </Grid>
     </PageSection>
   );

@@ -111,6 +111,11 @@ const initialMessageProject: IMessagingProject = {
   addRoutes: false
 };
 
+const initialIoTProject: IIoTProjectInput = {
+  isNameValid: true,
+  isEnabled: true
+};
+
 const CreateProject: React.FunctionComponent = () => {
   const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const [routeDetail, setRouteDetail] = useState<{
@@ -122,29 +127,27 @@ const CreateProject: React.FunctionComponent = () => {
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProject
   >(initialMessageProject);
-  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>({
-    isNameValid: true,
-    isEnabled: true
-  });
-  const [firstSelectedStep, setFirstSelectedStep] = useState<string>();
-  const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>(
-    false
+  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>(
+    initialIoTProject
   );
+  const [firstSelectedStep, setFirstSelectedStep] = useState<string>("iot");
+  const [isCreatedSuccessfully, setIsCreatedSuccessfully] = useState<boolean>();
 
   const onToggle = () => {
+    setFirstSelectedStep("iot");
+    setiotProjectDetail(initialIoTProject);
+    setMessagingProjectDetail(initialMessageProject);
     setIsWizardOpen(!isWizardOpen);
-    resetForm();
+    setIsCreatedSuccessfully(undefined);
   };
 
   const resetForm = () => {
-    setMessagingProjectDetail(initialMessageProject);
-    setFirstSelectedStep(undefined);
+    setIsCreatedSuccessfully(false);
   };
 
   const refetchQueries: string[] = ["allProjects"];
 
   const resetFormState = () => {
-    setMessagingProjectDetail(initialMessageProject);
     setIsCreatedSuccessfully(true);
   };
 
@@ -244,7 +247,7 @@ const CreateProject: React.FunctionComponent = () => {
     component: (
       <FinishedStep
         onClose={onToggle}
-        success={isCreatedSuccessfully}
+        success={isCreatedSuccessfully || false}
         routeDetail={routeDetail}
         projectType={
           firstSelectedStep === "messaging"
@@ -334,20 +337,20 @@ const CreateProject: React.FunctionComponent = () => {
     nextButtonText: "Finish"
   };
 
-  if (firstSelectedStep) {
-    if (firstSelectedStep === "iot") {
-      steps.push(configurationStepForIot);
-      steps.push(finalStepForIot);
-    } else {
-      steps.push(messagingConfigurationStep);
-      if (messagingProjectDetail.customizeEndpoint) {
-        steps = [...steps, endpointCustomizationStep];
+  if (isCreatedSuccessfully === undefined) {
+    if (firstSelectedStep) {
+      if (firstSelectedStep === "iot") {
+        steps.push(configurationStepForIot);
+        steps.push(finalStepForIot);
+      } else {
+        steps.push(messagingConfigurationStep);
+        if (messagingProjectDetail.customizeEndpoint) {
+          steps = [...steps, endpointCustomizationStep];
+        }
+        steps.push(messagingReviewStep);
       }
-      // messagingSteps.forEach(step=>steps.push(step));
-      steps.push(messagingReviewStep);
     }
-  }
-  steps.push(finishedStep);
+  } else steps = [finishedStep];
 
   const handleNextIsEnabled = () => {
     if (firstSelectedStep) {

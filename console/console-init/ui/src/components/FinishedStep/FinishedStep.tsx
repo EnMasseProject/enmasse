@@ -1,5 +1,9 @@
 import React from "react";
-import { CheckCircleIcon, ErrorCircleOIcon } from "@patternfly/react-icons";
+import {
+  CheckCircleIcon,
+  ErrorCircleOIcon,
+  ExclamationCircleIcon
+} from "@patternfly/react-icons";
 import {
   EmptyState,
   EmptyStateVariant,
@@ -48,26 +52,21 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
           className={css(styles.empty_state)}
         >
           <EmptyStateIcon
-            icon={ErrorCircleOIcon}
+            icon={ExclamationCircleIcon}
             className={css(styles.cog_red_color)}
           />
           <Title headingLevel="h5" size="xl">
-            Creation error
+            The project cannot be created
           </Title>
           <br />
           <EmptyStateBody>
             Error occured while {projectType} Project creation for management,
-            or return to homepage to view all projects
+            return to homepage to view all projects
           </EmptyStateBody>
-          {/* <Link to={projectDetailUrl()}>
-          <Button variant={ButtonVariant.primary} component="a">
-            View the project
-          </Button>
-        </Link> */}
           <br />
           <br />
           <Button variant="link" onClick={onClose}>
-            Back to list
+            Cancel
           </Button>
         </EmptyState>
       ) : (
