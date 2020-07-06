@@ -420,63 +420,40 @@ query single_address_with_links_and_metrics {
 
 ```
 query allProjects {
-  allProjects(projectType:iotProject) {
+  allProjects(
+    projectType: iotProject
+  ) {
     total
-    iotProjects{
-      metadata{
+    iotProjects {
+      metadata {
         name
         namespace
         creationTimestamp
       }
       enabled
-      spec{
-        downstreamStrategyType
+      spec {
+        tenantId
         configuration
-         downstreamStrategy{
-          __typename
-          	... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-              addressSpace {
+        addresses {
+              Telemetry {
                 name
               }
-              addresses {
-            		Telemetry {
-              		name
-            		}
-            		Event{
-              		name
-            		}
-            		Command{
-              		name
-            		}
-          		}
-            }
-          ... on ExternalDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-          	connectionInformation {
-              host
-              port
-            }
-          }
+              Event {
+                name
+              }
+              Command {
+                name
+              }
         }
       }
-      status{
+      status {
         phase
         phaseReason
-        tenantName
-        downstreamEndpoint{
-          host
-          port
-          credentials{
-            username
-            password
-          }
-          tls
-          certificate
-        }
       }
-      	endpoints{
-       	  name
-        	url
-       	  host
+      endpoints {
+        name
+        url
+        host
       }
     }
   }
