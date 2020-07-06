@@ -25,7 +25,7 @@ interface IIoTProjectDetailHeaderProps {
   type?: string;
   status?: string;
   isEnabled?: boolean;
-  changeEnable: () => void;
+  changeStatus: (checked: boolean) => void;
   onDelete: () => void;
 }
 
@@ -70,7 +70,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   type,
   status,
   isEnabled,
-  changeEnable,
+  changeStatus,
   onDelete
 }) => {
   const AddressTitle = () => (
@@ -109,14 +109,14 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
       </SplitItem>
     </>
   );
-  const onChange = () => {
-    changeEnable();
+  const onChangeStatus = (checked: boolean) => {
+    changeStatus(checked);
   };
   const EnabledIcon = () => (
     <Switch
       id="iot-project-header-switch"
       isChecked={isEnabled}
-      onChange={onChange}
+      onChange={onChangeStatus}
     />
   );
 

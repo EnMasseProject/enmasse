@@ -15,7 +15,7 @@ describe("<IoTProjectDetailHeader />", () => {
       type: "iot-project-type",
       status: "Active",
       isEnabled: true,
-      changeEnable: jest.fn(),
+      changeStatus: jest.fn(),
       onDelete: jest.fn()
     };
     const { getByText } = render(
@@ -37,7 +37,7 @@ describe("<IoTProjectDetailHeader />", () => {
       projectName: "iotProjectIndia",
       type: undefined,
       isEnabled: false,
-      changeEnable: jest.fn(),
+      changeStatus: jest.fn(),
       onDelete: jest.fn()
     };
     const { getByText } = render(
