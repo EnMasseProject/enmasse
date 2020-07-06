@@ -16,9 +16,9 @@ EnMasse provides a self-service messaging platform on Kubernetes and OpenShift w
 
 * **Supports a wide variety of messaging patterns** - Choose between JMS-style messaging with strict guarantees, or messaging that supports a larger number of connections and higher throughput.
 
-* **Great protocol support** - Support protocols available in the underlying messaging infrastructure: AMQP 1.0, MQTT, OpenWire, CORE and STOMP.
+* **Built-in authentication and authorization** - Use the built-in or plug in your own identity provider for authentication and authorization of messaging clients.
 
-* **Built-in authentication and authorization** - Use the built-in or plug in your own authentication service for authentication and authorization of messaging clients.
+* **IoT integration** - Integration with Eclipse Hono™ to provide excellent IoT connectivity support: MQTT, HTTP, LoRAWAN and SigFox.
 
 * **Uniform interface to manage messaging infrastructure** - Manage standalone broker instances or a scale-on-demand AMQP message bus using the same cloud-native APIs.
 
