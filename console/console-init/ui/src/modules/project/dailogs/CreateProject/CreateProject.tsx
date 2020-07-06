@@ -270,8 +270,7 @@ const CreateProject: React.FunctionComponent = () => {
         setProjectDetail={setMessagingProjectDetail}
         namespaces={namespaceOptions}
       />
-    ),
-    enableNext: isMessagingProjectConfigurationValid(messagingProjectDetail)
+    )
   };
 
   const endpointConfiguringStep = {
@@ -282,8 +281,7 @@ const CreateProject: React.FunctionComponent = () => {
         addressSpaceSchema={addressSpaceSchema}
         projectDetail={messagingProjectDetail}
       />
-    ),
-    enableNext: isMessagingProjectValid(messagingProjectDetail)
+    )
   };
 
   const endpointCertificatesStep = {
@@ -293,10 +291,7 @@ const CreateProject: React.FunctionComponent = () => {
         projectDetail={messagingProjectDetail}
         setProjectDetail={setMessagingProjectDetail}
       />
-    ),
-    enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail)
+    )
   };
 
   const endpointRoutesStep = {
@@ -307,11 +302,7 @@ const CreateProject: React.FunctionComponent = () => {
         addressSpaceSchema={addressSpaceSchema}
         setProjectDetail={setMessagingProjectDetail}
       />
-    ),
-    enableNext:
-      isMessagingProjectValid(messagingProjectDetail) &&
-      isEnabledCertificateStep(messagingProjectDetail) &&
-      isRouteStepValid(messagingProjectDetail)
+    )
   };
 
   const endpointCustomizationStep = {
@@ -323,7 +314,6 @@ const CreateProject: React.FunctionComponent = () => {
         : []),
       ...(messagingProjectDetail.addRoutes ? [endpointRoutesStep] : [])
     ],
-    enableNext: isMessagingProjectValid(messagingProjectDetail),
     canJumpTo: isMessagingProjectValid(messagingProjectDetail)
   };
 
@@ -332,7 +322,6 @@ const CreateProject: React.FunctionComponent = () => {
     component: (
       <MessagingProjectReview projectDetail={messagingProjectDetail} />
     ),
-    enableNext: isMessagingProjectValid(messagingProjectDetail),
     canJumpTo: isMessagingProjectValid(messagingProjectDetail),
     nextButtonText: "Finish"
   };
@@ -352,13 +341,26 @@ const CreateProject: React.FunctionComponent = () => {
     }
   } else steps = [finishedStep];
 
-  const handleNextIsEnabled = () => {
+  const handleNextIsEnabled = (step?: any) => {
     if (firstSelectedStep) {
       if (firstSelectedStep === "messaging") {
-        if (isMessagingProjectConfigurationValid(messagingProjectDetail)) {
-          return true;
+        if (step === "Configuration") {
+          return isMessagingProjectConfigurationValid(messagingProjectDetail);
+        } else if (step === "Configuring") {
+          return isMessagingProjectValid(messagingProjectDetail);
+        } else if (step === "Certificates") {
+          return (
+            isMessagingProjectValid(messagingProjectDetail) &&
+            isEnabledCertificateStep(messagingProjectDetail)
+          );
+        } else if (step === "Routes") {
+          return (
+            isMessagingProjectValid(messagingProjectDetail) &&
+            isEnabledCertificateStep(messagingProjectDetail) &&
+            isRouteStepValid(messagingProjectDetail)
+          );
         } else {
-          return false;
+          return isMessagingProjectConfigurationValid(messagingProjectDetail);
         }
       } else if (firstSelectedStep === "iot") {
         if (isIoTProjectValid(iotProjectDetail)) {
@@ -414,7 +416,9 @@ const CreateProject: React.FunctionComponent = () => {
                   type="submit"
                   id="submit-btn"
                   onClick={onNext}
-                  className={handleNextIsEnabled() ? "" : "pf-m-disabled"}
+                  className={
+                    handleNextIsEnabled(activeStep.name) ? "" : "pf-m-disabled"
+                  }
                 >
                   Next
                 </Button>
