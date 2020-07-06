@@ -7,7 +7,7 @@
 
 .Prerequisites
 
-* A namespace named `myapp` with a `MessagingTenant` named `default` must be created.
+* A namespace named `myapp` with a `MessagingProject` named `default` must be created.
 * An address named `myqueue` in a namespace named `myapp` must be created.
 * An endpoint named `cluster` in a namespace named `myapp` must be created.
 

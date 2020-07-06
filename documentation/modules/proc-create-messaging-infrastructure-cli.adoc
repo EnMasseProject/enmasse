@@ -29,7 +29,7 @@ endif::[]
 +
 [source,yaml,subs="+quotes,attributes",options="nowrap"]
 ----
-apiVersion: enmasse.io/v1beta2
+apiVersion: enmasse.io/v1
 kind: MessagingInfrastructure
 metadata:
   name: infra1

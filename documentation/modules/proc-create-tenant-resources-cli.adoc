@@ -3,7 +3,7 @@
 [id='create-tenant-resources-cli-{context}']
 = Create tenant messaging configuration
 
-In {ProductName}, the messaging tenant applies configuration to the messaging infrastructure that is isolated from other messaging tenants.
+In {ProductName}, the messaging tenant creates a messaging project to enable messaging in a {KubePlatform} namespace.
 
 .Procedure
 
@@ -23,17 +23,17 @@ ifeval::["{cmdcli}" == "oc"]
 ----
 endif::[]
 
-. Create a messaging tenant definition:
+. Create a messaging project definition:
 +
 [source,yaml,options="nowrap"]
 ----
-apiVersion: enmasse.io/v1beta2
-kind: MessagingTenant
+apiVersion: enmasse.io/v1
+kind: MessagingProject
 metadata:
   name: default
 spec: {}
 ---
-apiVersion: enmasse.io/v1beta2
+apiVersion: enmasse.io/v1
 kind: MessagingEndpoint
 metadata:
   name: cluster
@@ -41,7 +41,7 @@ spec:
   cluster: {}
   protocols: ["AMQP"]
 ---
-apiVersion: enmasse.io/v1beta2
+apiVersion: enmasse.io/v1
 kind: MessagingAddress
 metadata:
   name: myqueue
@@ -49,16 +49,16 @@ spec:
   queue: {}
 ----
 +
-NOTE: The name of the `MessagingTenant` must be `default`.
+NOTE: The name of the `MessagingProject` must be `default`.
 
-. Create the tenant configuration:
+. Create the configuration:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
-{cmdcli} create -n _myapp_ -f tenant-config.yaml
+{cmdcli} create -n _myapp_ -f config.yaml
 ----
 
-. Check the status of the messaging tenant, endpoints and addresses:
+. Check the status of the messaging project, endpoints and addresses:
 +
 [options="nowrap",subs="+quotes,attributes"]
 ----
@@ -67,4 +67,4 @@ NOTE: The name of the `MessagingTenant` must be `default`.
 {cmdcli} get msga -n _myapp_ myqueue -o wide
 ----
 +
-The tenant resources are configured when the `Phase` column of the above outputs is `Active`.
+The resources are configured when the `Phase` column of the above outputs is `Active`.

@@ -15,7 +15,7 @@ Custom resources:: {ProductName} provides a set of custom resources that can be 
 `MessagingInfrastructure`:: An "admin" resource for deploying and managing a set of routers, brokers and access control servers.
 `IoTInfrastructure`:: An "admin" resource for deployng and managing the IoT connectivity layer, including protocol adapters and device registries.
 `ConsoleService`:: An "admin" resource for deploying the {ProductName} console to easily manage and configure the messaging system.
-`MessagingTenant`:: A "tenant" resource that enables messaging for a {KubePlatform} namespace and binds it to a `MessagingInfrastructure`.
+`MessagingProject`:: A "tenant" resource that enables messaging for a {KubePlatform} namespace and binds it to a `MessagingInfrastructure`.
 `MessagingAddress`:: A "tenant" resource that configures the messaging infrastructures bound to the tenant with addresses.
 `MessagingEndpoint`:: A "tenant" resource that exposes endpoints on the router for access by messaging applications.
 `IoTProject`:: A "tenant" resource that configures a project entity on the IoT infrastructure.
