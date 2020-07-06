@@ -6,7 +6,7 @@ skinparam rectangle<<behavior>> {
 
 package "myapp" <<namespace>> {
 rectangle "myaddr" <<MessagingAddress>> as MA
-rectangle "default" <<MessagingTenant>> as MT
+rectangle "default" <<MessagingProject>> as MT
 '#rectangle "myconn" <<MessagingConnector>> as MC
 
 rectangle {

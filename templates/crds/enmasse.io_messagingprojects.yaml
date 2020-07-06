@@ -6,7 +6,7 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: messagingtenants.enmasse.io
+  name: messagingprojects.enmasse.io
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.phase
@@ -25,14 +25,14 @@ spec:
   names:
     categories:
     - enmasse
-    kind: MessagingTenant
-    listKind: MessagingTenantList
-    plural: messagingtenants
+    kind: MessagingProject
+    listKind: MessagingProjectList
+    plural: messagingprojects
     shortNames:
-    - msgt
-    - msgtenant
-    - msgtenants
-    singular: messagingtenant
+    - msgp
+    - msgproject
+    - msgprojects
+    singular: messagingproject
   scope: Namespaced
   subresources:
     status: {}
@@ -55,13 +55,13 @@ spec:
           properties:
             capabilities:
               description: The desired capabilities common to all addresses for this
-                tenant.
+                project.
               items:
                 type: string
               type: array
             messagingInfrastructureRef:
               description: Reference to a specific MessagingInfra to use (must be
-                available for this tenant).
+                available for this project).
               properties:
                 name:
                   description: Name of referenced MessagingInfra.
@@ -76,7 +76,7 @@ spec:
         status:
           properties:
             broker:
-              description: For transactional tenants, the broker addresses should
+              description: For transactional projects, the broker addresses should
                 be scheduled todo
               properties:
                 host:
@@ -86,7 +86,7 @@ spec:
               type: object
             capabilities:
               description: The actual capabilities common to all addresses for this
-                tenant.
+                project.
               items:
                 type: string
               type: array
@@ -112,7 +112,7 @@ spec:
             message:
               type: string
             messagingInfrastructureRef:
-              description: MessagingInfra this tenant is bound to.
+              description: MessagingInfra this project is bound to.
               properties:
                 name:
                   description: Name of referenced MessagingInfra.

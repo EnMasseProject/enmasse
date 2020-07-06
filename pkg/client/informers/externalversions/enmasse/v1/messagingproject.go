@@ -20,59 +20,59 @@ import (
 	cache "k8s.io/client-go/tools/cache"
 )
 
-// MessagingTenantInformer provides access to a shared informer and lister for
-// MessagingTenants.
-type MessagingTenantInformer interface {
+// MessagingProjectInformer provides access to a shared informer and lister for
+// MessagingProjects.
+type MessagingProjectInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1.MessagingTenantLister
+	Lister() v1.MessagingProjectLister
 }
 
-type messagingTenantInformer struct {
+type messagingProjectInformer struct {
 	factory          internalinterfaces.SharedInformerFactory
 	tweakListOptions internalinterfaces.TweakListOptionsFunc
 	namespace        string
 }
 
-// NewMessagingTenantInformer constructs a new informer for MessagingTenant type.
+// NewMessagingProjectInformer constructs a new informer for MessagingProject type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewMessagingTenantInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
-	return NewFilteredMessagingTenantInformer(client, namespace, resyncPeriod, indexers, nil)
+func NewMessagingProjectInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers) cache.SharedIndexInformer {
+	return NewFilteredMessagingProjectInformer(client, namespace, resyncPeriod, indexers, nil)
 }
 
-// NewFilteredMessagingTenantInformer constructs a new informer for MessagingTenant type.
+// NewFilteredMessagingProjectInformer constructs a new informer for MessagingProject type.
 // Always prefer using an informer factory to get a shared informer instead of getting an independent
 // one. This reduces memory footprint and number of connections to the server.
-func NewFilteredMessagingTenantInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
+func NewFilteredMessagingProjectInformer(client versioned.Interface, namespace string, resyncPeriod time.Duration, indexers cache.Indexers, tweakListOptions internalinterfaces.TweakListOptionsFunc) cache.SharedIndexInformer {
 	return cache.NewSharedIndexInformer(
 		&cache.ListWatch{
 			ListFunc: func(options metav1.ListOptions) (runtime.Object, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EnmasseV1().MessagingTenants(namespace).List(options)
+				return client.EnmasseV1().MessagingProjects(namespace).List(options)
 			},
 			WatchFunc: func(options metav1.ListOptions) (watch.Interface, error) {
 				if tweakListOptions != nil {
 					tweakListOptions(&options)
 				}
-				return client.EnmasseV1().MessagingTenants(namespace).Watch(options)
+				return client.EnmasseV1().MessagingProjects(namespace).Watch(options)
 			},
 		},
-		&enmassev1.MessagingTenant{},
+		&enmassev1.MessagingProject{},
 		resyncPeriod,
 		indexers,
 	)
 }
 
-func (f *messagingTenantInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
-	return NewFilteredMessagingTenantInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
+func (f *messagingProjectInformer) defaultInformer(client versioned.Interface, resyncPeriod time.Duration) cache.SharedIndexInformer {
+	return NewFilteredMessagingProjectInformer(client, f.namespace, resyncPeriod, cache.Indexers{cache.NamespaceIndex: cache.MetaNamespaceIndexFunc}, f.tweakListOptions)
 }
 
-func (f *messagingTenantInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&enmassev1.MessagingTenant{}, f.defaultInformer)
+func (f *messagingProjectInformer) Informer() cache.SharedIndexInformer {
+	return f.factory.InformerFor(&enmassev1.MessagingProject{}, f.defaultInformer)
 }
 
-func (f *messagingTenantInformer) Lister() v1.MessagingTenantLister {
-	return v1.NewMessagingTenantLister(f.Informer().GetIndexer())
+func (f *messagingProjectInformer) Lister() v1.MessagingProjectLister {
+	return v1.NewMessagingProjectLister(f.Informer().GetIndexer())
 }

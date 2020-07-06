@@ -4,34 +4,34 @@
  */
 package io.enmasse.systemtest.annotations;
 
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
-public class DefaultMessagingTenantExtension implements BeforeTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
+public class DefaultMessagingProjectExtension implements BeforeTestExecutionCallback, BeforeAllCallback, AfterAllCallback {
     private boolean isFullClass = false;
 
     @Override
     public void beforeTestExecution(ExtensionContext extensionContext) {
         if (!isFullClass) {
-            createDefaultTenant();
+            createDefaultProject();
         }
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        createDefaultTenant();
+        createDefaultProject();
         isFullClass = true;
     }
 
-    private void createDefaultTenant() {
-        MessagingTenant tenant = MessagingTenantResourceType.getDefault();
-        ResourceManager.getInstance().createResource(tenant);
-        ResourceManager.getInstance().setDefaultMessagingTenant(tenant);
+    private void createDefaultProject() {
+        MessagingProject project = MessagingProjectResourceType.getDefault();
+        ResourceManager.getInstance().createResource(project);
+        ResourceManager.getInstance().setDefaultMessagingProject(project);
     }
 
     @Override

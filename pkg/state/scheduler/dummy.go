@@ -24,10 +24,10 @@ func NewDummyScheduler() Scheduler {
 	return &dummyScheduler{}
 }
 
-func (s *dummyScheduler) ScheduleTenant(tenant *v1.MessagingTenant, brokers []*broker.BrokerState) error {
+func (s *dummyScheduler) ScheduleProject(project *v1.MessagingProject, brokers []*broker.BrokerState) error {
 	if len(brokers) > 0 {
 		broker := brokers[0]
-		tenant.Status.Broker = &v1.MessagingAddressBroker{
+		project.Status.Broker = &v1.MessagingAddressBroker{
 			State: v1.MessagingAddressBrokerScheduled,
 			Host:  broker.Host().Hostname,
 		}

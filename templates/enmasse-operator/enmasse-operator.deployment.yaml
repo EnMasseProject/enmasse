@@ -52,7 +52,7 @@ spec:
           value: "true"
         - name: CONTROLLER_ENABLE_MESSAGING_INFRASTRUCTURE
           value: "true"
-        - name: CONTROLLER_ENABLE_MESSAGING_TENANT
+        - name: CONTROLLER_ENABLE_MESSAGING_PROJECT
           value: "true"
         - name: CONTROLLER_ENABLE_MESSAGING_ADDRESS
           value: "true"

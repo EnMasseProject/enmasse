@@ -176,17 +176,17 @@ func main() {
 		)
 	}
 
-	if util.IsModuleEnabled("MESSAGING_TENANT") {
+	if util.IsModuleEnabled("MESSAGING_PROJECT") {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
 				Version: "v1",
-				Kind:    "MessagingTenant",
+				Kind:    "MessagingProject",
 			},
 			schema.GroupVersionKind{
 				Group:   "enmasse.io",
 				Version: "v1",
-				Kind:    "MessagingTenantList",
+				Kind:    "MessagingProjectList",
 			},
 		)
 	}
@@ -367,7 +367,7 @@ func serveCRMetrics(cfg *rest.Config) error {
 	filteredGVK := make([]schema.GroupVersionKind, 0)
 	for _, gvk := range allGVK {
 		if (!util.IsModuleEnabled("MESSAGING_INFRASTRUCTURE") && strings.HasPrefix(gvk.Kind, "MessagingInfrastructure")) ||
-			(!util.IsModuleEnabled("MESSAGING_TENANT") && strings.HasPrefix(gvk.Kind, "MessagingTenant")) ||
+			(!util.IsModuleEnabled("MESSAGING_PROJECT") && strings.HasPrefix(gvk.Kind, "MessagingProject")) ||
 			(!util.IsModuleEnabled("MESSAGING_ENDPOINT") && strings.HasPrefix(gvk.Kind, "MessagingEndpoint")) ||
 			(!util.IsModuleEnabled("MESSAGING_ADDRESS") && strings.HasPrefix(gvk.Kind, "MessagingAddress")) ||
 			(!util.IsModuleEnabled("MESSAGING_PLAN") && strings.HasPrefix(gvk.Kind, "MessagingPlan")) ||

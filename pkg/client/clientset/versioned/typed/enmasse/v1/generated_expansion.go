@@ -17,4 +17,4 @@ type MessagingInfrastructureExpansion interface{}
 
 type MessagingPlanExpansion interface{}
 
-type MessagingTenantExpansion interface{}
+type MessagingProjectExpansion interface{}

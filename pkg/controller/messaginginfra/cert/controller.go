@@ -87,10 +87,10 @@ func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, in
 }
 
 /*
- * Reconciles the CA for an instance of a messaging tenant. This function also handles renewal of the CA.
+ * Reconciles the CA for an instance of a messaging project. This function also handles renewal of the CA.
  */
-func (c *CertController) ReconcileTenantCa(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, namespace string) error {
-	secretName := GetTenantCaSecretName(namespace)
+func (c *CertController) ReconcileProjectCa(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, namespace string) error {
+	secretName := GetProjectCaSecretName(namespace)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -146,12 +146,12 @@ func (c *CertController) applyCaSecret(secret *corev1.Secret, logger logr.Logger
 }
 
 /*
- * Reconciles the internal certificate for a given endpoint in a tenant.
+ * Reconciles the internal certificate for a given endpoint in a project.
  * This function also handles renewal of the certificate.
  */
 func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) (*CertInfo, error) {
 
-	caSecretName := fmt.Sprintf("%s-tenant-ca", endpoint.Namespace)
+	caSecretName := fmt.Sprintf("%s-project-ca", endpoint.Namespace)
 	caSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: caSecretName},
 	}
@@ -161,7 +161,7 @@ func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.
 	}
 
 	// Secret already exists and shared, so we do not create it
-	secretName := GetTenantSecretName(infra.Name)
+	secretName := GetProjectSecretName(infra.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -190,11 +190,11 @@ func (c *CertController) ReconcileEndpointCert(ctx context.Context, logger logr.
 }
 
 /*
- * Reconciles the internal certificate for a given endpoint in a tenant so that it matches the provided values.
+ * Reconciles the internal certificate for a given endpoint in a project so that it matches the provided values.
  */
 func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint, key []byte, value []byte) error {
 	// Secret already exists and shared, so we do not create it
-	secretName := GetTenantSecretName(infra.Name)
+	secretName := GetProjectSecretName(infra.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -224,11 +224,11 @@ func (c *CertController) ReconcileEndpointCertFromValues(ctx context.Context, lo
 }
 
 /*
- * Deletes the certificates of a given endpoint from the tenant secret.
+ * Deletes the certificates of a given endpoint from the project secret.
  */
 func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, endpoint *v1.MessagingEndpoint) error {
 	// Secret already exists and shared, so we do not create it
-	secretName := GetTenantSecretName(infra.Name)
+	secretName := GetProjectSecretName(infra.Name)
 	secret := &corev1.Secret{}
 	err := c.client.Get(ctx, types.NamespacedName{Namespace: infra.Namespace, Name: secretName}, secret)
 	if err != nil {
@@ -495,10 +495,10 @@ func GetCertSecretName(name string) string {
 	return fmt.Sprintf("%s-cert", name)
 }
 
-func GetTenantCaSecretName(namespace string) string {
-	return fmt.Sprintf("%s-tenant-ca", namespace)
+func GetProjectCaSecretName(namespace string) string {
+	return fmt.Sprintf("%s-project-ca", namespace)
 }
 
-func GetTenantSecretName(infraName string) string {
-	return fmt.Sprintf("%s.tenant-certs", infraName)
+func GetProjectSecretName(infraName string) string {
+	return fmt.Sprintf("%s.project-certs", infraName)
 }

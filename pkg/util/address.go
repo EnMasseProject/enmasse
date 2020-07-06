@@ -22,7 +22,7 @@ var (
 )
 
 // Get an address name from an IoTProject
-// the name is the prefix (e.g. "telemetry") plus the tenant name. The name is not encoded in any way.
+// the name is the prefix (e.g. "telemetry") plus the project name. The name is not encoded in any way.
 func AddressName(object metav1.Object, prefix string) string {
 	return prefix + "/" + TenantNameForObject(object)
 }

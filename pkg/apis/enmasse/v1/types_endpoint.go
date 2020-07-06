@@ -180,7 +180,7 @@ type MessagingEndpointCondition struct {
 type MessagingEndpointConditionType string
 
 const (
-	MessagingEndpointFoundTenant    MessagingEndpointConditionType = "FoundTenant"
+	MessagingEndpointFoundProject    MessagingEndpointConditionType = "FoundProject"
 	MessagingEndpointConfiguredTls  MessagingEndpointConditionType = "ConfiguredTLS"
 	MessagingEndpointAllocatedPorts MessagingEndpointConditionType = "AllocatedPorts"
 	MessagingEndpointCreated        MessagingEndpointConditionType = "Created"

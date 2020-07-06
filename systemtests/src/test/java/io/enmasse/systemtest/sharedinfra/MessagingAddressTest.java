@@ -8,7 +8,7 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -16,7 +16,7 @@ import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
@@ -44,18 +44,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @DefaultMessagingInfrastructure
-@DefaultMessagingTenant
+@DefaultMessagingProject
 @ExternalClients
 public class MessagingAddressTest extends TestBase {
 
-    private MessagingTenant tenant;
+    private MessagingProject project;
     private MessagingEndpoint endpoint;
     @BeforeAll
     public void createEndpoint() {
-        tenant = resourceManager.getDefaultMessagingTenant();
+        project = resourceManager.getDefaultMessagingProject();
         endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -76,7 +76,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("addr1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewAnycast()
@@ -92,7 +92,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("multicast1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewMulticast()
@@ -108,7 +108,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewQueue()
@@ -124,7 +124,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewDeadLetter()
@@ -134,7 +134,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewQueue()
@@ -154,7 +154,7 @@ public class MessagingAddressTest extends TestBase {
         MessagingEndpoint ingress = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withName("dlq")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewNodePort()
@@ -167,7 +167,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewDeadLetter()
@@ -177,7 +177,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewQueue()
@@ -207,7 +207,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("topic1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewTopic()
@@ -223,7 +223,7 @@ public class MessagingAddressTest extends TestBase {
     void testTopicWildcards() throws Exception {
         MessagingEndpoint nodePort = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app-nodeport")
                 .endMetadata()
                 .editOrNewSpec()
@@ -235,7 +235,7 @@ public class MessagingAddressTest extends TestBase {
                 .build();
         MessagingAddress t0 = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("topic-wild")
                 .endMetadata()
                 .withNewSpec()
@@ -280,7 +280,7 @@ public class MessagingAddressTest extends TestBase {
         resourceManager.createResource(new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("topic1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewTopic()
@@ -290,7 +290,7 @@ public class MessagingAddressTest extends TestBase {
                 new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("sub1")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewSubscription()
@@ -301,7 +301,7 @@ public class MessagingAddressTest extends TestBase {
                 new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("sub2")
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .endMetadata()
                 .editOrNewSpec()
                 .editOrNewSubscription()

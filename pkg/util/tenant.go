@@ -7,10 +7,10 @@ package util
 
 import metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-func tenantName(namespace string, name string) string {
+func projectName(namespace string, name string) string {
 	return namespace + "." + name
 }
 
 func TenantNameForObject(object metav1.Object) string {
-	return tenantName(object.GetNamespace(), object.GetName())
+	return projectName(object.GetNamespace(), object.GetName())
 }

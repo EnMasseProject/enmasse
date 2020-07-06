@@ -29,9 +29,9 @@ spec:
     listKind: MessagingAddressPlanList
     plural: messagingaddressplans
     shortNames:
-    - msgp
-    - msgplan
-    - msgplans
+    - msgap
+    - msgaddressplan
+    - msgaddressplans
     singular: messagingaddressplan
   scope: Namespaced
   subresources:

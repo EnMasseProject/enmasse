@@ -35,20 +35,20 @@ type InfraClient interface {
 	SyncAll(routers []common.Host, brokers []common.Host, tlsConfig *tls.Config) ([]ConnectorStatus, error)
 	// Stop and cleanup client resources
 	Shutdown() error
-	// Check if broker is in use by any address or tenant and delete it
+	// Check if broker is in use by any address or project and delete it
 	DeleteBroker(host string) error
-	// Schedule tenant
-	ScheduleTenant(tenant *v1.MessagingTenant) error
-	// Schedule durable address for tenant
+	// Schedule project
+	ScheduleProject(project *v1.MessagingProject) error
+	// Schedule durable address for project
 	ScheduleAddress(address *v1.MessagingAddress) error
 	// Synchronize address
 	SyncAddress(address *v1.MessagingAddress) error
 	// Delete address
 	DeleteAddress(address *v1.MessagingAddress) error
-	// Synchronize tenant
-	SyncTenant(tenant *v1.MessagingTenant) error
-	// Delete tenant
-	DeleteTenant(tenant *v1.MessagingTenant) error
+	// Synchronize project
+	SyncProject(project *v1.MessagingProject) error
+	// Delete project
+	DeleteProject(project *v1.MessagingProject) error
 	// Allocate endpoint ports
 	AllocatePorts(endpoint *v1.MessagingEndpoint, protocols []v1.MessagingEndpointProtocol) error
 	// Free endpoint ports

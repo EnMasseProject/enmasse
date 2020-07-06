@@ -8,8 +8,8 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
-import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.api.model.MessagingTenantBuilder;
+import io.enmasse.api.model.MessagingProject;
+import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -52,12 +52,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class MessagingAddressJMSTest extends TestBase {
     private static final Logger LOGGER = CustomLogger.getLogger();
 
-    private MessagingTenant tenant;
+    private MessagingProject project;
     private MessagingEndpoint endpoint;
 
     @BeforeAll
-    public void createTenant() {
-        tenant = new MessagingTenantBuilder()
+    public void createProject() {
+        project = new MessagingProjectBuilder()
                 .editOrNewMetadata()
                 .withName("default")
                 .withNamespace(environment.namespace())
@@ -78,7 +78,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .addToProtocols("AMQP")
                 .endSpec()
                 .build();
-        resourceManager.createResource(tenant, endpoint);
+        resourceManager.createResource(project, endpoint);
     }
 
     private Context createContext(JmsProvider jmsProvider, MessagingAddress address) throws NamingException {
@@ -91,7 +91,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testTransactionCommitRejectQueue(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-queue-commit")
                 .endMetadata()
                 .withNewSpec()
@@ -173,7 +173,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testLoadMessagesQueue(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-queue-load")
                 .endMetadata()
                 .withNewSpec()
@@ -226,7 +226,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testLargeMessagesQueue(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-queue-large")
                 .endMetadata()
                 .withNewSpec()
@@ -256,7 +256,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testMessageNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-mess")
                 .endMetadata()
                 .withNewSpec()
@@ -307,7 +307,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-dur-subs")
                 .endMetadata()
                 .withNewSpec()
@@ -318,7 +318,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .build();
         MessagingAddress addressSub1= new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-dur-sub-1")
                 .endMetadata()
                 .withNewSpec()
@@ -330,7 +330,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .build();
         MessagingAddress addressSub2= new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-dur-sub-2")
                 .endMetadata()
                 .withNewSpec()
@@ -408,7 +408,7 @@ public class MessagingAddressJMSTest extends TestBase {
         String sub2ID = "sub2DurSubTrans";
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-trans")
                 .endMetadata()
                 .withNewSpec()
@@ -419,7 +419,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .build();
         MessagingAddress addressSub1= new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-trans-sub1")
                 .endMetadata()
                 .withNewSpec()
@@ -431,7 +431,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .build();
         MessagingAddress addressSub2= new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-trans-sub2")
                 .endMetadata()
                 .withNewSpec()
@@ -487,7 +487,7 @@ public class MessagingAddressJMSTest extends TestBase {
         String subID = "sharedConsumerDurable123";
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-durable")
                 .endMetadata()
                 .withNewSpec()
@@ -498,7 +498,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .build();
         MessagingAddress addressSub1= new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-durable-sub")
                 .endMetadata()
                 .withNewSpec()
@@ -563,7 +563,7 @@ public class MessagingAddressJMSTest extends TestBase {
         String subID = "sharedConsumerDurable123";
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-nondurable")
                 .endMetadata()
                 .withNewSpec()
@@ -620,7 +620,7 @@ public class MessagingAddressJMSTest extends TestBase {
     void testLargeMessages(JmsProvider jmsProvider) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("jms-topic-large")
                 .endMetadata()
                 .withNewSpec()

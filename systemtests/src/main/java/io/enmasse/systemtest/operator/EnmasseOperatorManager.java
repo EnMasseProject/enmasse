@@ -273,7 +273,7 @@ public class EnmasseOperatorManager {
         KubeCMDClient.runOnCluster("delete", "crd",
                 "messagingaddresses.enmasse.io",
                 "messagingendpoints.enmasse.io",
-                "messagingtenants.enmasse.io",
+                "messagingprojects.enmasse.io",
                 "messagingaddressplans.enmasse.io",
                 "messaginginfrastructures.enmasse.io",
                 "messagingplans.enmasse.io");

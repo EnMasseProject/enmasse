@@ -37,8 +37,8 @@ func (c *FakeEnmasseV1) MessagingPlans(namespace string) v1.MessagingPlanInterfa
 	return &FakeMessagingPlans{c, namespace}
 }
 
-func (c *FakeEnmasseV1) MessagingTenants(namespace string) v1.MessagingTenantInterface {
-	return &FakeMessagingTenants{c, namespace}
+func (c *FakeEnmasseV1) MessagingProjects(namespace string) v1.MessagingProjectInterface {
+	return &FakeMessagingProjects{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

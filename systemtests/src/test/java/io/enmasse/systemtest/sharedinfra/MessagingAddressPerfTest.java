@@ -8,10 +8,10 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
-import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.info.TestInfo;
 import io.enmasse.systemtest.logs.CustomLogger;
@@ -40,12 +40,12 @@ public class MessagingAddressPerfTest extends TestBase {
      */
     @Test
     @DefaultMessagingInfrastructure
-    @DefaultMessagingTenant
+    @DefaultMessagingProject
     public void testCreateDelete() throws Exception {
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
-                .withNamespace(tenant.getMetadata().getNamespace())
+                .withNamespace(project.getMetadata().getNamespace())
                 .withName("app")
                 .endMetadata()
                 .editOrNewSpec()
@@ -63,7 +63,7 @@ public class MessagingAddressPerfTest extends TestBase {
         for (int i = 0; i < numAnycast; i++) {
             addresses.add(new MessagingAddressBuilder()
                     .editOrNewMetadata()
-                    .withNamespace(tenant.getMetadata().getNamespace())
+                    .withNamespace(project.getMetadata().getNamespace())
                     .withName(String.format("anycast%d", i))
                     .endMetadata()
                     .editOrNewSpec()
@@ -76,7 +76,7 @@ public class MessagingAddressPerfTest extends TestBase {
         for (int i = 0; i < numQueues; i++) {
             addresses.add(new MessagingAddressBuilder()
                     .editOrNewMetadata()
-                    .withNamespace(tenant.getMetadata().getNamespace())
+                    .withNamespace(project.getMetadata().getNamespace())
                     .withName(String.format("queue%d", i))
                     .endMetadata()
                     .editOrNewSpec()

@@ -126,7 +126,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	}
 
 	// Initialize phase and conditions and type
-	var foundTenant *v1.MessagingAddressCondition
+	var foundProject *v1.MessagingAddressCondition
 	var validated *v1.MessagingAddressCondition
 	var scheduled *v1.MessagingAddressCondition
 	var created *v1.MessagingAddressCondition
@@ -148,7 +148,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 		} else if address.Spec.DeadLetter != nil {
 			address.Status.Type = v1.MessagingAddressTypeDeadLetter
 		}
-		foundTenant = address.Status.GetMessagingAddressCondition(v1.MessagingAddressFoundTenant)
+		foundProject = address.Status.GetMessagingAddressCondition(v1.MessagingAddressFoundProject)
 		validated = address.Status.GetMessagingAddressCondition(v1.MessagingAddressValidated)
 		scheduled = address.Status.GetMessagingAddressCondition(v1.MessagingAddressScheduled)
 		created = address.Status.GetMessagingAddressCondition(v1.MessagingAddressCreated)
@@ -180,7 +180,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 					if err != nil {
 						// Not bound - allow dropping finalizer
 						if utilerrors.IsNotBound(err) || utilerrors.IsNotFound(err) {
-							logger.Info("[Finalizer] Messaging tenant not found or bound, ignoring!")
+							logger.Info("[Finalizer] Messaging project not found or bound, ignoring!")
 							return reconcile.Result{}, nil
 						}
 						logger.Info("[Finalizer] Error looking up infra")
@@ -251,11 +251,11 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
 		_, i, err := messaginginfra.LookupInfra(ctx, r.client, found.Namespace)
 		if err != nil && (k8errors.IsNotFound(err) || utilerrors.IsNotBound(err)) {
-			foundTenant.SetStatus(corev1.ConditionFalse, "", err.Error())
+			foundProject.SetStatus(corev1.ConditionFalse, "", err.Error())
 			address.Status.Message = err.Error()
 			return processorResult{RequeueAfter: 10 * time.Second}, nil
 		}
-		foundTenant.SetStatus(corev1.ConditionTrue, "", "")
+		foundProject.SetStatus(corev1.ConditionTrue, "", "")
 		infra = i
 		return processorResult{}, err
 

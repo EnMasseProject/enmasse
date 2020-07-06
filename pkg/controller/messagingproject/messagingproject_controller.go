@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package messagingtenant
+package messagingproject
 
 import (
 	"context"
@@ -37,10 +37,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_messagingtenant")
-var _ reconcile.Reconciler = &ReconcileMessagingTenant{}
+var log = logf.Log.WithName("controller_messagingproject")
+var _ reconcile.Reconciler = &ReconcileMessagingProject{}
 
-type ReconcileMessagingTenant struct {
+type ReconcileMessagingProject struct {
 	client         client.Client
 	reader         client.Reader
 	recorder       record.EventRecorder
@@ -60,32 +60,32 @@ func Add(mgr manager.Manager) error {
  */
 
 const (
-	FINALIZER_NAME       = "enmasse.io/operator"
-	TENANT_RESOURCE_NAME = "default"
+	FINALIZER_NAME        = "enmasse.io/operator"
+	PROJECT_RESOURCE_NAME = "default"
 )
 
-func newReconciler(mgr manager.Manager) *ReconcileMessagingTenant {
+func newReconciler(mgr manager.Manager) *ReconcileMessagingProject {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
 	clientManager := state.GetClientManager()
-	return &ReconcileMessagingTenant{
+	return &ReconcileMessagingProject{
 		client:         mgr.GetClient(),
 		reader:         mgr.GetAPIReader(),
-		recorder:       mgr.GetEventRecorderFor("messagingtenant"),
+		recorder:       mgr.GetEventRecorderFor("messagingproject"),
 		certController: cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour),
 		namespace:      namespace,
 		clientManager:  clientManager,
 	}
 }
 
-func add(mgr manager.Manager, r *ReconcileMessagingTenant) error {
+func add(mgr manager.Manager, r *ReconcileMessagingProject) error {
 
-	c, err := controller.New("messagingtenant-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("messagingproject-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1.MessagingTenant{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.MessagingProject{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -93,104 +93,104 @@ func add(mgr manager.Manager, r *ReconcileMessagingTenant) error {
 	return err
 }
 
-func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
 	ctx := context.Background()
 
-	if request.Name != TENANT_RESOURCE_NAME {
+	if request.Name != PROJECT_RESOURCE_NAME {
 		logger.Info("Unsupported resource name")
 		return reconcile.Result{}, nil
 	}
 
-	logger.Info("Reconciling MessagingTenant")
+	logger.Info("Reconciling MessagingProject")
 
-	found := &v1.MessagingTenant{}
+	found := &v1.MessagingProject{}
 	err := r.reader.Get(ctx, request.NamespacedName, found)
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			logger.Info("MessagingTenant resource not found. Ignoring since object must be deleted")
+			logger.Info("MessagingProject resource not found. Ignoring since object must be deleted")
 			return reconcile.Result{}, nil
 		}
-		logger.Error(err, "Failed to get MessagingTenant")
+		logger.Error(err, "Failed to get MessagingProject")
 		return reconcile.Result{}, err
 	}
 
 	rc := resourceContext{
-		tenant: found,
-		status: found.Status.DeepCopy(),
-		ctx:    ctx,
-		client: r.client,
+		project: found,
+		status:  found.Status.DeepCopy(),
+		ctx:     ctx,
+		client:  r.client,
 	}
 
 	// Initialize phase and conditions
-	rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
-		if tenant.Status.Phase == "" {
-			tenant.Status.Phase = v1.MessagingTenantConfiguring
+	rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
+		if project.Status.Phase == "" {
+			project.Status.Phase = v1.MessagingProjectConfiguring
 		}
 		// TODO: Set based on plans
-		tenant.Status.Capabilities = tenant.Spec.Capabilities
+		project.Status.Capabilities = project.Spec.Capabilities
 
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantBound)
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCaCreated)
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantScheduled)
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCreated)
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantReady)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCaCreated)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCreated)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectReady)
 		return processorResult{}, nil
 	})
 
 	// Initialize and process finalizer
-	result, err := rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
+	result, err := rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
 
 		// Handle finalizing an deletion state first
-		if tenant.DeletionTimestamp != nil && tenant.Status.Phase != v1.MessagingTenantTerminating {
-			tenant.Status.Phase = v1.MessagingTenantTerminating
-			err := r.client.Status().Update(ctx, tenant)
+		if project.DeletionTimestamp != nil && project.Status.Phase != v1.MessagingProjectTerminating {
+			project.Status.Phase = v1.MessagingProjectTerminating
+			err := r.client.Status().Update(ctx, project)
 			return processorResult{Requeue: true}, err
 		}
 
-		original := tenant.DeepCopy()
-		result, err := finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, tenant, []finalizer.Finalizer{
+		original := project.DeepCopy()
+		result, err := finalizer.ProcessFinalizers(ctx, r.client, r.reader, r.recorder, project, []finalizer.Finalizer{
 			finalizer.Finalizer{
 				Name: FINALIZER_NAME,
 				Deconstruct: func(c finalizer.DeconstructorContext) (reconcile.Result, error) {
-					_, ok := c.Object.(*v1.MessagingTenant)
+					_, ok := c.Object.(*v1.MessagingProject)
 					if !ok {
-						return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingTenant")
+						return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports MessagingProject")
 					}
 
 					endpoints := &v1.MessagingEndpointList{}
-					err := r.client.List(ctx, endpoints, client.InNamespace(tenant.Namespace))
+					err := r.client.List(ctx, endpoints, client.InNamespace(project.Namespace))
 					if err != nil {
 						return reconcile.Result{}, err
 					}
 
 					addresses := &v1.MessagingAddressList{}
-					err = r.client.List(ctx, addresses, client.InNamespace(tenant.Namespace))
+					err = r.client.List(ctx, addresses, client.InNamespace(project.Namespace))
 					if err != nil {
 						return reconcile.Result{}, err
 					}
 
 					if len(addresses.Items) > 0 || len(endpoints.Items) > 0 {
-						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingTenant: waiting for %d addresses and %d endpoints to be deleted", len(addresses.Items), len(endpoints.Items))
+						return reconcile.Result{}, fmt.Errorf("unable to delete MessagingProject: waiting for %d addresses and %d endpoints to be deleted", len(addresses.Items), len(endpoints.Items))
 					}
 
-					if tenant.IsBound() {
+					if project.IsBound() {
 						infra := &v1.MessagingInfrastructure{}
-						err = r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
+						err = r.client.Get(ctx, types.NamespacedName{Name: project.Status.MessagingInfrastructureRef.Name, Namespace: project.Status.MessagingInfrastructureRef.Namespace}, infra)
 						if err != nil {
 							return reconcile.Result{}, err
 						}
 
 						client := r.clientManager.GetClient(infra)
-						err = client.DeleteTenant(tenant)
+						err = client.DeleteProject(project)
 						if err != nil {
 							return reconcile.Result{}, err
 						}
 
 						secret := &corev1.Secret{
-							ObjectMeta: metav1.ObjectMeta{Namespace: tenant.Status.MessagingInfrastructureRef.Namespace, Name: cert.GetTenantCaSecretName(tenant.Namespace)},
+							ObjectMeta: metav1.ObjectMeta{Namespace: project.Status.MessagingInfrastructureRef.Namespace, Name: cert.GetProjectCaSecretName(project.Namespace)},
 						}
 						err = r.client.Delete(ctx, secret)
 						if err != nil && k8errors.IsNotFound(err) {
@@ -208,8 +208,8 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 
 		if result.Requeue {
 			// Update and requeue if changed
-			if !reflect.DeepEqual(original, tenant) {
-				err := r.client.Update(ctx, tenant)
+			if !reflect.DeepEqual(original, project) {
+				err := r.client.Update(ctx, project)
 				return processorResult{Return: true}, err
 			}
 		}
@@ -221,8 +221,8 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 
 	// Lookup messaging infra
 	infra := &v1.MessagingInfrastructure{}
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
-		if !tenant.IsBound() {
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
+		if !project.IsBound() {
 			// Find a suiting MessagingInfrastructure to bind to
 			infras := &v1.MessagingInfrastructureList{}
 			err := r.client.List(ctx, infras)
@@ -230,15 +230,15 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 				logger.Info("Error listing infras")
 				return processorResult{}, err
 			}
-			infra = findBestMatch(tenant, infras.Items)
+			infra = findBestMatch(project, infras.Items)
 			return processorResult{}, nil
 		} else {
-			err := r.client.Get(ctx, types.NamespacedName{Name: tenant.Status.MessagingInfrastructureRef.Name, Namespace: tenant.Status.MessagingInfrastructureRef.Namespace}, infra)
+			err := r.client.Get(ctx, types.NamespacedName{Name: project.Status.MessagingInfrastructureRef.Name, Namespace: project.Status.MessagingInfrastructureRef.Namespace}, infra)
 			if err != nil {
 				if k8errors.IsNotFound(err) {
-					msg := fmt.Sprintf("Infrastructure %s/%s not found!", tenant.Status.MessagingInfrastructureRef.Namespace, tenant.Status.MessagingInfrastructureRef.Name)
-					tenant.Status.Message = msg
-					tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantBound).SetStatus(corev1.ConditionFalse, "", msg)
+					msg := fmt.Sprintf("Infrastructure %s/%s not found!", project.Status.MessagingInfrastructureRef.Namespace, project.Status.MessagingInfrastructureRef.Name)
+					project.Status.Message = msg
+					project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound).SetStatus(corev1.ConditionFalse, "", msg)
 					return processorResult{RequeueAfter: 10 * time.Second}, nil
 				} else {
 					logger.Info("Error reconciling", err)
@@ -252,18 +252,18 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	}
 
 	// Update infra reference
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
 		if infra != nil {
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantBound).SetStatus(corev1.ConditionTrue, "", "")
-			tenant.Status.MessagingInfrastructureRef = v1.MessagingInfrastructureReference{
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound).SetStatus(corev1.ConditionTrue, "", "")
+			project.Status.MessagingInfrastructureRef = v1.MessagingInfrastructureReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
 			}
 			return processorResult{}, nil
 		} else {
 			msg := "Not yet bound to any infrastructure"
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantBound).SetStatus(corev1.ConditionFalse, "", msg)
-			tenant.Status.Message = msg
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound).SetStatus(corev1.ConditionFalse, "", msg)
+			project.Status.Message = msg
 			return processorResult{RequeueAfter: 10 * time.Second}, err
 		}
 	})
@@ -271,10 +271,10 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		return result.Result(), err
 	}
 
-	// Schedule tenant with infra
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
+	// Schedule project with infra
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
 		transactional := false
-		for _, capability := range tenant.Status.Capabilities {
+		for _, capability := range project.Status.Capabilities {
 			if capability == v1.MessagingCapabilityTransactional {
 				transactional = true
 				break
@@ -282,79 +282,79 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 		}
 
 		if !transactional {
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled).SetStatus(corev1.ConditionTrue, "", "")
 			return processorResult{}, nil
 		}
 
 		// Already scheduled
-		if tenant.Status.Broker != nil {
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+		if project.Status.Broker != nil {
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled).SetStatus(corev1.ConditionTrue, "", "")
 			return processorResult{}, nil
 		}
 
 		client := r.clientManager.GetClient(infra)
-		err := client.ScheduleTenant(tenant)
+		err := client.ScheduleProject(project)
 		if err != nil {
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantScheduled).SetStatus(corev1.ConditionFalse, "", err.Error())
-			tenant.Status.Message = err.Error()
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled).SetStatus(corev1.ConditionFalse, "", err.Error())
+			project.Status.Message = err.Error()
 			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
 				return processorResult{RequeueAfter: 10 * time.Second}, nil
 			}
 			return processorResult{}, err
 		}
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantScheduled).SetStatus(corev1.ConditionTrue, "", "")
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled).SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{Requeue: true}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err
 	}
 
-	// Sync tenant with infra
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
+	// Sync project with infra
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
 		client := r.clientManager.GetClient(infra)
-		err := client.SyncTenant(tenant)
+		err := client.SyncProject(project)
 		if err != nil {
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
-			tenant.Status.Message = err.Error()
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			project.Status.Message = err.Error()
 			return processorResult{}, err
 		}
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCreated).SetStatus(corev1.ConditionTrue, "", "")
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCreated).SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err
 	}
 
-	// Reconcile Tenant CA
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
-		err := r.certController.ReconcileTenantCa(ctx, logger, infra, tenant.Namespace)
+	// Reconcile Project CA
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
+		err := r.certController.ReconcileProjectCa(ctx, logger, infra, project.Namespace)
 		if err != nil {
-			tenant.Status.Message = err.Error()
-			tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCaCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			project.Status.Message = err.Error()
+			project.Status.GetMessagingProjectCondition(v1.MessagingProjectCaCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{}, err
 		}
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantCaCreated).SetStatus(corev1.ConditionTrue, "", "")
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCaCreated).SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err
 	}
 
-	// Update tenant status
-	result, err = rc.Process(func(tenant *v1.MessagingTenant) (processorResult, error) {
-		originalStatus := tenant.Status.DeepCopy()
-		tenant.Status.Phase = v1.MessagingTenantActive
-		tenant.Status.Message = ""
-		tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantReady).SetStatus(corev1.ConditionTrue, "", "")
-		if !reflect.DeepEqual(originalStatus, tenant.Status) {
-			logger.Info("Tenant has changed", "old", originalStatus, "new", tenant.Status,
-				"originalBoundTransition", originalStatus.GetMessagingTenantCondition(v1.MessagingTenantBound).LastTransitionTime.UnixNano(),
-				"originalReadyTransition", originalStatus.GetMessagingTenantCondition(v1.MessagingTenantReady).LastTransitionTime.UnixNano(),
-				"boundTransition", tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantBound).LastTransitionTime.UnixNano(),
-				"readyTransition", tenant.Status.GetMessagingTenantCondition(v1.MessagingTenantReady).LastTransitionTime.UnixNano())
+	// Update project status
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
+		originalStatus := project.Status.DeepCopy()
+		project.Status.Phase = v1.MessagingProjectActive
+		project.Status.Message = ""
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectReady).SetStatus(corev1.ConditionTrue, "", "")
+		if !reflect.DeepEqual(originalStatus, project.Status) {
+			logger.Info("Project has changed", "old", originalStatus, "new", project.Status,
+				"originalBoundTransition", originalStatus.GetMessagingProjectCondition(v1.MessagingProjectBound).LastTransitionTime.UnixNano(),
+				"originalReadyTransition", originalStatus.GetMessagingProjectCondition(v1.MessagingProjectReady).LastTransitionTime.UnixNano(),
+				"boundTransition", project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound).LastTransitionTime.UnixNano(),
+				"readyTransition", project.Status.GetMessagingProjectCondition(v1.MessagingProjectReady).LastTransitionTime.UnixNano())
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
-			err := r.client.Status().Update(ctx, tenant)
+			err := r.client.Status().Update(ctx, project)
 			return processorResult{}, err
 		}
 		return processorResult{}, nil
@@ -362,7 +362,7 @@ func (r *ReconcileMessagingTenant) Reconcile(request reconcile.Request) (reconci
 	return result.Result(), err
 }
 
-func findBestMatch(tenant *v1.MessagingTenant, infras []v1.MessagingInfrastructure) *v1.MessagingInfrastructure {
+func findBestMatch(project *v1.MessagingProject, infras []v1.MessagingInfrastructure) *v1.MessagingInfrastructure {
 	var bestMatch *v1.MessagingInfrastructure
 	var bestMatchSelector *v1.NamespaceSelector
 	for _, infra := range infras {
@@ -374,10 +374,10 @@ func findBestMatch(tenant *v1.MessagingTenant, infras []v1.MessagingInfrastructu
 		if selector == nil && bestMatch == nil {
 			bestMatch = &infra
 		} else if selector != nil {
-			// If selector is applicable to this tenant
+			// If selector is applicable to this project
 			matched := false
 			for _, ns := range selector.MatchNames {
-				if ns == tenant.Namespace {
+				if ns == project.Namespace {
 					matched = true
 					break
 				}
@@ -399,10 +399,10 @@ func findBestMatch(tenant *v1.MessagingTenant, infras []v1.MessagingInfrastructu
  * Automatically handle status update of the resource after running some reconcile logic.
  */
 type resourceContext struct {
-	ctx    context.Context
-	client client.Client
-	status *v1.MessagingTenantStatus
-	tenant *v1.MessagingTenant
+	ctx     context.Context
+	client  client.Client
+	status  *v1.MessagingProjectStatus
+	project *v1.MessagingProject
 }
 
 type processorResult struct {
@@ -411,21 +411,21 @@ type processorResult struct {
 	Return       bool
 }
 
-func (r *resourceContext) Process(processor func(tenant *v1.MessagingTenant) (processorResult, error)) (processorResult, error) {
-	result, err := processor(r.tenant)
-	if !reflect.DeepEqual(r.status, r.tenant.Status) {
+func (r *resourceContext) Process(processor func(project *v1.MessagingProject) (processorResult, error)) (processorResult, error) {
+	result, err := processor(r.project)
+	if !reflect.DeepEqual(r.status, r.project.Status) {
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
-			statuserr := r.client.Status().Update(r.ctx, r.tenant)
+			statuserr := r.client.Status().Update(r.ctx, r.project)
 			if statuserr != nil {
 				// If this fails, report the status error if everything else whent ok, otherwise report the original error
-				log.Error(statuserr, "Status update failed", "tenant", r.tenant.Name)
+				log.Error(statuserr, "Status update failed", "project", r.project.Name)
 				if err == nil {
 					err = statuserr
 				}
 			} else {
-				r.status = r.tenant.Status.DeepCopy()
+				r.status = r.project.Status.DeepCopy()
 			}
 			return result, err
 		}

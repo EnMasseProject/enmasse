@@ -6,7 +6,7 @@ metadata:
   name: enmasse.io:console-server
 rules:
   - apiGroups: [ "enmasse.io" ]
-    resources: [ "messagingtenants", "messagingendpoints", "messagingaddresses" ]
+    resources: [ "messagingprojects", "messagingendpoints", "messagingaddresses" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "" ]
     resources: [ "namespaces" ]

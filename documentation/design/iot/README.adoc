@@ -103,7 +103,7 @@ a _message tenant_ created, then the IoT project will:
 
 * Get the field `.status.phase` set to `Failed`
 * Provide a helpful message in the field `.status.message`
-* Get the condition `HasMessagingTenant` set to `false`
+* Get the condition `HasMessagingProject` set to `false`
 
 As soon as the messaging tenant gets created, the project will
 try to become ready automatically.

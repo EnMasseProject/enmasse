@@ -6,13 +6,13 @@ package io.enmasse.systemtest.sharedinfra;
 
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureCondition;
-import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.api.model.MessagingTenantCondition;
+import io.enmasse.api.model.MessagingProject;
+import io.enmasse.api.model.MessagingProjectCondition;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingTenant;
+import io.enmasse.systemtest.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
-import io.enmasse.systemtest.messaginginfra.resources.MessagingTenantResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -39,17 +39,17 @@ public class DefaultsTest extends TestBase {
 
     @Test
     @DefaultMessagingInfrastructure
-    @DefaultMessagingTenant
-    public void testDefaultTenant() {
+    @DefaultMessagingProject
+    public void testDefaultProject() {
         MessagingInfrastructure infra = resourceManager.getDefaultInfra();
-        MessagingTenant tenant = resourceManager.getDefaultMessagingTenant();
+        MessagingProject project = resourceManager.getDefaultMessagingProject();
 
-        assertNotNull(tenant);
-        resourceManager.waitResourceCondition(tenant, t -> {
-            MessagingTenantCondition condition = MessagingTenantResourceType.getCondition(t.getStatus().getConditions(), "Ready");
+        assertNotNull(project);
+        resourceManager.waitResourceCondition(project, t -> {
+            MessagingProjectCondition condition = MessagingProjectResourceType.getCondition(t.getStatus().getConditions(), "Ready");
             return condition != null && "True".equals(condition.getStatus());
         });
-        assertEquals(infra.getMetadata().getName(), tenant.getStatus().getMessagingInfrastructureRef().getName());
-        assertEquals(infra.getMetadata().getNamespace(), tenant.getStatus().getMessagingInfrastructureRef().getNamespace());
+        assertEquals(infra.getMetadata().getName(), project.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(infra.getMetadata().getNamespace(), project.getStatus().getMessagingInfrastructureRef().getNamespace());
     }
 }

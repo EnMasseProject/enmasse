@@ -42,5 +42,5 @@ func IsNotBound(err error) bool {
 }
 
 func (e *NotBoundError) Error() string {
-	return fmt.Sprintf("MessagingTenant in namespace %s not bound to any infrastructure", e.namespace)
+	return fmt.Sprintf("MessagingProject in namespace %s not bound to any infrastructure", e.namespace)
 }
