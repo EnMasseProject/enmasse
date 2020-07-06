@@ -18,8 +18,8 @@ describe("<DeviceList />", () => {
       enabled: true,
       selected: true,
       lastSeen: "2020-01-20T11:44:28.607Z",
-      lastUpdated: "2020-01-20T11:44:28.607Z",
-      creationTimeStamp: "2020-01-20T11:44:28.607Z"
+      updated: "2020-01-20T11:44:28.607Z",
+      created: "2020-01-20T11:44:28.607Z"
     },
     {
       id: "jboss20",
@@ -28,15 +28,15 @@ describe("<DeviceList />", () => {
       selected: false,
       jsonData: '{"ext":{"ocean":"atlantic"}}',
       lastSeen: "2020-04-20T11:44:28.607Z",
-      lastUpdated: "2020-04-29T11:44:28.607Z",
-      creationTimeStamp: "2020-04-30T11:44:28.607Z"
+      updated: "2020-04-29T11:44:28.607Z",
+      created: "2020-04-30T11:44:28.607Z"
     },
     {
       id: "jboss20",
       viaGateway: true,
       lastSeen: "2020-04-20T11:44:28.607Z",
-      lastUpdated: null,
-      creationTimeStamp: "2020-04-30T11:44:28.607Z"
+      updated: undefined,
+      created: "2020-04-30T11:44:28.607Z"
     },
     {
       id: null,
@@ -44,8 +44,8 @@ describe("<DeviceList />", () => {
       enabled: false,
       selected: null,
       lastSeen: undefined,
-      lastUpdated: null,
-      creationTimeStamp: null
+      updated: undefined,
+      created: undefined
     }
   ].map(getTableCells);
 
