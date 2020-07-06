@@ -4,10 +4,27 @@
  */
 package io.enmasse.systemtest.platform;
 
+import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.ConsoleService;
 import io.enmasse.admin.model.v1.ConsoleServiceList;
 import io.enmasse.admin.model.v1.DoneableConsoleService;
+import io.enmasse.api.model.DoneableMessagingEndpoint;
+import io.enmasse.api.model.DoneableMessagingInfrastructure;
+import io.enmasse.api.model.DoneableMessagingTenant;
+import io.enmasse.api.model.MessagingEndpoint;
+import io.enmasse.api.model.MessagingEndpointList;
+import io.enmasse.api.model.MessagingInfrastructure;
+import io.enmasse.api.model.MessagingInfrastructureList;
+import io.enmasse.api.model.MessagingTenant;
+import io.enmasse.api.model.MessagingTenantList;
+import io.enmasse.iot.model.v1.DoneableIoTConfig;
+import io.enmasse.iot.model.v1.DoneableIoTProject;
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTConfigList;
+import io.enmasse.iot.model.v1.IoTCrd;
+import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTProjectList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
@@ -144,6 +161,10 @@ public abstract class Kubernetes {
         return instance;
     }
 
+    public static KubernetesClient getClient() {
+        return Kubernetes.instance.client;
+    }
+
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
 
     public abstract void deleteExternalEndpoint(String namespace, String name);
@@ -240,10 +261,6 @@ public abstract class Kubernetes {
 
     public String getInfraNamespace() {
         return infraNamespace;
-    }
-
-    public KubernetesClient getClient() {
-        return client;
     }
 
     public KubeCluster getCluster() {
@@ -1208,6 +1225,76 @@ public abstract class Kubernetes {
         final String stdoutString = stdout.toString(StandardCharsets.UTF_8);
         log.info("Output: {}", stdoutString);
         return stdoutString;
+    }
+
+    /**
+     * Get a client for {@link IoTConfig}s.
+     *
+     * @param namespace The namespace to bind the client to.
+     * @return The client instance.
+     */
+    public static MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigs(final String namespace) {
+        var result = getClient().customResources(IoTCrd.config(), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class);
+        if (namespace != null) {
+            result = (MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>>) result.inNamespace(namespace);
+        }
+        return result;
+    }
+
+    /**
+     * Get a client for {@link IoTProject}s.
+     *
+     * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
+     * @return The client instance.
+     */
+    public static MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotTenants(String namespace) {
+        var result = getClient().customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+        if (namespace != null) {
+            result = (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) result.inNamespace(namespace);
+        }
+        return result;
+    }
+
+    /**
+     * Get a client for {@link MessagingEndpoint}s.
+     *
+     * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
+     * @return The client instance.
+     */
+    public static MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> messagingEndpoints(final String namespace) {
+        var result = getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
+        if (namespace != null ) {
+            result = (MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>>) result.inNamespace(namespace);
+        }
+        return result;
+    }
+
+    /**
+     * Get a client for {@link MessagingTenant}s.
+     *
+     * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
+     * @return The client instance.
+     */
+    public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> messagingTenants(final String namespace) {
+        var result = getClient().customResources(CoreCrd.messagingTenants(), MessagingTenant.class, MessagingTenantList.class, DoneableMessagingTenant.class);
+        if (namespace != null ) {
+            result = (MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>>) result.inNamespace(namespace);
+        }
+        return result;
+    }
+
+    /**
+     * Get a client for {@link MessagingInfrastructure}s.
+     *
+     * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
+     * @return The client instance.
+     */
+    public static MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> messagingInfrastructures(final String namespace) {
+        var result = getClient().customResources(CoreCrd.messagingInfras(), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
+        if (namespace != null ) {
+            result = (MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>>) result.inNamespace(namespace);
+        }
+        return result;
     }
 
 }

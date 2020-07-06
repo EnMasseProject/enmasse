@@ -9,6 +9,17 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 
 public interface TerminusFactory {
     Source getSource(String address);
-
     Target getTarget(String address);
+
+    static TerminusFactory queue() {
+        return QueueTerminusFactory.INSTANCE;
+    }
+
+    static TerminusFactory topic() {
+        return TopicTerminusFactory.INSTANCE;
+    }
+
+    static TerminusFactory durableTopic() {
+        return DurableTopicTerminusFactory.INSTANCE;
+    }
 }

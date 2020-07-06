@@ -16,7 +16,10 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static io.enmasse.systemtest.amqp.TerminusFactory.queue;
 
 
 public class AmqpClientFactory {
@@ -25,7 +28,7 @@ public class AmqpClientFactory {
     private final String defaultPassword;
     private final List<AmqpClient> clients = new CopyOnWriteArrayList<>();
 
-    public AmqpClientFactory(UserCredentials credentials) {
+    public AmqpClientFactory(final UserCredentials credentials) {
         this.defaultUsername = credentials.getUsername();
         this.defaultPassword = credentials.getPassword();
     }
@@ -47,14 +50,14 @@ public class AmqpClientFactory {
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonQoS qos) {
-        return createClient(terminusFactory, endpoint, new ProtonClientOptions(), qos);
+        return createClient(terminusFactory, endpoint, null, qos);
     }
 
     protected AmqpClient createClient(TerminusFactory terminusFactory, Endpoint endpoint, ProtonClientOptions protonOptions, ProtonQoS qos) {
         AmqpConnectOptions connectOptions = new AmqpConnectOptions()
                 .setTerminusFactory(terminusFactory)
                 .setEndpoint(endpoint)
-                .setProtonClientOptions(protonOptions)
+                .setProtonClientOptions(Optional.ofNullable(protonOptions).orElseGet(ProtonClientOptions::new))
                 .setQos(qos)
                 .setUsername(defaultUsername)
                 .setPassword(defaultPassword);
