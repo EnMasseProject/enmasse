@@ -186,7 +186,7 @@ type MessagingAddressPlan_enmasse_io_v1 {
 }
 
 type AddressSpec_enmasse_io_v1 {
-  address:      String
+  address:      String!
 }
 
 type AddressStatus_enmasse_io_v1 {
@@ -297,7 +297,6 @@ input MessagingProject_enmasse_io_v1_Input {
 
 input AddressSpec_enmasse_io_v1_Input {
   address:      String
-  type: AddressType
 }
 
 
@@ -309,13 +308,11 @@ input Address_enmasse_io_v1_Input {
 type Mutation {
   createMessagingProject(input: MessagingProject_enmasse_io_v1_Input!): ObjectMeta_v1!
   patchMessagingProject(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteMessagingProject(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "deletes messagingprojects(s)"
   deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
-  createAddress(input: Address_enmasse_io_v1_Input!, addressSpace: String): ObjectMeta_v1!
+  createAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "deletes addresss(es)"
   deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   "purges address(es)"

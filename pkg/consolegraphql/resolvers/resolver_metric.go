@@ -12,7 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 )
 
-func (r *Resolver) Metric_consoleapi_enmasse_io_v1beta1() Metric_consoleapi_enmasse_io_v1beta1Resolver {
+func (r *Resolver) Metric_consoleapi_enmasse_io_v1() Metric_consoleapi_enmasse_io_v1Resolver {
 	return &metricK8sResolver{r}
 }
 

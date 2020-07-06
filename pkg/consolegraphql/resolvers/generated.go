@@ -203,11 +203,9 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CloseConnections        func(childComplexity int, input []*v1.ObjectMeta) int
-		CreateAddress           func(childComplexity int, input v11.MessagingAddress, addressSpace *string) int
+		CreateAddress           func(childComplexity int, input v11.MessagingAddress) int
 		CreateMessagingProject  func(childComplexity int, input v11.MessagingProject) int
-		DeleteAddress           func(childComplexity int, input v1.ObjectMeta) int
 		DeleteAddresses         func(childComplexity int, input []*v1.ObjectMeta) int
-		DeleteMessagingProject  func(childComplexity int, input v1.ObjectMeta) int
 		DeleteMessagingProjects func(childComplexity int, input []*v1.ObjectMeta) int
 		PatchAddress            func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
 		PatchMessagingProject   func(childComplexity int, input v1.ObjectMeta, jsonPatch string, patchType string) int
@@ -293,11 +291,9 @@ type Metric_consoleapi_enmasse_io_v1Resolver interface {
 type MutationResolver interface {
 	CreateMessagingProject(ctx context.Context, input v11.MessagingProject) (*v1.ObjectMeta, error)
 	PatchMessagingProject(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
-	DeleteMessagingProject(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	DeleteMessagingProjects(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
-	CreateAddress(ctx context.Context, input v11.MessagingAddress, addressSpace *string) (*v1.ObjectMeta, error)
+	CreateAddress(ctx context.Context, input v11.MessagingAddress) (*v1.ObjectMeta, error)
 	PatchAddress(ctx context.Context, input v1.ObjectMeta, jsonPatch string, patchType string) (*bool, error)
-	DeleteAddress(ctx context.Context, input v1.ObjectMeta) (*bool, error)
 	DeleteAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	PurgeAddresses(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
 	CloseConnections(ctx context.Context, input []*v1.ObjectMeta) (*bool, error)
@@ -879,7 +875,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAddress(childComplexity, args["input"].(v11.MessagingAddress), args["addressSpace"].(*string)), true
+		return e.complexity.Mutation.CreateAddress(childComplexity, args["input"].(v11.MessagingAddress)), true
 
 	case "Mutation.createMessagingProject":
 		if e.complexity.Mutation.CreateMessagingProject == nil {
@@ -893,18 +889,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateMessagingProject(childComplexity, args["input"].(v11.MessagingProject)), true
 
-	case "Mutation.deleteAddress":
-		if e.complexity.Mutation.DeleteAddress == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteAddress_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteAddress(childComplexity, args["input"].(v1.ObjectMeta)), true
-
 	case "Mutation.deleteAddresses":
 		if e.complexity.Mutation.DeleteAddresses == nil {
 			break
@@ -916,18 +900,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteAddresses(childComplexity, args["input"].([]*v1.ObjectMeta)), true
-
-	case "Mutation.deleteMessagingProject":
-		if e.complexity.Mutation.DeleteMessagingProject == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deleteMessagingProject_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeleteMessagingProject(childComplexity, args["input"].(v1.ObjectMeta)), true
 
 	case "Mutation.deleteMessagingProjects":
 		if e.complexity.Mutation.DeleteMessagingProjects == nil {
@@ -1442,7 +1414,7 @@ type MessagingAddressPlan_enmasse_io_v1 {
 }
 
 type AddressSpec_enmasse_io_v1 {
-  address:      String
+  address:      String!
 }
 
 type AddressStatus_enmasse_io_v1 {
@@ -1553,7 +1525,6 @@ input MessagingProject_enmasse_io_v1_Input {
 
 input AddressSpec_enmasse_io_v1_Input {
   address:      String
-  type: AddressType
 }
 
 
@@ -1565,13 +1536,11 @@ input Address_enmasse_io_v1_Input {
 type Mutation {
   createMessagingProject(input: MessagingProject_enmasse_io_v1_Input!): ObjectMeta_v1!
   patchMessagingProject(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteMessagingProject(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "deletes messagingprojects(s)"
   deleteMessagingProjects(input: [ObjectMeta_v1_Input!]!): Boolean
 
-  createAddress(input: Address_enmasse_io_v1_Input!, addressSpace: String): ObjectMeta_v1!
+  createAddress(input: Address_enmasse_io_v1_Input!): ObjectMeta_v1!
   patchAddress(input: ObjectMeta_v1_Input!, jsonPatch: String!, patchType : String!): Boolean
-  deleteAddress(input: ObjectMeta_v1_Input!): Boolean @deprecated
   "deletes addresss(es)"
   deleteAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
   "purges address(es)"
@@ -1765,14 +1734,6 @@ func (ec *executionContext) field_Mutation_createAddress_args(ctx context.Contex
 		}
 	}
 	args["input"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["addressSpace"]; ok {
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["addressSpace"] = arg1
 	return args, nil
 }
 
@@ -1790,40 +1751,12 @@ func (ec *executionContext) field_Mutation_createMessagingProject_args(ctx conte
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_deleteAddress_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 v1.ObjectMeta
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_deleteAddresses_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 []*v1.ObjectMeta
 	if tmp, ok := rawArgs["input"]; ok {
 		arg0, err = ec.unmarshalNObjectMeta_v1_Input2ᚕᚖk8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMetaᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deleteMessagingProject_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 v1.ObjectMeta
-	if tmp, ok := rawArgs["input"]; ok {
-		arg0, err = ec.unmarshalNObjectMeta_v1_Input2k8sᚗioᚋapimachineryᚋpkgᚋapisᚋmetaᚋv1ᚐObjectMeta(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -2284,11 +2217,14 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1_address(ctx context.Conte
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
 	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AddressStatus_enmasse_io_v1_message(ctx context.Context, field graphql.CollectedField, obj *v11.MessagingAddressStatus) (ret graphql.Marshaler) {
@@ -4683,44 +4619,6 @@ func (ec *executionContext) _Mutation_patchMessagingProject(ctx context.Context,
 	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_deleteMessagingProject(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteMessagingProject_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteMessagingProject(rctx, args["input"].(v1.ObjectMeta))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Mutation_deleteMessagingProjects(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4783,7 +4681,7 @@ func (ec *executionContext) _Mutation_createAddress(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v11.MessagingAddress), args["addressSpace"].(*string))
+		return ec.resolvers.Mutation().CreateAddress(rctx, args["input"].(v11.MessagingAddress))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4825,44 +4723,6 @@ func (ec *executionContext) _Mutation_patchAddress(ctx context.Context, field gr
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().PatchAddress(rctx, args["input"].(v1.ObjectMeta), args["jsonPatch"].(string), args["patchType"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*bool)
-	fc.Result = res
-	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_deleteAddress(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_deleteAddress_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAddress(rctx, args["input"].(v1.ObjectMeta))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6993,12 +6853,6 @@ func (ec *executionContext) unmarshalInputAddressSpec_enmasse_io_v1_Input(ctx co
 			if err != nil {
 				return it, err
 			}
-		case "type":
-			var err error
-			it.Type, err = ec.unmarshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		}
 	}
 
@@ -7154,6 +7008,9 @@ func (ec *executionContext) _AddressSpec_enmasse_io_v1(ctx context.Context, sel 
 			out.Values[i] = graphql.MarshalString("AddressSpec_enmasse_io_v1")
 		case "address":
 			out.Values[i] = ec._AddressSpec_enmasse_io_v1_address(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8110,8 +7967,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "patchMessagingProject":
 			out.Values[i] = ec._Mutation_patchMessagingProject(ctx, field)
-		case "deleteMessagingProject":
-			out.Values[i] = ec._Mutation_deleteMessagingProject(ctx, field)
 		case "deleteMessagingProjects":
 			out.Values[i] = ec._Mutation_deleteMessagingProjects(ctx, field)
 		case "createAddress":
@@ -8121,8 +7976,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "patchAddress":
 			out.Values[i] = ec._Mutation_patchAddress(ctx, field)
-		case "deleteAddress":
-			out.Values[i] = ec._Mutation_deleteAddress(ctx, field)
 		case "deleteAddresses":
 			out.Values[i] = ec._Mutation_deleteAddresses(ctx, field)
 		case "purgeAddresses":
@@ -9645,6 +9498,24 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
+func (ec *executionContext) unmarshalNString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalNString2string(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalNString2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec.marshalNString2string(ctx, sel, *v)
+}
+
 func (ec *executionContext) marshalNUser_v12githubᚗcomᚋopenshiftᚋapiᚋuserᚋv1ᚐUser(ctx context.Context, sel ast.SelectionSet, v v13.User) graphql.Marshaler {
 	return ec._User_v1(ctx, sel, &v)
 }
@@ -9902,30 +9773,6 @@ func (ec *executionContext) unmarshalOAddressSpec_enmasse_io_v1_Input2githubᚗc
 
 func (ec *executionContext) marshalOAddressStatus_enmasse_io_v12githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋapisᚋenmasseᚋv1ᚐMessagingAddressStatus(ctx context.Context, sel ast.SelectionSet, v v11.MessagingAddressStatus) graphql.Marshaler {
 	return ec._AddressStatus_enmasse_io_v1(ctx, sel, &v)
-}
-
-func (ec *executionContext) unmarshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, v interface{}) (AddressType, error) {
-	var res AddressType
-	return res, res.UnmarshalGQL(v)
-}
-
-func (ec *executionContext) marshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, sel ast.SelectionSet, v AddressType) graphql.Marshaler {
-	return v
-}
-
-func (ec *executionContext) unmarshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, v interface{}) (*AddressType, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalOAddressType2githubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx, v)
-	return &res, err
-}
-
-func (ec *executionContext) marshalOAddressType2ᚖgithubᚗcomᚋenmasseprojectᚋenmasseᚋpkgᚋconsolegraphqlᚋresolversᚐAddressType(ctx context.Context, sel ast.SelectionSet, v *AddressType) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {

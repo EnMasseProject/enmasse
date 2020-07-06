@@ -28,7 +28,7 @@ var separators = []string{"_", ".", "-"}
 
 const maxKubeName = 253
 
-func (r *Resolver) Address_consoleapi_enmasse_io_v1() Address_consoleapi_enmasse_io_v1 {
+func (r *Resolver) Address_consoleapi_enmasse_io_v1() Address_consoleapi_enmasse_io_v1Resolver {
 	return &addressK8sResolver{r}
 }
 
@@ -84,9 +84,11 @@ func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.Addr
 	return nil, nil
 }
 
+/*
 func (r *Resolver) AddressSpec_enmasse_io_v1() AddressSpec_enmasse_io_v1Resolver {
 	return &addressSpecK8sResolver{r}
 }
+*/
 
 type addressSpecK8sResolver struct{ *Resolver }
 

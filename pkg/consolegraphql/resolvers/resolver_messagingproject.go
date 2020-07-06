@@ -27,10 +27,6 @@ func (r *Resolver) MessagingProjectSpec_enmasse_io_v1() MessagingProjectSpec_enm
 	return &messagingProjectSpecK8sResolver{r}
 }
 
-func (r *Resolver) Port_enmasse_io_v1() Port_enmasse_io_v1Resolver {
-	return &portK8sResolver{r}
-}
-
 func (r *queryResolver) MessagingProjects(ctx context.Context, first *int, offset *int, filter *string, orderBy *string) (*MessagingProjectQueryResultConsoleapiEnmasseIoV1, error) {
 	requestState := server.GetRequestStateFromContext(ctx)
 	viewFilter := requestState.AccessController.ViewFilter()
@@ -70,6 +66,7 @@ func (r *queryResolver) MessagingProjects(ctx context.Context, first *int, offse
 
 type messagingProjectSpecK8sResolver struct{ *Resolver }
 
+/*
 func (r *messagingProjectSpecK8sResolver) Plan(ctx context.Context, obj *v1.MessagingProjectSpec) (*v1beta2.MessagingProjectPlan, error) {
 	if obj != nil {
 		messagingProjectPlan := obj.Plan
@@ -109,6 +106,7 @@ func (r *messagingProjectSpecK8sResolver) Plan(ctx context.Context, obj *v1.Mess
 	}
 	return nil, nil
 }
+*/
 
 type messagingProjectK8sResolver struct{ *Resolver }
 
@@ -262,13 +260,4 @@ func (r *queryResolver) MessagingProjectCommand(ctx context.Context, input v1.Me
 	input.Namespace = ""
 
 	return generateApplyCommand(input, namespace)
-}
-
-type portK8sResolver struct{ *Resolver }
-
-func (r *portK8sResolver) Port(_ context.Context, obj *v1.Port) (int, error) {
-	if obj != nil {
-		return int(obj.Port), nil
-	}
-	return -1, nil
 }

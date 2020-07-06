@@ -24,13 +24,13 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 	return nil
 }
 
-type addressSpaceHolderOption func(*consolegraphql.AddressSpaceHolder)
+type addressSpaceHolderOption func(*consolegraphql.MessagingProjectHolder)
 
-func createAddressSpace(addressspace, namespace string, addressSpaceHolderOptions ...addressSpaceHolderOption) *consolegraphql.AddressSpaceHolder {
-	ash := &consolegraphql.AddressSpaceHolder{
-		AddressSpace: v1beta1.AddressSpace{
+func createMessagingProject(addressspace, namespace string, addressSpaceHolderOptions ...addressSpaceHolderOption) *consolegraphql.MessagingProjectHolder {
+	ash := &consolegraphql.MessagingProjectHolder{
+		MessagingProject: v1beta1.MessagingProject{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "AddressSpace",
+				Kind: "MessagingProject",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      addressspace,
@@ -45,8 +45,8 @@ func createAddressSpace(addressspace, namespace string, addressSpaceHolderOption
 	return ash
 }
 
-func withAddressSpaceAnnotation(name, value string) addressSpaceHolderOption {
-	return func(ash *consolegraphql.AddressSpaceHolder) {
+func withMessagingProjectAnnotation(name, value string) addressSpaceHolderOption {
+	return func(ash *consolegraphql.MessagingProjectHolder) {
 
 		if ash.Annotations == nil {
 			ash.Annotations = make(map[string]string)
@@ -56,19 +56,19 @@ func withAddressSpaceAnnotation(name, value string) addressSpaceHolderOption {
 }
 
 func withEndpoint(spec v1beta1.EndpointSpec, status v1beta1.EndpointStatus) addressSpaceHolderOption {
-	return func(ash *consolegraphql.AddressSpaceHolder) {
+	return func(ash *consolegraphql.MessagingProjectHolder) {
 		ash.Spec.Endpoints = append(ash.Spec.Endpoints, spec)
 		ash.Status.EndpointStatus = append(ash.Status.EndpointStatus, status)
 	}
 }
 
 func withCACertificate(cACertificate []byte) addressSpaceHolderOption {
-	return func(ash *consolegraphql.AddressSpaceHolder) {
+	return func(ash *consolegraphql.MessagingProjectHolder) {
 		ash.Status.CACertificate = cACertificate
 	}
 }
 
-func createConnection(host, namespace, addressspace string, metrics ...*consolegraphql.Metric) *consolegraphql.Connection {
+func createConnection(host, namespace string, metrics ...*consolegraphql.Metric) *consolegraphql.Connection {
 	return &consolegraphql.Connection{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Connection",
@@ -79,7 +79,7 @@ func createConnection(host, namespace, addressspace string, metrics ...*consoleg
 			UID:       types.UID(uuid.New().String()),
 		},
 		Spec: consolegraphql.ConnectionSpec{
-			AddressSpace: addressspace,
+			namespace: namespace,
 		},
 		Metrics: metrics,
 	}

@@ -38,8 +38,6 @@ models:
     model: v1.MessagingAddressSpec
   AddressStatus_enmasse_io_v1:
     model: v1.MessagingAddressStatus
-  MessagingAddressPlanStatus_enmasse_io_v1:
-    model: v1.MessagingAddressPlanStatus
 
   MessagingProject_consoleapi_enmasse_io_v1:
     model: github.com/enmasseproject/enmasse/pkg/consolegraphql.MessagingProjectHolder
@@ -52,11 +50,16 @@ models:
     model: v1.MessagingAddressPlan
   MessagingAddressPlanSpec_enmasse_io_v1:
     model: v1.MessagingAddressPlanSpec
+  MessagingAddressPlanStatus_enmasse_io_v1:
+    model: v1.MessagingAddressPlanStatus
 
   MessagingPlan_enmasse_io_v1:
     model: v1.MessagingPlan
   MessagingPlanSpec_enmasse_io_v1:
     model: v1.MessagingPlanSpec
+  MessagingPlanStatus_enmasse_io_v1:
+    model: v1.MessagingPlanStatus
+
 
   Connection_consoleapi_enmasse_io_v1:
       model: github.com/enmasseproject/enmasse/pkg/consolegraphql.Connection
