@@ -6,7 +6,11 @@
 import React from "react";
 import { IoTProjectDetailHeader } from "modules/iot-project-detail/components";
 import { useQuery } from "@apollo/react-hooks";
-import { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, ENABLE_IOT_PROJECTS, DISABLE_IOT_PROJECTS } from "graphql-module/queries/iot_project";
+import {
+  RETURN_IOT_PROJECTS,
+  DELETE_IOT_PROJECT,
+  TOGGLE_IOT_PROJECTS_STATUS
+} from "graphql-module/queries/iot_project";
 import { IIoTProjectsResponse } from "schema/iot_project";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
@@ -24,8 +28,8 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
 
   const redirectToIoTProjectList = () => {
     history.push("/projects");
-  }
-  
+  };
+
   const [setDeleteIoTProjectQueryVariables] = useMutationQuery(
     DELETE_IOT_PROJECT,
     undefined,
@@ -34,12 +38,8 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
   );
 
   const [
-    setEnableIoTProjectQueryVariables
-  ] = useMutationQuery(ENABLE_IOT_PROJECTS, ["allProjects"]);
-
-  const [
-    setDisableIoTProjectQueryVariables
-  ] = useMutationQuery(DISABLE_IOT_PROJECTS, ["allProjects"]);
+    setToggleIoTProjectQueryVariables
+  ] = useMutationQuery(TOGGLE_IOT_PROJECTS_STATUS, ["allProjects"]);
 
   const { data } = useQuery<IIoTProjectsResponse>(
     RETURN_IOT_PROJECTS({ projectName })
@@ -68,7 +68,6 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     }
   };
 
-  // TODO: HANDLE AFTER MOCK IS READY
   const handleDelete = () => {
     dispatch({
       type: types.SHOW_MODAL,
@@ -86,21 +85,17 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     });
   };
 
-  // TODO: HANDLE AFTER MOCK IS READY
-  const handleChangeEnabled = () => {
+  const handleChangeEnabled = (checked: boolean) => {
     const queryVariable = {
       a: [
         {
           name: projectName,
           namespace: namespace
         }
-      ]
+      ],
+      status: checked
     };
-    if(enabled){
-      setDisableIoTProjectQueryVariables(queryVariable);
-    }else {
-      setEnableIoTProjectQueryVariables(queryVariable);
-    }
+    setToggleIoTProjectQueryVariables(queryVariable);
   };
 
   return (

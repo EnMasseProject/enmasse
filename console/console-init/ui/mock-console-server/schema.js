@@ -677,8 +677,10 @@ const typeDefs = gql`
       patchType: String!
     ): Boolean
     deleteIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
-    disableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
-    enableIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+    toggleIoTProjectsStatus(
+      input: [ObjectMeta_v1_Input!]!
+      state: Boolean!
+    ): Boolean
   }
 
   #

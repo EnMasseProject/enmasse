@@ -43,7 +43,7 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
 
   let filter: string = "";
 
-  if(filterObj){
+  if (filterObj) {
     filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
   }
 
@@ -78,16 +78,10 @@ export const CREATE_IOT_PROJECT = gql`
   }
 `;
 
-const ENABLE_IOT_PROJECTS = gql(
-  `mutation enable_iotProjects($a:[ObjectMeta_v1_Input!]!) {
-    enableIotProjects(input:$a)
+const TOGGLE_IOT_PROJECTS_STATUS = gql(
+  `mutation projectsstatustoggle($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
+    toggleIoTProjectsStatus(input: $a, state: $status)
   }`
 );
 
-const DISABLE_IOT_PROJECTS = gql(
-  `mutation disable_iotProjects($a:[ObjectMeta_v1_Input!]!) {
-    disableIotProjects(input:$a)
-  }`
-)
-
-export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, ENABLE_IOT_PROJECTS, DISABLE_IOT_PROJECTS };
+export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, TOGGLE_IOT_PROJECTS_STATUS };

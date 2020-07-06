@@ -1983,16 +1983,10 @@ function deleteIotProject(iotProject) {
   iotProjects.splice(pjIndex, 1);
 }
 
-function disableIotProject(iotProject) {
+function toggleIoTProjectStatus(iotProject, status) {
   let pjIndex = getIotProjectIndex(iotProject.name);
 
-  iotProjects[pjIndex].enabled = false;
-}
-
-function enableIotProject(iotProject) {
-  let pjIndex = getIotProjectIndex(iotProject.name);
-
-  iotProjects[pjIndex].enabled = true;
+  iotProjects[pjIndex].enabled = status;
 }
 
 function getMockIotDownstreamMessagingAddresses() {
@@ -2559,8 +2553,10 @@ const resolvers = {
       runOperationForAll(args.input, t => deleteIotProject(t));
       return true;
     },
-    disableIotProjects: (parent, args) => {
-      runOperationForAll(args.input, t => disableIotProject(t));
+    toggleIoTProjectsStatus: (parents, args) => {
+      runOperationForAll(args.input, t =>
+        toggleIoTProjectStatus(t, args.state)
+      );
       return true;
     }
   },

@@ -25,7 +25,7 @@ interface IIoTProjectDetailHeaderProps {
   type?: string;
   status?: string;
   isEnabled?: boolean;
-  changeEnable: () => void;
+  changeEnable: (checked: boolean) => void;
   onDelete: () => void;
 }
 
@@ -109,8 +109,8 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
       </SplitItem>
     </>
   );
-  const onChange = () => {
-    changeEnable();
+  const onChange = (checked: boolean) => {
+    changeEnable(checked);
   };
   const EnabledIcon = () => (
     <Switch
