@@ -68,7 +68,6 @@ import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
-import static io.enmasse.systemtest.iot.IoTTests.IOT_PROJECT_NAMESPACE;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.utils.Conditions.condition;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
@@ -79,6 +78,7 @@ import static java.util.Collections.singletonList;
 public final class IoTTestSession implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
+    private static final String IOT_PROJECT_NAMESPACE = "iot-systemtests";
 
     public enum Adapter {
         AMQP(AdaptersConfig::getAmqp) {
@@ -613,7 +613,6 @@ public final class IoTTestSession implements AutoCloseable {
 
                 for (final PreDeployProcessor processor : this.preDeploy) {
                     processor.preDeploy(new PreDeployContext() {
-
                         @Override
                         public void addCleanup(final ThrowingCallable cleanupTask) {
                             cleanup.add(cleanupTask);
@@ -626,9 +625,11 @@ public final class IoTTestSession implements AutoCloseable {
                 var config = this.config.build();
                 var project = this.project.build();
 
-                // create resources, in order to properly clean up, register cleanups first, then perform the operation
+                /*
+                 * Create resources: in order to properly clean up, register cleanups first, then perform the operation
+                 */
 
-                // create infra namespace if it doesn't exists
+                // create infra namespace
 
                 var infraNamespace = config.getMetadata().getNamespace();
                 if (!Environment.getInstance().skipCleanup()) {
@@ -636,6 +637,14 @@ public final class IoTTestSession implements AutoCloseable {
                 }
                 log.info("Creating infrastructure namespace: {}", infraNamespace);
                 Kubernetes.getInstance().createNamespace(infraNamespace);
+
+                // create device manager role, we do not clean it up
+
+                DeviceManagementApi.createManagementServiceAccount(infraNamespace);
+
+                // deploy certificates
+
+                deployDefaultCerts(infraNamespace);
 
                 // create messaging infrastructure
 
@@ -782,6 +791,8 @@ public final class IoTTestSession implements AutoCloseable {
 
                 return new IoTTestSession(vertx, config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
 
+                // the method returned and the IoTTestSession took ownership of the "cleanup" list.
+
             } catch (Throwable e) {
 
                 if (log.isDebugEnabled()) {
@@ -809,15 +820,15 @@ public final class IoTTestSession implements AutoCloseable {
     /**
      * Create a new test session builder.
      *
-     * @param namespace The namespace for the IoTConfig.
+     * @param infraNamespace The namespace for the IoTConfig.
      * @param isOpenshiftFour Create configuration for OCP4.
      * @return The new instance.
      */
-    public static IoTTestSession.Builder create(final String namespace, final boolean isOpenshiftFour) {
+    public static IoTTestSession.Builder create(final String infraNamespace, final boolean isOpenshiftFour) {
 
         // create new default IoT infrastructure
 
-        var config = createDefaultConfig(namespace, isOpenshiftFour);
+        var config = createDefaultConfig(infraNamespace, isOpenshiftFour);
 
         // we use the same name for the IoTProject and the AddressSpace
 
@@ -1038,6 +1049,7 @@ public final class IoTTestSession implements AutoCloseable {
     }
 
     protected static void defaultExceptionHandler(final Throwable error) {
+
         if (Environment.getInstance().isSkipSaveState()) {
             return;
         }
@@ -1052,6 +1064,7 @@ public final class IoTTestSession implements AutoCloseable {
         } else {
             log.error("Unable to log system test failure, no TestInfo details", error);
         }
+
     }
 
     /**
@@ -1081,7 +1094,7 @@ public final class IoTTestSession implements AutoCloseable {
         };
     }
 
-    public static void deployDefaultCerts() {
+    private static void deployDefaultCerts(final String namespace) {
 
         final Path examplesIoT = Paths.get(Environment.getInstance().getTemplatesPath())
                 .resolve("install/components/iot/examples");
@@ -1096,9 +1109,8 @@ public final class IoTTestSession implements AutoCloseable {
                 Map.of(
                         "CLI", KubeCMDClient.getCMD(),
                         "PREFIX", "systemtests-",
-                        "NAMESPACE", Kubernetes.getInstance().getInfraNamespace()));
+                        "NAMESPACE", namespace));
     }
-
 
     private static <T extends HasMetadata, L, D> T createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
@@ -1106,10 +1118,24 @@ public final class IoTTestSession implements AutoCloseable {
             final List<ThrowingCallable> cleanup) {
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
-        cleanup.add(() -> client.delete(Collections.singletonList(resource)));
+        if (shouldCleanup()) {
+            cleanup.add(() -> client.delete(Collections.singletonList(resource)));
+        }
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
         log.info("Creating successful. Resource is ready.");
         return client.withName(resource.getMetadata().getName()).get();
+    }
+
+    /**
+     * Check if created resources should be cleaned up after the test.
+     *
+     * <strong>Note:</strong> In-memory resources, like communication clients, must always be cleaned up. This check is
+     * only intended for persisted resources, so that the current situation can be inspected on a test failure.
+     *
+     * @return {@code true} if resources should be cleaned up, {@code false} otherwise.
+     */
+    private static boolean shouldCleanup() {
+        return !Environment.getInstance().skipCleanup();
     }
 }

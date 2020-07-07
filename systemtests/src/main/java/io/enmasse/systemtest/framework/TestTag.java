@@ -16,4 +16,5 @@ public class TestTag {
     public static final String ACCEPTANCE = "acceptance";
     public static final String SCALE = "scale";
     public static final String FRAMEWORK = "framework";
+    public static final String IOT = "iot";
 }

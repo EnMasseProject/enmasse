@@ -6,10 +6,10 @@ package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.systemtest.Endpoint;
+import io.enmasse.systemtest.amqp.TerminusFactory;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
-import io.enmasse.systemtest.amqp.QueueTerminusFactory;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
 import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
@@ -20,7 +20,6 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
-import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -176,7 +175,7 @@ public class MessagingClientRunner {
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setEndpoint(new Endpoint(host, port))
                 .setProtonClientOptions(protonClientOptions)
-                .setTerminusFactory(new QueueTerminusFactory()));
+                .setTerminusFactory(TerminusFactory.queue()));
 
         assertEquals(1, client.sendMessages(address, Collections.singletonList("hello")).get(1, TimeUnit.MINUTES));
         return client;

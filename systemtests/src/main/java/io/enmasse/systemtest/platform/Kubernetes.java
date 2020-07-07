@@ -887,7 +887,7 @@ public abstract class Kubernetes {
      */
     public static String getServiceAccountToken(final String namespace, final String serviceAccountName) {
 
-        var client = Kubernetes.getInstance().getClient();
+        var client = Kubernetes.getClient();
         var secretsClient = client
                 .secrets();
 
