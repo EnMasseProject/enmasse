@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	. "github.com/enmasseproject/enmasse/pkg/state/broker"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	. "github.com/enmasseproject/enmasse/pkg/state/errors"
@@ -1307,7 +1307,7 @@ func (i *infraClient) doDelete() {
 		var err error
 		for key, _ := range i.addresses {
 			if resource.GetNamespace() == key.Namespace {
-				err = fmt.Errorf("resource still in use by addresses")
+				err = ResourceInUseError
 				break
 			}
 		}

@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	BrokerInUseError    error = fmt.Errorf("broker in use")
+	BrokerInUseError     error = fmt.Errorf("broker in use")
 	ProjectNotFoundError error = fmt.Errorf("project not found")
-	NotInitializedError error = fmt.Errorf("not initialized")
-	NotSyncedError      error = fmt.Errorf("not synchronized")
-	NoEndpointsError    error = fmt.Errorf("no endpoints")
-	NotDeletedError     error = fmt.Errorf("error deleting")
+	NotInitializedError  error = fmt.Errorf("not initialized")
+	NotSyncedError       error = fmt.Errorf("not synchronized")
+	NoEndpointsError     error = fmt.Errorf("no endpoints")
+	NotDeletedError      error = fmt.Errorf("error deleting")
+	ResourceInUseError   error = fmt.Errorf("resource is in use")
 )

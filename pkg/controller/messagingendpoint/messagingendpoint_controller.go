@@ -343,7 +343,11 @@ func (r *ReconcileMessagingEndpoint) reconcileFinalizer(ctx context.Context, log
 				client := r.clientManager.GetClient(infra)
 				err = client.DeleteEndpoint(endpoint)
 				if err != nil {
-					return reconcile.Result{}, err
+					if errors.Is(err, stateerrors.ResourceInUseError) {
+						return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+					} else {
+						return reconcile.Result{}, err
+					}
 				}
 
 				err = r.certController.DeleteEndpointCert(ctx, logger, infra, endpoint)

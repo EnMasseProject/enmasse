@@ -217,7 +217,9 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 					}
 					client := r.clientManager.GetClient(infra)
 					err = client.DeleteAddress(address)
-
+					if err != nil && errors.Is(err, stateerrors.ResourceInUseError) {
+						return reconcile.Result{RequeueAfter: 10 * time.Second}, nil
+					}
 					// TODO: Notify Terminating deadLetter or topics referenced by this queue to speed up reconcile
 
 					logger.Info("[Finalizer] Deleted address", "err", err)
