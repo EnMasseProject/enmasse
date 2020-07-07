@@ -12,7 +12,6 @@ describe("<IoTProjectDetailHeader />", () => {
   it("should render an iot project header", () => {
     const props = {
       projectName: "iot-project-name",
-      type: "iot-project-type",
       status: "Active",
       isEnabled: true,
       changeStatus: jest.fn(),
@@ -23,10 +22,8 @@ describe("<IoTProjectDetailHeader />", () => {
         <IoTProjectDetailHeader {...props} />
       </MemoryRouter>
     );
-    getByText("Type :");
     getByText("Status :");
     getByText(props.projectName);
-    getByText(props.type);
     getByText(props.status);
   });
 });
@@ -35,7 +32,6 @@ describe("<IoTProjectDetailHeader />", () => {
   it("should render an iot project header with undefined prop values", () => {
     const props = {
       projectName: "iotProjectIndia",
-      type: undefined,
       isEnabled: false,
       changeStatus: jest.fn(),
       onDelete: jest.fn()
@@ -45,7 +41,6 @@ describe("<IoTProjectDetailHeader />", () => {
         <IoTProjectDetailHeader {...props} />
       </MemoryRouter>
     );
-    getByText("Type :");
     getByText("Status :");
     getByText(props.projectName);
   });

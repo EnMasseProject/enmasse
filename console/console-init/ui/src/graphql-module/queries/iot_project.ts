@@ -14,7 +14,6 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject?: any) => {
   }
 
   // TODO: Filters to be incrementally added
-
   return filter;
 };
 
@@ -26,10 +25,11 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
       metadata {
         name
         namespace
+        creationTimestamp
       }
       enabled
       spec {
-        downstreamStrategyType
+        configuration
       }
       status {
         phase
