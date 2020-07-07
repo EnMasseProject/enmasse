@@ -5,6 +5,7 @@ GO_DIRS = \
 	controller-manager \
 	iot/iot-proxy-configurator \
 	console/console-server \
+	access-control-server \
 	broker-plugin
 
 DOCKER_DIRS = \
