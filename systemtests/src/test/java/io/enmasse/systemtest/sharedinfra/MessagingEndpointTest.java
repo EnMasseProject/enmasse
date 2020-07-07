@@ -73,8 +73,8 @@ public class MessagingEndpointTest extends TestBase {
                 .build();
 
         createEndpointAndAddress(endpoint, "queue1");
-
         clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint), "queue1", false, false);
+        assertDefaultMessaging();
     }
 
     @Test
@@ -191,6 +191,7 @@ public class MessagingEndpointTest extends TestBase {
 
         AmqpClient client = clientRunner.sendReceiveOutsideCluster(endpoint.getStatus().getHost(),
                 MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue5", true, true, endpoint.getStatus().getTls().getCaCertificate());
+        assertMessagingOutside(client, "queue5");
     }
 
     @Test
@@ -215,6 +216,7 @@ public class MessagingEndpointTest extends TestBase {
 
         createEndpointAndAddress(endpoint, "queue6");
         clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQPS", endpoint), "queue6", true, false);
+        assertDefaultMessaging();
     }
 
     @Test

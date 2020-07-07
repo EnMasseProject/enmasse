@@ -19,7 +19,6 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructur
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
-import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
