@@ -18,8 +18,13 @@ import {
   CardTitle
 } from "@patternfly/react-core";
 import { DownloadIcon } from "@patternfly/react-icons";
-import { InputText, JsonEditor, SwitchWithToggle, IAdapter } from "components";
-import { AdapterListContainer } from "containers";
+import {
+  InputText,
+  JsonEditor,
+  SwitchWithToggle,
+  IAdapter,
+  AdapterList
+} from "components";
 
 export interface IIoTMessagingObject {
   url?: string;
@@ -28,10 +33,10 @@ export interface IIoTMessagingObject {
   addressSpace?: string;
   eventAddress?: string;
   telemetryAddress: string;
-  commandAddresses?: Array<string>;
+  commandAddresses?: Array<string | undefined>;
 }
 export interface IAccessCredentialsProps {
-  tenantId: string;
+  tenantId?: string;
   messaging: IIoTMessagingObject;
   adapters: IAdapter[];
   onDownloadCertificate: (certificateType: ".pem" | ".jks") => void;
@@ -234,7 +239,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <br />
           <Messaging />
           <br />
-          <AdapterListContainer id="ac-adapter-list-container" />
+          <AdapterList id="ac-adapter-list-container" adapters={adapters} />
         </CardBody>
       )}
     </Card>

@@ -19,10 +19,11 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { DropdownWithKebabToggle } from "components";
+import { FormatDistance } from "use-patternfly";
 
 interface IIoTProjectDetailHeaderProps {
   projectName?: string;
-  type?: string;
+  timeCreated?: string;
   status?: string;
   isEnabled?: boolean;
   changeStatus: (checked: boolean) => void;
@@ -67,7 +68,7 @@ export const project_header_styles = StyleSheet.create({
 
 const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderProps> = ({
   projectName,
-  type,
+  timeCreated,
   status,
   isEnabled,
   changeStatus,
@@ -85,16 +86,17 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
 
   const AddressDetailInFlex = () => (
     <Flex className={css(project_header_styles.namespace_info_margin)}>
-      <FlexItem id="iot-project-type">
-        {/* TODO: The bold tag should have the CSS to capitalize text */}
-        Type : <b>{type}</b>
-      </FlexItem>
-      <FlexItem
-        id="iot-project-status"
-        className={css(project_header_styles.flex_left_border)}
-      >
+      <FlexItem id="iot-project-status">
         Status : <b>{status}</b>
       </FlexItem>
+      {timeCreated && (
+        <FlexItem className={css(project_header_styles.flex_left_border)}>
+          Created{" "}
+          <b>
+            <FormatDistance date={timeCreated} /> ago
+          </b>
+        </FlexItem>
+      )}
     </Flex>
   );
 
