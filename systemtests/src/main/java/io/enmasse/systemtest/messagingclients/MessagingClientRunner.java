@@ -119,7 +119,7 @@ public class MessagingClientRunner {
         }
     }
 
-    public void endpointSendAndReceiveOnCluster(String host, int port, String address, boolean enableTls, boolean websockets) throws InterruptedException {
+    public void sendAndReceiveOnCluster(String host, int port, String address, boolean enableTls, boolean websockets) throws InterruptedException {
         assertTrue(port > 0);
         int expectedMsgCount = 10;
         executor = Executors.newFixedThreadPool(2);

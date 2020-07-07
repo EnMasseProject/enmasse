@@ -89,18 +89,4 @@ public abstract class TestBase implements ITestSeparator {
             throw exception;
         }
     }
-
-    protected void assertDefaultMessaging() {
-        int expectedMsgCount = 10;
-        List<ExternalMessagingClient> clients = clientRunner.getClients();
-        for (ExternalMessagingClient client : clients) {
-            if (client.isSender()) {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d sent messages", expectedMsgCount));
-            } else {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount));
-            }
-        }
-    }
 }

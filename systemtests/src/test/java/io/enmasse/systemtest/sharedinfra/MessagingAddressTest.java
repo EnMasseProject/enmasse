@@ -20,6 +20,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
+import io.enmasse.systemtest.utils.AssertionUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 import org.apache.qpid.proton.amqp.messaging.Rejected;
@@ -83,7 +84,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, "addr1", "addr1");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
     @Test
@@ -99,7 +100,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, true, "multicast1", "multicast1", "multicast1", "multicast1");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
     @Test
@@ -115,7 +116,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, "queue1", "queue1");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
     @Test
@@ -145,7 +146,7 @@ public class MessagingAddressTest extends TestBase {
         clientRunner.sendAndReceive(endpoint, false,
                 Collections.singletonMap(ClientArgument.MSG_TTL, "100"),
                 null, "queue1", "dlq1");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
     @Test
@@ -214,7 +215,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, true, "topic1", "topic1", "topic1", "topic1");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
     @Test
@@ -310,7 +311,7 @@ public class MessagingAddressTest extends TestBase {
                         .build());
 
         clientRunner.sendAndReceive(endpoint, "topic1", "sub1", "sub2");
-        assertDefaultMessaging();
+        AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
 
