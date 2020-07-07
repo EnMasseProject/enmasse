@@ -6,7 +6,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.VertxFactory;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.Count;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.CompositeFuture;
@@ -35,7 +35,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class AmqpClient implements AutoCloseable {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     private final Collection<Vertx> clients = new ConcurrentHashSet<>();
 

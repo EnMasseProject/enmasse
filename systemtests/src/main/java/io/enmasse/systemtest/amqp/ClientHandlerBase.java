@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.amqp;
 
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.proton.ProtonClient;
 import io.vertx.proton.ProtonConnection;
@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class ClientHandlerBase<T> extends AbstractVerticle {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private static final Symbol unauthorizedAccess = Symbol.getSymbol("amqp:unauthorized-access");
     protected final AmqpConnectOptions clientOptions;
     protected final LinkOptions linkOptions;

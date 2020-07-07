@@ -9,7 +9,7 @@ import com.google.common.base.Throwables;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.Predicates;
 import io.enmasse.systemtest.utils.VertxUtils;
 import io.vertx.core.Vertx;
@@ -72,7 +72,7 @@ public class HttpAdapterClient extends ApiClient {
 
     }
 
-    protected static final Logger log = CustomLogger.getLogger();
+    protected static final Logger log = LoggerUtils.getLogger();
 
     private static final Predicate<? super Throwable> DEFAULT_EXCEPTION_FILTER = x -> false;
 

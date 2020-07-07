@@ -6,7 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -19,7 +19,7 @@ import java.util.Objects;
 
 public class Openshift4WebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     SeleniumProvider selenium;
     String ocRoute;

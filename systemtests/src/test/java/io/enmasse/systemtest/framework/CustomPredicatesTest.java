@@ -4,7 +4,6 @@
  */
 package io.enmasse.systemtest.framework;
 
-import io.enmasse.systemtest.TestTag;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

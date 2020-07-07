@@ -7,7 +7,7 @@ package io.enmasse.systemtest.mqtt;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.UserCredentials;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttAsyncClient;
@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 
 public class MqttClientFactory {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     private static final String SERVER_URI_TEMPLATE = "tcp://%s:%s";
     private static final String TLS_SERVER_URI_TEMPLATE = "ssl://%s:%s";

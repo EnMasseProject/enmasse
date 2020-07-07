@@ -15,7 +15,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.condition.MultinodeCluster;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
@@ -93,7 +93,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class Kubernetes {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private static Kubernetes instance;
     protected final Environment environment;
     protected final KubernetesClient client;
@@ -537,7 +537,7 @@ public abstract class Kubernetes {
         deleteNamespace(namespace, Duration.ofMinutes(5));
     }
 
-    public void deleteNamespace(String namespace, Duration timeout) throws Exception {
+    public void deleteNamespace(String namespace, Duration timeout) {
         if (verboseLog) {
             log.info("Following namespace will be removed - {}", namespace);
         }
@@ -1093,9 +1093,9 @@ public abstract class Kubernetes {
             return "api.crc.testing";
         }
         List<NodeAddress> addresses = client.nodes().list().getItems().stream()
-                .peek(n -> CustomLogger.getLogger().info("Found node: {}", n))
+                .peek(n -> LoggerUtils.getLogger().info("Found node: {}", n))
                 .flatMap(n -> n.getStatus().getAddresses().stream()
-                        .peek(a -> CustomLogger.getLogger().info("Found address: {}", a))
+                        .peek(a -> LoggerUtils.getLogger().info("Found address: {}", a))
                         .filter(a -> a.getType().equals("InternalIP") || a.getType().equals("ExternalIP")))
                 .collect(Collectors.toList());
         if (addresses.isEmpty()) {

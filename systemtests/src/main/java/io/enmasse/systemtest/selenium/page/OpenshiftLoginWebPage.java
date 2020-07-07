@@ -6,7 +6,7 @@ package io.enmasse.systemtest.selenium.page;
 
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.condition.OpenShiftVersion.Openshift4MinorVersion;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.selenium.SeleniumProvider;
 import org.openqa.selenium.By;
@@ -18,7 +18,7 @@ import java.time.Duration;
 
 public class OpenshiftLoginWebPage implements IWebPage {
 
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
 
     SeleniumProvider selenium;
 

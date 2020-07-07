@@ -11,7 +11,7 @@ import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.OpenShift;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class EnmasseOperatorManager {
 
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
     private final Kubernetes kube = Kubernetes.getInstance();
     private final Environment env = Environment.getInstance();
     private final String productName;
@@ -61,29 +61,33 @@ public class EnmasseOperatorManager {
     }
 
     public void installEnmasseBundle() {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("         Enmasse operator shared infra install");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("               Enmasse operator install");
+        LoggerUtils.logDelimiter("*");
         generateTemplates();
         kube.createNamespace(kube.getInfraNamespace(), Collections.singletonMap("allowed", "true"));
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(Environment.getInstance().getTemplatesPath(), "install", "bundles", env.getProductName()));
         TestUtils.waitUntilDeployed(kube.getInfraNamespace());
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("            End of Enmasse operator install");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void installEnmasseOlm(OLMInstallationType installation) throws Exception {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("                  Enmasse OLM install");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         olm.install(installation);
         waitUntilOperatorReadyOlm(installation);
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("               End of Enmasse OLM install");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void enableMonitoring() throws Exception {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("                Enmasse enable monitoring");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         if (Kubernetes.isOpenShiftCompatible(OCP4) && !Kubernetes.isCRC()) {
             enableUserWorkloadMonitoring();
         } else {
@@ -92,14 +96,16 @@ public class EnmasseOperatorManager {
             }
             installMonitoringOperator();
         }
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("            End of Enmasse enable monitoring");
+        LoggerUtils.logDelimiter("*");
     }
 
 
     private void enableUserWorkloadMonitoring() throws Exception {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("                Enmasse user workload monitoring");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         enableOperatorMetrics(true);
         kube.createConfigmapFromResource("openshift-monitoring", new ConfigMapBuilder()
                 .editOrNewMetadata()
@@ -109,13 +115,15 @@ public class EnmasseOperatorManager {
                 .addToData("config.yaml", "techPreviewUserWorkload:\n  enabled: true")
                 .build());
         TestUtils.waitForPodReady("prometheus-user-workload-0", "openshift-user-workload-monitoring");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("            End of Enmasse user workload monitoring");
+        LoggerUtils.logDelimiter("*");
     }
 
     private void installMonitoringOperator() throws Exception {
-        LOGGER.info("***********************************************************");
-        LOGGER.info("                Enmasse enmasse monitoring");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("                Install enmasse monitoring");
+        LoggerUtils.logDelimiter("*");
         enableOperatorMetrics(false);
         kube.createNamespace(env.getMonitoringNamespace());
         KubeCMDClient.applyFromFile(env.getMonitoringNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "monitoring-operator"));
@@ -131,41 +139,49 @@ public class EnmasseOperatorManager {
         enableMonitoringForNamespace();
         enableOperatorMetrics(true);
         KubeCMDClient.applyFromFile(kube.getInfraNamespace(), Paths.get(env.getTemplatesPath(), "install", "components", "kube-state-metrics"));
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("             End of Install enmasse monitoring");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void deleteEnmasseOlm() throws Exception {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("                  Enmasse OLM delete");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         removeOlm();
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("               End of Enmasse OLM delete");
+        LoggerUtils.logDelimiter("*");
     }
 
-    public void deleteEnmasseBundle() throws Exception {
-        LOGGER.info("***********************************************************");
+    public void deleteEnmasseBundle() {
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("                  Enmasse operator delete");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         clean();
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("               End of Enmasse operator delete");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void deleteEnmasseAnsible() {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("            Enmasse operator delete by ansible");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         Path inventoryFile = Paths.get(System.getProperty("user.dir"), "ansible", "inventory", kube.getOcpVersion() == OpenShiftVersion.OCP3 ? "systemtests.inventory" : "systemtests.ocp4.inventory");
         Path ansiblePlaybook = Paths.get(Environment.getInstance().getUpgradeTemplates(), "ansible", "playbooks", "openshift", "uninstall.yml");
         List<String> cmd = Arrays.asList("ansible-playbook", ansiblePlaybook.toString(), "-i", inventoryFile.toString(),
                 "--extra-vars", String.format("namespace=%s", kube.getInfraNamespace()));
         assertTrue(Exec.execute(cmd, 300_000, true).getRetCode(), "Uninstall failed");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
+        LOGGER.info("        End of Enmasse operator delete by ansible");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void deleteMonitoringOperator() throws Exception {
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         LOGGER.info("            Enmasse monitoring delete");
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
         if (!Kubernetes.isOpenShiftCompatible(OCP4) || Kubernetes.isCRC()) {
             KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "blackboxtargets.applicationmonitoring.integreatly.org");
             KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "grafanadashboards.integreatly.org");
@@ -179,7 +195,7 @@ public class EnmasseOperatorManager {
             KubeCMDClient.deleteResource(env.getMonitoringNamespace(), "crd", "servicemonitors.monitoring.coreos.com");
             kube.deleteNamespace(env.getMonitoringNamespace());
         }
-        LOGGER.info("***********************************************************");
+        LoggerUtils.logDelimiter("*");
     }
 
     public void installEnmasseOlm() throws Exception {
@@ -253,7 +269,7 @@ public class EnmasseOperatorManager {
     }
 
 
-    public boolean clean() throws Exception {
+    public boolean clean() {
         cleanCRDs();
         KubeCMDClient.runOnCluster("delete", "clusterrolebindings", "-l", "app=enmasse");
         KubeCMDClient.runOnCluster("delete", "clusterroles", "-l", "app=enmasse");

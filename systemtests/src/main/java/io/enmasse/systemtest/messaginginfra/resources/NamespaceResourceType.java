@@ -8,6 +8,8 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 
+import java.util.UUID;
+
 public class NamespaceResourceType implements ResourceType<Namespace> {
     @Override
     public String getKind() {
@@ -20,7 +22,7 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
     }
 
     public static Namespace getDefault() {
-        return new NamespaceBuilder().withNewMetadata().withName("enmasse-app").endMetadata().build();
+        return new NamespaceBuilder().withNewMetadata().withName(String.format("enmasse-project-%s", UUID.randomUUID().toString().split("-")[0])).addToLabels("app", "enmasse").endMetadata().build();
     }
 
     @Override

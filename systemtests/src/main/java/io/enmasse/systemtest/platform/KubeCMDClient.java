@@ -7,7 +7,7 @@ package io.enmasse.systemtest.platform;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.slf4j.Logger;
 
@@ -33,7 +33,7 @@ public class KubeCMDClient {
     protected static final int ONE_MINUTE_TIMEOUT = 60000;
     protected static final int FIVE_MINUTES_TIMEOUT = 300000;
     protected static final String CMD = getCMD();
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     public static String getCMD() {
         return Kubernetes.getInstance().getCluster().getKubeCmd();

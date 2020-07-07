@@ -10,9 +10,11 @@ import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.api.model.MessagingProjectCondition;
 import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import org.junit.jupiter.api.Test;
+
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -91,7 +93,7 @@ public class MessagingProjectTest extends TestBase {
                 messagingProject != null &&
                         messagingProject.getStatus() != null &&
                         MessagingProjectResourceType.getCondition(messagingProject.getStatus().getConditions(), "Bound") != null &&
-                        MessagingProjectResourceType.getCondition(messagingProject.getStatus().getConditions(), "Bound").getStatus() != null &&
-                        MessagingProjectResourceType.getCondition(messagingProject.getStatus().getConditions(), "Bound").getStatus().equals("False")));
+                        Objects.requireNonNull(MessagingProjectResourceType.getCondition(messagingProject.getStatus().getConditions(), "Bound")).getStatus() != null &&
+                        Objects.requireNonNull(MessagingProjectResourceType.getCondition(messagingProject.getStatus().getConditions(), "Bound")).getStatus().equals("False")));
     }
 }

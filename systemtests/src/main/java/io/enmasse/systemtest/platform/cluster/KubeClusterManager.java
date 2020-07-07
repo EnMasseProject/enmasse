@@ -4,9 +4,9 @@
  */
 package io.enmasse.systemtest.platform.cluster;
 
-import io.enmasse.systemtest.bases.ThrowableRunner;
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.ThrowableRunner;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -14,6 +14,7 @@ import io.fabric8.kubernetes.api.model.Node;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
@@ -24,7 +25,7 @@ import java.util.stream.Collectors;
  */
 public class KubeClusterManager {
 
-    private static Logger LOGGER = CustomLogger.getLogger();
+    private static Logger LOGGER = LoggerUtils.getLogger();
     private Kubernetes kube = Kubernetes.getInstance();
     private static KubeClusterManager instance;
     private final String CMD = Kubernetes.getInstance().getCluster().getKubeCmd();
@@ -53,22 +54,32 @@ public class KubeClusterManager {
     }
 
     public void restoreClassConfigurations() throws Exception {
+        LoggerUtils.logDelimiter("-");
         LOGGER.info("Going to restore all class configurations");
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        if (classConfigurations.isEmpty()) {
+            LOGGER.info("Nothing to delete");
+        }
         while (!classConfigurations.empty()) {
             classConfigurations.pop().run();
         }
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        LOGGER.info("");
         classConfigurations.clear();
     }
 
     public void restoreMethodConfigurations() throws Exception {
+        LoggerUtils.logDelimiter("-");
         LOGGER.info("Going to restore all method configurations");
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        if (methodConfigurations.isEmpty()) {
+            LOGGER.info("Nothing to delete");
+        }
         while (!methodConfigurations.empty()) {
             methodConfigurations.pop().run();
         }
-        LOGGER.info("------------------------------------");
+        LoggerUtils.logDelimiter("-");
+        LOGGER.info("");
         methodConfigurations.clear();
         pointerConfigurations = methodConfigurations;
     }

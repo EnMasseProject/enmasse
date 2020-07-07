@@ -5,9 +5,9 @@
 
 package io.enmasse.systemtest;
 
-import io.enmasse.systemtest.bases.ITestSeparator;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
-import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
+import io.enmasse.systemtest.framework.ITestSeparator;
+import io.enmasse.systemtest.framework.TestLifecycleManager;
+import io.enmasse.systemtest.framework.TestTag;
 import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Base class for all tests
  */
-@ExtendWith(JunitCallbackListener.class)
+@ExtendWith(TestLifecycleManager.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Tag(TestTag.SYSTEMTEST)

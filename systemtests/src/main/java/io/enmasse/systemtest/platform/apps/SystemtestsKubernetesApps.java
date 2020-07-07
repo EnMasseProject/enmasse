@@ -8,8 +8,8 @@ package io.enmasse.systemtest.platform.apps;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
-import io.enmasse.systemtest.info.TestInfo;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.TestPlanInfo;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -25,7 +25,6 @@ import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
 import io.fabric8.kubernetes.api.model.ContainerStatus;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
-import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -73,21 +72,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -96,7 +90,7 @@ import static java.time.Duration.ofSeconds;
 
 public class SystemtestsKubernetesApps {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     private static final Kubernetes kube = Kubernetes.getInstance();
     private static final Environment env = Environment.getInstance();
@@ -927,7 +921,7 @@ public class SystemtestsKubernetesApps {
 
     private static void collectContainerBuildLogs(Kubernetes kubeClient) {
         GlobalLogCollector collector = new GlobalLogCollector(kubeClient,
-                TestUtils.getFailedTestLogsPath(TestInfo.getInstance().getActualTestClass()), CONTAINER_BUILDS_PROJECT);
+                TestUtils.getFailedTestLogsPath(TestPlanInfo.getInstance().getActualTestClass()), CONTAINER_BUILDS_PROJECT);
         collector.collectLogsOfPodsInNamespace(CONTAINER_BUILDS_PROJECT);
     }
 

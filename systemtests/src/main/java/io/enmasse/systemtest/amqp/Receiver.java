@@ -4,7 +4,7 @@
  */
 package io.enmasse.systemtest.amqp;
 
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
 import io.vertx.proton.ProtonReceiver;
@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 
 public class Receiver extends ClientHandlerBase<List<Message>> {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private ProtonReceiver receiver;
     private final List<Message> messages = new ArrayList<>();
     private final AtomicInteger messageCount = new AtomicInteger();

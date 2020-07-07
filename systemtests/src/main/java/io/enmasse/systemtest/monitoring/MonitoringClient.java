@@ -6,7 +6,7 @@ package io.enmasse.systemtest.monitoring;
 
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.PrometheusApiClient;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -23,7 +23,7 @@ import java.util.function.Predicate;
 
 
 public class MonitoringClient {
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
     private final PrometheusApiClient client;
 
     public MonitoringClient(Endpoint endpoint) {

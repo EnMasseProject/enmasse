@@ -2,7 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.info;
+package io.enmasse.systemtest.framework;
 
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -14,12 +14,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class MethodBasedExtensionContext implements ExtensionContext{
+public class TestMethodExtensionContext implements ExtensionContext{
 
     private Class<?> testClass;
     private Optional<Method> method;
 
-    public MethodBasedExtensionContext(Class<?> testClass, Optional<Method> method) throws ClassNotFoundException {
+    public TestMethodExtensionContext(Class<?> testClass, Optional<Method> method) throws ClassNotFoundException {
         this.testClass = testClass;
         this.method = method;
     }

@@ -13,10 +13,10 @@ import io.enmasse.api.model.MessagingInfrastructureBuilder;
 import io.enmasse.api.model.MessagingInfrastructureCondition;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
-import io.enmasse.systemtest.annotations.DefaultMessagingInfrastructure;
-import io.enmasse.systemtest.annotations.DefaultMessagingProject;
-import io.enmasse.systemtest.annotations.ExternalClients;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
+import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
+import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingInfrastructureTest extends TestBase {
-    private static final Logger LOGGER = CustomLogger.getLogger();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
 
     /**
      * Test that infrastructure static scaling strategy can be changed and that change is reflected

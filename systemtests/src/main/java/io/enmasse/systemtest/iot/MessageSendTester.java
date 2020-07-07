@@ -6,7 +6,7 @@
 package io.enmasse.systemtest.iot;
 
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class MessageSendTester {
 
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
     private Type type = Type.TELEMETRY;
     private int amount = 1;
     private int payloadSize = 0;

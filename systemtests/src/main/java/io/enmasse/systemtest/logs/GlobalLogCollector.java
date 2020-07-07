@@ -5,10 +5,11 @@
 package io.enmasse.systemtest.logs;
 
 import io.enmasse.systemtest.Environment;
-import io.enmasse.systemtest.bases.ThrowableRunner;
+import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.ThrowableRunner;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.ExecutionResultData;
-import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
@@ -33,7 +34,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class GlobalLogCollector {
-    private final static Logger LOGGER = CustomLogger.getLogger();
+    private final static Logger LOGGER = LoggerUtils.getLogger();
     private static boolean verbose = true;
     private final Kubernetes kubernetes;
     private final Path logDir;
@@ -257,7 +258,7 @@ public class GlobalLogCollector {
         Kubernetes kube = Kubernetes.getInstance();
         saveInfraState(path, kube.getInfraNamespace(),
                 () -> {
-                    if (TestInfo.getInstance().isOLMTest()) {
+                    if (TestPlanInfo.getInstance().isOLMTest()) {
                         Files.writeString(path.resolve("describe_pods_olm.txt"), KubeCMDClient.describePods(kube.getOlmNamespace()).getStdOut());
                     }
                 });

@@ -5,7 +5,7 @@
 package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
 import io.vertx.core.json.JsonArray;
@@ -33,7 +33,7 @@ import java.util.function.Supplier;
  * Class represent abstract client which keeps common features of client
  */
 public abstract class AbstractClient {
-    private static Logger log = CustomLogger.getLogger();
+    private static Logger log = LoggerUtils.getLogger();
     private final Object lock = new Object();
     private final int DEFAULT_ASYNC_TIMEOUT = 300_000;
     private final int DEFAULT_SYNC_TIMEOUT = 60_000;

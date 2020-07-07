@@ -2,7 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.annotations;
+package io.enmasse.systemtest.framework.annotations;
 
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
@@ -18,17 +18,17 @@ public class DefaultMessagingProjectExtension implements BeforeTestExecutionCall
     @Override
     public void beforeTestExecution(ExtensionContext extensionContext) {
         if (!isFullClass) {
-            createDefaultProject();
+            createDefaultTenant();
         }
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        createDefaultProject();
+        createDefaultTenant();
         isFullClass = true;
     }
 
-    private void createDefaultProject() {
+    private void createDefaultTenant() {
         MessagingProject project = MessagingProjectResourceType.getDefault();
         ResourceManager.getInstance().createResource(project);
         ResourceManager.getInstance().setDefaultMessagingProject(project);

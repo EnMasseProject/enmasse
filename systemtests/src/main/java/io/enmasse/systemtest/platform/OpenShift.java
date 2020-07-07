@@ -7,7 +7,7 @@ package io.enmasse.systemtest.platform;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -31,7 +31,7 @@ import java.util.Map;
  * Handles interaction with openshift cluster
  */
 public class OpenShift extends Kubernetes {
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     private static final String OLM_NAMESPACE = "openshift-operators";
 

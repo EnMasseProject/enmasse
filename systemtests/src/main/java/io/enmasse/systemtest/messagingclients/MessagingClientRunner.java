@@ -6,7 +6,7 @@ package io.enmasse.systemtest.messagingclients;
 
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
@@ -30,7 +30,7 @@ public class MessagingClientRunner {
     private List<ExternalMessagingClient> clients = new ArrayList<>();
 
     public MessagingClientRunner() {
-        LOGGER = CustomLogger.getLogger();
+        LOGGER = LoggerUtils.getLogger();
     }
 
     public void sendAndReceive(MessagingEndpoint endpoint, boolean waitReceivers, String senderAddress, String ... receiverAddresses) throws Exception {
