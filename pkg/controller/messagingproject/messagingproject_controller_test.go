@@ -20,7 +20,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func setup(t *testing.T, ns *corev1.Namespace) *ReconcileMessagingProject {
+type testCase struct {
+	t *testing.T
+	r *ReconcileMessagingProject
+}
+
+func setup(t *testing.T) *testCase {
+	ns := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   "app1",
+			Labels: map[string]string{"key1": "value1"},
+		},
+	}
 	s := scheme.Scheme
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Namespace{})
 	objs := []runtime.Object{
@@ -28,19 +39,10 @@ func setup(t *testing.T, ns *corev1.Namespace) *ReconcileMessagingProject {
 	}
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 	r := &ReconcileMessagingProject{client: cl}
-	return r
-}
-
-func assertSelector(t *testing.T, expected bool, selector *v1.NamespaceSelector) {
-	r := setup(t, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "app1",
-			Labels: map[string]string{"key1": "value1"},
-		},
-	})
-	matches, err := r.matchesSelector(context.TODO(), "app1", selector)
-	assert.Nil(t, err)
-	assert.Equal(t, expected, matches)
+	return &testCase{
+		r: r,
+		t: t,
+	}
 }
 
 func createSelectable(selector *v1.NamespaceSelector) v1.Selectable {
@@ -51,47 +53,51 @@ func createSelectable(selector *v1.NamespaceSelector) v1.Selectable {
 	}
 }
 
-func assertBestMatch(t *testing.T, expected v1.Selectable, selectable []v1.Selectable) {
-	r := setup(t, &corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   "app1",
-			Labels: map[string]string{"key1": "value1"},
-		},
-	})
-	bestMatch, err := r.findBestMatch(context.TODO(), "app1", selectable)
-	assert.Nil(t, err)
-	assert.Equal(t, expected, bestMatch)
+func (tc *testCase) assertSelector(expected bool, selector *v1.NamespaceSelector) {
+	matches, err := tc.r.matchesSelector(context.TODO(), "app1", selector)
+	assert.Nil(tc.t, err)
+	assert.Equal(tc.t, expected, matches)
+}
+
+func (tc *testCase) assertBestMatch(expected v1.Selectable, selectable []v1.Selectable) {
+	bestMatch, err := tc.r.findBestMatch(context.TODO(), "app1", selectable)
+	assert.Nil(tc.t, err)
+	assert.Equal(tc.t, expected, bestMatch)
 }
 
 func TestMatchesSelectorGlobal(t *testing.T) {
+	tc := setup(t)
 	s := createSelectable(nil)
-	assertSelector(t, true, s.GetSelector())
-	assertBestMatch(t, s, []v1.Selectable{s})
+	tc.assertSelector(true, s.GetSelector())
+	tc.assertBestMatch(s, []v1.Selectable{s})
 }
 
 func TestMatchesSelectorByName(t *testing.T) {
+	tc := setup(t)
 	s := createSelectable(&v1.NamespaceSelector{
 		MatchNames: []string{"app3", "app1", "app2"},
 	})
-	assertSelector(t, true, s.GetSelector())
-	assertBestMatch(t, s, []v1.Selectable{s})
+	tc.assertSelector(true, s.GetSelector())
+	tc.assertBestMatch(s, []v1.Selectable{s})
 }
 
 func TestMatchesSelectorByMatchLabels(t *testing.T) {
+	tc := setup(t)
 	s := createSelectable(&v1.NamespaceSelector{
 		MatchLabels: map[string]string{"key1": "value1"},
 	})
-	assertSelector(t, true, s.GetSelector())
-	assertBestMatch(t, s, []v1.Selectable{s})
+	tc.assertSelector(true, s.GetSelector())
+	tc.assertBestMatch(s, []v1.Selectable{s})
 
 	s = createSelectable(&v1.NamespaceSelector{
 		MatchLabels: map[string]string{"key1": "value1", "key2": "value2"},
 	})
-	assertSelector(t, false, s.GetSelector())
-	assertBestMatch(t, nil, []v1.Selectable{s})
+	tc.assertSelector(false, s.GetSelector())
+	tc.assertBestMatch(nil, []v1.Selectable{s})
 }
 
 func TestMatchesSelectorByMatchExpressions(t *testing.T) {
+	tc := setup(t)
 	s := createSelectable(&v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
@@ -101,8 +107,8 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 			},
 		},
 	})
-	assertSelector(t, true, s.GetSelector())
-	assertBestMatch(t, s, []v1.Selectable{s})
+	tc.assertSelector(true, s.GetSelector())
+	tc.assertBestMatch(s, []v1.Selectable{s})
 
 	s = createSelectable(&v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -112,8 +118,8 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 			},
 		},
 	})
-	assertSelector(t, true, s.GetSelector())
-	assertBestMatch(t, s, []v1.Selectable{s})
+	tc.assertSelector(true, s.GetSelector())
+	tc.assertBestMatch(s, []v1.Selectable{s})
 
 	s = createSelectable(&v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
@@ -123,11 +129,12 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 			},
 		},
 	})
-	assertSelector(t, false, s.GetSelector())
-	assertBestMatch(t, nil, []v1.Selectable{s})
+	tc.assertSelector(false, s.GetSelector())
+	tc.assertBestMatch(nil, []v1.Selectable{s})
 }
 
 func TestBestMatchOrder(t *testing.T) {
+	tc := setup(t)
 	globalSelector := createSelectable(nil)
 	nameSelector := createSelectable(&v1.NamespaceSelector{
 		MatchNames: []string{"app3", "app1", "app2"},
@@ -136,7 +143,7 @@ func TestBestMatchOrder(t *testing.T) {
 		MatchLabels: map[string]string{"key1": "value1"},
 	})
 
-	assertBestMatch(t, globalSelector, []v1.Selectable{globalSelector})
-	assertBestMatch(t, nameSelector, []v1.Selectable{globalSelector, nameSelector})
-	assertBestMatch(t, nameSelector, []v1.Selectable{globalSelector, nameSelector, labelSelector})
+	tc.assertBestMatch(globalSelector, []v1.Selectable{globalSelector})
+	tc.assertBestMatch(nameSelector, []v1.Selectable{globalSelector, nameSelector})
+	tc.assertBestMatch(nameSelector, []v1.Selectable{globalSelector, nameSelector, labelSelector})
 }
