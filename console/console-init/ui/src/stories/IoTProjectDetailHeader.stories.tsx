@@ -17,7 +17,7 @@ export const ProjectDetailHeader = () => (
   <MemoryRouter>
     <IoTProjectDetailHeader
       projectName={text("Project Name", "Project name")}
-      type={text("Type", "Managed")}
+      timeCreated={text("Creation Time", "2019-11-10T05:08:31.489Z")}
       status={text("Status", "Ready")}
       isEnabled={boolean("Enabled", true)}
       changeStatus={action("onEnableChange Clicked")}

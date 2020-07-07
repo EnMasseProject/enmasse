@@ -225,7 +225,6 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
 
   return (
     <Wizard
-      isOpen={true}
       onClose={onCloseDialog}
       onSave={handleSave}
       footer={CustomFooter}

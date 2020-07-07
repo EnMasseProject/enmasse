@@ -50,12 +50,6 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
 }) => {
   const history = useHistory();
 
-  const navigateToAdressSpace = () => {
-    history.push(
-      `/messaging-projects/${namespace}/${addressSpace}/standard/addresses`
-    );
-  };
-
   const navigateToAddress = (address: string) => {
     history.push(
       `/messaging-projects/${namespace}/${addressSpace}/standard/addresses/${addressSpace}.${address}`
@@ -71,11 +65,11 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           </Title>
         </CardTitle>
         <CardBody>
-          <b className={css(styles.style_margin)}>Address space</b>
+          {/* <b className={css(styles.style_margin)}>Address space</b>
           <Button variant="link" isInline onClick={navigateToAdressSpace}>
             {addressSpace}
           </Button>
-          <br />
+          <br /> */}
           <b className={css(styles.style_margin)}>Events address name</b>
           {eventAddress && (
             <Button
@@ -99,20 +93,26 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           )}
           <br />
           <b className={css(styles.style_margin)}>Command address name</b>
+          {console.log(commandAddresses)}
           {commandAddresses &&
             commandAddresses.length > 0 &&
-            commandAddresses.map((address: string, index: number) => (
-              <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
-                <Button
-                  variant="link"
-                  isInline
-                  onClick={() => navigateToAddress(address)}
-                >
-                  {address}
-                </Button>
-                {index < commandAddresses.length - 1 && ", "}
-              </React.Fragment>
-            ))}
+            commandAddresses.map(
+              (address: string, index: number) =>
+                address && (
+                  <React.Fragment
+                    key={`navlink-gi-command-${address}-${index}`}
+                  >
+                    <Button
+                      variant="link"
+                      isInline
+                      onClick={() => navigateToAddress(address)}
+                    >
+                      {address}
+                    </Button>
+                    {index < commandAddresses.length - 1 && ", "}
+                  </React.Fragment>
+                )
+            )}
           <br />
           <br />
           <Divider />

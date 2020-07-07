@@ -14,16 +14,11 @@ import {
 import { IIoTProjectsResponse } from "schema/iot_project";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { useHistory } from "react-router";
+import { useHistory, useParams } from "react-router";
 
-interface IIoTProjectDetailHeaderContainerProps {
-  projectName: string;
-}
-
-export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderContainerProps> = ({
-  projectName
-}) => {
+export const IoTProjectDetailHeaderContainer: React.FC = () => {
   const { dispatch } = useStoreContext();
+  const { projectname } = useParams();
   const history = useHistory();
 
   const redirectToIoTProjectList = () => {
@@ -42,7 +37,7 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
   ] = useMutationQuery(TOGGLE_IOT_PROJECTS_STATUS, ["allProjects"]);
 
   const { data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS({ projectName })
+    RETURN_IOT_PROJECTS({ projectname })
   );
 
   const { allProjects } = data || {
@@ -55,11 +50,11 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
   const namespace = metadata?.namespace;
 
   const onDeleteProject = () => {
-    if (projectName && namespace) {
+    if (projectname && namespace) {
       const queryVariable = {
         as: [
           {
-            name: projectName,
+            name: projectname,
             namespace: namespace
           }
         ]
@@ -73,11 +68,11 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
       type: types.SHOW_MODAL,
       modalType: MODAL_TYPES.DELETE_PROJECT,
       modalProps: {
-        selectedItems: [projectName],
-        data: projectName,
+        selectedItems: [projectname],
+        data: projectname,
         onConfirm: onDeleteProject,
         option: "Delete",
-        detail: `Are you sure you want to delete this iot project: ${projectName} ?`,
+        detail: `Are you sure you want to delete this iot project: ${projectname} ?`,
         header: "Delete this IoT Project ?",
         confirmButtonLabel: "Delete",
         iconType: "danger"
@@ -89,7 +84,7 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     const queryVariable = {
       a: [
         {
-          name: projectName,
+          name: projectname,
           namespace: namespace
         }
       ],
@@ -98,13 +93,31 @@ export const IoTProjectDetailHeaderContainer: React.FC<IIoTProjectDetailHeaderCo
     await setToggleIoTProjectQueryVariables(queryVariable);
   };
 
+  const handleChangeEnableSwitch = (checked: boolean) => {
+    const title = checked ? "Enable" : "Disable";
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_PROJECT,
+      modalProps: {
+        selectedItems: [projectname],
+        data: projectname,
+        onConfirm: () => handleChangeStatus(checked),
+        option: title,
+        detail: `Are you sure you want to ${title} this iot project: ${projectname} ?`,
+        header: `${title} this IoT Project ?`,
+        confirmButtonLabel: title,
+        iconType: "danger"
+      }
+    });
+  };
+
   return (
     <IoTProjectDetailHeader
       projectName={metadata?.name}
-      type={spec?.downstreamStrategyType}
+      timeCreated={metadata?.creationTimestamp}
       status={status?.phase}
       isEnabled={enabled}
-      changeStatus={handleChangeStatus}
+      changeStatus={handleChangeEnableSwitch}
       onDelete={handleDelete}
     />
   );

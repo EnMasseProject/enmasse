@@ -6,9 +6,7 @@ import {
   AccessCredentials,
   IIoTMessagingObject
 } from "modules/iot-project-detail/components";
-import { action } from "@storybook/addon-actions";
 import { IAdapter } from "components/AdapterList";
-import { Protocols } from "constant";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
 import { RETURN_IOT_PROJECTS } from "graphql-module/queries/iot_project";
@@ -18,47 +16,39 @@ export default function IoTProjectDetailInfoPage() {
   const { projectname } = useParams();
 
   const queryResolver = `
-  iotProjects {
-    metadata{
-      namespace
-    }
-    spec {
-      downstreamStrategy {
-        ... on ManagedDownstreamStrategy_iot_enmasse_io_v1alpha1 {
-          addressSpace {
-            name
-          }
-          addresses {
-            Telemetry {
-              name
-            }
-            Event {
-              name
-            }
-            Command {
-              name
-            }
-          }
+    iotProjects{
+      metadata{
+        name
+        namespace
+        creationTimestamp
+      }
+      enabled
+      spec{
+        tenantId
+        configuration
+        addresses{
+              Telemetry{
+                name
+              }
+              Event{
+                name
+              }
+              Command{
+                name
+              }
         }
       }
-    }
-    status {
-      tenantName
-      downstreamEndpoint {
+      status{
+        phase
+        phaseReason
+      }
+      endpoints {
+        name
+        url
         host
-        port
-        credentials {
-          username
-          password
-        }
+        tls
       }
     }
-    endpoints {
-      name
-      url
-      host
-    }
-  }
 `;
 
   const { data } = useQuery<IIoTProjectsResponse>(
@@ -67,53 +57,39 @@ export default function IoTProjectDetailInfoPage() {
 
   const { allProjects } = data || {
     allProjects: {
-      iotProjects : []
+      iotProjects: []
     }
   };
 
-  const { spec, metadata, status } = allProjects?.iotProjects?.[0] || {};
-  const { name: addressSpace } = spec?.downstreamStrategy?.addressSpace || { name : "" };
-  const { username, password } = status?.downstreamEndpoint?.credentials || {};
+  const { spec, metadata, endpoints } = allProjects?.iotProjects?.[0] || {};
 
-  const { Telemetry, Event, Command } = spec?.downstreamStrategy?.addresses || {};
+  //TODO: add username and password to be updated from the server response
+  //TODO: Remove addressSpace as it is not proesent in shared infra
+
+  const { name: addressSpace } = { name: "addressspace_dummy" };
+  const { username, password } = {
+    username: "dummy_username",
+    password: "dummy_password"
+  };
+
+  const { Telemetry, Event, Command } = spec?.addresses || {};
 
   const telemetryAddress = Telemetry?.name || "";
   const eventAddress = Event?.name || "";
-  const commandAddresses = Command || [];
+  const commandAddresses = Command
+    ? Command.map(add => (add && add.name ? add.name : ""))
+    : [];
 
   const messaging: IIoTMessagingObject = {
-    url: "https://http.bosch-iot-hub.com",
     username,
     password,
     addressSpace,
     eventAddress,
     telemetryAddress,
-    commandAddresses: []
+    commandAddresses: commandAddresses
   };
-  const httpAdapter: IAdapter = {
-    name: Protocols.HTTP,
-    url: "https://http.bosch-iot-hub.com"
-  };
-  const mqttAdapter: IAdapter = {
-    name: Protocols.MQTT,
-    tls: true,
-    host: "mange.bosh-iot-hub.com",
-    port: 8883
-  };
-  const amqpAdapter: IAdapter = {
-    name: Protocols.AMQP,
-    url: "https://http.bosch-iot-hub.com"
-  };
-  const coapAdapter: IAdapter = {
-    name: Protocols.COAP,
-    url: "https://http.bosch-iot-hub.com"
-  };
-  const adapters: IAdapter[] = [
-    httpAdapter,
-    mqttAdapter,
-    amqpAdapter,
-    coapAdapter
-  ];
+
+  const adapters: IAdapter[] = endpoints || [];
   return (
     <Grid>
       <GridItem span={6}>
@@ -121,7 +97,7 @@ export default function IoTProjectDetailInfoPage() {
           addressSpace={addressSpace}
           eventAddress={eventAddress}
           telemetryAddress={telemetryAddress}
-          commandAddresses={commandAddresses.map((as: any) => as.name)}
+          commandAddresses={commandAddresses}
           maxConnection={50000}
           dataVolume={50000}
           startDate={"start Date"}
@@ -136,10 +112,10 @@ export default function IoTProjectDetailInfoPage() {
       </GridItem>
       <GridItem span={6}>
         <AccessCredentials
-          tenantId={"FNDSKB5GSD58EGWAW6663RWfsaf8"}
+          tenantId={spec?.tenantId}
           messaging={messaging}
           adapters={adapters}
-          onDownloadCertificate={action("onDownload triggered")}
+          onDownloadCertificate={() => console.log("onDownload triggered")}
         />
       </GridItem>
     </Grid>
