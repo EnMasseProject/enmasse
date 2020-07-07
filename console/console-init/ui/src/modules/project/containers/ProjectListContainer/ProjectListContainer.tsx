@@ -25,7 +25,8 @@ import { useMutationQuery } from "hooks";
 import {
   DELETE_ADDRESS_SPACE,
   RETURN_IOT_PROJECTS,
-  DELETE_IOT_PROJECT
+  DELETE_IOT_PROJECT,
+  TOGGLE_IOT_PROJECTS_STATUS
 } from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
 import { IIoTProjectsResponse } from "schema/iot_project";
@@ -66,12 +67,14 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   useA11yRouteChange();
   const { dispatch } = useStoreContext();
   const [sortBy, setSortBy] = useState<ISortBy>();
-  const refetchQueries: string[] = ["all_address_spaces"];
+  const refetchQueries: string[] = ["allProjects"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
     refetchQueries
   );
-
+  const [
+    setToggleIoTProjectQueryVariables
+  ] = useMutationQuery(TOGGLE_IOT_PROJECTS_STATUS, ["allProjects"]);
   // const { loading, data } = useQuery<IProjectsResponse>(
   //   RETURN_ALL_ADDRESS_SPACES(
   //     page,
@@ -190,7 +193,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     if (project.projectType === ProjectTypes.MESSAGING) {
       dispatch({
         type: types.SHOW_MODAL,
-        modalType: MODAL_TYPES.DELETE_ADDRESS_SPACE,
+        modalType: MODAL_TYPES.DELETE_PROJECT,
         modalProps: {
           selectedItems: [project.name],
           data: project,
@@ -246,21 +249,61 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
     // if (link.parentNode) link.parentNode.removeChild(link);
   };
 
+  const handleOnChangeEnable = (project: IProject) => {
+    const queryVariable = {
+      a: [
+        {
+          name: project.name,
+          namespace: project.namespace
+        }
+      ],
+      status: !project.isEnabled
+    };
+    setToggleIoTProjectQueryVariables(queryVariable);
+  };
+
   const onEnable = (project: IProject) => {
-    console.log("enable the project", project);
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_PROJECT,
+      modalProps: {
+        selectedItems: [project.name],
+        data: project,
+        onConfirm: () => handleOnChangeEnable(project),
+        option: "Enable",
+        detail: `Are you sure you want to enable this iot project: ${project.name} ?`,
+        header: "Enable this IoT Project ?",
+        confirmButtonLabel: "Enable",
+        iconType: "danger"
+      }
+    });
   };
 
   const onDisable = (project: IProject) => {
-    console.log("disable the project", project);
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.DELETE_PROJECT,
+      modalProps: {
+        selectedItems: [project.name],
+        data: project,
+        onConfirm: () => handleOnChangeEnable(project),
+        option: "Disable",
+        detail: `Are you sure you want to disable this iot project: ${project.name} ?`,
+        header: "Disable this IoT Project ?",
+        confirmButtonLabel: "Disable",
+        iconType: "danger"
+      }
+    });
   };
 
   const getProjects = () => {
     return projects?.map((project: any) => {
-      const { metadata, status } = project || {};
+      const { metadata, status, enabled } = project || {};
       return {
         projectType: ProjectTypes.IOT,
         name: metadata?.name,
         displayName: metadata?.name,
+        isEnabled: enabled,
         type: "",
         namespace: metadata?.namespace,
         plan: "",
