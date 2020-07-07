@@ -69,6 +69,12 @@ export const AppRoutes = () => (
       exact={true}
       getComponent={getProjectListPage}
     />
+    {/* messaging project list page route */}
+    <LazyRoute
+      path="/messaging-projects"
+      exact={true}
+      getComponent={getAddressSpaceListPage}
+    />
     <LazyRoute
       path="/messaging-projects/:namespace/:name/:type/:subList"
       exact={true}
