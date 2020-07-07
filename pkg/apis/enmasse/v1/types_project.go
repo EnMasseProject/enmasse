@@ -47,17 +47,13 @@ type MessagingProjectStatus struct {
 	// Applied plan name.
 	MessagingPlanRef *ObjectReference `json:"messagingPlanRef,omitempty"`
 	// Applied plan configuration.
-	AppliedMessagingPlan *MessagingProjectAppliedPlan `json:"appliedMessagingPlan,omitempty"`
+	AppliedMessagingPlan *MessagingPlanSpec `json:"appliedMessagingPlan,omitempty"`
 	// Current project conditions.
 	Conditions []MessagingProjectCondition `json:"conditions,omitempty"`
 	// The actual capabilities common to all addresses for this project.
 	Capabilities []MessagingCapability `json:"capabilities,omitempty"`
 	// For transactional projects, the broker addresses should be scheduled todo
 	Broker *MessagingAddressBroker `json:"broker,omitempty"`
-}
-
-type MessagingProjectAppliedPlan struct {
-	Resources *MessagingPlanSpecResources `json:"resources,omitempty"`
 }
 
 type MessagingProjectCondition struct {
