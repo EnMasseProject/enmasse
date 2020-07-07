@@ -486,6 +486,10 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, namespace
 	var bestMatch v1.Selectable
 	var bestMatchSelector *v1.NamespaceSelector
 
+	if len(objects) == 0 {
+		return nil, nil
+	}
+
 	// Try to find a selector matching a specific name before needing to lookup namespace
 	for _, object := range objects {
 		selector := object.GetSelector()
