@@ -33,7 +33,7 @@ spec:
     type: string
   - JSONPath: .status.tls.certificateValidity.notAfter
     description: Certificate expiry.
-    name: CertficateExpiry
+    name: CertificateExpiry
     priority: 1
     type: string
   - JSONPath: .metadata.creationTimestamp

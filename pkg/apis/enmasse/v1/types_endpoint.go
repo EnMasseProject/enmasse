@@ -26,7 +26,7 @@ import (
 // +kubebuilder:printcolumn:name="Host",type="string",JSONPath=".status.host",description="The hostname."
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message",priority=1,description="Message describing the reason for the current Phase."
 // +kubebuilder:printcolumn:name="Protocols",type="string",JSONPath=".spec.protocols",priority=1,description="Supported protocols."
-// +kubebuilder:printcolumn:name="CertficateExpiry",type="string",JSONPath=".status.tls.certificateValidity.notAfter",priority=1,description="Certificate expiry."
+// +kubebuilder:printcolumn:name="CertificateExpiry",type="string",JSONPath=".status.tls.certificateValidity.notAfter",priority=1,description="Certificate expiry."
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MessagingEndpoint struct {
 	metav1.TypeMeta   `json:",inline"`
