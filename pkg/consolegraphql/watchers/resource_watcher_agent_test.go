@@ -8,19 +8,20 @@ package watchers
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"testing"
+	"time"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	v1meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/fake"
 	fake2 "k8s.io/client-go/kubernetes/typed/core/v1/fake"
-	"testing"
-	"time"
 )
 
 const namespace = "mynamespace"
@@ -34,7 +35,7 @@ func newTestAgentWatcher(t *testing.T) (*AgentWatcher, chan agent.AgentEvent) {
 
 	eventChan := make(chan agent.AgentEvent)
 
-	watcher, err := NewAgentWatcher(objectCache, nil, v1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
+	watcher, err := NewAgentWatcher(objectCache, nil, corev1.NamespaceAll, MockAgentCollectorCreator(eventChan), false, AgentWatcherClient(fake.NewSimpleClientset().CoreV1()))
 	assert.NoError(t, err)
 
 	_, err = watcher.ClientInterface.Secrets("").(*fake2.FakeSecrets).Create(createCaSecret())
@@ -96,8 +97,7 @@ func TestWatchAgent_NewConnection(t *testing.T) {
 			CreationTimestamp: v1meta.Unix(epoch, 0),
 		},
 		Spec: consolegraphql.ConnectionSpec{
-			AddressSpace: addressSpace,
-			Protocol:     "amqp",
+			Protocol: "amqp",
 		},
 	}
 
@@ -356,7 +356,7 @@ func TestWatchAgent_AddressMetricsUpdated(t *testing.T) {
 
 func createAddress(namespace, name string, metrics ...*consolegraphql.Metric) *consolegraphql.AddressHolder {
 	return &consolegraphql.AddressHolder{
-		Address: v1beta1.Address{
+		MessagingAddress: v1.MessagingAddress{
 			TypeMeta: v1meta.TypeMeta{
 				Kind: "Address",
 			},
@@ -429,8 +429,8 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 	return nil
 }
 
-func createService() *v1.Service {
-	return &v1.Service{
+func createService() *corev1.Service {
+	return &corev1.Service{
 		ObjectMeta: v1meta.ObjectMeta{
 			Name: "myagentservice",
 			Annotations: map[string]string{
@@ -442,8 +442,8 @@ func createService() *v1.Service {
 				"app":       "enmasse",
 				"component": "agent"},
 		},
-		Spec: v1.ServiceSpec{
-			Ports: []v1.ServicePort{{
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
 				Name: "amqps",
 				Port: 5671,
 			}},
@@ -451,8 +451,8 @@ func createService() *v1.Service {
 	}
 }
 
-func createCaSecret() *v1.Secret {
-	return &v1.Secret{
+func createCaSecret() *corev1.Secret {
+	return &corev1.Secret{
 		ObjectMeta: v1meta.ObjectMeta{
 			Name: fmt.Sprintf("ca-%s%s", addressSpace, infraUuid),
 		},

@@ -7,7 +7,9 @@
 package accesscontroller
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"testing"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/stretchr/testify/assert"
 	authv1 "k8s.io/api/authorization/v1"
@@ -17,7 +19,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	clientTesting "k8s.io/client-go/testing"
-	"testing"
 )
 
 type acTestResource struct {
@@ -151,10 +152,10 @@ func TestReadNamespaceDenied(t *testing.T) {
 
 func createAddress(namespace, name string) *consolegraphql.AddressHolder {
 	address := &consolegraphql.AddressHolder{
-		Address: v1beta1.Address{
+		MessagingAddress: v1.MessagingAddress{
 			TypeMeta: metav1.TypeMeta{
-				APIVersion: "enmasse.io/v1beta1",
-				Kind:       "Address",
+				APIVersion: "enmasse.io/v1",
+				Kind:       "MessagingAddress",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: namespace,

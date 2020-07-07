@@ -7,7 +7,7 @@
 package resolvers
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/agent"
 	"github.com/google/uuid"
@@ -26,14 +26,14 @@ func getMetric(name string, metrics []*consolegraphql.Metric) *consolegraphql.Me
 
 type messagingProjectHolderOption func(*consolegraphql.MessagingProjectHolder)
 
-func createMessagingProject(addressspace, namespace string, messagingProjectHolderOptions ...messagingProjectHolderOption) *consolegraphql.MessagingProjectHolder {
+func createMessagingProject(namespace string, messagingProjectHolderOptions ...messagingProjectHolderOption) *consolegraphql.MessagingProjectHolder {
 	ash := &consolegraphql.MessagingProjectHolder{
 		MessagingProject: v1.MessagingProject{
 			TypeMeta: metav1.TypeMeta{
 				Kind: "MessagingProject",
 			},
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      addressspace,
+				Name:      "default",
 				Namespace: namespace,
 				UID:       types.UID(uuid.New().String()),
 			},
@@ -65,9 +65,7 @@ func createConnection(host, namespace string, metrics ...*consolegraphql.Metric)
 			Namespace: namespace,
 			UID:       types.UID(uuid.New().String()),
 		},
-		Spec: consolegraphql.ConnectionSpec{
-			Namespace: namespace,
-		},
+		Spec:    consolegraphql.ConnectionSpec{},
 		Metrics: metrics,
 	}
 }

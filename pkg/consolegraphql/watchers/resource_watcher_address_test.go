@@ -6,42 +6,43 @@
 package watchers
 
 import (
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"testing"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/fake"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
-func newTestAddressWatcher(t *testing.T) *AddressWatcher {
+func newTestAddressWatcher(t *testing.T) *MessagingAddressWatcher {
 	objectCache, err := cache.CreateObjectCache()
 	assert.NoError(t, err, "failed to create object cache")
 
 	clientset := fake.NewSimpleClientset()
 
-	watcher, err := NewAddressWatcher(objectCache, nil, AddressWatcherClient(clientset.EnmasseV1beta1()),
-		AddressWatcherFactory(AddressCreate, AddressUpdate))
+	watcher, err := NewMessagingAddressWatcher(objectCache, nil, MessagingAddressWatcherClient(clientset.EnmasseV1()),
+		MessagingAddressWatcherFactory(AddressCreate, AddressUpdate))
 	assert.NoError(t, err, "failed to create test resolver")
 
-	return watcher.(*AddressWatcher)
+	return watcher.(*MessagingAddressWatcher)
 }
 
 func TestWatchAddress_ListProvidesNewValue(t *testing.T) {
 	w := newTestAddressWatcher(t)
 
 	namespace := "mynamespace"
-	addr := createAddress(namespace, "myyaddressspace.myaddr")
+	addr := createAddress(namespace, "myaddr")
 
-	_, err := w.ClientInterface.Addresses(namespace).Create(&addr.Address)
+	_, err := w.ClientInterface.MessagingAddresses(namespace).Create(&addr.MessagingAddress)
 	assert.NoError(t, err, "failed to create address")
 
 	err = w.Watch()
 	assert.NoError(t, err, "failed to commence address watcher")
 	w.Shutdown()
 
-	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "MessagingAddress", nil)
 	assert.NoError(t, err, "failed to query cache")
 	assert.Equal(t, 1, len(objs), "Unexpected number of addresses")
 	assert.Equal(t, int32(0), w.GetRestartCount())
@@ -54,27 +55,27 @@ func TestWatchAddress_ListProvidesNewValue(t *testing.T) {
 func TestWatchAddress_ListProvidesDifferingValues(t *testing.T) {
 	w := newTestAddressWatcher(t)
 
-	addr1 := createAddress(namespace, "myyaddressspace.myaddr1") // Will continue to exist unchanged.
-	addr2 := createAddress(namespace, "myyaddressspace.myaddr2") // Will continue to exist, but kubernetes version will carry an update
-	addr3 := createAddress(namespace, "myyaddressspace.myaddr3") // Will be provided new by kubernetes.
-	addr4 := createAddress(namespace, "myyaddressspace.myaddr4") // Wont be provided by kubernetes, so will be removed.
+	addr1 := createAddress(namespace, "myaddr1") // Will continue to exist unchanged.
+	addr2 := createAddress(namespace, "myaddr2") // Will continue to exist, but kubernetes version will carry an update
+	addr3 := createAddress(namespace, "myaddr3") // Will be provided new by kubernetes.
+	addr4 := createAddress(namespace, "myaddr4") // Wont be provided by kubernetes, so will be removed.
 
 	err := w.Cache.Add(deepCopyAddress(addr1), deepCopyAddress(addr2), deepCopyAddress(addr4))
 	assert.NoError(t, err, "failed to create address population")
 
-	annotateAddress(&addr2.Address) // give namespace2 an update
-	_, err = w.ClientInterface.Addresses(namespace).Create(&addr1.Address)
+	annotateAddress(&addr2.MessagingAddress) // give namespace2 an update
+	_, err = w.ClientInterface.MessagingAddresses(namespace).Create(&addr1.MessagingAddress)
 	assert.NoError(t, err, "failed to create address1")
-	_, err = w.ClientInterface.Addresses(namespace).Create(&addr2.Address)
+	_, err = w.ClientInterface.MessagingAddresses(namespace).Create(&addr2.MessagingAddress)
 	assert.NoError(t, err, "failed to create address2")
-	_, err = w.ClientInterface.Addresses(namespace).Create(&addr3.Address)
+	_, err = w.ClientInterface.MessagingAddresses(namespace).Create(&addr3.MessagingAddress)
 	assert.NoError(t, err, "failed to create address3")
 
 	err = w.Watch()
 	assert.NoError(t, err, "failed to commence address watcher")
 	w.Shutdown()
 
-	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "MessagingAddress", nil)
 	assert.NoError(t, err, "failed to query cache")
 
 	assert.Equal(t, 3, len(objs), "Unexpected number of addresses")
@@ -103,17 +104,17 @@ func TestWatchAddress_WatchCreatesNewValue(t *testing.T) {
 	w := newTestAddressWatcher(t)
 
 	namespace := "mynamespace"
-	addr := createAddress(namespace, "myyaddressspace.myaddr")
+	addr := createAddress(namespace, "myaddr")
 
 	err := w.Watch()
 	assert.NoError(t, err, "failed to commence address watcher")
 	w.AwaitWatching()
 
-	_, err = w.ClientInterface.Addresses(namespace).Create(&addr.Address)
+	_, err = w.ClientInterface.MessagingAddresses(namespace).Create(&addr.MessagingAddress)
 	assert.NoError(t, err, "failed to create address")
 	w.Shutdown()
 
-	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "MessagingAddress", nil)
 	assert.NoError(t, err, "failed to query cache")
 	assert.Equal(t, 1, len(objs), "Unexpected number of addresses")
 	assert.Equal(t, int32(0), w.GetRestartCount())
@@ -127,9 +128,9 @@ func TestWatchAddress_WatchUpdatesExistingValue(t *testing.T) {
 	w := newTestAddressWatcher(t)
 
 	namespace := "mynamespace"
-	addr := createAddress(namespace, "myyaddressspace.myaddr")
+	addr := createAddress(namespace, "myaddr")
 
-	created, err := w.ClientInterface.Addresses(namespace).Create(&addr.Address)
+	created, err := w.ClientInterface.MessagingAddresses(namespace).Create(&addr.MessagingAddress)
 	assert.NoError(t, err, "failed to create address")
 
 	err = w.Watch()
@@ -139,11 +140,11 @@ func TestWatchAddress_WatchUpdatesExistingValue(t *testing.T) {
 	copy := created.DeepCopy()
 	annotateAddress(copy)
 
-	_, err = w.ClientInterface.Addresses(namespace).Update(copy)
+	_, err = w.ClientInterface.MessagingAddresses(namespace).Update(copy)
 	assert.NoError(t, err, "failed to update address")
 	w.Shutdown()
 
-	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "MessagingAddress", nil)
 	assert.NoError(t, err, "failed to query cache")
 	expected := 1
 	actual := len(objs)
@@ -164,20 +165,20 @@ func TestWatchAddress_WatchDeletesExistingValue(t *testing.T) {
 	w := newTestAddressWatcher(t)
 
 	namespace := "mynamespace"
-	addr := createAddress(namespace, "myyaddressspace.myaddr")
+	addr := createAddress(namespace, "myaddr")
 
-	_, err := w.ClientInterface.Addresses(namespace).Create(&addr.Address)
+	_, err := w.ClientInterface.MessagingAddresses(namespace).Create(&addr.MessagingAddress)
 	assert.NoError(t, err, "failed to create address")
 
 	err = w.Watch()
 	assert.NoError(t, err, "failed to commence address watcher")
 	w.AwaitWatching()
 
-	err = w.ClientInterface.Addresses(namespace).Delete(addr.Name, &metav1.DeleteOptions{})
+	err = w.ClientInterface.MessagingAddresses(namespace).Delete(addr.Name, &metav1.DeleteOptions{})
 	assert.NoError(t, err, "failed to address namespace")
 	w.Shutdown()
 
-	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "Address", nil)
+	objs, err := w.Cache.Get(cache.PrimaryObjectIndex, "MessagingAddress", nil)
 	assert.NoError(t, err, "failed to query cache")
 	expected := 0
 	actual := len(objs)
@@ -185,7 +186,7 @@ func TestWatchAddress_WatchDeletesExistingValue(t *testing.T) {
 	assert.Equal(t, int32(0), w.GetRestartCount())
 }
 
-func annotateAddress(addr *v1beta1.Address) {
+func annotateAddress(addr *v1.MessagingAddress) {
 	if addr.Annotations == nil {
 		addr.Annotations = make(map[string]string)
 	}
@@ -194,7 +195,7 @@ func annotateAddress(addr *v1beta1.Address) {
 
 func deepCopyAddress(ah *consolegraphql.AddressHolder) *consolegraphql.AddressHolder {
 	metrics := ah.Metrics
-	object := ah.DeepCopyObject().(*v1beta1.Address)
+	object := ah.DeepCopyObject().(*v1.MessagingAddress)
 	if ah.Metrics != nil {
 		metrics = make([]*consolegraphql.Metric, len(ah.Metrics))
 		for i := range ah.Metrics {
@@ -205,7 +206,7 @@ func deepCopyAddress(ah *consolegraphql.AddressHolder) *consolegraphql.AddressHo
 		}
 	}
 	return &consolegraphql.AddressHolder{
-		Address: *object,
-		Metrics: ah.Metrics,
+		MessagingAddress: *object,
+		Metrics:          ah.Metrics,
 	}
 }

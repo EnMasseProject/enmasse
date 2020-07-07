@@ -8,6 +8,8 @@ package resolvers
 
 import (
 	"context"
+	"testing"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -15,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"testing"
 )
 
 func newTestLinkResolver(t *testing.T) *Resolver {
@@ -32,7 +33,6 @@ func TestLinkConnection(t *testing.T) {
 
 	uid := uuid.New().String()
 	namespace := "mynamespace"
-	addressspace := "myaddressspace"
 	addr := &consolegraphql.Connection{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Connection",
@@ -42,20 +42,17 @@ func TestLinkConnection(t *testing.T) {
 			UID:       types.UID(uid),
 			Namespace: namespace,
 		},
-		Spec: consolegraphql.ConnectionSpec{
-			AddressSpace: addressspace,
-		},
+		Spec: consolegraphql.ConnectionSpec{},
 	}
 	err := r.Cache.Add(addr)
 	assert.NoError(t, err)
 
 	obj := &consolegraphql.LinkSpec{
-		Connection:   uid,
-		AddressSpace: addressspace,
+		Connection: uid,
 	}
 
 	ctx := buildResolverContext(namespace)
-	con, err := r.LinkSpec_consoleapi_enmasse_io_v1beta1().Connection(ctx, obj)
+	con, err := r.LinkSpec_consoleapi_enmasse_io_v1().Connection(ctx, obj)
 	assert.NoError(t, err)
 
 	assert.Equal(t, uid, con.ObjectMeta.Name, "unexpected connection uid")

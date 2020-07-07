@@ -8,7 +8,9 @@ package resolvers
 import (
 	"context"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	"testing"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
@@ -16,7 +18,6 @@ import (
 	v12 "github.com/openshift/api/route/v1"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
 )
 
 func newTestMessagingEndpointResolver(t *testing.T) (*Resolver, context.Context) {
@@ -36,10 +37,6 @@ func newTestMessagingEndpointResolver(t *testing.T) (*Resolver, context.Context)
 
 func TestQueryMessagingEndpointNoEndpoints(t *testing.T) {
 	r, ctx := newTestMessagingEndpointResolver(t)
-
-	addressSpace := createAddressSpace("myas", "mynamespace")
-	err := r.Cache.Add(addressSpace)
-	assert.NoError(t, err)
 
 	objs, err := r.Query().MessagingEndpoints(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)
@@ -61,9 +58,6 @@ func TestQueryMessagingEndpointClusterOnly(t *testing.T) {
 			{Name: "amqps", Port: 5671},
 		},
 	}
-	addressSpace := createAddressSpace("myas", "mynamespace", withEndpoint(endpointSpec, endpointStatus))
-	err := r.Cache.Add(addressSpace)
-	assert.NoError(t, err)
 
 	objs, err := r.Query().MessagingEndpoints(ctx, nil, nil, nil, nil)
 	assert.NoError(t, err)

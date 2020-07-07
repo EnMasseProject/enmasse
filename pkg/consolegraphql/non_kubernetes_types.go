@@ -7,13 +7,14 @@ package consolegraphql
 
 import (
 	"container/ring"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	"time"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	authv1 "k8s.io/api/authorization/v1"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"time"
 )
 
 var rateMetricTimeSeriesElements = util.GetUintEnvOrDefault("RATE_METRIC_TIME_SERIES_ELEMENTS", 0, 8, 100)
@@ -43,7 +44,6 @@ func (c *Connection) GetMetrics() []*Metric {
 }
 
 type ConnectionSpec struct {
-	Namespace   string            `json:"namespace,omitempty"`
 	Hostname    string            `json:"hostname,omitempty"`
 	ContainerId string            `json:"containerId,omitempty"`
 	Protocol    string            `json:"protocol,omitempty"`

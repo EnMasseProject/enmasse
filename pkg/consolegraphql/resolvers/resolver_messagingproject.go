@@ -8,8 +8,9 @@ package resolvers
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
@@ -101,6 +102,16 @@ func (r *messagingProjectSpecK8sResolver) Plan(ctx context.Context, obj *v1.Mess
 */
 
 type messagingProjectK8sResolver struct{ *Resolver }
+
+func (r *Resolver) MessagingProjectStatus_enmasse_io_v1() MessagingProjectStatus_enmasse_io_v1Resolver {
+	return &messagingProjectStatusK8sResolver{r}
+}
+
+func (r *messagingProjectStatusK8sResolver) Phase(ctx context.Context, obj *v1.MessagingProjectStatus) (string, error) {
+	return string(obj.Phase), nil
+}
+
+type messagingProjectStatusK8sResolver struct{ *Resolver }
 
 func (r *messagingProjectK8sResolver) Connections(ctx context.Context, obj *consolegraphql.MessagingProjectHolder, first *int, offset *int, filter *string, orderBy *string) (*ConnectionQueryResultConsoleapiEnmasseIoV1, error) {
 	if obj != nil {

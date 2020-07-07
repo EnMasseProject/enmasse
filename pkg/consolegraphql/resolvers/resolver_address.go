@@ -8,16 +8,17 @@ package resolvers
 import (
 	"context"
 	"fmt"
+	"regexp"
+	"strings"
+
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/google/uuid"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"regexp"
-	"strings"
 )
 
 // From https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -32,8 +33,6 @@ func (r *Resolver) Address_consoleapi_enmasse_io_v1() Address_consoleapi_enmasse
 }
 
 type addressK8sResolver struct{ *Resolver }
-
-const infraUuidAnnotation = "enmasse.io/infra-uuid"
 
 func (ar addressK8sResolver) Links(ctx context.Context, obj *consolegraphql.AddressHolder, first *int, offset *int, filter *string, orderBy *string) (*LinkQueryResultConsoleapiEnmasseIoV1, error) {
 	if obj != nil {
@@ -171,6 +170,16 @@ func (r *addressSpecK8sResolver) Type(ctx context.Context, obj *v1.MessagingAddr
 	return AddressType(obj.Type), nil
 }
 */
+
+func (r *Resolver) AddressStatus_enmasse_io_v1() AddressStatus_enmasse_io_v1Resolver {
+	return &addressStatusK8sResolver{r}
+}
+
+func (r *addressStatusK8sResolver) Phase(ctx context.Context, obj *v1.MessagingAddressStatus) (string, error) {
+	return string(obj.Phase), nil
+}
+
+type addressStatusK8sResolver struct{ *Resolver }
 
 func (r *mutationResolver) CreateMessagingAddress(ctx context.Context, input v1.MessagingAddress) (*metav1.ObjectMeta, error) {
 	requestState := server.GetRequestStateFromContext(ctx)

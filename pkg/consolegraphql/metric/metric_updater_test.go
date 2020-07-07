@@ -8,13 +8,14 @@ package metric
 
 import (
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
+	"testing"
+	"time"
+
+	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/cache"
 	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"testing"
-	"time"
 )
 
 func newTestMetricUpdater(t *testing.T) cache.Cache {
@@ -56,9 +57,9 @@ func TestMetricUpdater(t *testing.T) {
 
 func createAddress(namespace, name string, metrics ...*consolegraphql.Metric) *consolegraphql.AddressHolder {
 	return &consolegraphql.AddressHolder{
-		Address: v1beta1.Address{
+		MessagingAddress: v1.MessagingAddress{
 			TypeMeta: metav1.TypeMeta{
-				Kind: "Address",
+				Kind: "MessagingAddress",
 			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      name,
