@@ -23,12 +23,12 @@ const breadcrumb = (
 export default function IoTProjectDetailPage() {
   useBreadcrumb(breadcrumb);
   useDocumentTitle("IoT Project Detail");
-  const { projectname, sublist } = useParams();
+  const { sublist } = useParams();
 
   return (
     <>
       <PageSection variant={PageSectionVariants.light}>
-        <IoTProjectDetailHeaderContainer projectName={projectname} />
+        <IoTProjectDetailHeaderContainer />
         <ProjectNavigation activeItem={sublist || "detail"} />
       </PageSection>
       <PageSection>

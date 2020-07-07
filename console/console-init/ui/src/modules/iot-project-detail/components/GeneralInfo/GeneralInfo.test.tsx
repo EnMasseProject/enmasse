@@ -30,7 +30,6 @@ describe("<GeneralInfo />", () => {
       </MemoryRouter>
     );
     getByText("General Info");
-    getByText("Address space");
     getByText("Events address name");
     getByText("Telemetry address name");
     getByText("Command address name");
