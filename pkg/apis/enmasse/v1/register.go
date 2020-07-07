@@ -43,6 +43,10 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&MessagingPlanList{},
 		&MessagingAddressPlan{},
 		&MessagingAddressPlanList{},
+		&IdentityProvider{},
+		&IdentityProviderList{},
+		&MessagingUser{},
+		&MessagingUserList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

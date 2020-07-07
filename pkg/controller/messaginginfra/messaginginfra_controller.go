@@ -363,7 +363,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 			accessControlCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
 			return processorResult{}, err
 		}
-		certCreated.SetStatus(corev1.ConditionTrue, "", "")
+		accessControlCreated.SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {

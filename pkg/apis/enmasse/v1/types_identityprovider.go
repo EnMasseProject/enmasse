@@ -45,7 +45,9 @@ type IdentityProviderStatus struct {
 	// The current phase of the identity provider.
 	Phase IdentityProviderPhase `json:"phase,omitempty"`
 	// The identityprovider type.
-	Type MessagingEndpointType `json:"type,omitempty"`
+	Type IdentityProviderType `json:"type,omitempty"`
+	// Status messages for the identityprovider.
+	Message string `json:"message,omitempty"`
 }
 
 type IdentityProviderPhase string

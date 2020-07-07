@@ -6,17 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.3.0
   creationTimestamp: null
-  name: identityproviders.enmasse.io
+  name: messagingusers.enmasse.io
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.phase
-    description: The current phase.
-    name: Phase
-    type: string
-  - JSONPath: .status.type
-    description: The provider type.
-    name: Type
-    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
@@ -24,14 +16,14 @@ spec:
   names:
     categories:
     - enmasse
-    kind: IdentityProvider
-    listKind: IdentityProviderList
-    plural: identityproviders
+    kind: MessagingUser
+    listKind: MessagingUserList
+    plural: messagingusers
     shortNames:
-    - idpr
-    - idprovider
-    - idproviders
-    singular: identityprovider
+    - msgusr
+    - msguser
+    - msgusers
+    singular: messaginguser
   scope: Namespaced
   subresources:
     status: {}
@@ -52,23 +44,13 @@ spec:
           type: object
         spec:
           properties:
-            anonymousProvider:
-              description: An identity provide support anonymous authentication
-              type: object
-            namespaceProvider:
-              description: An identity provide support anonymous authentication
-              type: object
+            password:
+              type: string
           type: object
         status:
           properties:
-            message:
-              description: Status messages for the identityprovider.
-              type: string
             phase:
               description: The current phase of the identity provider.
-              type: string
-            type:
-              description: The identityprovider type.
               type: string
           type: object
       type: object

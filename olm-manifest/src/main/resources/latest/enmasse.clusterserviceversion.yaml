@@ -287,6 +287,12 @@ spec:
         - apiGroups: [ "batch" ]
           resources: [ "jobs" ]
           verbs: [ "get", "list", "watch", "update", "create", "patch", "delete" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "identityproviders", "identityproviders/finalizers", "identityproviders/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
+        - apiGroups: [ "enmasse.io" ]
+          resources: [ "messagingusers", "messagingusers/finalizers", "messagingusers/status" ]
+          verbs: [ "create", "update", "patch", "get", "list", "watch", "delete" ]
       - serviceAccountName: console-server
         rules:
         - apiGroups: [ "enmasse.io" ]
@@ -427,6 +433,8 @@ spec:
                 - name: CONTROLLER_ENABLE_MESSAGING_ADDRESS
                   value: "true"
                 - name: CONTROLLER_ENABLE_MESSAGING_ENDPOINT
+                  value: "true"
+                - name: CONTROLLER_ENABLE_IDENTITY_PROVIDER
                   value: "true"
                 - name: CONTROLLER_ENABLE_CONSOLE_SERVICE
                   value: "false"
