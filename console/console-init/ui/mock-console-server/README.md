@@ -992,6 +992,25 @@ args:
 
 ```
 
+## Toggle Iot device status
+
+```
+mutation toggle_iot_devices_status($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
+  toggleIoTProjectsStatus(iotproject: $a, devices: $b, status: $status)
+}
+```
+
+args:
+
+```
+{
+  "a": [{"name": "iotProjectFrance", "namespace": "app1_ns" }],
+  "b": ["10","11"] ,
+  "status" : false
+}
+
+```
+
 ## Create Iot device
 
 ```

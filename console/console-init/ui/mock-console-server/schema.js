@@ -681,6 +681,11 @@ const typeDefs = gql`
       input: [ObjectMeta_v1_Input!]!
       status: Boolean!
     ): Boolean
+    toggleIoTDevicesStatus(
+      iotproject: ObjectMeta_v1_Input!
+      devices: [String!]!
+      status: Boolean!
+    ): Boolean
   }
 
   #

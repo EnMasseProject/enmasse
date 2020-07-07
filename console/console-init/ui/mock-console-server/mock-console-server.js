@@ -4,19 +4,19 @@
  *
  */
 
-const uuidv1 = require('uuid/v1');
-const uuidv5 = require('uuid/v5');
-const { ApolloServer, ApolloError, gql } = require('apollo-server');
-const { formatApolloErrors } = require('apollo-server-errors');
-const typeDefs = require('./schema');
-const { applyPatch, compare } = require('fast-json-patch');
-const parser = require('./filter_parser.js');
-const clone = require('clone');
-const orderer = require('./orderer.js');
-const _ = require('lodash');
+const uuidv1 = require("uuid/v1");
+const uuidv5 = require("uuid/v5");
+const { ApolloServer, ApolloError, gql } = require("apollo-server");
+const { formatApolloErrors } = require("apollo-server-errors");
+const typeDefs = require("./schema");
+const { applyPatch, compare } = require("fast-json-patch");
+const parser = require("./filter_parser.js");
+const clone = require("clone");
+const orderer = require("./orderer.js");
+const _ = require("lodash");
 
 class MultiError extends ApolloError {
-  constructor(message, errors){
+  constructor(message, errors) {
     super(message);
     this.errors = errors;
   }
@@ -24,7 +24,7 @@ class MultiError extends ApolloError {
 
 function runOperationForAll(input, operation) {
   var errors = [];
-  input.forEach( i => {
+  input.forEach(i => {
     try {
       operation(i);
     } catch (e) {
@@ -45,7 +45,7 @@ function calcLowerUpper(offset, first, len) {
   if (first !== undefined && first > 0) {
     upper = Math.min(lower + first, len);
   }
-  return {lower, upper};
+  return { lower, upper };
 }
 
 var stateChangeTimeout = process.env.STATE_CHANGE_TIMEOUT;
@@ -54,7 +54,7 @@ if (!stateChangeTimeout) {
 }
 
 function setStateChangeTimeout(timeout) {
-  stateChangeTimeout = timeout
+  stateChangeTimeout = timeout;
 }
 
 var active = {};
@@ -74,8 +74,9 @@ const availableAddressSpaceTypes = [
       addressSpaceType: "brokered",
       displayName: "brokered",
       shortDescription: "The brokered address space.",
-      longDescription: "The brokered address space type is the \"classic\" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.",
-      displayOrder: 0,
+      longDescription:
+        'The brokered address space type is the "classic" message broker in the cloud which supports AMQP, CORE, OpenWire, and MQTT protocols. It supports JMS with transactions, message groups, selectors on queues and so on.',
+      displayOrder: 0
     }
   },
   {
@@ -88,10 +89,11 @@ const availableAddressSpaceTypes = [
       addressSpaceType: "standard",
       displayName: "standard",
       shortDescription: "The standard address space.",
-      longDescription: "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
-      displayOrder: 1,
+      longDescription:
+        "The standard address space type is the default type in EnMasse, and is focused on scaling in the number of connections and the throughput of the system. It supports AMQP and MQTT protocols.",
+      displayOrder: 1
     }
-  },
+  }
 ];
 
 const availableAddressTypes = [
@@ -105,8 +107,9 @@ const availableAddressTypes = [
       addressSpaceType: "brokered",
       displayName: "queue",
       shortDescription: "A store-and-forward queue",
-      longDescription: "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
-      displayOrder: 0,
+      longDescription:
+        "The queue address type is a store-and-forward queue. This address type is appropriate for implementing a distributed work queue, handling traffic bursts, and other use cases where you want to decouple the producer and consumer. A queue in the brokered address space supports selectors, message groups, transactions, and other JMS features. Message order can be lost with released messages.",
+      displayOrder: 0
     }
   },
   {
@@ -118,9 +121,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "brokered",
       displayName: "topic",
-      shortDescription: "A publish-and-subscribe address with store-and-forward semantics",
-      longDescription: "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
-      displayOrder: 1,
+      shortDescription:
+        "A publish-and-subscribe address with store-and-forward semantics",
+      longDescription:
+        "The topic address type supports the publish-subscribe messaging pattern in which there are 1..N producers and 1..M consumers. Each message published to a topic address is forwarded to all subscribers for that address. A subscriber can also be durable, in which case messages are kept until the subscriber has acknowledged them.",
+      displayOrder: 1
     }
   },
   {
@@ -132,9 +137,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "standard",
       displayName: "anycast",
-      shortDescription: "A scalable 'direct' address for sending messages to one consumer",
-      longDescription: "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
-      displayOrder: 0,
+      shortDescription:
+        "A scalable 'direct' address for sending messages to one consumer",
+      longDescription:
+        "The anycast address type is a scalable direct address for sending messages to one consumer. Messages sent to an anycast address are not stored, but are instead forwarded directly to the consumer. This method makes this address type ideal for request-reply (RPC) uses or even work distribution. This is the cheapest address type as it does not require any persistence.",
+      displayOrder: 0
     }
   },
   {
@@ -146,9 +153,11 @@ const availableAddressTypes = [
     spec: {
       addressSpaceType: "standard",
       displayName: "multicast",
-      shortDescription: "A scalable 'direct' address for sending messages to multiple consumers",
-      longDescription: "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
-      displayOrder: 1,
+      shortDescription:
+        "A scalable 'direct' address for sending messages to multiple consumers",
+      longDescription:
+        "The multicast address type is a scalable direct address for sending messages to multiple consumers. Messages sent to a multicast address are forwarded to all consumers receiving messages on that address. Because message acknowledgments from consumers are not propagated to producers, only pre-settled messages can be sent to multicast addresses.",
+      displayOrder: 1
     }
   },
   {
@@ -1969,6 +1978,10 @@ function toggleIoTProjectStatus(iotProject, status) {
   iotProjects[pjIndex].enabled = status;
 }
 
+function toggleIoTDevicesStatus(iotProject, iotDevice, status) {
+  getIotDevice(iotProject, iotDevice).enabled = status;
+}
+
 function getMockIotDownstreamMessagingAddresses() {
   return {
     Telemetry: {
@@ -2536,6 +2549,12 @@ const resolvers = {
     toggleIoTProjectsStatus: (parents, args) => {
       runOperationForAll(args.input, t =>
         toggleIoTProjectStatus(t, args.status)
+      );
+      return true;
+    },
+    toggleIoTDevicesStatus: (parents, args) => {
+      runOperationForAll(args.devices, t =>
+        toggleIoTDevicesStatus(args.iotproject, t, args.status)
       );
       return true;
     }
