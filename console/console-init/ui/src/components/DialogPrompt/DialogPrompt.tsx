@@ -23,7 +23,10 @@ const getIcon = (icon?: string) => {
     );
 };
 
-const getConfirmButtonVariant = (confirmLabel?: string) => {
+const getConfirmButtonVariant = (confirmLabel?: string, iconType?: string) => {
+  if (iconType && iconType === "danger") {
+    return "danger";
+  }
   switch (confirmLabel && confirmLabel.toLowerCase()) {
     case "delete":
       return "danger";
@@ -76,7 +79,7 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
       actions={[
         <Button
           key={option}
-          variant={getConfirmButtonVariant(confirmButtonLabel)}
+          variant={getConfirmButtonVariant(confirmButtonLabel, iconType)}
           onClick={onConfirmDialog}
         >
           {/* Confirm */}
