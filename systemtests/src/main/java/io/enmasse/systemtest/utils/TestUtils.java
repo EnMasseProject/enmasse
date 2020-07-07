@@ -612,6 +612,10 @@ public class TestUtils {
         return path;
     }
 
+    public static Path getLogsPath(String rootFolder) {
+        return Environment.getInstance().testLogDir().resolve(rootFolder);
+    }
+
     /**
      * Encode an X509 certificate into PEM format.
      *

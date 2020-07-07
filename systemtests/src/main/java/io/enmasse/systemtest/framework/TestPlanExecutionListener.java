@@ -5,7 +5,9 @@
 package io.enmasse.systemtest.framework;
 
 import io.enmasse.systemtest.Environment;
+import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.operator.EnmasseOperatorManager;
+import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.platform.launcher.TestExecutionListener;
 import org.junit.platform.launcher.TestPlan;
 import org.slf4j.Logger;
@@ -26,8 +28,13 @@ public class TestPlanExecutionListener implements TestExecutionListener {
 
     @Override
     public void testPlanExecutionFinished(TestPlan testPlan) {
-        if(!env.skipUninstall()) {
-            operator.deleteEnmasseBundle();
+        try {
+            if (!env.skipUninstall()) {
+                operator.deleteEnmasseBundle();
+            }
+        } catch (Exception | AssertionError ex) {
+            LOGGER.error(ex.getMessage());
+            GlobalLogCollector.saveInfraState(TestUtils.getLogsPath("EndOfTestSuite"));
         }
     }
 }
