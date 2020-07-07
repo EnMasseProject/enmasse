@@ -490,8 +490,17 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, namespace
 	for _, object := range objects {
 		selector := object.GetSelector()
 		// If there is a global one without a selector, use it
-		if selector == nil && bestMatch == nil {
-			bestMatch = object
+		if selector == nil {
+			if bestMatch == nil {
+				bestMatch = object
+				bestMatchSelector = selector
+			} else {
+				// Prefer oldest
+				if bestMatch.GetCreationTimestamp().Time.After(object.GetCreationTimestamp().Time) {
+					bestMatch = object
+					bestMatchSelector = selector
+				}
+			}
 		} else if selector != nil {
 			// If selector is applicable to this namespace
 			matched := false

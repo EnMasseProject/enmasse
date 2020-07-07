@@ -8,6 +8,7 @@ package messagingproject
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -45,8 +46,13 @@ func setup(t *testing.T) *testCase {
 	}
 }
 
-func createSelectable(selector *v1.NamespaceSelector) v1.Selectable {
+func createSelectable(creationTime time.Time, selector *v1.NamespaceSelector) v1.Selectable {
 	return &v1.MessagingInfrastructure{
+		ObjectMeta: metav1.ObjectMeta{
+			CreationTimestamp: metav1.Time{
+				Time: creationTime,
+			},
+		},
 		Spec: v1.MessagingInfrastructureSpec{
 			NamespaceSelector: selector,
 		},
@@ -67,14 +73,14 @@ func (tc *testCase) assertBestMatch(expected v1.Selectable, selectable []v1.Sele
 
 func TestMatchesSelectorGlobal(t *testing.T) {
 	tc := setup(t)
-	s := createSelectable(nil)
+	s := createSelectable(time.Time{}, nil)
 	tc.assertSelector(true, s.GetSelector())
 	tc.assertBestMatch(s, []v1.Selectable{s})
 }
 
 func TestMatchesSelectorByName(t *testing.T) {
 	tc := setup(t)
-	s := createSelectable(&v1.NamespaceSelector{
+	s := createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchNames: []string{"app3", "app1", "app2"},
 	})
 	tc.assertSelector(true, s.GetSelector())
@@ -83,13 +89,13 @@ func TestMatchesSelectorByName(t *testing.T) {
 
 func TestMatchesSelectorByMatchLabels(t *testing.T) {
 	tc := setup(t)
-	s := createSelectable(&v1.NamespaceSelector{
+	s := createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchLabels: map[string]string{"key1": "value1"},
 	})
 	tc.assertSelector(true, s.GetSelector())
 	tc.assertBestMatch(s, []v1.Selectable{s})
 
-	s = createSelectable(&v1.NamespaceSelector{
+	s = createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchLabels: map[string]string{"key1": "value1", "key2": "value2"},
 	})
 	tc.assertSelector(false, s.GetSelector())
@@ -98,7 +104,7 @@ func TestMatchesSelectorByMatchLabels(t *testing.T) {
 
 func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 	tc := setup(t)
-	s := createSelectable(&v1.NamespaceSelector{
+	s := createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "key1",
@@ -110,7 +116,7 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 	tc.assertSelector(true, s.GetSelector())
 	tc.assertBestMatch(s, []v1.Selectable{s})
 
-	s = createSelectable(&v1.NamespaceSelector{
+	s = createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "key1",
@@ -121,7 +127,7 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 	tc.assertSelector(true, s.GetSelector())
 	tc.assertBestMatch(s, []v1.Selectable{s})
 
-	s = createSelectable(&v1.NamespaceSelector{
+	s = createSelectable(time.Time{}, &v1.NamespaceSelector{
 		MatchExpressions: []metav1.LabelSelectorRequirement{
 			{
 				Key:      "key1",
@@ -135,15 +141,23 @@ func TestMatchesSelectorByMatchExpressions(t *testing.T) {
 
 func TestBestMatchOrder(t *testing.T) {
 	tc := setup(t)
-	globalSelector := createSelectable(nil)
-	nameSelector := createSelectable(&v1.NamespaceSelector{
+	oldGlobalSelector := createSelectable(time.Time{}, nil)
+	globalSelector := createSelectable(time.Time{}.Add(1*time.Hour), nil)
+	nameSelector := createSelectable(time.Time{}.Add(1*time.Hour), &v1.NamespaceSelector{
 		MatchNames: []string{"app3", "app1", "app2"},
 	})
-	labelSelector := createSelectable(&v1.NamespaceSelector{
+	oldLabelSelector := createSelectable(time.Time{}, &v1.NamespaceSelector{
+		MatchLabels: map[string]string{"key1": "value1"},
+	})
+	labelSelector := createSelectable(time.Time{}.Add(1*time.Hour), &v1.NamespaceSelector{
 		MatchLabels: map[string]string{"key1": "value1"},
 	})
 
 	tc.assertBestMatch(globalSelector, []v1.Selectable{globalSelector})
+	tc.assertBestMatch(oldGlobalSelector, []v1.Selectable{oldGlobalSelector, globalSelector})
+	tc.assertBestMatch(oldGlobalSelector, []v1.Selectable{globalSelector, oldGlobalSelector})
 	tc.assertBestMatch(nameSelector, []v1.Selectable{globalSelector, nameSelector})
 	tc.assertBestMatch(nameSelector, []v1.Selectable{globalSelector, nameSelector, labelSelector})
+	tc.assertBestMatch(oldLabelSelector, []v1.Selectable{oldLabelSelector, labelSelector})
+	tc.assertBestMatch(oldLabelSelector, []v1.Selectable{labelSelector, oldLabelSelector})
 }
