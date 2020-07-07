@@ -5,38 +5,19 @@
 
 package io.enmasse.systemtest.iot;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.TestInstance;
-
 import io.enmasse.systemtest.IndicativeSentences;
 import io.enmasse.systemtest.TestCleaner;
 import io.enmasse.systemtest.framework.ITestSeparator;
-import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.framework.TestLifecycleManager;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Base interface for IoT tests.
  */
+@ExtendWith(TestLifecycleManager.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public interface IoTTests extends ITestSeparator, TestCleaner {
-
-    String IOT_PROJECT_NAMESPACE = System.getProperty("io.enmasse.systemtest.iot.namespace", "iot-system-tests");
-
-    @BeforeAll
-    static void deployDefaultCerts() {
-        IoTTestSession.deployDefaultCerts();
-    }
-
-    @BeforeAll
-    static void createDeviceManager() throws Exception {
-        DeviceManagementApi.createManagementServiceAccount();
-    }
-
-    @BeforeEach
-    default void createNamespace() {
-        Kubernetes.getInstance().createNamespace(IOT_PROJECT_NAMESPACE);
-    }
-
 }

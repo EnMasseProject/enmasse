@@ -24,21 +24,20 @@ public final class DeviceManagementApi {
         return Kubernetes.getServiceAccountToken(Kubernetes.getInstance().getInfraNamespace(), SERVICE_ACCOUNT_NAME);
     }
 
-    public static void createManagementServiceAccount() throws Exception {
+    public static void createManagementServiceAccount(final String namespace) throws Exception {
 
-        var client = Kubernetes.getInstance().getClient();
-        var ns = Kubernetes.getInstance().getInfraNamespace();
+        var client = Kubernetes.getClient();
 
         // create a service account for working with devices
 
         client
                 .serviceAccounts()
-                .inNamespace(ns)
+                .inNamespace(namespace)
 
                 .createOrReplaceWithNew()
 
                 .withNewMetadata()
-                .withNamespace(ns)
+                .withNamespace(namespace)
                 .withName(SERVICE_ACCOUNT_NAME)
                 .addToLabels("app", "enmasse")
                 .addToLabels("component", "iot")
@@ -87,7 +86,7 @@ public final class DeviceManagementApi {
 
                 .addNewSubject()
                 .withKind("ServiceAccount")
-                .withNamespace(ns)
+                .withNamespace(namespace)
                 .withName(SERVICE_ACCOUNT_NAME)
                 .endSubject()
 

@@ -17,7 +17,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import java.util.List;
 
 public class MessagingAddressResourceType implements ResourceType<MessagingAddress> {
-    private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingAddresses(), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
+    private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingAddresses(), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
 
     @Override
     public String getKind() {

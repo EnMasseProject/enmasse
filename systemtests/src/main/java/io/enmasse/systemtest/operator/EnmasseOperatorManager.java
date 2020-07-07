@@ -203,7 +203,7 @@ public class EnmasseOperatorManager {
     }
 
     private void enableMonitoringForNamespace() {
-        Kubernetes.getInstance().getClient().namespaces()
+        Kubernetes.getClient().namespaces()
                 .withName(kube.getInfraNamespace())
                 .edit()
                 .editMetadata()
@@ -214,7 +214,7 @@ public class EnmasseOperatorManager {
 
     private void enableOperatorMetrics(boolean enable) {
         LOGGER.info("Enabling operator metrics");
-        List<EnvVar> envVars = Kubernetes.getInstance().getClient().apps()
+        List<EnvVar> envVars = Kubernetes.getClient().apps()
                 .deployments()
                 .inNamespace(kube.getInfraNamespace())
                 .withName("enmasse-operator")
@@ -228,7 +228,7 @@ public class EnmasseOperatorManager {
                 })
                 .collect(Collectors.toList());
 
-        Kubernetes.getInstance().getClient().apps()
+        Kubernetes.getClient().apps()
                 .deployments()
                 .inNamespace(kube.getInfraNamespace())
                 .withName("enmasse-operator")

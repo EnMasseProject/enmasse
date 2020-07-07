@@ -17,7 +17,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import java.util.List;
 
 public class MessagingEndpointResourceType implements ResourceType<MessagingEndpoint> {
-    private static final MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> operation = Kubernetes.getInstance().getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
+    private static final MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
 
     @Override
     public String getKind() {

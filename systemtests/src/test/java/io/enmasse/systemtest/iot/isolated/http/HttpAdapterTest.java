@@ -15,11 +15,11 @@ import org.junit.jupiter.api.Tag;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.enmasse.systemtest.framework.TestTag.SYSTEMTEST;
+import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.DeviceSupplier.named;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 
-@Tag(SYSTEMTEST)
+@Tag(IOT)
 class HttpAdapterTest implements StandardIoTHttpTests {
 
     private static IoTTestSession session;
