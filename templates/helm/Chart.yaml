@@ -1,0 +1,23 @@
+apiVersion: v2
+name: enmasse
+description: EnMasse provides messaging as a managed service on Kubernetes
+type: application
+version: ${MAVEN_VERSION}
+appVersion: ${MAVEN_VERSION}
+home: https://enmasse.io
+sources:
+  - https://github.com/EnMasseProject/enmasse
+maintainers:
+  - name: EnMasse Community
+    email: enmasse@redhat.com
+    url: https://enmasse.io/community
+icon: https://raw.githubusercontent.com/EnMasseProject/enmasse/master/documentation/_images/logo/enmasse_icon.svg
+keywords:
+  - amqp
+  - messaging
+  - event
+  - iot
+  - integration
+  - mqtt
+  - lorawan
+  - sigfox

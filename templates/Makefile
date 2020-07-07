@@ -18,10 +18,10 @@ IOT_MODULES=\
 MODULES=\
 	$(IOT_MODULES) \
 	enmasse-operator \
+	helm \
 	crds \
 	console-server \
 	example-roles \
-	example-plans \
 	example-console \
 	example-olm \
 	iot/examples \
@@ -90,6 +90,17 @@ replace_images: prepare
 component_install: replace_images
 	cp -r $(BUILDDIR)/replaced/* $(PACKAGE_INSTALL_DIR)/components/
 
+HELM_CHART=$(PACKAGE_INSTALL_DIR)/helm
+$(HELM_CHART): replace_images
+	mkdir -p $(HELM_CHART)/templates
+	cp $(BUILDDIR)/replaced/helm/Chart.yaml $(HELM_CHART)/
+	cp -r $(BUILDDIR)/replaced/crds $(HELM_CHART)/
+	cp -r ../LICENSE $(HELM_CHART)/
+	for i in enmasse-operator console-server $(IOT_MODULES); do \
+		cp $(BUILDDIR)/replaced/$$i/*.yaml $(HELM_CHART)/templates; \
+	done
+	sed -i -e 's/$(DEFAULT_PROJECT)/{{ .Release.Namespace }}/g' $(HELM_CHART)/templates/*
+
 ENMASSE_BUNDLE=$(PACKAGE_INSTALL_DIR)/bundles/enmasse
 $(ENMASSE_BUNDLE): replace_images
 	mkdir -p $(ENMASSE_BUNDLE)
@@ -97,7 +108,7 @@ $(ENMASSE_BUNDLE): replace_images
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(ENMASSE_BUNDLE)/; \
 	done
 
-install: component_install $(ENMASSE_BUNDLE)
+install: component_install $(ENMASSE_BUNDLE) $(HELM_CHART)
 	@echo "Preparing installation bundle"
 
 package: prepare install
@@ -105,4 +116,4 @@ package: prepare install
 
 coverage:
 
-.PHONY: prepare package clean $(ENMASSE_BUNDLE)
+.PHONY: prepare package clean $(ENMASSE_BUNDLE) $(HELM_CHART)
