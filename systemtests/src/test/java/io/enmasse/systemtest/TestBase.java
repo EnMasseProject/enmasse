@@ -8,6 +8,7 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.framework.ITestSeparator;
 import io.enmasse.systemtest.framework.TestLifecycleManager;
 import io.enmasse.systemtest.framework.TestTag;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -22,6 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Base class for all tests

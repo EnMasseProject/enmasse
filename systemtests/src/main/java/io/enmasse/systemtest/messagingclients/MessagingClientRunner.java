@@ -7,12 +7,25 @@ package io.enmasse.systemtest.messagingclients;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.amqp.AmqpConnectOptions;
+import io.enmasse.systemtest.amqp.QueueTerminusFactory;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientReceiver;
+import io.enmasse.systemtest.messagingclients.proton.java.ProtonJMSClientSender;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientReceiver;
 import io.enmasse.systemtest.messagingclients.rhea.RheaClientSender;
+import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.PemTrustOptions;
+import io.vertx.proton.ProtonClientOptions;
+import io.vertx.proton.ProtonQoS;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -21,6 +34,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingClientRunner {
@@ -103,6 +117,69 @@ public class MessagingClientRunner {
         } catch (Exception e) {
             cleanClients();
         }
+    }
+
+    public void sendAndReceiveOnCluster(String host, int port, String address, boolean enableTls, boolean websockets) throws InterruptedException {
+        assertTrue(port > 0);
+        int expectedMsgCount = 10;
+        executor = Executors.newFixedThreadPool(2);
+        try {
+            Endpoint e = new Endpoint(host, port);
+            ExternalMessagingClient senderClient = new ExternalMessagingClient(enableTls)
+                    .withClientEngine(websockets ? new RheaClientSender() : new ProtonJMSClientSender())
+                    .withMessagingRoute(e)
+                    .withAddress(address)
+                    .withCount(expectedMsgCount)
+                    .withMessageBody("msg no. %d")
+                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                    .withTimeout(30);
+            ExternalMessagingClient receiverClient = new ExternalMessagingClient(enableTls)
+                    .withClientEngine(websockets ? new RheaClientReceiver() : new ProtonJMSClientReceiver())
+                    .withMessagingRoute(e)
+                    .withAddress(address)
+                    .withCount(expectedMsgCount)
+                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
+                    .withTimeout(30);
+            /*if (enableTls) {
+                senderClient.withAdditionalArgument(ClientArgument.CONN_SSL_VERIFY_PEER_NAME, true);
+            }*/
+            if (websockets) {
+                senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
+                receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
+                senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+                receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
+            }
+            clients.addAll(Arrays.asList(senderClient, receiverClient));
+            List<Future<Boolean>> results = executor.invokeAll(List.of(senderClient::run, receiverClient::run));
+
+            assertTrue(results.get(0).get(1, TimeUnit.MINUTES), "Sender failed, expected return code 0");
+            assertTrue(results.get(1).get(1, TimeUnit.MINUTES), "Receiver failed, expected return code 0");
+        } catch (Exception e) {
+            cleanClients();
+        }
+    }
+
+    public AmqpClient sendReceiveOutsideCluster(String host, int port, String address, boolean tls, boolean verifyHost, String caCert) throws Exception {
+        ProtonClientOptions protonClientOptions = new ProtonClientOptions();
+        if (tls) {
+            protonClientOptions.setSsl(true);
+            if (!verifyHost) {
+                protonClientOptions.setHostnameVerificationAlgorithm("");
+            }
+            if (caCert != null) {
+                protonClientOptions.setTrustOptions(new PemTrustOptions()
+                        .addCertValue(Buffer.buffer(caCert)));
+            }
+        }
+        AmqpClient client = ResourceManager.getInstance().getAmqpClientFactory().createClient(new AmqpConnectOptions()
+                .setSaslMechanism("ANONYMOUS")
+                .setQos(ProtonQoS.AT_LEAST_ONCE)
+                .setEndpoint(new Endpoint(host, port))
+                .setProtonClientOptions(protonClientOptions)
+                .setTerminusFactory(new QueueTerminusFactory()));
+
+        assertEquals(1, client.sendMessages(address, Collections.singletonList("hello")).get(1, TimeUnit.MINUTES));
+        return client;
     }
 
     public void cleanClients() throws InterruptedException {
