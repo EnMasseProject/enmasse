@@ -20,33 +20,25 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-func setup(t *testing.T, ns *corev1.Namespace) (*ReconcileMessagingProject, *v1.MessagingProject) {
+func setup(t *testing.T, ns *corev1.Namespace) *ReconcileMessagingProject {
 	s := scheme.Scheme
-	s.AddKnownTypes(v1.SchemeGroupVersion, &v1.MessagingProject{})
 	s.AddKnownTypes(corev1.SchemeGroupVersion, &corev1.Namespace{})
-	project := &v1.MessagingProject{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      PROJECT_RESOURCE_NAME,
-			Namespace: ns.Name,
-		},
-	}
 	objs := []runtime.Object{
 		ns,
-		project,
 	}
 	cl := fake.NewFakeClientWithScheme(s, objs...)
 	r := &ReconcileMessagingProject{client: cl}
-	return r, project
+	return r
 }
 
 func assertSelector(t *testing.T, expected bool, selector *v1.NamespaceSelector) {
-	r, project := setup(t, &corev1.Namespace{
+	r := setup(t, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "app1",
 			Labels: map[string]string{"key1": "value1"},
 		},
 	})
-	matches, err := r.matchesSelector(context.TODO(), project, selector)
+	matches, err := r.matchesSelector(context.TODO(), "app1", selector)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, matches)
 }
@@ -60,13 +52,13 @@ func createSelectable(selector *v1.NamespaceSelector) v1.Selectable {
 }
 
 func assertBestMatch(t *testing.T, expected v1.Selectable, selectable []v1.Selectable) {
-	r, project := setup(t, &corev1.Namespace{
+	r := setup(t, &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   "app1",
 			Labels: map[string]string{"key1": "value1"},
 		},
 	})
-	bestMatch, err := r.findBestMatch(context.TODO(), project, selectable)
+	bestMatch, err := r.findBestMatch(context.TODO(), "app1", selectable)
 	assert.Nil(t, err)
 	assert.Equal(t, expected, bestMatch)
 }

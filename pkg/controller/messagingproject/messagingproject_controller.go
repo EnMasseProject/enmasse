@@ -238,7 +238,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 					activeInfras = append(activeInfras, &item)
 				}
 			}
-			bestMatch, err := r.findBestMatch(ctx, project, activeInfras)
+			bestMatch, err := r.findBestMatch(ctx, project.Namespace, activeInfras)
 			if err != nil {
 				return processorResult{}, err
 			}
@@ -293,7 +293,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 			if err != nil {
 				return processorResult{}, err
 			}
-			matches, err := r.matchesSelector(ctx, project, p.Spec.NamespaceSelector)
+			matches, err := r.matchesSelector(ctx, project.Namespace, p.Spec.NamespaceSelector)
 			if err != nil {
 				return processorResult{}, err
 			}
@@ -319,7 +319,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 					activePlans = append(activePlans, &item)
 				}
 			}
-			bestMatch, err := r.findBestMatch(ctx, project, activePlans)
+			bestMatch, err := r.findBestMatch(ctx, project.Namespace, activePlans)
 			if err != nil {
 				return processorResult{}, err
 			}
@@ -431,48 +431,58 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 	return result.Result(), err
 }
 
-func (r *ReconcileMessagingProject) matchesSelector(ctx context.Context, project *v1.MessagingProject, selector *v1.NamespaceSelector) (bool, error) {
+/**
+ * Checks if a selector matches a given project.
+ */
+func (r *ReconcileMessagingProject) matchesSelector(ctx context.Context, namespace string, selector *v1.NamespaceSelector) (bool, error) {
 	if selector == nil {
 		return true, nil
 	}
 
 	for _, ns := range selector.MatchNames {
-		if ns == project.Namespace {
+		if ns == namespace {
 			return true, nil
 		}
 	}
 
-	ns := &corev1.Namespace{}
-	err := r.client.Get(ctx, types.NamespacedName{Name: project.Namespace}, ns)
-	if err != nil {
-		return false, err
-	}
-
-	if len(selector.MatchLabels) > 0 {
-		sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-			MatchLabels: selector.MatchLabels,
-		})
+	// Fall back to looking up namespace to verify labels if we have specified. This ensures that we only require namespace lookup permissions if
+	// absolutely necessary.
+	if len(selector.MatchLabels) > 0 || len(selector.MatchExpressions) > 0 {
+		ns := &corev1.Namespace{}
+		err := r.client.Get(ctx, types.NamespacedName{Name: namespace}, ns)
 		if err != nil {
 			return false, err
 		}
-		if sel.Matches(labels.FromMap(ns.Labels)) {
-			return true, nil
-		}
-	}
 
-	if len(selector.MatchExpressions) > 0 {
-		sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-			MatchExpressions: selector.MatchExpressions,
-		})
-		if err != nil {
-			return false, err
+		if len(selector.MatchLabels) > 0 {
+			sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+				MatchLabels: selector.MatchLabels,
+			})
+			if err != nil {
+				return false, err
+			}
+			if sel.Matches(labels.FromMap(ns.Labels)) {
+				return true, nil
+			}
 		}
-		return sel.Matches(labels.FromMap(ns.Labels)), nil
+
+		if len(selector.MatchExpressions) > 0 {
+			sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+				MatchExpressions: selector.MatchExpressions,
+			})
+			if err != nil {
+				return false, err
+			}
+			return sel.Matches(labels.FromMap(ns.Labels)), nil
+		}
 	}
 	return false, nil
 }
 
-func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *v1.MessagingProject, objects []v1.Selectable) (v1.Selectable, error) {
+/**
+ * Find the best matching object among a list of objects whose selectors are matched against a messaging project.
+ */
+func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, namespace string, objects []v1.Selectable) (v1.Selectable, error) {
 	var bestMatch v1.Selectable
 	var bestMatchSelector *v1.NamespaceSelector
 
@@ -486,7 +496,7 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *
 			// If selector is applicable to this namespace
 			matched := false
 			for _, ns := range selector.MatchNames {
-				if ns == project.Namespace {
+				if ns == namespace {
 					matched = true
 					break
 				}
@@ -507,10 +517,11 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *
 		}
 	}
 
-	// If no match was found, try again with label matching
+	// Fall back to looking up namespace to verify labels if we have specified. This ensures that we only require namespace lookup permissions if
+	// absolutely necessary.
 	if bestMatch == nil {
 		ns := &corev1.Namespace{}
-		err := r.client.Get(ctx, types.NamespacedName{Name: project.Namespace}, ns)
+		err := r.client.Get(ctx, types.NamespacedName{Name: namespace}, ns)
 		if err != nil {
 			return nil, err
 		}
