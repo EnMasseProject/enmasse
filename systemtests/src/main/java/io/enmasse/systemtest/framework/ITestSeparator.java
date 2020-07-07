@@ -57,7 +57,7 @@ public interface ITestSeparator {
         TimeMeasuringSystem.stopOperation(SystemtestsOperation.TEST_EXECUTION);
         testSeparatorLogger.info("");
         LoggerUtils.logDelimiter("#");
-        testSeparatorLogger.info("[TEST-END] {}.{}-STARTED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
+        testSeparatorLogger.info("[TEST-END] {}.{}-FINISHED", testInfo.getTestClass().get().getName(), testInfo.getDisplayName());
         LoggerUtils.logDelimiter("#");
     }
 }
