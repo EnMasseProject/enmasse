@@ -108,7 +108,7 @@ public class ResourceManager {
         pointerResources = classResources;
     }
 
-    private void cleanDefault(HasMetadata resource) {
+    private synchronized void cleanDefault(HasMetadata resource) {
         if (defaultInfra != null && defaultInfra.getKind().equals(resource.getKind()) && defaultInfra.getMetadata().getName().equals(resource.getMetadata().getName())) {
             defaultInfra = null;
         }
@@ -191,8 +191,10 @@ public class ResourceManager {
             }
 
             // Convenience for tests that create resources in non-existing namespaces. This will create and clean them up.
-            if (resource.getMetadata().getNamespace() != null && !kubeClient.namespaceExists(resource.getMetadata().getNamespace())) {
-                createResource(waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
+            synchronized (this) {
+                if (resource.getMetadata().getNamespace() != null && !kubeClient.namespaceExists(resource.getMetadata().getNamespace())) {
+                    createResource(waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
+                }
             }
 
             if (verbose) {
@@ -202,9 +204,11 @@ public class ResourceManager {
 
             type.create(resource);
 
-            pointerResources.push(() -> {
-                deleteResource(resource);
-            });
+            synchronized (this) {
+                pointerResources.push(() -> {
+                    deleteResource(resource);
+                });
+            }
         }
 
         if (waitReady) {
