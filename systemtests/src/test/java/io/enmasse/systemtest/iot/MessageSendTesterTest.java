@@ -5,18 +5,17 @@
 
 package io.enmasse.systemtest.iot;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import io.vertx.core.json.JsonObject;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import io.enmasse.systemtest.TestTag;
-import io.vertx.core.json.JsonObject;
-
-@Tag(TestTag.FRAMEWORK)
+@Tag(FRAMEWORK)
 public class MessageSendTesterTest {
 
     @Test

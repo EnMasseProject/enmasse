@@ -58,10 +58,6 @@ func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result,
 	}
 
 	return deconstructManagedResources(project, ctx)
-
-	// nothing to do
-
-	return reconcile.Result{}, nil
 }
 
 func deconstructManagedResources(project *iotv1alpha1.IoTProject, ctx finalizer.DeconstructorContext) (reconcile.Result, error) {

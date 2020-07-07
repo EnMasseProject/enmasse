@@ -8,7 +8,7 @@ PROFILE=${1:-"systemtests"}
 TESTCASE=${2}
 
 if [[ -n "$TESTCASE" ]]; then
-    EXTRA_ARGS="-Dtest=${TESTCASE}"
+    EXTRA_ARGS="${EXTRA_ARGS} -Dtest=${TESTCASE}"
 fi
 
 if [[ "$MAVEN_DEBUG" == "true" ]]; then

@@ -7,7 +7,7 @@ package iotproject
 
 import (
 	"context"
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"k8s.io/client-go/tools/record"
@@ -78,7 +78,7 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 
 	// watch for addresses
 
-	err = c.Watch(&source.Kind{Type: &enmassev1beta2.MessagingAddress{}}, loghandler.New(&handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &enmassev1.MessagingAddress{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &iotv1alpha1.IoTProject{},
 	}, log.V(2), "Address"))
@@ -288,8 +288,8 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 // get the first, active endpoint for an IoTProject
 // returns an error if there is one
-func findFirstActiveEndpoint(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (*enmassev1beta2.MessagingEndpoint, error) {
-	endpoints := &enmassev1beta2.MessagingEndpointList{}
+func findFirstActiveEndpoint(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (*enmassev1.MessagingEndpoint, error) {
+	endpoints := &enmassev1.MessagingEndpointList{}
 	if err := c.List(ctx, endpoints, client.InNamespace(project.Namespace)); err != nil {
 		return nil, err
 	}

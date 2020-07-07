@@ -5,18 +5,11 @@
 
 package io.enmasse.systemtest.iot.http;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SYSTEMTEST;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
 import javax.net.ssl.SSLHandshakeException;
 
-import io.enmasse.systemtest.TestTag;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,6 +21,12 @@ import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.StandardIoTTests;
+
+import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.framework.TestTag.SYSTEMTEST;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(SYSTEMTEST)
 public interface StandardIoTHttpTests extends StandardIoTTests {

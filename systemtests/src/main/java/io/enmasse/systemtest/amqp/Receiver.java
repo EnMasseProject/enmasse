@@ -1,9 +1,11 @@
 /*
- * Copyright 2018, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 package io.enmasse.systemtest.amqp;
 
+
+import com.google.common.base.MoreObjects;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.vertx.proton.ProtonConnection;
 import io.vertx.proton.ProtonLinkOptions;
@@ -33,6 +35,14 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         super(clientOptions, linkOptions, connectPromise, resultPromise, containerId);
         this.done = done;
         this.deliveryHandler = deliveryHandler;
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("address", this.linkOptions.getSource())
+                .add("qos", this.clientOptions.getQos())
+                .toString();
     }
 
     @Override

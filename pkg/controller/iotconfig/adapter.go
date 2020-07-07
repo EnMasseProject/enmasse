@@ -9,7 +9,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -208,7 +208,7 @@ func prepareAdapterStatus(config *iotv1alpha1.IoTConfig) {
 func (r *ReconcileIoTConfig) processStandardAdapter(
 	ctx context.Context,
 	config *iotv1alpha1.IoTConfig,
-	_ *enmassev1beta2.MessagingInfrastructure,
+	_ *enmassev1.MessagingInfrastructure,
 	change *cchange.ConfigChangeRecorder,
 	adapter adapter,
 ) (reconcile.Result, error) {
@@ -452,7 +452,7 @@ func appendAdapterEnvVar(container *corev1.Container, a adapter, key string, val
 	install.ApplyOrRemoveEnvSimple(container, a.EnvPrefix+key, value)
 }
 
-func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1beta2.MessagingInfrastructure, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
@@ -465,7 +465,7 @@ func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTConfig, infra *enmassev1beta2.MessagingInfrastructure, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
 
 	// tls versions
 
@@ -903,7 +903,7 @@ func (r *ReconcileIoTConfig) reconcileStandardAdapterRoute(config *iotv1alpha1.I
 }
 
 // create the client certificate for the QDR proxies of the protocol adapters
-func (r *ReconcileIoTConfig) processSharedInfraSecrets(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1beta2.MessagingInfrastructure) error {
+func (r *ReconcileIoTConfig) processSharedInfraSecrets(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure) error {
 	if _, err := r.certController.ReconcileCertWithName(ctx, log, infra, config, getSharedInfraSecretName(config), "adapter-client-cert"); err != nil {
 		return errors.Wrap(err, "Failed to create client certificate for adapters")
 	}

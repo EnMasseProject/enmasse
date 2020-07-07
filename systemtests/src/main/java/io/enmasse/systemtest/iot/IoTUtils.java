@@ -4,6 +4,26 @@
  */
 package io.enmasse.systemtest.iot;
 
+import static io.enmasse.systemtest.platform.Kubernetes.getClient;
+import static io.enmasse.systemtest.platform.Kubernetes.iotConfigs;
+import static io.enmasse.systemtest.platform.Kubernetes.iotTenants;
+import static io.enmasse.systemtest.time.TimeMeasuringSystem.Operation.startOperation;
+import static io.enmasse.systemtest.utils.TestUtils.TimeoutHandler.explain;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+
+import org.slf4j.Logger;
+
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -16,32 +36,13 @@ import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.ServiceConfig;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
-import io.enmasse.systemtest.logs.CustomLogger;
+import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.utils.Serialization;
-import org.slf4j.Logger;
-
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-
-import static io.enmasse.systemtest.platform.Kubernetes.getClient;
-import static io.enmasse.systemtest.platform.Kubernetes.iotConfigs;
-import static io.enmasse.systemtest.platform.Kubernetes.iotTenants;
-import static io.enmasse.systemtest.time.TimeMeasuringSystem.Operation.startOperation;
-import static io.enmasse.systemtest.utils.TestUtils.TimeoutHandler.explain;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class IoTUtils {
 
@@ -57,7 +58,7 @@ public class IoTUtils {
     private static final String IOT_SERVICE_MESH = "iot-service-mesh";
 
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
-    private static final Logger log = CustomLogger.getLogger();
+    private static final Logger log = LoggerUtils.getLogger();
 
     public static void waitForIoTConfigReady(IoTConfig config) throws Exception {
         var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
@@ -203,16 +204,15 @@ public class IoTUtils {
                         .map(Serialization::asJson)
                         .orElse("Project doesn't have status")));
 
-        // the project is ready, so we need to check a few things
-        assertNotNull(project.getStatus());
-        assertEquals("Active", project.getStatus().getPhase());
+        // refresh
+        var actual = tenantAccess.get();
+
+        // the tenant is ready, so we need to check a few things
+        assertNotNull(actual.getStatus());
+        assertEquals("Active", actual.getStatus().getPhase());
     }
 
-    public static boolean isIoTInstalled() {
-        return Kubernetes.getInstance().getCRD(IoTCrd.project().getMetadata().getName()) != null;
-    }
-
-    public static void deleteIoTProjectAndWait(IoTProject project) {
+    static void deleteIoTProjectAndWait(IoTProject project) {
 
         log.info("Deleting IoTProject: {}", project.getMetadata().getName());
 
@@ -243,7 +243,7 @@ public class IoTUtils {
 
     }
 
-    public static void createIoTConfig(IoTConfig config) throws Exception {
+    static void createIoTConfig(IoTConfig config) throws Exception {
         var name = config.getMetadata().getName();
         log.info("Creating IoTConfig - name: {}", name);
         try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_CONFIG)) {
@@ -258,7 +258,7 @@ public class IoTUtils {
         }
     }
 
-    public static void createIoTProject(IoTProject project) {
+    static void createIoTProject(IoTProject project) {
         var name = project.getMetadata().getName();
         log.info("Creating IoTProject - name: {}", name);
         try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_TENANT)) {

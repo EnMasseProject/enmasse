@@ -5,19 +5,18 @@
 
 package io.enmasse.systemtest.utils;
 
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
+
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
-
 public final class Conditions {
 
     private Conditions() {
     }
-
 
     /**
      * Create a condition, checking for a Kubernetes condition.
@@ -93,10 +92,10 @@ public final class Conditions {
         }
     }
 
-    private static String conditionStatus(final Object current, final String conditionType) {
+    static String conditionStatus(final Object current, final String conditionType) {
         try {
             var status = statusSection(current).get();
-            var conditions = status.getClass().getMethod("getConditions").invoke(status));
+            var conditions = status.getClass().getMethod("getConditions").invoke(status);
             for (Object o : (Iterable<?>) conditions) {
                 var clazz = o.getClass();
                 var name = clazz.getMethod("getType").invoke(o);
