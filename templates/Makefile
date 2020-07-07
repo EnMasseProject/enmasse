@@ -94,7 +94,9 @@ HELM_CHART=$(PACKAGE_INSTALL_DIR)/helm
 $(HELM_CHART): replace_images
 	mkdir -p $(HELM_CHART)/templates
 	cp $(BUILDDIR)/replaced/helm/Chart.yaml $(HELM_CHART)/
-	for i in crds enmasse-operator console-server $(IOT_MODULES); do \
+	cp -r $(BUILDDIR)/replaced/crds $(HELM_CHART)/
+	cp -r ../LICENSE $(HELM_CHART)/
+	for i in enmasse-operator console-server $(IOT_MODULES); do \
 		cp $(BUILDDIR)/replaced/$$i/*.yaml $(HELM_CHART)/templates; \
 	done
 	sed -i -e 's/$(DEFAULT_PROJECT)/{{ .Release.Namespace }}/g' $(HELM_CHART)/templates/*
