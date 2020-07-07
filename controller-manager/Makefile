@@ -29,6 +29,7 @@ build/operatorImageMap.yaml:
 	echo "none-authservice: $(NONE_AUTHSERVICE_IMAGE)" >> "$@"
 	echo "keycloak: $(KEYCLOAK_IMAGE)" >> "$@"
 	echo "keycloak-plugin: $(KEYCLOAK_PLUGIN_IMAGE)" >> "$@"
+	echo "access-control-server: $(+ACCESS_CONTROL_SERVER_IMAGE)" >> "$@"
 	echo "console-init: $(CONSOLE_INIT_IMAGE)" >> "$@"
 	echo "console-server: $(CONSOLE_SERVER_IMAGE)" >> "$@"
 	echo "console-proxy-openshift: $(CONSOLE_PROXY_OPENSHIFT_IMAGE)" >> "$@"

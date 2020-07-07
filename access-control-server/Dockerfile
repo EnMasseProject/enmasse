@@ -12,4 +12,4 @@ ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 
 ADD target/access-control-server-${maven_version}-dist.tar.gz /
 
-ENTRYPOINT /access-control-server
+ENTRYPOINT ["/access-control-server"]
