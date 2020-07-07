@@ -1,0 +1,80 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.3.0
+  creationTimestamp: null
+  name: identityproviders.enmasse.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The current phase.
+    name: Phase
+    type: string
+  - JSONPath: .status.type
+    description: The provider type.
+    name: Type
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
+  group: enmasse.io
+  names:
+    categories:
+    - enmasse
+    kind: IdentityProvider
+    listKind: IdentityProviderList
+    plural: identityproviders
+    shortNames:
+    - idpr
+    - idprovider
+    - idprovider
+    singular: identityprovider
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            loadBalancer:
+              description: A cluster endpoint creates an endpoint available through
+                a LoadBalancer service.
+              type: object
+          type: object
+        status:
+          properties:
+            phase:
+              description: The current phase of the identity provider.
+              type: string
+            type:
+              description: The identityprovider type.
+              type: string
+          type: object
+      type: object
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

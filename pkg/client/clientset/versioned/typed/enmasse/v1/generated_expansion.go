@@ -7,6 +7,8 @@
 
 package v1
 
+type IdentityProviderExpansion interface{}
+
 type MessagingAddressExpansion interface{}
 
 type MessagingAddressPlanExpansion interface{}
@@ -18,3 +20,5 @@ type MessagingInfrastructureExpansion interface{}
 type MessagingPlanExpansion interface{}
 
 type MessagingProjectExpansion interface{}
+
+type MessagingUserExpansion interface{}

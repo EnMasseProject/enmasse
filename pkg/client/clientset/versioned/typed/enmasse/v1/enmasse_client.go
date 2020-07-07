@@ -15,17 +15,23 @@ import (
 
 type EnmasseV1Interface interface {
 	RESTClient() rest.Interface
+	IdentityProvidersGetter
 	MessagingAddressesGetter
 	MessagingAddressPlansGetter
 	MessagingEndpointsGetter
 	MessagingInfrastructuresGetter
 	MessagingPlansGetter
 	MessagingProjectsGetter
+	MessagingUsersGetter
 }
 
 // EnmasseV1Client is used to interact with features provided by the enmasse.io group.
 type EnmasseV1Client struct {
 	restClient rest.Interface
+}
+
+func (c *EnmasseV1Client) IdentityProviders(namespace string) IdentityProviderInterface {
+	return newIdentityProviders(c, namespace)
 }
 
 func (c *EnmasseV1Client) MessagingAddresses(namespace string) MessagingAddressInterface {
@@ -50,6 +56,10 @@ func (c *EnmasseV1Client) MessagingPlans(namespace string) MessagingPlanInterfac
 
 func (c *EnmasseV1Client) MessagingProjects(namespace string) MessagingProjectInterface {
 	return newMessagingProjects(c, namespace)
+}
+
+func (c *EnmasseV1Client) MessagingUsers(namespace string) MessagingUserInterface {
+	return newMessagingUsers(c, namespace)
 }
 
 // NewForConfig creates a new EnmasseV1Client for the given config.

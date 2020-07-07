@@ -17,6 +17,10 @@ type FakeEnmasseV1 struct {
 	*testing.Fake
 }
 
+func (c *FakeEnmasseV1) IdentityProviders(namespace string) v1.IdentityProviderInterface {
+	return &FakeIdentityProviders{c, namespace}
+}
+
 func (c *FakeEnmasseV1) MessagingAddresses(namespace string) v1.MessagingAddressInterface {
 	return &FakeMessagingAddresses{c, namespace}
 }
@@ -39,6 +43,10 @@ func (c *FakeEnmasseV1) MessagingPlans(namespace string) v1.MessagingPlanInterfa
 
 func (c *FakeEnmasseV1) MessagingProjects(namespace string) v1.MessagingProjectInterface {
 	return &FakeMessagingProjects{c, namespace}
+}
+
+func (c *FakeEnmasseV1) MessagingUsers(namespace string) v1.MessagingUserInterface {
+	return &FakeMessagingUsers{c, namespace}
 }
 
 // RESTClient returns a RESTClient that is used to communicate

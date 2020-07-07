@@ -7,6 +7,14 @@
 
 package v1
 
+// IdentityProviderListerExpansion allows custom methods to be added to
+// IdentityProviderLister.
+type IdentityProviderListerExpansion interface{}
+
+// IdentityProviderNamespaceListerExpansion allows custom methods to be added to
+// IdentityProviderNamespaceLister.
+type IdentityProviderNamespaceListerExpansion interface{}
+
 // MessagingAddressListerExpansion allows custom methods to be added to
 // MessagingAddressLister.
 type MessagingAddressListerExpansion interface{}
@@ -54,3 +62,11 @@ type MessagingProjectListerExpansion interface{}
 // MessagingProjectNamespaceListerExpansion allows custom methods to be added to
 // MessagingProjectNamespaceLister.
 type MessagingProjectNamespaceListerExpansion interface{}
+
+// MessagingUserListerExpansion allows custom methods to be added to
+// MessagingUserLister.
+type MessagingUserListerExpansion interface{}
+
+// MessagingUserNamespaceListerExpansion allows custom methods to be added to
+// MessagingUserNamespaceLister.
+type MessagingUserNamespaceListerExpansion interface{}

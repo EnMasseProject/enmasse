@@ -13,6 +13,8 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// IdentityProviders returns a IdentityProviderInformer.
+	IdentityProviders() IdentityProviderInformer
 	// MessagingAddresses returns a MessagingAddressInformer.
 	MessagingAddresses() MessagingAddressInformer
 	// MessagingAddressPlans returns a MessagingAddressPlanInformer.
@@ -25,6 +27,8 @@ type Interface interface {
 	MessagingPlans() MessagingPlanInformer
 	// MessagingProjects returns a MessagingProjectInformer.
 	MessagingProjects() MessagingProjectInformer
+	// MessagingUsers returns a MessagingUserInformer.
+	MessagingUsers() MessagingUserInformer
 }
 
 type version struct {
@@ -36,6 +40,11 @@ type version struct {
 // New returns a new Interface.
 func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakListOptions internalinterfaces.TweakListOptionsFunc) Interface {
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
+}
+
+// IdentityProviders returns a IdentityProviderInformer.
+func (v *version) IdentityProviders() IdentityProviderInformer {
+	return &identityProviderInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // MessagingAddresses returns a MessagingAddressInformer.
@@ -66,4 +75,9 @@ func (v *version) MessagingPlans() MessagingPlanInformer {
 // MessagingProjects returns a MessagingProjectInformer.
 func (v *version) MessagingProjects() MessagingProjectInformer {
 	return &messagingProjectInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// MessagingUsers returns a MessagingUserInformer.
+func (v *version) MessagingUsers() MessagingUserInformer {
+	return &messagingUserInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
