@@ -56,6 +56,28 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
     );
   };
 
+  const renderCommandAddress = () => {
+    return (
+      commandAddresses &&
+      commandAddresses.length > 0 &&
+      commandAddresses.map(
+        (address: string, index: number) =>
+          address && (
+            <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
+              <Button
+                variant="link"
+                isInline
+                onClick={() => navigateToAddress(address)}
+              >
+                {address}
+              </Button>
+              {index < commandAddresses.length - 1 && ", "}
+            </React.Fragment>
+          )
+      )
+    );
+  };
+
   return (
     <PageSection>
       <Card>
@@ -93,26 +115,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           )}
           <br />
           <b className={css(styles.style_margin)}>Command address name</b>
-          {console.log(commandAddresses)}
-          {commandAddresses &&
-            commandAddresses.length > 0 &&
-            commandAddresses.map(
-              (address: string, index: number) =>
-                address && (
-                  <React.Fragment
-                    key={`navlink-gi-command-${address}-${index}`}
-                  >
-                    <Button
-                      variant="link"
-                      isInline
-                      onClick={() => navigateToAddress(address)}
-                    >
-                      {address}
-                    </Button>
-                    {index < commandAddresses.length - 1 && ", "}
-                  </React.Fragment>
-                )
-            )}
+          {renderCommandAddress()}
           <br />
           <br />
           <Divider />

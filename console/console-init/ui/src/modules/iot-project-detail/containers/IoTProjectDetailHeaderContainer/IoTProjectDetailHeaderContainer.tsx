@@ -93,7 +93,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
     await setToggleIoTProjectQueryVariables(queryVariable);
   };
 
-  const handleChangeEnableSwitch = (checked: boolean) => {
+  const handleProjectStatus = (checked: boolean) => {
     const title = checked ? "Enable" : "Disable";
     dispatch({
       type: types.SHOW_MODAL,
@@ -117,7 +117,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
       timeCreated={metadata?.creationTimestamp}
       status={status?.phase}
       isEnabled={enabled}
-      changeStatus={handleChangeEnableSwitch}
+      changeStatus={handleProjectStatus}
       onDelete={handleDelete}
     />
   );
