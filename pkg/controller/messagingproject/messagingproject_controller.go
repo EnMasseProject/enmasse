@@ -437,25 +437,39 @@ func (r *ReconcileMessagingProject) matchesSelector(ctx context.Context, project
 	}
 
 	for _, ns := range selector.MatchNames {
-		if ns == project.Name {
+		if ns == project.Namespace {
 			return true, nil
 		}
 	}
 
 	ns := &corev1.Namespace{}
-	err := r.client.Get(ctx, types.NamespacedName{Name: project.Name, Namespace: project.Namespace}, ns)
+	err := r.client.Get(ctx, types.NamespacedName{Name: project.Namespace}, ns)
 	if err != nil {
 		return false, err
 	}
 
-	sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels:      selector.MatchLabels,
-		MatchExpressions: selector.MatchExpressions,
-	})
-	if err != nil {
-		return false, err
+	if len(selector.MatchLabels) > 0 {
+		sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+			MatchLabels: selector.MatchLabels,
+		})
+		if err != nil {
+			return false, err
+		}
+		if sel.Matches(labels.FromMap(ns.Labels)) {
+			return true, nil
+		}
 	}
-	return sel.Matches(labels.FromMap(ns.Labels)), nil
+
+	if len(selector.MatchExpressions) > 0 {
+		sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+			MatchExpressions: selector.MatchExpressions,
+		})
+		if err != nil {
+			return false, err
+		}
+		return sel.Matches(labels.FromMap(ns.Labels)), nil
+	}
+	return false, nil
 }
 
 func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *v1.MessagingProject, objects []v1.Selectable) (v1.Selectable, error) {
@@ -472,7 +486,7 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *
 			// If selector is applicable to this namespace
 			matched := false
 			for _, ns := range selector.MatchNames {
-				if ns == project.Name {
+				if ns == project.Namespace {
 					matched = true
 					break
 				}
@@ -496,7 +510,7 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *
 	// If no match was found, try again with label matching
 	if bestMatch == nil {
 		ns := &corev1.Namespace{}
-		err := r.client.Get(ctx, types.NamespacedName{Name: project.Name, Namespace: project.Namespace}, ns)
+		err := r.client.Get(ctx, types.NamespacedName{Name: project.Namespace}, ns)
 		if err != nil {
 			return nil, err
 		}
@@ -507,14 +521,28 @@ func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, project *
 			if selector == nil && bestMatch == nil {
 				bestMatch = object
 			} else if selector != nil {
-				sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-					MatchLabels:      selector.MatchLabels,
-					MatchExpressions: selector.MatchExpressions,
-				})
-				if err != nil {
-					return nil, err
+				matches := false
+				if len(selector.MatchLabels) > 0 {
+					sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+						MatchLabels: selector.MatchLabels,
+					})
+					if err != nil {
+						return nil, err
+					}
+					matches = sel.Matches(labels.FromMap(ns.Labels))
 				}
-				if sel.Matches(labels.FromMap(ns.Labels)) {
+
+				if !matches && len(selector.MatchExpressions) > 0 {
+					sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+						MatchExpressions: selector.MatchExpressions,
+					})
+					if err != nil {
+						return nil, err
+					}
+					matches = sel.Matches(labels.FromMap(ns.Labels))
+				}
+
+				if matches {
 					if bestMatch == nil || bestMatchSelector == nil {
 						bestMatch = object
 						bestMatchSelector = selector
