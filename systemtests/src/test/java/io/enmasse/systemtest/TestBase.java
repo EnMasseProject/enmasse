@@ -23,6 +23,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.LinkedList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * Base class for all tests
  */
@@ -84,6 +86,20 @@ public abstract class TestBase implements ITestSeparator {
         this.cleanup.clear();
         if (exception != null) {
             throw exception;
+        }
+    }
+
+    protected void assertDefaultMessaging() {
+        int expectedMsgCount = 10;
+        List<ExternalMessagingClient> clients = clientRunner.getClients();
+        for (ExternalMessagingClient client : clients) {
+            if (client.isSender()) {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
+                        String.format("Expected %d sent messages", expectedMsgCount));
+            } else {
+                assertEquals(expectedMsgCount, client.getMessages().size(),
+                        String.format("Expected %d received messages", expectedMsgCount));
+            }
         }
     }
 }

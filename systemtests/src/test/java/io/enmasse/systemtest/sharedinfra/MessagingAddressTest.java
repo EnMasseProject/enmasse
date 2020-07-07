@@ -84,7 +84,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, "addr1", "addr1");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
     @Test
@@ -100,7 +100,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, true, "multicast1", "multicast1", "multicast1", "multicast1");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
     @Test
@@ -116,7 +116,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, "queue1", "queue1");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
     @Test
@@ -146,7 +146,7 @@ public class MessagingAddressTest extends TestBase {
         clientRunner.sendAndReceive(endpoint, false,
                 Collections.singletonMap(ClientArgument.MSG_TTL, "100"),
                 null, "queue1", "dlq1");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
     @Test
@@ -215,7 +215,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build());
         clientRunner.sendAndReceive(endpoint, true, "topic1", "topic1", "topic1", "topic1");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
     @Test
@@ -311,19 +311,8 @@ public class MessagingAddressTest extends TestBase {
                         .build());
 
         clientRunner.sendAndReceive(endpoint, "topic1", "sub1", "sub2");
-        assertDefaultMessaging(clientRunner.getClients());
+        assertDefaultMessaging();
     }
 
-    private void assertDefaultMessaging(List<ExternalMessagingClient> clients) throws InterruptedException {
-        int expectedMsgCount = 10;
-        for (ExternalMessagingClient client : clients) {
-            if (client.isSender()) {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d sent messages", expectedMsgCount));
-            } else {
-                assertEquals(expectedMsgCount, client.getMessages().size(),
-                        String.format("Expected %d received messages", expectedMsgCount));
-            }
-        }
-    }
+
 }

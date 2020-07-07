@@ -167,8 +167,10 @@ public class MessagingInfrastructureTest extends TestBase {
 
         // Make sure endpoints work first
         LOGGER.info("Running initial client check");
-        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
-        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
+        clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
+        clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
+        assertDefaultMessaging();
+        clientRunner.cleanClients();
 
         // Restart router and broker pods
         MessagingInfrastructure defaultInfra = resourceManager.getDefaultInfra();
@@ -181,8 +183,9 @@ public class MessagingInfrastructureTest extends TestBase {
         assertTrue(resourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 1));
         waitForConditionsTrue(defaultInfra);
 
-        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
-        MessagingEndpointTest.doTestSendReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
+        clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
+        clientRunner.endpointSendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
+        assertDefaultMessaging();
     }
 
     private void waitForConditionsTrue(MessagingInfrastructure infra) {
