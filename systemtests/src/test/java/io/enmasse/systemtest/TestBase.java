@@ -8,6 +8,7 @@ package io.enmasse.systemtest;
 import io.enmasse.systemtest.framework.ITestSeparator;
 import io.enmasse.systemtest.framework.TestLifecycleManager;
 import io.enmasse.systemtest.framework.TestTag;
+import io.enmasse.systemtest.messagingclients.ExternalMessagingClient;
 import io.enmasse.systemtest.messagingclients.MessagingClientRunner;
 import io.enmasse.systemtest.messaginginfra.ResourceManager;
 import io.enmasse.systemtest.platform.KubeCMDClient;
