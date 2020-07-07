@@ -5,18 +5,16 @@
 
 package io.enmasse.systemtest.iot.isolated.http;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SYSTEMTEST;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
-
-import io.enmasse.systemtest.TestTag;
+import io.enmasse.systemtest.framework.TestTag;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
 import org.junit.jupiter.api.Tag;
 
-@Tag(SYSTEMTEST)
+import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
+
+@Tag(TestTag.SYSTEMTEST)
 public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
 
     @Override

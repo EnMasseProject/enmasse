@@ -11,13 +11,13 @@ import io.enmasse.admin.model.v1.ConsoleServiceList;
 import io.enmasse.admin.model.v1.DoneableConsoleService;
 import io.enmasse.api.model.DoneableMessagingEndpoint;
 import io.enmasse.api.model.DoneableMessagingInfrastructure;
-import io.enmasse.api.model.DoneableMessagingTenant;
+import io.enmasse.api.model.DoneableMessagingProject;
 import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointList;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureList;
-import io.enmasse.api.model.MessagingTenant;
-import io.enmasse.api.model.MessagingTenantList;
+import io.enmasse.api.model.MessagingProject;
+import io.enmasse.api.model.MessagingProjectList;
 import io.enmasse.iot.model.v1.DoneableIoTConfig;
 import io.enmasse.iot.model.v1.DoneableIoTProject;
 import io.enmasse.iot.model.v1.IoTConfig;
@@ -162,7 +162,7 @@ public abstract class Kubernetes {
     }
 
     public static KubernetesClient getClient() {
-        return Kubernetes.instance.client;
+        return Kubernetes.getInstance().client;
     }
 
     public abstract void createExternalEndpoint(String name, String namespace, Service service, ServicePort targetPort);
@@ -1045,7 +1045,7 @@ public abstract class Kubernetes {
         loadDirectories(streamManipulator, o -> {
             o.fromServer().get().forEach(item -> {
                 // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
-                Kubernetes.getInstance().getClient().resource(item).cascading(true).delete();
+                getClient().resource(item).cascading(true).delete();
             });
         }, paths);
     }
@@ -1060,8 +1060,7 @@ public abstract class Kubernetes {
     private void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
                                Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
 
-        final Kubernetes kubeCli = Kubernetes.getInstance();
-        final KubernetesClient client = kubeCli.getClient();
+        final KubernetesClient client = getClient();
 
         log.info("Loading resources from: {}", path);
 
@@ -1219,7 +1218,7 @@ public abstract class Kubernetes {
             throw new IllegalStateException("'status' is missing in response");
         }
         if (!status.equals("Success")) {
-            throw new IllegalStateException(String.format("Command failed: ", result.getString("message")));
+            throw new IllegalStateException(String.format("Command failed: %s", result.getString("message")));
         }
 
         final String stdoutString = stdout.toString(StandardCharsets.UTF_8);
@@ -1270,15 +1269,15 @@ public abstract class Kubernetes {
     }
 
     /**
-     * Get a client for {@link MessagingTenant}s.
+     * Get a client for {@link MessagingProject}s.
      *
      * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
      * @return The client instance.
      */
-    public static MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>> messagingTenants(final String namespace) {
-        var result = getClient().customResources(CoreCrd.messagingTenants(), MessagingTenant.class, MessagingTenantList.class, DoneableMessagingTenant.class);
+    public static MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> messagingProjects(final String namespace) {
+        var result = getClient().customResources(CoreCrd.messagingProjects(), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
         if (namespace != null ) {
-            result = (MixedOperation<MessagingTenant, MessagingTenantList, DoneableMessagingTenant, Resource<MessagingTenant, DoneableMessagingTenant>>) result.inNamespace(namespace);
+            result = (MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>>) result.inNamespace(namespace);
         }
         return result;
     }

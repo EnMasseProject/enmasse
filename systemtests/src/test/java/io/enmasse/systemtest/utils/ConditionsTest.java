@@ -5,13 +5,14 @@
 
 package io.enmasse.systemtest.utils;
 
-import io.enmasse.api.model.MessagingEndpointBuilder;
+import java.time.Instant;
+
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
+import io.enmasse.api.model.MessagingEndpointBuilder;
 
-import static io.enmasse.systemtest.TestTag.FRAMEWORK;
+import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 

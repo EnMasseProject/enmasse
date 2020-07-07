@@ -12,6 +12,7 @@ import static java.net.HttpURLConnection.HTTP_NOT_FOUND;
 import java.net.HttpURLConnection;
 import java.util.Optional;
 
+import io.enmasse.iot.model.v1.IoTProjectStatus;
 import org.eclipse.hono.client.ClientErrorException;
 import org.eclipse.hono.client.ServerErrorException;
 import org.eclipse.hono.deviceregistry.service.tenant.TenantInformationService;
@@ -103,6 +104,8 @@ public class KubernetesTenantInformationService extends AbstractProjectBasedServ
             // we re-encode the accepted configuration into the Hono management structure,
             // which isn't completely correct as the Hono 'Tenant' object is not the same
             // as the Hono 'TenantObject'.
+            //
+            // it may be that the next step fails, in that case we simply report this as an error
             var json = this.mapper.valueToTree(project.getStatus().getAccepted().getConfiguration());
             tenant = this.mapper.treeToValue(json, Tenant.class);
         } catch (Exception e) {

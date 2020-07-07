@@ -5,11 +5,10 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.util.Objects;
-
+import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
+import java.util.Objects;
 
 /**
  * A supplier for devices. Required due to an issue in Surefire.

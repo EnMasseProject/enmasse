@@ -36,7 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -127,7 +127,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		{&corev1.ConfigMap{}, false},
 		{&corev1.Secret{}, false},
 		{&corev1.PersistentVolumeClaim{}, false},
-		{&enmassev1beta2.MessagingInfrastructure{}, false},
+		{&enmassev1.MessagingInfrastructure{}, false},
 
 		{&routev1.Route{}, true},
 	} {
@@ -267,7 +267,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	if infraName == "" {
 		infraName = config.Name
 	}
-	messagingInfra := &enmassev1beta2.MessagingInfrastructure{}
+	messagingInfra := &enmassev1.MessagingInfrastructure{}
 	if err := r.client.Get(ctx, client.ObjectKey{Namespace: config.Namespace, Name: infraName}, messagingInfra); err != nil {
 		if apierrors.IsNotFound(err) {
 			// FIXME: properly handle status section

@@ -5,22 +5,19 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.TestCleaner;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import io.enmasse.systemtest.IndicativeSentences;
-import io.enmasse.systemtest.bases.ITestSeparator;
-import io.enmasse.systemtest.listener.JunitCallbackListener;
+import io.enmasse.systemtest.TestCleaner;
+import io.enmasse.systemtest.framework.ITestSeparator;
 import io.enmasse.systemtest.platform.Kubernetes;
 
 /**
  * Base interface for IoT tests.
  */
-@ExtendWith(JunitCallbackListener.class)
 @DisplayNameGeneration(IndicativeSentences.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public interface IoTTests extends ITestSeparator, TestCleaner {

@@ -12,7 +12,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/util"
@@ -119,7 +119,7 @@ func (r *ReconcileIoTProject) reconcileAddress(
 	project *iotv1alpha1.IoTProject,
 	addressName string,
 	addressType AddressType,
-	existing *enmassev1beta2.MessagingAddress,
+	existing *enmassev1.MessagingAddress,
 ) error {
 
 	if err := r.ensureControllerOwnerIsSet(project, existing); err != nil {
@@ -129,7 +129,7 @@ func (r *ReconcileIoTProject) reconcileAddress(
 	existing.Spec.Address = &addressName
 	switch addressType {
 	case AddressTypeAnycast:
-		existing.Spec.Anycast = &enmassev1beta2.MessagingAddressSpecAnycast{}
+		existing.Spec.Anycast = &enmassev1.MessagingAddressSpecAnycast{}
 		existing.Spec.DeadLetter = nil
 		existing.Spec.Multicast = nil
 		existing.Spec.Queue = nil
@@ -139,7 +139,7 @@ func (r *ReconcileIoTProject) reconcileAddress(
 		existing.Spec.Anycast = nil
 		existing.Spec.DeadLetter = nil
 		existing.Spec.Multicast = nil
-		existing.Spec.Queue = &enmassev1beta2.MessagingAddressSpecQueue{}
+		existing.Spec.Queue = &enmassev1.MessagingAddressSpecQueue{}
 		existing.Spec.Subscription = nil
 		existing.Spec.Topic = nil
 	}
@@ -155,7 +155,7 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	stateKey := "Address|" + addressName
 	managedStatus.remainingCreated[stateKey] = false
 
-	address := &enmassev1beta2.MessagingAddress{
+	address := &enmassev1.MessagingAddress{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: project.Namespace,
 			Name:      addressMetaName,
@@ -163,7 +163,7 @@ func (r *ReconcileIoTProject) createOrUpdateAddress(ctx context.Context, project
 	}
 
 	rc, err := controllerutil.CreateOrUpdate(ctx, r.client, address, func() error {
-		managedStatus.remainingReady[stateKey] = address.Status.Phase == enmassev1beta2.MessagingAddressActive
+		managedStatus.remainingReady[stateKey] = address.Status.Phase == enmassev1.MessagingAddressActive
 
 		return r.reconcileAddress(project, addressName, addressType, address)
 	})

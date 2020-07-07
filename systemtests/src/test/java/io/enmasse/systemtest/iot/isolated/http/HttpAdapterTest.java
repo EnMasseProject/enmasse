@@ -5,21 +5,19 @@
 
 package io.enmasse.systemtest.iot.isolated.http;
 
-import static io.enmasse.systemtest.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.TestTag.SYSTEMTEST;
-import static io.enmasse.systemtest.iot.DeviceSupplier.named;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-
-import java.util.Arrays;
-import java.util.List;
-
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
+import java.util.Arrays;
+import java.util.List;
+
+import static io.enmasse.systemtest.framework.TestTag.SYSTEMTEST;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 
 @Tag(SYSTEMTEST)
 class HttpAdapterTest implements StandardIoTHttpTests {

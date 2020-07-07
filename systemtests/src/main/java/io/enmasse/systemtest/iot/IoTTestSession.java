@@ -6,10 +6,10 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.collect.Lists;
-import io.enmasse.api.model.DoneableMessagingInfrastructure;
 import io.enmasse.api.model.MessagingEndpointBuilder;
+import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
-import io.enmasse.api.model.MessagingTenantBuilder;
+import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
 import io.enmasse.iot.model.v1.AdaptersConfig;
@@ -30,7 +30,7 @@ import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.executor.Exec;
-import io.enmasse.systemtest.info.TestInfo;
+import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
@@ -80,7 +80,7 @@ public final class IoTTestSession implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
 
-    public static enum Adapter {
+    public enum Adapter {
         AMQP(AdaptersConfig::getAmqp) {
             @Override
             public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
@@ -125,7 +125,8 @@ public final class IoTTestSession implements AutoCloseable {
                     return a;
                 });
             }
-        },;
+        },
+        ;
 
         private static <X extends AdapterConfigFluent<X>> IoTConfigBuilder editAdapter(
                 final IoTConfigBuilder config,
@@ -147,7 +148,7 @@ public final class IoTTestSession implements AutoCloseable {
 
         }
 
-        private Adapter(final Function<AdaptersConfig, ? extends AdapterConfig> getter) {
+        Adapter(final Function<AdaptersConfig, ? extends AdapterConfig> getter) {
             this.getter = getter;
         }
 
@@ -201,7 +202,7 @@ public final class IoTTestSession implements AutoCloseable {
 
     @FunctionalInterface
     public interface Code {
-        public void run(IoTTestSession session) throws Exception;
+        void run(IoTTestSession session) throws Exception;
     }
 
     public class Device {
@@ -211,7 +212,6 @@ public final class IoTTestSession implements AutoCloseable {
         private String password;
         private PrivateKey key;
         private X509Certificate certificate;
-        private String name;
 
         private Device(String deviceId) {
             this.deviceId = deviceId;
@@ -220,15 +220,6 @@ public final class IoTTestSession implements AutoCloseable {
         public Device register() throws Exception {
             IoTTestSession.this.registryClient.registerDevice(getTenantId(), this.deviceId);
             return this;
-        }
-
-        @Override
-        public String toString() {
-            if (this.name != null) {
-                return this.name;
-            } else {
-                return super.toString();
-            }
         }
 
         /**
@@ -252,7 +243,7 @@ public final class IoTTestSession implements AutoCloseable {
 
         /**
          * Use a different password then stored in the device registry (using {@link #setPassword()}.
-         *
+         * <p>
          * Uses a new random password.
          *
          * @return This instance, for chained method calls.
@@ -290,7 +281,7 @@ public final class IoTTestSession implements AutoCloseable {
          * Create a new http adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
-         *         up.
+         * up.
          */
         public HttpAdapterClient createHttpAdapterClient() throws Exception {
             return createHttpAdapterClient(null);
@@ -301,7 +292,7 @@ public final class IoTTestSession implements AutoCloseable {
          *
          * @param tlsVersions The supported TLS versions.
          * @return The new instance. It will automatically be closed when the test session is being cleaned
-         *         up.
+         * up.
          */
         public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) throws Exception {
             if (this.key != null) {
@@ -315,7 +306,7 @@ public final class IoTTestSession implements AutoCloseable {
          * Create a new mqtt adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
-         *         up.
+         * up.
          */
         public MqttAdapterClient createMqttAdapterClient() throws Exception {
             if (key != null) {
@@ -329,7 +320,7 @@ public final class IoTTestSession implements AutoCloseable {
          * Create a new AMQP adapter client.
          *
          * @return The new instance. It will automatically be closed when the test session is being cleaned
-         *         up.
+         * up.
          */
         public AmqpAdapterClient createAmqpAdapterClient() throws Exception {
             return createAmqpAdapterClient(null);
@@ -340,7 +331,7 @@ public final class IoTTestSession implements AutoCloseable {
          *
          * @param tlsVersions The supported TLS versions.
          * @return The new instance. It will automatically be closed when the test session is being cleaned
-         *         up.
+         * up.
          */
         public AmqpAdapterClient createAmqpAdapterClient(final Set<String> tlsVersions) throws Exception {
             if (this.key != null) {
@@ -525,7 +516,7 @@ public final class IoTTestSession implements AutoCloseable {
 
         @FunctionalInterface
         interface BuildProcessor<T, X extends Throwable> {
-            public T process(IoTConfig config, IoTProject project) throws X;
+            T process(IoTConfig config, IoTProject project) throws X;
         }
 
         private final IoTProjectBuilder project;
@@ -596,12 +587,12 @@ public final class IoTTestSession implements AutoCloseable {
         }
 
         public interface PreDeployContext {
-            public void addCleanup(ThrowingCallable cleanup);
+            void addCleanup(ThrowingCallable cleanup);
         }
 
         @FunctionalInterface
         public interface PreDeployProcessor {
-            public void preDeploy(PreDeployContext context, IoTConfigBuilder config, IoTProjectBuilder project) throws Exception;
+            void preDeploy(PreDeployContext context, IoTConfigBuilder config, IoTProjectBuilder project) throws Exception;
         }
 
         /**
@@ -683,9 +674,9 @@ public final class IoTTestSession implements AutoCloseable {
                 }
                 Kubernetes.getInstance().createNamespace(namespace);
 
-                // create messaging tenant
+                // create messaging project
 
-                var messagingTenant = new MessagingTenantBuilder()
+                var messagingProject = new MessagingProjectBuilder()
                         .withNewMetadata()
                         .withNamespace(namespace)
                         .withName("default")
@@ -694,23 +685,25 @@ public final class IoTTestSession implements AutoCloseable {
                         .withNewSpec().endSpec()
 
                         .build();
-                createDefaultResource(Kubernetes::messagingTenants, messagingTenant, cleanup);
+                createDefaultResource(Kubernetes::messagingProjects, messagingProject, cleanup);
 
-                // create messaging project
+                // create messaging endpoint
 
                 var messagingEndpoint = new MessagingEndpointBuilder()
                         .withNewMetadata()
                         .withNamespace(namespace)
-                        .withName("cluster")
+                        .withName("downstream")
                         .endMetadata()
 
                         .withNewSpec()
-                        .withNewCluster().endCluster()
+                        .withHost(Kubernetes.getInstance().getHost())
+                        .withNewNodePort().endNodePort()
                         .addNewProtocol("AMQP")
                         .endSpec()
 
                         .build();
-                createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
+                messagingEndpoint = createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
+                var endpointHost = messagingEndpoint.getStatus().getHost();
 
                 // create IoT project
 
@@ -729,6 +722,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 // create user
 
+                // FIXME: when users are back, we need to create a user for telemetry, events, and command and control.
                 /*
 
                 var tenantId = getTenantId(project);
@@ -770,7 +764,16 @@ public final class IoTTestSession implements AutoCloseable {
                 UserUtils.waitForUserActive(user, ofDuration(ofMinutes(1)));
                 */
 
-                final Endpoint amqpEndpoint = Kubernetes.getInstance().getServiceEndpoint(namespace + "-cluster", infraNamespace, "amqp" );
+                // eval messaging endpoint
+
+                var port = messagingEndpoint.getStatus()
+                        .getPorts().stream()
+                        .filter(p -> "AMQP".equals(p.getProtocol()))
+                        .map(MessagingEndpointPort::getPort)
+                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'amqp' in endpoint status"));
+                final Endpoint amqpEndpoint = new Endpoint(endpointHost, port);
+
+                // create AMQP client
 
                 AmqpClient client = new AmqpClient(defaultQueue(amqpEndpoint));
                 cleanup.add(client::close);
@@ -831,7 +834,7 @@ public final class IoTTestSession implements AutoCloseable {
 
     /**
      * Create a basic test session builder.
-     *
+     * <p>
      * If you want a ready-to-run configuration, use {@link #createDefault()}.
      *
      * @return The new builder, missing services and undeployed.
@@ -854,7 +857,7 @@ public final class IoTTestSession implements AutoCloseable {
 
     /**
      * Create a new default config, using the default namespace.
-     *
+     * <p>
      * The default namespace is evaluated by a call to
      * {@link Kubernetes#getInfraNamespace()}, which requires an active Kubernetes
      * environment.
@@ -1009,7 +1012,7 @@ public final class IoTTestSession implements AutoCloseable {
      *
      * @param deviceId The ID of the device to create.
      * @return The new device creation instance. The device will only be created when the
-     *         {@link Device#register()} method is being called.
+     * {@link Device#register()} method is being called.
      */
     public Device newDevice(final String deviceId) {
         return new Device(deviceId);
@@ -1039,9 +1042,9 @@ public final class IoTTestSession implements AutoCloseable {
             return;
         }
 
-        var test = TestInfo.getInstance().getActualTest();
+        var test = TestPlanInfo.getInstance().getActualTest();
         if (test == null) {
-            test = TestInfo.getInstance().getActualTestClass();
+            test = TestPlanInfo.getInstance().getActualTestClass();
         }
 
         if (test != null) {
@@ -1097,8 +1100,8 @@ public final class IoTTestSession implements AutoCloseable {
     }
 
 
-    private static <T extends HasMetadata, L, D> void createDefaultResource(
-            final Function<String,MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
+    private static <T extends HasMetadata, L, D> T createDefaultResource(
+            final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
             final List<ThrowingCallable> cleanup) {
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
@@ -1107,5 +1110,6 @@ public final class IoTTestSession implements AutoCloseable {
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
         log.info("Creating successful. Resource is ready.");
+        return client.withName(resource.getMetadata().getName()).get();
     }
 }

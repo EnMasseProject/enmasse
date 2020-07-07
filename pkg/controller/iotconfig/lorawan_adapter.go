@@ -7,7 +7,7 @@ package iotconfig
 
 import (
 	"context"
-	enmassev1beta2 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta2"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -19,7 +19,7 @@ import (
 
 const nameLoraWanAdapter = "iot-lorawan-adapter"
 
-func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1beta2.MessagingInfrastructure, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processLoraWanAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	// find adapter
 
