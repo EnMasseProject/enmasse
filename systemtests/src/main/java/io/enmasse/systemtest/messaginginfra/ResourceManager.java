@@ -13,8 +13,8 @@ import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
-import io.enmasse.systemtest.framework.ThrowableRunner;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.ThrowableRunner;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
@@ -28,7 +28,6 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import org.slf4j.Logger;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Predicate;

@@ -12,6 +12,7 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.KubeClusterManager;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -113,7 +114,7 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
     private void handleCallBackError(String description, ExtensionContext context, ThrowableRunner runnable) throws Exception {
         try {
             runnable.run();
-        } catch (Exception ex) {
+        } catch (Exception | AssertionError ex) {
             try {
                 saveKubernetesState(description, context, ex);
             } catch (Throwable ignored) {
