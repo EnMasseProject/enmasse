@@ -43,7 +43,7 @@ func main() {
 	tlsCertFile := util.GetEnvOrDefault("TLS_CERT_FILE", "")
 	tlsKeyFile := util.GetEnvOrDefault("TLS_KEY_FILE", "")
 
-	// TODO watch the file and restart in the event of change.
+	// TODO watch the files and restart the listener in the event of change(s) in order to support certificate rotation..
 	var tlsConfig *tls.Config
 	if tlsCertFile != "" && tlsKeyFile != "" {
 		cer, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)

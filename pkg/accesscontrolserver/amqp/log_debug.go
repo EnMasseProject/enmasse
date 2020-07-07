@@ -13,7 +13,7 @@ import "os"
 import "strconv"
 
 var (
-	debugLevel = 1
+	debugLevel = 0
 	logger     = log.New(os.Stderr, "", log.Lmicroseconds)
 )
 
@@ -24,12 +24,6 @@ func init() {
 	}
 
 	debugLevel = level
-}
-
-func debug(level int, format string, v ...interface{}) {
-	if level <= debugLevel {
-		logger.Printf(format, v...)
-	}
 }
 
 func debugFrame(c *IncomingConn, prefix string, fr *frame) {
