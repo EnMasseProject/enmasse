@@ -37,6 +37,8 @@ type MessagingInfrastructureSpec struct {
 	Router MessagingInfrastructureSpecRouter `json:"router,omitempty"`
 	// Broker configuration options.
 	Broker MessagingInfrastructureSpecBroker `json:"broker,omitempty"`
+
+	AccessControl MessagingInfrastructureSpecAccessControl `json:"accessControl,omitempty"`
 }
 
 type MessagingInfrastructureSpecRouter struct {
@@ -73,6 +75,10 @@ type MessagingInfrastructureSpecBrokerScalingStrategy struct {
 type MessagingInfrastructureSpecBrokerScalingStrategyStatic struct {
 	// The number of brokers to create.
 	PoolSize int32 `json:"poolSize"`
+}
+
+type MessagingInfrastructureSpecAccessControl struct {
+	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 type MessagingInfrastructureStatus struct {
