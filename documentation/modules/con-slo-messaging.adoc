@@ -1,0 +1,6 @@
+[id='con-slo-messaging-{context}']
+= Messaging service level objectives
+
+* Direct-routed addresses such as anycast and multicast can achieve a throughput of NN bytes/second.
+* Persisted addresses such as queues and topics can achieve a throughput of N bytes/second.
+* With more than > 2 {RouterProductName} replicas, the percieved downtime for clients during upgrades are 99.9% < N seconds.

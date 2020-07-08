@@ -1,0 +1,17 @@
+:parent-context: {context}
+
+:context: assembly-slos-{parent-context}
+
+[id='{context}']
+= Service Level Objectives
+
+{ProductName} defines a set of Service Level Objectives (SLO) that sets what expectations users can have in terms of scaling and operation of {ProductName}. However, all of the SLOs assume a {KubePlatform} with sufficient resources of nodes, memory and CPU to support the need of {ProductName} components.
+
+include::../modules/con-slo-messaging.adoc[leveloffset=+1]
+
+include::../modules/con-slo-operator.adoc[leveloffset=+1]
+
+include::../modules/con-slo-iot.adoc[leveloffset=+1]
+
+:context: {parent-context}
+

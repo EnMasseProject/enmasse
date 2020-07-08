@@ -12,4 +12,6 @@ include::assemblies/assembly-key-features.adoc[leveloffset=+1]
 
 include::assemblies/assembly-concepts.adoc[leveloffset=+1]
 
+include::assemblies/assembly-slos.adoc[leveloffset=+1]
+
 :context: {parent-context}

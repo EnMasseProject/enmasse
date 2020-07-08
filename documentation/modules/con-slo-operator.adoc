@@ -1,0 +1,5 @@
+[id='con-slo-operator-{context}']
+= Operator service level objectives
+
+* A single instance of the operator with sufficient memory and CPU can support up to 100 {RouterProductName} and 1000 {BrokerProductName} across up to 100 instances of messaging infrastructures.
+* A single instance of the operator with sufficient memory and CPU can support up to 100,000 addresses spread across `MessagingInfrastructure`s managed by the same operator.
