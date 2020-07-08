@@ -242,7 +242,9 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 			if err != nil {
 				return processorResult{}, err
 			}
-			infra = bestMatch.(*v1.MessagingInfrastructure)
+			if bestMatch != nil {
+				infra = bestMatch.(*v1.MessagingInfrastructure)
+			}
 			return processorResult{}, nil
 		} else {
 			err := r.client.Get(ctx, types.NamespacedName{Name: project.Status.MessagingInfrastructureRef.Name, Namespace: project.Status.MessagingInfrastructureRef.Namespace}, infra)
@@ -323,7 +325,9 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 			if err != nil {
 				return processorResult{}, err
 			}
-			plan = bestMatch.(*v1.MessagingPlan)
+			if bestMatch != nil {
+				plan = bestMatch.(*v1.MessagingPlan)
+			}
 		}
 
 		// No plan set is fine - defaults will be used
