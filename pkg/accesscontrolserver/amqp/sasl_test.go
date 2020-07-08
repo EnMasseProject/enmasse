@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-func TestAnonymous_InitResponseProvidesIdentity(t *testing.T) {
+func TestAnonymous_InitResponseWithTrace(t *testing.T) {
 	ic := getIncomingConn(WithSASLAnonymous())
 	next := ic.saslMechanisms[saslMechanismANONYMOUS]
 	assert.NotNil(t, next)
@@ -26,7 +26,7 @@ func TestAnonymous_InitResponseProvidesIdentity(t *testing.T) {
 	assert.Equal(t, "user", ic.saslAuthenticatedIdentity)
 }
 
-func TestAnonymous_SubsequentResponseProvidesIdentity(t *testing.T) {
+func TestAnonymous_InitResponseWithoutTrace(t *testing.T) {
 	ic := getIncomingConn(WithSASLAnonymous())
 	next := ic.saslMechanisms[saslMechanismANONYMOUS]
 	assert.NotNil(t, next)
@@ -34,37 +34,13 @@ func TestAnonymous_SubsequentResponseProvidesIdentity(t *testing.T) {
 	next, challenge, err := next("", []byte{})
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(challenge))
-	assert.NotNil(t, next)
-	assert.Nil(t, ic.saslOutcome)
-
-	next, challenge, err = next("", []byte("user"))
-	assert.NoError(t, err)
-	assert.Equal(t, 0, len(challenge))
 	assert.Nil(t, next)
 
 	assert.NotNil(t, ic.saslOutcome)
 	assert.Equal(t, codeSASLOK, ic.saslOutcome.Code)
-	assert.Equal(t, "user", ic.saslAuthenticatedIdentity)
+	assert.Equal(t, "", ic.saslAuthenticatedIdentity)
 }
 
-func TestAnonymous_TooManyEmptyResponses(t *testing.T) {
-	ic := getIncomingConn(WithSASLAnonymous())
-	next := ic.saslMechanisms[saslMechanismANONYMOUS]
-	assert.NotNil(t, next)
-
-	var i int
-	for i = 0; i < 2; i++ {
-		next, challenge, err := next("", []byte{})
-		assert.NoError(t, err)
-		assert.Equal(t, 0, len(challenge))
-		assert.NotNil(t, next)
-		assert.Nil(t, ic.saslOutcome)
-	}
-
-	_, _, err := next("", []byte{})
-	assert.Error(t, err, "too many empty SASL responses received from peer")
-
-}
 
 func getIncomingConn(options ...IncomingConnOption) *IncomingConn {
 	ic := &IncomingConn{

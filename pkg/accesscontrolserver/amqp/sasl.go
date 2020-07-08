@@ -6,10 +6,6 @@
 
 package amqp
 
-import (
-	"fmt"
-)
-
 // SASL Codes
 const (
 	codeSASLOK      saslCode = iota // Connection authentication succeeded.
@@ -41,24 +37,13 @@ func (s *saslCode) unmarshal(r *buffer) error {
 func WithSASLAnonymous() IncomingConnOption {
 	return func(ic *IncomingConn) error {
 		var f saslStateFunc
-		var count int
 		f = func(hostname string, r []byte) (next saslStateFunc, c []byte, err error) {
 			c = []byte{}
-			if len(r) > 0 {
-				ic.saslOutcome = &saslOutcome{
-					Code: codeSASLOK,
-				}
-				ic.saslAuthenticatedIdentity = string(r)
-				return
-			} else {
-				count++
-				if count > 2 {
-					err = fmt.Errorf("too many empty SASL responses received from peer")
-				} else {
-					next = f
-				}
-				return
+			ic.saslOutcome = &saslOutcome{
+				Code: codeSASLOK,
 			}
+			ic.saslAuthenticatedIdentity = string(r)
+			return
 		}
 		ic.saslMechanisms[saslMechanismANONYMOUS] = f
 
