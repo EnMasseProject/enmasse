@@ -16,7 +16,7 @@ import {
 import { IDropdownOption } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { IAddressSpacesResponse } from "schema/ResponseTypes";
-import { FetchPolicy,WIZARD_HEIGHT } from "constant";
+import { FetchPolicy, WIZARD_HEIGHT } from "constant";
 import { messagingAddressNameRegexp } from "types/Configs";
 
 export const CreateAddress: React.FunctionComponent = () => {
@@ -185,6 +185,7 @@ export const CreateAddress: React.FunctionComponent = () => {
   return (
     <Wizard
       id="create-addr-wizard"
+      aria-label="Wizard for creating address"
       isOpen={true}
       onClose={onCloseDialog}
       title="Create new Address"

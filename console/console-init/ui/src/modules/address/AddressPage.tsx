@@ -226,6 +226,8 @@ export default function AddressPage() {
   const renderPagination = () => {
     return (
       <TablePagination
+        id="addr-page-pagination"
+        aria-label="pagination for addresses table"
         itemCount={totalAddresses}
         variant={"top"}
         page={page}

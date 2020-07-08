@@ -84,17 +84,17 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     ) {
       return [
         {
-          id: "edit-address",
+          id: "addr-list-edit-button",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
-          id: "delete-address",
+          id: "addr-list-delete-button",
           title: "Delete",
           onClick: () => onDelete(originalData)
         },
         {
-          id: "purge-address",
+          id: "addr-list-purge-button",
           title: "Purge",
           onClick: () => onPurge(originalData)
         }
@@ -102,12 +102,12 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       return [
         {
-          id: "edit-address",
+          id: "address-list-edit-button",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
-          id: "delete-address",
+          id: "address-list-delete-button",
           title: "Delete",
           onClick: () => onDelete(originalData)
         }
@@ -271,7 +271,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         sortBy={sortBy}
         onSort={onSort}
       >
-        <TableHeader id="address-list-table-bodheader" />
+        <TableHeader
+          id="address-list-tableheader"
+          aria-label="Table Header for address list"
+        />
         <TableBody />
       </Table>
     </div>

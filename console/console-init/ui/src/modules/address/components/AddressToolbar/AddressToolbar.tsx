@@ -96,7 +96,10 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
           />
         )}
       </ToolbarItem>
-      <ToolbarItem data-codemods="true">
+      <ToolbarItem
+        data-codemods="true"
+        id="addr-toolbar-address-list-kebab-toolbaritem"
+      >
         <AddressListKebab
           createAddressOnClick={onClickCreateAddress}
           onDeleteAllAddress={onDeleteAllAddress}
@@ -110,7 +113,7 @@ const AddressToolbar: React.FunctionComponent<IAddressToolbarProps &
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="addr-toolbar-with-filter-toolbar"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
