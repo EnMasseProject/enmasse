@@ -9,13 +9,16 @@ import {
   WizardFooter,
   WizardContextConsumer,
   Button,
-  SelectOptionObject
+  SelectOptionObject,
+  Grid,
+  GridItem,
+  Title
 } from "@patternfly/react-core";
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
 import { AddGateways } from "modules/iot-device/components";
 import { useStoreContext, types } from "context-state-reducer";
-import { AddCredentials } from "stories/AddCredential.stories";
+import { AddCredential } from "modules/iot-device/components";
 
 export interface IDeviceInfo {
   onPropertySelect: (e: any, selection: SelectOptionObject) => void;
@@ -54,9 +57,23 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
     component: <AddGateways returnGateways={getGateways} />
   };
 
+  const AddCredentialWrapper = () => (
+    <Grid hasGutter>
+      <GridItem span={8}>
+        <Title size="2xl" headingLevel="h1">
+          Add credentials to this new device{" "}
+        </Title>
+        <br />
+      </GridItem>
+      <GridItem span={8}>
+        <AddCredential />
+      </GridItem>
+    </Grid>
+  );
+
   const addCredentials = {
     name: "Add credentials",
-    component: <AddCredentials />
+    component: <AddCredentialWrapper />
   };
 
   const reviewForm = {
@@ -134,7 +151,7 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
   }
 
   const handleNextIsEnabled = () => {
-    return false;
+    return true;
   };
 
   const CustomFooter = (

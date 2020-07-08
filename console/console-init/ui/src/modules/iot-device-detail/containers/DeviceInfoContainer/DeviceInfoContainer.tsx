@@ -59,10 +59,6 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     //await setUpdatePasswordQueryVaribles("");
   };
 
-  const addGateways = () => {};
-
-  const addCredentials = () => {};
-
   const deleteGateways = () => {
     /**
      * TODO: add delete gataways query
@@ -100,8 +96,6 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
       onChangeStatus={onChangeCredentialStatus}
       onConfirmPassword={onConfirmSecretPassword}
       errorState={getErrorState()}
-      addGateways={addGateways}
-      addCredentials={addCredentials}
       deleteGateways={deleteGateways}
       deleteCredentials={deleteCredentials}
     />

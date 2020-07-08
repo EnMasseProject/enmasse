@@ -93,16 +93,18 @@ const SecretRow: React.FC<ISecretRowProps> = ({
         const value = secret && (secret as any)[key];
         return (
           <>
-            <Grid key={"secrets-view-" + key}>
-              <GridItem span={3}>
-                <Title headingLevel="h1" size="md">
-                  {getLabelByKey(key)}
-                </Title>
-              </GridItem>
-              <GridItem span={9} className={css(styles.row_margin)}>
-                {renderGridItemValue(value, key)}
-              </GridItem>
-            </Grid>
+            {value && (
+              <Grid key={"secrets-view-" + key}>
+                <GridItem span={3}>
+                  <Title headingLevel="h1" size="md">
+                    {getLabelByKey(key)}
+                  </Title>
+                </GridItem>
+                <GridItem span={9} className={css(styles.row_margin)}>
+                  {renderGridItemValue(value, key)}
+                </GridItem>
+              </Grid>
+            )}
           </>
         );
       })}

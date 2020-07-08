@@ -30,7 +30,7 @@ const styles = StyleSheet.create({
 
 export interface IExtension {
   id: string;
-  parameter?: string;
+  key?: string;
   type?: string;
   value?: string;
 }
@@ -75,24 +75,24 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
 
   return (
     <>
-      <Grid id={"el-list-grid"}>
+      <Grid id={"ext-list-grid"}>
         <GridItem span={12}>
           <DividerWithTitle title={"Ext"} />
           <br />
         </GridItem>
-        {extensions &&
-          extensions.map(ext => {
+        {Array.isArray(extensions) &&
+          extensions?.map(ext => {
             const { id } = ext;
             return (
               <Grid key={id}>
                 <GridItem span={4}>
                   <FormGroup
-                    fieldId={"el-parameter-textinput-" + id}
+                    fieldId={`ext-list-key-textinput-${id}`}
                     label="Parameter"
                   >
                     <TextInput
-                      id={"el-parameter-textinput" + id}
-                      name="parameter"
+                      id={`ext-list-key-textinput-${id}`}
+                      name="key"
                       onChange={(value, event) =>
                         handleInputChangeExtension(
                           credentialId,
@@ -101,17 +101,18 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                           id
                         )
                       }
+                      value={ext["key"]}
                     />
                   </FormGroup>
                 </GridItem>
                 <GridItem span={3}>
                   <FormGroup
-                    fieldId={"el-type-dropdown-" + id}
+                    fieldId={`ext-list-type-dropdown-${id}`}
                     label="Type"
                     className={css(styles.type_margin)}
                   >
                     <DropdownWithToggle
-                      id={"el-type-dropdwon-" + id}
+                      id={`ext-list-type-dropdwon-${id}`}
                       name="type"
                       className={css(styles.dropdown_align)}
                       toggleClass={css(styles.dropdown_toggle_align)}
@@ -130,9 +131,12 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   </FormGroup>
                 </GridItem>
                 <GridItem span={4}>
-                  <FormGroup fieldId={"el-value-textinput-" + id} label="Value">
+                  <FormGroup
+                    fieldId={`ext-list-value-textinput-${id}`}
+                    label="Value"
+                  >
                     <TextInput
-                      id={"el-value-textinput-" + id}
+                      id={`ext-list-value-textinput-${id}`}
                       name="value"
                       onChange={(value, event) =>
                         handleInputChangeExtension(
@@ -147,6 +151,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={1}>
                   <Button
+                    id="ext-list-delete-extension-button"
                     className={css(styles.delete_button_margin)}
                     variant="link"
                     type="button"

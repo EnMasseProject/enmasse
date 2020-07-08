@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { PageSection } from "@patternfly/react-core";
+import { PageSection, PageSectionVariants } from "@patternfly/react-core";
 import {
   CredentialList,
   ICredential,
@@ -13,11 +13,19 @@ import {
 } from "modules/iot-device/components";
 import { uniqueId, findIndexByProperty } from "utils";
 
-export const AddCredential: React.FC<{}> = () => {
+export interface IAddCredentialProps {
+  id?: string;
+  setCredentialList?: (credentials: ICredential[]) => void;
+}
+
+export const AddCredential: React.FC<IAddCredentialProps> = ({
+  id = "add-credential",
+  setCredentialList
+}) => {
   const getExtensionsFieldsInitialState = () => {
     const initialState: IExtension = {
       id: uniqueId(),
-      parameter: "",
+      key: "",
       type: "",
       value: ""
     };
@@ -99,6 +107,10 @@ export const AddCredential: React.FC<{}> = () => {
     setSecretsInitialFormState();
   }, [type]);
 
+  useEffect(() => {
+    setCredentialList && setCredentialList(credentials);
+  }, [credentials]);
+
   const onSelectType = (id: string, event: any, value: string) => {
     setType(value);
     setActiveCredentialFormId(id);
@@ -120,7 +132,6 @@ export const AddCredential: React.FC<{}> = () => {
           ...secrets,
           { id: uniqueId(), ...initialState }
         ];
-        setCredentials(newCredentials);
       }
     } else {
       /**
@@ -162,7 +173,7 @@ export const AddCredential: React.FC<{}> = () => {
     const newCredentials: ICredential[] = [...credentials];
     const index: number = findIndexByProperty(newCredentials, "id", id);
     /**
-     * save child object's fields value i.e. screts and extensions
+     * save child object's fields value i.e. secrets and ext
      */
     if (index >= 0 && elementName) {
       if (childObjId && property) {
@@ -197,7 +208,7 @@ export const AddCredential: React.FC<{}> = () => {
   };
 
   return (
-    <PageSection>
+    <PageSection id={id} variant={PageSectionVariants.light}>
       <CredentialList
         credentials={credentials}
         handleInputChange={handleInputChange}
