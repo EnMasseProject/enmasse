@@ -24,6 +24,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 @Execution(ExecutionMode.CONCURRENT)
 @Test
-@ExtendWith(ParallelTestsExtension.class)
 public @interface ParallelTest {
 }

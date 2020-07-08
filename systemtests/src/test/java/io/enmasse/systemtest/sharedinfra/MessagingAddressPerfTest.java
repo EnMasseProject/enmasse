@@ -20,6 +20,7 @@ import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public class MessagingAddressPerfTest extends TestBase {
     @Test
     @DefaultMessagingInfrastructure
     @DefaultMessagingProject
-    public void testCreateDelete() throws Exception {
+    public void testCreateDelete(ExtensionContext extensionContext) throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -54,7 +55,7 @@ public class MessagingAddressPerfTest extends TestBase {
                 .endNodePort()
                 .endSpec()
                 .build();
-        resourceManager.createResource(endpoint);
+        resourceManager.createResource(extensionContext, endpoint);
 
         int numAnycast = 1000;
         int numQueues = 300;
@@ -89,7 +90,7 @@ public class MessagingAddressPerfTest extends TestBase {
         MessagingAddress[] toCreate = addresses.toArray(new MessagingAddress[0]);
 
         long start = System.nanoTime();
-        resourceManager.createResource(true, toCreate);
+        resourceManager.createResource(extensionContext, true, toCreate);
         long end = System.nanoTime();
 
         long startDelete = System.nanoTime();

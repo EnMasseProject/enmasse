@@ -18,19 +18,19 @@ public class DefaultMessagingInfrastructureExtension implements BeforeTestExecut
     @Override
     public void beforeTestExecution(ExtensionContext extensionContext) {
         if (!isFullClass) {
-            createDefaultInfra();
+            createDefaultInfra(extensionContext);
         }
     }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        createDefaultInfra();
+        createDefaultInfra(extensionContext);
         isFullClass = true;
     }
 
-    private void createDefaultInfra() {
+    private void createDefaultInfra(ExtensionContext extensionContext) {
         MessagingInfrastructure infra = MessagingInfrastructureResourceType.getDefault();
-        ResourceManager.getInstance().createResource(infra);
+        ResourceManager.getInstance().createResource(extensionContext, infra);
         ResourceManager.getInstance().setDefaultInfra(infra);
     }
 
