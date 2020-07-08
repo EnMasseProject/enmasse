@@ -1104,7 +1104,241 @@ mutation {
 }
 ```
 
+## Edit credentials for iot device
+
+Assuming a device `Jens-phone` with no credentials:
+
+```
+[]
+```
+
+### Add a credential
+
+Let's add one credential containing two secrets :
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+                {
+                  "type": "hashed-password",
+                  "auth-id": "jens",
+                  "enabled": true,
+                  "secrets": [
+                    {
+                      "not-after": "2020-10-01T10:00:00Z",
+                      "pwd-plain": "some secret password",
+                      "comment": "iphone"
+                    },
+                    {
+                      "not-before": "2020-10-01T10:00:00Z",
+                      "pwd-plain": "another different secret password",
+                      "comment": "android"
+                    }
+                  ]
+                }
+              ]'
+  )
+}
+```
+
+When assigning a new secret, the server will assign it a UUID.
+The server should not return secrets details, but send the UUID instead. If you query for the credentials
+you should receive :
+
+```
+[
+    {
+      "type": "hashed-password",
+      "auth-id": "jens",
+      "enabled": true,
+      "secrets": [
+        {
+          "not-after": "2020-10-01T10:00:00Z",
+          "id": "2c3e8da0-daee-4905-8de6-acdda14beb23",
+          "comment": "iphone"
+        },
+        {
+          "not-before": "2019-10-01T10:00:00Z",
+          "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+          "comment": "android"
+        }
+      ]
+    }
+]
+```
+
+### Delete a secret
+
+But Jens doesn't want to keep the iphone, so to delete one of the secrets simply remove it from the payload,
+while keeping the id for the secret.
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+        {
+          "type": "hashed-password",
+          "auth-id": "jens",
+          "enabled": true,
+          "secrets": [
+            {
+              "not-before": "2019-10-01T10:00:00Z",
+              "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+              "comment": "android"
+            }
+          ]
+        }
+    ]'
+  )
+}
+```
+
+### Add a secret
+
+Jens installed a second app on his phone, let's add another secret :
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+        {
+          "type": "hashed-password",
+          "auth-id": "jens",
+          "enabled": true,
+          "secrets": [
+            {
+              "not-before": "2019-10-01T10:00:00Z",
+              "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+              "comment": "android"
+            },
+            {
+              "pwd-plain": "The new password",
+              "comment": "android another app"
+            }
+          ]
+        }
+    ]'
+  )
+}
+```
+
+### Edit a secret
+
+To update a secret, send the new password/key/certificate value, or any other field.
+(Here the comment is deleted and a `not-after` field is added. )
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+        {
+          "type": "hashed-password",
+          "auth-id": "jens",
+          "enabled": true,
+          "secrets": [
+            {
+              "not-before": "2019-10-01T10:00:00Z",
+              "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+              "comment": "android"
+            },
+            {
+              "not-after": "2020-10-01T10:00:00Z",
+              "pwd-plain": "yet another new password"
+            }
+          ]
+        }
+    ]'
+  )
+}
+```
+
+### Add a credential
+
+In addition to it's phone, jens got a computer, let's add another credential for it.
+Note that this is a hashed-password with a different auth-id.
+If i wanted to use the same auth-id I could set a PSK secret, but not a hashed-password.
+The couple {auth-id, type} must be unique inside an iot project.
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+        {
+          "type": "hashed-password",
+          "auth-id": "jens",
+          "enabled": true,
+          "secrets": [
+            {
+              "not-before": "2019-10-01T10:00:00Z",
+              "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+              "comment": "android"
+            },
+            {
+              "not-after": "2020-10-01T10:00:00Z",
+              "id": "98533132-17f0-4c19-be27-2c94731a8edc"
+            }
+          ]
+        },
+        {
+          "type": "hashed-password",
+          "auth-id": "jens-laptop",
+          "enabled": true,
+          "secrets": [
+            {
+              "pwd-plain": "some long password because its easy to type on a real keyboard",
+            }
+          ]
+        }
+    ]'
+  )
+}
+```
+
+### Delete a credential
+
+Remove it from the payload and keep what you want to keep:
+
+```
+mutation {
+  setCredentialsForDevice(
+    iotproject: "iotProjectFrance"
+    deviceId: "Jens-phone"
+    jsonData: '[
+        {
+          "type": "hashed-password",
+          "auth-id": "jens",
+          "enabled": true,
+          "secrets": [
+            {
+              "not-before": "2019-10-01T10:00:00Z",
+              "id": "7fd81926-c129-11ea-b3de-0242ac130004",
+              "comment": "android"
+            },
+            {
+              "not-after": "2020-10-01T10:00:00Z",
+              "id": "98533132-17f0-4c19-be27-2c94731a8edc"
+            }
+          ]
+        }
+    ]'
+  )
+}
+```
+
 ## Delete credentials for iot device
+
+This will delete all credentials for a device.
 
 ```
 mutation {
@@ -1113,8 +1347,4 @@ mutation {
     deviceId: "Jens-phone"
 	)
 }
-```
-
-```
-
 ```
