@@ -21,6 +21,7 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
+import io.enmasse.systemtest.framework.annotations.ParallelTest;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.utils.AssertionUtils;
