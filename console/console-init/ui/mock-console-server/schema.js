@@ -76,7 +76,7 @@ const typeDefs = gql`
     reencrypt
   }
 
-  enum MessagingEndpointType_enmasse_io_v1beta2 {
+  enum MessagingEndpointType_enmasse_io_v1 {
     Cluster
     NodePort
     LoadBalancer
@@ -84,14 +84,14 @@ const typeDefs = gql`
     Ingress
   }
 
-  enum MessagingEndpointProtocol_enmasse_io_v1beta2 {
+  enum MessagingEndpointProtocol_enmasse_io_v1 {
     AMQP
     AMQPS
     AMQP_WS
     AMQP_WSS
   }
 
-  enum MessagingEndpointPhase_enmasse_io_v1beta2 {
+  enum MessagingEndpointPhase_enmasse_io_v1 {
     Configuring
     Active
     Terminating
@@ -235,7 +235,7 @@ const typeDefs = gql`
 
   type MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1 {
     total: Int!
-    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1beta2!]!
+    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
   }
 
   #
@@ -267,7 +267,7 @@ const typeDefs = gql`
   }
 
   type AddressSpaceSpec_enmasse_io_v1beta1 {
-    plan: AddressSpacePlan_admin_enmasse_io_v1beta2!
+    plan: AddressSpacePlan_admin_enmasse_io_v1!
     type: AddressSpaceType!
 
     authenticationService: AuthenticationService_enmasse_io_v1beta1
@@ -299,29 +299,29 @@ const typeDefs = gql`
     loadBalancerSourceRanges: [String!]
   }
 
-  type MessagingEndpoint_enmasse_io_v1beta2 {
+  type MessagingEndpoint_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: MessagingEndpointSpec_enmasse_io_v1beta2!
-    status: MessagingEndpointStatus_enmasse_io_v1beta2
+    spec: MessagingEndpointSpec_enmasse_io_v1!
+    status: MessagingEndpointStatus_enmasse_io_v1
   }
 
-  type MessagingEndpointSpec_enmasse_io_v1beta2 {
-    protocols: [MessagingEndpointProtocol_enmasse_io_v1beta2!]!
+  type MessagingEndpointSpec_enmasse_io_v1 {
+    protocols: [MessagingEndpointProtocol_enmasse_io_v1!]!
   }
 
-  type MessagingEndpointStatus_enmasse_io_v1beta2 {
-    phase: MessagingEndpointPhase_enmasse_io_v1beta2!
-    type: MessagingEndpointType_enmasse_io_v1beta2!
+  type MessagingEndpointStatus_enmasse_io_v1 {
+    phase: MessagingEndpointPhase_enmasse_io_v1!
+    type: MessagingEndpointType_enmasse_io_v1!
     message: String
     host: String
 
-    ports: [MessagingEndpointPort_enmasse_io_v1beta2!]!
-    internalPorts: [MessagingEndpointPort_enmasse_io_v1beta2!]!
+    ports: [MessagingEndpointPort_enmasse_io_v1!]!
+    internalPorts: [MessagingEndpointPort_enmasse_io_v1!]!
   }
 
-  type MessagingEndpointPort_enmasse_io_v1beta2 {
+  type MessagingEndpointPort_enmasse_io_v1 {
     name: String!
-    protocol: MessagingEndpointProtocol_enmasse_io_v1beta2!
+    protocol: MessagingEndpointProtocol_enmasse_io_v1!
     port: Int!
   }
 
@@ -356,7 +356,7 @@ const typeDefs = gql`
     address: String!
     addressSpace: String!
     type: AddressType!
-    plan: AddressPlan_admin_enmasse_io_v1beta2!
+    plan: AddressPlan_admin_enmasse_io_v1!
     topic: String
   }
 
@@ -386,12 +386,12 @@ const typeDefs = gql`
     metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
   }
 
-  type AddressPlan_admin_enmasse_io_v1beta2 {
+  type AddressPlan_admin_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: AddressPlanSpec_admin_enmasse_io_v1beta2!
+    spec: AddressPlanSpec_admin_enmasse_io_v1!
   }
 
-  type AddressPlanSpec_admin_enmasse_io_v1beta2 {
+  type AddressPlanSpec_admin_enmasse_io_v1 {
     addressType: AddressType!
     displayName: String!
     longDescription: String!
@@ -399,13 +399,13 @@ const typeDefs = gql`
     displayOrder: Int!
   }
 
-  type AddressSpacePlan_admin_enmasse_io_v1beta2 {
+  type AddressSpacePlan_admin_enmasse_io_v1 {
     metadata: ObjectMeta_v1!
-    spec: AddressSpacePlanSpec_admin_enmasse_io_v1beta2!
+    spec: AddressSpacePlanSpec_admin_enmasse_io_v1!
   }
 
-  type AddressSpacePlanSpec_admin_enmasse_io_v1beta2 {
-    addressPlans: [AddressPlan_admin_enmasse_io_v1beta2!]!
+  type AddressSpacePlanSpec_admin_enmasse_io_v1 {
+    addressPlans: [AddressPlan_admin_enmasse_io_v1!]!
     addressSpaceType: AddressSpaceType
     displayName: String!
     longDescription: String!
@@ -456,13 +456,13 @@ const typeDefs = gql`
     "Returns the address spaces plans defined by the system optionally filtereing for a single address space type"
     addressSpacePlans(
       addressSpaceType: AddressSpaceType
-    ): [AddressSpacePlan_admin_enmasse_io_v1beta2!]!
+    ): [AddressSpacePlan_admin_enmasse_io_v1!]!
 
     "Returns the address plans defined by the system optionally filtering those for a matching address space plan and/or address type"
     addressPlans(
       addressSpacePlan: String
       addressType: AddressType
-    ): [AddressPlan_admin_enmasse_io_v1beta2!]!
+    ): [AddressPlan_admin_enmasse_io_v1!]!
 
     "Returns the authenticationServices"
     authenticationServices: [AuthenticationService_admin_enmasse_io_v1beta1!]!
