@@ -19,6 +19,12 @@ spec:
     - name: v1beta2
       served: true
       storage: true
+    - name: v1beta1
+      served: true
+      storage: false
+    - name: v1alpha1
+      served: true
+      storage: false
   additionalPrinterColumns:
   - name: Phase
     type: string
@@ -82,3 +88,27 @@ spec:
                 minimum:
                   description: "Imposes a minimum TTL value (in milliseconds) for messages arriving at the address.  Messages arriving with TTL values less than this value will have their expiration adjusted."
                   type: integer
+        displayName:
+          type: string
+        displayOrder:
+          type: integer
+        shortDescription:
+          type: string
+        longDescription:
+          type: string
+        uuid:
+          type: string
+        addressType:
+          type: string
+        requiredResources:
+          type: array
+          items:
+            type: object
+            required:
+            - name
+            - credit
+            properties:
+              name:
+                type: string
+              credit:
+                type: number
