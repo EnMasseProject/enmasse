@@ -1557,7 +1557,7 @@
     victory-core "^33.0.1"
     victory-legend "^33.0.1"
 
-"@patternfly/react-core@^3.146.0", "@patternfly/react-core@^3.153.13":
+"@patternfly/react-core@^3.153.13":
   version "3.153.13"
   resolved "https://registry.yarnpkg.com/@patternfly/react-core/-/react-core-3.153.13.tgz#f05dead48f3fff7dae156798c6a5b4c244d77c9d"
   integrity sha512-OyssAlsdsHWXRuKXvkcagG8PcplpE02FSLClON+407Fzhj4t0BLGWECI8RQwZ0Tapr+qVXikKQRukM5MY9zIqg==
