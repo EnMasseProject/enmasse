@@ -11,7 +11,6 @@ import (
 	"time"
 
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
-	userv1beta1informers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/user/v1beta1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -19,7 +18,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 	toolscache "k8s.io/client-go/tools/cache"
 
-	fake "sigs.k8s.io/controller-runtime/pkg/cache/informertest"
+	"sigs.k8s.io/controller-runtime/pkg/cache/informertest"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
@@ -31,17 +30,19 @@ func getGvk(t *testing.T, s *runtime.Scheme, obj runtime.Object) schema.GroupVer
 	return gvk
 }
 
+var _ toolscache.SharedIndexInformer = &myFakeInformer{}
+
 func TestDelegation(t *testing.T) {
 	s := scheme.Scheme
 	user := &userv1beta1.MessagingUser{}
 	s.AddKnownTypes(userv1beta1.SchemeGroupVersion, user)
 	userGvk := getGvk(t, s, user)
 
-	localCache := fake.FakeInformers{InformersByGVK: make(map[schema.GroupVersionKind]toolscache.SharedIndexInformer)}
-	globalCache := fake.FakeInformers{InformersByGVK: make(map[schema.GroupVersionKind]toolscache.SharedIndexInformer)}
+	localCache := informertest.FakeInformers{InformersByGVK: make(map[schema.GroupVersionKind]toolscache.SharedIndexInformer)}
+	globalCache := informertest.FakeInformers{InformersByGVK: make(map[schema.GroupVersionKind]toolscache.SharedIndexInformer)}
 
 	// Set up mocks so that global cache returns something else
-	globalCache.InformersByGVK[userGvk] = userv1beta1informers.NewMessagingUserInformer(nil, "", time.Second*1, nil)
+	globalCache.InformersByGVK[userGvk] = &myFakeInformer{}
 
 	cache := delegateCache{
 		defaultNamespace: "test",
@@ -64,7 +65,46 @@ func TestDelegation(t *testing.T) {
 	cache.globalGvkMap[userGvk] = true
 
 	globalInformer, err := cache.GetInformer(user)
-	if reflect.TypeOf(globalInformer).String() != "*cache.sharedIndexInformer" {
+	if reflect.TypeOf(globalInformer).String() != "*cache.myFakeInformer" {
 		t.Error("Global informer is not the right type:", reflect.TypeOf(globalInformer).String())
 	}
+}
+
+type myFakeInformer struct {
+}
+
+func (m myFakeInformer) AddEventHandler(_ toolscache.ResourceEventHandler) {
+	panic("implement me")
+}
+
+func (m myFakeInformer) AddEventHandlerWithResyncPeriod(_ toolscache.ResourceEventHandler, _ time.Duration) {
+	panic("implement me")
+}
+
+func (m myFakeInformer) GetStore() toolscache.Store {
+	panic("implement me")
+}
+
+func (m myFakeInformer) GetController() toolscache.Controller {
+	panic("implement me")
+}
+
+func (m myFakeInformer) Run(_ <-chan struct{}) {
+	panic("implement me")
+}
+
+func (m myFakeInformer) HasSynced() bool {
+	panic("implement me")
+}
+
+func (m myFakeInformer) LastSyncResourceVersion() string {
+	panic("implement me")
+}
+
+func (m myFakeInformer) AddIndexers(_ toolscache.Indexers) error {
+	panic("implement me")
+}
+
+func (m myFakeInformer) GetIndexer() toolscache.Indexer {
+	panic("implement me")
 }

@@ -7,20 +7,15 @@ package main
 
 import (
 	"flag"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"os"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"strconv"
 
 	"github.com/enmasseproject/enmasse/pkg/logs"
 
-	enmasse "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/scheme"
-	"k8s.io/client-go/rest"
-
 	"time"
-
-	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
-	informers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions"
 
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
@@ -43,57 +38,39 @@ func main() {
 
 	// start processing
 
-	stopCh := signals.SetupSignalHandler()
-
 	log.Info("Starting up...")
 
-	if ephemeralCertBase != "" {
-		fi, err := os.Stat(ephemeralCertBase)
-		if err != nil {
-			log.Error(err, "Ephemeral certificate base is configured, but unable to access: %v", err.Error())
-			os.Exit(1)
-		}
-		if !fi.IsDir() {
-			log.Info("Ephemeral certificate base is configured, but is not a directory")
-			os.Exit(1)
-		}
-	}
-
-	cfg, err := rest.InClusterConfig()
+	// Get a config to talk to the apiserver
+	cfg, err := config.GetConfig()
 	if err != nil {
-		log.Error(err, "Error getting in-cluster config")
+		log.Error(err, "Failed to get configuration")
 		os.Exit(1)
 	}
 
-	kubeClient, err := kubernetes.NewForConfig(cfg)
+	refresh := refreshPeriod()
+
+	mgr, err := manager.New(cfg, manager.Options{
+		SyncPeriod: &refresh,
+	})
 	if err != nil {
-		log.Error(err, "Error building kubernetes client")
+		log.Error(err, "Failed to create manager")
 		os.Exit(1)
 	}
 
-	enmasseClient, err := enmasse.NewForConfig(cfg)
-	if err != nil {
-		log.Error(err, "Error building EnMasse client")
+	if err := iotv1alpha1.AddToScheme(mgr.GetScheme()); err != nil {
+		log.Error(err, "Failed to register IoT schema")
 		os.Exit(1)
 	}
 
-	if err := enmassescheme.AddToScheme(scheme.Scheme); err != nil {
-		log.Error(err, "Failed to register EnMasse schema")
+	if err := add(mgr); err != nil {
+		log.Error(err, "Failed to create controller")
 		os.Exit(1)
 	}
 
-	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, refreshPeriod())
-
-	configurator := NewConfigurator(
-		kubeClient, enmasseClient,
-		enmasseInformerFactory.Iot().V1alpha1().IoTProjects(),
-		ephemeralCertBase,
-	)
-
-	enmasseInformerFactory.Start(stopCh)
-
-	if err = configurator.Run(1, stopCh); err != nil {
-		log.Error(err, "Failed running configurator")
+	// Start the Cmd
+	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
+		log.Error(err, "manager exited non-zero")
+		os.Exit(1)
 	}
 }
 

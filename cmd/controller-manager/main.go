@@ -9,6 +9,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"strings"
 	"time"
 
@@ -43,8 +44,6 @@ import (
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/openshift/api"
-
-	enmassescheme "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/scheme"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
@@ -274,7 +273,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := enmassescheme.AddToScheme(mgr.GetScheme()); err != nil {
+	if err := enmassev1.AddToScheme(mgr.GetScheme()); err != nil {
 		log.Error(err, "Failed to register EnMasse schema")
 		os.Exit(1)
 	}
@@ -363,7 +362,7 @@ func addMetrics(ctx context.Context, cfg *rest.Config, namespace string) {
 // It serves those metrics on "http://metricsHost:operatorMetricsPort".
 func serveCRMetrics(cfg *rest.Config) error {
 	// Below function returns all GVKs for EnMasse.
-	allGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassescheme.AddToScheme)
+	allGVK, err := k8sutil.GetGVKsFromAddToScheme(enmassev1.AddToScheme)
 	if err != nil {
 		return err
 	}

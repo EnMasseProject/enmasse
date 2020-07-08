@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	. "github.com/enmasseproject/enmasse/pkg/state/broker"
 	. "github.com/enmasseproject/enmasse/pkg/state/common"
 	. "github.com/enmasseproject/enmasse/pkg/state/errors"

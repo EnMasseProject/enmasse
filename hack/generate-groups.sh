@@ -56,7 +56,8 @@ GOBIN="${SCRIPTPATH}/../go-bin"
   cd "${SCRIPTPATH}"
   
   mkdir -p "${GOBIN}"
-  GOBIN="$GOBIN" GO111MODULE=on go install -mod=vendor ${GENERATOR_BASE}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
+  echo "Installing pre-reqs"
+  time GOBIN="$GOBIN" GO111MODULE=on go install -mod=vendor ${GENERATOR_BASE}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 )
 
 function codegen::join() { local IFS="$1"; shift; echo "$*"; }
@@ -74,25 +75,10 @@ done
 
 if [ "${GENS}" = "all" ] || grep -qw "deepcopy" <<<"${GENS}"; then
   echo "Generating deepcopy funcs"
-  "${GOBIN}/deepcopy-gen" --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" "$@"
+  time "${GOBIN}/deepcopy-gen" --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" -O zz_generated.deepcopy --bounding-dirs "${APIS_PKG}" "$@"
 fi
 
 if [ "${GENS}" = "all" ] || grep -qw "client" <<<"${GENS}"; then
   echo "Generating clientset for ${GROUPS_WITH_VERSIONS} at ${OUTPUT_PKG}/${CLIENTSET_PKG_NAME:-clientset}"
-  "${GOBIN}/client-gen" --clientset-name "${CLIENTSET_NAME_VERSIONED:-versioned}" --input-base "" --input "$(codegen::join , "${FQ_APIS[@]}")" --output-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME:-clientset}" "$@"
-fi
-
-if [ "${GENS}" = "all" ] || grep -qw "lister" <<<"${GENS}"; then
-  echo "Generating listers for ${GROUPS_WITH_VERSIONS} at ${OUTPUT_PKG}/listers"
-  "${GOBIN}/lister-gen" --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" --output-package "${OUTPUT_PKG}/listers" "$@"
-fi
-
-if [ "${GENS}" = "all" ] || grep -qw "informer" <<<"${GENS}"; then
-  echo "Generating informers for ${GROUPS_WITH_VERSIONS} at ${OUTPUT_PKG}/informers"
-  "${GOBIN}/informer-gen" \
-           --input-dirs "$(codegen::join , "${FQ_APIS[@]}")" \
-           --versioned-clientset-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME:-clientset}/${CLIENTSET_NAME_VERSIONED:-versioned}" \
-           --listers-package "${OUTPUT_PKG}/listers" \
-           --output-package "${OUTPUT_PKG}/informers" \
-           "$@"
+  time "${GOBIN}/client-gen" --clientset-name "${CLIENTSET_NAME_VERSIONED:-versioned}" --input-base "" --input "$(codegen::join , "${FQ_APIS[@]}")" --output-package "${OUTPUT_PKG}/${CLIENTSET_PKG_NAME:-clientset}" "$@"
 fi
