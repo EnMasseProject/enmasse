@@ -629,20 +629,13 @@ public final class IoTTestSession implements AutoCloseable {
                  * Create resources: in order to properly clean up, register cleanups first, then perform the operation
                  */
 
-                // create infra namespace
-
                 var infraNamespace = config.getMetadata().getNamespace();
-                if (!Environment.getInstance().skipCleanup()) {
-                    cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(infraNamespace));
-                }
-                log.info("Creating infrastructure namespace: {}", infraNamespace);
-                Kubernetes.getInstance().createNamespace(infraNamespace);
 
                 // create device manager role, we do not clean it up
 
                 DeviceManagementApi.createManagementServiceAccount(infraNamespace);
 
-                // deploy certificates
+                // deploy certificates, we do not clean them up
 
                 deployDefaultCerts(infraNamespace);
 
@@ -1078,14 +1071,15 @@ public final class IoTTestSession implements AutoCloseable {
             try {
 
                 if (!Environment.getInstance().isSkipDeployPostgresql()) {
+
+                    if (!Environment.getInstance().skipUninstall()) {
+                        context.addCleanup(DefaultDeviceRegistry::deleteDefaultServer);
+                    }
+
                     config
                             .editOrNewSpec()
                             .withServices(DefaultDeviceRegistry.newDefaultInstance())
                             .endSpec();
-                }
-
-                if (!Environment.getInstance().skipUninstall()) {
-                    context.addCleanup(DefaultDeviceRegistry::deleteDefaultServer);
                 }
 
             } catch (Exception e) {
