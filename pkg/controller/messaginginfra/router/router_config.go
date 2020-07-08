@@ -18,6 +18,7 @@ type routerConfig struct {
 
 func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastructureSpecRouter) routerConfig {
 	globalAuthHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local", i.Name, i.Namespace)
+	authServicePort := 5671
 
 	return routerConfig{
 		entities: [][]interface{}{
@@ -109,13 +110,14 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 				},
 			},
 
-			// TODO this global authService config is temporary.  Will be replace by per endpoint config.
+			// TODO this global authService config is temporary.  Will be replaced by per endpoint config.
 			[]interface{}{
 				// Listener for cluster-internal components
 				"authServicePlugin",
 				map[string]interface{}{
+					"name":       fmt.Sprintf("%s:%d", globalAuthHost, authServicePort),
 					"host":       globalAuthHost,
-					"port":       5671,
+					"port":       authServicePort,
 					"realm":      globalAuthHost,
 					"sslProfile": "infra_tls",
 				},
