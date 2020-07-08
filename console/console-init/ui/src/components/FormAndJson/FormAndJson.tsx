@@ -15,20 +15,7 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
 }) => {
   const [isValid, setIsValid] = useState<boolean>(true);
   const [showJson, setShowJson] = useState<boolean>(true);
-  //   const setDetail1 = () => {
-  //     const obj = {
-  //       persons: [
-  //         { name: "John", age: 30, city: "New York" },
-  //         { name: "John", age: 30, city: "New York" },
-  //         { name: "John", age: 30, city: "New York" }
-  //       ]
-  //     };
-  //     setDetail(JSON.stringify(obj, undefined, 2));
-  //     setDetailJson(obj);
-  //   };
-  //   if (!detail) {
-  //     setDetail1();
-  //   }
+
   const onToggle = () => {
     if (showJson) {
       try {
@@ -46,9 +33,11 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
       setShowJson(!showJson);
     }
   };
+
   const onChange = (value: string) => {
     setDetail(value);
   };
+
   return (
     <>
       {!isValid && <h1 style={{ color: "red" }}>inValid</h1>}
