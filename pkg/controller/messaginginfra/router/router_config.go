@@ -112,13 +112,12 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 			// TODO this global authService config is temporary.  Will be replace by per endpoint config.
 			[]interface{}{
 				// Listener for cluster-internal components
-				"authService",
+				"authServicePlugin",
 				map[string]interface{}{
-					"host":            globalAuthHost,
-					"port":             5671,
-					"realm":       globalAuthHost,
-					"sslProfile":       "infra_tls",
-					"authenticatePeer": true,
+					"host":       globalAuthHost,
+					"port":       5671,
+					"realm":      globalAuthHost,
+					"sslProfile": "infra_tls",
 				},
 			},
 

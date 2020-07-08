@@ -124,7 +124,7 @@ type RouterSslProfile struct {
 	PrivateKeyFile string `json:"privateKeyFile,omitempty"`
 }
 
-type RouterAuthService struct {
+type RouterAuthServicePlugin struct {
 	Host       string `json:"host"`
 	Port       string `json:"port"`
 	Realm      string `json:"realm"`

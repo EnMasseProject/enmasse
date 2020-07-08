@@ -601,19 +601,19 @@ func (e *NamedEntity) Order() int {
 	return 0
 }
 
-func (e *RouterAuthService) Type() RouterEntityType {
+func (e *RouterAuthServicePlugin) Type() RouterEntityType {
 	return RouterAuthServicePluginEntity
 }
 
-func (e *RouterAuthService) GetName() string {
+func (e *RouterAuthServicePlugin) GetName() string {
 	return fmt.Sprintf("%s:%s", e.Host, e.Port)
 }
 
-func (e *RouterAuthService) Equals(other RouterEntity) bool {
+func (e *RouterAuthServicePlugin) Equals(other RouterEntity) bool {
 	return reflect.DeepEqual(e, other)
 }
 
-func (e *RouterAuthService) Order() int {
+func (e *RouterAuthServicePlugin) Order() int {
 	return 0
 }
 

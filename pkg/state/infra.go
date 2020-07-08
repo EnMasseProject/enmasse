@@ -919,7 +919,7 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 
 		// TODO separate authhost per endpoint required (so that the service can apply the correct SASL config) - use glocal one for now
 		authHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local:5671", i.infrastructure.Name, i.infrastructure.Namespace)
-		//authService := &RouterAuthService{
+		//authService := &RouterAuthServicePlugin{
 		//	Host:       authHost,
 		//	Port:       "5671",
 		//	Realm:      authHost,
