@@ -530,8 +530,8 @@ query {
     total
     devices {
       deviceId
+      enabled
       jsonData
-      credentials
     }
   }
 }
