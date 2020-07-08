@@ -242,7 +242,7 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 				return processorResult{Return: true}, err
 			}
 		}
-		return processorResult{Requeue: result.Requeue}, nil
+		return processorResult{Requeue: result.Requeue, RequeueAfter: result.RequeueAfter}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err
