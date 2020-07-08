@@ -7,6 +7,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 
 	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 )
@@ -15,7 +16,9 @@ type routerConfig struct {
 	entities [][]interface{}
 }
 
-func generateConfig(router *v1.MessagingInfrastructureSpecRouter) routerConfig {
+func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastructureSpecRouter) routerConfig {
+	globalAuthHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local", i.Name, i.Namespace)
+
 	return routerConfig{
 		entities: [][]interface{}{
 			[]interface{}{
@@ -105,6 +108,21 @@ func generateConfig(router *v1.MessagingInfrastructureSpecRouter) routerConfig {
 					"authenticatePeer": true,
 				},
 			},
+
+			// TODO this global authService config is temporary.  Will be replace by per endpoint config.
+			[]interface{}{
+				// Listener for cluster-internal components
+				"authService",
+				map[string]interface{}{
+					"host":            globalAuthHost,
+					"port":             5671,
+					"realm":       globalAuthHost,
+					"sslProfile":       "infra_tls",
+					"authenticatePeer": true,
+				},
+			},
+
+
 		},
 	}
 }

@@ -53,14 +53,14 @@ func TestReconcileAccessController(t *testing.T) {
 	err = bc.client.List(context.TODO(), deployments, client.InNamespace("test"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(deployments.Items))
-	assert.Equal(t, "accesscontrol-infra1", deployments.Items[0].Name)
+	assert.Equal(t, "access-control-infra1", deployments.Items[0].Name)
 	assert.Equal(t, two, *deployments.Items[0].Spec.Replicas)
 
 	services := &corev1.ServiceList{}
 	err = bc.client.List(context.TODO(), services, client.InNamespace("test"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(services.Items))
-	assert.Equal(t, "accesscontrol-infra1", services.Items[0].Name)
+	assert.Equal(t, "access-control-infra1", services.Items[0].Name)
 
 	secrets := &corev1.SecretList{}
 	err = bc.client.List(context.TODO(), secrets, client.InNamespace("test"))
@@ -71,5 +71,5 @@ func TestReconcileAccessController(t *testing.T) {
 		names = append(names, item.Name)
 	}
 	assert.Contains(t, names, "infra1-ca")
-	assert.Contains(t, names, "accesscontrol-infra1-cert")
+	assert.Contains(t, names, "access-control-infra1-cert")
 }
