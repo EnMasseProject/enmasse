@@ -400,7 +400,7 @@ public class MessagingEndpointTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    @Test
+    @ParallelTest
     @Disabled("Awaiting fixes in DISPATCH-1585 to allow endpoints to use same addresses")
     public void testMultipleEndpoints() throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
