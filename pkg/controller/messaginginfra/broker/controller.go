@@ -238,6 +238,12 @@ func (b *BrokerController) reconcileBroker(ctx context.Context, logger logr.Logg
 			install.ApplyVolumeMountSimple(container, "init", "/opt/apache-artemis/custom", false)
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 
+			// TODO: Make configurable
+			container.Resources = corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{corev1.ResourceMemory: *resource.NewScaledQuantity(1, resource.Giga)},
+				Limits:   corev1.ResourceList{corev1.ResourceMemory: *resource.NewScaledQuantity(1, resource.Giga)},
+			}
+
 			container.Ports = []corev1.ContainerPort{
 				{
 					ContainerPort: 5671,
