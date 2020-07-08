@@ -116,6 +116,7 @@ const Data = (
         items={bulkSelectItems}
         onSelectAllDevices={action("All devices selected")}
         onChange={action("checkbox dropdown changed")}
+        handleToggleModal={action("on toggle manage columns")}
       />
       <Divider />
       <DeviceList

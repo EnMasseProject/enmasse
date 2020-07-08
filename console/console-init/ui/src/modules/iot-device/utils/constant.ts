@@ -85,6 +85,30 @@ const getInitialAlert = () => {
   return alert;
 };
 
+const getInitialSelectedColumns = () => {
+  return [
+    "deviceId",
+    "connectionType",
+    "status",
+    "lastUpdated",
+    "lastSeen",
+    "addedDate"
+  ];
+};
+
+const getInitialCheckedColumns = () => {
+  return {
+    isDeviceIdChecked: true,
+    isConnectionTypeChecked: true,
+    isStatusChecked: true,
+    isLastUpdatedChecked: true,
+    isLastSeenChecked: true,
+    isAddedDateChecked: true,
+    isMemberOfChecked: false,
+    isViaGatewaysChecked: false
+  };
+};
+
 /**
  * key value constants
  */
@@ -120,5 +144,7 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getInitialMetadataState,
+  getInitialSelectedColumns,
+  getInitialCheckedColumns,
   MAX_DEVICE_LIST_COUNT
 };

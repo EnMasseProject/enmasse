@@ -49,6 +49,7 @@ export interface IDeviceListContainerProps {
   resetFilter: () => void;
   projectname: string;
   namespace: string;
+  selectedColumns?: string[];
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
@@ -64,7 +65,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   appliedFilter,
   resetFilter,
   projectname,
-  namespace
+  namespace,
+  selectedColumns
 }) => {
   const [sortBy, setSortBy] = useState<ISortBy>();
 
