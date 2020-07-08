@@ -2554,7 +2554,7 @@ const resolvers = {
     },
     toggleIoTDevicesStatus: (parents, args) => {
       runOperationForAll(args.devices, t =>
-        toggleIoTDevicesStatus(args.iotproject, t, args.status)
+        toggleIoTDevicesStatus(args.iotproject.name, t, args.status)
       );
       return true;
     }
@@ -2764,7 +2764,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       var resultCreds =
         copyCreds && copyCreds.filter(me => filterer.evaluate(me));
       return {
-        total: (creds && creds.length) || 0,
+        total: (resultCreds && resultCreds.length) || 0,
         credentials: (resultCreds && JSON.stringify(resultCreds)) || ""
       };
     },
