@@ -537,11 +537,44 @@ query {
 }
 ```
 
+## Retrieve enabled Iot devices
+
+```
+query {
+  devices(
+    iotproject: "iotProjectFrance",
+    filter: "`$.enabled` = TRUE"
+  ) {
+    total
+    devices {
+      deviceId
+      enabled
+      jsonData
+    }
+  }
+}
+```
+
 ## Retrieve credentials for device
 
 ```
 query {
   credentials(
+    iotproject: "iotProjectIndia",
+    deviceId: "20"
+  ) {
+    total
+    credentials
+  }
+}
+```
+
+## Retrieve credentials for device filtering with auth-id
+
+```
+query {
+  credentials(
+    filter: "$['auth-id'] = 'user-1'"
     iotproject: "iotProjectIndia",
     deviceId: "20"
   ) {
