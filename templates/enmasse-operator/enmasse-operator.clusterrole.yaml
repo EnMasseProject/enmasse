@@ -9,7 +9,7 @@ rules:
     resources: [ "events" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch", "delete", "deletecollection" ]
     resources: [ "namespaces" ]
-    verbs: [ "get" ]
+    verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "oauth.openshift.io" ]
     resources: [ "oauthclients" ]
     verbs: [ "create", "get", "update", "list", "watch" ]
