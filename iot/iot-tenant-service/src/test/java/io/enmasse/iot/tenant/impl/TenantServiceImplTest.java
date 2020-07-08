@@ -182,5 +182,4 @@ public class TenantServiceImplTest {
         assertEquals(HttpURLConnection.HTTP_OK, r.getStatus());
     }
 
-
 }

@@ -57,13 +57,7 @@ func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result,
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
 	}
 
-	if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
-		return deconstructManagedResources(project, ctx)
-	}
-
-	// nothing to do
-
-	return reconcile.Result{}, nil
+	return deconstructManagedResources(project, ctx)
 }
 
 func deconstructManagedResources(project *iotv1alpha1.IoTProject, ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
@@ -95,7 +89,7 @@ func cleanupManagedResources(ctx context.Context, c client.Client, project *iotv
 		rc.Process(func() (result reconcile.Result, e error) {
 
 			addressName := util.AddressName(project, a)
-			addressMetaName := util.EncodeAddressSpaceAsMetaName(managed.AddressSpace, addressName)
+			addressMetaName := util.EncodeAddressSpaceAsMetaName(addressName)
 
 			return cleanupResource(ctx, c, project, client.ObjectKey{
 				Namespace: project.Namespace,

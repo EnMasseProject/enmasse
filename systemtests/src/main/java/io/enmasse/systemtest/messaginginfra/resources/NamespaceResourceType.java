@@ -18,7 +18,7 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
 
     @Override
     public Namespace get(String namespace, String name) {
-        return Kubernetes.getInstance().getClient().namespaces().withName(name).get();
+        return Kubernetes.getClient().namespaces().withName(name).get();
     }
 
     public static Namespace getDefault() {
@@ -27,7 +27,7 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
 
     @Override
     public void create(Namespace resource) {
-        Kubernetes.getInstance().getClient().namespaces().create(resource);
+        Kubernetes.getClient().namespaces().create(resource);
     }
 
     @Override

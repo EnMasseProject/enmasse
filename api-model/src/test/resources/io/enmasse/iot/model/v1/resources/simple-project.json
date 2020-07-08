@@ -1,0 +1,11 @@
+{
+    "apiVersion": "iot.enmasse.io/v1alpah1",
+    "kind": "IoTProject",
+    "metadata": {
+        "name": "iot"
+    },
+    "spec": {
+        "downstream": {
+        }
+    }
+}

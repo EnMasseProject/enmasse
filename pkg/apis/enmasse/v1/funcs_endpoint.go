@@ -43,3 +43,7 @@ func (e *MessagingEndpoint) IsEdgeTerminated() bool {
 	return e.Spec.Tls == nil &&
 		(e.Spec.Ingress != nil || (e.Spec.Route != nil && (e.Spec.Route.TlsTermination == nil || *e.Spec.Route.TlsTermination == routev1.TLSTerminationEdge)))
 }
+
+func (e *MessagingEndpoint) IsActive() bool {
+	return e.Status.Phase == MessagingEndpointActive && e.Status.Host != ""
+}

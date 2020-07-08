@@ -580,7 +580,7 @@ func (i *infraClient) applyBrokers(ctx context.Context, fn func(broker *BrokerSt
 func (i *infraClient) getActiveEndpoints() map[string][]*v1.MessagingEndpoint {
 	activeEndpoints := make(map[string][]*v1.MessagingEndpoint, 0)
 	for _, endpoint := range i.endpoints {
-		if isEndpointActive(endpoint) {
+		if endpoint.IsActive() {
 			if activeEndpoints[endpoint.Namespace] == nil {
 				activeEndpoints[endpoint.Namespace] = make([]*v1.MessagingEndpoint, 0)
 			}
@@ -878,10 +878,6 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 	return built, routerEntities, brokerEntities
 }
 
-func isEndpointActive(endpoint *v1.MessagingEndpoint) bool {
-	return endpoint.Status.Phase == v1.MessagingEndpointActive && endpoint.Status.Host != ""
-}
-
 func (i *infraClient) buildRouterProjectEntities(project *v1.MessagingProject) ([]RouterEntity, error) {
 	routerEntities := make([]RouterEntity, 0)
 	// TODO: Create vhost policy based on status (plan settings)
@@ -948,7 +944,7 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
  */
 func (i *infraClient) buildRouterAddressEntities(endpoint *v1.MessagingEndpoint, address *v1.MessagingAddress) ([]RouterEntity, error) {
 	// Skip endpoints that are not active or do not have hosts defined
-	if !isEndpointActive(endpoint) {
+	if !endpoint.IsActive() {
 		return nil, fmt.Errorf("inactive endpoint")
 	}
 
@@ -1115,7 +1111,7 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1.MessagingEndpoint,
  */
 func (i *infraClient) buildBrokerAddressEntities(endpoint *v1.MessagingEndpoint, address *v1.MessagingAddress) (map[Host][]BrokerEntity, error) {
 
-	if !isEndpointActive(endpoint) {
+	if !endpoint.IsActive() {
 		return nil, fmt.Errorf("inactive endpoint")
 	}
 

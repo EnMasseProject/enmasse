@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
@@ -17,7 +18,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	// find adapter
 
@@ -36,7 +37,7 @@ func (r *ReconcileIoTConfig) processSigfoxAdapter(ctx context.Context, config *i
 		})
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processStandardAdapter(ctx, config, change, adapter)
+		return r.processStandardAdapter(ctx, config, infra, change, adapter)
 	})
 
 	// done

@@ -14,6 +14,7 @@ import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.amqp.AmqpConnectOptions;
 import io.enmasse.systemtest.amqp.QueueTerminusFactory;
+import io.enmasse.systemtest.amqp.TerminusFactory;
 import io.enmasse.systemtest.amqp.TopicTerminusFactory;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
@@ -192,7 +193,7 @@ public class MessagingAddressTest extends TestBase {
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setEndpoint(new Endpoint(ingress.getStatus().getHost(), ingress.getStatus().getPorts().get(0).getPort()))
                 .setProtonClientOptions(new ProtonClientOptions())
-                .setTerminusFactory(new QueueTerminusFactory()));
+                .setTerminusFactory(TerminusFactory.queue()));
 
         assertEquals(1, client.sendMessages("queue1", Collections.singletonList("todeadletter")).get(1, TimeUnit.MINUTES));
         Source source = new Source();
@@ -252,7 +253,7 @@ public class MessagingAddressTest extends TestBase {
                 .setQos(ProtonQoS.AT_LEAST_ONCE)
                 .setEndpoint(new Endpoint(nodePort.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", nodePort)))
                 .setProtonClientOptions(new ProtonClientOptions())
-                .setTerminusFactory(new TopicTerminusFactory()));
+                .setTerminusFactory(TerminusFactory.topic()));
 
         List<String> msgs = Arrays.asList("foo", "bar", "baz", "qux");
 

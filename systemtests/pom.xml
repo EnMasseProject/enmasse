@@ -243,6 +243,13 @@
             </properties>
         </profile>
         <profile>
+            <id>iot</id>
+            <properties>
+                <skip.tests>false</skip.tests>
+                <groups>iot &amp; !systemtests &amp; !upgrade &amp; !scale</groups>
+            </properties>
+        </profile>
+        <profile>
             <id>scale</id>
             <properties>
                 <skip.tests>false</skip.tests>

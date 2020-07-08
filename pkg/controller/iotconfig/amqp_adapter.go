@@ -7,6 +7,7 @@ package iotconfig
 
 import (
 	"context"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 
 	"github.com/enmasseproject/enmasse/pkg/util/cchange"
 
@@ -20,7 +21,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-func (r *ReconcileIoTConfig) processAmqpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processAmqpAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, qdrProxyConfigCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	// find adapter
 
@@ -39,7 +40,7 @@ func (r *ReconcileIoTConfig) processAmqpAdapter(ctx context.Context, config *iot
 		})
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processStandardAdapter(ctx, config, qdrProxyConfigCtx, adapter)
+		return r.processStandardAdapter(ctx, config, infra, qdrProxyConfigCtx, adapter)
 	})
 
 	// done

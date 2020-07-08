@@ -41,19 +41,18 @@ func TestBuildName1(t *testing.T) {
 func TestEncodeName(t *testing.T) {
 
 	data := []struct {
-		addressSpace string
-		name         string
-		output       string
+		name   string
+		output string
 	}{
-		{"as1", "foo", "as1.foo"},
-		{"as1", "foo#bar", "as1.foobar-c0bcd0e4-eba6-3f8e-8ce8-842b01ee4bcd"},
-		{"as1", "foo.bar", "as1.foobar-f650eb27-6a02-3b32-8e0b-30d0aaa4a225"},
-		{"as1", ".", "as1.4f5067c8-a900-337c-a5a8-5658d18db8b9"},
-		{"as1", "..", "as1.542b76a4-0d9a-3ca2-93bd-4ba89f64d117"},
+		{"foo", "foo"},
+		{"foo#bar", "foobar-c0bcd0e4-eba6-3f8e-8ce8-842b01ee4bcd"},
+		{"foo.bar", "foobar-f650eb27-6a02-3b32-8e0b-30d0aaa4a225"},
+		{".", "4f5067c8-a900-337c-a5a8-5658d18db8b9"},
+		{"..", "542b76a4-0d9a-3ca2-93bd-4ba89f64d117"},
 	}
 
 	for _, entry := range data {
-		actual := util.EncodeAddressSpaceAsMetaName(entry.addressSpace, entry.name)
+		actual := util.EncodeAddressSpaceAsMetaName(entry.name)
 
 		if actual != entry.output {
 			t.Errorf("Encoding was not correct - wanted: %s, got: %s", entry.output, actual)

@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-const testExpected1 = `{"downstreamStrategy":{},"configuration":{"enabled":true,"ext":{"bar":"baz","bar2":2}}}`
+const testExpected1 = `{"downstream":{"addresses":{"telemetry":{},"event":{},"command":{}}},"configuration":{"enabled":true,"ext":{"bar":"baz","bar2":2}}}`
 
 // Test to decode and re-encode the generic config section
 func TestSerializeConfiguration(t *testing.T) {

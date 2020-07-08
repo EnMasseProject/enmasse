@@ -23,16 +23,16 @@ import io.sundr.builder.annotations.Inline;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class IoTProjectSpec {
 
-    private DownstreamStrategy downstreamStrategy;
+    private DownstreamStrategy downstream;
 
     private TenantConfiguration configuration;
 
-    public DownstreamStrategy getDownstreamStrategy() {
-        return this.downstreamStrategy;
+    public DownstreamStrategy getDownstream() {
+        return this.downstream;
     }
 
-    public void setDownstreamStrategy(final DownstreamStrategy downstreamStrategy) {
-        this.downstreamStrategy = downstreamStrategy;
+    public void setDownstream(final DownstreamStrategy downstream) {
+        this.downstream = downstream;
     }
 
     public TenantConfiguration getConfiguration() {

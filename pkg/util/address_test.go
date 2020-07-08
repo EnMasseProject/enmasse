@@ -11,17 +11,16 @@ import (
 
 func TestAddressName(t *testing.T) {
 	for _, v := range []struct {
-		addressSpaceName string
-		addressName      string
-		expected         string
+		addressName string
+		expected    string
 	}{
-		{addressSpaceName: "as1", addressName: "telemetry/iot-project-ns.iot1", expected: "as1.telemetryiot-project-ns-4cf002ae-37a5-38d6-9749-b7f85b29a385"},
-		{addressSpaceName: "as1", addressName: "event/iot-project-ns.iot1", expected: "as1.eventiot-project-nsiot1-82203f07-4081-392b-a834-dd1ffcaa2c5f"},
+		{addressName: "telemetry/iot-project-ns.iot1", expected: "telemetryiot-project-ns-4cf002ae-37a5-38d6-9749-b7f85b29a385"},
+		{addressName: "event/iot-project-ns.iot1", expected: "eventiot-project-nsiot1-82203f07-4081-392b-a834-dd1ffcaa2c5f"},
 	} {
 
-		out := EncodeAddressSpaceAsMetaName(v.addressSpaceName, v.addressName)
+		out := EncodeAddressSpaceAsMetaName(v.addressName)
 		if out != v.expected {
-			t.Errorf("Encoding error - input: '%s', '%s' expected: '%s', actual: '%s'", v.addressSpaceName, v.addressName, v.expected, out)
+			t.Errorf("Encoding error - input: '%s' expected: '%s', actual: '%s'", v.addressName, v.expected, out)
 		}
 
 	}

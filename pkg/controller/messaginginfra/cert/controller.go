@@ -69,7 +69,7 @@ const ANNOTATION_CA_DIGEST = "enmasse.io/ca-digest"
  * Reconciles the CA for an instance of shared infrastructure. This function also handles renewal of the CA.
  */
 func (c *CertController) ReconcileCa(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure) ([]byte, error) {
-	secretName := fmt.Sprintf("%s-ca", infra.Name)
+	secretName := getCaSecretName(infra.Name)
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -258,8 +258,16 @@ func (c *CertController) DeleteEndpointCert(ctx context.Context, logger logr.Log
  * This function also handles renewal of the certificate.
  */
 func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, object metav1.Object, commonName string, dnsNames ...string) (*CertInfo, error) {
+	return c.ReconcileCertWithName(ctx, logger, infra, object, GetCertSecretName(object.GetName()), commonName, dnsNames...)
+}
 
-	caSecretName := fmt.Sprintf("%s-ca", infra.Name)
+/*
+ * Reconciles the internal certificate for a given component in a shared infrastructure, allowing to specify the name of the secret.
+ * This function also handles renewal of the certificate.
+ */
+func (c *CertController) ReconcileCertWithName(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure, object metav1.Object, secretName string, commonName string, dnsNames ...string) (*CertInfo, error) {
+
+	caSecretName := getCaSecretName(infra.Name)
 	caSecret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: caSecretName},
 	}
@@ -268,7 +276,6 @@ func (c *CertController) ReconcileCert(ctx context.Context, logger logr.Logger, 
 		return nil, err
 	}
 
-	secretName := GetCertSecretName(object.GetName())
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{Namespace: infra.Namespace, Name: secretName},
 	}
@@ -494,6 +501,10 @@ func shouldRenewCert(now time.Time, expiryDate time.Time) bool {
 func getDigest(data []byte) string {
 	sum := sha256.Sum256(data)
 	return hex.EncodeToString(sum[:])
+}
+
+func getCaSecretName(name string) string {
+	return fmt.Sprintf("%s-ca", name)
 }
 
 func GetCertSecretName(name string) string {

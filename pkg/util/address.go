@@ -58,8 +58,6 @@ func EncodeAsMetaName(name string, maxLength int) string {
 }
 
 // Encode an address name so that it can be put inside the .metadata.name field of an Address object
-func EncodeAddressSpaceAsMetaName(addressSpaceName string, addressName string) string {
-
-	return addressSpaceName + "." + EncodeAsMetaName(addressName, 60)
-
+func EncodeAddressSpaceAsMetaName(addressName string) string {
+	return EncodeAsMetaName(addressName, 60)
 }

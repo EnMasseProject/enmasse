@@ -14,33 +14,31 @@ import io.fabric8.kubernetes.api.model.Node;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 
 /**
  * Do the operation with cluster (scale, restart etc...)
  */
 public class KubeClusterManager {
 
-    private static Logger LOGGER = LoggerUtils.getLogger();
-    private Kubernetes kube = Kubernetes.getInstance();
-    private static KubeClusterManager instance;
-    private final String CMD = Kubernetes.getInstance().getCluster().getKubeCmd();
-    private Stack<ThrowableRunner> classConfigurations = new Stack<>();
-    private Stack<ThrowableRunner> methodConfigurations = new Stack<>();
+    private static final Logger LOGGER = LoggerUtils.getLogger();
+    private static final Kubernetes KUBE = Kubernetes.getInstance();
+    private static final KubeClusterManager INSTANCE = new KubeClusterManager();
+    private static final String CMD = Kubernetes.getInstance().getCluster().getKubeCmd();
+    private final Stack<ThrowableRunner> classConfigurations = new Stack<>();
+    private final Stack<ThrowableRunner> methodConfigurations = new Stack<>();
     private Stack<ThrowableRunner> pointerConfigurations = classConfigurations;
 
     private KubeClusterManager() {
     }
 
     public static synchronized KubeClusterManager getInstance() {
-        if (instance == null) {
-            instance = new KubeClusterManager();
-        }
-        return instance;
+        return INSTANCE;
     }
 
     public void setMethodConfigurations() {
@@ -94,12 +92,12 @@ public class KubeClusterManager {
     //////////////////////////////////////////////////////////////
 
     public List<Node> getWorkerNodes() {
-        return kube.getClient().nodes().list().getItems().stream().filter(node ->
+        return getClient().nodes().list().getItems().stream().filter(node ->
                 node.getMetadata().getName().contains("worker")).collect(Collectors.toList());
     }
 
     public List<Node> getMasterNodes() {
-        return kube.getClient().nodes().list().getItems().stream().filter(node ->
+        return getClient().nodes().list().getItems().stream().filter(node ->
                 node.getMetadata().getName().contains("master")).collect(Collectors.toList());
     }
 
@@ -154,8 +152,8 @@ public class KubeClusterManager {
     //////////////////////////////////////////////////////////////
     public void restartKubeApi() {
         LOGGER.info("Restart kube-api server");
-        kube.getClient().pods().inAnyNamespace().withLabel("apiserver", "true").list().getItems().forEach(
-                pod -> kube.deletePod(pod.getMetadata().getNamespace(), pod.getMetadata().getName())
+        getClient().pods().inAnyNamespace().withLabel("apiserver", "true").list().getItems().forEach(
+                pod -> KUBE.deletePod(pod.getMetadata().getNamespace(), pod.getMetadata().getName())
         );
     }
 }

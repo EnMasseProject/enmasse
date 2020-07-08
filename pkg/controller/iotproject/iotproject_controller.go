@@ -7,6 +7,7 @@ package iotproject
 
 import (
 	"context"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/loghandler"
 	"k8s.io/client-go/tools/record"
@@ -18,9 +19,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
-	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
-	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -35,10 +34,6 @@ import (
 const ControllerName = "iotproject-controller"
 
 var log = logf.Log.WithName("controller_iotproject")
-
-const DefaultEndpointName = "messaging"
-const DefaultPortName = "amqps"
-const DefaultEndpointMode = iotv1alpha1.Service
 
 // Gets called by parent "init", adding as to the manager
 func Add(mgr manager.Manager) error {
@@ -70,30 +65,23 @@ func add(mgr manager.Manager, r *ReconcileIoTProject) error {
 
 	// watch for messaging users
 
-	err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, loghandler.New(&handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &iotv1alpha1.IoTProject{},
-	}, log.V(2), "MessagingUser"))
-	if err != nil {
-		return err
-	}
+	// FIXME: need a solution
+	/*
+		err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, loghandler.New(&handler.EnqueueRequestForOwner{
+			IsController: true,
+			OwnerType:    &iotv1alpha1.IoTProject{},
+		}, log.V(2), "MessagingUser"))
+		if err != nil {
+			return err
+		}
+	*/
 
 	// watch for addresses
 
-	err = c.Watch(&source.Kind{Type: &enmassev1beta1.Address{}}, loghandler.New(&handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &enmassev1.MessagingAddress{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &iotv1alpha1.IoTProject{},
 	}, log.V(2), "Address"))
-	if err != nil {
-		return err
-	}
-
-	// Watch for address spaces
-
-	err = c.Watch(&source.Kind{Type: &enmassev1beta1.AddressSpace{}}, loghandler.New(&handler.EnqueueRequestForOwner{
-		IsController: false,
-		OwnerType:    &iotv1alpha1.IoTProject{},
-	}, log.V(2), "AddressSpace"))
 	if err != nil {
 		return err
 	}
@@ -138,8 +126,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 		if rc.Error() == nil &&
 			resourcesCreatedCondition.IsOk() &&
-			resourcesReadyCondition.IsOk() &&
-			newProject.Status.DownstreamEndpoint != nil {
+			resourcesReadyCondition.IsOk() {
 
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseActive
 			newProject.Status.Message = ""
@@ -279,56 +266,40 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			})
 	})
 
-	// process different types
+	// lookup infrastructure
 
-	if project.Spec.DownstreamStrategy.ExternalDownstreamStrategy != nil {
+	// FIXME: the following has to be removed once we no longer need an active endpoint
+	project.Status.MessagingInfrastructurePrefix = ""
+	rc.ProcessSimple(func() error {
+		endpoint, err := findFirstActiveEndpoint(ctx, r.client, project)
+		if endpoint != nil {
+			project.Status.MessagingInfrastructurePrefix = endpoint.Status.Host
+		}
+		return err
+	})
 
-		// handling as external
-		// all information has to be externally configured, we are not managing anything
+	rc.Process(func() (result reconcile.Result, e error) {
+		return r.reconcileManaged(ctx, project)
+	})
 
-		reqLogger.V(2).Info("Handle as external")
+	return r.updateProjectStatus(ctx, original, project, rc)
 
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.reconcileExternal(ctx, &request, project)
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
+}
 
-	} else if project.Spec.DownstreamStrategy.ProvidedDownstreamStrategy != nil {
-
-		// handling as provided
-
-		reqLogger.V(2).Info("Handle as provided")
-
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.reconcileProvided(ctx, &request, project)
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
-
-	} else if project.Spec.DownstreamStrategy.ManagedDownstreamStrategy != nil {
-
-		// handling as managed
-		// we create the addressspace, addresses and internal users
-
-		reqLogger.V(2).Info("Handle as managed")
-
-		rc.Process(func() (result reconcile.Result, e error) {
-			return r.reconcileManaged(ctx, &request, project)
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
-
-	} else {
-
-		// unknown strategy, we don't know how to handle this
-		// so re-queuing doesn't make any sense
-
-		reqLogger.Info("Missing or unknown downstream strategy")
-
-		// add error to rc
-		rc.ProcessSimple(func() error {
-			return util.NewConfigurationError("missing or unknown downstream strategy")
-		})
-		return r.updateProjectStatus(ctx, original, project, rc)
-
+// get the first, active endpoint for an IoTProject
+// returns an error if there is one
+func findFirstActiveEndpoint(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (*enmassev1.MessagingEndpoint, error) {
+	endpoints := &enmassev1.MessagingEndpointList{}
+	if err := c.List(ctx, endpoints, client.InNamespace(project.Namespace)); err != nil {
+		return nil, err
 	}
 
+	for _, e := range endpoints.Items {
+		if !e.IsActive() {
+			continue
+		}
+		return &e, nil
+	}
+
+	return nil, util.NewConfigurationError("No active endpoint found in namespace '%s'", project.Namespace)
 }

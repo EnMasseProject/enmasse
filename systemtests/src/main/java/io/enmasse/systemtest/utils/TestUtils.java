@@ -19,6 +19,8 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.hibernate.validator.internal.util.logging.formatter.DurationFormatter;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.function.ThrowingSupplier;
 import org.openqa.selenium.Capabilities;
@@ -27,6 +29,7 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.opentest4j.AssertionFailedError;
 import org.slf4j.Logger;
+import org.springframework.boot.convert.DurationFormat;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -38,8 +41,12 @@ import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
+import java.text.DateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +65,16 @@ public class TestUtils {
 
     public interface TimeoutHandler<X extends Throwable> {
         void timeout() throws X;
+
+        static TimeoutHandler<AssertionError> explain(final ThrowingSupplier<String> supplier) {
+            return () -> {
+                try {
+                    Assertions.fail("Operation did not complete in time:" + supplier.get());
+                } catch (Throwable e) {
+                    Assertions.fail("Failed to explain timeout", e);
+                }
+            };
+        }
     }
 
     private static final Random R = new Random();
@@ -382,6 +399,21 @@ public class TestUtils {
     }
 
     /**
+     * Wait for a condition, fail otherwise.
+     *
+     * This method works like {@link #waitUntilConditionOrFail(BooleanSupplier, Duration, Duration, Supplier)}, but
+     * takes the fail message from the {@link #toString()} method of the condition.
+     *
+     * @param condition The condition to check, returning {@code true} means success.
+     * @param timeout The maximum time to wait for
+     * @param delay The delay between checks.
+     * @throws AssertionFailedError In case the timeout expired
+     */
+    public static void waitUntilConditionOrFail(final BooleanSupplier condition, final Duration timeout, final Duration delay) {
+        waitUntilConditionOrFail(condition, timeout, delay, condition::toString);
+    }
+
+    /**
      * Wait for a condition, throw exception otherwise.
      *
      * @param condition The condition to check, returning {@code true} means success.
@@ -428,6 +460,7 @@ public class TestUtils {
      * remaining time budget left.
      *
      * @param condition The condition to check, returning {@code true} means success.
+     * @param timeout The timeout of the operation.
      * @param delay The delay between checks.
      * @return {@code true} if the condition was met, {@code false otherwise}.
      */
@@ -456,7 +489,7 @@ public class TestUtils {
 
             // otherwise sleep
 
-            log.debug("next iteration, remaining time: {}", remaining);
+            log.debug("next iteration, remaining time: {}", format(remaining.negated()));
             try {
                 Thread.sleep(delay.toMillis());
             } catch (InterruptedException e) {
@@ -465,6 +498,10 @@ public class TestUtils {
 
         }
 
+    }
+
+    private static String format(final Duration duration) {
+        return String.format("%02d:%2d:%2d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
     public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)

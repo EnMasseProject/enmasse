@@ -22,25 +22,7 @@
                 }
             ]
         },
-        "downstreamStrategy": {
-            "managedStrategy": {
-                "addressSpace": {
-                    "name": "iot",
-                    "plan": "standard-unlimited"
-                },
-                "addresses": {
-                    "command": {
-                        "plan": "standard-small-anycast"
-                    },
-                    "event": {
-                        "plan": "standard-small-queue"
-                    },
-                    "telemetry": {
-                        "plan": "standard-small-anycast"
-                    }
-                }
-            }
-        }
+        "downstream": {}
     },
     "status": {
         "accepted": {
@@ -78,18 +60,6 @@
                 "type": "ConfigurationAccepted"
             }
         ],
-        "downstreamEndpoint": {
-            "certificate": "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURXVENDQWtHZ0F3SUJBZ0lKQUxDSGdLeGhpR29HTUEwR0NTcUdTSWIzRFFFQkN3VUFNRUl4Q3pBSkJnTlYKQkFZVEFsaFlNUlV3RXdZRFZRUUhEQXhFWldaaGRXeDBJRU5wZEhreEhEQWFCZ05WQkFvTUUwUmxabUYxYkhRZwpRMjl0Y0dGdWVTQk1kR1F3SUJjTk1qQXdNVE14TVRNME56TTVXaGdQTWpBMU1EQXpNVFF4TXpRM016bGFNRUl4CkN6QUpCZ05WQkFZVEFsaFlNUlV3RXdZRFZRUUhEQXhFWldaaGRXeDBJRU5wZEhreEhEQWFCZ05WQkFvTUUwUmwKWm1GMWJIUWdRMjl0Y0dGdWVTQk1kR1F3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLQW9JQgpBUURXMCtobDA4dnRFY3RiQ1RtVFZOUzFmZzFjR0RUSnA5QWRPMnpyS2Q3dXNFRENMd3E1THN0YjZDaXNLVkVzCmR1bFR2akJZV2xEYUtMazRBVEk2R1ltL3VnTXFTd253Y3FSVDM2Z3JmbW1lQlQrSTBhc0t1bUdFQjZ1dE1LbFYKaVhiM1dadlZrMEt3V0xYeE9FRm56dDFaSXJHMTdINWNmRGxoNnBBdGx0VnYwMjg2Z1pDWldzajV4M0VJM1hTbgpqbTAweXpNYXBCam15ekJaWkcyMmkyaWFwcFpldjg3U1ZaT0JWMkFPU3hYZE4yVU9kam9OaVBndUwwY29hdC92Ci9GSHhlWFBmcVpaL2RUTGwvV0d6NjZlTWZZSlpydXZhdm44M1Nvb2xBdXA2RjdsMmdOQUlaM2xEZVBSaElxSHMKaTlZd0hFQ05wcnF1M21KUDJnNllpSXRMQWdNQkFBR2pVREJPTUIwR0ExVWREZ1FXQkJTWFgwNDhhMUVyeG8rdwp3QWpoa1YyR2FDMXh1ekFmQmdOVkhTTUVHREFXZ0JTWFgwNDhhMUVyeG8rd3dBamhrVjJHYUMxeHV6QU1CZ05WCkhSTUVCVEFEQVFIL01BMEdDU3FHU0liM0RRRUJDd1VBQTRJQkFRQ01qNUZzYi91TGRhRExoNFE5VFdELzlFYjEKTVVDOXVaUk9vL282WG94cU05bjRDZWlKdXVrWEQ3VDNBMm95ZFM1WEpIRjlaamVocVBjaDFGRjJ1Q2NkUWdCTQo4Y2dYOEY2RkpCUWdMTjJjY1BqRGs1NnU4ODBEcmZvWEtZanRWdWhzMzhKRTZ5K2lWdldaL2JHcjlKMC9IWGN5CnlnZDZJaFRCMUlRcU5VRFM0WHFUNjlxV0ZWQTZOM0xzVDVoM3owNC9HQ0VRMHFKT0hucUNwL1lMcjdyTUl0T3EKendNU2c3ZmhRa3VHOHhkZ1pvV2ttTHB4UGJxZ2JGTTNyNlV4ZnNZaTNQa3lmVUg5SEo5MDhjbnAvYTh2RVRGUQpMc1l6SGo4TlgxUzdWelVCaGl1dGJaSTN3bmcwN0srTU9ZdmlQVkoxbjlIRnVuUVRMT0svNDYrNklDcE8KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=",
-            "host": "messaging-9812cc4.enmasse-infra.svc",
-            "password": "1234567890",
-            "port": 5671,
-            "tls": true,
-            "username": "adapter-3d98d3bc-4430-11ea-863e-00163e294db3"
-        },
-        "managed": {
-            "addressSpace": "iot",
-            "passwordTime": "2020-01-31T13:47:37Z"
-        },
         "phase": "Active",
         "tenantName": "enmasse-infra.iot"
     }

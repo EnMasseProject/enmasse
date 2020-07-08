@@ -11,6 +11,8 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
+import static io.enmasse.systemtest.amqp.TerminusFactory.queue;
+
 public class AmqpConnectOptions {
     private Endpoint endpoint;
     private TerminusFactory terminusFactory;
@@ -110,4 +112,14 @@ public class AmqpConnectOptions {
         return this;
     }
 
+    public static AmqpConnectOptions defaults(final Endpoint endpoint, final TerminusFactory factory, final ProtonQoS qos) {
+        return new AmqpConnectOptions()
+                .setEndpoint(endpoint)
+                .setTerminusFactory(factory)
+                .setQos(qos);
+    }
+
+    public static AmqpConnectOptions defaultQueue(final Endpoint endpoint) {
+        return defaults(endpoint, queue(), ProtonQoS.AT_LEAST_ONCE);
+    }
 }

@@ -133,19 +133,23 @@ func main() {
 
 	globalGvks := make([]schema.GroupVersionKind, 0)
 
-	if util.IsModuleEnabled("IOT_CONFIG") {
-		globalGvks = append(globalGvks,
-			schema.GroupVersionKind{
-				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTConfig",
-			},
-			schema.GroupVersionKind{
-				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTConfigList",
-			})
-	}
+	// IoTConfig is only processed in the namespace of the operator
+	// FIXME: this may change in the future
+	/*
+		if util.IsModuleEnabled("IOT_CONFIG") {
+			globalGvks = append(globalGvks,
+				schema.GroupVersionKind{
+					Group:   "iot.enmasse.io",
+					Version: "v1alpha1",
+					Kind:    "IoTConfig",
+				},
+				schema.GroupVersionKind{
+					Group:   "iot.enmasse.io",
+					Version: "v1alpha1",
+					Kind:    "IoTConfigList",
+				})
+		}
+	*/
 
 	if util.IsModuleEnabled("IOT_PROJECT") {
 		globalGvks = append(globalGvks,

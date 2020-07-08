@@ -84,6 +84,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static io.enmasse.systemtest.platform.Kubernetes.executeWithInput;
+import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -216,7 +217,7 @@ public class SystemtestsKubernetesApps {
             if (namespace.equals("allowed-namespace")) {
                 Namespace allowedNamespace = new NamespaceBuilder().withNewMetadata()
                         .withName("allowed-namespace").addToLabels("allowed", "true").endMetadata().build();
-                kube.getClient().namespaces().create(allowedNamespace);
+                getClient().namespaces().create(allowedNamespace);
             } else {
                 kube.createNamespace(namespace);
             }
@@ -365,7 +366,7 @@ public class SystemtestsKubernetesApps {
 
         kube.createNamespace(INFINISPAN_PROJECT);
 
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         // apply "common" and "manual" folders
 
@@ -403,7 +404,7 @@ public class SystemtestsKubernetesApps {
         }
 
         // delete "common" and "manual" folders
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         if (client.apps()
                 .statefulSets()
@@ -440,7 +441,7 @@ public class SystemtestsKubernetesApps {
 
         kube.createNamespace(POSTGRESQL_PROJECT);
 
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         kube.apply(POSTGRESQL_PROJECT, namespaceReplacer(POSTGRESQL_PROJECT), POSTGRESQL_EXAMPLE_BASE);
 
@@ -514,7 +515,7 @@ public class SystemtestsKubernetesApps {
             return;
         }
 
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         if (client.apps()
                 .deployments()
@@ -541,7 +542,7 @@ public class SystemtestsKubernetesApps {
 
         kube.createNamespace(H2_PROJECT);
 
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         kube.apply(H2_PROJECT, namespaceReplacer(H2_PROJECT), H2_EXAMPLE_BASE);
 
@@ -571,8 +572,8 @@ public class SystemtestsKubernetesApps {
     }
 
     public static Optional<PodResource<Pod, DoneablePod>> getH2ServerPod() {
-        final var client = kube.getClient();
-        return kube.getClient()
+        final var client = getClient();
+        return getClient()
                 .pods()
                 .inNamespace(H2_PROJECT)
                 .withLabel("app", "h2")
@@ -611,7 +612,7 @@ public class SystemtestsKubernetesApps {
             return;
         }
 
-        final KubernetesClient client = kube.getClient();
+        final KubernetesClient client = getClient();
 
         if (client.apps()
                 .deployments()
@@ -638,7 +639,7 @@ public class SystemtestsKubernetesApps {
     public static void deployAMQBroker(String namespace, String name, String user, String password, BrokerCertBundle certBundle) throws Exception {
         kube.createNamespace(namespace);
 
-        kube.getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
+        getClient().rbac().roles().inNamespace(namespace).createOrReplace(new RoleBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -650,7 +651,7 @@ public class SystemtestsKubernetesApps {
                         .addToVerbs("get")
                         .build())
                 .build());
-        kube.getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
+        getClient().rbac().roleBindings().inNamespace(namespace).createOrReplace(new RoleBindingBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -691,7 +692,7 @@ public class SystemtestsKubernetesApps {
 
         kube.createExternalEndpoint(name, namespace, service, tlsPort);
 
-        kube.getClient()
+        getClient()
                 .apps().deployments()
                 .inNamespace(namespace)
                 .withName(name)
@@ -701,8 +702,8 @@ public class SystemtestsKubernetesApps {
     }
 
     public static void deleteAMQBroker(String namespace, String name) throws Exception {
-        kube.getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
-        kube.getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
+        getClient().rbac().roles().inNamespace(namespace).withName(name).cascading(true).delete();
+        getClient().rbac().roleBindings().inNamespace(namespace).withName(name).cascading(true).delete();
         kube.deleteSecret(namespace, name);
         kube.deleteService(namespace, name);
         kube.deleteDeployment(namespace, name);

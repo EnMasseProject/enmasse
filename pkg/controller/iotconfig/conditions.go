@@ -159,7 +159,7 @@ func (c *conditionAggregator) aggregateFromList(condition *iotv1alpha1.CommonCon
 		if len(list) == 1 {
 			format = "%d component out of %d is %s: %s"
 		} else {
-			format = "%d component out of %d are %s: %s"
+			format = "%d components out of %d are %s: %s"
 		}
 		condition.SetStatusAsBoolean(
 			!okValue,

@@ -362,12 +362,12 @@ public class Exec {
         public Future<String> read() {
             return CompletableFuture.supplyAsync(() -> {
                 try (Scanner scanner = new Scanner(is)) {
-                    log.debug("Reading stream {}", is);
+                    log.trace("Reading stream {}", is);
                     while (scanner.hasNextLine()) {
                         String line = scanner.nextLine();
                         data.append(line);
                         if (appendLineSeparator) {
-                            data.append(System.getProperty("line.separator"));
+                            data.append(System.lineSeparator());
                         }
                         subscribers.forEach(sub -> sub.onNext(line));
                     }

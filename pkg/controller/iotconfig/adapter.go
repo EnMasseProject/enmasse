@@ -9,6 +9,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
+	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/cert"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"os"
@@ -34,6 +36,7 @@ import (
 
 // the name of the router image key
 const imageNameRouter = "router"
+const SharedInfraConnectionName = "shared-infra"
 
 type adapterPort struct {
 	ContainerPort    int32
@@ -202,7 +205,13 @@ func prepareAdapterStatus(config *iotv1alpha1.IoTConfig) {
 	config.Status.Services = make(map[string]iotv1alpha1.ServiceStatus)
 }
 
-func (r *ReconcileIoTConfig) processStandardAdapter(ctx context.Context, config *iotv1alpha1.IoTConfig, change *cchange.ConfigChangeRecorder, adapter adapter) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processStandardAdapter(
+	ctx context.Context,
+	config *iotv1alpha1.IoTConfig,
+	_ *enmassev1.MessagingInfrastructure,
+	change *cchange.ConfigChangeRecorder,
+	adapter adapter,
+) (reconcile.Result, error) {
 
 	enabled := adapter.IsEnabled(config)
 
@@ -291,6 +300,8 @@ func (r *ReconcileIoTConfig) processAdapterRoute(ctx context.Context, config *io
 
 func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, deployment *appsv1.Deployment, containers iotv1alpha1.CommonAdapterContainers) error {
 
+	// create qdr configurator sidecar
+
 	err := install.ApplyDeploymentContainerWithError(deployment, "qdr-cfg", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, "iot-proxy-configurator", config); err != nil {
@@ -327,6 +338,8 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		return err
 	}
 
+	// create qdr proxy sidecar
+
 	err = install.ApplyDeploymentContainerWithError(deployment, "qdr-proxy", func(container *corev1.Container) error {
 
 		if err := install.SetContainerImage(container, imageNameRouter, config); err != nil {
@@ -348,6 +361,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 		install.ApplyVolumeMountSimple(container, "qdr-proxy-config", "/etc/qdr/config", true)
 		install.ApplyVolumeMountSimple(container, "qdr-command-config", "/etc/qdr/command", true)
 		install.ApplyVolumeMountSimple(container, tlsServiceCAVolumeName, "/etc/tls-service-ca", true)
+		install.ApplyVolumeMountSimple(container, "shared-infra", "/etc/shared-infra-internal", true)
 
 		// tracing config
 
@@ -369,6 +383,7 @@ func (r *ReconcileIoTConfig) addQpidProxySetup(config *iotv1alpha1.IoTConfig, de
 	install.ApplyEmptyDirVolume(&deployment.Spec.Template.Spec, "qdr-tmp-certs")
 	install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "qdr-proxy-config", "qdr-proxy-configurator")
 	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "qdr-command-config", nameCommandMeshSecretName)
+	install.ApplySecretVolume(&deployment.Spec.Template.Spec, "shared-infra", getSharedInfraSecretName(config))
 
 	if err := ApplyInterServiceForDeployment(r.client, config, deployment, "", ""); err != nil {
 		return err
@@ -437,20 +452,20 @@ func appendAdapterEnvVar(container *corev1.Container, a adapter, key string, val
 	install.ApplyOrRemoveEnvSimple(container, a.EnvPrefix+key, value)
 }
 
-func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
+func (r *ReconcileIoTConfig) processQdrProxyConfig(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, configCtx *cchange.ConfigChangeRecorder) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 
 	rc.ProcessSimple(func() error {
 		return r.processConfigMap(ctx, "qdr-proxy-configurator", config, false, func(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap) error {
-			return r.reconcileAdapterConfigMap(config, configMap, configCtx)
+			return r.reconcileAdapterConfigMap(config, infra, configMap, configCtx)
 		})
 	})
 
 	return rc.Result()
 }
 
-func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTConfig, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
+func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure, configMap *corev1.ConfigMap, configCtx *cchange.ConfigChangeRecorder) error {
 
 	// tls versions
 
@@ -460,6 +475,7 @@ func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTCo
 
 	const internalCommandConnectionName = "iot-command-mesh"
 	commandMeshHost := nameCommandMesh + "." + config.Namespace + ".svc"
+	sharedInfraHost := infra.GetInternalClusterServiceName() + "." + config.Namespace + ".svc"
 
 	router := [][]interface{}{
 		{
@@ -482,6 +498,36 @@ func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTCo
 				"saslMechanisms":   "ANONYMOUS",
 			},
 		},
+		// configuration for connecting to the shared infrastructure
+		{
+			"sslProfile",
+			map[string]interface{}{
+				"name":           SharedInfraConnectionName + "-ssl",
+				"privateKeyFile": "/etc/shared-infra-internal/tls.key",
+				"certFile":       "/etc/shared-infra-internal/tls.crt",
+				"caCertFile":     "/etc/shared-infra-internal/ca.crt",
+			},
+		},
+		{
+			"connector",
+			map[string]interface{}{
+				"name":           SharedInfraConnectionName, // the name inside the configuration
+				"host":           sharedInfraHost,           // the hostname to connect to
+				"port":           55667,
+				"sslProfile":     SharedInfraConnectionName + "-ssl",
+				"role":           "route-container",
+				"saslMechanisms": "EXTERNAL",
+			},
+		},
+		// configuration for connecting to the command mesh
+		{
+			"sslProfile",
+			map[string]interface{}{
+				"name":       internalCommandConnectionName + "-ssl",
+				"caCertFile": "/etc/tls-service-ca/service-ca.crt",
+				"protocols":  tlsVersions,
+			},
+		},
 		{
 			"connector",
 			map[string]interface{}{
@@ -493,14 +539,6 @@ func (r *ReconcileIoTConfig) reconcileAdapterConfigMap(config *iotv1alpha1.IoTCo
 				"saslMechanisms": "PLAIN",
 				"saslUsername":   iotCommandMeshUserName + "@" + iotCommandMeshDomainName,
 				"saslPassword":   "file:/etc/qdr/command/password",
-			},
-		},
-		{
-			"sslProfile",
-			map[string]interface{}{
-				"name":       internalCommandConnectionName + "-ssl",
-				"caCertFile": "/etc/tls-service-ca/service-ca.crt",
-				"protocols":  tlsVersions,
 			},
 		},
 		{
@@ -862,4 +900,17 @@ func (r *ReconcileIoTConfig) reconcileStandardAdapterRoute(config *iotv1alpha1.I
 	// return
 
 	return nil
+}
+
+// create the client certificate for the QDR proxies of the protocol adapters
+func (r *ReconcileIoTConfig) processSharedInfraSecrets(ctx context.Context, config *iotv1alpha1.IoTConfig, infra *enmassev1.MessagingInfrastructure) error {
+	if _, err := r.certController.ReconcileCertWithName(ctx, log, infra, config, getSharedInfraSecretName(config), "adapter-client-cert"); err != nil {
+		return errors.Wrap(err, "Failed to create client certificate for adapters")
+	}
+	return nil
+}
+
+func getSharedInfraSecretName(config *iotv1alpha1.IoTConfig) string {
+	// FIXME: we still have name clashes, but maybe less
+	return cert.GetCertSecretName("iot-" + config.Name)
 }

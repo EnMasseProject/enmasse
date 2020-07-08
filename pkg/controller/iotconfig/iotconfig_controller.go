@@ -36,6 +36,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -79,7 +80,14 @@ func Add(mgr manager.Manager) error {
 }
 
 func newReconciler(mgr manager.Manager, infraNamespace string, configName string) *ReconcileIoTConfig {
-	certController := cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour)
+
+	certController := cert.NewCertController(
+		mgr.GetClient(),
+		mgr.GetScheme(),
+		24*30*time.Hour, /* CA expiry, which don't use */
+		24*time.Hour,    /* client cert expiry */ // FIXME: make configurable
+	)
+
 	return &ReconcileIoTConfig{
 		client:         mgr.GetClient(),
 		scheme:         mgr.GetScheme(),
@@ -119,6 +127,7 @@ func add(mgr manager.Manager, r *ReconcileIoTConfig) error {
 		{&corev1.ConfigMap{}, false},
 		{&corev1.Secret{}, false},
 		{&corev1.PersistentVolumeClaim{}, false},
+		{&enmassev1.MessagingInfrastructure{}, false},
 
 		{&routev1.Route{}, true},
 	} {
@@ -218,11 +227,11 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling IoTConfig")
 
+	ctx := context.Background()
+
 	// Get config
 	config := &iotv1alpha1.IoTConfig{}
-	err := r.client.Get(context.TODO(), request.NamespacedName, config)
-
-	ctx := context.TODO()
+	err := r.client.Get(ctx, request.NamespacedName, config)
 
 	if err != nil {
 
@@ -240,13 +249,38 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
+	// check of unique name
+	// FIXME: drop requirement in a future version
+
 	if config.Name != r.configName {
 		return r.failWrongConfigName(ctx, config)
 	}
 
-	rc := &recon.ReconcileContext{}
+	// we can start
 
+	rc := &recon.ReconcileContext{}
 	original := config.DeepCopy()
+
+	// get messaging infrastructure
+
+	infraName := config.Spec.MessagingInfrastructure
+	if infraName == "" {
+		infraName = config.Name
+	}
+	messagingInfra := &enmassev1.MessagingInfrastructure{}
+	if err := r.client.Get(ctx, client.ObjectKey{Namespace: config.Namespace, Name: infraName}, messagingInfra); err != nil {
+		if apierrors.IsNotFound(err) {
+			// FIXME: properly handle status section
+			// we cannot proceed without a messaging infrastructure
+			rc.ProcessSimple(func() error {
+				return util.NewConfigurationError("Unable to find MessagingInfrastructure named '%s' in namespace '%s'", infraName, config.Namespace)
+			})
+			return r.updateFinalStatus(ctx, original, config, rc)
+		} else {
+			// expect a recoverable error ... try again
+			return reconcile.Result{}, err
+		}
+	}
 
 	// prepare the adapter status section
 
@@ -257,7 +291,7 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	configTracker := NewConfigTracker()
 
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processQdrProxyConfig(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processQdrProxyConfig(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.ProcessSimple(func() error {
 		return r.processAuthServicePskSecret(ctx, config, configTracker.authServicePskCtx)
@@ -265,15 +299,15 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processAdapterPskCredentials(ctx, config, configTracker)
 	})
-	rc.Process(func() (reconcile.Result, error) {
-		return r.processAdapterInfraCert(ctx, config, configTracker)
+	rc.ProcessSimple(func() error {
+		return r.processInterServiceCAConfigMap(ctx, config)
+	})
+	rc.ProcessSimple(func() error {
+		return r.processSharedInfraSecrets(ctx, config, messagingInfra)
 	})
 
 	// start normal reconcile
 
-	rc.ProcessSimple(func() error {
-		return r.processInterServiceCAConfigMap(ctx, config)
-	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processServiceMesh(ctx, config)
 	})
@@ -290,19 +324,19 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.processDeviceRegistry(ctx, config, configTracker.authServicePskCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processAmqpAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processAmqpAdapter(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processHttpAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processHttpAdapter(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processMqttAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processMqttAdapter(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processSigfoxAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processSigfoxAdapter(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
-		return r.processLoraWanAdapter(ctx, config, configTracker.qdrProxyConfigCtx)
+		return r.processLoraWanAdapter(ctx, config, messagingInfra, configTracker.qdrProxyConfigCtx)
 	})
 	rc.Process(func() (reconcile.Result, error) {
 		return r.processMonitoring(ctx, config)

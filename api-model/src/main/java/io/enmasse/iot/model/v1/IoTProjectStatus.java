@@ -7,6 +7,7 @@ package io.enmasse.iot.model.v1;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.fabric8.kubernetes.api.model.Doneable;
@@ -24,10 +25,10 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(value = { "prefix" })
 public class IoTProjectStatus {
 
     private String tenantName;
-    private ExternalDownstreamStrategy downstreamEndpoint;
     private List<ProjectCondition> conditions;
     private String phase;
     private String message;
@@ -40,14 +41,6 @@ public class IoTProjectStatus {
 
     public void setTenantName(String tenantName) {
         this.tenantName = tenantName;
-    }
-
-    public ExternalDownstreamStrategy getDownstreamEndpoint() {
-        return downstreamEndpoint;
-    }
-
-    public void setDownstreamEndpoint(ExternalDownstreamStrategy downstreamEndpoint) {
-        this.downstreamEndpoint = downstreamEndpoint;
     }
 
     public List<ProjectCondition> getConditions() {
