@@ -8,6 +8,9 @@
 [\w]?\'(\\.|[^\\'])*\'    return 'STRING_LITERAL_S';
 [\w]?\`(\\.|[^\\`])*\`    return 'JSON_PATH';
 
+"true"                    return 'TRUE';
+"false"                   return 'FALSE';
+
 "("                       return 'LPAREN';
 ")"                       return 'RPAREN';
 
@@ -83,4 +86,8 @@ literal
 {$$ = yy.constantExpression.createString($1)}
 |   JSON_PATH
 {$$ = yy.constantExpression.createJsonPath($1)}
+|   TRUE
+{$$ = yy.constantExpression.createBoolean($1)}
+|   FALSE
+{$$ = yy.constantExpression.createBoolean($1)}
 ;
