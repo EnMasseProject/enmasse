@@ -69,7 +69,7 @@ test_go_codegen:
 	GO111MODULE=on ./hack/verify-codegen.sh
 
 test_go_vet:
-	GO111MODULE=on go vet $(GOOPTS) ./cmd/... ./pkg/...
+	GO111MODULE=on time go vet $(GOOPTS) ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
 test_go_run:
