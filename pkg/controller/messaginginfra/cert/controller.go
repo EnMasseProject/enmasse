@@ -367,7 +367,9 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		if err != nil {
 			return nil, err
 		}
-		secret.Data = make(map[string][]byte)
+		if secret.Data == nil {
+			secret.Data = make(map[string][]byte)
+		}
 
 		if config.key != "" {
 			secret.Data[config.key] = key
@@ -427,7 +429,10 @@ func (c *CertController) applyCertSecret(secret *corev1.Secret, caSecret *corev1
 		if err != nil {
 			return nil, err
 		}
-		secret.Data = make(map[string][]byte)
+
+		if secret.Data == nil {
+			secret.Data = make(map[string][]byte)
+		}
 
 		if config.key != "" {
 			secret.Data[config.key] = key
