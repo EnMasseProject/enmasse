@@ -574,7 +574,7 @@ query {
 ```
 query {
   credentials(
-    filter: "$['auth-id'] = 'user-1'"
+    filter: "`$['auth-id']` = 'user-1'"
     iotproject: "iotProjectIndia",
     deviceId: "20"
   ) {
