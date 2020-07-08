@@ -125,10 +125,11 @@ parser.yy = {
     createBoolean: function(s) {
       return {
         evaluate: function(target) {
-          if (s == "TRUE") {
+          if (s.toUpperCase() == "TRUE") {
             return true;
-          } else s == "FALSE";
-          return false;
+          } else if (s.toUpperCase() == "FALSE") {
+            return false;
+          }
         }
       };
     }
