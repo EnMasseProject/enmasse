@@ -26,7 +26,8 @@ import {
 } from "modules/iot-device-detail/components";
 import {
   RETURN_IOT_DEVICE_DETAIL,
-  DELETE_IOT_DEVICE
+  DELETE_IOT_DEVICE,
+  TOGGLE_IOT_DEVICE_STATUS
 } from "graphql-module/queries";
 import { IDeviceDetailResponse } from "schema";
 import { Routes } from "./Routes";
@@ -34,6 +35,12 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { NoDataFound } from "components";
 import { ActionManager } from "modules/iot-device-detail/components";
+import { DialogTypes } from "constant";
+import {
+  getDetailForDialog,
+  getHeaderForDialog
+} from "modules/iot-device/utils";
+
 import "./pf-overrides.css";
 
 export default function DeviceDetailPage() {
@@ -64,6 +71,10 @@ export default function DeviceDetailPage() {
     undefined,
     changePageState
   );
+
+  const [
+    setUpdateDeviceQueryVariables
+  ] = useMutationQuery(TOGGLE_IOT_DEVICE_STATUS, ["iot_device_detail"]);
 
   const { devices } = data || {
     devices: { total: 0, devices: [] }
@@ -139,10 +150,31 @@ export default function DeviceDetailPage() {
      */
   };
 
-  const onChangeDeviceStatus = () => {
-    /**
-     * TODO: implement change device status logic
-     */
+  const onConfirmToggleDeviceStatus = async (data: any) => {
+    const variable = {
+      a: { name: projectname, namespace },
+      b: [data.deviceId],
+      status: data.status
+    };
+    await setUpdateDeviceQueryVariables(variable);
+  };
+
+  const onChangeDeviceStatus = (status: boolean) => {
+    const dialogType: string = status
+      ? DialogTypes.ENABLE
+      : DialogTypes.DISABLE;
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
+      modalProps: {
+        onConfirm: onConfirmToggleDeviceStatus,
+        selectedItems: [deviceId],
+        option: DialogTypes.DISABLE,
+        data: { deviceId, status },
+        detail: getDetailForDialog([{ deviceId }], dialogType),
+        header: getHeaderForDialog([{ deviceId }], dialogType)
+      }
+    });
   };
 
   return (

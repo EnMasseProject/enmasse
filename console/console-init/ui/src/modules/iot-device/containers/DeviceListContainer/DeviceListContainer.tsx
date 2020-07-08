@@ -10,7 +10,7 @@ import { IIoTDevicesResponse } from "schema/iot_device";
 import {
   RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
   DELETE_IOT_DEVICE,
-  UPDATE_IOT_DEVICE
+  TOGGLE_IOT_DEVICE_STATUS
 } from "graphql-module/queries/iot_device";
 import {
   DeviceList,
@@ -48,6 +48,7 @@ export interface IDeviceListContainerProps {
   appliedFilter: IDeviceFilter;
   resetFilter: () => void;
   projectname: string;
+  namespace: string;
 }
 
 export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
@@ -62,7 +63,8 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   setSortValue,
   appliedFilter,
   resetFilter,
-  projectname
+  projectname,
+  namespace
 }) => {
   const [sortBy, setSortBy] = useState<ISortBy>();
 
@@ -109,9 +111,9 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     "devices_for_iot_project"
   ]);
 
-  const [setUpdateDeviceQueryVariables] = useMutationQuery(UPDATE_IOT_DEVICE, [
-    "devices_for_iot_project"
-  ]);
+  const [
+    setUpdateDeviceQueryVariables
+  ] = useMutationQuery(TOGGLE_IOT_DEVICE_STATUS, ["devices_for_iot_project"]);
 
   if (loading) {
     return <Loading />;
@@ -125,22 +127,13 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     await setDeleteDeviceQueryVariables(variable);
   };
 
-  const onConfirmEnableDevice = async (device: any) => {
-    // TODO: to be changed according to the backend query of mock
+  const onConfirmToggleDeviceStatus = async (data: any) => {
     const variable = {
-      project: projectname,
-      deviceId: device
+      a: { name: projectname, namespace },
+      b: [data.deviceId],
+      status: data.status
     };
     await setUpdateDeviceQueryVariables(variable);
-  };
-
-  const onConfirmDisableDevice = async (device: any) => {
-    // TODO: to be changed according to the backend query of mock
-    const variable = {
-      iotproject: projectname,
-      device
-    };
-    await setDeleteDeviceQueryVariables(variable);
   };
 
   const deleteDevice = (row: any) => {
@@ -159,46 +152,21 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     });
   };
 
-  const disableDevice = (row: any) => {
-    const { deviceId, jsonData, viaGateway } = row.originalData;
-    const device = {
-      deviceId,
-      jsonData,
-      viaGateway,
-      enabled: false
-    };
+  const toggleDeviceStatus = (row: any, status: boolean) => {
+    const { deviceId } = row.originalData;
+    const dialogType: string = status
+      ? DialogTypes.ENABLE
+      : DialogTypes.DISABLE;
     dispatch({
       type: types.SHOW_MODAL,
       modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
       modalProps: {
-        onConfirm: onConfirmDisableDevice,
+        onConfirm: onConfirmToggleDeviceStatus,
         selectedItems: [deviceId],
         option: DialogTypes.DISABLE,
-        data: device,
-        detail: getDetailForDialog([{ deviceId }], DialogTypes.DISABLE),
-        header: getHeaderForDialog([{ deviceId }], DialogTypes.DISABLE)
-      }
-    });
-  };
-
-  const enableDevice = (row: any) => {
-    const { deviceId, jsonData, viaGateway } = row.originalData;
-    const device = {
-      deviceId,
-      jsonData,
-      viaGateway,
-      enabled: true
-    };
-    dispatch({
-      type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
-      modalProps: {
-        onConfirm: onConfirmEnableDevice,
-        selectedItems: [deviceId],
-        option: DialogTypes.ENABLE,
-        data: device,
-        detail: getDetailForDialog([{ deviceId }], DialogTypes.ENABLE),
-        header: getHeaderForDialog([{ deviceId }], DialogTypes.ENABLE)
+        data: { deviceId, status },
+        detail: getDetailForDialog([{ deviceId }], dialogType),
+        header: getHeaderForDialog([{ deviceId }], dialogType)
       }
     });
   };
@@ -213,7 +181,9 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       {
         title: enabled ? "Disable" : "Enable",
         onClick: () =>
-          enabled ? disableDevice(rowData) : enableDevice(rowData)
+          enabled
+            ? toggleDeviceStatus(rowData, false)
+            : toggleDeviceStatus(rowData, true)
       }
     ];
   };

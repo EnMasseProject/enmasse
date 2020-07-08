@@ -101,14 +101,43 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
   return orderBy;
 };
 
+const concatAND = (filter: string) => {
+  if (filter?.length > 0) return " AND ";
+  return "";
+};
+
 const FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   filterObject: IDeviceFilter
 ) => {
-  const { deviceId } = filterObject;
+  const { deviceId, status, deviceType } = filterObject;
   let filter: string = "";
 
   if (deviceId && deviceId.trim() !== "") {
     filter += "`$.deviceId` = '" + deviceId + "'";
+  }
+
+  if (status?.trim() !== "" && status !== "allStatus") {
+    filter += concatAND(filter);
+    switch (status?.trim()) {
+      case "disabled":
+        filter += "`$.enabled`=false";
+        break;
+      case "enabled":
+        filter += "`$.enabled`=true";
+        break;
+    }
+  }
+
+  if (deviceType?.trim() !== "" && deviceType?.trim() !== "allTypes") {
+    filter += concatAND(filter);
+    switch (deviceType?.trim()) {
+      case "gateway":
+        filter += "`$.viaGateway`=true";
+        break;
+      case "direct":
+        filter += "`$.viaGateway`=false";
+        break;
+    }
   }
 
   // TODO: Needs to handle more parameters once the mock supports it.
@@ -156,14 +185,9 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   return ALL_DEVICE_LIST;
 };
 
-const UPDATE_IOT_DEVICE = gql(
-  `mutation update_iot_device(
-    $project: String!
-    $device: Device_iot_console_input!
-  ) {
-    updateIotDevice(iotproject: $project, device: $device) {
-      deviceId
-    }
+const TOGGLE_IOT_DEVICE_STATUS = gql(
+  `mutation toggle_iot_devices_status($a: ObjectMeta_v1_Input!, $b: [String!]!, $status: Boolean!){
+    toggleIoTDevicesStatus(iotproject: $a, devices: $b, status: $status)
   }`
 );
 
@@ -171,7 +195,7 @@ export {
   RETURN_IOT_DEVICE_DETAIL,
   RETURN_IOT_CREDENTIALS,
   DELETE_IOT_DEVICE,
-  UPDATE_IOT_DEVICE,
   RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
-  DELETE_CREDENTIALS_FOR_IOT_DEVICE
+  DELETE_CREDENTIALS_FOR_IOT_DEVICE,
+  TOGGLE_IOT_DEVICE_STATUS
 };
