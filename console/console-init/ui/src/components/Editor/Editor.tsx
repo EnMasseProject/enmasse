@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import AceEditor, { IAceEditorProps } from "react-ace";
 
@@ -28,9 +33,9 @@ const Editor: React.FunctionComponent<IAceEditorProps> = ({
       name={name}
       enableBasicAutocompletion={enableBasicAutocompletion}
       enableLiveAutocompletion={enableLiveAutocompletion}
-      style={style}  
+      style={style}
       height={height}
-      className={className}     
+      className={className}
     />
   );
 };
