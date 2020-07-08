@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/enmasseproject/enmasse/pkg/accesscontrolserver"
+	serverAmqp "github.com/enmasseproject/enmasse/pkg/accesscontrolserver/amqp"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"log"
 	"os"
@@ -55,7 +56,7 @@ func main() {
 	}
 
 
-	server, err := accesscontrolserver.NewServer(tlsConfig, bindAddress, port)
+	server, err := accesscontrolserver.NewServer(tlsConfig, bindAddress, port, serverAmqp.WithSASLAnonymous())
 	if err != nil {
 		log.Panic(err)
 	}
