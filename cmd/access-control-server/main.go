@@ -54,14 +54,16 @@ func main() {
 		tlsConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
 	}
 
+
 	server, err := accesscontrolserver.NewServer(tlsConfig, bindAddress, port)
 	if err != nil {
 		log.Panic(err)
 	}
+	log.Printf("Listening : %s TLS : %t", server.GetAddress(), tlsConfig != nil)
 
 	go func() {
-		log.Println("Shutting down")
 		_ = <-sigs
+		log.Println("Shutting down")
 		server.Stop()
 		done <- true
 	}()

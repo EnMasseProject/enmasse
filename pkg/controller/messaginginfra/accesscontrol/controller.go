@@ -43,7 +43,7 @@ func NewAccessControlController(client client.Client, scheme *runtime.Scheme, ce
 }
 
 func getAccessControlInfraConfigName(infra *v1.MessagingInfrastructure) string {
-	return fmt.Sprintf("accesscontrol-%s", infra.Name)
+	return fmt.Sprintf("access-control-%s", infra.Name)
 }
 
 func (c AccessControlController) ReconcileAccessControl(ctx context.Context, logger logr.Logger, infra *v1.MessagingInfrastructure) (interface{}, error) {
@@ -83,6 +83,8 @@ func (c AccessControlController) ReconcileAccessControl(ctx context.Context, log
 			install.ApplyVolumeMountSimple(container, "certs", "/etc/enmasse-certs", false)
 			install.ApplyEnvSimple(container, "TLS_KEY_FILE", "/etc/enmasse-certs/tls.key")
 			install.ApplyEnvSimple(container, "TLS_CERT_FILE", "/etc/enmasse-certs/tls.crt")
+			install.ApplyEnvSimple(container, "PORT", "5671")
+			install.ApplyEnvSimple(container, "BIND_ADDRESS", "0.0.0.0")
 
 			container.Ports = []corev1.ContainerPort{
 				{
@@ -145,12 +147,12 @@ func (c AccessControlController) ReconcileAccessControl(ctx context.Context, log
 		if err := controllerutil.SetControllerReference(infra, accessControlService, c.scheme); err != nil {
 			return err
 		}
-		install.ApplyServiceDefaults(accessControlService, "router", infra.Name)
+		install.ApplyServiceDefaults(accessControlService, "accesscontrol", infra.Name)
 		accessControlService.Spec.ClusterIP = "None"
 		accessControlService.Spec.Selector = deployment.Spec.Template.Labels
 		accessControlService.Spec.Ports = []corev1.ServicePort{
 			{
-				Port:       55671,
+				Port:       5671,
 				Protocol:   corev1.ProtocolTCP,
 				TargetPort: intstr.FromString("amqps-auth"),
 				Name:       "amqps-auth",
