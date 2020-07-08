@@ -62,7 +62,8 @@ func TestFilterEval(t *testing.T) {
 		FooInt32 int32
 		FooInt64 int64
 		FooUint  uint
-	}{"Bar", 10, 11, 12, 13}
+		FooBool  bool
+	}{"Bar", 10, 11, 12, 13, true}
 
 	testCases := []struct {
 		expr     string
@@ -147,6 +148,7 @@ func TestFilterEval(t *testing.T) {
 		{"NOT (FALSE)", true},
 
 		{"`$.FooStr` = 'Bar'", true},
+		{"`$['FooStr']` = 'Bar'", true},  //Bracket notation is used to evaluate nodes with special characters
 		{"`$.FooStr` != 'Bar'", false},
 		{"`$.FooStr` = `$.FooStr`", true},
 
@@ -154,6 +156,8 @@ func TestFilterEval(t *testing.T) {
 		{"`$.FooInt32` = 11", true},
 		{"`$.FooInt64` = 12", true},
 		{"`$.FooUint` = 13", true},
+		{"`$.FooBool` = true", true},
+		{"`$.FooBool` = false", false},
 
 		{"`$.NonExistentNode` != 'Bar'", false},
 		{"`$.FooStr.NonExistentSubNode` != 'Bar'", false},
