@@ -91,11 +91,14 @@ type RouterListener struct {
 }
 
 type RouterVhost struct {
-	Name             string                      `json:"name"`
-	Hostname         string                      `json:"hostname"`
-	Aliases          string                      `json:"aliases"`
-	AllowUnknownUser bool                        `json:"allowUnknownUser"`
-	Groups           map[string]RouterVhostGroup `json:"groups"`
+	Name                  string                      `json:"name"`
+	Hostname              string                      `json:"hostname"`
+	Aliases               string                      `json:"aliases"`
+	AllowUnknownUser      bool                        `json:"allowUnknownUser"`
+	MaxConnectionsPerUser int32                       `json:"maxConnectionsPerUser"`
+	MaxConnections        int32                       `json:"maxConnections"`
+	MaxConnectionsPerHost int32                       `json:"maxConnectionsPerHost"`
+	Groups                map[string]RouterVhostGroup `json:"groups"`
 }
 
 type RouterVhostGroup struct {

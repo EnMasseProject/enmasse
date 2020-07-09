@@ -944,11 +944,15 @@ func (i *infraClient) buildRouterVhostPolicies(endpointsByNamespace map[string][
 		}
 		if len(aliases) > 0 {
 			aliasesStr := strings.Join(aliases[:], ",")
+			// TODO: Configure based on plan
 			routerEntities = append(routerEntities, &RouterVhost{
-				Name:             fmt.Sprintf("vhost-%s", namespace),
-				Hostname:         namespace,
-				Aliases:          aliasesStr,
-				AllowUnknownUser: true,
+				Name:                  fmt.Sprintf("vhost-%s", namespace),
+				Hostname:              namespace,
+				Aliases:               aliasesStr,
+				AllowUnknownUser:      true,
+				MaxConnections:        65535,
+				MaxConnectionsPerUser: 65535,
+				MaxConnectionsPerHost: 65535,
 				Groups: map[string]RouterVhostGroup{
 					"$default": RouterVhostGroup{
 						RemoteHosts:          "*",

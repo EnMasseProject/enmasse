@@ -131,8 +131,11 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 				// Enable policy
 				"vhost",
 				map[string]interface{}{
-					"hostname":         "$default",
-					"allowUnknownUser": true,
+					"hostname":              "$default",
+					"allowUnknownUser":      true,
+					"maxConnections":        65535,
+					"maxConnectionsPerUser": 65535,
+					"maxConnectionsPerHost": 65535,
 					"groups": map[string]interface{}{
 						"$default": map[string]interface{}{
 							"remoteHosts":          "*",
