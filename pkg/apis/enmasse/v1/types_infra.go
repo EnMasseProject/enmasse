@@ -109,13 +109,14 @@ type MessagingInfrastructureCondition struct {
 type MessagingInfrastructureConditionType string
 
 const (
-	MessagingInfrastructureReady            MessagingInfrastructureConditionType = "Ready"
-	MessagingInfrastructureCaCreated        MessagingInfrastructureConditionType = "CaCreated"
-	MessagingInfrastructureCertCreated      MessagingInfrastructureConditionType = "CertCreated"
-	MessagingInfrastructureBrokersCreated   MessagingInfrastructureConditionType = "BrokersCreated"
-	MessagingInfrastructureRoutersCreated   MessagingInfrastructureConditionType = "RoutersCreated"
-	MessagingInfrastructureSynchronized     MessagingInfrastructureConditionType = "Synchronized"
-	MessagingInfrastructureBrokersConnected MessagingInfrastructureConditionType = "BrokersConnected"
+	MessagingInfrastructureReady                MessagingInfrastructureConditionType = "Ready"
+	MessagingInfrastructureCaCreated            MessagingInfrastructureConditionType = "CaCreated"
+	MessagingInfrastructureCertCreated          MessagingInfrastructureConditionType = "CertCreated"
+	MessagingInfrastructureAccessControlCreated MessagingInfrastructureConditionType = "AccessControlCreated"
+	MessagingInfrastructureBrokersCreated       MessagingInfrastructureConditionType = "BrokersCreated"
+	MessagingInfrastructureRoutersCreated       MessagingInfrastructureConditionType = "RoutersCreated"
+	MessagingInfrastructureSynchronized         MessagingInfrastructureConditionType = "Synchronized"
+	MessagingInfrastructureBrokersConnected     MessagingInfrastructureConditionType = "BrokersConnected"
 )
 
 type MessagingInfrastructurePhase string

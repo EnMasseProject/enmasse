@@ -337,7 +337,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		ready = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureReady)
 		caCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureCaCreated)
 		certCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureCertCreated)
-		accessControlCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureCertCreated)
+		accessControlCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureAccessControlCreated)
 		brokersCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureBrokersCreated)
 		routersCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureRoutersCreated)
 		brokersConnected = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureBrokersConnected)
