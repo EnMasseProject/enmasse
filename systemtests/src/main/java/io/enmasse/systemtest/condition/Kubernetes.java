@@ -16,6 +16,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(AssumeKubernetesCondition.class)
 public @interface Kubernetes {
-    ClusterType type() default ClusterType.MINIKUBE;
+    ClusterType type() default ClusterType.WHATEVER;
     MultinodeCluster multinode() default MultinodeCluster.WHATEVER;
 }
