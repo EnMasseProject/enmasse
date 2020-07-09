@@ -129,7 +129,7 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 			},
 			[]interface{}{
 				// Enable policy
-				"system-vhost",
+				"vhost",
 				map[string]interface{}{
 					"hostname":         "$default",
 					"allowUnknownUser": true,
