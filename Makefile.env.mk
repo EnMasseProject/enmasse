@@ -23,7 +23,7 @@ IMAGE_VERSION          ?= $(TAG)
 
 # External images
 
-ROUTER_IMAGE ?= quay.io/interconnectedcloud/qdrouterd:1.12.0
+ROUTER_IMAGE ?= docker.io/lulf/qdrouterd:master
 BROKER_IMAGE ?= quay.io/enmasse/artemis-base:2.13.0-ARTEMIS-2810
 PROMETHEUS_IMAGE ?= prom/prometheus:v2.4.3
 ALERTMANAGER_IMAGE ?= prom/alertmanager:v0.15.2
