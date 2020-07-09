@@ -81,7 +81,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     setIsKebabOpen(false);
   };
   const onRedoFilter = () => {
-    // redoFilter();
     const lastFilterLength = lastAppliedFilter.length;
     const lastFilter = createDeepCopy({
       ...lastAppliedFilter[lastFilterLength - 2]
@@ -91,7 +90,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     filterList.splice(lastFilterLength - 2, 1);
     setIsRedoEnabled(false);
     setLastAppliedFilter(filterList);
-    setIsKebabOpen(false);
+    runFilter && runFilter(lastFilter);
   };
   const onChangeDeviceId = (value: string) => {
     const filterObj = { ...filter };
@@ -109,10 +108,6 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     const filterObj = { ...filter };
     filterObj.status = value;
     setFilter(filterObj);
-  };
-
-  const onKebabToggle = () => {
-    setIsKebabOpen(!isKebabOpen);
   };
 
   const onRunFilter = () => {
