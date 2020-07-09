@@ -168,7 +168,7 @@
                     <groups>${groups}</groups>
                     <excludedGroups>${excludeGroups}</excludedGroups>
                     <skipTests>${skip.tests}</skipTests>
-                    <forkCount>1</forkCount>
+                    <forkCount>0</forkCount>
                     <reuseForks>true</reuseForks>
                     <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
                     <systemProperties>

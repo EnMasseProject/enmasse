@@ -507,9 +507,10 @@ func (i *infraClient) syncConfiguration(ctx context.Context) error {
 		routerEntities = append(routerEntities, resultRouter...)
 	}
 
-	// Build vhost policies
-	endpointsByNamespace := i.getEndpointsWithHosts()
-	routerEntities = append(routerEntities, i.buildRouterVhostPolicies(endpointsByNamespace)...)
+	for _, project := range i.projects {
+		endpointsForProject := i.getEndpointsWithHosts(project.Namespace)
+		routerEntities = append(routerEntities, i.buildRouterVhostPolicies(project.Namespace, endpointsForProject)...)
+	}
 
 	return i.syncEntities(ctx, routerEntities, brokerEntities)
 }
@@ -589,14 +590,11 @@ func (i *infraClient) applyBrokers(ctx context.Context, fn func(broker *BrokerSt
 /**
  * Return map of endpoints that are in the active state (phase Active) and hostname set.
  */
-func (i *infraClient) getEndpointsWithHosts() map[string][]*v1.MessagingEndpoint {
-	endpointsWithHosts := make(map[string][]*v1.MessagingEndpoint, 0)
+func (i *infraClient) getEndpointsWithHosts(namespace string) []*v1.MessagingEndpoint {
+	endpointsWithHosts := make([]*v1.MessagingEndpoint, 0)
 	for _, endpoint := range i.endpoints {
-		if endpoint.Status.Host != "" {
-			if endpointsWithHosts[endpoint.Namespace] == nil {
-				endpointsWithHosts[endpoint.Namespace] = make([]*v1.MessagingEndpoint, 0)
-			}
-			endpointsWithHosts[endpoint.Namespace] = append(endpointsWithHosts[endpoint.Namespace], endpoint)
+		if endpoint.Namespace == namespace && endpoint.Status.Host != "" {
+			endpointsWithHosts = append(endpointsWithHosts, endpoint)
 		}
 	}
 	return endpointsWithHosts
@@ -873,29 +871,6 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 
 	}
 
-	// Ensure that we update vhost policy aliases with all endpoints
-	endpointsByNamespace := i.getEndpointsWithHosts()
-	for _, req := range built {
-		switch v := req.resource.(type) {
-		case *v1.MessagingEndpoint:
-			endpoint := v
-			endpoints := make([]*v1.MessagingEndpoint, 1)
-			endpoints[0] = endpoint
-
-			existing := endpointsByNamespace[endpoint.Namespace]
-			if existing != nil {
-				for _, e := range existing {
-					if e.Name == endpoint.Name {
-						continue
-					}
-					endpoints = append(endpoints, e)
-				}
-			}
-		}
-	}
-
-	routerEntities = append(routerEntities, i.buildRouterVhostPolicies(endpointsByNamespace)...)
-
 	return built, routerEntities, brokerEntities
 }
 
@@ -929,47 +904,49 @@ func (i *infraClient) buildRouterProjectEntities(project *v1.MessagingProject) (
 		return routerEntities, nil
 	}
 
+	// Ensure that we update vhost policy aliases with all endpoints
+	endpointsForProject := i.getEndpointsWithHosts(project.Namespace)
+	routerEntities = append(routerEntities, i.buildRouterVhostPolicies(project.Namespace, endpointsForProject)...)
+
 	return routerEntities, nil
 }
 
-func (i *infraClient) buildRouterVhostPolicies(endpointsByNamespace map[string][]*v1.MessagingEndpoint) []RouterEntity {
+func (i *infraClient) buildRouterVhostPolicies(namespace string, endpoints []*v1.MessagingEndpoint) []RouterEntity {
 	// Update policy to include all endpoints
 	routerEntities := make([]RouterEntity, 0)
-	for namespace, endpoints := range endpointsByNamespace {
-		aliasMap := make(map[string]bool, 0)
-		for _, endpoint := range endpoints {
-			if endpoint.Status.Host != "" {
-				aliasMap[endpoint.Status.Host] = true
-			}
+	aliasMap := make(map[string]bool, 0)
+	for _, endpoint := range endpoints {
+		if endpoint.Status.Host != "" {
+			aliasMap[endpoint.Status.Host] = true
 		}
-		if len(aliasMap) > 0 {
-			aliases := make([]string, len(aliasMap))
-			i := 0
-			for alias, _ := range aliasMap {
-				aliases[i] = alias
-				i += 1
-			}
-			aliasesStr := strings.Join(aliases[:], ",")
-			// TODO: Configure based on plan
-			routerEntities = append(routerEntities, &RouterVhost{
-				Name:                  fmt.Sprintf("vhost-%s", namespace),
-				Hostname:              namespace,
-				Aliases:               aliasesStr,
-				AllowUnknownUser:      true,
-				MaxConnections:        65535,
-				MaxConnectionsPerUser: 65535,
-				MaxConnectionsPerHost: 65535,
-				Groups: map[string]RouterVhostGroup{
-					"$default": RouterVhostGroup{
-						RemoteHosts:          "*",
-						Sources:              "*",
-						Targets:              "*",
-						AllowDynamicSource:   true,
-						AllowAnonymousSender: true,
-					},
+	}
+	if len(aliasMap) > 0 {
+		aliases := make([]string, len(aliasMap))
+		i := 0
+		for alias, _ := range aliasMap {
+			aliases[i] = alias
+			i += 1
+		}
+		aliasesStr := strings.Join(aliases[:], ",")
+		// TODO: Configure based on plan
+		routerEntities = append(routerEntities, &RouterVhost{
+			Name:                  fmt.Sprintf("vhost-%s", namespace),
+			Hostname:              namespace,
+			Aliases:               aliasesStr,
+			AllowUnknownUser:      true,
+			MaxConnections:        65535,
+			MaxConnectionsPerUser: 65535,
+			MaxConnectionsPerHost: 65535,
+			Groups: map[string]RouterVhostGroup{
+				"$default": RouterVhostGroup{
+					RemoteHosts:          "*",
+					Sources:              "*",
+					Targets:              "*",
+					AllowDynamicSource:   true,
+					AllowAnonymousSender: true,
 				},
-			})
-		}
+			},
+		})
 	}
 
 	return routerEntities
