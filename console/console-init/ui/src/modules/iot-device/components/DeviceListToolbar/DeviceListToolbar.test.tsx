@@ -15,9 +15,15 @@ import { ICreateDeviceButtonProps } from "modules/iot-device";
 
 describe("<DeviceListToolbar />", () => {
   const kebabItems: React.ReactNode[] = [
-    <DropdownItem onClick={jest.fn()}>Enable</DropdownItem>,
-    <DropdownItem onClick={jest.fn()}>Disable</DropdownItem>,
-    <DropdownItem onClick={jest.fn()}>Delete</DropdownItem>
+    <DropdownItem key="1" onClick={jest.fn()}>
+      Enable
+    </DropdownItem>,
+    <DropdownItem key="2" onClick={jest.fn()}>
+      Disable
+    </DropdownItem>,
+    <DropdownItem key="3" onClick={jest.fn()}>
+      Delete
+    </DropdownItem>
   ];
 
   const addDeviceBtnProps: ICreateDeviceButtonProps = {

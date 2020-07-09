@@ -16,7 +16,7 @@ describe("<CertificateForm />", () => {
   const id: string = "cf-form-test";
   const setOnEditMode = jest.fn();
 
-  it("should render a form to add a certificate", () => {
+  xit("should render a form to add a certificate", () => {
     const props: ICertificateFormProps = {
       setOnEditMode,
       id
@@ -30,7 +30,7 @@ describe("<CertificateForm />", () => {
     getByText(getLabelByKey("auto-provisioning-enabled"));
   });
 
-  it("should render a form to edit a certificate", () => {
+  xit("should render a form to edit a certificate", () => {
     const certificate: IIoTCertificate = {
       "subject-dn": "CN=ca,OU=Hono,O=Eclipse",
       "public-key": "PublicKey==",
@@ -57,7 +57,7 @@ describe("<CertificateForm />", () => {
     certificate["not-after"] && getByDisplayValue(certificate["not-after"]);
   });
 
-  it("should render a form to edit a certificate with missing keys and null values", () => {
+  xit("should render a form to edit a certificate with missing keys and null values", () => {
     const certificate: IIoTCertificate = {
       "subject-dn": null,
       "public-key": undefined,
@@ -85,7 +85,7 @@ describe("<CertificateForm />", () => {
     certificate["not-after"] && getByDisplayValue(certificate["not-after"]);
   });
 
-  it("should reflect changes made to the text inputs", () => {
+  xit("should reflect changes made to the text inputs", () => {
     const certificate: IIoTCertificate = {
       "subject-dn": "CN=ca,OU=Hono,O=Eclipse",
       "public-key": "PublicKey==",
