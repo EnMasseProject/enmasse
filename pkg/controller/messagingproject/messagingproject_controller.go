@@ -242,6 +242,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 			if err != nil {
 				return processorResult{}, err
 			}
+			infra = nil
 			if bestMatch != nil {
 				infra = bestMatch.(*v1.MessagingInfrastructure)
 			}

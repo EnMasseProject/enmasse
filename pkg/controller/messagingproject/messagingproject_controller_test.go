@@ -85,6 +85,12 @@ func TestMatchesSelectorByName(t *testing.T) {
 	})
 	tc.assertSelector(true, s.GetSelector())
 	tc.assertBestMatch(s, []v1.Selectable{s})
+
+	s = createSelectable(time.Time{}, &v1.NamespaceSelector{
+		MatchNames: []string{"app3", "app2"},
+	})
+	tc.assertSelector(false, s.GetSelector())
+	tc.assertBestMatch(nil, []v1.Selectable{s})
 }
 
 func TestMatchesSelectorByMatchLabels(t *testing.T) {
