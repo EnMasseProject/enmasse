@@ -170,6 +170,7 @@
                     <skipTests>${skip.tests}</skipTests>
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
+                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
                     <systemProperties>
                         <enmasse.version>${release.version}</enmasse.version>
                         <enmasse.docs>${application.docs}</enmasse.docs>

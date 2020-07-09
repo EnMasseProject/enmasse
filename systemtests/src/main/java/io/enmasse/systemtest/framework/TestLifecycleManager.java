@@ -27,9 +27,9 @@ import org.slf4j.Logger;
  */
 public class TestLifecycleManager implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
-    private static final Logger LOGGER = LoggerUtils.getLogger();
-    private static final Environment env = Environment.getInstance();
+    private final Environment env = Environment.getInstance();
     private final Kubernetes kubernetes = Kubernetes.getInstance();
+    private final Logger LOGGER = LoggerUtils.getLogger();
     private final TestPlanInfo testInfo = TestPlanInfo.getInstance();
     private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
 
