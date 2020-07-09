@@ -127,7 +127,7 @@ const CreateProject: React.FunctionComponent = () => {
   const [messagingProjectDetail, setMessagingProjectDetail] = useState<
     IMessagingProject
   >(initialMessageProject);
-  const [iotProjectDetail, setiotProjectDetail] = useState<IIoTProjectInput>(
+  const [iotProjectDetail, setIotProjectDetail] = useState<IIoTProjectInput>(
     initialIoTProject
   );
   const [firstSelectedStep, setFirstSelectedStep] = useState<string>("iot");
@@ -135,7 +135,7 @@ const CreateProject: React.FunctionComponent = () => {
 
   const onToggle = () => {
     setFirstSelectedStep("iot");
-    setiotProjectDetail(initialIoTProject);
+    setIotProjectDetail(initialIoTProject);
     setMessagingProjectDetail(initialMessageProject);
     setIsWizardOpen(!isWizardOpen);
     setIsCreatedSuccessfully(undefined);
@@ -143,12 +143,16 @@ const CreateProject: React.FunctionComponent = () => {
 
   const resetForm = () => {
     setIsCreatedSuccessfully(false);
+    setMessagingProjectDetail(initialMessageProject);
+    setIotProjectDetail(initialIoTProject);
   };
 
   const refetchQueries: string[] = ["allProjects"];
 
   const resetFormState = () => {
     setIsCreatedSuccessfully(true);
+    setMessagingProjectDetail(initialMessageProject);
+    setIotProjectDetail(initialIoTProject);
   };
 
   const [setMessagingVariables] = useMutationQuery(
@@ -182,7 +186,6 @@ const CreateProject: React.FunctionComponent = () => {
         namespace: messagingProjectDetail.namespace || "",
         type: messagingProjectDetail.type
       });
-      resetForm();
     }
   };
 
@@ -219,9 +222,7 @@ const CreateProject: React.FunctionComponent = () => {
         namespace: iotProjectDetail.namespace || "",
         enabled: iotProjectDetail.isEnabled
       });
-      resetForm();
     }
-    resetForm();
   };
 
   const step1 = {
@@ -235,7 +236,7 @@ const CreateProject: React.FunctionComponent = () => {
   };
 
   const configurationStepForIot = IoTConfigurationStep(
-    setiotProjectDetail,
+    setIotProjectDetail,
     namespaceOptions,
     iotProjectDetail
   );
@@ -247,7 +248,7 @@ const CreateProject: React.FunctionComponent = () => {
     component: (
       <FinishedStep
         onClose={onToggle}
-        success={isCreatedSuccessfully || false}
+        success={isCreatedSuccessfully}
         routeDetail={routeDetail}
         projectType={
           firstSelectedStep === "messaging"
