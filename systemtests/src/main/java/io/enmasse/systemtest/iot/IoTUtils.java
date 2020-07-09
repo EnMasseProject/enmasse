@@ -30,7 +30,6 @@ import io.enmasse.iot.model.v1.AdaptersConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTConfigStatus;
-import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectStatus;
 import io.enmasse.iot.model.v1.MeshConfig;
@@ -45,7 +44,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.client.utils.Serialization;
 
-public class IoTUtils {
+class IoTUtils {
 
     private static final String IOT_SIGFOX_ADAPTER = "iot-sigfox-adapter";
     private static final String IOT_MQTT_ADAPTER = "iot-mqtt-adapter";
@@ -61,7 +60,7 @@ public class IoTUtils {
     private static final Map<String, String> IOT_LABELS = Map.of("component", "iot");
     private static final Logger log = LoggerUtils.getLogger();
 
-    public static void waitForIoTConfigReady(IoTConfig config) throws Exception {
+    static void waitForIoTConfigReady(IoTConfig config) throws Exception {
         var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         var iotConfigAccess = iotConfigs(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
@@ -98,7 +97,7 @@ public class IoTUtils {
         TestUtils.waitForNReplicas(expectedDeployments.length + meshReplicas, config.getMetadata().getNamespace(), IOT_LABELS, budget);
     }
 
-    public static void deleteIoTConfigAndWait(IoTConfig config) throws Exception {
+    static void deleteIoTConfigAndWait(IoTConfig config) throws Exception {
         log.info("Deleting IoTConfig: {} in namespace: {}", config.getMetadata().getName(), config.getMetadata().getNamespace());
         try ( var ignored = startOperation(SystemtestsOperation.DELETE_IOT_CONFIG)) {
             iotConfigs(config.getMetadata().getNamespace())
@@ -259,7 +258,7 @@ public class IoTUtils {
         }
     }
 
-    static void createIoTProject(IoTProject project) {
+    static void createIoTProject(IoTProject project, boolean awaitReady) {
         var name = project.getMetadata().getName();
         log.info("Creating IoTProject - name: {}", name);
         try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_TENANT)) {
@@ -270,7 +269,9 @@ public class IoTUtils {
                 log.info("iot project {} will be created", name);
                 iotProjectApiClient.create(project);
             }
-            IoTUtils.waitForIoTProjectReady(project);
+            if (awaitReady) {
+                IoTUtils.waitForIoTProjectReady(project);
+            }
         }
     }
 

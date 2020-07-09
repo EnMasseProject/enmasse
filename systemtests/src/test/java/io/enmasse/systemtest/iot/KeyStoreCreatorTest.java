@@ -5,7 +5,9 @@
 
 package io.enmasse.systemtest.iot;
 
+import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import io.enmasse.systemtest.iot.KeyStoreCreator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;

@@ -53,10 +53,48 @@ public final class Conditions {
             final MixedOperation<T, L, D, Resource<T, D>> client,
             final T resource,
             final String conditionType,
-            boolean expected
+            final boolean expected
+    ) {
+           return condition(
+                   client
+                           .inNamespace(resource.getMetadata().getNamespace())
+                           .withName(resource.getMetadata().getName()),
+                   conditionType,
+                   expected);
+    }
+
+    /**
+     * Create a condition, checking for a Kubernetes condition.
+     *
+     * @param access The resource to check.
+     * @param conditionType The of the condition to check.
+     * @param <T> Type of resource.
+     * @param <D> The "doneable" of the resource.
+     * @return a boolean condition, which can evaluate if the Kubernetes resource condition has the expected state.
+     */
+    public static <T extends HasMetadata, D> BooleanSupplier condition(
+            final Resource<T, D> access,
+            final String conditionType
+    ) {
+        return condition(access, conditionType, true);
+    }
+
+    /**
+     * Create a condition, checking for a Kubernetes condition.
+     *
+     * @param access The resource to check.
+     * @param conditionType The of the condition to check.
+     * @param expected The expected status.
+     * @param <T> Type of resource.
+     * @param <D> The "doneable" of the resource.
+     * @return a boolean condition, which can evaluate if the Kubernetes resource condition has the expected state.
+     */
+    public static <T extends HasMetadata, D> BooleanSupplier condition(
+            final Resource<T, D> access,
+            final String conditionType,
+            final boolean expected
     ) {
 
-        var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
         var expectedString = expected ? "True" : "False";
 
         return new BooleanSupplier() {
@@ -70,7 +108,8 @@ public final class Conditions {
 
             @Override
             public String toString() {
-                var state = statusSection(access.get());
+                var resource = access.get();
+                var state = statusSection(resource);
                 return String.format("Failed to detect condition '%s' of '%s/%s' (%s/%s) as '%s': %s",
                         conditionType,
                         resource.getMetadata().getNamespace(),

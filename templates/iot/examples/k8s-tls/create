@@ -3,12 +3,13 @@
 set -e
 
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+# shellcheck source=common
 source "$SCRIPTDIR/common"
 
 OUTDIR="$SCRIPTDIR/build"
 
-: ${NAMESPACE:=enmasse-infra}
-: ${CLUSTER:=localhost}
+: "${NAMESPACE:=enmasse-infra}"
+: "${CLUSTER:=localhost}"
 
 rm -Rf "$OUTDIR"
 mkdir -p "$OUTDIR"
@@ -33,8 +34,8 @@ cat "$OUTDIR/ca-cert.pem" "$OUTDIR/root-cert.pem" > "$OUTDIR/trusted-certs.pem"
 CA_SUBJECT=$(openssl x509 -in "$OUTDIR/ca-cert.pem" -noout -subject -nameopt RFC2253 | sed s/^subject=//)
 PK=$(openssl x509 -in "$OUTDIR/ca-cert.pem" -noout -pubkey | sed /^---/d)
 
-echo $CA_SUBJECT
-echo $PK
+echo "$CA_SUBJECT"
+echo "$PK"
 
 function createServiceKeyAndCert() {
   DNSHOSTNAME=${CLUSTER}
@@ -43,7 +44,7 @@ function createServiceKeyAndCert() {
     DNSHOSTNAME=${1}-${NAMESPACE}.${CLUSTER}
     SAN4=,DNS.4:$DNSHOSTNAME
   fi
-  echo $DNSHOSTNAME
+  echo "$DNSHOSTNAME"
   openssl req -config "$SCRIPTDIR/ca.cnf" -nodes -newkey rsa:4096 -keyout "$OUTDIR/$1-key.pem" -days 365 -subj "/O=EnMasse/OU=IoT/CN=$DNSHOSTNAME" | \
   SAN="DNS.1:${1}.svc,DNS.2:${1}.${NAMESPACE}.svc,DNS.3:localhost$SAN4" openssl x509 -req -extfile "$SCRIPTDIR/ca.cnf" -extensions "san_ext" -out "$OUTDIR/$1.pem" -days 365 -CA "$OUTDIR/ca-cert.pem" -CAkey "$OUTDIR/ca-key.pem" -CAcreateserial
 

@@ -7,5 +7,5 @@ package io.enmasse.systemtest.utils;
 
 @FunctionalInterface
 public interface ThrowingFunction<T, R> {
-    R apply(T t) throws Exception;
+    R apply(T value) throws Exception;
 }
