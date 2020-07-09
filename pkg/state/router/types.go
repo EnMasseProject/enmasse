@@ -32,6 +32,7 @@ const (
 	RouterLinkRouteEntity         RouterEntityType = "org.apache.qpid.dispatch.router.config.linkRoute"
 	RouterSslProfileEntity        RouterEntityType = "org.apache.qpid.dispatch.sslProfile"
 	RouterAuthServicePluginEntity RouterEntityType = "org.apache.qpid.dispatch.authServicePlugin"
+	RouterVhostEntity             RouterEntityType = "org.apache.qpid.dispatch.vhost"
 )
 
 type RouterEntity interface {
@@ -90,7 +91,19 @@ type RouterListener struct {
 }
 
 type RouterVhost struct {
-	Host string `json:"host"`
+	Name             string                      `json:"name"`
+	Hostname         string                      `json:"hostname"`
+	Aliases          string                      `json:"aliases"`
+	AllowUnknownUser bool                        `json:"allowUnknownUser"`
+	Groups           map[string]RouterVhostGroup `json:"groups"`
+}
+
+type RouterVhostGroup struct {
+	RemoteHosts          string `json:"remoteHosts,omitempty"`
+	Sources              string `json:"sources,omitempty"`
+	Targets              string `json:"targets,omitempty"`
+	AllowDynamicSource   bool   `json:"allowDynamicSource,omitempty"`
+	AllowAnonymousSender bool   `json:"allowAnonymousSender,omitempty"`
 }
 
 type RouterAddress struct {

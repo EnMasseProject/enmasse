@@ -581,6 +581,22 @@ func (e *RouterLinkRoute) Order() int {
 	return 0
 }
 
+func (e *RouterVhost) Type() RouterEntityType {
+	return RouterVhostEntity
+}
+
+func (e *RouterVhost) GetName() string {
+	return e.Name
+}
+
+func (e *RouterVhost) Equals(other RouterEntity) bool {
+	return reflect.DeepEqual(e, other)
+}
+
+func (e *RouterVhost) Order() int {
+	return 0
+}
+
 func (e *NamedEntity) Type() RouterEntityType {
 	return e.EntityType
 }

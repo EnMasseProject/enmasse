@@ -120,6 +120,11 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 					"port":       authServicePort,
 					"realm":      globalAuthHost,
 					"sslProfile": "infra_tls",
+			[]interface{}{
+				// Enable policy
+				"policy",
+				map[string]interface{}{
+					"enableVhostPolicy": true,
 				},
 			},
 		},
