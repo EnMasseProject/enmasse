@@ -134,6 +134,7 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
       <Modal
         title="Manage columns"
         isOpen={isModalOpen}
+        id="device-list-manage-column-modal"
         variant="small"
         description={
           <TextContent>
@@ -144,23 +145,37 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
         }
         onClose={handleModalToggle}
         actions={[
-          <Button key="save" variant="primary" onClick={onSave}>
+          <Button
+            key="save"
+            id="manage-column-save-button"
+            variant="primary"
+            onClick={onSave}
+          >
             Save
           </Button>,
-          <Button key="cancel" variant="secondary" onClick={handleModalToggle}>
+          <Button
+            key="cancel"
+            id="manage-column-cancel-button"
+            variant="secondary"
+            onClick={handleModalToggle}
+          >
             Cancel
           </Button>
         ]}
       >
         <DataList
           aria-label="Table column management"
-          id="table-column-management"
+          id="device-list-column-management"
           isCompact
         >
-          <DataListItem aria-labelledby="table-column-management-device-id">
+          <DataListItem
+            id="device-list-col-mangmnt-deviceid"
+            aria-labelledby="table-column-management-device-id"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-device-id"
+                aria-labelledby="device list table column management device id"
+                id="device-list-col-mangmnt-deviceid-checkbox"
                 isChecked={isDeviceIdChecked}
                 name="deviceId"
                 onChange={handleChange}
@@ -168,8 +183,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-device-id"
-                    key="table-column-management-device-id"
+                    id="device-list-column-management-device-id"
+                    key="device-list-column-management-device-id"
                   >
                     Device ID
                   </DataListCell>
@@ -177,10 +192,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-connection-type">
+          <DataListItem
+            id="device-list-col-mangmnt-connection-type"
+            aria-labelledby="table-column-management-connection-type"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-connection-type"
+                aria-labelledby="device-list-column-management-connection-type"
+                id="device-list-col-mangmnt-connection-type-checkbox"
                 isChecked={isConnectionTypeChecked}
                 name="connectionType"
                 onChange={handleChange}
@@ -188,8 +207,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-connection-type"
-                    key="table-column-management-connection-type"
+                    id="device-list-column-management-connection-type"
+                    key="device-list-column-management-connection-type"
                   >
                     Connection type
                   </DataListCell>
@@ -197,10 +216,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-status">
+          <DataListItem
+            id="device-list-col-mangmnt-status"
+            aria-labelledby="device-list-column-management-status"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-status"
+                id="device-list-col-mangmnt-status-checkbox"
+                aria-labelledby="device-list-column-management-status"
                 isChecked={isStatusChecked}
                 name="status"
                 onChange={handleChange}
@@ -208,8 +231,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-status"
-                    key="table-column-management-status"
+                    id="device-list-column-management-status"
+                    key="device-list-column-management-status"
                   >
                     Status
                   </DataListCell>
@@ -217,10 +240,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-last-updated">
+          <DataListItem
+            id="device-list-col-mangmnt-last-updated"
+            aria-labelledby="device-list-column-management-last-updated"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-last-updated"
+                id="device-list-col-mangmnt-last-updated-checkbox"
+                aria-labelledby="device-list-column-management-last-updated"
                 isChecked={isLastUpdatedChecked}
                 name="lastUpdated"
                 onChange={handleChange}
@@ -228,8 +255,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-last-updated"
-                    key="table-column-management-last-updated"
+                    id="device-list-column-management-last-updated"
+                    key="device-list-column-management-last-updated"
                   >
                     Last updated
                   </DataListCell>
@@ -237,10 +264,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-last-seen">
+          <DataListItem
+            id="device-list-col-mangmnt-last-seen"
+            aria-labelledby="device-list-column-management-last-seen"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-last-seen"
+                id="device-list-col-mangmnt-last-seen-checkbox"
+                aria-labelledby="device-list-column-management-last-seen"
                 isChecked={isLastSeenChecked}
                 name="lastSeen"
                 onChange={handleChange}
@@ -248,8 +279,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-last-seen"
-                    key="table-column-management-last-seen"
+                    id="device-list-column-management-last-seen"
+                    key="device-list-column-management-last-seen"
                   >
                     Last seen
                   </DataListCell>
@@ -257,10 +288,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-added-date">
+          <DataListItem
+            id="device-list-col-mangmnt-added-date"
+            aria-labelledby="device-list-column-management-added-date"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-added-date"
+                id="device-list-col-mangmnt-added-date-checkbox"
+                aria-labelledby="device-list-column-management-added-date"
                 isChecked={isAddedDateChecked}
                 name="addedDate"
                 onChange={handleChange}
@@ -268,8 +303,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-added-date"
-                    key="table-column-management-added-date"
+                    id="device-list-column-management-added-date"
+                    key="device-list-column-management-added-date"
                   >
                     Added date
                   </DataListCell>
@@ -277,10 +312,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-member-of">
+          <DataListItem
+            id="device-list-col-mangmnt-member-of"
+            aria-labelledby="device-list-column-management-member-of"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-member-of"
+                id="device-list-col-mangmnt-member-of-checkbox"
+                aria-labelledby="device-list-column-management-member-of"
                 isChecked={isMemberOfChecked}
                 name="memberOf"
                 onChange={handleChange}
@@ -288,8 +327,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-member-of"
-                    key="table-column-management-member-of"
+                    id="device-list-column-management-member-of"
+                    key="device-list-column-management-member-of"
                   >
                     Member of
                   </DataListCell>
@@ -297,10 +336,14 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               />
             </DataListItemRow>
           </DataListItem>
-          <DataListItem aria-labelledby="table-column-management-via-gateways">
+          <DataListItem
+            id="device-list-col-mangmnt-via-gateways"
+            aria-labelledby="device-list-column-management-via-gateways"
+          >
             <DataListItemRow>
               <DataListCheck
-                aria-labelledby="table-column-management-via-gateways"
+                id="device-list-col-mangmnt-via-gateways-checkbox"
+                aria-labelledby="device-list-column-management-via-gateways"
                 isChecked={isViaGatewaysChecked}
                 name="viaGateways"
                 onChange={handleChange}
@@ -308,8 +351,8 @@ const ManageColumnModal: React.FunctionComponent<IManageColumnModalProps> = ({
               <DataListItemCells
                 dataListCells={[
                   <DataListCell
-                    id="table-column-management-via-gateways"
-                    key="table-column-management-via-gateways"
+                    id="device-list-column-management-via-gateways"
+                    key="device-list-column-management-via-gateways"
                   >
                     Via gateways
                   </DataListCell>

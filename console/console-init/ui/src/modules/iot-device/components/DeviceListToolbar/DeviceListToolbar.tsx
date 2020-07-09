@@ -46,7 +46,7 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
         <ToolbarContent id="device-data-toolbar-content">
           <ToolbarItem
             variant="bulk-select"
-            id="device-list-toolbar-item-1"
+            id="device-list-toolbar-bulk-select"
             key="bulk-select"
             aria-label="Select multiple devices"
             data-codemods="true"
@@ -61,7 +61,7 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             />
           </ToolbarItem>
           <ToolbarItem
-            id="device-list-toolbar-item-2"
+            id="device-list-toolbar-create-device-button"
             key="create-device"
             aria-label="Create device button"
             data-codemods="true"
@@ -72,7 +72,7 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             />
           </ToolbarItem>
           <ToolbarItem
-            id="device-list-toolbar-item-3"
+            id="device-list-toolbar-kebab-dropdown"
             key="kebab-dropdown"
             aria-label="Device list kebab dropdown"
             data-codemods="true"
