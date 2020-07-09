@@ -40,10 +40,10 @@ import { DialogTypes } from "constant";
 import { TablePagination } from "components";
 import { useLocation, useParams } from "react-router";
 import { useMutationQuery } from "hooks";
-import { DELETE_IOT_DEVICE } from "graphql-module";
+import { DELETE_IOT_DEVICE, TOGGLE_IOT_DEVICE_STATUS } from "graphql-module";
 
 export default function DeviceListPage() {
-  const { projectname } = useParams();
+  const { projectname, namespace } = useParams();
 
   useDocumentTitle("Device List");
 
@@ -71,6 +71,10 @@ export default function DeviceListPage() {
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
     "devices_for_iot_project"
   ]);
+
+  const [
+    setUpdateDeviceQueryVariables
+  ] = useMutationQuery(TOGGLE_IOT_DEVICE_STATUS, ["devices_for_iot_project"]);
 
   const changeDeviceAlert = () => {
     if (totalDevices && totalDevices < MAX_DEVICE_LIST_COUNT) {
@@ -147,8 +151,8 @@ export default function DeviceListPage() {
     }
   };
 
-  const runFilter = () => {
-    setAppliedFilter(filter);
+  const runFilter = (filter2: IDeviceFilter) => {
+    setAppliedFilter(filter2);
   };
 
   const selectAllDevices = (devices: IDevice[]) => {
@@ -163,12 +167,26 @@ export default function DeviceListPage() {
     await setDeleteDeviceQueryVariables(variable);
   };
 
-  const onConfirmEnableSelectedDevices = () => {
-    // TODO: TO BE DONE AFTER BACKEND IS READY
+  const onConfirmEnableSelectedDevices = async (devices: IDevice[]) => {
+    setIsAllSelected(false);
+    setSelectedDevices([]);
+    const variable = {
+      a: { name: projectname, namespace },
+      b: devices.map(({ deviceId }) => deviceId),
+      status: true
+    };
+    await setUpdateDeviceQueryVariables(variable);
   };
 
-  const onConfirmDisableSelectedDevices = () => {
-    // TODO: TO BE DONE AFTER BACKEND IS READY
+  const onConfirmDisableSelectedDevices = async (devices: IDevice[]) => {
+    setIsAllSelected(false);
+    setSelectedDevices([]);
+    const variable = {
+      a: { name: projectname, namespace },
+      b: devices.map(({ deviceId }) => deviceId),
+      status: false
+    };
+    await setUpdateDeviceQueryVariables(variable);
   };
 
   const onSelectEnableDevices = () => {
@@ -181,7 +199,8 @@ export default function DeviceListPage() {
         option: "Enable",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.ENABLE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE),
+        confirmButtonLabel: "Enable"
       }
     });
   };
@@ -196,7 +215,8 @@ export default function DeviceListPage() {
         option: "Disable",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.DISABLE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE),
+        confirmButtonLabel: "Disable"
       }
     });
   };
@@ -211,7 +231,9 @@ export default function DeviceListPage() {
         option: "Delete",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.DELETE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.DELETE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DELETE),
+        confirmButtonLabel: "Delete",
+        iconType: "danger"
       }
     });
   };
@@ -348,6 +370,7 @@ export default function DeviceListPage() {
             setSortValue={setSortDropdownValue}
             appliedFilter={appliedFilter}
             resetFilter={resetFilter}
+            namespace={namespace}
           />
           <br />
           {renderPagination()}
