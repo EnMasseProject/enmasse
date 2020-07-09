@@ -2367,12 +2367,12 @@ setCredentials(
         {
           "not-after": "2020-10-01T10:00:00Z",
           "pwd-hash": "bjb232138d",
-          id: uidv1()
+          id: uuidv1()
         },
         {
           "not-before": "2020-10-01T10:00:00Z",
           "pwd-hash": "adfhk327823",
-          id: uidv1()
+          id: uuidv1()
         }
       ]
     },
@@ -2384,7 +2384,7 @@ setCredentials(
         {
           "pwd-hash": "pwd-test",
           comment: "was just for testing",
-          id: uidv1()
+          id: uuidv1()
         }
       ]
     },
@@ -2395,7 +2395,7 @@ setCredentials(
         {
           key: "123knsd8=",
           comment: "was just for testing",
-          id: uidv1()
+          id: uuidv1()
         }
       ]
     },
