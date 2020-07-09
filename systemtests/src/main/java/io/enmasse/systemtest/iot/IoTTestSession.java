@@ -73,6 +73,7 @@ import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.utils.Conditions.condition;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
+import static io.enmasse.systemtest.utils.TestUtils.waitUntilNotFound;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
@@ -1202,7 +1203,13 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
         if (shouldCleanup()) {
-            cleanup.add(() -> client.delete(Collections.singletonList(resource)));
+            cleanup.add(()-> {
+                var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
+                access
+                        .withPropagationPolicy("Foreground")
+                        .delete();
+                waitUntilNotFound(access, ofMinutes(5), ofSeconds(5));
+            });
         }
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));

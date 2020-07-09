@@ -195,7 +195,6 @@ func prepareAdapterStatus(config *iotv1alpha1.IoTConfig) {
 	config.Status.Adapters = make(map[string]iotv1alpha1.AdapterStatus)
 
 	for _, a := range adapters {
-
 		config.Status.Adapters[a.Name] = iotv1alpha1.AdapterStatus{
 			Enabled: a.IsEnabled(config),
 		}

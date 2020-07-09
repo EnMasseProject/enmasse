@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.hibernate.validator.internal.util.logging.formatter.DurationFormatter;
 import org.junit.jupiter.api.Assertions;
@@ -499,6 +500,20 @@ public class TestUtils {
         }
 
     }
+
+    /**
+     * Wait until a resource can be no longer found.
+     * <p>
+     * This is intended to be used when deleting resources, to wait for the resource to disappear.
+     *
+     * @param resource The resource to check.
+     * @param timeout The timeout.
+     * @param delay The delay between checks.
+     */
+    public static void waitUntilNotFound(final Resource<?, ?> resource, final Duration timeout, final Duration delay) {
+        waitUntilConditionOrFail(() -> resource.get() == null, timeout, delay);
+    }
+
 
     private static String format(final Duration duration) {
         return String.format("%02d:%2d:%2d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
