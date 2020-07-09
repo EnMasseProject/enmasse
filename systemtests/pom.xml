@@ -241,7 +241,7 @@
             <id>pr</id>
             <properties>
                 <skip.tests>false</skip.tests>
-                <groups>systemtests &amp; !upgrade</groups>
+                <groups>systemtests &amp; !upgrade &amp; !scale</groups>
             </properties>
         </profile>
         <profile>
