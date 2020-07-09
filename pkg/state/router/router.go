@@ -55,6 +55,7 @@ func NewRouterState(host Host, port int32, tlsConfig *tls.Config) *RouterState {
 			RouterAutoLinkEntity:   make(map[string]RouterEntity, 0),
 			RouterLinkRouteEntity:  make(map[string]RouterEntity, 0),
 			RouterSslProfileEntity: make(map[string]RouterEntity, 0),
+			RouterVhostEntity:      make(map[string]RouterEntity, 0),
 		},
 		commandClient: amqpcommand.NewCommandClient(fmt.Sprintf("amqps://%s:%d", host.Ip, port),
 			routerCommandAddress,
@@ -105,7 +106,7 @@ func (r *RouterState) Initialize(nextResync time.Time) error {
 	log.Info(fmt.Sprintf("[Router %s] Initializing...", r.host))
 	r.reconnectCount = r.commandClient.ReconnectCount()
 	totalEntities := 0
-	entityTypes := []RouterEntityType{RouterConnectorEntity, RouterListenerEntity, RouterAddressEntity, RouterAutoLinkEntity, RouterLinkRouteEntity, RouterSslProfileEntity}
+	entityTypes := []RouterEntityType{RouterConnectorEntity, RouterListenerEntity, RouterAddressEntity, RouterAutoLinkEntity, RouterLinkRouteEntity, RouterSslProfileEntity, RouterVhostEntity}
 	for _, t := range entityTypes {
 		list, err := r.readEntities(t)
 		if err != nil {
@@ -406,7 +407,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 		if ok {
 			if !existing.Equals(entity) {
 				log.Info(fmt.Sprintf("Changing from '%+v' to '%+v'\n", existing, entity))
-				if entityType.CanUpdate() {
+				if !entityType.CanUpdate() {
 					return fmt.Errorf("router entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
 				} else {
 					toUpdate = append(toUpdate, entity)
@@ -712,6 +713,9 @@ func (c *RouterEntityType) Decode(data map[string]interface{}) (entity RouterEnt
 		err = mapToEntity(data, entity)
 	case RouterSslProfileEntity:
 		entity = &RouterSslProfile{}
+		err = mapToEntity(data, entity)
+	case RouterVhostEntity:
+		entity = &RouterVhost{}
 		err = mapToEntity(data, entity)
 	default:
 		err = fmt.Errorf("unknown entity %s", *c)
