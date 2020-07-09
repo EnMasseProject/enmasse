@@ -27,16 +27,16 @@ public class Minikube extends Kubernetes {
 
     private static final String OLM_NAMESPACE = "operators";
 
-    protected Minikube(Environment environment) {
-        super(environment, () -> {
+    protected Minikube() {
+        super(() -> {
             Config config = new ConfigBuilder().build();
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                    .connectTimeout(environment.getKubernetesApiConnectTimeout())
-                    .writeTimeout(environment.getKubernetesApiWriteTimeout())
-                    .readTimeout(environment.getKubernetesApiReadTimeout())
+                    .connectTimeout(Environment.getInstance().getKubernetesApiConnectTimeout())
+                    .writeTimeout(Environment.getInstance().getKubernetesApiWriteTimeout())
+                    .readTimeout(Environment.getInstance().getKubernetesApiReadTimeout())
                     .build();
             return new DefaultKubernetesClient(httpClient, config);
         });
