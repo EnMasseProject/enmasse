@@ -134,7 +134,7 @@ func TestBuildRouterEndpointEntities_SingleEndpointPlainAMQP(t *testing.T) {
 
 	endpoint := &v1.MessagingEndpoint{
 		Status: v1.MessagingEndpointStatus{
-			InternalPorts: []v1.MessagingEndpointPort {
+			InternalPorts: []v1.MessagingEndpointPort{
 				{
 					Name:     "test",
 					Protocol: v1.MessagingProtocolAMQP,
@@ -163,7 +163,7 @@ func TestBuildRouterEndpointEntities_SingleEndpointPlainAMQP(t *testing.T) {
 	}, listenerEntity)
 }
 
-func findEntity(name string, entities []RouterEntity) (RouterEntity) {
+func findEntity(name string, entities []RouterEntity) RouterEntity {
 	return FindFirst(func(e RouterEntity) bool {
 		return e.GetName() == name
 	}, entities)

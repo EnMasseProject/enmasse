@@ -122,8 +122,6 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 					"sslProfile": "infra_tls",
 				},
 			},
-
-
 		},
 	}
 }

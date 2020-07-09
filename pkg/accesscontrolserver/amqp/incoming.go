@@ -55,7 +55,7 @@ type IncomingConn struct {
 	saslAuthenticatedIdentity string
 
 	// local settings
-	maxFrameSize uint32                 // max frame size to accept
+	maxFrameSize uint32 // max frame size to accept
 
 	// remote settings
 	peerMaxFrameSize        uint32  // maximum frame size peer will accept
@@ -96,7 +96,7 @@ func NewIncoming(netConn net.Conn, opts ...IncomingConnOption) (ic *IncomingConn
 		txFrame:          make(chan frame),
 		txStop:           make(chan *Error),
 		txDone:           make(chan struct{}),
-		connectTimeout: time.Second * 5,
+		connectTimeout:   time.Second * 5,
 	}
 
 	for _, f := range opts {

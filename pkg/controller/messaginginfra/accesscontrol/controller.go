@@ -31,7 +31,6 @@ type AccessControlController struct {
 	clientManager  state.ClientManager
 }
 
-
 func NewAccessControlController(client client.Client, scheme *runtime.Scheme, certController *cert.CertController) *AccessControlController {
 	clientManager := state.GetClientManager()
 	return &AccessControlController{

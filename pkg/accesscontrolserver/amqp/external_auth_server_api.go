@@ -19,5 +19,5 @@ func buildAuthenticatedIdentity(c string) map[string]interface{} {
 }
 
 func buildGroups() []string {
-	return []string {"manage"}  // Allow all
+	return []string{"manage"} // Allow all
 }

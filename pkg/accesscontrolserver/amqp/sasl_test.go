@@ -41,7 +41,6 @@ func TestAnonymous_InitResponseWithoutTrace(t *testing.T) {
 	assert.Equal(t, "", ic.saslAuthenticatedIdentity)
 }
 
-
 func getIncomingConn(options ...IncomingConnOption) *IncomingConn {
 	ic := &IncomingConn{
 		saslMechanisms: make(map[Symbol]saslStateFunc),

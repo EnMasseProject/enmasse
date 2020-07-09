@@ -55,7 +55,6 @@ func main() {
 		tlsConfig = &tls.Config{Certificates: []tls.Certificate{cer}}
 	}
 
-
 	server, err := accesscontrolserver.NewServer(tlsConfig, bindAddress, port, serverAmqp.WithSASLAnonymous())
 	if err != nil {
 		log.Panic(err)
