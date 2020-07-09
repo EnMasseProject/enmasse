@@ -162,6 +162,8 @@ func (r *RouterState) readEntities(entityType RouterEntityType) (map[string]Rout
 		entities[entity.GetName()] = entity
 	}
 
+	log.Info(fmt.Sprintf("[Router %s] Found these entities of type %s: %+v", string(entityType), entities))
+
 	return entities, nil
 }
 
