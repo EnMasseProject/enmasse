@@ -220,6 +220,33 @@ func isConnectionError(err error) bool {
 	return err != nil
 }
 
+func (r *RouterState) updateEntity(entity RouterEntityType, name string, data map[string]interface{}) error {
+	properties := make(map[string]interface{})
+	properties["operation"] = "UPDATE"
+	properties["type"] = string(entity)
+	properties["name"] = name
+	request := &amqp.Message{
+		Properties:            &amqp.MessageProperties{},
+		ApplicationProperties: properties,
+		Value:                 data,
+	}
+
+	response, err := r.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	code, err := getStatusCode(response)
+	if err != nil {
+		return err
+	}
+
+	if (code < 200 || code >= 300) && code != 404 {
+		return fmt.Errorf("response with status code %d: %+v", code, getStatusDescription(response))
+	}
+	return nil
+}
+
 func (r *RouterState) createEntity(entity RouterEntityType, name string, data map[string]interface{}) error {
 	properties := make(map[string]interface{})
 	properties["operation"] = "CREATE"
@@ -370,14 +397,20 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 	if !r.initialized {
 		return NotInitializedError
 	}
+	toUpdate := make([]RouterEntity, 0, len(entities))
 	toCreate := make([]RouterEntity, 0, len(entities))
 	for _, entity := range entities {
-		typeMap := r.entities[entity.Type()]
+		entityType := entity.Type()
+		typeMap := r.entities[entityType]
 		existing, ok := typeMap[entity.GetName()]
 		if ok {
 			if !existing.Equals(entity) {
 				log.Info(fmt.Sprintf("Changing from '%+v' to '%+v'\n", existing, entity))
-				return fmt.Errorf("router entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
+				if entityType.CanUpdate() {
+					return fmt.Errorf("router entity %s %s was updated - updates are not supported", entity.Type(), existing.GetName())
+				} else {
+					toUpdate = append(toUpdate, entity)
+				}
 			}
 		} else {
 			toCreate = append(toCreate, entity)
@@ -385,7 +418,7 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 
 	}
 
-	completed := make(chan RouterEntity, len(toCreate))
+	completed := make(chan RouterEntity, len(toCreate)+len(toUpdate))
 	var err error
 	for order := 0; order < maxOrder; order++ {
 		g, _ := errgroup.WithContext(ctx)
@@ -400,6 +433,25 @@ func (r *RouterState) EnsureEntities(ctx context.Context, entities []RouterEntit
 				g.Go(func() error {
 					log.Info(fmt.Sprintf("[Router %s] Creating entity %s %s: %+v", r.host, e.Type(), e.GetName(), value))
 					err := r.createEntity(t, e.GetName(), value)
+					if err != nil {
+						return err
+					}
+					completed <- e
+					return nil
+				})
+			}
+		}
+		for _, entity := range toUpdate {
+			e := entity
+			if e.Order() == order {
+				t := e.Type()
+				value, err := t.Encode(e)
+				if err != nil {
+					return err
+				}
+				g.Go(func() error {
+					log.Info(fmt.Sprintf("[Router %s] Updating entity %s %s: %+v", r.host, e.Type(), e.GetName(), value))
+					err := r.updateEntity(t, e.GetName(), value)
 					if err != nil {
 						return err
 					}
@@ -634,7 +686,8 @@ func (e *RouterAuthServicePlugin) Order() int {
 }
 
 func (t *RouterEntityType) CanUpdate() bool {
-	return false
+	// TODO: Only vhosts can be up/ated right now
+	return *t == RouterVhostEntity
 }
 func (c *RouterEntityType) Encode(entity RouterEntity) (map[string]interface{}, error) {
 	return entityToMap(entity)
