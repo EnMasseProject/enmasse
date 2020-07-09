@@ -28,9 +28,14 @@ const (
 	MessagingCapabilityTransactional MessagingCapability = "transactional"
 )
 
-type MessagingInfrastructureReference struct {
-	// Name of referenced MessagingInfra.
+type ObjectReference struct {
+	// Name of referenced object.
 	Name string `json:"name"`
-	// Namespace of referenced MessagingInfra.
+	// Namespace of referenced object.
 	Namespace string `json:"namespace,omitempty"`
+}
+
+type Selectable interface {
+	metav1.Object
+	GetSelector() *NamespaceSelector
 }

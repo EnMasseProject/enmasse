@@ -19,6 +19,7 @@ import (
 	stateerrors "github.com/enmasseproject/enmasse/pkg/state/errors"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
+	"github.com/prometheus/prometheus/pkg/labels"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -135,6 +136,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 		project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound)
 		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCaCreated)
 		project.Status.GetMessagingProjectCondition(v1.MessagingProjectScheduled)
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectPlanApplied)
 		project.Status.GetMessagingProjectCondition(v1.MessagingProjectCreated)
 		project.Status.GetMessagingProjectCondition(v1.MessagingProjectReady)
 		return processorResult{}, nil
@@ -230,7 +232,20 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 				logger.Info("Error listing infras")
 				return processorResult{}, err
 			}
-			infra = findBestMatch(project, infras.Items)
+			activeInfras := make([]v1.Selectable, 0)
+			for _, item := range infras.Items {
+				if item.Status.Phase == v1.MessagingInfrastructureActive {
+					activeInfras = append(activeInfras, &item)
+				}
+			}
+			bestMatch, err := r.findBestMatch(ctx, project.Namespace, activeInfras)
+			if err != nil {
+				return processorResult{}, err
+			}
+			infra = nil
+			if bestMatch != nil {
+				infra = bestMatch.(*v1.MessagingInfrastructure)
+			}
 			return processorResult{}, nil
 		} else {
 			err := r.client.Get(ctx, types.NamespacedName{Name: project.Status.MessagingInfrastructureRef.Name, Namespace: project.Status.MessagingInfrastructureRef.Namespace}, infra)
@@ -255,7 +270,7 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
 		if infra != nil {
 			project.Status.GetMessagingProjectCondition(v1.MessagingProjectBound).SetStatus(corev1.ConditionTrue, "", "")
-			project.Status.MessagingInfrastructureRef = v1.MessagingInfrastructureReference{
+			project.Status.MessagingInfrastructureRef = v1.ObjectReference{
 				Name:      infra.Name,
 				Namespace: infra.Namespace,
 			}
@@ -266,6 +281,65 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 			project.Status.Message = msg
 			return processorResult{RequeueAfter: 10 * time.Second}, err
 		}
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
+	// Locate active plan for tenant
+	result, err = rc.Process(func(project *v1.MessagingProject) (processorResult, error) {
+		var plan *v1.MessagingPlan
+		if project.Spec.MessagingPlanRef != nil {
+			// Locate desired plan
+			p := &v1.MessagingPlan{}
+			err := r.client.Get(ctx, types.NamespacedName{Name: project.Spec.MessagingPlanRef.Name, Namespace: project.Spec.MessagingPlanRef.Namespace}, p)
+			if err != nil {
+				return processorResult{}, err
+			}
+			matches, err := r.matchesSelector(ctx, project.Namespace, p.Spec.NamespaceSelector)
+			if err != nil {
+				return processorResult{}, err
+			}
+
+			if !matches {
+				err := fmt.Errorf("referenced plan does not match namespace of project")
+				project.Status.Message = err.Error()
+				project.Status.GetMessagingProjectCondition(v1.MessagingProjectPlanApplied).SetStatus(corev1.ConditionFalse, "", err.Error())
+				return processorResult{RequeueAfter: 10 * time.Second}, nil
+			}
+			plan = p
+		} else {
+			// Find best matching plan
+			plans := &v1.MessagingPlanList{}
+			err := r.client.List(ctx, plans)
+			if err != nil {
+				logger.Info("Error listing plans")
+				return processorResult{}, err
+			}
+			activePlans := make([]v1.Selectable, 0)
+			for _, item := range plans.Items {
+				if item.Status.Phase == v1.MessagingPlanActive {
+					activePlans = append(activePlans, &item)
+				}
+			}
+			bestMatch, err := r.findBestMatch(ctx, project.Namespace, activePlans)
+			if err != nil {
+				return processorResult{}, err
+			}
+			if bestMatch != nil {
+				plan = bestMatch.(*v1.MessagingPlan)
+			}
+		}
+
+		// No plan set is fine - defaults will be used
+		if plan == nil {
+			return processorResult{}, nil
+		}
+
+		logger.Info("Will apply plan", "plan", plan)
+		// TODO: Apply plan - check differences
+		project.Status.GetMessagingProjectCondition(v1.MessagingProjectPlanApplied).SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {
 		return result.Result(), err
@@ -362,37 +436,157 @@ func (r *ReconcileMessagingProject) Reconcile(request reconcile.Request) (reconc
 	return result.Result(), err
 }
 
-func findBestMatch(project *v1.MessagingProject, infras []v1.MessagingInfrastructure) *v1.MessagingInfrastructure {
-	var bestMatch *v1.MessagingInfrastructure
-	var bestMatchSelector *v1.NamespaceSelector
-	for _, infra := range infras {
-		if infra.Status.Phase != v1.MessagingInfrastructureActive {
-			continue
+/**
+ * Checks if a selector matches a given project.
+ */
+func (r *ReconcileMessagingProject) matchesSelector(ctx context.Context, namespace string, selector *v1.NamespaceSelector) (bool, error) {
+	if selector == nil {
+		return true, nil
+	}
+
+	for _, ns := range selector.MatchNames {
+		if ns == namespace {
+			return true, nil
 		}
-		selector := infra.Spec.NamespaceSelector
+	}
+
+	// Fall back to looking up namespace to verify labels if we have specified. This ensures that we only require namespace lookup permissions if
+	// absolutely necessary.
+	if len(selector.MatchLabels) > 0 || len(selector.MatchExpressions) > 0 {
+		ns := &corev1.Namespace{}
+		err := r.client.Get(ctx, types.NamespacedName{Name: namespace}, ns)
+		if err != nil {
+			return false, err
+		}
+
+		if len(selector.MatchLabels) > 0 {
+			sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+				MatchLabels: selector.MatchLabels,
+			})
+			if err != nil {
+				return false, err
+			}
+			if sel.Matches(labels.FromMap(ns.Labels)) {
+				return true, nil
+			}
+		}
+
+		if len(selector.MatchExpressions) > 0 {
+			sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+				MatchExpressions: selector.MatchExpressions,
+			})
+			if err != nil {
+				return false, err
+			}
+			return sel.Matches(labels.FromMap(ns.Labels)), nil
+		}
+	}
+	return false, nil
+}
+
+/**
+ * Find the best matching object among a list of objects whose selectors are matched against a messaging project.
+ */
+func (r *ReconcileMessagingProject) findBestMatch(ctx context.Context, namespace string, objects []v1.Selectable) (v1.Selectable, error) {
+	var bestMatch v1.Selectable
+	var bestMatchSelector *v1.NamespaceSelector
+
+	if len(objects) == 0 {
+		return nil, nil
+	}
+
+	// Try to find a selector matching a specific name before needing to lookup namespace
+	for _, object := range objects {
+		selector := object.GetSelector()
 		// If there is a global one without a selector, use it
-		if selector == nil && bestMatch == nil {
-			bestMatch = &infra
+		if selector == nil {
+			if bestMatch == nil {
+				bestMatch = object
+				bestMatchSelector = selector
+			} else {
+				// Prefer oldest
+				if bestMatch.GetCreationTimestamp().Time.After(object.GetCreationTimestamp().Time) {
+					bestMatch = object
+					bestMatchSelector = selector
+				}
+			}
 		} else if selector != nil {
-			// If selector is applicable to this project
+			// If selector is applicable to this namespace
 			matched := false
 			for _, ns := range selector.MatchNames {
-				if ns == project.Namespace {
+				if ns == namespace {
 					matched = true
 					break
 				}
 			}
 
-			// Check if this selector is better than the previous (aka. previous was either not set or global)
-			if matched && bestMatchSelector == nil {
-				bestMatch = &infra
-				bestMatchSelector = selector
+			if matched {
+				if bestMatch == nil || bestMatchSelector == nil {
+					bestMatch = object
+					bestMatchSelector = selector
+				} else {
+					// Prefer oldest
+					if bestMatch.GetCreationTimestamp().Time.After(object.GetCreationTimestamp().Time) {
+						bestMatch = object
+						bestMatchSelector = selector
+					}
+				}
 			}
-
-			// TODO: Support more advanced selection mechanism based on namespace labels
 		}
 	}
-	return bestMatch
+
+	// Fall back to looking up namespace to verify labels if we have specified. This ensures that we only require namespace lookup permissions if
+	// absolutely necessary.
+	if bestMatch == nil {
+		ns := &corev1.Namespace{}
+		err := r.client.Get(ctx, types.NamespacedName{Name: namespace}, ns)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, object := range objects {
+			selector := object.GetSelector()
+			// If there is a global one without a selector, use it
+			if selector == nil && bestMatch == nil {
+				bestMatch = object
+			} else if selector != nil {
+				matches := false
+				if len(selector.MatchLabels) > 0 {
+					sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+						MatchLabels: selector.MatchLabels,
+					})
+					if err != nil {
+						return nil, err
+					}
+					matches = sel.Matches(labels.FromMap(ns.Labels))
+				}
+
+				if !matches && len(selector.MatchExpressions) > 0 {
+					sel, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+						MatchExpressions: selector.MatchExpressions,
+					})
+					if err != nil {
+						return nil, err
+					}
+					matches = sel.Matches(labels.FromMap(ns.Labels))
+				}
+
+				if matches {
+					if bestMatch == nil || bestMatchSelector == nil {
+						bestMatch = object
+						bestMatchSelector = selector
+					} else {
+						// Prefer oldest
+						if bestMatch.GetCreationTimestamp().Time.After(object.GetCreationTimestamp().Time) {
+							bestMatch = object
+							bestMatchSelector = selector
+						}
+					}
+				}
+			}
+		}
+	}
+	return bestMatch, nil
 }
 
 /*

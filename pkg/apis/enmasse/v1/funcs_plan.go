@@ -37,3 +37,7 @@ func (c *MessagingPlanCondition) SetStatus(status corev1.ConditionStatus, reason
 	c.Reason = reason
 	c.Message = message
 }
+
+func (m *MessagingPlan) GetSelector() *NamespaceSelector {
+	return m.Spec.NamespaceSelector
+}
