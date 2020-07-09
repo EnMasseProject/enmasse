@@ -936,13 +936,19 @@ func (i *infraClient) buildRouterVhostPolicies(endpointsByNamespace map[string][
 	// Update policy to include all endpoints
 	routerEntities := make([]RouterEntity, 0)
 	for namespace, endpoints := range endpointsByNamespace {
-		aliases := make([]string, 0, len(endpoints))
+		aliasMap := make(map[string]bool, 0)
 		for _, endpoint := range endpoints {
 			if endpoint.Status.Host != "" {
-				aliases = append(aliases, endpoint.Status.Host)
+				aliasMap[endpoint.Status.Host] = true
 			}
 		}
-		if len(aliases) > 0 {
+		if len(aliasMap) > 0 {
+			aliases := make([]string, len(aliasMap))
+			i := 0
+			for alias, _ := range aliasMap {
+				aliases[i] = alias
+				i += 1
+			}
 			aliasesStr := strings.Join(aliases[:], ",")
 			// TODO: Configure based on plan
 			routerEntities = append(routerEntities, &RouterVhost{
