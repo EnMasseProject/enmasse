@@ -30,6 +30,7 @@ import org.apache.qpid.proton.message.Message;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,7 +53,7 @@ public class MessagingAddressTest extends TestBase {
     private MessagingEndpoint endpoint;
 
     @BeforeAll
-    public void createEndpoint() {
+    public void createEndpoint(ExtensionContext extensionContext) {
         project = resourceManager.getDefaultMessagingProject();
         endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -69,12 +70,12 @@ public class MessagingAddressTest extends TestBase {
                 .addToProtocols("AMQP", "AMQPS")
                 .endSpec()
                 .build();
-        resourceManager.createResource(endpoint);
+        resourceManager.createResource(extensionContext, endpoint);
     }
 
     @Test
-    public void testAnycast() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testAnycast(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("addr1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -89,8 +90,8 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testMulticast() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testMulticast(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("multicast1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -105,8 +106,8 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testQueue() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testQueue(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -121,8 +122,8 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testDeadLetterExpiry() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testDeadLetterExpiry(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -132,7 +133,7 @@ public class MessagingAddressTest extends TestBase {
                 .endDeadLetter()
                 .endSpec()
                 .build());
-        resourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -151,7 +152,7 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testDeadLetterConsume() throws Exception {
+    public void testDeadLetterConsume(ExtensionContext extensionContext) throws Exception {
         MessagingEndpoint ingress = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withName("dlq")
@@ -164,8 +165,8 @@ public class MessagingAddressTest extends TestBase {
                 .addToProtocols("AMQP")
                 .endSpec()
                 .build();
-        resourceManager.createResource(ingress);
-        resourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(extensionContext, ingress);
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("dlq1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -175,7 +176,7 @@ public class MessagingAddressTest extends TestBase {
                 .endDeadLetter()
                 .endSpec()
                 .build());
-        resourceManager.createResource(new MessagingAddressBuilder()
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("queue1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -204,8 +205,8 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testTopic() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testTopic(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                 .editOrNewMetadata()
                 .withName("topic1")
                 .withNamespace(project.getMetadata().getNamespace())
@@ -221,7 +222,7 @@ public class MessagingAddressTest extends TestBase {
 
     @Test
     @Disabled("Topic support not yet implemented")
-    void testTopicWildcards() throws Exception {
+    void testTopicWildcards(ExtensionContext extensionContext) throws Exception {
         MessagingEndpoint nodePort = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -246,7 +247,7 @@ public class MessagingAddressTest extends TestBase {
                 .endSpec()
                 .build();
 
-        resourceManager.createResource(nodePort, t0);
+        resourceManager.createResource(extensionContext, nodePort, t0);
 
         AmqpClient amqpClient = resourceManager.getAmqpClientFactory().createClient(new AmqpConnectOptions()
                 .setSaslMechanism("ANONYMOUS")
@@ -277,8 +278,8 @@ public class MessagingAddressTest extends TestBase {
     }
 
     @Test
-    public void testSubscription() throws Exception {
-        resourceManager.createResource(new MessagingAddressBuilder()
+    public void testSubscription(ExtensionContext extensionContext) throws Exception {
+        resourceManager.createResource(extensionContext, new MessagingAddressBuilder()
                         .editOrNewMetadata()
                         .withName("topic1")
                         .withNamespace(project.getMetadata().getNamespace())

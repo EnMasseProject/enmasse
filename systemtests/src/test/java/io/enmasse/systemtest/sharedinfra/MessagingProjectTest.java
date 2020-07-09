@@ -13,6 +13,7 @@ import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.util.Objects;
 
@@ -24,7 +25,7 @@ public class MessagingProjectTest extends TestBase {
 
     @Test
     @DefaultMessagingInfrastructure
-    public void testMultipleMessagingProjects() {
+    public void testMultipleMessagingProjects(ExtensionContext extensionContext) {
         MessagingProject t1 = new MessagingProjectBuilder()
                 .editOrNewMetadata()
                 .withName("default")
@@ -39,7 +40,7 @@ public class MessagingProjectTest extends TestBase {
                 .endMetadata()
                 .build();
 
-        resourceManager.createResource(t1, t2);
+        resourceManager.createResource(extensionContext, t1, t2);
 
         t1 = MessagingProjectResourceType.getOperation().inNamespace(t1.getMetadata().getNamespace()).withName(t1.getMetadata().getName()).get();
         assertNotNull(t1);
@@ -59,7 +60,7 @@ public class MessagingProjectTest extends TestBase {
     }
 
     @Test
-    public void testSelectors() {
+    public void testSelectors(ExtensionContext extensionContext) {
         MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default-infra")
@@ -86,8 +87,8 @@ public class MessagingProjectTest extends TestBase {
                 .endMetadata()
                 .build();
 
-        resourceManager.createResource(infra, t1);
-        resourceManager.createResource(false, t2);
+        resourceManager.createResource(extensionContext, infra, t1);
+        resourceManager.createResource(extensionContext, false, t2);
 
         assertTrue(resourceManager.waitResourceCondition(t2, messagingProject ->
                 messagingProject != null &&

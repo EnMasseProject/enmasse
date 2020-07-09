@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingProject;
-import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.framework.LoggerUtils;
@@ -25,9 +24,12 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Predicate;
@@ -43,15 +45,12 @@ public class ResourceManager {
     private static final Logger LOGGER = LoggerUtils.getLogger();
     private static boolean verbose = true;
 
-    private static final Stack<ThrowableRunner> classResources = new Stack<>();
-    private static final Stack<ThrowableRunner> methodResources = new Stack<>();
-    private static Stack<ThrowableRunner> pointerResources = classResources;
+    private static final Map<String, Stack<ThrowableRunner>> storedResoruces = new LinkedHashMap<>();
 
     private MessagingInfrastructure defaultInfra;
     private MessagingProject defaultProject;
 
     private final Kubernetes kubeClient = Kubernetes.getInstance();
-    private final Environment environment = Environment.getInstance();
     private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(new UserCredentials("dummy", "dummy"));
 
     private static ResourceManager instance;
@@ -63,52 +62,22 @@ public class ResourceManager {
         return instance;
     }
 
-    public Stack<ThrowableRunner> getPointerResources() {
-        return pointerResources;
-    }
-
-    public void setMethodResources() {
-        LOGGER.info("Setting pointer to method resources");
-        pointerResources = methodResources;
-    }
-
-    public void setClassResources() {
-        LOGGER.info("Setting pointer to class resources");
-        pointerResources = classResources;
-    }
-
-    public void deleteClassResources() throws Exception {
+    public void deleteResources(ExtensionContext testContext) throws Exception {
         LoggerUtils.logDelimiter("-");
-        LOGGER.info("Going to clear all class resources");
+        LOGGER.info("Going to clear all resources for {}", testContext.getDisplayName());
         LoggerUtils.logDelimiter("-");
-        if (classResources.isEmpty()) {
+        if (!storedResoruces.containsKey(testContext.getDisplayName()) || storedResoruces.get(testContext.getDisplayName()).isEmpty()) {
             LOGGER.info("Nothing to delete");
         }
-        while (!classResources.empty()) {
-            classResources.pop().run();
+        while (storedResoruces.containsKey(testContext.getDisplayName()) && !storedResoruces.get(testContext.getDisplayName()).isEmpty()) {
+            storedResoruces.get(testContext.getDisplayName()).pop().run();
         }
         LoggerUtils.logDelimiter("-");
         LOGGER.info("");
-        classResources.clear();
+        storedResoruces.remove(testContext.getDisplayName());
     }
 
-    public void deleteMethodResources() throws Exception {
-        LoggerUtils.logDelimiter("-");
-        LOGGER.info("Going to clear all method resources");
-        LoggerUtils.logDelimiter("-");
-        if (methodResources.isEmpty()) {
-            LOGGER.info("Nothing to delete");
-        }
-        while (!methodResources.empty()) {
-            methodResources.pop().run();
-        }
-        LoggerUtils.logDelimiter("-");
-        LOGGER.info("");
-        methodResources.clear();
-        pointerResources = classResources;
-    }
-
-    private void cleanDefault(HasMetadata resource) {
+    private synchronized void cleanDefault(HasMetadata resource) {
         if (defaultInfra != null && defaultInfra.getKind().equals(resource.getKind()) && defaultInfra.getMetadata().getName().equals(resource.getMetadata().getName())) {
             defaultInfra = null;
         }
@@ -177,12 +146,12 @@ public class ResourceManager {
     };
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(T... resources) {
-        createResource(true, resources);
+    public final <T extends HasMetadata> void createResource(ExtensionContext testContext, T... resources) {
+        createResource(testContext, true, resources);
     }
 
     @SafeVarargs
-    public final <T extends HasMetadata> void createResource(boolean waitReady, T... resources) {
+    public final <T extends HasMetadata> void createResource(ExtensionContext testContext, boolean waitReady, T... resources) {
         for (T resource : resources) {
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
@@ -191,8 +160,10 @@ public class ResourceManager {
             }
 
             // Convenience for tests that create resources in non-existing namespaces. This will create and clean them up.
-            if (resource.getMetadata().getNamespace() != null && !kubeClient.namespaceExists(resource.getMetadata().getNamespace())) {
-                createResource(waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
+            synchronized (this) {
+                if (resource.getMetadata().getNamespace() != null && !kubeClient.namespaceExists(resource.getMetadata().getNamespace())) {
+                    createResource(testContext, waitReady, new NamespaceBuilder().editOrNewMetadata().withName(resource.getMetadata().getNamespace()).endMetadata().build());
+                }
             }
 
             if (verbose) {
@@ -202,9 +173,10 @@ public class ResourceManager {
 
             type.create(resource);
 
-            pointerResources.push(() -> {
-                deleteResource(resource);
-            });
+            synchronized (this) {
+                storedResoruces.computeIfAbsent(testContext.getDisplayName(), k -> new Stack<>());
+                storedResoruces.get(testContext.getDisplayName()).push(() -> deleteResource(resource));
+            }
         }
 
         if (waitReady) {

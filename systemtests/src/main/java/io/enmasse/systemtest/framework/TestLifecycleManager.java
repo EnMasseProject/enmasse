@@ -12,7 +12,6 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.KubeClusterManager;
 import io.enmasse.systemtest.utils.TestUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -28,19 +27,15 @@ import org.slf4j.Logger;
  */
 public class TestLifecycleManager implements TestExecutionExceptionHandler, LifecycleMethodExecutionExceptionHandler,
         AfterEachCallback, BeforeEachCallback, BeforeAllCallback, AfterAllCallback {
-    private static final Logger LOGGER = LoggerUtils.getLogger();
-    private static final Environment env = Environment.getInstance();
+    private final Environment env = Environment.getInstance();
     private final Kubernetes kubernetes = Kubernetes.getInstance();
+    private final Logger LOGGER = LoggerUtils.getLogger();
     private final TestPlanInfo testInfo = TestPlanInfo.getInstance();
     private final EnmasseOperatorManager operatorManager = EnmasseOperatorManager.getInstance();
 
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         testInfo.setCurrentTestClass(context);
-
-        ResourceManager.getInstance().setClassResources();
-        KubeClusterManager.getInstance().setClassConfigurations();
-
         handleCallBackError("Callback before all", context, () -> {
             if (!operatorManager.isEnmasseBundleDeployed()) {
                 operatorManager.installEnmasseBundle();
@@ -52,7 +47,7 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after all", extensionContext, () -> {
             if (!env.skipCleanup()) {
-                ResourceManager.getInstance().deleteClassResources();
+                ResourceManager.getInstance().deleteResources(extensionContext);
                 KubeClusterManager.getInstance().restoreClassConfigurations();
             }
             if (env.skipCleanup() || env.skipUninstall()) {
@@ -67,7 +62,6 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
             LoggerUtils.logDelimiter("*");
             LOGGER.info("Before each section");
             testInfo.setCurrentTest(context);
-            ResourceManager.getInstance().setMethodResources();
             KubeClusterManager.getInstance().setMethodConfigurations();
 
             logPodsInInfraNamespace();
@@ -80,8 +74,10 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
         handleCallBackError("Callback after each", extensionContext, () -> {
             LoggerUtils.logDelimiter("*");
             LOGGER.info("Teardown section: ");
-            ResourceManager.getInstance().deleteMethodResources();
-            KubeClusterManager.getInstance().restoreMethodConfigurations();
+            if (!env.skipCleanup()) {
+                ResourceManager.getInstance().deleteResources(extensionContext);
+                KubeClusterManager.getInstance().restoreMethodConfigurations();
+            }
             LoggerUtils.logDelimiter("*");
         });
     }

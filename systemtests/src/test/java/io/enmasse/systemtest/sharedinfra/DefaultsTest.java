@@ -14,6 +14,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public class DefaultsTest extends TestBase {
 
     @Test
     @DefaultMessagingInfrastructure
-    public void testDefaultInfra() {
+    public void testDefaultInfra(ExtensionContext extensionContext) {
         MessagingInfrastructure infra = resourceManager.getDefaultInfra();
 
         resourceManager.waitResourceCondition(infra, i -> {
@@ -40,7 +41,7 @@ public class DefaultsTest extends TestBase {
     @Test
     @DefaultMessagingInfrastructure
     @DefaultMessagingProject
-    public void testDefaultProject() {
+    public void testDefaultProject(ExtensionContext extensionContext) {
         MessagingInfrastructure infra = resourceManager.getDefaultInfra();
         MessagingProject project = resourceManager.getDefaultMessagingProject();
 

@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import javax.jms.Connection;
@@ -56,7 +57,7 @@ public class MessagingAddressJMSTest extends TestBase {
     private MessagingEndpoint endpoint;
 
     @BeforeAll
-    public void createProject() {
+    public void createProject(ExtensionContext extensionContext) {
         project = new MessagingProjectBuilder()
                 .editOrNewMetadata()
                 .withName("default")
@@ -78,7 +79,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .addToProtocols("AMQP")
                 .endSpec()
                 .build();
-        resourceManager.createResource(project, endpoint);
+        resourceManager.createResource(extensionContext, project, endpoint);
     }
 
     private Context createContext(JmsProvider jmsProvider, MessagingAddress address) throws NamingException {
@@ -88,7 +89,7 @@ public class MessagingAddressJMSTest extends TestBase {
     @Test
     @DisplayName("testTransactionCommitRejectQueue")
     @Disabled("Transaction test needs looking into")
-    void testTransactionCommitRejectQueue(JmsProvider jmsProvider) throws Exception {
+    void testTransactionCommitRejectQueue(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -100,7 +101,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsQueueCommit")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressQueue);
+        resourceManager.createResource(extensionContext, addressQueue);
 
         Context context = createContext(jmsProvider, addressQueue);
 
@@ -170,7 +171,7 @@ public class MessagingAddressJMSTest extends TestBase {
 
     @Test
     @DisplayName("testLoadMessagesQueue")
-    void testLoadMessagesQueue(JmsProvider jmsProvider) throws Exception {
+    void testLoadMessagesQueue(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -182,7 +183,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsQueueLoad")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressQueue);
+        resourceManager.createResource(extensionContext, addressQueue);
 
         Context context = createContext(jmsProvider, addressQueue);
         Connection connection = jmsProvider.createConnection(context);
@@ -223,7 +224,7 @@ public class MessagingAddressJMSTest extends TestBase {
 
     @Test
     @DisplayName("testLargeMessagesQueue")
-    void testLargeMessagesQueue(JmsProvider jmsProvider) throws Exception {
+    void testLargeMessagesQueue(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressQueue = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -235,7 +236,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsQueueLarge")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressQueue);
+        resourceManager.createResource(extensionContext, addressQueue);
 
         Context context = createContext(jmsProvider, addressQueue);
         Connection connection = jmsProvider.createConnection(context);
@@ -253,7 +254,7 @@ public class MessagingAddressJMSTest extends TestBase {
 
     @Test
     @DisplayName("testMessageNonDurableSubscription")
-    void testMessageNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testMessageNonDurableSubscription(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -265,7 +266,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsTopicMess")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic);
+        resourceManager.createResource(extensionContext, addressTopic);
 
         Context context = createContext(jmsProvider, addressTopic);
         Connection connection = jmsProvider.createConnection(context);
@@ -304,7 +305,7 @@ public class MessagingAddressJMSTest extends TestBase {
     @Test
     @Disabled("Not yet supported")
     @DisplayName("testMessageDurableSubscription")
-    void testMessageDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testMessageDurableSubscription(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -340,7 +341,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("sub2DurSub")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic, addressSub1, addressSub2);
+        resourceManager.createResource(extensionContext, addressTopic, addressSub1, addressSub2);
 
         Context context = createContext(jmsProvider, addressTopic);
         Connection connection = jmsProvider.createConnection(context);
@@ -402,7 +403,7 @@ public class MessagingAddressJMSTest extends TestBase {
     @Test
     @Disabled("Not yet supported")
     @DisplayName("testMessageDurableSubscriptionTransacted")
-    void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider) throws Exception {
+    void testMessageDurableSubscriptionTransacted(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         String topicAddress = "jmsTopicTrans";
         String sub1ID = "sub1DurSubTrans";
         String sub2ID = "sub2DurSubTrans";
@@ -441,7 +442,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(sub2ID)
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic, addressSub1, addressSub2);
+        resourceManager.createResource(extensionContext, addressTopic, addressSub1, addressSub2);
 
         Context context = createContext(jmsProvider, addressTopic);
         Connection connection = jmsProvider.createConnection(context);
@@ -482,7 +483,7 @@ public class MessagingAddressJMSTest extends TestBase {
     @Test
     @Disabled("Not yet supported")
     @DisplayName("testSharedDurableSubscription")
-    void testSharedDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testSharedDurableSubscription(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         String topicAddress = "jmsTopicDurable";
         String subID = "sharedConsumerDurable123";
         MessagingAddress addressTopic = new MessagingAddressBuilder()
@@ -508,7 +509,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(subID)
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic, addressSub1);
+        resourceManager.createResource(extensionContext, addressTopic, addressSub1);
 
         Context context1 = createContext(jmsProvider, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
@@ -558,7 +559,7 @@ public class MessagingAddressJMSTest extends TestBase {
     @Test
     @Disabled("javax.jms.JMSException: Remote peer does not support shared subscriptions")
     @DisplayName("testSharedNonDurableSubscription")
-    void testSharedNonDurableSubscription(JmsProvider jmsProvider) throws Exception {
+    void testSharedNonDurableSubscription(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         String topicAddress = "jmsTopicNonDurable";
         String subID = "sharedConsumerDurable123";
         MessagingAddress addressTopic = new MessagingAddressBuilder()
@@ -572,7 +573,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress(topicAddress)
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic);
+        resourceManager.createResource(extensionContext, addressTopic);
 
         Context context1 = createContext(jmsProvider, addressTopic);
         Connection connection1 = jmsProvider.createConnection(context1);
@@ -617,7 +618,7 @@ public class MessagingAddressJMSTest extends TestBase {
 
     @Test
     @DisplayName("testLargeMessages")
-    void testLargeMessages(JmsProvider jmsProvider) throws Exception {
+    void testLargeMessages(JmsProvider jmsProvider, ExtensionContext extensionContext) throws Exception {
         MessagingAddress addressTopic = new MessagingAddressBuilder()
                 .withNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -629,7 +630,7 @@ public class MessagingAddressJMSTest extends TestBase {
                 .withAddress("jmsTopicLarge")
                 .endSpec()
                 .build();
-        resourceManager.createResource(addressTopic);
+        resourceManager.createResource(extensionContext, addressTopic);
 
         Context context = createContext(jmsProvider, addressTopic);
         Connection connection = jmsProvider.createConnection(context);

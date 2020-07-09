@@ -112,7 +112,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 public abstract class Kubernetes {
     private static final Logger log = LoggerUtils.getLogger();
     private static Kubernetes instance;
-    protected final Environment environment;
     protected final KubernetesClient client;
     protected final String infraNamespace;
     protected static KubeCluster cluster;
@@ -137,13 +136,12 @@ public abstract class Kubernetes {
                 log.error(ex.getMessage());
                 throw new RuntimeException(ex);
             }
-            Environment env = Environment.getInstance();
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
-                instance = new Minikube(env);
+                instance = new Minikube();
             } else if (cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
-                instance = new GenericKubernetes(env);
+                instance = new GenericKubernetes();
             } else {
-                instance = new OpenShift(env);
+                instance = new OpenShift();
             }
             try {
                 instance.olmAvailable = instance.getCRD("clusterserviceversions.operators.coreos.com") != null
@@ -217,14 +215,13 @@ public abstract class Kubernetes {
         return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
     }
 
-    protected Kubernetes(Environment environment, Supplier<KubernetesClient> clientSupplier) {
-        this.environment = environment;
+    protected Kubernetes(Supplier<KubernetesClient> clientSupplier) {
         this.client = clientSupplier.get();
-        if (environment.installType() == EnmasseInstallType.OLM
-                && environment.olmInstallType() == OLMInstallationType.DEFAULT) {
+        if (Environment.getInstance().installType() == EnmasseInstallType.OLM
+                && Environment.getInstance().olmInstallType() == OLMInstallationType.DEFAULT) {
             this.infraNamespace = getOlmNamespace();
         } else {
-            this.infraNamespace = environment.namespace();
+            this.infraNamespace = Environment.getInstance().namespace();
         }
         this.verboseLog = true;
     }
@@ -291,7 +288,7 @@ public abstract class Kubernetes {
     ///////////////////////////////////////////////////////////////////////////////
 
     public String getApiToken() {
-        return environment.getApiToken();
+        return Environment.getInstance().getApiToken();
     }
 
     public Endpoint getEndpoint(String serviceName, String namespace, String port) {
@@ -1109,7 +1106,7 @@ public abstract class Kubernetes {
             return "api.crc.testing";
         }
         List<NodeAddress> addresses = client.nodes().list().getItems().stream()
-                .peek(n -> LoggerUtils.getLogger().info("Found node: {}", n))
+                .peek(n -> LoggerUtils.getLogger().info("Found node: {}", n.getMetadata().getName()))
                 .flatMap(n -> n.getStatus().getAddresses().stream()
                         .peek(a -> LoggerUtils.getLogger().info("Found address: {}", a))
                         .filter(a -> a.getType().equals("InternalIP") || a.getType().equals("ExternalIP")))

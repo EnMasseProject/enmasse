@@ -35,18 +35,18 @@ public class OpenShift extends Kubernetes {
 
     private static final String OLM_NAMESPACE = "openshift-operators";
 
-    public OpenShift(Environment environment) {
-        super(environment, () -> {
-            Config config = new ConfigBuilder().withMasterUrl(environment.getApiUrl())
-                    .withOauthToken(environment.getApiToken())
+    public OpenShift() {
+        super(() -> {
+            Config config = new ConfigBuilder().withMasterUrl(Environment.getInstance().getApiUrl())
+                    .withOauthToken(Environment.getInstance().getApiToken())
                     .build();
             OkHttpClient httpClient = HttpClientUtils.createHttpClient(config);
             // Workaround https://github.com/square/okhttp/issues/3146
             httpClient = httpClient.newBuilder()
                     .protocols(Collections.singletonList(Protocol.HTTP_1_1))
-                    .connectTimeout(environment.getKubernetesApiConnectTimeout())
-                    .writeTimeout(environment.getKubernetesApiWriteTimeout())
-                    .readTimeout(environment.getKubernetesApiReadTimeout())
+                    .connectTimeout(Environment.getInstance().getKubernetesApiConnectTimeout())
+                    .writeTimeout(Environment.getInstance().getKubernetesApiWriteTimeout())
+                    .readTimeout(Environment.getInstance().getKubernetesApiReadTimeout())
                     .build();
             return new DefaultOpenShiftClient(httpClient, new OpenShiftConfig(config));
         });

@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 /**
  * Execution listener useful for safety cleanups of the test environment after test suite execution
  */
-public class TestPlanExecutionListener implements TestExecutionListener {
+public class TestPlanExecutionManager implements TestExecutionListener {
     private static final Logger LOGGER = LoggerUtils.getLogger();
     Environment env = Environment.getInstance();
 
