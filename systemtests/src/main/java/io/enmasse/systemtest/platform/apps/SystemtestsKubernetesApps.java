@@ -15,6 +15,7 @@ import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingFunction;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ConfigMapVolumeSourceBuilder;
@@ -346,7 +347,7 @@ public class SystemtestsKubernetesApps {
         return String.format("%s.%s.svc", SystemtestsKubernetesApps.API_PROXY, kube.getInfraNamespace());
     }
 
-    private static Function<InputStream, InputStream> namespaceReplacer(final String namespace) {
+    private static ThrowingFunction<InputStream, InputStream> namespaceReplacer(final String namespace) {
         final Map<String, String> values = new HashMap<>();
         values.put("NAMESPACE", namespace);
         return in -> ReplaceValueStream.replaceValues(in, values);

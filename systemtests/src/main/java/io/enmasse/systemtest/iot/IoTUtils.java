@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import org.slf4j.Logger;
 
 import io.enmasse.iot.model.v1.AdapterConfig;
@@ -102,7 +103,7 @@ public class IoTUtils {
         try ( var ignored = startOperation(SystemtestsOperation.DELETE_IOT_CONFIG)) {
             iotConfigs(config.getMetadata().getNamespace())
                     .withName(config.getMetadata().getName())
-                    .withPropagationPolicy("Background")
+                    .withPropagationPolicy(DeletionPropagation.BACKGROUND)
                     .delete();
             TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         }
@@ -224,7 +225,7 @@ public class IoTUtils {
 
             tenantClient
                     .withName(project.getMetadata().getName())
-                    .withPropagationPolicy("Background")
+                    .withPropagationPolicy(DeletionPropagation.BACKGROUND)
                     .delete();
 
             // wait until the IoTProject is deleted
