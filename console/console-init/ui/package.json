@@ -36,7 +36,8 @@
     "react-router-last-location": "^2.0.1",
     "react-scripts": "^3.3.0",
     "request": "2.88.2",
-    "typescript": "3.9.6"
+    "typescript": "3.9.6",
+    "use-patternfly": "^0.2.0"
   },
   "scripts": {
     "start": "react-scripts start",
