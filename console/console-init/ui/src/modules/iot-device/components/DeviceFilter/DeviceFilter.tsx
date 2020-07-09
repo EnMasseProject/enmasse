@@ -31,10 +31,9 @@ import {
 
 const styles = StyleSheet.create({
   time_input_box: {
-    padding: 20,
-    marginRight: 10
+    padding: 20
   },
-  dropdown_align: { display: "flex", marginRight: 10 },
+  dropdown_align: { display: "flex" },
   dropdown_toggle_align: { flex: "1" }
 });
 
