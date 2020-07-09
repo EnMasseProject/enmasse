@@ -12,11 +12,12 @@ import {
   FlexItem,
   DropdownItem,
   DropdownPosition,
-  DropdownSeparator
+  DropdownSeparator,
+  Switch
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
-import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
+import { DropdownWithKebabToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
 
@@ -229,7 +230,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
       <DeviceDetailLayout />
       <SplitItem isFilled />
       <SplitItem className={css(styles.kebab_toggle_margin)}>
-        <SwitchWithToggle
+        <Switch
           id="switch-device-header-enable-btn"
           label="Enabled"
           labelOff="Disabled"
