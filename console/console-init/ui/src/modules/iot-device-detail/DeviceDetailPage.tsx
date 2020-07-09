@@ -139,7 +139,9 @@ export default function DeviceDetailPage() {
         selectedItems: [deviceId],
         option: "Delete",
         detail: `Are you sure you want to delete this device: ${deviceId} ?`,
-        header: "Delete this device ?"
+        header: "Delete this device ?",
+        confirmButtonLabel: "Delete",
+        iconType: "danger"
       }
     });
   };
@@ -169,10 +171,11 @@ export default function DeviceDetailPage() {
       modalProps: {
         onConfirm: onConfirmToggleDeviceStatus,
         selectedItems: [deviceId],
-        option: DialogTypes.DISABLE,
+        option: dialogType,
         data: { deviceId, status },
         detail: getDetailForDialog([{ deviceId }], dialogType),
-        header: getHeaderForDialog([{ deviceId }], dialogType)
+        header: getHeaderForDialog([{ deviceId }], dialogType),
+        confirmButtonLabel: dialogType
       }
     });
   };

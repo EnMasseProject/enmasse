@@ -136,7 +136,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     await setUpdateDeviceQueryVariables(variable);
   };
 
-  const deleteDevice = (row: any) => {
+  const deleteDevice = (row: IRowData) => {
     const { deviceId } = row.originalData;
     dispatch({
       type: types.SHOW_MODAL,
@@ -147,12 +147,14 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
         option: DialogTypes.DELETE,
         data: deviceId,
         detail: getDetailForDialog([{ deviceId }], DialogTypes.DELETE),
-        header: getHeaderForDialog([{ deviceId }], DialogTypes.DELETE)
+        header: getHeaderForDialog([{ deviceId }], DialogTypes.DELETE),
+        confirmButtonLabel: "Delete",
+        iconType: "danger"
       }
     });
   };
 
-  const toggleDeviceStatus = (row: any, status: boolean) => {
+  const toggleDeviceStatus = (row: IRowData, status: boolean) => {
     const { deviceId } = row.originalData;
     const dialogType: string = status
       ? DialogTypes.ENABLE
@@ -163,10 +165,11 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       modalProps: {
         onConfirm: onConfirmToggleDeviceStatus,
         selectedItems: [deviceId],
-        option: DialogTypes.DISABLE,
+        option: dialogType,
         data: { deviceId, status },
         detail: getDetailForDialog([{ deviceId }], dialogType),
-        header: getHeaderForDialog([{ deviceId }], dialogType)
+        header: getHeaderForDialog([{ deviceId }], dialogType),
+        confirmButtonLabel: dialogType
       }
     });
   };

@@ -102,7 +102,7 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
 };
 
 const concatAND = (filter: string) => {
-  if (filter?.length > 0) return " AND ";
+  if (filter?.trim() !== "") return " AND ";
   return "";
 };
 

@@ -199,7 +199,8 @@ export default function DeviceListPage() {
         option: "Enable",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.ENABLE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE),
+        confirmButtonLabel: "Enable"
       }
     });
   };
@@ -214,7 +215,8 @@ export default function DeviceListPage() {
         option: "Disable",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.DISABLE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE),
+        confirmButtonLabel: "Disable"
       }
     });
   };
@@ -229,7 +231,9 @@ export default function DeviceListPage() {
         option: "Delete",
         data: selectedDevices,
         detail: getDetailForDialog(selectedDevices, DialogTypes.DELETE),
-        header: getHeaderForDialog(selectedDevices, DialogTypes.DELETE)
+        header: getHeaderForDialog(selectedDevices, DialogTypes.DELETE),
+        confirmButtonLabel: "Delete",
+        iconType: "danger"
       }
     });
   };
