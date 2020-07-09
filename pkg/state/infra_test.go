@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	v1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"testing"
 	"time"
 
@@ -33,13 +32,7 @@ func (t *testClock) Now() time.Time {
 func setUp(t *testing.T) (*infraClient, *fakecommand.FakeClient, *fakecommand.FakeClient) {
 	rclient := fakecommand.NewFakeClient()
 	bclient := fakecommand.NewFakeClient()
-	i := &v1.MessagingInfrastructure{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "testinfra",
-			Namespace: "ns",
-		},
-	}
-	ic := NewInfra(i, func(host Host, port int32, _ *tls.Config) *RouterState {
+	ic := NewInfra("testinfa", "ns", func(host Host, port int32, _ *tls.Config) *RouterState {
 		return NewTestRouterState(host, port, rclient)
 	}, func(host Host, port int32, _ *tls.Config) *BrokerState {
 		return NewTestBrokerState(host, port, bclient)
@@ -151,7 +144,7 @@ func TestBuildRouterEndpointEntities_SingleEndpointPlainAMQP(t *testing.T) {
 		},
 	}
 
-	expectedAuthServiceHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local", i.infrastructure.Name, i.infrastructure.Namespace)
+	expectedAuthServiceHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local", i.infrastructureName, i.infrastructureNamespace)
 	list, err := i.buildRouterEndpointEntities(endpoint)
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(list))

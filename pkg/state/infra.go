@@ -48,7 +48,8 @@ type request struct {
 var defaultScheduler = sched.NewDummyScheduler()
 
 type infraClient struct {
-	infrastructure *v1.MessagingInfrastructure
+	infrastructureName      string
+	infrastructureNamespace string
 
 	// The known routers and brokers. All configuration is synchronized with these. If their connections get reset,
 	// state is re-synced. If new routers and brokers are created, their configuration will be synced as well.
@@ -91,14 +92,16 @@ type infraClient struct {
 	lock           *sync.Mutex
 }
 
-func NewInfra(i *v1.MessagingInfrastructure, routerFactory routerStateFunc, brokerFactory brokerStateFunc, clock Clock) *infraClient {
+func NewInfra(infraName, infraNamespace string, routerFactory routerStateFunc, brokerFactory brokerStateFunc, clock Clock) *infraClient {
 	// TODO: Make constants and expand range
 	portmap := make(map[int]*string, 0)
 	for i := 40000; i < 40100; i++ {
 		portmap[i] = nil
 	}
 	client := &infraClient{
-		infrastructure:      i,
+		infrastructureName:      infraName,
+		infrastructureNamespace: infraNamespace,
+
 		routers:            make(map[Host]*RouterState, 0),
 		brokers:            make(map[Host]*BrokerState, 0),
 		hostMap:            make(map[string]Host, 0),
@@ -917,8 +920,8 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 			routerEntities = append(routerEntities, sslProfile)
 		}
 
-		// TODO separate authhost per endpoint required (so that the service can apply the correct SASL config) - use glocal one for now
-		authHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local:5671", i.infrastructure.Name, i.infrastructure.Namespace)
+		// TODO separate authhost per endpoint required (so that the service can apply the correct SASL config) - use global one for now
+		authHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local:5671", i.infrastructureName, i.infrastructureNamespace)
 		//authService := &RouterAuthServicePlugin{
 		//	Host:       authHost,
 		//	Port:       "5671",
