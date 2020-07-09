@@ -148,19 +148,31 @@ public class MessagingClientRunner {
                     .withAddress(address)
                     .withCount(expectedMsgCount)
                     .withMessageBody("msg no. %d")
-                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                     .withTimeout(30);
+
+            if (!websockets) {
+                senderClient.withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS");
+            }
+
             ExternalMessagingClient receiverClient = new ExternalMessagingClient(enableTls)
                     .withClientEngine(websockets ? new RheaClientReceiver() : new ProtonJMSClientReceiver())
                     .withMessagingRoute(e)
                     .withAddress(address)
                     .withCount(expectedMsgCount)
-                    .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                     .withTimeout(30);
+            if (!websockets) {
+                receiverClient.withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS");
+            }
+
             /*if (enableTls) {
                 senderClient.withAdditionalArgument(ClientArgument.CONN_SSL_VERIFY_PEER_NAME, true);
             }*/
             if (websockets) {
+                // In Rhea setting the username only causes it to choose SASL ANONYMOUS (and send the username as the 'trace'
+                // information).
+                // See comment https://github.com/amqp/rhea/blob/master/examples/sasl/simple_sasl_client.js
+                senderClient.withAdditionalArgument(ClientArgument.USERNAME, "trace");
+                receiverClient.withAdditionalArgument(ClientArgument.USERNAME, "trace");
                 senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
                 receiverClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET, true);
                 senderClient.withAdditionalArgument(ClientArgument.CONN_WEB_SOCKET_PROTOCOLS, "binary");
