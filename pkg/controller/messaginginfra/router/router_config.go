@@ -127,6 +127,23 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 					"enableVhostPolicy": true,
 				},
 			},
+			[]interface{}{
+				// Enable policy
+				"system-vhost",
+				map[string]interface{}{
+					"hostname":         "$default",
+					"allowUnknownUser": true,
+					Groups: map[string]interface{}{
+						"$default": map[string]interface{}{
+							"remoteHosts":          "*",
+							"sources":              "*",
+							"targets":              "*",
+							"allowDynamicSource":   true,
+							"allowAnonymousSender": true,
+						},
+					},
+				},
+			},
 		},
 	}
 }

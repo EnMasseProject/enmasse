@@ -945,7 +945,7 @@ func (i *infraClient) buildRouterVhostPolicies(endpointsByNamespace map[string][
 		if len(aliases) > 0 {
 			aliasesStr := strings.Join(aliases[:], ",")
 			routerEntities = append(routerEntities, &RouterVhost{
-				Name:             namespace,
+				Name:             fmt.Sprintf("vhost-%s", namespace),
 				Hostname:         namespace,
 				Aliases:          aliasesStr,
 				AllowUnknownUser: true,
