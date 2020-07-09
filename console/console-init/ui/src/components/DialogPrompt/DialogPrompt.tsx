@@ -71,13 +71,14 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
 
   return (
     <Modal
-      id="Dialogue-prompt-modal"
+      id="dialogue-prompt-modal"
       variant={ModalVariant.small}
       title={""}
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
+          id="dialogue-prompt-confirm-button"
           key={option}
           variant={getConfirmButtonVariant(confirmButtonLabel, iconType)}
           onClick={onConfirmDialog}
@@ -85,12 +86,17 @@ export const DialogPrompt: React.FunctionComponent<{}> = () => {
           {/* Confirm */}
           {confirmButtonLabel || "Confirm"}
         </Button>,
-        <Button key="cancel" variant="link" onClick={onCloseDialog}>
+        <Button
+          id="dialogue-prompt-cancel-button"
+          key="cancel"
+          variant="link"
+          onClick={onCloseDialog}
+        >
           Cancel
         </Button>
       ]}
     >
-      <Title headingLevel="h1" size="2xl">
+      <Title id="dialogue-prompt-header" headingLevel="h1" size="2xl">
         {getIcon(iconType)}
         {header}
       </Title>
