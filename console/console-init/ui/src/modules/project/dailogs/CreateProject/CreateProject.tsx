@@ -17,7 +17,6 @@ import {
   ProjectTypeConfigurationStep,
   IIoTProjectInput,
   IoTConfigurationStep,
-  IoTReviewStep,
   isMessagingProjectValid,
   isIoTProjectValid,
   isMessagingProjectConfigurationValid
@@ -45,6 +44,7 @@ import {
   ConfiguringCertificates
 } from "modules/project/dailogs";
 import { EndpointConfiguration } from "modules/project/components";
+import { IoTProjectReview } from "./IotProjectReview";
 
 export interface IRouteConf {
   protocol: string;
@@ -241,7 +241,13 @@ const CreateProject: React.FunctionComponent = () => {
     iotProjectDetail
   );
 
-  const finalStepForIot = IoTReviewStep(iotProjectDetail);
+  const finalStepForIot = {
+    name: "Review",
+    isDisabled: true,
+    component: <IoTProjectReview projectDetail={iotProjectDetail} />,
+    enableNext: isIoTProjectValid(iotProjectDetail),
+    nextButtonText: "Finish"
+  };
 
   const finishedStep = {
     name: "Finish",

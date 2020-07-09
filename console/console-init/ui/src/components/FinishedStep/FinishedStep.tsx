@@ -60,7 +60,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
               icon={ExclamationCircleIcon}
               className={css(styles.cog_red_color)}
             />
-            <Title headingLevel="h5" size="xl">
+            <Title headingLevel="h5" size="xl" id="error-state-title">
               The project cannot be created
             </Title>
             <br />
@@ -70,7 +70,11 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
             </EmptyStateBody>
             <br />
             <br />
-            <Button variant="link" onClick={onClose}>
+            <Button
+              id="error-state-cancel-button"
+              variant="link"
+              onClick={onClose}
+            >
               Cancel
             </Button>
           </EmptyState>
@@ -83,7 +87,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
               icon={CheckCircleIcon}
               className={css(styles.cog_green_color)}
             />
-            <Title headingLevel="h5" size="xl">
+            <Title headingLevel="h5" size="xl" id="success-state-title">
               Creation successful
             </Title>
             <br />
@@ -93,13 +97,21 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
             </EmptyStateBody>
             <br />
             <Link to={projectDetailUrl()}>
-              <Button variant={ButtonVariant.primary} component="a">
+              <Button
+                id="success-state-view-project-button"
+                variant={ButtonVariant.primary}
+                component="a"
+              >
                 View the project
               </Button>
             </Link>
             <br />
             <br />
-            <Button variant="link" onClick={onClose}>
+            <Button
+              id="success-state-view-list-button"
+              variant="link"
+              onClick={onClose}
+            >
               Back to list
             </Button>
           </EmptyState>
