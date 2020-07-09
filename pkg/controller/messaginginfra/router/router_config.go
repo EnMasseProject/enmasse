@@ -133,7 +133,7 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 				map[string]interface{}{
 					"hostname":         "$default",
 					"allowUnknownUser": true,
-					Groups: map[string]interface{}{
+					"groups": map[string]interface{}{
 						"$default": map[string]interface{}{
 							"remoteHosts":          "*",
 							"sources":              "*",
