@@ -11,6 +11,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/controller/messaginginfra/accesscontrol"
 	"reflect"
 	"time"
 
@@ -58,15 +59,16 @@ const (
 )
 
 type ReconcileMessagingInfra struct {
-	client           client.Client
-	reader           client.Reader
-	recorder         record.EventRecorder
-	scheme           *runtime.Scheme
-	certController   *cert.CertController
-	routerController *router.RouterController
-	brokerController *broker.BrokerController
-	clientManager    state.ClientManager
-	namespace        string
+	client                  client.Client
+	reader                  client.Reader
+	recorder                record.EventRecorder
+	scheme                  *runtime.Scheme
+	certController          *cert.CertController
+	accessControlController *accesscontrol.AccessControlController
+	routerController        *router.RouterController
+	brokerController        *broker.BrokerController
+	clientManager           state.ClientManager
+	namespace               string
 }
 
 // Gets called by parent "init", adding as to the manager
@@ -76,7 +78,7 @@ func Add(mgr manager.Manager) error {
 
 /**
  * - TODO Make certificate expiry configurable
- * - TODO Add podTemplate configuration to CRD in .spec.router.podTemplate and .spec.broker.podTemplate and apply
+ * - TODO Add podTemplate configuration to CRD in .spec.router.podTemplate, .spec.broker.podTemplate , .spec.accessControl.podTemplate and apply
  * - TODO Add static router configuration options in .spec.router: thread pool, min available, max unavailable, link capacity, idle timeout
  * - TODO Add static broker configuration options in .spec.broker: minAvailable, maxUnavailable, storage capacity, java options, address full policy, global max size, storage class name, resize persistent volume claim, threadpool config, global address policies
  */
@@ -87,18 +89,20 @@ func newReconciler(mgr manager.Manager) *ReconcileMessagingInfra {
 	// TODO: Make expiry configurable
 	clientManager := state.GetClientManager()
 	certController := cert.NewCertController(mgr.GetClient(), mgr.GetScheme(), 24*30*time.Hour, 24*time.Hour)
+	accessControlController := accesscontrol.NewAccessControlController(mgr.GetClient(), mgr.GetScheme(), certController)
 	brokerController := broker.NewBrokerController(mgr.GetClient(), mgr.GetScheme(), certController)
 	routerController := router.NewRouterController(mgr.GetClient(), mgr.GetScheme(), certController)
 	return &ReconcileMessagingInfra{
-		client:           mgr.GetClient(),
-		certController:   certController,
-		routerController: routerController,
-		brokerController: brokerController,
-		clientManager:    clientManager,
-		reader:           mgr.GetAPIReader(),
-		recorder:         mgr.GetEventRecorderFor("messaginginfra"),
-		scheme:           mgr.GetScheme(),
-		namespace:        namespace,
+		client:                  mgr.GetClient(),
+		certController:          certController,
+		accessControlController: accessControlController,
+		routerController:        routerController,
+		brokerController:        brokerController,
+		clientManager:           clientManager,
+		reader:                  mgr.GetAPIReader(),
+		recorder:                mgr.GetEventRecorderFor("messaginginfra"),
+		scheme:                  mgr.GetScheme(),
+		namespace:               namespace,
 	}
 }
 
@@ -318,6 +322,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 	var ready *v1.MessagingInfrastructureCondition
 	var caCreated *v1.MessagingInfrastructureCondition
 	var certCreated *v1.MessagingInfrastructureCondition
+	var accessControlCreated *v1.MessagingInfrastructureCondition
 	var brokersCreated *v1.MessagingInfrastructureCondition
 	var routersCreated *v1.MessagingInfrastructureCondition
 	var brokersConnected *v1.MessagingInfrastructureCondition
@@ -332,6 +337,7 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		ready = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureReady)
 		caCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureCaCreated)
 		certCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureCertCreated)
+		accessControlCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureAccessControlCreated)
 		brokersCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureBrokersCreated)
 		routersCreated = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureRoutersCreated)
 		brokersConnected = infra.Status.GetMessagingInfrastructureCondition(v1.MessagingInfrastructureBrokersConnected)
@@ -370,6 +376,20 @@ func (r *ReconcileMessagingInfra) Reconcile(request reconcile.Request) (reconcil
 		}
 		certCreated.SetStatus(corev1.ConditionTrue, "", "")
 		controllerCert = *certInfo.Certificate
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
+	result, err = rc.Process(func(infra *v1.MessagingInfrastructure) (processorResult, error) {
+		_, err := r.accessControlController.ReconcileAccessControl(ctx, logger, infra)
+		if err != nil {
+			infra.Status.Message = err.Error()
+			accessControlCreated.SetStatus(corev1.ConditionFalse, "", err.Error())
+			return processorResult{}, err
+		}
+		certCreated.SetStatus(corev1.ConditionTrue, "", "")
 		return processorResult{}, nil
 	})
 	if result.ShouldReturn(err) {

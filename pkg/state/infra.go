@@ -48,6 +48,9 @@ type request struct {
 var defaultScheduler = sched.NewDummyScheduler()
 
 type infraClient struct {
+	infrastructureName      string
+	infrastructureNamespace string
+
 	// The known routers and brokers. All configuration is synchronized with these. If their connections get reset,
 	// state is re-synced. If new routers and brokers are created, their configuration will be synced as well.
 	routers     map[Host]*RouterState
@@ -86,16 +89,19 @@ type infraClient struct {
 	resyncInterval time.Duration
 
 	// Guards all fields in the internal state of the client
-	lock *sync.Mutex
+	lock           *sync.Mutex
 }
 
-func NewInfra(routerFactory routerStateFunc, brokerFactory brokerStateFunc, clock Clock) *infraClient {
+func NewInfra(infraName, infraNamespace string, routerFactory routerStateFunc, brokerFactory brokerStateFunc, clock Clock) *infraClient {
 	// TODO: Make constants and expand range
 	portmap := make(map[int]*string, 0)
 	for i := 40000; i < 40100; i++ {
 		portmap[i] = nil
 	}
 	client := &infraClient{
+		infrastructureName:      infraName,
+		infrastructureNamespace: infraNamespace,
+
 		routers:            make(map[Host]*RouterState, 0),
 		brokers:            make(map[Host]*BrokerState, 0),
 		hostMap:            make(map[string]Host, 0),
@@ -127,6 +133,7 @@ func (i *infraClient) Start() {
 				i.syncerStopped <- true
 				return
 			default:
+
 				i.doSync()
 			}
 		}
@@ -743,6 +750,7 @@ func (i *infraClient) doSync() {
 		}
 	}
 
+	// here
 	builtRequests, routerEntities, brokerEntities := i.buildEntities(valid)
 
 	log.Info(fmt.Sprintf("Syncing %d router entities", len(routerEntities)))
@@ -912,6 +920,15 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 			routerEntities = append(routerEntities, sslProfile)
 		}
 
+		// TODO separate authhost per endpoint required (so that the service can apply the correct SASL config) - use global one for now
+		authHost := fmt.Sprintf("access-control-%s.%s.svc.cluster.local:5671", i.infrastructureName, i.infrastructureNamespace)
+		//authService := &RouterAuthServicePlugin{
+		//	Host:       authHost,
+		//	Port:       "5671",
+		//	Realm:      authHost,
+		//	SslProfile: "infra_tls",
+		//}
+
 		websockets := (internalPort.Protocol == v1.MessagingProtocolAMQPWS || internalPort.Protocol == v1.MessagingProtocolAMQPWSS)
 		listener := &RouterListener{
 			Name:               listenerName(internalPort.Name),
@@ -919,7 +936,7 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 			Port:               fmt.Sprintf("%d", internalPort.Port),
 			Role:               "normal",
 			RequireSsl:         false,
-			AuthenticatePeer:   false, // TODO: Auth service
+			AuthenticatePeer:   true,
 			IdleTimeoutSeconds: idleTimeoutSeconds,
 			// LinkCapacity:       TODO: Make configurable?
 			MultiTenant: true,
@@ -927,6 +944,7 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 			Http:        websockets,
 			Healthz:     false,
 			Metrics:     false,
+			SaslPlugin:  authHost,
 		}
 
 		if sslProfile != nil {

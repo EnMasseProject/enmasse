@@ -54,6 +54,12 @@ spec:
           type: object
         spec:
           properties:
+            accessControl:
+              properties:
+                replicas:
+                  format: int32
+                  type: integer
+              type: object
             broker:
               description: Broker configuration options.
               properties:

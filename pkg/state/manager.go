@@ -64,7 +64,7 @@ func (m *manager) GetClient(i *v1.MessagingInfrastructure) InfraClient {
 	key := clientKey{Name: i.Name, Namespace: i.Namespace}
 	client, exists := m.clients[key]
 	if !exists {
-		client = NewInfra(router.NewRouterState, broker.NewBrokerState, &systemClock{})
+		client = NewInfra(i.Name, i.Namespace, router.NewRouterState, broker.NewBrokerState, &systemClock{})
 		m.clients[key] = client
 		client.Start()
 	}

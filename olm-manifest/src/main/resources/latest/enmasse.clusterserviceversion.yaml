@@ -480,6 +480,8 @@ spec:
                   value: "${env.CONSOLE_PROXY_OPENSHIFT_IMAGE}"
                 - name: RELATED_IMAGE_CONSOLE_PROXY_KUBERNETES
                   value: "${env.CONSOLE_PROXY_KUBERNETES_IMAGE}"
+                - name: RELATED_IMAGE_ACCESS_CONTROL_SERVER
+                  value: ${env.ACCESS_CONTROL_SERVER_IMAGE}
                 - name: "FS_GROUP_FALLBACK_MAP"
                   value: "{}"
                 - name: ENABLE_MONITORING

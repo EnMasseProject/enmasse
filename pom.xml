@@ -115,6 +115,7 @@
     </properties>
 
     <modules>
+        <module>access-control-server</module>
         <module>api-model-annotator</module>
         <module>api-model</module>
         <module>api-common</module>

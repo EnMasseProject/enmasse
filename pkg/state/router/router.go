@@ -601,6 +601,22 @@ func (e *NamedEntity) Order() int {
 	return 0
 }
 
+func (e *RouterAuthServicePlugin) Type() RouterEntityType {
+	return RouterAuthServicePluginEntity
+}
+
+func (e *RouterAuthServicePlugin) GetName() string {
+	return fmt.Sprintf("%s:%s", e.Host, e.Port)
+}
+
+func (e *RouterAuthServicePlugin) Equals(other RouterEntity) bool {
+	return reflect.DeepEqual(e, other)
+}
+
+func (e *RouterAuthServicePlugin) Order() int {
+	return 0
+}
+
 func (t *RouterEntityType) CanUpdate() bool {
 	return false
 }
@@ -695,4 +711,13 @@ func entityToMap(v interface{}) (map[string]interface{}, error) {
 	}
 
 	return converted, nil
+}
+
+func FindFirst(pred func(RouterEntity) bool, entities []RouterEntity) RouterEntity {
+	for _, entity := range entities {
+		if pred(entity) {
+			return entity
+		}
+	}
+	return nil
 }

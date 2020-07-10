@@ -53,6 +53,7 @@ func setIfEnvPresent(data map[string]string, key string, envVar string) {
 
 func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "controller-manager", "RELATED_IMAGE_CONTROLLER_MANAGER")
+	setIfEnvPresent(data, "access-control-server", "RELATED_IMAGE_ACCESS_CONTROL_SERVER")
 	setIfEnvPresent(data, "iot-auth-service", "RELATED_IMAGE_IOT_AUTH_SERVICE")
 	setIfEnvPresent(data, "iot-device-connection-infinispan", "RELATED_IMAGE_IOT_DEVICE_CONNECTION_INFINISPAN")
 	setIfEnvPresent(data, "iot-device-connection-jdbc", "RELATED_IMAGE_IOT_DEVICE_CONNECTION_JDBC")

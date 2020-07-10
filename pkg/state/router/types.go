@@ -25,12 +25,13 @@ type RouterState struct {
 type RouterEntityType string
 
 const (
-	RouterAddressEntity    RouterEntityType = "org.apache.qpid.dispatch.router.config.address"
-	RouterListenerEntity   RouterEntityType = "org.apache.qpid.dispatch.listener"
-	RouterConnectorEntity  RouterEntityType = "org.apache.qpid.dispatch.connector"
-	RouterAutoLinkEntity   RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
-	RouterLinkRouteEntity  RouterEntityType = "org.apache.qpid.dispatch.router.config.linkRoute"
-	RouterSslProfileEntity RouterEntityType = "org.apache.qpid.dispatch.sslProfile"
+	RouterAddressEntity           RouterEntityType = "org.apache.qpid.dispatch.router.config.address"
+	RouterListenerEntity          RouterEntityType = "org.apache.qpid.dispatch.listener"
+	RouterConnectorEntity         RouterEntityType = "org.apache.qpid.dispatch.connector"
+	RouterAutoLinkEntity          RouterEntityType = "org.apache.qpid.dispatch.router.config.autoLink"
+	RouterLinkRouteEntity         RouterEntityType = "org.apache.qpid.dispatch.router.config.linkRoute"
+	RouterSslProfileEntity        RouterEntityType = "org.apache.qpid.dispatch.sslProfile"
+	RouterAuthServicePluginEntity RouterEntityType = "org.apache.qpid.dispatch.authServicePlugin"
 )
 
 type RouterEntity interface {
@@ -85,6 +86,7 @@ type RouterListener struct {
 	Healthz                        bool   `json:"healthz"`
 	Websockets                     bool   `json:"websockets"`
 	HttpRootDir                    string `json:"httpRootDir,omitempty"`
+	SaslPlugin                     string `json:"saslPlugin,omitempty"`
 }
 
 type RouterVhost struct {
@@ -120,4 +122,11 @@ type RouterSslProfile struct {
 	CaCertFile     string `json:"caCertFile,omitempty"`
 	CertFile       string `json:"certFile,omitempty"`
 	PrivateKeyFile string `json:"privateKeyFile,omitempty"`
+}
+
+type RouterAuthServicePlugin struct {
+	Host       string `json:"host"`
+	Port       string `json:"port"`
+	Realm      string `json:"realm"`
+	SslProfile string `json:"sslProfile"`
 }

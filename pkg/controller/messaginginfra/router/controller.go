@@ -60,7 +60,7 @@ func (r *RouterController) ReconcileRouters(ctx context.Context, logger logr.Log
 	certSecretName := cert.GetCertSecretName(routerInfraName)
 
 	// Reconcile static router config
-	routerConfig := generateConfig(&infra.Spec.Router)
+	routerConfig := generateConfig(infra, &infra.Spec.Router)
 	routerConfigBytes, err := serializeConfig(&routerConfig)
 	if err != nil {
 		return nil, err

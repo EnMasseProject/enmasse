@@ -179,8 +179,9 @@ type conn struct {
 	containerID  string                 // set explicitly or randomly generated
 
 	// peer settings
-	peerIdleTimeout  time.Duration // maximum period between sending frames
-	peerMaxFrameSize uint32        // maximum frame size peer will accept
+	peerIdleTimeout  time.Duration          // maximum period between sending frames
+	peerMaxFrameSize uint32                 // maximum frame size peer will accept
+	peerProperties   map[symbol]interface{} // additional properties received during connection open
 
 	// conn state
 	errMu sync.Mutex    // mux holds errMu from start until shutdown completes; operations are sequential before mux is started
@@ -201,9 +202,10 @@ type conn struct {
 	connReaderRun chan func() // functions to be run by conn reader (set deadline on conn to run)
 
 	// connWriter
-	txFrame chan frame // AMQP frames to be sent by connWriter
-	txBuf   buffer     // buffer for marshaling frames before transmitting
-	txDone  chan struct{}
+	txFrame        chan frame // AMQP frames to be sent by connWriter
+	txBuf          buffer     // buffer for marshaling frames before transmitting
+	txDone         chan struct{}
+
 }
 
 type newSessionResp struct {
@@ -842,6 +844,7 @@ func (c *conn) openAMQP() stateFunc {
 	if o.ChannelMax < c.channelMax {
 		c.channelMax = o.ChannelMax
 	}
+	c.peerProperties = o.Properties
 
 	// connection established, exit state machine
 	return nil

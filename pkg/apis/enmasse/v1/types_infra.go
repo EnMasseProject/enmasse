@@ -37,6 +37,8 @@ type MessagingInfrastructureSpec struct {
 	Router MessagingInfrastructureSpecRouter `json:"router,omitempty"`
 	// Broker configuration options.
 	Broker MessagingInfrastructureSpecBroker `json:"broker,omitempty"`
+
+	AccessControl MessagingInfrastructureSpecAccessControl `json:"accessControl,omitempty"`
 }
 
 type MessagingInfrastructureSpecRouter struct {
@@ -75,6 +77,10 @@ type MessagingInfrastructureSpecBrokerScalingStrategyStatic struct {
 	PoolSize int32 `json:"poolSize"`
 }
 
+type MessagingInfrastructureSpecAccessControl struct {
+	Replicas *int32 `json:"replicas,omitempty"`
+}
+
 type MessagingInfrastructureStatus struct {
 	// +kubebuilder:printcolumn
 	Phase      MessagingInfrastructurePhase          `json:"phase,omitempty"`
@@ -103,13 +109,14 @@ type MessagingInfrastructureCondition struct {
 type MessagingInfrastructureConditionType string
 
 const (
-	MessagingInfrastructureReady            MessagingInfrastructureConditionType = "Ready"
-	MessagingInfrastructureCaCreated        MessagingInfrastructureConditionType = "CaCreated"
-	MessagingInfrastructureCertCreated      MessagingInfrastructureConditionType = "CertCreated"
-	MessagingInfrastructureBrokersCreated   MessagingInfrastructureConditionType = "BrokersCreated"
-	MessagingInfrastructureRoutersCreated   MessagingInfrastructureConditionType = "RoutersCreated"
-	MessagingInfrastructureSynchronized     MessagingInfrastructureConditionType = "Synchronized"
-	MessagingInfrastructureBrokersConnected MessagingInfrastructureConditionType = "BrokersConnected"
+	MessagingInfrastructureReady                MessagingInfrastructureConditionType = "Ready"
+	MessagingInfrastructureCaCreated            MessagingInfrastructureConditionType = "CaCreated"
+	MessagingInfrastructureCertCreated          MessagingInfrastructureConditionType = "CertCreated"
+	MessagingInfrastructureAccessControlCreated MessagingInfrastructureConditionType = "AccessControlCreated"
+	MessagingInfrastructureBrokersCreated       MessagingInfrastructureConditionType = "BrokersCreated"
+	MessagingInfrastructureRoutersCreated       MessagingInfrastructureConditionType = "RoutersCreated"
+	MessagingInfrastructureSynchronized         MessagingInfrastructureConditionType = "Synchronized"
+	MessagingInfrastructureBrokersConnected     MessagingInfrastructureConditionType = "BrokersConnected"
 )
 
 type MessagingInfrastructurePhase string
