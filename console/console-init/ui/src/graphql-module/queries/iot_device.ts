@@ -38,16 +38,41 @@ const RETURN_IOT_DEVICE_DETAIL = (
   return IOT_DEVICE_DETAIL;
 };
 
+const FILTER_IOT_CREDENTIALS = (
+  property?: string,
+  filterType?: string,
+  filterValue?: string | boolean
+) => {
+  let filter = "";
+  if (filterValue && property?.toLowerCase() === "enabled") {
+    filter += "`$." + [property] + "` = " + filterValue + "";
+  } else if (
+    filterValue &&
+    property?.toLowerCase() === "auth-id" &&
+    filterType
+  ) {
+    filter +=
+      "`$.type` = '" +
+      filterType +
+      "' AND `$['auth-id']` = '" +
+      filterValue +
+      "'";
+  } else if (filterValue && property) {
+    filter += "`$." + [property] + "` = '" + filterValue + "'";
+  }
+
+  return filter;
+};
+
 const RETURN_IOT_CREDENTIALS = (
   iotproject: string,
   deviceId: string,
   property?: string,
+  filterType?: string,
   filterValue?: string | boolean
 ) => {
-  let filter = "";
-  if (filterValue && property) {
-    filter += "`$." + [property] + "` = '" + filterValue + "'";
-  }
+  const filter = FILTER_IOT_CREDENTIALS(property, filterType, filterValue);
+
   const IOT_CREDENTIALS = gql(
     `query iot_credentials{
       credentials(

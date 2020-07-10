@@ -21,12 +21,16 @@ export const ConfigurationInfoContainer: React.FC<{ id: string }> = ({
   const [filterType, setFilterType] = useState<string>("enabled");
   const [filterValue, setFilterValue] = useState<string>("");
 
+  const propertyName = getCredentialFilterType(filterType, filterValue);
+  const value = getCredentialFilterValue(filterType, filterValue);
+
   const { data } = useQuery<ICredentialsReponse>(
     RETURN_IOT_CREDENTIALS(
       projectname,
       deviceid,
-      getCredentialFilterType(filterType, filterValue),
-      getCredentialFilterValue(filterType, filterValue)
+      propertyName,
+      filterType,
+      value
     )
   );
 
@@ -37,8 +41,10 @@ export const ConfigurationInfoContainer: React.FC<{ id: string }> = ({
     <ConfigurationInfo
       id={id}
       credentials={credentialsJson}
-      onSelectFilterType={setFilterType}
-      onSelectFilterValue={setFilterValue}
+      setFilterType={setFilterType}
+      setFilterValue={setFilterValue}
+      filterType={filterType}
+      filterValue={filterValue}
     />
   );
 };

@@ -17,7 +17,10 @@ enum DeviceActionType {
 /**
  * configuration-info
  */
-const getCredentialFilterType = (filterType: string, filterValue: string) => {
+const getCredentialFilterType = (
+  filterType: string,
+  filterValue: string | boolean
+) => {
   let type: string = "";
   if (filterType === "enabled") {
     type = filterType;
@@ -33,14 +36,17 @@ const getCredentialFilterType = (filterType: string, filterValue: string) => {
   return type;
 };
 
-const getCredentialFilterValue = (filterType: string, filterValue: string) => {
+const getCredentialFilterValue = (
+  filterType: string,
+  filterValue: string | boolean
+) => {
   let value: string | boolean = filterValue;
   if (filterType === "enabled") {
     value = true;
   } else if (
     filterType !== "all" &&
     filterType !== "enabled" &&
-    (filterValue === undefined || filterValue === "all")
+    (!filterValue || filterValue === "all")
   ) {
     value = filterType;
   }

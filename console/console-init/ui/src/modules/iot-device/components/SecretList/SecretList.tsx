@@ -112,6 +112,7 @@ const DefaultSecretsSetting: React.FC<IDefaultSecretsSetting> = ({
               value={secret["key"]}
             />
           </FormGroup>
+          <br />
         </GridItem>
       )}
     </>

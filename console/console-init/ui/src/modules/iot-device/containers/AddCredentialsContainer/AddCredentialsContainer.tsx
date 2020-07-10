@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { useParams } from "react-router";
+import { StyleSheet, css } from "aphrodite";
 import {
   Title,
   Flex,
@@ -19,6 +20,15 @@ import { useStoreContext, types } from "context-state-reducer";
 import { SET_IOT_CREDENTIAL_FOR_DEVICE } from "graphql-module/queries";
 import { useMutationQuery } from "hooks";
 import { serializeCredentials } from "modules/iot-device/utils";
+
+const styles = StyleSheet.create({
+  header: {
+    marginLeft: 25
+  },
+  button_alignment: {
+    marginLeft: 25
+  }
+});
 
 export const AddCredentialsContainer = () => {
   const { projectname, deviceid } = useParams();
@@ -49,17 +59,16 @@ export const AddCredentialsContainer = () => {
   };
 
   return (
-    <Grid>
+    <Grid hasGutter>
       <GridItem span={6}>
-        <Title headingLevel="h2" size="xl">
+        <Title headingLevel="h2" size="xl" className={css(styles.header)}>
           Add credentials
         </Title>
         <br />
         <AddCredential setCredentialList={setCredentials} />
         <br />
-        {JSON.stringify(credentials, undefined, 2)}
         <br />
-        <Flex>
+        <Flex className={css(styles.button_alignment)}>
           <FlexItem>
             <Button
               id="ac-save-credentials-button"

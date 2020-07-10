@@ -4,6 +4,7 @@
  */
 
 import React from "react";
+import _ from "lodash";
 import { Title, Grid, GridItem, Button } from "@patternfly/react-core";
 import { EditAltIcon } from "@patternfly/react-icons";
 import classNames from "classnames";
@@ -86,10 +87,10 @@ const SecretRow: React.FC<ISecretRowProps> = ({
     return value;
   };
 
-  const secretsKeys = Object.keys(secret);
+  const secretsKeys = Object.keys(_.omit(secret, "id"));
   return (
     <>
-      {secretsKeys.map((key: string) => {
+      {secretsKeys?.map((key: string) => {
         const value = secret && (secret as any)[key];
         return (
           <>
