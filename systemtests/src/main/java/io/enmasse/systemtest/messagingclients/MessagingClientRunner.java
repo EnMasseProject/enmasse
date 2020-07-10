@@ -61,10 +61,11 @@ public class MessagingClientRunner {
     public void receive(MessagingEndpoint endpoint, String address) throws Exception {
         Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
         try (ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                .withClientEngine(new ProtonJMSClientReceiver())
+                    .withClientEngine(new RheaClientReceiver())
                     .withMessagingRoute(e)
                     .withAddress(address)
                     .withCount(10)
+                    .withAdditionalArgument(ClientArgument.USERNAME, "trace")
                     .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                     .withTimeout(60)) {
             clients.add(receiverClient);
@@ -83,11 +84,12 @@ public class MessagingClientRunner {
         try {
             Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
             ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
-                    .withClientEngine(new ProtonJMSClientSender())
+                    .withClientEngine(new RheaClientSender())
                     .withMessagingRoute(e)
                     .withAddress(senderAddress)
                     .withCount(expectedMsgCount)
                     .withMessageBody("msg no. %d")
+                    .withAdditionalArgument(ClientArgument.USERNAME, "trace")
                     .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                     .withTimeout(60);
 
@@ -99,10 +101,11 @@ public class MessagingClientRunner {
 
             for (String receiverAddress : receiverAddresses) {
                 ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                        .withClientEngine(new ProtonJMSClientReceiver())
+                        .withClientEngine(new RheaClientReceiver())
                         .withMessagingRoute(e)
                         .withAddress(receiverAddress)
                         .withCount(expectedMsgCount)
+                        .withAdditionalArgument(ClientArgument.USERNAME, "trace")
                         .withAdditionalArgument(ClientArgument.CONN_AUTH_MECHANISM, "ANONYMOUS")
                         .withTimeout(60);
 
