@@ -61,7 +61,7 @@ public class MessagingClientRunner {
     public void receive(MessagingEndpoint endpoint, String address) throws Exception {
         Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
         try (ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                .withClientEngine(new RheaClientReceiver())
+                .withClientEngine(new ProtonJMSClientReceiver())
                     .withMessagingRoute(e)
                     .withAddress(address)
                     .withCount(10)
@@ -83,7 +83,7 @@ public class MessagingClientRunner {
         try {
             Endpoint e = new Endpoint(endpoint.getStatus().getHost(), MessagingEndpointResourceType.getPort("AMQP", endpoint));
             ExternalMessagingClient senderClient = new ExternalMessagingClient(false)
-                    .withClientEngine(new RheaClientSender())
+                    .withClientEngine(new ProtonJMSClientSender())
                     .withMessagingRoute(e)
                     .withAddress(senderAddress)
                     .withCount(expectedMsgCount)
@@ -99,7 +99,7 @@ public class MessagingClientRunner {
 
             for (String receiverAddress : receiverAddresses) {
                 ExternalMessagingClient receiverClient = new ExternalMessagingClient(false)
-                        .withClientEngine(new RheaClientReceiver())
+                        .withClientEngine(new ProtonJMSClientReceiver())
                         .withMessagingRoute(e)
                         .withAddress(receiverAddress)
                         .withCount(expectedMsgCount)
