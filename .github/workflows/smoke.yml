@@ -34,17 +34,6 @@ jobs:
       - name: Unit tests and build
         run: make
 
-      - name: Collect logs
-        if: failure()
-        run: ./.github/scripts/collectLogs.sh
-
-      - name: Upload artifacts
-        if: failure()
-        uses: actions/upload-artifact@v1.0.0
-        with:
-          name: unit-test-logs
-          path: test-logs.zip
-
   systemtests:
     env:
       SKIP_TESTS: true
