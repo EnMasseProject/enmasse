@@ -382,7 +382,7 @@ public class SerializationTest {
         assertEquals("test-plan", plan.getMetadata().getName());
         ObjectMapper mapper = new ObjectMapper();
         String serialized = mapper.writeValueAsString(plan);
-        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressSpacePlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"myplan\",\"addressSpaceType\":\"standard\",\"addressPlans\":[\"a\",\"b\",\"c\"],\"resourceLimits\":{\"router\":1.0}}}";
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressSpacePlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"myplan\",\"addressSpaceType\":\"standard\",\"addressPlans\":[\"a\",\"b\",\"c\"],\"resourceLimits\":{\"router\":1.0}}}";
         assertEquals(expected, serialized);
         System.out.println(serialized);
         AddressSpacePlan deserialized = mapper.readValue(serialized, AddressSpacePlan.class);
@@ -411,7 +411,7 @@ public class SerializationTest {
         ObjectMapper mapper = new ObjectMapper();
         String serialized = mapper.writeValueAsString(plan);
         System.out.println(serialized);
-        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressPlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"labels\":{},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"kornys\",\"addressType\":\"topic\",\"resources\":{\"broker\":14.0,\"router\":2.0}}}";
+        String expected = "{\"apiVersion\":\"admin.enmasse.io/v1beta2\",\"kind\":\"AddressPlan\",\"metadata\":{\"annotations\":{\"test-key\":\"test-value\"},\"name\":\"test-plan\"},\"spec\":{\"shortDescription\":\"kornys\",\"addressType\":\"topic\",\"resources\":{\"broker\":14.0,\"router\":2.0}}}";
         assertEquals(expected, serialized);
         AddressPlan deserialized = mapper.readValue(serialized, AddressPlan.class);
         assertEquals(plan, deserialized);

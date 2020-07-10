@@ -40,9 +40,11 @@ import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
 import io.enmasse.systemtest.platform.cluster.NoClusterException;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
+import io.enmasse.systemtest.utils.ThrowingFunction;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
 import io.fabric8.kubernetes.api.model.Container;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.DoneablePod;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Namespace;
@@ -572,7 +574,7 @@ public abstract class Kubernetes {
 
     public void deletePod(String namespace, Map<String, String> labels) {
         log.info("Delete pods with labels: {}", labels.toString());
-        client.pods().inNamespace(namespace).withLabels(labels).withPropagationPolicy("Background").delete();
+        client.pods().inNamespace(namespace).withLabels(labels).withPropagationPolicy(DeletionPropagation.BACKGROUND).delete();
     }
 
     /***
@@ -1028,7 +1030,7 @@ public abstract class Kubernetes {
         client.policy().podDisruptionBudget().inNamespace(namespace).withName(name).delete();
     }
 
-    public void apply(String namespace, final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+    public void apply(String namespace, final ThrowingFunction<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, item -> {
             item.inNamespace(namespace).createOrReplace();
         }, paths);
@@ -1038,7 +1040,7 @@ public abstract class Kubernetes {
         apply(namespace, inputStream -> inputStream, paths);
     }
 
-    public void delete(final Function<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
+    public void delete(final ThrowingFunction<InputStream, InputStream> streamManipulator, final Path... paths) throws Exception {
         loadDirectories(streamManipulator, o -> {
             o.fromServer().get().forEach(item -> {
                 // Workaround for https://github.com/fabric8io/kubernetes-client/issues/1856
@@ -1047,14 +1049,14 @@ public abstract class Kubernetes {
         }, paths);
     }
 
-    private void loadDirectories(final Function<InputStream, InputStream> streamManipulator,
+    private void loadDirectories(final ThrowingFunction<InputStream, InputStream> streamManipulator,
                                  Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path... paths) throws Exception {
         for (Path path : paths) {
             loadDirectory(streamManipulator, consumer, path);
         }
     }
 
-    private void loadDirectory(final Function<InputStream, InputStream> streamManipulator,
+    private void loadDirectory(final ThrowingFunction<InputStream, InputStream> streamManipulator,
                                Consumer<ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable<HasMetadata, Boolean>> consumer, final Path path) throws Exception {
 
         final KubernetesClient client = getClient();
@@ -1090,6 +1092,8 @@ public abstract class Kubernetes {
                     if (in != null) {
                         consumer.accept(client.load(in));
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
                 return FileVisitResult.CONTINUE;

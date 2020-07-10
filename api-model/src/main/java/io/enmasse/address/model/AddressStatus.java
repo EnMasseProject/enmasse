@@ -165,7 +165,11 @@ public class AddressStatus extends AbstractWithAdditionalProperties {
     }
 
     public void setForwarders(List<AddressStatusForwarder> forwarders) {
-        this.forwarders = new ArrayList<>(forwarders);
+        if (forwarders != null) {
+            this.forwarders = new ArrayList<>(forwarders);
+        } else {
+            this.forwarders = new ArrayList<>();
+        }
     }
 
     public SubscriptionStatus getSubscription() {

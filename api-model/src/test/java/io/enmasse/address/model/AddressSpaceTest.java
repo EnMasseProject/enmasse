@@ -43,10 +43,6 @@ public class AddressSpaceTest {
         assertThat(space.getSpec().getEndpoints().size(), is(0));
         assertNull(space.getSpec().getAuthenticationService());
 
-        assertNotNull(space.getMetadata().getAnnotations());
-        assertThat(space.getMetadata().getAnnotations().size(), is(0));
-        assertNotNull(space.getMetadata().getLabels());
-        assertThat(space.getMetadata().getLabels().size(), is(0));
     }
 
 
