@@ -189,31 +189,6 @@ func add(mgr manager.Manager, r *ReconcileMessagingInfra) error {
 		return err
 	}
 
-	// Watch changes to addresses that map to our infra
-	err = c.Watch(&source.Kind{Type: &v1.MessagingAddress{}}, &handler.EnqueueRequestsFromMapFunc{
-		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
-			address := o.Object.(*v1.MessagingAddress)
-			project := &v1.MessagingProject{}
-			err := r.client.Get(context.Background(), client.ObjectKey{Name: messagingproject.PROJECT_RESOURCE_NAME, Namespace: address.Namespace}, project)
-			if err != nil || !project.IsBound() {
-				// Skip triggering if we can't find project
-				return []reconcile.Request{}
-			}
-
-			return []reconcile.Request{
-				{
-					NamespacedName: types.NamespacedName{
-						Namespace: project.Status.MessagingInfrastructureRef.Namespace,
-						Name:      project.Status.MessagingInfrastructureRef.Name,
-					},
-				},
-			}
-		}),
-	})
-	if err != nil {
-		return err
-	}
-
 	// Watch changes to endpoints that map to our infra
 	err = c.Watch(&source.Kind{Type: &v1.MessagingEndpoint{}}, &handler.EnqueueRequestsFromMapFunc{
 		ToRequests: handler.ToRequestsFunc(func(o handler.MapObject) []reconcile.Request {
