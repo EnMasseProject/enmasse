@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.mqtt;
+package io.enmasse.systemtest.iot.isolated.mqtt;
 
 import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.DeviceSupplier.named;

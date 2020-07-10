@@ -501,20 +501,6 @@ public class TestUtils {
 
     }
 
-    /**
-     * Wait until a resource can be no longer found.
-     * <p>
-     * This is intended to be used when deleting resources, to wait for the resource to disappear.
-     *
-     * @param resource The resource to check.
-     * @param timeout The timeout.
-     * @param delay The delay between checks.
-     */
-    public static void waitUntilNotFound(final Resource<?, ?> resource, final Duration timeout, final Duration delay) {
-        waitUntilConditionOrFail(() -> resource.get() == null, timeout, delay);
-    }
-
-
     private static String format(final Duration duration) {
         return String.format("%02d:%2d:%2d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }

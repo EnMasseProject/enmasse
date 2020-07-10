@@ -54,7 +54,6 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -68,13 +67,14 @@ import java.util.function.Function;
 
 import static io.enmasse.systemtest.amqp.AmqpConnectOptions.defaultQueue;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.DeviceManagementApi.createManagementServiceAccount;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.utils.Conditions.condition;
+import static io.enmasse.systemtest.utils.Conditions.gone;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
-import static io.enmasse.systemtest.utils.TestUtils.waitUntilNotFound;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
@@ -350,6 +350,8 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
     @Override
     public void close() throws Exception {
 
+        log.info("Cleaning up test instance: {}/{}", this.config.getMetadata().getNamespace(), this.config.getMetadata().getName());
+
         var e = cleanup(this.cleanup, null);
         if (e != null) {
             throw e;
@@ -473,7 +475,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 // create device manager role, we do not clean it up
 
-                DeviceManagementApi.createManagementServiceAccount(infraNamespace);
+                createManagementServiceAccount(infraNamespace);
 
                 // deploy certificates, we do not clean them up
 
@@ -497,6 +499,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 // create vertx context
 
+                log.info("Creating vert.x instance");
                 final Vertx vertx = Vertx.factory.vertx();
                 cleanup.add(vertx::close);
 
@@ -513,7 +516,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 /*
                  * We handed off responsibility of cleaning up our close list to the "test session". So we can clean
-                 * the list, and add a reference to the "iot test session", which know what to clean up so far.
+                 * the list, and add a reference to the "iot test session", which knows now what to clean up so far.
                  */
 
                 cleanup.clear();
@@ -535,7 +538,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
     }
 
-    public class ProjectBuilder{
+    public class ProjectBuilder {
 
         private final IoTProjectBuilder project;
         private final Consumer<Throwable> exceptionHandler;
@@ -553,12 +556,12 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             return this;
         }
 
-        public ProjectBuilder awaitReady(boolean enabled){
+        public ProjectBuilder awaitReady(boolean enabled) {
             this.awaitReady = enabled;
             return this;
         }
 
-        public ProjectBuilder createNamespace(boolean enabled){
+        public ProjectBuilder createNamespace(boolean enabled) {
             this.createNamespace = enabled;
             return this;
         }
@@ -567,81 +570,81 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             return createNamespace(true);
         }
 
-        public IoTTestContext deploy() throws Exception{
+        public IoTTestContext deploy() throws Exception {
 
             return trackingCleanup(this.exceptionHandler, cleanup -> {
 
-            // build the project object
+                // build the project object
 
-            var project = this.project.build();
+                var project = this.project.build();
 
-            // the project namespace
+                // the project namespace
 
-            var namespace = project.getMetadata().getNamespace();
+                var namespace = project.getMetadata().getNamespace();
 
-            if (this.createNamespace) {
+                if (this.createNamespace) {
 
-                // create namespace if not created
+                    // create namespace if not created
+
+                    if (!Environment.getInstance().skipCleanup()) {
+                        cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(namespace));
+                    }
+                    Kubernetes.getInstance().createNamespace(namespace);
+
+                    // create messaging project
+
+                    var messagingProject = new MessagingProjectBuilder()
+                            .withNewMetadata()
+                            .withNamespace(namespace)
+                            .withName("default")
+                            .endMetadata()
+
+                            .withNewSpec().endSpec()
+
+                            .build();
+                    createDefaultResource(Kubernetes::messagingProjects, messagingProject, cleanup);
+
+                    // create messaging endpoint
+
+                    var messagingEndpoint = new MessagingEndpointBuilder()
+                            .withNewMetadata()
+                            .withNamespace(namespace)
+                            .withName("downstream")
+                            .endMetadata()
+
+                            .withNewSpec()
+                            .withHost(Kubernetes.getInstance().getHost())
+                            .withNewNodePort().endNodePort()
+                            .addNewProtocol("AMQP")
+                            .endSpec()
+
+                            .build();
+                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
+                }
+
+                // get the endpoint
+
+                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace).withName("downstream").get();
+                var endpointHost = messagingEndpoint.getStatus().getHost();
+
+                // create IoT project
 
                 if (!Environment.getInstance().skipCleanup()) {
-                    cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(namespace));
+                    cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(project));
                 }
-                Kubernetes.getInstance().createNamespace(namespace);
+                IoTUtils.createIoTProject(project, this.awaitReady);
 
-                // create messaging project
+                // create endpoints
 
-                var messagingProject = new MessagingProjectBuilder()
-                        .withNewMetadata()
-                        .withNamespace(namespace)
-                        .withName("default")
-                        .endMetadata()
+                final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
+                final DeviceRegistryClient registryClient = new DeviceRegistryClient(vertx, deviceRegistryEndpoint);
+                cleanup.add(registryClient::close);
+                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(vertx, deviceRegistryEndpoint);
+                cleanup.add(credentialsClient::close);
 
-                        .withNewSpec().endSpec()
+                // create user
 
-                        .build();
-                createDefaultResource(Kubernetes::messagingProjects, messagingProject, cleanup);
-
-                // create messaging endpoint
-
-                var messagingEndpoint = new MessagingEndpointBuilder()
-                        .withNewMetadata()
-                        .withNamespace(namespace)
-                        .withName("downstream")
-                        .endMetadata()
-
-                        .withNewSpec()
-                        .withHost(Kubernetes.getInstance().getHost())
-                        .withNewNodePort().endNodePort()
-                        .addNewProtocol("AMQP")
-                        .endSpec()
-
-                        .build();
-                createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
-            }
-
-            // get the endpoint
-
-            var messagingEndpoint = Kubernetes.messagingEndpoints(namespace).withName("downstream").get();
-            var endpointHost = messagingEndpoint.getStatus().getHost();
-
-            // create IoT project
-
-            if (!Environment.getInstance().skipCleanup()) {
-                cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(project));
-            }
-            IoTUtils.createIoTProject(project, this.awaitReady);
-
-            // create endpoints
-
-            final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
-            final DeviceRegistryClient registryClient = new DeviceRegistryClient(vertx, deviceRegistryEndpoint);
-            cleanup.add(registryClient::close);
-            final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(vertx, deviceRegistryEndpoint);
-            cleanup.add(credentialsClient::close);
-
-            // create user
-
-            // FIXME: when users are back, we need to create a user for telemetry, events, and command and control.
+                // FIXME: when users are back, we need to create a user for telemetry, events, and command and control.
                 /*
 
                 var tenantId = getTenantId(project);
@@ -683,21 +686,28 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
                 UserUtils.waitForUserActive(user, ofDuration(ofMinutes(1)));
                 */
 
-            // eval messaging endpoint
+                // eval messaging endpoint
 
-            var port = messagingEndpoint.getStatus()
-                    .getPorts().stream()
-                    .filter(p -> "AMQP".equals(p.getProtocol()))
-                    .map(MessagingEndpointPort::getPort)
-                    .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQP' in endpoint status"));
-            final Endpoint amqpEndpoint = new Endpoint(endpointHost, port);
+                var port = messagingEndpoint.getStatus()
+                        .getPorts().stream()
+                        .filter(p -> "AMQP".equals(p.getProtocol()))
+                        .map(MessagingEndpointPort::getPort)
+                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQP' in endpoint status"));
+                final Endpoint amqpEndpoint = new Endpoint(endpointHost, port);
 
-            // create AMQP client
+                // create AMQP client
 
-            AmqpClient client = new AmqpClient(defaultQueue(amqpEndpoint));
-            cleanup.add(client::close);
+                AmqpClient client = new AmqpClient(defaultQueue(amqpEndpoint));
+                cleanup.add(client::close);
 
-            return new ProjectInstance(IoTTestSession.this.config, project, registryClient, credentialsClient, client, cleanup);
+                // we are all set up, register ourselves with the session
+
+                var result = new ProjectInstance(IoTTestSession.this.config, project, registryClient, credentialsClient, client, cleanup);
+                IoTTestSession.this.cleanup.add(result::close);
+
+                // return result
+
+                return result;
 
             });
         }
@@ -869,6 +879,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             this.consumerClient = consumerClient;
 
             this.cleanup = cleanup;
+
         }
 
         @Override
@@ -893,10 +904,14 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         @Override
         public void close() throws Exception {
+
+            log.info("Cleaning up project instance: {}/{}", this.project.getMetadata().getNamespace(), this.project.getMetadata().getName());
+
             var e = cleanup(this.cleanup, null);
             if (e != null) {
                 throw e;
             }
+
         }
     }
 
@@ -1084,7 +1099,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             }
 
             log.info("Cleaning up resources... done!");
-            if ( initialException != null ) {
+            if (initialException != null) {
                 log.info("Cleanup resulting in error", initialException);
             }
 
@@ -1112,7 +1127,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
     }
 
     public ProjectBuilder newProject(final String namespace, final String name) {
-       return newProject(createDefaultTenant(namespace, name));
+        return newProject(createDefaultTenant(namespace, name));
     }
 
     /**
@@ -1185,6 +1200,8 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
     private static void deployDefaultCerts(final String namespace) {
 
+        log.info("Deploying default certificates");
+
         final Path examplesIoT = Paths.get(Environment.getInstance().getTemplatesPath())
                 .resolve("install/components/iot/examples");
 
@@ -1204,20 +1221,24 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
             final List<ThrowingCallable> cleanup) {
+
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
         if (shouldCleanup()) {
-            cleanup.add(()-> {
+            cleanup.add(() -> {
                 var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
                 access
                         .withPropagationPolicy(DeletionPropagation.FOREGROUND)
                         .delete();
-                waitUntilNotFound(access, ofMinutes(5), ofSeconds(5));
+                waitUntilConditionOrFail(gone(access), ofMinutes(5), ofSeconds(5));
             });
         }
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
+
         log.info("Creating successful. Resource is ready.");
+
     }
 
     /**
@@ -1234,7 +1255,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
     /**
      * Track cleanup during creation of resources.
-     *
+     * <p>
      * This method will create a cleanup list, and then call the provided code, passing in the cleanup list. When the
      * provided code fails, it will clean up all elements in the cleanup list. If the code returns without throwing
      * an exception, the result of the code will simply be returned, and no cleanup will take place.
@@ -1251,8 +1272,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         try {
             return code.apply(cleanup);
-        }
-        catch(Throwable e ) {
+        } catch (Throwable e) {
             if (log.isDebugEnabled()) {
                 log.debug("Caught exception during deployment", e);
             } else {

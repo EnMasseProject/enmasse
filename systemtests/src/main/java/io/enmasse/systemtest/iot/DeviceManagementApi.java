@@ -7,8 +7,12 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.IoTCrd;
 import io.enmasse.systemtest.platform.Kubernetes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class DeviceManagementApi {
+
+    private static final Logger log = LoggerFactory.getLogger(DeviceManagementApi.class);
 
     public static final String CLUSTER_ROLE_NAME = "test.iot.enmasse.io:device-manager";
     public static final String SERVICE_ACCOUNT_NAME = "iot-device-management";
@@ -25,6 +29,8 @@ public final class DeviceManagementApi {
     }
 
     public static void createManagementServiceAccount(final String namespace) throws Exception {
+
+        log.info("Creating management service account");
 
         var client = Kubernetes.getClient();
 

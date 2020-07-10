@@ -108,16 +108,7 @@ public final class Conditions {
 
             @Override
             public String toString() {
-                var resource = access.get();
-                var state = statusSection(resource);
-                return String.format("Failed to detect condition '%s' of '%s/%s' (%s/%s) as '%s': %s",
-                        conditionType,
-                        resource.getMetadata().getNamespace(),
-                        resource.getMetadata().getName(),
-                        resource.getApiVersion(), resource.getKind(),
-                        expectedString,
-                        state.map(Serialization::asJson).orElse("<no status>")
-                );
+                return reasonFromStatus(String.format("Failed to detect condition '%s' as '%s'", conditionType, expectedString), access);
             }
         };
 
@@ -146,6 +137,32 @@ public final class Conditions {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata,?> resource) {
+        return new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return resource.get() == null;
+            }
+
+            @Override
+            public String toString() {
+                return reasonFromStatus("Resource should be gone, but is not", resource);
+            }
+        };
+    }
+
+    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata,?> access) {
+        var resource = access.get();
+        var state = statusSection(resource);
+        return String.format("%s: '%s/%s' (%s/%s): %s",
+                message,
+                resource.getMetadata().getNamespace(),
+                resource.getMetadata().getName(),
+                resource.getApiVersion(), resource.getKind(),
+                state.map(Serialization::asJson).orElse("<no status>")
+        );
     }
 
 }
