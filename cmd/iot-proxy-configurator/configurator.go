@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 
@@ -29,9 +28,6 @@ import (
 )
 
 type Configurator struct {
-	ephemeralCertBase string
-
-	kubeclientset    kubernetes.Interface
 	enmasseclientset clientset.Interface
 
 	projectLister  iotlisters.IoTProjectLister
@@ -43,22 +39,18 @@ type Configurator struct {
 }
 
 func NewConfigurator(
-	kubeclientset kubernetes.Interface,
 	iotclientset clientset.Interface,
 	projectInformer iotinformers.IoTProjectInformer,
-	ephemeralCertBase string,
 ) *Configurator {
 
 	controller := &Configurator{
-		kubeclientset:    kubeclientset,
 		enmasseclientset: iotclientset,
 
 		projectLister:  projectInformer.Lister(),
 		projectsSynced: projectInformer.Informer().HasSynced,
 
-		workqueue:         workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
-		manage:            qdr.NewManage(),
-		ephemeralCertBase: ephemeralCertBase,
+		workqueue: workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "IoTProjects"),
+		manage:    qdr.NewManage(),
 	}
 
 	log.Info("Setting up event handlers")
