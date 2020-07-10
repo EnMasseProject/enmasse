@@ -20,9 +20,6 @@ jobs:
       - name: Install dependencies
         run: ./.github/scripts/install_dep.sh
 
-      - name: Cancel run
-        run: node .github/scripts/cancelAction.js
-
       - uses: actions/setup-go@v2
         with:
           go-version: '1.13.1'
@@ -35,8 +32,7 @@ jobs:
           java-version: 11.0.2
 
       - name: Unit tests and build
-        run: |
-          cat asgdhasdiuashdoiasn.txt
+        run: make
 
       - name: Collect logs
         if: failure()
