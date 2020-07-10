@@ -39,6 +39,7 @@ import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.ThrowingCallable;
 import io.enmasse.systemtest.utils.ThrowingConsumer;
 import io.enmasse.systemtest.utils.ThrowingFunction;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -1083,6 +1084,9 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             }
 
             log.info("Cleaning up resources... done!");
+            if ( initialException != null ) {
+                log.info("Cleanup resulting in error", initialException);
+            }
 
         } else {
 
@@ -1196,7 +1200,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
                         "NAMESPACE", namespace));
     }
 
-    private static <T extends HasMetadata, L, D> T createDefaultResource(
+    private static <T extends HasMetadata, L, D> void createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
             final List<ThrowingCallable> cleanup) {
@@ -1206,7 +1210,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             cleanup.add(()-> {
                 var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
                 access
-                        .withPropagationPolicy("Foreground")
+                        .withPropagationPolicy(DeletionPropagation.FOREGROUND)
                         .delete();
                 waitUntilNotFound(access, ofMinutes(5), ofSeconds(5));
             });
@@ -1214,7 +1218,6 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
         log.info("Creating successful. Resource is ready.");
-        return client.withName(resource.getMetadata().getName()).get();
     }
 
     /**
