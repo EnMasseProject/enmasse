@@ -55,6 +55,7 @@ type IoTProject_iot_enmasse_io_v1alpha1 {
   enabled: Boolean!
   spec: IotProjectSpec_iot_enmasse_io_v1alpha1!
   status: IoTProjectStatus_iot_enmasse_io_v1alpha1!
+  messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
   devices(iotproject: String!, first: Int, offset: Int, filter: String, orderBy: String): DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1
 
   #This field contain the routes and connection details from the iotconfig
