@@ -20,7 +20,8 @@ public class AssumeKubernetesCondition implements ExecutionCondition {
         if (annotation.isPresent()) {
             ClusterType cluster = annotation.get().type();
             MultinodeCluster multinode = annotation.get().multinode();
-            if (!io.enmasse.systemtest.platform.Kubernetes.getInstance().getCluster().toString().equals(cluster.toString().toLowerCase()) &&
+            boolean isOpenshift = io.enmasse.systemtest.platform.Kubernetes.isOpenShift();
+            if (isOpenshift || (cluster != ClusterType.WHATEVER && !io.enmasse.systemtest.platform.Kubernetes.getInstance().getCluster().toString().equals(cluster.toString().toLowerCase())) &&
                     (multinode == MultinodeCluster.WHATEVER || multinode == io.enmasse.systemtest.platform.Kubernetes.getInstance().isClusterMultinode())) {
                 return ConditionEvaluationResult.disabled("Test is not supported on current cluster");
             } else {
