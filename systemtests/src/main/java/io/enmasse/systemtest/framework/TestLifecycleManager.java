@@ -46,13 +46,12 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
     @Override
     public void afterAll(ExtensionContext extensionContext) throws Exception {
         handleCallBackError("Callback after all", extensionContext, () -> {
-            if (!env.skipCleanup()) {
-                ResourceManager.getInstance().deleteResources(extensionContext);
-                KubeClusterManager.getInstance().restoreClassConfigurations();
+            if (env.skipCleanup()) {
+                LOGGER.info("[AFTER ALL] Skip cleanup is set, resources won't be deleted");
+                return;
             }
-            if (env.skipCleanup() || env.skipUninstall()) {
-                LOGGER.info("Skip cleanup/uninstall is set, enmasse and iot operators won't be deleted");
-            }
+            ResourceManager.getInstance().deleteResources(extensionContext);
+            KubeClusterManager.getInstance().restoreClassConfigurations();
         });
     }
 
@@ -74,10 +73,13 @@ public class TestLifecycleManager implements TestExecutionExceptionHandler, Life
         handleCallBackError("Callback after each", extensionContext, () -> {
             LoggerUtils.logDelimiter("*");
             LOGGER.info("Teardown section: ");
-            if (!env.skipCleanup()) {
-                ResourceManager.getInstance().deleteResources(extensionContext);
-                KubeClusterManager.getInstance().restoreMethodConfigurations();
+            if (env.skipCleanup()) {
+                LOGGER.info("[AFTER EACH] Skip cleanup is set, resources won't be deleted");
+                LoggerUtils.logDelimiter("*");
+                return;
             }
+            ResourceManager.getInstance().deleteResources(extensionContext);
+            KubeClusterManager.getInstance().restoreMethodConfigurations();
             LoggerUtils.logDelimiter("*");
         });
     }

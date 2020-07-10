@@ -32,11 +32,13 @@ public class TestPlanExecutionManager implements TestExecutionListener {
             LOGGER.info("Running framework tests, no cleanup performed");
             return;
         }
+        if (env.skipCleanup() || env.skipUninstall()) {
+            LOGGER.info("[AFTER TEST PLAN EXECUTION] Skip cleanup/uninstall is set, resources won't be deleted");
+            return;
+        }
 
         try {
-            if (!env.skipUninstall()) {
-                EnmasseOperatorManager.getInstance().deleteEnmasseBundle();
-            }
+            EnmasseOperatorManager.getInstance().deleteEnmasseBundle();
         } catch (Exception | AssertionError ex) {
             LOGGER.error(ex.getMessage());
             GlobalLogCollector.saveInfraState(TestUtils.getLogsPath("EndOfTestSuite"));
