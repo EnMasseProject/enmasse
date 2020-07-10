@@ -10,13 +10,14 @@ import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
-import io.enmasse.api.model.MessagingInfrastructureCondition;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AssertionUtils;
@@ -27,7 +28,6 @@ import org.slf4j.Logger;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,7 +53,7 @@ public class MessagingInfrastructureTest extends TestBase {
 
         resourceManager.createResource(extensionContext, infra);
 
-        waitForConditionsTrue(infra);
+        waitForConditionsTrue(infra, null);
 
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
         assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
@@ -83,7 +83,7 @@ public class MessagingInfrastructureTest extends TestBase {
         assertTrue(resourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 2));
         assertTrue(resourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 3));
 
-        waitForConditionsTrue(infra);
+        waitForConditionsTrue(infra, null);
 
         // Ensure that we can find the pods as the above conditions are true
         assertEquals(3, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
@@ -113,7 +113,7 @@ public class MessagingInfrastructureTest extends TestBase {
         assertTrue(resourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
         assertTrue(resourceManager.waitResourceCondition(infra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 2));
 
-        waitForConditionsTrue(infra);
+        waitForConditionsTrue(infra, null);
 
         // Conditions are not set to false when scaling down, so we must wait for replicas
         TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
@@ -183,23 +183,29 @@ public class MessagingInfrastructureTest extends TestBase {
         // Wait for the operator state to be green again.
         assertTrue(resourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));
         assertTrue(resourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getRouters() != null && i.getStatus().getRouters().size() == 1));
-        waitForConditionsTrue(defaultInfra);
+        waitForConditionsTrue(defaultInfra, endpoint, anycast, queue);
 
         clientRunner.sendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), anycast.getMetadata().getName(), false, false);
         clientRunner.sendAndReceiveOnCluster(endpoint.getStatus().getHost(), endpoint.getStatus().getPorts().get(0).getPort(), queue.getMetadata().getName(), false, false);
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    private void waitForConditionsTrue(MessagingInfrastructure infra) {
-        for (String condition : List.of("CaCreated", "RoutersCreated", "BrokersCreated", "BrokersConnected", "Ready")) {
-            waitForCondition(infra, condition, "True");
+    private void waitForConditionsTrue(MessagingInfrastructure infra, MessagingEndpoint endpoint, MessagingAddress ... addresses) {
+        assertTrue(resourceManager.waitResourceCondition(infra, messagingInfra -> checkConditions("True", MessagingInfrastructureResourceType.getConditions(messagingInfra))));
+        if (endpoint != null) {
+            assertTrue(resourceManager.waitResourceCondition(endpoint, messagingEndpoint -> checkConditions("True", MessagingEndpointResourceType.getConditions(messagingEndpoint))));
+        }
+        for (MessagingAddress address : addresses) {
+            assertTrue(resourceManager.waitResourceCondition(address, messagingAddress -> checkConditions("True", MessagingAddressResourceType.getConditions(messagingAddress))));
         }
     }
 
-    private void waitForCondition(MessagingInfrastructure infra, String conditionName, String expectedValue) {
-        assertTrue(resourceManager.waitResourceCondition(infra, messagingInfra -> {
-            MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(messagingInfra.getStatus().getConditions(), conditionName);
-            return condition != null && expectedValue.equals(condition.getStatus());
-        }));
+    private boolean checkConditions(String expectedValue, Map<String, String> conditions) {
+        for (Map.Entry<String, String> entry : conditions.entrySet()) {
+            if (!expectedValue.equals(entry.getValue())) {
+                return false;
+            }
+        }
+        return true;
     }
 }

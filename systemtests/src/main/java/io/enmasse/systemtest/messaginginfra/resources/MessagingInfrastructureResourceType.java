@@ -15,7 +15,12 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingInfrastructureResourceType implements ResourceType<MessagingInfrastructure> {
     private static final MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingInfras(), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
@@ -82,5 +87,18 @@ public class MessagingInfrastructureResourceType implements ResourceType<Messagi
             }
         }
         return null;
+    }
+
+    public static Map<String, String> getConditions(MessagingInfrastructure infrastructure) {
+        Map<String, String> conditions = new HashMap<>();
+        for (String conditionName : List.of("CaCreated", "RoutersCreated", "BrokersCreated", "BrokersConnected", "Synchronized", "Ready")) {
+            MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(infrastructure.getStatus().getConditions(), conditionName);
+            if (condition == null) {
+                conditions.put(conditionName, "Unknown");
+            } else {
+                conditions.put(conditionName, condition.getStatus());
+            }
+        }
+        return conditions;
     }
 }
