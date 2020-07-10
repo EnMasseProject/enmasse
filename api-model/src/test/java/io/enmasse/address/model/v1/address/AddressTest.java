@@ -7,12 +7,12 @@ package io.enmasse.address.model.v1.address;
 import io.enmasse.address.model.Address;
 import io.enmasse.address.model.AddressBuilder;
 import io.enmasse.address.model.AddressList;
-import io.enmasse.address.model.Phase;
 import io.enmasse.address.model.AddressStatus;
+import io.enmasse.address.model.Phase;
 import org.junit.jupiter.api.Test;
 
-import static io.enmasse.address.model.validation.ValidationMatchers.isValid;
 import static io.enmasse.address.model.validation.ValidationMatchers.isNotValid;
+import static io.enmasse.address.model.validation.ValidationMatchers.isValid;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -161,6 +161,7 @@ public class AddressTest {
 
     /**
      * Create a simple valid address.
+     *
      * @param name the name for {@code .metadata.name}
      * @return the newly created address, this address may not be valid
      */
@@ -223,7 +224,7 @@ public class AddressTest {
      * When the {@code .spec.addressSpace} field is set, then it must match.
      */
     @Test
-    public void testAddressSpaceMismatch () {
+    public void testAddressSpaceMismatch() {
         final Address a = createAddress("foo.addr");
         a.getSpec().setAddressSpace("bar");
 
@@ -234,7 +235,7 @@ public class AddressTest {
      * When the {@code .spec.addressSpace} field is set, then it must match, even when it is in a list.
      */
     @Test
-    public void testAddressSpaceMismatchInList () {
+    public void testAddressSpaceMismatchInList() {
         final Address a = createAddress("foo.addr");
         a.getSpec().setAddressSpace("bar");
 
@@ -248,7 +249,7 @@ public class AddressTest {
      * When the metadata name is missing, the address space name must still validate.
      */
     @Test
-    public void testAddressSpaceNoName () {
+    public void testAddressSpaceNoName() {
         final Address a = createAddress(null);
         a.getSpec().setAddress("foo");
         a.getSpec().setAddressSpace("bar");
