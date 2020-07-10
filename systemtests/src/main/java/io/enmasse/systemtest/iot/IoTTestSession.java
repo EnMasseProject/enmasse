@@ -1093,9 +1093,8 @@ public final class IoTTestSession implements AutoCloseable {
         final Path examplesIoT = Paths.get(Environment.getInstance().getTemplatesPath())
                 .resolve("install/components/iot/examples");
 
-        if (!Files.isRegularFile(examplesIoT.resolve("k8s-tls/build/root-cert.pem"))) {
-            Exec.executeAndCheck(examplesIoT.resolve("k8s-tls/create").toAbsolutePath().toString());
-        }
+        Exec.executeAndCheck(examplesIoT.resolve("k8s-tls/create").toAbsolutePath().toString());
+
         // deploy will try to undeploy first, so it can always be called
         Exec.executeAndCheck(
                 singletonList(examplesIoT.resolve("k8s-tls/deploy").toAbsolutePath().toString()),
