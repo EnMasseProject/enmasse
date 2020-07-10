@@ -8,3 +8,4 @@ export * from "./ConfiguringCertificates";
 export * from "./ConfiguringRoutes";
 export * from "./MessagingProjectConfiguration";
 export * from "./MessagingProjectReview";
+export * from "./IotProjectReview";

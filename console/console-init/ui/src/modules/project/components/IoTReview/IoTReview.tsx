@@ -26,6 +26,7 @@ export interface IIoTReviewProps {
   name?: string;
   namespace: string;
   isEnabled: boolean;
+  command: string;
 }
 
 const styles = StyleSheet.create({
@@ -51,7 +52,8 @@ const styles = StyleSheet.create({
 export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
   name,
   namespace,
-  isEnabled
+  isEnabled,
+  command
 }) => {
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [isExpanded, setIsExpanded] = useState<boolean>(false);
@@ -162,8 +164,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               theme="github"
               fontSize={14}
               width={"auto"}
-              // onChange={() => {}}
-              value={"data"}
+              value={command}
               name="UNIQUE_ID_OF_DIV"
               editorProps={{ $blockScrolling: true }}
               className={css(styles.editor)}
