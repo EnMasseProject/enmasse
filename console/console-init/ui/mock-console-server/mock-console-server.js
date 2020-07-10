@@ -2507,13 +2507,13 @@ const resolvers = {
     },
 
     createIotDevice: (parent, args) => {
-      return createIotDevice(args.iotproject, args.device);
+      return createIotDevice(args.iotproject.name, args.device);
     },
     deleteIotDevices: (parent, args) => {
       var errors = [];
       args.deviceIds.forEach(i => {
         try {
-          deleteIotDevice(args.iotproject, i);
+          deleteIotDevice(args.iotproject.name, i);
         } catch (e) {
           errors.push(e);
         }
@@ -2525,15 +2525,15 @@ const resolvers = {
       return true;
     },
     updateIotDevice: (parent, args) => {
-      deleteIotDevice(args.iotproject, args.device.deviceId);
-      return createIotDevice(args.iotproject, args.device);
+      deleteIotDevice(args.iotproject.name, args.device.deviceId);
+      return createIotDevice(args.iotproject.name, args.device);
     },
     setCredentialsForDevice: (parent, args) => {
-      setCredentials(args.iotproject, args.deviceId, args.jsonData);
+      setCredentials(args.iotproject.name, args.deviceId, args.jsonData);
       return true;
     },
     deleteCredentialsForDevice: (parent, args) => {
-      setCredentials(args.iotproject, args.deviceId, "");
+      setCredentials(args.iotproject.name, args.deviceId, "");
       return true;
     },
     createIotProject: (parent, args) => {
@@ -2743,7 +2743,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
     },
 
     devices: (parent, args, context, info) => {
-      var iotProject = args.iotproject;
+      var iotProject = args.iotproject.name;
       var filterer = buildFilterer(args.filter);
       var orderBy = orderer(args.orderBy);
 
@@ -2759,7 +2759,7 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       };
     },
     credentials: (parent, args, context, info) => {
-      var iotProject = args.iotproject;
+      var iotProject = args.iotproject.name;
       var deviceId = args.deviceId;
       var filterer = buildFilterer(args.filter);
       var creds = getIotCredentials(iotProject, deviceId);
