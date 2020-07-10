@@ -536,7 +536,7 @@ const typeDefs = gql`
 
     "Returns the devices in the given iot project visible to this user, optionally filtering"
     devices(
-      iotproject: String!
+      iotproject: ObjectMeta_v1_Input!
       first: Int
       offset: Int
       filter: String
@@ -546,7 +546,7 @@ const typeDefs = gql`
     "Returns the credentials for the given device"
     credentials(
       filter: String
-      iotproject: String!
+      iotproject: ObjectMeta_v1_Input!
       deviceId: String!
     ): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
 
@@ -652,21 +652,27 @@ const typeDefs = gql`
 
     # iot mutations
     createIotDevice(
-      iotproject: String!
+      iotproject: ObjectMeta_v1_Input!
       device: Device_iot_console_input!
     ): Device
-    deleteIotDevices(iotproject: String!, deviceIds: [String!]!): Boolean
+    deleteIotDevices(
+      iotproject: ObjectMeta_v1_Input!
+      deviceIds: [String!]!
+    ): Boolean
     updateIotDevice(
-      iotproject: String!
+      iotproject: ObjectMeta_v1_Input!
       device: Device_iot_console_input!
     ): Device
 
     setCredentialsForDevice(
-      iotproject: String!
+      iotproject: ObjectMeta_v1_Input!
       deviceId: String!
       jsonData: [String!]!
     ): Boolean
-    deleteCredentialsForDevice(iotproject: String!, deviceId: String!): Boolean
+    deleteCredentialsForDevice(
+      iotproject: ObjectMeta_v1_Input!
+      deviceId: String!
+    ): Boolean
 
     createIotProject(
       input: IotProject_iot_enmasse_io_v1alpha1_input
