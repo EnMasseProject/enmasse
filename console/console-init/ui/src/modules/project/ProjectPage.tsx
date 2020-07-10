@@ -106,11 +106,6 @@ export default function ProjectPage() {
   };
 
   const onConfirmDeleteAll = async () => {
-    /**
-     * Todo: projectType is temporary check for demo. it will remove later;
-     */
-
-    console.log(selectedProjects);
     if (selectedProjects && selectedProjects.length > 0) {
       let iotQueryVariables: Array<{ name: string; namespace: string }> = [];
       let msgQueryVariables: Array<{ name: string; namespace: string }> = [];
@@ -132,14 +127,12 @@ export default function ProjectPage() {
         const queryVariable = {
           a: iotQueryVariables
         };
-        console.log(queryVariable);
         await setDeleteIoTProjectQueryVariables(queryVariable);
       }
       if (msgQueryVariables.length > 0) {
         const queryVariable = {
           as: msgQueryVariables
         };
-        console.log(queryVariable);
         await setDeleteProjectQueryVariables(queryVariable);
       }
     }

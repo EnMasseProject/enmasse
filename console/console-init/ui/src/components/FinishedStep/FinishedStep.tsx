@@ -48,74 +48,77 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
       return `/messaging-projects/${namespace}/${name}/${type}/addresses`;
     }
   };
+  const renderSuccesState = () => {
+    return (
+      <EmptyState
+        variant={EmptyStateVariant.full}
+        className={css(styles.empty_state)}
+      >
+        <EmptyStateIcon
+          icon={ExclamationCircleIcon}
+          className={css(styles.cog_red_color)}
+        />
+        <Title headingLevel="h5" size="xl" id="error-state-title">
+          The project cannot be created
+        </Title>
+        <br />
+        <EmptyStateBody>
+          Error occured during {projectType} Project creation for management,
+          return to homepage to view all projects
+        </EmptyStateBody>
+        <br />
+        <br />
+        <Button id="error-state-cancel-button" variant="link" onClick={onClose}>
+          Cancel
+        </Button>
+      </EmptyState>
+    );
+  };
+
+  const renderErrorState = () => {
+    return (
+      <EmptyState
+        variant={EmptyStateVariant.full}
+        className={css(styles.empty_state)}
+      >
+        <EmptyStateIcon
+          icon={CheckCircleIcon}
+          className={css(styles.cog_green_color)}
+        />
+        <Title headingLevel="h5" size="xl" id="success-state-title">
+          Creation successful
+        </Title>
+        <br />
+        <EmptyStateBody>
+          Enter your {projectType} Project for management, or return to homepage
+          to view all projects.
+        </EmptyStateBody>
+        <br />
+        <Link to={projectDetailUrl()}>
+          <Button
+            id="success-state-view-project-button"
+            variant={ButtonVariant.primary}
+            component="a"
+          >
+            View the project
+          </Button>
+        </Link>
+        <br />
+        <br />
+        <Button
+          id="success-state-view-list-button"
+          variant="link"
+          onClick={onClose}
+        >
+          Back to list
+        </Button>
+      </EmptyState>
+    );
+  };
   return (
     <>
       {success !== undefined &&
-        (!success ? (
-          <EmptyState
-            variant={EmptyStateVariant.full}
-            className={css(styles.empty_state)}
-          >
-            <EmptyStateIcon
-              icon={ExclamationCircleIcon}
-              className={css(styles.cog_red_color)}
-            />
-            <Title headingLevel="h5" size="xl" id="error-state-title">
-              The project cannot be created
-            </Title>
-            <br />
-            <EmptyStateBody>
-              Error occured during {projectType} Project creation for
-              management, return to homepage to view all projects
-            </EmptyStateBody>
-            <br />
-            <br />
-            <Button
-              id="error-state-cancel-button"
-              variant="link"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-          </EmptyState>
-        ) : (
-          <EmptyState
-            variant={EmptyStateVariant.full}
-            className={css(styles.empty_state)}
-          >
-            <EmptyStateIcon
-              icon={CheckCircleIcon}
-              className={css(styles.cog_green_color)}
-            />
-            <Title headingLevel="h5" size="xl" id="success-state-title">
-              Creation successful
-            </Title>
-            <br />
-            <EmptyStateBody>
-              Enter your {projectType} Project for management, or return to
-              homepage to view all projects.
-            </EmptyStateBody>
-            <br />
-            <Link to={projectDetailUrl()}>
-              <Button
-                id="success-state-view-project-button"
-                variant={ButtonVariant.primary}
-                component="a"
-              >
-                View the project
-              </Button>
-            </Link>
-            <br />
-            <br />
-            <Button
-              id="success-state-view-list-button"
-              variant="link"
-              onClick={onClose}
-            >
-              Back to list
-            </Button>
-          </EmptyState>
-        ))}
+        (!success ? renderSuccesState() : renderErrorState())}
     </>
   );
 };

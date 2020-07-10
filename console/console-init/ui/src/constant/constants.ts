@@ -4,8 +4,8 @@
  */
 
 const UNKNOWN: string = "unknown";
-const POLL_INTERVAL: number = 50000000;
-const POLL_INTERVAL_USER: number = 20000000;
+const POLL_INTERVAL: number = 5000;
+const POLL_INTERVAL_USER: number = 20000;
 const QUERY: string = "query";
 const MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN = 10;
 const SERVER_DATA_THRESHOLD = 10;
