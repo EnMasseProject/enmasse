@@ -286,6 +286,25 @@ func (r *ReconcileMessagingEndpoint) Reconcile(request reconcile.Request) (recon
 		return result.Result(), err
 	}
 
+	// Ensure endpoint exists
+	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
+		err := client.SyncEndpoint(endpoint)
+		if err != nil {
+			endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated).SetStatus(corev1.ConditionFalse, "", err.Error())
+			endpoint.Status.Message = err.Error()
+			if errors.Is(err, stateerrors.NotInitializedError) || errors.Is(err, amqp.RequestTimeoutError) || errors.Is(err, stateerrors.NotSyncedError) {
+				return processorResult{RequeueAfter: 10 * time.Second}, nil
+			}
+			return processorResult{}, err
+		}
+
+		endpoint.Status.GetMessagingEndpointCondition(v1.MessagingEndpointCreated).SetStatus(corev1.ConditionTrue, "", "")
+		return processorResult{}, nil
+	})
+	if result.ShouldReturn(err) {
+		return result.Result(), err
+	}
+
 	// Mark endpoint status as all-OK
 	result, err = rc.Process(func(endpoint *v1.MessagingEndpoint) (processorResult, error) {
 		if endpoint.Status.Host == "" {

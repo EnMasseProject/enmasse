@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 
@@ -477,33 +478,38 @@ func (i *infraClient) syncConfiguration(ctx context.Context) error {
 
 	for _, endpoint := range i.endpoints {
 		if endpoint.Status.Phase == v1.MessagingEndpointActive && endpoint.Status.Host != "" {
-			for _, address := range i.addresses {
-				if endpoint.Namespace == address.Namespace {
-					resultRouter, err := i.buildRouterAddressEntities(endpoint, address)
-					if err != nil {
-						return err
-					}
 
-					resultBroker, err := i.buildBrokerAddressEntities(endpoint, address)
-					if err != nil {
-						return err
-					}
-					for broker, entities := range resultBroker {
-						if brokerEntities[broker] == nil {
-							brokerEntities[broker] = entities
-						} else {
-							brokerEntities[broker] = append(brokerEntities[broker], entities...)
-						}
-					}
-					routerEntities = append(routerEntities, resultRouter...)
-				}
-			}
 			e, err := i.buildRouterEndpointEntities(endpoint)
 			if err != nil {
 				return err
 			}
 			routerEntities = append(routerEntities, e...)
 		}
+	}
+
+	for _, address := range i.addresses {
+		resultRouter, err := i.buildRouterAddressEntities(address)
+		if err != nil {
+			return err
+		}
+
+		resultBroker, err := i.buildBrokerAddressEntities(address)
+		if err != nil {
+			return err
+		}
+		for broker, entities := range resultBroker {
+			if brokerEntities[broker] == nil {
+				brokerEntities[broker] = entities
+			} else {
+				brokerEntities[broker] = append(brokerEntities[broker], entities...)
+			}
+		}
+		routerEntities = append(routerEntities, resultRouter...)
+	}
+
+	for _, project := range i.projects {
+		endpointsForProject := i.getEndpointsWithHosts(project.Namespace)
+		routerEntities = append(routerEntities, i.buildRouterVhostPolicies(project.Namespace, endpointsForProject)...)
 	}
 
 	return i.syncEntities(ctx, routerEntities, brokerEntities)
@@ -584,17 +590,14 @@ func (i *infraClient) applyBrokers(ctx context.Context, fn func(broker *BrokerSt
 /**
  * Return map of endpoints that are in the active state (phase Active) and hostname set.
  */
-func (i *infraClient) getActiveEndpoints() map[string][]*v1.MessagingEndpoint {
-	activeEndpoints := make(map[string][]*v1.MessagingEndpoint, 0)
+func (i *infraClient) getEndpointsWithHosts(namespace string) []*v1.MessagingEndpoint {
+	endpointsWithHosts := make([]*v1.MessagingEndpoint, 0)
 	for _, endpoint := range i.endpoints {
-		if endpoint.IsActive() {
-			if activeEndpoints[endpoint.Namespace] == nil {
-				activeEndpoints[endpoint.Namespace] = make([]*v1.MessagingEndpoint, 0)
-			}
-			activeEndpoints[endpoint.Namespace] = append(activeEndpoints[endpoint.Namespace], endpoint)
+		if endpoint.Namespace == namespace && endpoint.Status.Host != "" {
+			endpointsWithHosts = append(endpointsWithHosts, endpoint)
 		}
 	}
-	return activeEndpoints
+	return endpointsWithHosts
 }
 
 func (i *infraClient) requestSync(object metav1.Object) error {
@@ -811,7 +814,6 @@ func (i *infraClient) syncEntities(ctx context.Context, entities []RouterEntity,
  * be created is returned.
  */
 func (i *infraClient) buildEntities(requests []*request) (built []*request, routerEntities []RouterEntity, brokerEntities map[Host][]BrokerEntity) {
-	activeEndpoints := i.getActiveEndpoints()
 	routerEntities = make([]RouterEntity, 0, len(requests))
 	brokerEntities = make(map[Host][]BrokerEntity, len(i.brokers))
 	for _, broker := range i.brokers {
@@ -823,41 +825,27 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 		switch v := req.resource.(type) {
 		case *v1.MessagingAddress:
 			address := v
-			endpoints := activeEndpoints[address.Namespace]
-			if endpoints == nil {
-				req.done <- NoEndpointsError
+			resultRouter, err := i.buildRouterAddressEntities(address)
+			if err != nil {
+				req.done <- err
 				continue
 			}
 
-			failed := false
-			for _, endpoint := range endpoints {
-				resultRouter, err := i.buildRouterAddressEntities(endpoint, address)
-				if err != nil {
-					req.done <- err
-					failed = true
-					break
-				}
-
-				resultBroker, err := i.buildBrokerAddressEntities(endpoint, address)
-				if err != nil {
-					req.done <- err
-					failed = true
-					break
-				}
-
-				routerEntities = append(routerEntities, resultRouter...)
-				for broker, entities := range resultBroker {
-					if brokerEntities[broker] == nil {
-						brokerEntities[broker] = entities
-					} else {
-						brokerEntities[broker] = append(brokerEntities[broker], entities...)
-					}
-				}
+			resultBroker, err := i.buildBrokerAddressEntities(address)
+			if err != nil {
+				req.done <- err
+				continue
 			}
 
-			if !failed {
-				built = append(built, req)
+			routerEntities = append(routerEntities, resultRouter...)
+			for broker, entities := range resultBroker {
+				if brokerEntities[broker] == nil {
+					brokerEntities[broker] = entities
+				} else {
+					brokerEntities[broker] = append(brokerEntities[broker], entities...)
+				}
 			}
+			built = append(built, req)
 
 		case *v1.MessagingEndpoint:
 			endpoint := v
@@ -888,8 +876,80 @@ func (i *infraClient) buildEntities(requests []*request) (built []*request, rout
 
 func (i *infraClient) buildRouterProjectEntities(project *v1.MessagingProject) ([]RouterEntity, error) {
 	routerEntities := make([]RouterEntity, 0)
-	// TODO: Create vhost policy based on status (plan settings)
+	// Transactional means that we create a link route based on the project prefix,
+	// and all broker addresses go through that route.
+	projectId := project.Namespace
+
+	if project.Status.Broker != nil {
+		broker := *project.Status.Broker
+		host := i.hostMap[broker.Host]
+		brokerState := i.brokers[host]
+		if brokerState == nil {
+			return nil, fmt.Errorf("unable to configure transactional linkroute (project %s) for unknown broker %s", projectId, broker.Host)
+		}
+		connector := connectorName(brokerState)
+		routerEntities = append(routerEntities, &RouterLinkRoute{
+			Name:       globalLinkRouteName(projectId, host.Hostname, "out"),
+			Prefix:     projectId,
+			Direction:  "out",
+			Connection: connector,
+		})
+
+		routerEntities = append(routerEntities, &RouterLinkRoute{
+			Name:       globalLinkRouteName(projectId, host.Hostname, "in"),
+			Prefix:     projectId,
+			Direction:  "in",
+			Connection: connector,
+		})
+		return routerEntities, nil
+	}
+
+	// Ensure that we update vhost policy aliases with all endpoints
+	endpointsForProject := i.getEndpointsWithHosts(project.Namespace)
+	routerEntities = append(routerEntities, i.buildRouterVhostPolicies(project.Namespace, endpointsForProject)...)
+
 	return routerEntities, nil
+}
+
+func (i *infraClient) buildRouterVhostPolicies(namespace string, endpoints []*v1.MessagingEndpoint) []RouterEntity {
+	// Update policy to include all endpoints
+	routerEntities := make([]RouterEntity, 0)
+	aliasMap := make(map[string]bool, 0)
+	for _, endpoint := range endpoints {
+		if endpoint.Status.Host != "" {
+			aliasMap[endpoint.Status.Host] = true
+		}
+	}
+	if len(aliasMap) > 0 {
+		aliases := make([]string, len(aliasMap))
+		i := 0
+		for alias, _ := range aliasMap {
+			aliases[i] = alias
+			i += 1
+		}
+		aliasesStr := strings.Join(aliases[:], ",")
+		// TODO: Configure based on plan
+		routerEntities = append(routerEntities, &RouterVhost{
+			Name:                  fmt.Sprintf("vhost-%s", namespace),
+			Hostname:              namespace,
+			Aliases:               aliasesStr,
+			AllowUnknownUser:      true,
+			MaxConnections:        65535,
+			MaxConnectionsPerUser: 65535,
+			MaxConnectionsPerHost: 65535,
+			Groups: map[string]RouterVhostGroup{
+				"$default": RouterVhostGroup{
+					RemoteHosts:          "*",
+					Sources:              "*",
+					Targets:              "*",
+					AllowDynamicSource:   true,
+					AllowAnonymousSender: true,
+				},
+			},
+		})
+	}
+
+	return routerEntities
 }
 
 func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint) ([]RouterEntity, error) {
@@ -938,6 +998,7 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 			RequireSsl:         false,
 			AuthenticatePeer:   true,
 			IdleTimeoutSeconds: idleTimeoutSeconds,
+			PolicyVhost:        endpoint.Namespace,
 			// LinkCapacity:       TODO: Make configurable?
 			MultiTenant: true,
 			Websockets:  websockets,
@@ -960,42 +1021,15 @@ func (i *infraClient) buildRouterEndpointEntities(endpoint *v1.MessagingEndpoint
 /**
  * Add router entities that should exist for a given address for a given endpoint.
  */
-func (i *infraClient) buildRouterAddressEntities(endpoint *v1.MessagingEndpoint, address *v1.MessagingAddress) ([]RouterEntity, error) {
+func (i *infraClient) buildRouterAddressEntities(address *v1.MessagingAddress) ([]RouterEntity, error) {
 	// Skip endpoints that are not active or do not have hosts defined
-	if !endpoint.IsActive() {
-		return nil, fmt.Errorf("inactive endpoint")
-	}
-
 	routerEntities := make([]RouterEntity, 0)
 
 	project := i.projects[resourceKey{Name: "default", Namespace: address.Namespace}]
-	projectId := endpoint.Status.Host
+	projectId := project.Namespace
 
 	// If transactional, rely on link route to be created
-	// TODO: Move this to buildRouterProjectEntities once endpoint is not needed.
 	if project.Status.Broker != nil {
-		// Transactional means that we create a link route based on the project prefix,
-		// and all broker addresses go through that route.
-		broker := *project.Status.Broker
-		host := i.hostMap[broker.Host]
-		brokerState := i.brokers[host]
-		if brokerState == nil {
-			return nil, fmt.Errorf("unable to configure transactional linkroute (project %s) for unknown broker %s", projectId, broker.Host)
-		}
-		connector := connectorName(brokerState)
-		routerEntities = append(routerEntities, &RouterLinkRoute{
-			Name:       globalLinkRouteName(projectId, host.Hostname, "out"),
-			Prefix:     projectId,
-			Direction:  "out",
-			Connection: connector,
-		})
-
-		routerEntities = append(routerEntities, &RouterLinkRoute{
-			Name:       globalLinkRouteName(projectId, host.Hostname, "in"),
-			Prefix:     projectId,
-			Direction:  "in",
-			Connection: connector,
-		})
 		return routerEntities, nil
 	}
 
@@ -1127,14 +1161,11 @@ func (i *infraClient) buildRouterAddressEntities(endpoint *v1.MessagingEndpoint,
 /**
  * Add broker entities to be created for a given addresss
  */
-func (i *infraClient) buildBrokerAddressEntities(endpoint *v1.MessagingEndpoint, address *v1.MessagingAddress) (map[Host][]BrokerEntity, error) {
-
-	if !endpoint.IsActive() {
-		return nil, fmt.Errorf("inactive endpoint")
-	}
+func (i *infraClient) buildBrokerAddressEntities(address *v1.MessagingAddress) (map[Host][]BrokerEntity, error) {
 
 	brokerEntities := make(map[Host][]BrokerEntity, 0)
-	projectId := endpoint.Status.Host
+	project := i.projects[resourceKey{Name: "default", Namespace: address.Namespace}]
+	projectId := project.Namespace
 
 	// Build desired state
 	fullAddress := qualifiedAddress(projectId, address.GetAddress())
@@ -1331,13 +1362,6 @@ func (i *infraClient) doDelete() {
 	for _, req := range toDelete {
 		switch req.resource.(type) {
 		case *v1.MessagingProject:
-			err := checkDelete(req.resource)
-			if err != nil {
-				req.done <- err
-				continue
-			}
-			valid = append(valid, req)
-		case *v1.MessagingEndpoint:
 			err := checkDelete(req.resource)
 			if err != nil {
 				req.done <- err

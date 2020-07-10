@@ -400,7 +400,6 @@ public class MessagingEndpointTest extends TestBase {
     }
 
     @Test
-    @Disabled("Awaiting fixes in DISPATCH-1585 to allow endpoints to use same addresses")
     public void testMultipleEndpoints(ExtensionContext extensionContext) throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
 

@@ -391,6 +391,13 @@ func (r *ReconcileMessagingAddress) Reconcile(request reconcile.Request) (reconc
 
 	// Update address status
 	result, err = rc.Process(func(address *v1.MessagingAddress) (processorResult, error) {
+		// TODO: This ensures that autolinks and linkroutes have a chance to become active
+		// on the broker and router. This should be replaced with a mechanism in the infra
+		// state to collect the auto link status when synchronizing an address.
+		// See https://github.com/EnMasseProject/enmasse/issues/4945
+		if address.Status.Phase != v1.MessagingAddressActive {
+			time.Sleep(5 * time.Second)
+		}
 		originalStatus := address.Status.DeepCopy()
 		address.Status.Phase = v1.MessagingAddressActive
 		address.Status.Message = ""

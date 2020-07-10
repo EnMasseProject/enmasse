@@ -166,6 +166,8 @@ public class MessagingInfrastructureTest extends TestBase {
                 .build();
 
         resourceManager.createResource(extensionContext, endpoint, anycast, queue);
+        MessagingInfrastructure defaultInfra = resourceManager.getDefaultInfra();
+        waitForConditionsTrue(defaultInfra, endpoint, anycast, queue);
 
         // Make sure endpoints work first
         LOGGER.info("Running initial client check");
@@ -175,10 +177,10 @@ public class MessagingInfrastructureTest extends TestBase {
         clientRunner.cleanClients();
 
         // Restart router and broker pods
-        MessagingInfrastructure defaultInfra = resourceManager.getDefaultInfra();
         kubernetes.deletePod(defaultInfra.getMetadata().getNamespace(), Collections.singletonMap("infra", defaultInfra.getMetadata().getName()));
 
-        Thread.sleep(60_000);
+        // TODO: Look into why sleep is needed
+        Thread.sleep(120_000);
 
         // Wait for the operator state to be green again.
         assertTrue(resourceManager.waitResourceCondition(defaultInfra, i -> i.getStatus() != null && i.getStatus().getBrokers() != null && i.getStatus().getBrokers().size() == 1));

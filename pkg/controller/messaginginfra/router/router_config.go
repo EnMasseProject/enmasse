@@ -122,6 +122,35 @@ func generateConfig(i *v1.MessagingInfrastructure, router *v1.MessagingInfrastru
 					"sslProfile": "infra_tls",
 				},
 			},
+
+			[]interface{}{
+				// Enable policy
+				"policy",
+				map[string]interface{}{
+					"enableVhostPolicy": true,
+				},
+			},
+
+			[]interface{}{
+				// Enable policy
+				"vhost",
+				map[string]interface{}{
+					"hostname":              "$default",
+					"allowUnknownUser":      true,
+					"maxConnections":        65535,
+					"maxConnectionsPerUser": 65535,
+					"maxConnectionsPerHost": 65535,
+					"groups": map[string]interface{}{
+						"$default": map[string]interface{}{
+							"remoteHosts":          "*",
+							"sources":              "*",
+							"targets":              "*",
+							"allowDynamicSource":   true,
+							"allowAnonymousSender": true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
