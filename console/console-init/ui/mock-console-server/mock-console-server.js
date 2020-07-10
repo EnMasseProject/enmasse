@@ -1946,7 +1946,7 @@ function createIotProject(pj) {
       addresses: getMockIotDownstreamMessagingAddresses(),
       configuration: "{}"
     },
-    status: pj.status,
+    messagingEndpoints: makeMessagingEndpoints(),
     endpoints: getMockIotEndpoints(),
     status: getMockIotProjectStatus()
   };

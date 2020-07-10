@@ -754,6 +754,7 @@ const typeDefs = gql`
     enabled: Boolean!
     spec: IotProjectSpec_iot_enmasse_io_v1alpha1!
     status: IoTProjectStatus_iot_enmasse_io_v1alpha1!
+    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
     devices(
       iotproject: String!
       first: Int
