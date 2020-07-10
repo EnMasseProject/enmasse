@@ -9,7 +9,12 @@ import {
   DropdownWithKebabToggle,
   IDropdownWithBulkSelectProps
 } from "components";
-import { ToolbarContent, Toolbar, ToolbarItem } from "@patternfly/react-core";
+import {
+  ToolbarContent,
+  Toolbar,
+  ToolbarItem,
+  Button
+} from "@patternfly/react-core";
 import {
   CreateDeviceButton,
   ICreateDeviceButtonProps
@@ -23,6 +28,7 @@ export interface IDeviceListToolbarProps
   kebabItems: React.ReactNode[];
   onSelectAllDevices: (val: boolean) => void;
   onChange: (val: boolean) => void;
+  handleToggleModal: () => void;
 }
 
 export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps &
@@ -31,51 +37,63 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
   handleJSONUpload,
   onSelectAllDevices,
   isChecked,
-  kebabItems
+  kebabItems,
+  handleToggleModal
 }) => {
   return (
-    <Toolbar id="device-data-toolbar" data-codemods="true">
-      <ToolbarContent id="device-data-toolbar-content">
-        <ToolbarItem
-          variant="bulk-select"
-          id="device-list-toolbar-item-1"
-          key="bulk-select"
-          aria-label="Select multiple devices"
-          data-codemods="true"
-        >
-          <DropdownWithBulkSelect
-            dropdownId="device-bulk-select"
-            dropdownToggleId="device-bulk-select-toggle"
-            checkBoxId="device-bulk-select-checkbox"
-            ariaLabel="Bulk select dropdown for device list"
-            isChecked={isChecked}
-            onChange={onSelectAllDevices}
-          />
-        </ToolbarItem>
-        <ToolbarItem
-          id="device-list-toolbar-item-2"
-          key="create-device"
-          aria-label="Create device button"
-          data-codemods="true"
-        >
-          <CreateDeviceButton
-            handleInputDeviceInfo={handleInputDeviceInfo}
-            handleJSONUpload={handleJSONUpload}
-          />
-        </ToolbarItem>
-        <ToolbarItem
-          id="device-list-toolbar-item-3"
-          key="kebab-dropdown"
-          aria-label="Device list kebab dropdown"
-          data-codemods="true"
-        >
-          <DropdownWithKebabToggle
-            isPlain={true}
-            dropdownItems={kebabItems}
-            id="device-list-toolbar-kebab"
-          />
-        </ToolbarItem>
-      </ToolbarContent>
-    </Toolbar>
+    <>
+      <Toolbar id="device-list-toolbar" data-codemods="true">
+        <ToolbarContent id="device-list-toolbar-content">
+          <ToolbarItem
+            variant="bulk-select"
+            id="device-list-toolbar-bulk-select"
+            key="bulk-select"
+            aria-label="Select multiple devices"
+            data-codemods="true"
+          >
+            <DropdownWithBulkSelect
+              dropdownId="device-list-toolbar-bulk-select-dropdown"
+              dropdownToggleId="device-list-toolbar-bulk-select-toggle"
+              checkBoxId="device-list-toolbar-bulk-select-checkbox"
+              ariaLabel="Bulk select dropdown for device list"
+              isChecked={isChecked}
+              onChange={onSelectAllDevices}
+            />
+          </ToolbarItem>
+          <ToolbarItem
+            id="device-list-toolbar-kebab-dropdown"
+            key="kebab-dropdown"
+            aria-label="Device list kebab dropdown"
+            data-codemods="true"
+          >
+            <DropdownWithKebabToggle
+              isPlain={true}
+              dropdownItems={kebabItems}
+              id="device-list-toolbar-kebab"
+            />
+          </ToolbarItem>
+          <ToolbarItem
+            id="device-list-toolbar-create-device-button"
+            key="create-device"
+            aria-label="Create device button"
+            data-codemods="true"
+          >
+            <CreateDeviceButton
+              handleInputDeviceInfo={handleInputDeviceInfo}
+              handleJSONUpload={handleJSONUpload}
+            />
+          </ToolbarItem>
+          <ToolbarItem>
+            <Button
+              id="device-list-toolbar-manage-column-button"
+              variant="link"
+              onClick={handleToggleModal}
+            >
+              Manage columns
+            </Button>
+          </ToolbarItem>
+        </ToolbarContent>
+      </Toolbar>
+    </>
   );
 };

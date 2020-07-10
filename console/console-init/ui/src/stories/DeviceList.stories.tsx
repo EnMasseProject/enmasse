@@ -143,6 +143,7 @@ export const deviceToolbar = () => {
         items={bulkSelectItems}
         onChange={action("checkbox dropdown changed")}
         onSelectAllDevices={action("All devices selected")}
+        handleToggleModal={action("on toggle manage columns")}
       />
     </MemoryRouter>
   );

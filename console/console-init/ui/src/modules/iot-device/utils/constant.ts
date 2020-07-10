@@ -85,6 +85,59 @@ const getInitialAlert = () => {
   return alert;
 };
 
+const getInitialSelectedColumns = () => {
+  return [
+    "deviceId",
+    "connectionType",
+    "status",
+    "lastUpdated",
+    "lastSeen",
+    "addedDate"
+  ];
+};
+
+const getInitialManageColumnsForDevices = () => {
+  return [
+    { key: "deviceid", value: "deviceId", label: "Device ID", isChecked: true },
+    {
+      key: "connection-type",
+      value: "connectionType",
+      label: "Connection Type",
+      isChecked: true
+    },
+    { key: "status", value: "status", label: "Status", isChecked: true },
+    {
+      key: "last-updated",
+      value: "lastUpdated",
+      label: "Last updated",
+      isChecked: true
+    },
+    {
+      key: "last-seen",
+      value: "lastSeen",
+      label: "Last Seen",
+      isChecked: true
+    },
+    {
+      key: "added-date",
+      value: "addedDate",
+      label: "Added Date",
+      isChecked: true
+    },
+    {
+      key: "memberof",
+      value: "memberOf",
+      label: "Member Of",
+      isChecked: false
+    },
+    {
+      key: "via-gateways",
+      value: "viaGateways",
+      label: "Via Gateways",
+      isChecked: false
+    }
+  ];
+};
 /**
  * key value constants
  */
@@ -120,5 +173,7 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getInitialMetadataState,
+  getInitialSelectedColumns,
+  getInitialManageColumnsForDevices,
   MAX_DEVICE_LIST_COUNT
 };
