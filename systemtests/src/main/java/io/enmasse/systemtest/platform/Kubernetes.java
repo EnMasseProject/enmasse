@@ -32,6 +32,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.OLMInstallationType;
 import io.enmasse.systemtest.condition.MultinodeCluster;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
@@ -93,6 +94,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -207,7 +209,7 @@ public abstract class Kubernetes {
      * Check if tests are running on OpenShift (excluding CRC).
      */
     public static boolean isOpenShift() {
-        return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.OPENSHIFT.toString().toLowerCase());
+        return Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
     }
 
     /**
