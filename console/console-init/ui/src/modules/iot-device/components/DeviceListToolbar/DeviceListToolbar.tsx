@@ -42,8 +42,8 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
 }) => {
   return (
     <>
-      <Toolbar id="device-data-toolbar" data-codemods="true">
-        <ToolbarContent id="device-data-toolbar-content">
+      <Toolbar id="device-list-toolbar" data-codemods="true">
+        <ToolbarContent id="device-list-toolbar-content">
           <ToolbarItem
             variant="bulk-select"
             id="device-list-toolbar-bulk-select"
@@ -52,23 +52,12 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             data-codemods="true"
           >
             <DropdownWithBulkSelect
-              dropdownId="device-bulk-select"
-              dropdownToggleId="device-bulk-select-toggle"
-              checkBoxId="device-bulk-select-checkbox"
+              dropdownId="device-list-toolbar-bulk-select-dropdown"
+              dropdownToggleId="device-list-toolbar-bulk-select-toggle"
+              checkBoxId="device-list-toolbar-bulk-select-checkbox"
               ariaLabel="Bulk select dropdown for device list"
               isChecked={isChecked}
               onChange={onSelectAllDevices}
-            />
-          </ToolbarItem>
-          <ToolbarItem
-            id="device-list-toolbar-create-device-button"
-            key="create-device"
-            aria-label="Create device button"
-            data-codemods="true"
-          >
-            <CreateDeviceButton
-              handleInputDeviceInfo={handleInputDeviceInfo}
-              handleJSONUpload={handleJSONUpload}
             />
           </ToolbarItem>
           <ToolbarItem
@@ -83,8 +72,23 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
               id="device-list-toolbar-kebab"
             />
           </ToolbarItem>
+          <ToolbarItem
+            id="device-list-toolbar-create-device-button"
+            key="create-device"
+            aria-label="Create device button"
+            data-codemods="true"
+          >
+            <CreateDeviceButton
+              handleInputDeviceInfo={handleInputDeviceInfo}
+              handleJSONUpload={handleJSONUpload}
+            />
+          </ToolbarItem>
           <ToolbarItem>
-            <Button variant="link" onClick={handleToggleModal}>
+            <Button
+              id="device-list-toolbar-manage-column-button"
+              variant="link"
+              onClick={handleToggleModal}
+            >
               Manage columns
             </Button>
           </ToolbarItem>
