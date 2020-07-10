@@ -10,11 +10,15 @@ import io.enmasse.api.model.MessagingAddress;
 import io.enmasse.api.model.MessagingAddressBuilder;
 import io.enmasse.api.model.MessagingAddressCondition;
 import io.enmasse.api.model.MessagingAddressList;
+import io.enmasse.api.model.MessagingEndpoint;
+import io.enmasse.api.model.MessagingEndpointCondition;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MessagingAddressResourceType implements ResourceType<MessagingAddress> {
     private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingAddresses(), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
@@ -69,5 +73,18 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
             }
         }
         return null;
+    }
+
+    public static Map<String, String> getConditions(MessagingAddress infrastructure) {
+        Map<String, String> conditions = new HashMap<>();
+        for (String conditionName : List.of("FoundProject", "Validated", "Scheduled", "Created", "Ready")) {
+            MessagingAddressCondition condition = MessagingAddressResourceType.getCondition(infrastructure.getStatus().getConditions(), conditionName);
+            if (condition == null) {
+                conditions.put(conditionName, "Unknown");
+            } else {
+                conditions.put(conditionName, condition.getStatus());
+            }
+        }
+        return conditions;
     }
 }

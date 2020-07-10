@@ -247,6 +247,12 @@
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingAddressPlanSpec": {
       "type": "object",
       "description": "",
+      "properties": {
+        "namespaceSelector": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_NamespaceSelector",
+          "javaType": "NamespaceSelector"
+        }
+      },
       "additionalProperties": true,
       "javaType": "MessagingAddressPlanSpec",
       "javaInterfaces": [
@@ -929,25 +935,6 @@
         "io.fabric8.kubernetes.api.model.KubernetesResourceList\u003cMessagingInfrastructure\u003e"
       ]
     },
-    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureReference": {
-      "type": "object",
-      "description": "",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": ""
-        },
-        "namespace": {
-          "type": "string",
-          "description": ""
-        }
-      },
-      "additionalProperties": true,
-      "javaType": "MessagingInfrastructureReference",
-      "javaInterfaces": [
-        "io.fabric8.kubernetes.api.model.KubernetesResource"
-      ]
-    },
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureSpec": {
       "type": "object",
       "description": "",
@@ -1254,8 +1241,38 @@
     "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingPlanSpec": {
       "type": "object",
       "description": "",
+      "properties": {
+        "namespaceSelector": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_NamespaceSelector",
+          "javaType": "NamespaceSelector"
+        },
+        "resources": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingPlanSpecResources",
+          "javaType": "MessagingPlanSpecResources"
+        }
+      },
       "additionalProperties": true,
       "javaType": "MessagingPlanSpec",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingPlanSpecResources": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "description": "",
+          "additionalProperties": {
+            "$ref": "#/definitions/kubernetes_resource_Quantity",
+            "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity"
+          },
+          "existingJavaType": "java.util.Map\u003cString,io.fabric8.kubernetes.api.model.Quantity\u003e"
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingPlanSpecResources",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -1404,8 +1421,12 @@
           }
         },
         "messagingInfrastructureRef": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureReference",
-          "javaType": "MessagingInfrastructureReference"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_ObjectReference",
+          "javaType": "ObjectReference"
+        },
+        "messagingPlanRef": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_ObjectReference",
+          "javaType": "ObjectReference"
         }
       },
       "additionalProperties": true,
@@ -1418,6 +1439,10 @@
       "type": "object",
       "description": "",
       "properties": {
+        "appliedMessagingPlan": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingPlanSpec",
+          "javaType": "MessagingPlanSpec"
+        },
         "broker": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingAddressBroker",
           "javaType": "MessagingAddressBroker"
@@ -1445,8 +1470,12 @@
           "description": ""
         },
         "messagingInfrastructureRef": {
-          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureReference",
-          "javaType": "MessagingInfrastructureReference"
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_ObjectReference",
+          "javaType": "ObjectReference"
+        },
+        "messagingPlanRef": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_ObjectReference",
+          "javaType": "ObjectReference"
         },
         "phase": {
           "type": "string",
@@ -1493,6 +1522,25 @@
       },
       "additionalProperties": true,
       "javaType": "NamespaceSelector",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_ObjectReference": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": ""
+        },
+        "namespace": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "ObjectReference",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
@@ -1823,6 +1871,21 @@
       },
       "additionalProperties": true,
       "existingJavaType": "io.fabric8.kubernetes.api.model.SecretKeySelector",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "kubernetes_resource_Quantity": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "Format": {
+          "type": "string",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "existingJavaType": "io.fabric8.kubernetes.api.model.Quantity",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
