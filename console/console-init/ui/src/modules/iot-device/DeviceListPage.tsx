@@ -21,14 +21,16 @@ import {
   DeviceListAlert,
   DeviceListToolbar,
   IDevice,
-  IDeviceFilter
+  IDeviceFilter,
+  ManageColumnModal
 } from "modules/iot-device/components";
 import {
   getHeaderForDialog,
   getDetailForDialog,
   MAX_DEVICE_LIST_COUNT,
   getInitialAlert,
-  getInitialFilter
+  getInitialFilter,
+  getInitialSelectedColumns
 } from "modules/iot-device/utils";
 import {
   DeviceListContainer,
@@ -68,7 +70,13 @@ export default function DeviceListPage() {
     title: string;
     description: string;
   }>(getInitialAlert());
-
+  const [selectedColumns, setSelectedColumns] = useState<string[]>(
+    getInitialSelectedColumns()
+  );
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const handleToggleModal = () => {
+    setIsModalOpen(!isModalOpen);
+  };
   const { dispatch } = useStoreContext();
 
   const [setDeleteDeviceQueryVariables] = useMutationQuery(DELETE_IOT_DEVICE, [
@@ -360,6 +368,7 @@ export default function DeviceListPage() {
                 items={[]}
                 onChange={() => {}}
                 onSelectAllDevices={onSelectAllDevices}
+                handleToggleModal={handleToggleModal}
               />
             </GridItem>
             <GridItem span={7}>{renderPagination()}</GridItem>
@@ -379,10 +388,16 @@ export default function DeviceListPage() {
             appliedFilter={appliedFilter}
             resetFilter={resetFilter}
             namespace={namespace}
+            selectedColumns={selectedColumns}
           />
           <br />
           {renderPagination()}
         </PageSection>
+        <ManageColumnModal
+          isModalOpen={isModalOpen}
+          handleModalToggle={handleToggleModal}
+          setSelectedColumns={setSelectedColumns}
+        />
       </GridItem>
     </Grid>
   );

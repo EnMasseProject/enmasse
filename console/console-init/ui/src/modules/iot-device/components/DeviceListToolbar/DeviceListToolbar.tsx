@@ -9,7 +9,12 @@ import {
   DropdownWithKebabToggle,
   IDropdownWithBulkSelectProps
 } from "components";
-import { ToolbarContent, Toolbar, ToolbarItem } from "@patternfly/react-core";
+import {
+  ToolbarContent,
+  Toolbar,
+  ToolbarItem,
+  Button
+} from "@patternfly/react-core";
 import {
   CreateDeviceButton,
   ICreateDeviceButtonProps
@@ -24,6 +29,7 @@ export interface IDeviceListToolbarProps
   kebabItems: React.ReactNode[];
   onSelectAllDevices: (val: boolean) => void;
   onChange: (val: boolean) => void;
+  handleToggleModal: () => void;
 }
 
 export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps &
@@ -32,7 +38,8 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
   handleJSONUpload,
   onSelectAllDevices,
   isChecked,
-  kebabItems
+  kebabItems,
+  handleToggleModal
 }) => {
   return (
     <Toolbar id="device-data-toolbar" data-codemods="true">
@@ -76,6 +83,15 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
             handleInputDeviceInfo={handleInputDeviceInfo}
             handleJSONUpload={handleJSONUpload}
           />
+        </ToolbarItem>
+        <ToolbarItem>
+          <Button
+            id="device-list-toolbar-manage-column-button"
+            variant="link"
+            onClick={handleToggleModal}
+          >
+            Manage columns
+          </Button>
         </ToolbarItem>
       </ToolbarContent>
     </Toolbar>
