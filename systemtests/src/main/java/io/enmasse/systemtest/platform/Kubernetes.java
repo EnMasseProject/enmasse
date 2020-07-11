@@ -198,6 +198,8 @@ public abstract class Kubernetes {
 
     }
 
+
+
     /**
      * Check if tests are running on something which is compatible with OpenShift (OpenShift or CRC).
      */
