@@ -11,6 +11,18 @@ import { IRowData } from "@patternfly/react-table";
 import { IDevice } from "modules/iot-device/components";
 import { Label } from "@patternfly/react-core";
 
+const renderDeviceType = (type: string) => {
+  return type === "N/A" ? (
+    <Label color="orange" icon={<ExclamationTriangleIcon />}>
+      {type}
+    </Label>
+  ) : (
+    <Label variant="outline" color="green">
+      {type}
+    </Label>
+  );
+};
+
 export const getTableCells = (row: IDevice) => {
   const {
     enabled,
@@ -45,16 +57,7 @@ export const getTableCells = (row: IDevice) => {
       },
       {
         header: "type",
-        title:
-          deviceType === "N/A" ? (
-            <Label color="orange" icon={<ExclamationTriangleIcon />}>
-              {deviceType}
-            </Label>
-          ) : (
-            <Label variant="outline" color="green">
-              {deviceType}
-            </Label>
-          )
+        title: renderDeviceType(deviceType)
       },
       {
         title: enabled ? (
