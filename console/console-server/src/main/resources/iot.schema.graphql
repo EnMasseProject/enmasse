@@ -52,6 +52,7 @@ type IotProjectSpec_iot_enmasse_io_v1alpha1 {
 type IoTProject_iot_enmasse_io_v1alpha1 {
 
   metadata: ObjectMeta_v1! @goField(name: "ObjectMeta")
+  kind: String!
   enabled: Boolean!
   spec: IotProjectSpec_iot_enmasse_io_v1alpha1!
   status: IoTProjectStatus_iot_enmasse_io_v1alpha1!
@@ -87,23 +88,19 @@ type CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
   total: Int!
   credentials: [String!]! #The Json representation of the credentials for device.
 }
-
-type AddressSpaceAndIotProjectsQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
+type projectListQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
   total: Int!
-  addressSpaces: [AddressSpace_consoleapi_enmasse_io_v1beta1!]
-  iotProjects: [IoTProject_iot_enmasse_io_v1alpha1!]
+  objects: [ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1!]!
 }
 
-enum ProjectQueryType {
-  iotProject
-  addressSpace
-}
+union ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1 =
+  AddressSpace_consoleapi_enmasse_io_v1beta1 | IoTProject_iot_enmasse_io_v1alpha1
 
 type Query {
 
   "Returns the namespaces and iotprojects visible to this user, optionaly filtered by project type"
   #This extends the existing "addressSpaces" query
-  allProjects(first: Int, offset: Int, filter: String, orderBy: String, projectType: ProjectQueryType): AddressSpaceAndIotProjectsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+  allProjects(first: Int, offset: Int, filter: String, orderBy: String): ProjectListQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
 
   devices(iotproject: ObjectMeta_v1_Input!, first: Int, offset: Int, filter: String, orderBy: String): DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1
   credentials(iotproject: ObjectMeta_v1_Input!, deviceId: String!): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!

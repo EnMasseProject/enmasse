@@ -701,6 +701,7 @@ function createAddressSpace(as) {
         ? as.metadata.creationTimestamp
         : getRandomCreationDate()
     },
+    kind: "AddressSpace",
     spec: {
       plan: spacePlan,
       type: as.spec.type,
@@ -1940,6 +1941,7 @@ function createIotProject(pj) {
         ? pj.metadata.creationTimestamp
         : getRandomCreationDate()
     },
+    kind: "IoTProject",
     enabled: pj.enabled,
     spec: {
       tenantId: pj.metadata.name + ".iot",
@@ -2462,6 +2464,18 @@ function getAddressSpacesAndOrIotProjects(projectType) {
 
 // A map of functions which return data for the schema.
 const resolvers = {
+  ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1: {
+    __resolveType(obj, context, info){
+      switch (obj.kind) {
+        case 'IoTProject':
+          return 'IoTProject_iot_enmasse_io_v1alpha1';
+        case 'AddressSpace':
+          return 'AddressSpace_consoleapi_enmasse_io_v1beta1';
+        default:
+          return null;
+      }
+    }
+  },
   Mutation: {
     createAddressSpace: (parent, args) => {
       return createAddressSpace(init(args.input));
@@ -2773,41 +2787,33 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       };
     },
     allProjects: (parent, args, context, info) => {
-      var projectType = args.projectType;
-      var filterer = buildFilterer(args.filter);
-      var orderBy = orderer(args.orderBy);
+      let projectType = args.projectType;
+      let filterer = buildFilterer(args.filter);
+      let orderBy = orderer(args.orderBy);
 
       // fetch address spaces
-      if (projectType === undefined || projectType === "addressSpace") {
-        resultAs = clone(addressSpaces);
-        resultAs.forEach(as => {
-          as.metrics = makeAddressSpaceMetrics(as);
-        });
-        var as = resultAs.filter(as => filterer.evaluate(as)).sort(orderBy);
-        var paginationBounds = calcLowerUpper(
-          args.offset,
-          args.first,
-          as.length
-        );
-        var pageAs = as.slice(paginationBounds.lower, paginationBounds.upper);
-      }
-      if (projectType === undefined || projectType === "iotProject") {
-        // fetch iot projects
-        resultPj = clone(iotProjects);
-        var pj = resultPj.filter(pj => filterer.evaluate(pj)).sort(orderBy);
-        var paginationBounds = calcLowerUpper(
-          args.offset,
-          args.first,
-          pj.length
-        );
-        var pagePj = pj.slice(paginationBounds.lower, paginationBounds.upper);
+      let result = clone(addressSpaces);
+      result.forEach(as => {
+        as.metrics = makeAddressSpaceMetrics(as);
+      });
+      // fetch iot projects
+      iotProjects.forEach(pj => {
+        result.push(pj)
+      });
 
-        return {
-          total: pj.length,
-          addressSpaces: pageAs,
-          iotProjects: pagePj
-        };
-      }
+      // filters
+      let as = result.filter(as => filterer.evaluate(as)).sort(orderBy);
+      let paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        as.length
+      );
+      let pageAs = as.slice(paginationBounds.lower, paginationBounds.upper);
+
+      return {
+        total: result.length,
+        objects: pageAs
+      };
     }
   },
 
