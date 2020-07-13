@@ -21,7 +21,7 @@ import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.amqp.StandardIoTAmqpTests;
 
 @Tag(IOT)
-class AmqpAdapterTest implements StandardIoTAmqpTests {
+public class AmqpAdapterTest implements StandardIoTAmqpTests {
 
     private static IoTTestSession session;
 

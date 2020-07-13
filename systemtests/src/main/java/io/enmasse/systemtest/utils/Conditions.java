@@ -11,7 +11,6 @@ import java.util.function.BooleanSupplier;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 public final class Conditions {
 
@@ -32,7 +31,7 @@ public final class Conditions {
     public static <T extends HasMetadata, L, D> BooleanSupplier condition(
             final MixedOperation<T, L, D, Resource<T, D>> client,
             final T resource,
-            final String conditionType
+            final Object conditionType
     ) {
         return condition(client, resource, conditionType, true);
     }
@@ -52,7 +51,7 @@ public final class Conditions {
     public static <T extends HasMetadata, L, D> BooleanSupplier condition(
             final MixedOperation<T, L, D, Resource<T, D>> client,
             final T resource,
-            final String conditionType,
+            final Object conditionType,
             final boolean expected
     ) {
            return condition(
@@ -74,7 +73,7 @@ public final class Conditions {
      */
     public static <T extends HasMetadata, D> BooleanSupplier condition(
             final Resource<T, D> access,
-            final String conditionType
+            final Object conditionType
     ) {
         return condition(access, conditionType, true);
     }
@@ -91,7 +90,7 @@ public final class Conditions {
      */
     public static <T extends HasMetadata, D> BooleanSupplier condition(
             final Resource<T, D> access,
-            final String conditionType,
+            final Object conditionType,
             final boolean expected
     ) {
 
@@ -122,9 +121,13 @@ public final class Conditions {
         }
     }
 
-    static String conditionStatus(final Object current, final String conditionType) {
+    static String conditionStatus(final Object current, final Object conditionType) {
         try {
-            var status = statusSection(current).get();
+            var statusSection = statusSection(current);
+            if (statusSection.isEmpty()){
+                return null;
+            }
+            var status = statusSection.get();
             var conditions = status.getClass().getMethod("getConditions").invoke(status);
             for (Object o : (Iterable<?>) conditions) {
                 var clazz = o.getClass();
@@ -161,7 +164,7 @@ public final class Conditions {
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
                 resource.getApiVersion(), resource.getKind(),
-                state.map(Serialization::asJson).orElse("<no status>")
+                state.map(Serialization::toYaml).orElse("<no status>")
         );
     }
 

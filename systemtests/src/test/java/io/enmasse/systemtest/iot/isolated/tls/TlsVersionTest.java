@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import io.enmasse.systemtest.iot.IoTTests;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +25,7 @@ import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 
 @Tag(IOT)
-public class TlsVersionTest {
+public class TlsVersionTest implements IoTTests {
 
     @OpenShift(version = OpenShiftVersion.OCP4)
     @Test

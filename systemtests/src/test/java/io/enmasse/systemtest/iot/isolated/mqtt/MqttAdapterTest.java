@@ -24,7 +24,7 @@ import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
  * Testing MQTT message transmission.
  */
 @Tag(IOT)
-class MqttAdapterTest implements StandardIoTMqttTests {
+public class MqttAdapterTest implements StandardIoTMqttTests {
 
     private static IoTTestSession session;
 

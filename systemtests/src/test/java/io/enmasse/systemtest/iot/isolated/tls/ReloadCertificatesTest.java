@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import io.enmasse.iot.model.v1.ConfigConditionType;
 import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.iot.Names;
 import org.junit.jupiter.api.Tag;
@@ -113,7 +114,7 @@ public class ReloadCertificatesTest implements IoTTests {
 
                     var initialVersion = deploymentAccess.get().getMetadata().getResourceVersion();
                     waitForChangedResourceVersion(
-                            budget,
+                            budget.remaining(),
                             initialVersion,
                             () -> ofNullable(deploymentAccess.get())
                                     .map(d -> d.getMetadata().getResourceVersion())
@@ -122,7 +123,7 @@ public class ReloadCertificatesTest implements IoTTests {
                     // and wait until the IoTConfig is ready again
 
                     waitUntilConditionOrFail(
-                            condition(session.config(), "Ready"),
+                            condition(session.config(), ConfigConditionType.READY),
                             budget.remaining(),
                             ofSeconds(5)
                     );

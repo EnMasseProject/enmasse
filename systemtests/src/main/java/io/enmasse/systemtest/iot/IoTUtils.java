@@ -19,10 +19,10 @@ import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.time.SystemtestsOperation;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.utils.Serialization;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.client.utils.Serialization;
 import io.vertx.core.json.JsonObject;
 import org.assertj.core.api.Condition;
 import org.slf4j.Logger;
@@ -41,6 +41,7 @@ import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 import static io.enmasse.systemtest.platform.Kubernetes.iotConfigs;
 import static io.enmasse.systemtest.platform.Kubernetes.iotTenants;
 import static io.enmasse.systemtest.time.TimeMeasuringSystem.Operation.startOperation;
+import static io.enmasse.systemtest.utils.Serialization.toJson;
 import static io.enmasse.systemtest.utils.TestUtils.TimeoutHandler.explain;
 import static java.util.Optional.ofNullable;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,7 +84,7 @@ class IoTUtils {
                             .map(IoTConfigStatus::getPhase)
                             .orElse(null);
                     if ("Active".equals(currentPhase)) {
-                        log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, Serialization.asJson(currentState.getStatus()));
+                        log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
                         return true;
                     } else {
                         log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
@@ -93,7 +94,7 @@ class IoTUtils {
                 budget.remaining(), Duration.ofSeconds(5),
                 explain(() -> ofNullable(iotConfigAccess.get())
                         .map(IoTConfig::getStatus)
-                        .map(Serialization::asJson)
+                        .map(Serialization::toYaml)
                         .orElse("IoTConfig has no status section")));
 
         // gather expected deployments
@@ -215,7 +216,7 @@ class IoTUtils {
                             .map(IoTProjectStatus::getPhase)
                             .orElse(null);
                     if ("Active".equals(currentPhase)) {
-                        log.info("IoTProject is ready - phase: {} -> {}", currentPhase, Serialization.asJson(currentState.getStatus()));
+                        log.info("IoTProject is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
                         return true;
                     } else {
                         log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), currentPhase);
@@ -225,8 +226,8 @@ class IoTUtils {
                 budget.remaining(), Duration.ofSeconds(5),
                 explain(() -> ofNullable(tenantAccess.get())
                         .map(IoTProject::getStatus)
-                        .map(Serialization::asJson)
-                        .orElse("Project doesn't have status")));
+                        .map(Serialization::toYaml)
+                        .orElse("Project has no status section")));
 
         // refresh
         var actual = tenantAccess.get();

@@ -20,7 +20,7 @@ import static io.enmasse.systemtest.iot.DeviceSupplier.named;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 
 @Tag(IOT)
-class HttpAdapterTest implements StandardIoTHttpTests {
+public class HttpAdapterTest implements StandardIoTHttpTests {
 
     private static IoTTestSession session;
 

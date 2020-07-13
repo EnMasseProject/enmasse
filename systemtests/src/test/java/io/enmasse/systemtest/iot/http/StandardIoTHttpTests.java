@@ -23,7 +23,6 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.StandardIoTTests;
 
 import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
