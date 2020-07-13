@@ -157,7 +157,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
         id="addr-header-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
-        toggleId="adheader-kebab"
+        toggleId="addr-header-kebab-toggle"
         dropdownItems={dropdownItems}
       />
     );

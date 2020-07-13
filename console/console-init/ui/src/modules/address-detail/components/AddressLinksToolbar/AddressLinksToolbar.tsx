@@ -97,7 +97,7 @@ const AddressLinksToolbar: React.FunctionComponent<IAddressLinksToolbarProps &
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="addr-links-toolbar-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
