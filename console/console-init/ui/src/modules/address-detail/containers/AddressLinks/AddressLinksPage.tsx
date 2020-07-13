@@ -56,6 +56,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   const renderPagination = () => {
     return (
       <TablePagination
+        id="addr-links-pgination"
         itemCount={addresLinksTotal}
         variant={"top"}
         page={page}
@@ -70,6 +71,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
           headingLevel="h2"
           size="lg"
           className={css(GridStylesForTableHeader.filter_left_margin)}
+          id="addr-links-title"
         >
           Links for address - {addressDisplayName}
         </Title>

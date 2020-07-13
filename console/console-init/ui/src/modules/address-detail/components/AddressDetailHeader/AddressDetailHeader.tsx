@@ -120,7 +120,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
   const KebabOptionsLayout = () => {
     const dropdownItems = [
       <DropdownItem
-        id="adheader-dropdown-item-edit"
+        id="addr-header-edit-item-dropdown"
         key="download"
         aria-label="download"
         onClick={() => onEdit(name)}
@@ -128,7 +128,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
         Edit
       </DropdownItem>,
       <DropdownItem
-        id="adheader-dropdown-item-delete"
+        id="addr-header-delete-item-dropdown"
         key="delete"
         aria-label="delete"
         onClick={() => onDelete(name)}
@@ -143,7 +143,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     ) {
       dropdownItems.push(
         <DropdownItem
-          id="adheader-dropdown-item-purge"
+          id="addr-header-purge-item-dropdown"
           key="purge"
           aria-label="purge"
           onClick={() => onPurge(name)}
@@ -154,7 +154,7 @@ export const AddressDetailHeader: React.FunctionComponent<IAddressDetailHeaderPr
     }
     return (
       <DropdownWithKebabToggle
-        id="adheader-dropdown"
+        id="addr-header-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
         toggleId="adheader-kebab"

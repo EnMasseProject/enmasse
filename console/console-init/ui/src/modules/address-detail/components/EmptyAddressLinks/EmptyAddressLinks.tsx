@@ -15,12 +15,12 @@ import { GlobeRouteIcon } from "@patternfly/react-icons";
 
 export const EmptyAddressLinks = () => {
   return (
-    <EmptyState variant={EmptyStateVariant.full} id="empty-link">
+    <EmptyState variant={EmptyStateVariant.full} id="empty-addr-link">
       <EmptyStateIcon icon={GlobeRouteIcon} />
-      <Title headingLevel="h2" id="empty-link-title" size="lg">
+      <Title headingLevel="h2" id="empty-addr-no-link-title" size="lg">
         No Links
       </Title>
-      <EmptyStateBody id="empty-link-body">
+      <EmptyStateBody id="empty-addr-no-link-body">
         You currently don't have any links
       </EmptyStateBody>
     </EmptyState>

@@ -58,9 +58,11 @@ export const AddressLinks: React.FunctionComponent<IAddressLinksProps> = ({
             <>
               {row.name}{" "}
               <Link
+                id="addr-link-connections"
                 to={`/messaging-projects/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
               >
                 <Tooltip
+                  id="addr-link-goto-tooltip"
                   position={TooltipPosition.top}
                   content={<div>Go to the link</div>}
                 >
