@@ -192,7 +192,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="addr-toggle-filter-by-dropdown"
+          id="addr-toggle-filter-type-dropdown"
           dropdownItemIdPrefix={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
