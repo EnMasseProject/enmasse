@@ -42,6 +42,13 @@ import {
 } from "modules/iot-device/utils";
 
 import "./pf-overrides.css";
+import { StyleSheet, css } from "aphrodite";
+
+const styles = StyleSheet.create({
+  no_bottom_padding: {
+    paddingBottom: 0
+  }
+});
 
 export default function DeviceDetailPage() {
   const { projectname, namespace, deviceid, subList } = useParams();
@@ -183,7 +190,10 @@ export default function DeviceDetailPage() {
   return (
     <>
       {actionType ? (
-        <PageSection variant={PageSectionVariants.light}>
+        <PageSection
+          variant={PageSectionVariants.light}
+          className={css(styles.no_bottom_padding)}
+        >
           <ActionManager actionType={actionType} viaGateway={viaGateway} />
         </PageSection>
       ) : (

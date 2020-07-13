@@ -148,7 +148,8 @@ const FILTER_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
 const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
   page: number,
   perPage: number,
-  iotproject: string,
+  projectName: string,
+  namespace: string,
   sortBy?: ISortBy,
   filterObj?: IDeviceFilter,
   queryResolver?: string
@@ -160,6 +161,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
       jsonData
       enabled
       viaGateway
+      credentials
     }
   `;
 
@@ -175,7 +177,7 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
 
   const ALL_DEVICE_LIST = gql(
     `query devices_for_iot_project {
-      devices(iotproject: "${iotproject}",first:${perPage}, offset:${perPage *
+      devices(iotproject: { name : "${projectName}", namespace : "${namespace}"},first:${perPage}, offset:${perPage *
       (page - 1)}, orderBy:"${orderBy}", filter: "${filter}") {
         ${queryResolver}
       }
