@@ -234,6 +234,7 @@ func (r *ReconcileIoTConfig) reconcileCommonJdbcDeviceRegistryDeployment(
 
 		install.ApplyOrRemoveEnvSimple(container, "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", service.JDBC.Management.AuthTokenCacheExpiration)
 
+		applyServiceConnectionOptions(container, "HONO_AUTH", config.Spec.ServicesConfig.Authentication.TlsVersions(config))
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &commonConfig)
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_REST_", config, &commonConfig)
 

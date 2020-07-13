@@ -120,6 +120,41 @@ func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
 
 // endregion
 
+// region TlsVersions
+
+func (c *DeviceConnectionServiceConfig) TlsVersions(config *IoTConfig) []string {
+
+	if c.JDBC != nil && !c.JDBC.Disabled {
+		return c.JDBC.TlsVersions(config)
+	}
+	if c.Infinispan != nil && !c.Infinispan.Disabled {
+		return c.Infinispan.TlsVersions(config)
+	}
+
+	return config.Spec.TlsDefaults.Versions
+}
+
+func (c *DeviceRegistryServiceConfig) TlsVersions(config *IoTConfig) []string {
+
+	if c.Infinispan != nil && !c.Infinispan.Disabled {
+		return c.Infinispan.TlsVersions(config)
+	}
+
+	if c.JDBC != nil && !c.JDBC.Disabled && c.JDBC.Server.External != nil {
+		if c.JDBC.Server.External.Adapter != nil {
+			return c.JDBC.Server.External.Adapter.TlsVersions(config)
+		}
+		if c.JDBC.Server.External.Management != nil {
+			return c.JDBC.Server.External.Management.TlsVersions(config)
+		}
+	}
+
+	return config.Spec.TlsDefaults.Versions
+
+}
+
+// endregion
+
 func (p *IoTProjectStatus) GetProjectCondition(t ProjectConditionType) *ProjectCondition {
 	for i, c := range p.Conditions {
 		if c.Type == t {

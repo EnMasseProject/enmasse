@@ -100,6 +100,8 @@ func (r *ReconcileIoTConfig) reconcileTenantServiceDeployment(config *iotv1alpha
 			{Name: "ENMASSE_IOT_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
+		applyServiceConnectionOptions(container, "ENMASSE_IOT_AUTH", config.Spec.ServicesConfig.Authentication.TlsVersions(config))
+
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)

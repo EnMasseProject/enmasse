@@ -1080,7 +1080,9 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
         return config;
     }
 
-    private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
+    private static Exception cleanup(final List<ThrowingCallable> cleanup, final Throwable initialException) {
+
+        var resultingException = initialException;
 
         if (!Environment.getInstance().skipCleanup()) {
 
@@ -1090,18 +1092,15 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
                 try {
                     f.call();
                 } catch (Throwable e) {
-                    if (initialException == null) {
-                        initialException = e;
+                    if (resultingException == null) {
+                        resultingException = e;
                     } else {
-                        initialException.addSuppressed(e);
+                        resultingException.addSuppressed(e);
                     }
                 }
             }
 
             log.info("Cleaning up resources... done!");
-            if (initialException != null) {
-                log.info("Cleanup resulting in error", initialException);
-            }
 
         } else {
 
@@ -1109,12 +1108,24 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         }
 
-        if (initialException == null || initialException instanceof Exception) {
+        // log
+
+        if (resultingException != null) {
+            if (initialException == null) {
+                log.info("Reporting initial exception", resultingException);
+            } else {
+                log.info("Cleanup resulting in error", resultingException);
+            }
+        }
+
+        // now throw
+
+        if (resultingException == null || resultingException instanceof Exception) {
             // return the Exception (or null)
-            return (Exception) initialException;
+            return (Exception) resultingException;
         } else {
             // return Throwable wrapped in exception
-            return new Exception(initialException);
+            return new Exception(resultingException);
         }
     }
 

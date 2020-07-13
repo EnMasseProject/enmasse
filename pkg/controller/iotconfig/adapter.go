@@ -416,6 +416,11 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 		{Name: "HONO_TENANT_PASSWORD", ValueFrom: password},
 	}...)
 
+	applyServiceConnectionOptions(container, "HONO_REGISTRATION", config.Spec.ServicesConfig.DeviceRegistry.TlsVersions(config))
+	applyServiceConnectionOptions(container, "HONO_CREDENTIALS", config.Spec.ServicesConfig.DeviceRegistry.TlsVersions(config))
+	applyServiceConnectionOptions(container, "HONO_DEVICE_CONNECTION", config.Spec.ServicesConfig.DeviceConnection.TlsVersions(config))
+	applyServiceConnectionOptions(container, "HONO_TENANT", config.Spec.ServicesConfig.Tenant.TlsVersions(config))
+
 	adapterConfig := adapter.AdapterConfigProvider(config)
 	options := mergeAdapterOptions(config.Spec.AdaptersConfig.DefaultOptions, adapterConfig.Options)
 

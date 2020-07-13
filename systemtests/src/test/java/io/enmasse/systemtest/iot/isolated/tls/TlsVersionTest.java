@@ -27,7 +27,7 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 @Tag(IOT)
 public class TlsVersionTest implements IoTTests {
 
-    @OpenShift(version = OpenShiftVersion.OCP4)
+    //@OpenShift(version = OpenShiftVersion.OCP4)
     @Test
     public void testWithExplicitVersion() throws Exception {
         IoTTestSession

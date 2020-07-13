@@ -95,6 +95,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceConnectionDeployment(confi
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
+		applyServiceConnectionOptions(container, "HONO_AUTH", config.Spec.ServicesConfig.Authentication.TlsVersions(config))
 		appendCommonHonoJavaEnv(container, "HONO_DEVICECONNECTION_AMQP_", config, &service.Infinispan.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)

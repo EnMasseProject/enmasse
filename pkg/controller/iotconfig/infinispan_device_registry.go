@@ -98,6 +98,7 @@ func (r *ReconcileIoTConfig) reconcileInfinispanDeviceRegistryDeployment(config 
 			{Name: "ENMASSE_IOT_REST_AUTH_TOKEN_CACHE_EXPIRATION", Value: service.Infinispan.Management.AuthTokenCacheExpiration},
 		}
 
+		applyServiceConnectionOptions(container, "HONO_AUTH", config.Spec.ServicesConfig.Authentication.TlsVersions(config))
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.Infinispan.CommonServiceConfig)
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_REST_", config, &service.Infinispan.CommonServiceConfig)
 
