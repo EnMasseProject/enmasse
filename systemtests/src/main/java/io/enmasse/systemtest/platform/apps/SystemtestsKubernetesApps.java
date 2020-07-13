@@ -143,9 +143,7 @@ public class SystemtestsKubernetesApps {
 
     //infinispan iot
     public static final String INFINISPAN_SERVER = "infinispan";
-    private static final Path INFINISPAN_EXAMPLE_BASE;
-    private static final String[] INFINISPAN_OPENSHIFT;
-    private static final String[] INFINISPAN_KUBERNETES;
+    private static final Path INFINISPAN_EXAMPLE;
 
     //postgress iot
     public static final String POSTGRESQL_SERVER = "postgresql";
@@ -173,15 +171,7 @@ public class SystemtestsKubernetesApps {
 
         final Path examplesIoT = TEMPLATES_ROOT.resolve("install/components/iot/examples");
 
-        INFINISPAN_EXAMPLE_BASE = examplesIoT.resolve("infinispan");
-        INFINISPAN_OPENSHIFT = new String[]{
-                "common",
-                "openshift"
-        };
-        INFINISPAN_KUBERNETES = new String[]{
-                "common",
-                "kubernetes"
-        };
+        INFINISPAN_EXAMPLE = examplesIoT.resolve("infinispan");
 
         POSTGRESQL_EXAMPLE_BASE = examplesIoT.resolve("postgresql/deploy");
         POSTGRESQL_CREATE_TABLE_SQL = new Path[]{
@@ -369,17 +359,7 @@ public class SystemtestsKubernetesApps {
 
         final KubernetesClient client = getClient();
 
-        // apply "common" and "manual" folders
-
-        if (!Kubernetes.isOpenShiftCompatible()) {
-            log.info("Installing Infinispan for Kubernetes");
-            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_KUBERNETES));
-        } else {
-            log.info("Installing Infinispan for OpenShift");
-            kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT),
-                    resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT));
-        }
+        kube.apply(INFINISPAN_PROJECT, namespaceReplacer(INFINISPAN_PROJECT), INFINISPAN_EXAMPLE);
 
         // wait for the deployment
 
@@ -414,10 +394,7 @@ public class SystemtestsKubernetesApps {
                 .get() != null) {
 
             log.info("Infinispan server will be removed");
-
-            for (final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
-                KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
-            }
+            KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, INFINISPAN_EXAMPLE);
             kube.deleteNamespace(INFINISPAN_PROJECT);
         }
     }
