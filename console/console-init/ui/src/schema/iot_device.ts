@@ -31,6 +31,7 @@ export interface IIoTDevicesResponse {
       jsonData: string;
       enabled: boolean;
       viaGateway: boolean;
+      credentials: string;
     }>;
   };
 }

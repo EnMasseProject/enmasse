@@ -60,7 +60,7 @@ describe("<ProjectList/>", () => {
       div
     );
   });
-  test("should render a list of address spaces", () => {
+  it("should render a list of address spaces", () => {
     const { getByText } = render(
       <MemoryRouter>
         <ProjectList

@@ -75,6 +75,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       page,
       perPage,
       projectname,
+      namespace,
       sortBy,
       appliedFilter
     ),
@@ -183,10 +184,7 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
       },
       {
         title: enabled ? "Disable" : "Enable",
-        onClick: () =>
-          enabled
-            ? toggleDeviceStatus(rowData, false)
-            : toggleDeviceStatus(rowData, true)
+        onClick: () => toggleDeviceStatus(rowData, enabled ? false : true)
       }
     ];
   };
@@ -201,12 +199,13 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   };
 
   const rows =
-    devices?.map(({ deviceId, enabled, jsonData, viaGateway }) => {
+    devices?.map(({ deviceId, enabled, jsonData, viaGateway, credentials }) => {
       return {
         deviceId,
         enabled,
         jsonData,
         viaGateway,
+        credentials: JSON.parse(credentials),
         ...JSON.parse(jsonData)?.status,
         selected:
           selectedDevices.filter(device =>

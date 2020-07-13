@@ -42,9 +42,19 @@ const rows: IDevice[] = [
     updated: "2020-01-20T11:44:28.607Z",
     created: "2020-01-20T11:44:28.607Z"
   },
+  {
+    deviceId: "littlesensor235",
+    viaGateway: false,
+    enabled: true,
+    selected: true,
+    lastSeen: "2020-01-20T11:44:28.607Z",
+    updated: "2020-01-20T11:44:28.607Z",
+    created: "2020-01-20T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]'
+  },
   ...new Array(15).fill({
     deviceId: "jboss20",
-    type: false,
+    viaGateway: false,
     enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",

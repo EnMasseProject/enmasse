@@ -10,27 +10,29 @@ import {
 } from "modules/iot-device/components";
 import { useQuery } from "@apollo/react-hooks";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
-import { useParams } from "react-router";
 import { IIoTDevicesResponse } from "schema/iot_device";
 import { RETURN_ALL_DEVICES_FOR_IOT_PROJECT } from "graphql-module/queries";
 
 export interface IEmptyDeviceContainerProps extends IEmptyDeviceListProps {
   setTotalDevices: (val: number) => void;
+  projectname: string;
+  namespace: string;
 }
 
 export const EmptyDeviceContainer: React.FC<IEmptyDeviceContainerProps> = ({
   handleInputDeviceInfo,
   handleJSONUpload,
-  setTotalDevices
+  setTotalDevices,
+  projectname,
+  namespace
 }) => {
-  const { projectname } = useParams();
-
   // To check if the server has atleast one device
   const { data } = useQuery<IIoTDevicesResponse>(
     RETURN_ALL_DEVICES_FOR_IOT_PROJECT(
       1,
       1,
       projectname,
+      namespace,
       undefined,
       undefined,
       "total"

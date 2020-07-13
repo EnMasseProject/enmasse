@@ -33,6 +33,7 @@ export interface IDevice {
   jsonData?: string;
   updated?: string | Date;
   created?: string | Date;
+  credentials?: string;
 }
 
 export const StyleForFooteredTable = StyleSheet.create({

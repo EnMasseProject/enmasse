@@ -1,27 +1,47 @@
 import React from "react";
 import {
   CheckCircleIcon,
-  ExclamationCircleIcon
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon
 } from "@patternfly/react-icons";
 import { Link } from "react-router-dom";
 import { FormatDistance } from "use-patternfly";
 
 import { IRowData } from "@patternfly/react-table";
 import { IDevice } from "modules/iot-device/components";
+import { Label } from "@patternfly/react-core";
+
+const renderDeviceType = (type: string) => {
+  return type === "N/A" ? (
+    <Label color="orange" icon={<ExclamationTriangleIcon />}>
+      {type}
+    </Label>
+  ) : (
+    <Label variant="outline" color="green">
+      {type}
+    </Label>
+  );
+};
 
 export const getTableCells = (row: IDevice) => {
-  const { jsonData = "{}", enabled } = row;
-
-  const { gateways, credentials } = JSON.parse(jsonData);
+  const {
+    enabled,
+    viaGateway,
+    credentials,
+    deviceId,
+    updated,
+    created,
+    lastSeen
+  } = row;
 
   let deviceType: string;
 
-  if (!gateways?.length === !credentials?.length) {
+  if (!viaGateway === !credentials?.length) {
     deviceType = "N/A";
-  } else if (gateways) {
-    deviceType = "Using gateways";
+  } else if (viaGateway) {
+    deviceType = "Via gateways";
   } else {
-    deviceType = "Using credentials";
+    deviceType = "Connected directly";
   }
 
   const tableRow: IRowData = {
@@ -31,15 +51,13 @@ export const getTableCells = (row: IDevice) => {
         header: "id",
         title: (
           <span>
-            <Link to={`devices/${row.deviceId}/device-info`}>
-              {row.deviceId}
-            </Link>
+            <Link to={`devices/${deviceId}/device-info`}>{deviceId}</Link>
           </span>
         )
       },
       {
         header: "type",
-        title: <span>{deviceType}</span>
+        title: renderDeviceType(deviceType)
       },
       {
         title: enabled ? (
@@ -54,25 +72,25 @@ export const getTableCells = (row: IDevice) => {
           </span>
         )
       },
-      // TODO: The timestamps are subjected to change, the following lines of code will be changed accordingly
+      // TODO: The lastseen value is not being parsed from server yet
       {
-        title: row.lastSeen && (
+        title: lastSeen && (
           <>
-            <FormatDistance date={row.lastSeen} /> ago
+            <FormatDistance date={lastSeen} /> ago
           </>
         )
       },
       {
-        title: row.updated && (
+        title: updated && (
           <>
-            <FormatDistance date={row.updated} /> ago
+            <FormatDistance date={updated} /> ago
           </>
         )
       },
       {
-        title: row.created && (
+        title: created && (
           <>
-            <FormatDistance date={row.created} /> ago
+            <FormatDistance date={created} /> ago
           </>
         )
       }

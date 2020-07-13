@@ -39,7 +39,7 @@ import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
 import { TablePagination } from "components";
 import { useLocation, useParams } from "react-router";
-import { useMutationQuery } from "hooks";
+import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 import { DELETE_IOT_DEVICE, TOGGLE_IOT_DEVICE_STATUS } from "graphql-module";
 
 export default function DeviceListPage() {
@@ -113,6 +113,8 @@ export default function DeviceListPage() {
     changeDeviceAlert();
   }, [totalDevices]);
 
+  useSearchParamsPageChange([appliedFilter]);
+
   const onSelectDevice = (
     data: IDevice,
     isSelected: boolean,
@@ -151,8 +153,8 @@ export default function DeviceListPage() {
     }
   };
 
-  const runFilter = (filter2: IDeviceFilter) => {
-    setAppliedFilter(filter2);
+  const runFilter = (filter: IDeviceFilter) => {
+    setAppliedFilter(filter);
   };
 
   const selectAllDevices = (devices: IDevice[]) => {
@@ -167,24 +169,14 @@ export default function DeviceListPage() {
     await setDeleteDeviceQueryVariables(variable);
   };
 
-  const onConfirmEnableSelectedDevices = async (devices: IDevice[]) => {
+  const onConfirmToggleSelectedDeviceStatus = async (data: any) => {
+    const { devices, status } = data;
     setIsAllSelected(false);
     setSelectedDevices([]);
     const variable = {
       a: { name: projectname, namespace },
-      b: devices.map(({ deviceId }) => deviceId),
-      status: true
-    };
-    await setUpdateDeviceQueryVariables(variable);
-  };
-
-  const onConfirmDisableSelectedDevices = async (devices: IDevice[]) => {
-    setIsAllSelected(false);
-    setSelectedDevices([]);
-    const variable = {
-      a: { name: projectname, namespace },
-      b: devices.map(({ deviceId }) => deviceId),
-      status: false
+      b: devices.map((device: IDevice) => device.deviceId),
+      status
     };
     await setUpdateDeviceQueryVariables(variable);
   };
@@ -194,10 +186,10 @@ export default function DeviceListPage() {
       type: types.SHOW_MODAL,
       modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
       modalProps: {
-        onConfirm: onConfirmEnableSelectedDevices,
+        onConfirm: onConfirmToggleSelectedDeviceStatus,
         selectedItems: selectedDevices.map(device => device.deviceId),
         option: "Enable",
-        data: selectedDevices,
+        data: { devices: selectedDevices, status: true },
         detail: getDetailForDialog(selectedDevices, DialogTypes.ENABLE),
         header: getHeaderForDialog(selectedDevices, DialogTypes.ENABLE),
         confirmButtonLabel: "Enable"
@@ -210,10 +202,10 @@ export default function DeviceListPage() {
       type: types.SHOW_MODAL,
       modalType: MODAL_TYPES.UPDATE_DEVICE_STATUS,
       modalProps: {
-        onConfirm: onConfirmDisableSelectedDevices,
+        onConfirm: onConfirmToggleSelectedDeviceStatus,
         selectedItems: selectedDevices.map(device => device.deviceId),
         option: "Disable",
-        data: selectedDevices,
+        data: { devices: selectedDevices, status: false },
         detail: getDetailForDialog(selectedDevices, DialogTypes.DISABLE),
         header: getHeaderForDialog(selectedDevices, DialogTypes.DISABLE),
         confirmButtonLabel: "Disable"
@@ -246,15 +238,15 @@ export default function DeviceListPage() {
   };
 
   const isEnableDevicesOptionDisabled = () => {
-    return selectedDevices.every((device: IDevice) => {
-      return device?.enabled === true;
-    });
+    if (selectedDevices.length === 0) return true;
+    const isEnabled = (device: IDevice) => device?.enabled === true;
+    return selectedDevices.some(isEnabled);
   };
 
   const isDisableDevicesOptionDisabled = () => {
-    return selectedDevices.every((device: IDevice) => {
-      return device?.enabled === false;
-    });
+    if (selectedDevices.length === 0) return true;
+    const isDisabled = (device: IDevice) => device?.enabled === false;
+    return selectedDevices.some(isDisabled);
   };
 
   const kebabItems: React.ReactNode[] = [
@@ -314,6 +306,8 @@ export default function DeviceListPage() {
         handleInputDeviceInfo={handleInputDeviceInfo}
         handleJSONUpload={handleJSONUpload}
         setTotalDevices={setTotalDevices}
+        projectname={projectname}
+        namespace={namespace}
       />
     );
   }
