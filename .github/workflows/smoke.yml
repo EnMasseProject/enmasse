@@ -126,3 +126,63 @@ jobs:
         with:
           name: smoke-test-logs
           path: test-logs.zip
+
+  iottests:
+    #if: contains(github.event.pull_request.labels.*.name, 'component/iot')
+    env:
+      SKIP_TESTS: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Clean disk
+        run: ./.github/scripts/clean_disk.sh
+
+      - name: Set version
+        run: |
+          echo "::set-env name=VERSION::$(grep "release.version" pom.properties| cut -d'=' -f2)"
+
+      - name: Install dependencies
+        run: ./.github/scripts/install_dep.sh
+
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.14.3'
+      - run: go version
+
+      - name: setup-docker
+        run: ./.github/scripts/setup_docker.sh
+
+      - name: setup-kind
+        run: ./.github/scripts/setup_kind.sh
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11.0.2
+
+      - name: Cache local Maven repository
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build images
+        run: ./.github/scripts/build.sh
+
+      - name: IoT systemtests
+        run: |
+          make TESTCASE=iot.isolated.http.HttpAdapterTest PROFILE=iot systemtests
+
+      - name: Collect logs
+        if: failure()
+        run: ./.github/scripts/collectLogs.sh
+
+      - name: Upload artifacts
+        if: failure()
+        uses: actions/upload-artifact@v1.0.0
+        with:
+          name: smoke-test-logs
+          path: test-logs.zip
