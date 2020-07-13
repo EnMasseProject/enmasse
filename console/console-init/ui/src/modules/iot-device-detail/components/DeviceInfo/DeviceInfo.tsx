@@ -110,7 +110,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
           <SplitItem isFilled />
           <SplitItem>
             <SwitchWithToggle
-              id={"divice-info-view-json"}
+              id={"device-info-view-in-json-switch"}
               label={"View in JSON"}
               onChange={onToggle}
             />
@@ -172,7 +172,7 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
                 <CardBody className={css(styles.card_body)}>
                   <MetadataListTable
                     dataList={prepareMetadataList()}
-                    id={"divice-info-metadata-table"}
+                    id={"device-info-metadata-table"}
                     aria-label={"device info metadata"}
                     aria-labelledby={"device info metadata header"}
                   />

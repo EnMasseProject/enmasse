@@ -33,7 +33,8 @@ const rows: IDevice[] = [
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
     updated: "2020-01-20T11:44:28.607Z",
-    created: "2020-01-20T11:44:28.607Z"
+    created: "2020-01-20T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]'
   },
   {
     deviceId: "jboss20",
@@ -42,7 +43,8 @@ const rows: IDevice[] = [
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
     updated: "2020-04-29T11:44:28.607Z",
-    created: "2020-04-30T11:44:28.607Z"
+    created: "2020-04-30T11:44:28.607Z",
+    credentials: '[{"auth-id":"10-id","type":"psk"}]'
   },
   {
     deviceId: "jboss20",

@@ -509,7 +509,7 @@ query allProjects {
 
 ```
 query {
-  devices(iotproject: "iotProjectFrance") {
+  devices(iotproject: { name: "iotProjectFrance", namespace:"app1_ns" }) {
     total
     devices {
       deviceId
@@ -524,7 +524,7 @@ query {
 ```
 query {
   devices(
-    iotproject: "iotProjectFrance",
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     filter: "`$.deviceId`='10'"
   ) {
     total
@@ -542,7 +542,7 @@ query {
 ```
 query {
   devices(
-    iotproject: "iotProjectFrance",
+    iotproject: { name: "iotProjectFrance",namespace: "app1_ns" },
     filter: "`$.enabled` = TRUE"
   ) {
     total
@@ -1028,8 +1028,8 @@ args:
 ## Toggle Iot device status
 
 ```
-mutation toggle_iot_devices_status($a: [ObjectMeta_v1_Input!]!, $status: Boolean!){
-  toggleIoTProjectsStatus(iotproject: $a, devices: $b, status: $status)
+mutation toggle_iot_devices_status($a: ObjectMeta_v1_Input!, $b: [String!]!, $status: Boolean!){
+  toggleIoTDevicesStatus(iotproject: $a, devices: $b, status: $status)
 }
 ```
 
@@ -1037,8 +1037,8 @@ args:
 
 ```
 {
-  "a": [{"name": "iotProjectFrance", "namespace": "app1_ns" }],
-  "b": ["10","11"] ,
+  "a": {"name": "iotProjectFrance", "namespace": "app1_ns" },
+  "b": ["10", "12", "51"] ,
   "status" : false
 }
 
