@@ -38,42 +38,28 @@ make PROFILE=${PROFILE} systemtests
 ##  Running a single test class
 
 ```shell script
-make PROFILE=${PROFILE} TESTCASE="**.SmokeTest" systemtests
+make PROFILE=${PROFILE} TESTCASE="**.MessagingEndpointTest" systemtests
 ```
 
 Where $PROFILE can be:
 
 * systemtests
 * acceptance
-* upgrade
-* soak
-
-## Running upgrade test
-
-```shell script
-mkdir templates/build -pv
-export START_VERSION=0.28.2
-wget https://github.com/EnMasseProject/enmasse/releases/download/${START_VERSION}/enmasse-${START_VERSION}.tgz -O templates/build/enmasse-${START_VERSION}.tgz
-tar zxvf templates/build/enmasse-${version}.tgz -C templates/build
-make templates
-make TAG=latest imageenv
-export START_TEMPLATES=${pwd}/templates/build/enmasse-${START_VERSION}
-export UPGRADE_TEMPLATES=${pwd}/templates/build/enmasse-latest
-make PROFILE=upgrade systemtests
-```
+* iot
+* scale
 
 ## Test process
 1. Tests are stored into TestPlan
-2. [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/OperatorManager.java) installs enmasse operator, example plans, example auth services and roles (if test is iot is also deploy iot components).
+2. [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/EnmasseOperatorManager.java) installs enmasse operator, example plans, example auth services and roles (if test is iot is also deploy iot components).
 3. Test is triggered and evaluated.
-4. If test is latest [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/OperatorManager.java) uninstall operators and clean kubernetes env, else continue with step 2.
+4. If test is latest [OperatorManager](systemtests/src/main/java/io/enmasse/systemtest/operator/EnmasseOperatorManager.java) uninstall operators and clean kubernetes env, else continue with step 2.
 
 ## Creating test cases
 * Decide if you can create test under existing test class [here](systemtests/src/test/java/io/enmasse/systemtest) or create a new one.
-* If your test can work with shared address space please store test in [shared](systemtests/src/test/java/io/enmasse/systemtest/shared) package of not pick other
 * Create `@Test` method:
-    * Create resources using builders (`AddressSpaceBuilder`, `AddressBuilder` etc...) from api-model
-    * call resourceManager methods for creating enmasse resources in kubernetes cluster `resourceManager.createAddressSpace(addressSpace)`
+    * Every test method should pass junit ExtensionContext by default so your test declaration should be `void testFoo(ExtensionContext extensioncontext)...`
+    * Create resources using builders (`MessagingInfrastructureBuilder`, `MessagingProjectBuilder` etc...) from api-model or you can use default infra and project by using annotations `@DefaultMessagingInfrastructure` and `@DefaulMessagingtProject`
+    * call resourceManager methods for creating enmasse resources in kubernetes cluster `resourceManager.create(extensionConstext, infra, project)`
     * do test code
 * You don't need to take care about removing resources, Test callbacks do that after every test
 
@@ -95,7 +81,7 @@ All environment variables can be seen in [Environment](systemtests/src/main/java
 | UPGRADE_TEMPLATES         | path for upgrade templates                                                                       | ${ENMASSE_DIR}/templates/build/enmasse-latest                                       |
 | START_TEMPLATES      | path for start templates before upgrade                                     | ${ENMASSE_DIR}/templates/build/enmasse-latest             |
 | TEMPLATES         | path where templates are stored                    | ${ENMASSE_DIR}/templates/build/enmasse-latest                                        |
-| SKIP_CLEANUP             | skip teardown and clean phase of tests (for debug only)                            | false                                            |
+| SKIP_CLEANUP             | skip teardown and uninstall phase of tests (for debug only)                            | false                                            |
 | SKIP_UNINSTALL         | skip enmassse operator uninstall (for debug purpose)                                                                    | false                                     |
 | STORE_SCREENSHOTS         | store screenshots in selenium tests even if test failed or not                                                                    | false                                     |
 | MONITORING_NAMESPACE         | Inamespace for install monitoring part of enmasse                                                                    | enmasse-monitoring                                     |
