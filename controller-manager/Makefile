@@ -31,6 +31,7 @@ build/operatorImageMap.yaml:
 	echo "console-init: $(CONSOLE_INIT_IMAGE)" >> "$@"
 	echo "console-server: $(CONSOLE_SERVER_IMAGE)" >> "$@"
 	echo "console-proxy-openshift: $(CONSOLE_PROXY_OPENSHIFT_IMAGE)" >> "$@"
+	echo "console-proxy-openshift3: $(CONSOLE_PROXY_OPENSHIFT3_IMAGE)" >> "$@"
 	echo "console-proxy-kubernetes: $(CONSOLE_PROXY_KUBERNETES_IMAGE)" >> "$@"
 	echo "standard-controller: $(STANDARD_CONTROLLER_IMAGE)" >> "$@"
 	echo "agent: $(AGENT_IMAGE)" >> "$@"

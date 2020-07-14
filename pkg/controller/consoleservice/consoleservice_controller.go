@@ -798,7 +798,11 @@ func applyDeployment(consoleservice *v1beta1.ConsoleService, deployment *appsv1.
 	if util.IsOpenshift() {
 		install.ApplyConfigMapVolume(&deployment.Spec.Template.Spec, "trusted-ca-bundle", getCustomCaConfigMapName(consoleservice))
 		if err := install.ApplyDeploymentContainerWithError(deployment, "console-proxy", func(container *corev1.Container) error {
-			if err := install.ApplyContainerImage(container, "console-proxy-openshift", nil); err != nil {
+			imageName := "console-proxy-openshift3"
+			if util.IsOpenshift4() {
+				imageName = "console-proxy-openshift"
+			}
+			if err := install.ApplyContainerImage(container, imageName, nil); err != nil {
 				return err
 			}
 			container.Args = []string{
