@@ -17,7 +17,7 @@ import {
 export const ConfigurationInfoContainer: React.FC<{ id: string }> = ({
   id
 }) => {
-  const { projectname, deviceid } = useParams();
+  const { projectname, deviceid, namespace } = useParams();
   const [filterType, setFilterType] = useState<string>("enabled");
   const [filterValue, setFilterValue] = useState<string>("");
 
@@ -27,6 +27,7 @@ export const ConfigurationInfoContainer: React.FC<{ id: string }> = ({
   const { data } = useQuery<ICredentialsReponse>(
     RETURN_IOT_CREDENTIALS(
       projectname,
+      namespace,
       deviceid,
       propertyName,
       filterType,

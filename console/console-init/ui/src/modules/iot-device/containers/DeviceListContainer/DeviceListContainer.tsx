@@ -123,7 +123,10 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   const onConfirmDeleteDevice = async (deviceId: string) => {
     const variable = {
       deviceId,
-      iotproject: projectname
+      iotproject: {
+        name: projectname,
+        namespace
+      }
     };
     await setDeleteDeviceQueryVariables(variable);
   };
@@ -198,6 +201,9 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     setSortValue({ index: index, direction: direction });
   };
 
+  console.log(devices);
+  // JSON.parse(devices?[0]?.credentials);
+
   const rows =
     devices?.map(({ deviceId, enabled, jsonData, viaGateway, credentials }) => {
       return {
@@ -205,7 +211,9 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
         enabled,
         jsonData,
         viaGateway,
-        credentials: JSON.parse(credentials),
+        ...(credentials?.trim() !== "" && {
+          credentials: JSON.parse(credentials)
+        }),
         ...JSON.parse(jsonData)?.status,
         selected:
           selectedDevices.filter(device =>

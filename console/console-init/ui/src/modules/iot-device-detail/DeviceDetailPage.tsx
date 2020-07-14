@@ -60,7 +60,7 @@ export default function DeviceDetailPage() {
   useA11yRouteChange();
 
   const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
   );
 
   const changePageState = (deleteIotDevice: boolean) => {
@@ -131,7 +131,10 @@ export default function DeviceDetailPage() {
 
   const onConfirmDeleteDevice = async () => {
     const variable = {
-      iotproject: projectname,
+      iotproject: {
+        name: projectname,
+        namespace
+      },
       deviceId: [deviceid]
     };
     await setIotDeviceQueryVariables(variable);
