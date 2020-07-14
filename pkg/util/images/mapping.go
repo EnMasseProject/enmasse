@@ -71,6 +71,7 @@ func overrideImageMapFromEnv(data map[string]string) {
 	setIfEnvPresent(data, "keycloak-plugin", "RELATED_IMAGE_KEYCLOAK_PLUGIN")
 	setIfEnvPresent(data, "console-init", "RELATED_IMAGE_CONSOLE_INIT")
 	setIfEnvPresent(data, "console-proxy-openshift", "RELATED_IMAGE_CONSOLE_PROXY_OPENSHIFT")
+	setIfEnvPresent(data, "console-proxy-openshift3", "RELATED_IMAGE_CONSOLE_PROXY_OPENSHIFT3")
 	setIfEnvPresent(data, "console-proxy-kubernetes", "RELATED_IMAGE_CONSOLE_PROXY_KUBERNETES")
 	setIfEnvPresent(data, "console-server", "RELATED_IMAGE_CONSOLE_SERVER")
 	setIfEnvPresent(data, "address-space-controller", "RELATED_IMAGE_ADDRESS_SPACE_CONTROLLER")
