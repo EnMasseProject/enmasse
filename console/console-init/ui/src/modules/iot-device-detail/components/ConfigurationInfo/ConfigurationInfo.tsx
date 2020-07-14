@@ -41,43 +41,45 @@ const style = StyleSheet.create({
 export interface IConfigurationInfoProps
   extends Pick<ICredentialsViewProps, "credentials"> {
   id: string;
-  onSelectFilterType?: (value: string) => void;
-  onSelectFilterValue?: (value: string) => void;
+  setFilterType: (value: string) => void;
+  setFilterValue: (value: string) => void;
+  filterType: string;
+  filterValue: string;
 }
 
 export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   id,
   credentials,
-  onSelectFilterType,
-  onSelectFilterValue
+  setFilterType,
+  setFilterValue,
+  filterType,
+  filterValue
 }) => {
-  const [credentialType, setCredentialType] = useState<string>("enabled");
   const [filterOptions, setFilterOptions] = useState<IDropdownOption[]>([]);
-  const [selectedFilterValue, setSelectedFilterValue] = useState<string>("");
 
   useEffect(() => {
-    getFilterOptions();
-  }, [credentialType, credentials]);
+    /**
+     * dropdown options should prepare if selected value is all
+     * so that dropdown can have all previous options
+     */
+    if (filterValue === "all") {
+      getFilterOptions();
+    }
+  }, [filterType, credentials]);
 
   const onSelectCredentialType = (value: string) => {
-    setCredentialType(value);
+    setFilterType(value);
     /**
      * reset default selected value of filter dropdown
      */
-    onSelectFilterValue && onSelectFilterValue("all");
-    onSelectFilterType && onSelectFilterType(value);
-  };
-
-  const onSelectFilterItem = (value: string) => {
-    setSelectedFilterValue(value);
-    onSelectFilterValue && onSelectFilterValue(value);
+    setFilterValue("all");
   };
 
   const shouldDisplayChildDropdown = () => {
     if (
-      credentialType === CredentialsType.PASSWORD ||
-      credentialType === CredentialsType.PSK ||
-      credentialType === CredentialsType.X509_CERTIFICATE
+      filterType === CredentialsType.PASSWORD ||
+      filterType === CredentialsType.PSK ||
+      filterType === CredentialsType.X509_CERTIFICATE
     ) {
       return true;
     }
@@ -85,14 +87,14 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   };
 
   const getFilterOptions = () => {
-    const filterOptions = getDefaultCredentialsFiterOption(credentialType);
-    const defaultSelectedOption = shouldDisplayChildDropdown()
-      ? filterOptions[0]?.value
-      : "";
+    const filterOptions = getDefaultCredentialsFiterOption(filterType);
+    const defaultSelectedOption = filterValue
+      ? filterValue
+      : filterOptions[0]?.value;
     if (shouldDisplayChildDropdown() && credentials) {
       const newCredentials = [...credentials];
       newCredentials
-        ?.filter((item: any) => item?.type === credentialType)
+        ?.filter((item: any) => item?.type === filterType)
         .forEach((item: any) => {
           const { "auth-id": authId } = item;
           filterOptions.push({
@@ -102,7 +104,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
           });
         });
     }
-    setSelectedFilterValue(defaultSelectedOption);
+    shouldDisplayChildDropdown() && setFilterValue(defaultSelectedOption);
     setFilterOptions(shouldDisplayChildDropdown() ? filterOptions : []);
   };
 
@@ -152,7 +154,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                         position={DropdownPosition.left}
                         onSelectItem={onSelectCredentialType}
                         dropdownItems={credentialsTypeOptions}
-                        value={credentialType && credentialType.trim()}
+                        value={filterType && filterType.trim()}
                         isLabelAndValueNotSame={true}
                         toggleIcon={
                           <>
@@ -166,9 +168,9 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                           id="ci-filter-dropdown"
                           toggleId={"ci-filter-dropdown"}
                           position={DropdownPosition.left}
-                          onSelectItem={onSelectFilterItem}
+                          onSelectItem={setFilterValue}
                           dropdownItems={filterOptions}
-                          value={selectedFilterValue}
+                          value={filterValue}
                           isLabelAndValueNotSame={true}
                           className={css(style.filter_dropdown)}
                         />

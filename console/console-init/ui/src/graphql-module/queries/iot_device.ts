@@ -38,16 +38,41 @@ const RETURN_IOT_DEVICE_DETAIL = (
   return IOT_DEVICE_DETAIL;
 };
 
+const FILTER_IOT_CREDENTIALS = (
+  property?: string,
+  filterType?: string,
+  filterValue?: string | boolean
+) => {
+  let filter = "";
+  if (filterValue && property?.toLowerCase() === "enabled") {
+    filter += "`$." + [property] + "` = " + filterValue + "";
+  } else if (
+    filterValue &&
+    property?.toLowerCase() === "auth-id" &&
+    filterType
+  ) {
+    filter +=
+      "`$.type` = '" +
+      filterType +
+      "' AND `$['auth-id']` = '" +
+      filterValue +
+      "'";
+  } else if (filterValue && property) {
+    filter += "`$." + [property] + "` = '" + filterValue + "'";
+  }
+
+  return filter;
+};
+
 const RETURN_IOT_CREDENTIALS = (
   iotproject: string,
   deviceId: string,
   property?: string,
+  filterType?: string,
   filterValue?: string | boolean
 ) => {
-  let filter = "";
-  if (filterValue && property) {
-    filter += "`$." + [property] + "` = '" + filterValue + "'";
-  }
+  const filter = FILTER_IOT_CREDENTIALS(property, filterType, filterValue);
+
   const IOT_CREDENTIALS = gql(
     `query iot_credentials{
       credentials(
@@ -193,11 +218,27 @@ const TOGGLE_IOT_DEVICE_STATUS = gql(
   }`
 );
 
+const SET_IOT_CREDENTIAL_FOR_DEVICE = gql(
+  `mutation set_iot_credential_for_device(
+    $iotproject: String!
+    $deviceId: String!
+    $jsonData: String!
+  ){
+    setCredentialsForDevice(
+      iotproject:$iotproject,
+      deviceId:$deviceId,
+      jsonData:$jsonData
+    )
+  }
+  `
+);
+
 export {
   RETURN_IOT_DEVICE_DETAIL,
   RETURN_IOT_CREDENTIALS,
   DELETE_IOT_DEVICE,
   RETURN_ALL_DEVICES_FOR_IOT_PROJECT,
   DELETE_CREDENTIALS_FOR_IOT_DEVICE,
-  TOGGLE_IOT_DEVICE_STATUS
+  TOGGLE_IOT_DEVICE_STATUS,
+  SET_IOT_CREDENTIAL_FOR_DEVICE
 };

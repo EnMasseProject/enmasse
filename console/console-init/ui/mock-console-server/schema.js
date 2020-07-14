@@ -667,7 +667,7 @@ const typeDefs = gql`
     setCredentialsForDevice(
       iotproject: ObjectMeta_v1_Input!
       deviceId: String!
-      jsonData: [String!]!
+      jsonData: String!
     ): Boolean
     deleteCredentialsForDevice(
       iotproject: ObjectMeta_v1_Input!

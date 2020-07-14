@@ -4,93 +4,46 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { PageSection } from "@patternfly/react-core";
-import {
-  CredentialList,
-  ICredential,
-  IExtension,
-  ISecret
-} from "modules/iot-device/components";
+import { PageSection, PageSectionVariants } from "@patternfly/react-core";
+import { CredentialList, ICredential } from "modules/iot-device/components";
 import { uniqueId, findIndexByProperty } from "utils";
+import { CredentialsType } from "constant";
+import {
+  getCredentialsFieldsInitialState,
+  getFormInitialStateByProperty
+} from "modules/iot-device/utils";
 
-export const AddCredential: React.FC<{}> = () => {
-  const getExtensionsFieldsInitialState = () => {
-    const initialState: IExtension = {
-      id: uniqueId(),
-      parameter: "",
-      type: "",
-      value: ""
-    };
-    return initialState;
-  };
+export interface IAddCredentialProps {
+  id?: string;
+  setCredentialList?: (credentials: ICredential[]) => void;
+}
 
-  const getCredentialsFieldsInitialState = () => {
-    const initialState: ICredential = {
-      id: uniqueId(),
-      "auth-id": "",
-      type: "hashed-password",
-      secrets: [{ "pwd-hash": "" }],
-      ext: [getExtensionsFieldsInitialState()],
-      enabled: true,
-      isExpandedAdvancedSetting: false
-    };
-    return initialState;
-  };
-
+export const AddCredential: React.FC<IAddCredentialProps> = ({
+  id = "add-credential",
+  setCredentialList
+}) => {
   const [credentials, setCredentials] = useState([
     getCredentialsFieldsInitialState()
   ]);
-  const [type, setType] = useState<string>("hashed-password");
-  const [activeCredentialFormId, setActiveCredentialFormId] = useState("");
-
-  const getSecretsFieldsInitialState = () => {
-    let initialState: ISecret = {};
-    switch (type && type.toLowerCase()) {
-      case "hashed-password":
-        initialState = {
-          "pwd-hash": "",
-          "not-before": "",
-          "not-after": "",
-          comment: ""
-        };
-        break;
-      case "x509":
-        initialState = { "not-before": "", "not-after": "", comment: "" };
-        break;
-      case "psk":
-        initialState = {
-          key: "",
-          "not-before": "",
-          "not-after": "",
-          comment: ""
-        };
-        break;
-      default:
-        break;
-    }
-    return initialState;
-  };
-
-  const getFormInitialStateByProperty = (property: string) => {
-    let initialState = {};
-    if (property === "secrets") {
-      initialState = getSecretsFieldsInitialState();
-    } else if (property === "ext") {
-      initialState = getExtensionsFieldsInitialState();
-    } else if (property === "credentials") {
-      initialState = getCredentialsFieldsInitialState();
-    }
-    return initialState;
-  };
+  const [type, setType] = useState<string>(CredentialsType.PASSWORD);
+  const [activeCredentialFormId, setActiveCredentialFormId] = useState<string>(
+    ""
+  );
 
   const setSecretsInitialFormState = () => {
     const newCredentials = [...credentials];
     const activeFormId =
       activeCredentialFormId || newCredentials[newCredentials.length - 1]?.id;
-    const index = findIndexByProperty(credentials, "id", activeFormId);
-    if (index >= 0) {
-      const initialState = getFormInitialStateByProperty("secrets");
-      newCredentials[index]["secrets"] = [{ id: uniqueId(), ...initialState }];
+    const credIndex = findIndexByProperty(credentials, "id", activeFormId);
+    if (credIndex >= 0) {
+      const initialState = getFormInitialStateByProperty(
+        newCredentials,
+        "secrets",
+        credIndex
+      );
+      newCredentials[credIndex]["secrets"] = [
+        { id: uniqueId(), ...initialState }
+      ];
       setCredentials(newCredentials);
     }
   };
@@ -99,56 +52,117 @@ export const AddCredential: React.FC<{}> = () => {
     setSecretsInitialFormState();
   }, [type]);
 
+  useEffect(() => {
+    setCredentialList && setCredentialList(credentials);
+  }, [credentials]);
+
   const onSelectType = (id: string, event: any, value: string) => {
     setType(value);
     setActiveCredentialFormId(id);
     handleInputChange(id, event, value);
   };
 
+  const addMoreSecretOrExt = (id?: string, property?: string) => {
+    let newCredentials: ICredential[] = [];
+    if (property && id) {
+      newCredentials = [...credentials];
+      const credIndex: number = findIndexByProperty(credentials, "id", id);
+      if (credIndex >= 0) {
+        const initialState = getFormInitialStateByProperty(
+          newCredentials,
+          property,
+          credIndex
+        );
+        const secrets = (newCredentials[credIndex] as any)[property];
+        (newCredentials[credIndex] as any)[property] = [
+          ...secrets,
+          { id: uniqueId(), ...initialState }
+        ];
+      }
+    }
+    return newCredentials;
+  };
+
+  const addMoreCredentials = () => {
+    let newCredentials: ICredential[] = [];
+    newCredentials = [...credentials, getCredentialsFieldsInitialState()];
+    return newCredentials;
+  };
+
   const addMoreItem = (id?: string, property?: string) => {
-    let newCredentials: ICredential[];
+    let newCredentials: ICredential[] = [];
     /**
      * add more items for child fields i.e. secrets and extensions
      */
     if (property && id) {
-      newCredentials = [...credentials];
-      const index: number = findIndexByProperty(credentials, "id", id);
-      if (index >= 0) {
-        const initialState = getFormInitialStateByProperty(property);
-        const secrets = (newCredentials[index] as any)[property];
-        (newCredentials[index] as any)[property] = [
-          ...secrets,
-          { id: uniqueId(), ...initialState }
-        ];
-        setCredentials(newCredentials);
-      }
+      newCredentials = addMoreSecretOrExt(id, property);
     } else {
       /**
        * add more credentials
        */
-      newCredentials = [...credentials, getCredentialsFieldsInitialState()];
+      newCredentials = addMoreCredentials();
     }
     setCredentials(newCredentials);
   };
 
+  const deleteSecretOrExt = (
+    id: string,
+    credentials: ICredential[],
+    credIndex: number,
+    property?: string,
+    childObjId?: string
+  ) => {
+    if (id && property && childObjId && credIndex >= 0) {
+      const items = (credentials[credIndex] as any)[property];
+      const itemIndex = findIndexByProperty(items, "id", childObjId);
+      itemIndex >= 0 &&
+        (credentials[credIndex] as any)[property].splice(itemIndex, 1);
+    }
+  };
+
+  const deleteCredential = (credentials: ICredential[], credIndex: number) => {
+    credentials.splice(credIndex, 1);
+  };
+
   const onDeleteItem = (id: string, property?: string, childObjId?: string) => {
     let newCredentials: ICredential[] = [...credentials];
-    const index: number = findIndexByProperty(credentials, "id", id);
+    const credIndex: number = findIndexByProperty(credentials, "id", id);
     /**
      * delete items for child fields i.e. secrets and extensions
      */
-    if (id && property && childObjId && index >= 0) {
-      const items = (newCredentials[index] as any)[property];
-      const itemIndex = findIndexByProperty(items, "id", childObjId);
-      itemIndex >= 0 &&
-        (newCredentials[index] as any)[property].splice(itemIndex, 1);
-    } else if (id && index >= 0) {
+    if (id && property && childObjId && credIndex >= 0) {
+      deleteSecretOrExt(id, newCredentials, credIndex, property, childObjId);
+    } else if (id && credIndex >= 0) {
       /**
        * delete credentilas
        */
-      newCredentials.splice(index, 1);
+      deleteCredential(newCredentials, credIndex);
     }
     setCredentials(newCredentials);
+  };
+
+  const handleSecretOrExtInputChange = (
+    credentials: ICredential[],
+    childObjId: string,
+    property: string,
+    credIndex: number,
+    elementName: string,
+    value: string | boolean
+  ) => {
+    const items = (credentials[credIndex] as any)[property];
+    const itemIndex = findIndexByProperty(items, "id", childObjId);
+    if (itemIndex >= 0) {
+      (credentials[credIndex] as any)[property][itemIndex][elementName] = value;
+    }
+  };
+
+  const handleCredentialsInputChange = (
+    credentials: ICredential[],
+    credIndex: number,
+    elementName: string,
+    value: string | boolean
+  ) => {
+    (credentials[credIndex] as any)[elementName] = value;
   };
 
   const handleInputChange = (
@@ -160,27 +174,36 @@ export const AddCredential: React.FC<{}> = () => {
   ) => {
     const elementName: string = evt.target.name;
     const newCredentials: ICredential[] = [...credentials];
-    const index: number = findIndexByProperty(newCredentials, "id", id);
+    const credIndex: number = findIndexByProperty(newCredentials, "id", id);
     /**
-     * save child object's fields value i.e. screts and extensions
+     * save child object's fields value i.e. secrets and ext
      */
-    if (index >= 0 && elementName) {
-      if (childObjId && property) {
-        const items = (newCredentials[index] as any)[property];
-        const itemIndex = findIndexByProperty(items, "id", childObjId);
-        if (itemIndex >= 0) {
-          (newCredentials[index] as any)[property][itemIndex][
-            elementName
-          ] = value;
-        }
-      } else {
-        /**
-         * save crentials (parent object) fields value
-         */
-        (newCredentials[index] as any)[elementName] = value;
-      }
-      setCredentials(newCredentials);
+    if (
+      credIndex >= 0 &&
+      elementName?.trim() &&
+      childObjId?.trim() &&
+      property?.trim()
+    ) {
+      handleSecretOrExtInputChange(
+        newCredentials,
+        childObjId,
+        property,
+        credIndex,
+        elementName,
+        value
+      );
+    } else {
+      /**
+       * save crentials (parent object) fields value
+       */
+      handleCredentialsInputChange(
+        newCredentials,
+        credIndex,
+        elementName,
+        value
+      );
     }
+    setCredentials(newCredentials);
   };
 
   const onToggleAdvancedSetting = (id: string) => {
@@ -197,7 +220,7 @@ export const AddCredential: React.FC<{}> = () => {
   };
 
   return (
-    <PageSection>
+    <PageSection id={id} variant={PageSectionVariants.light}>
       <CredentialList
         credentials={credentials}
         handleInputChange={handleInputChange}

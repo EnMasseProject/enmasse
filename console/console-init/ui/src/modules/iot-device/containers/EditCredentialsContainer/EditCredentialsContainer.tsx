@@ -9,7 +9,9 @@ import {
   Flex,
   FlexItem,
   Button,
-  ButtonVariant
+  ButtonVariant,
+  Grid,
+  GridItem
 } from "@patternfly/react-core";
 import { AddCredential } from "modules/iot-device/components";
 import { useStoreContext, types } from "context-state-reducer";
@@ -41,29 +43,33 @@ export const EditCredentialsContainer = () => {
         Edit credentials
       </Title>
       <br />
-      <AddCredential />
-      <br />
-      <br />
-      <Flex>
-        <FlexItem>
-          <Button
-            id="ec-save-credentials-button"
-            variant={ButtonVariant.primary}
-            onClick={onSave}
-          >
-            Save
-          </Button>
-        </FlexItem>
-        <FlexItem>
-          <Button
-            id="ec-cancel-credentials-button"
-            variant={ButtonVariant.secondary}
-            onClick={onCancel}
-          >
-            Cancel
-          </Button>
-        </FlexItem>
-      </Flex>
+      <Grid>
+        <GridItem span={6}>
+          <AddCredential />
+          <br />
+          <br />
+          <Flex>
+            <FlexItem>
+              <Button
+                id="ec-save-credentials-button"
+                variant={ButtonVariant.primary}
+                onClick={onSave}
+              >
+                Save
+              </Button>
+            </FlexItem>
+            <FlexItem>
+              <Button
+                id="ec-cancel-credentials-button"
+                variant={ButtonVariant.secondary}
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            </FlexItem>
+          </Flex>
+        </GridItem>
+      </Grid>
     </>
   );
 };

@@ -82,5 +82,12 @@ const credentials = [
 ];
 
 export const ConfigurationInfoPage = () => (
-  <ConfigurationInfo id="ci-page" credentials={credentials} />
+  <ConfigurationInfo
+    id="ci-page"
+    credentials={credentials}
+    filterType="all"
+    filterValue="all"
+    setFilterType={() => {}}
+    setFilterValue={() => {}}
+  />
 );

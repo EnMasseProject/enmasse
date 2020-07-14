@@ -59,7 +59,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
 
   const extOptions = convertJsonToMetadataOptions(ext);
 
-  const rows = extOptions.map((ext: any) => {
+  const rows = extOptions?.map((ext: any) => {
     const { key, value, typeLabel } = ext || {};
     const cells = [
       { header: "parameter", title: key },

@@ -10,7 +10,8 @@ import {
   FormGroup,
   TextInput,
   DropdownPosition,
-  Button
+  Button,
+  Title
 } from "@patternfly/react-core";
 import { MinusCircleIcon } from "@patternfly/react-icons";
 import { DropdownWithToggle, DividerWithTitle } from "components";
@@ -21,16 +22,13 @@ const styles = StyleSheet.create({
   type_margin: {
     marginLeft: 10
   },
-  delete_button_margin: {
-    marginTop: 32
-  },
   dropdown_align: { display: "flex", marginRight: 10 },
   dropdown_toggle_align: { flex: "1" }
 });
 
 export interface IExtension {
   id: string;
-  parameter?: string;
+  key?: string;
   type?: string;
   value?: string;
 }
@@ -75,79 +73,67 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
 
   return (
     <>
-      <Grid id={"el-list-grid"}>
+      <Grid id={"ext-list-grid"}>
         <GridItem span={12}>
           <DividerWithTitle title={"Ext"} />
           <br />
         </GridItem>
-        {extensions &&
-          extensions.map(ext => {
+        <GridItem span={4}>
+          <Title headingLevel="h1" size="md">
+            Parameter
+          </Title>
+        </GridItem>
+        <GridItem span={3} className={css(styles.type_margin)}>
+          <Title headingLevel="h1" size="md">
+            Type
+          </Title>
+        </GridItem>
+        <GridItem span={5}>
+          <Title headingLevel="h1" size="md">
+            Value
+          </Title>
+        </GridItem>
+        {Array.isArray(extensions) &&
+          extensions?.map(ext => {
             const { id } = ext;
             return (
               <Grid key={id}>
                 <GridItem span={4}>
-                  <FormGroup
-                    fieldId={"el-parameter-textinput-" + id}
-                    label="Parameter"
-                  >
-                    <TextInput
-                      id={"el-parameter-textinput" + id}
-                      name="parameter"
-                      onChange={(value, event) =>
-                        handleInputChangeExtension(
-                          credentialId,
-                          event,
-                          value,
-                          id
-                        )
-                      }
-                    />
-                  </FormGroup>
+                  <TextInput
+                    id={`ext-list-key-textinput-${id}`}
+                    name="key"
+                    onChange={(value, event) =>
+                      handleInputChangeExtension(credentialId, event, value, id)
+                    }
+                    value={ext["key"]}
+                  />
                 </GridItem>
-                <GridItem span={3}>
-                  <FormGroup
-                    fieldId={"el-type-dropdown-" + id}
-                    label="Type"
-                    className={css(styles.type_margin)}
-                  >
-                    <DropdownWithToggle
-                      id={"el-type-dropdwon-" + id}
-                      name="type"
-                      className={css(styles.dropdown_align)}
-                      toggleClass={css(styles.dropdown_toggle_align)}
-                      position={DropdownPosition.left}
-                      dropdownItems={typeOptions}
-                      value={ext["type"] || ""}
-                      onSelectItem={(value, event) =>
-                        handleInputChangeExtension(
-                          credentialId,
-                          event,
-                          value,
-                          id
-                        )
-                      }
-                    />
-                  </FormGroup>
+                <GridItem span={3} className={css(styles.type_margin)}>
+                  <DropdownWithToggle
+                    id={`ext-list-type-dropdwon-${id}`}
+                    name="type"
+                    className={css(styles.dropdown_align)}
+                    toggleClass={css(styles.dropdown_toggle_align)}
+                    position={DropdownPosition.left}
+                    dropdownItems={typeOptions}
+                    value={ext["type"] || ""}
+                    onSelectItem={(value, event) =>
+                      handleInputChangeExtension(credentialId, event, value, id)
+                    }
+                  />
                 </GridItem>
                 <GridItem span={4}>
-                  <FormGroup fieldId={"el-value-textinput-" + id} label="Value">
-                    <TextInput
-                      id={"el-value-textinput-" + id}
-                      name="value"
-                      onChange={(value, event) =>
-                        handleInputChangeExtension(
-                          credentialId,
-                          event,
-                          value,
-                          id
-                        )
-                      }
-                    />
-                  </FormGroup>
+                  <TextInput
+                    id={`ext-list-value-textinput-${id}`}
+                    name="value"
+                    onChange={(value, event) =>
+                      handleInputChangeExtension(credentialId, event, value, id)
+                    }
+                  />
                 </GridItem>
                 <GridItem span={1}>
                   <Button
-                    className={css(styles.delete_button_margin)}
+                    id="ext-list-delete-extension-button"
                     variant="link"
                     type="button"
                     icon={
