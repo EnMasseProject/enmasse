@@ -54,14 +54,17 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -212,6 +215,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
     private final Vertx vertx;
     private final IoTConfig config;
     private final Consumer<Throwable> exceptionHandler;
+    private final Set<String> defaultTlsVersions;
     private final List<ThrowingCallable> cleanup;
 
     private IoTTestContext defaultProject;
@@ -220,12 +224,14 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
             final Vertx vertx,
             final IoTConfig config,
             final Consumer<Throwable> exceptionHandler,
+            final Set<String> defaultTlsVersions,
             final List<ThrowingCallable> cleanup) {
 
         this.vertx = vertx;
         this.config = config;
 
         this.exceptionHandler = exceptionHandler;
+        this.defaultTlsVersions = defaultTlsVersions;
         this.cleanup = cleanup;
 
     }
@@ -370,8 +376,10 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
         private final List<PreDeployProcessor> preDeploy = new LinkedList<>();
 
         private IoTConfigBuilder config;
+        private Set<String> defaultTlsVersions;
 
         private Consumer<Throwable> exceptionHandler = IoTTestSession::defaultExceptionHandler;
+        private Consumer<ProjectBuilder> defaultProjectCustomizer;
 
         private Builder(final IoTConfigBuilder config, final IoTProjectBuilder project) {
             this.config = config;
@@ -380,6 +388,16 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         public Builder config(final ThrowingConsumer<IoTConfigBuilder> configCustomizer) throws Exception {
             configCustomizer.accept(this.config);
+            return this;
+        }
+
+        public Builder defaultTlsVersions(final String... defaultTlsVersions) {
+            this.defaultTlsVersions = defaultTlsVersions == null || defaultTlsVersions.length == 0 ? null : Set.of(defaultTlsVersions);
+            return this;
+        }
+
+        public Builder defaultTlsVersions(final Set<String> defaultTlsVersions) {
+            this.defaultTlsVersions = defaultTlsVersions == null ? null : Set.copyOf(defaultTlsVersions);
             return this;
         }
 
@@ -419,6 +437,11 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
          */
         public Builder adapters(final Adapter... adapters) {
             return adapters(EnumSet.copyOf(Arrays.asList(adapters)));
+        }
+
+        public Builder defaultProjectCustomizer(final Consumer<ProjectBuilder> customizer) {
+            this.defaultProjectCustomizer = customizer;
+            return this;
         }
 
         /**
@@ -512,7 +535,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 // create result
 
-                var result = new IoTTestSession(vertx, config, this.exceptionHandler, new ArrayList<>(cleanup));
+                var result = new IoTTestSession(vertx, config, this.exceptionHandler, this.defaultTlsVersions, new ArrayList<>(cleanup));
 
                 /*
                  * We handed off responsibility of cleaning up our close list to the "test session". So we can clean
@@ -524,9 +547,13 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 // create default project
 
-                var defaultProject = result.newProject(this.project)
-                        .createNamespace(true)
-                        .deploy();
+                var defaultProjectBuilder = result
+                        .newProject(this.project)
+                        .createNamespace(true);
+                if (this.defaultProjectCustomizer != null) {
+                    this.defaultProjectCustomizer.accept(defaultProjectBuilder);
+                }
+                var defaultProject = defaultProjectBuilder.deploy();
                 result.setDefaultProject(defaultProject);
 
                 // done
@@ -542,17 +569,33 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         private final IoTProjectBuilder project;
         private final Consumer<Throwable> exceptionHandler;
+        private final Set<String> defaultTlsVersions;
 
+        private Set<String> consumerTlsVersions;
         private boolean awaitReady = true;
         private boolean createNamespace = false;
 
-        private ProjectBuilder(final IoTProjectBuilder project, final Consumer<Throwable> exceptionHandler) {
+        private ProjectBuilder(
+                final IoTProjectBuilder project,
+                final Consumer<Throwable> exceptionHandler,
+                final Set<String> defaultTlsVersions
+        ) {
             this.project = project;
             this.exceptionHandler = exceptionHandler;
+            this.defaultTlsVersions = defaultTlsVersions;
         }
 
         public ProjectBuilder project(final ThrowingConsumer<IoTProjectBuilder> projectCustomizer) throws Exception {
             projectCustomizer.accept(this.project);
+            return this;
+        }
+
+        public ProjectBuilder consumerTlsVersions(final String... consumerTlsVersions) {
+            return consumerTlsVersions(consumerTlsVersions != null ? Set.of(consumerTlsVersions) : null);
+        }
+
+        public ProjectBuilder consumerTlsVersions(final Set<String> consumerTlsVersions) {
+            this.consumerTlsVersions = consumerTlsVersions;
             return this;
         }
 
@@ -637,9 +680,17 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
                 // create endpoints
 
                 final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
-                final DeviceRegistryClient registryClient = new DeviceRegistryClient(vertx, deviceRegistryEndpoint);
+
+                final DeviceRegistryClient registryClient = new DeviceRegistryClient(
+                        IoTTestSession.this.vertx,
+                        deviceRegistryEndpoint,
+                        this.defaultTlsVersions);
                 cleanup.add(registryClient::close);
-                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(vertx, deviceRegistryEndpoint);
+
+                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(
+                        IoTTestSession.this.vertx,
+                        deviceRegistryEndpoint,
+                        this.defaultTlsVersions);
                 cleanup.add(credentialsClient::close);
 
                 // create user
@@ -697,7 +748,16 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
                 // create AMQP client
 
-                AmqpClient client = new AmqpClient(defaultQueue(amqpEndpoint));
+                AmqpClient client = new AmqpClient(
+                        defaultQueue(amqpEndpoint)
+                                .customizeProtonClientOptions(options -> {
+                                    if (consumerTlsVersions != null) {
+                                        options.setEnabledSecureTransportProtocols(this.consumerTlsVersions);
+                                    } else if (this.defaultTlsVersions != null) {
+                                        options.setEnabledSecureTransportProtocols(this.defaultTlsVersions);
+                                    }
+                                })
+                );
                 cleanup.add(client::close);
 
                 // we are all set up, register ourselves with the session
@@ -862,6 +922,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
         private final CredentialsRegistryClient credentialsClient;
         private final AmqpClient consumerClient;
         private final List<ThrowingCallable> cleanup;
+        private final AtomicBoolean closed = new AtomicBoolean();
 
         public ProjectInstance(
                 final IoTConfig config,
@@ -904,6 +965,10 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
 
         @Override
         public void close() throws Exception {
+
+            if (closed.getAndSet(true)) {
+                return;
+            }
 
             log.info("Cleaning up project instance: {}/{}", this.project.getMetadata().getNamespace(), this.project.getMetadata().getName());
 
@@ -1134,7 +1199,7 @@ public final class IoTTestSession implements IoTTestContext, AutoCloseable {
     }
 
     private ProjectBuilder newProject(final IoTProjectBuilder project) {
-        return new ProjectBuilder(project, this.exceptionHandler);
+        return new ProjectBuilder(project, this.exceptionHandler, this.defaultTlsVersions);
     }
 
     public ProjectBuilder newProject(final String namespace, final String name) {

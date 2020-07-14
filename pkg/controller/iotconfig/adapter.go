@@ -408,9 +408,9 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 		{Name: "HONO_CREDENTIALS_HOST", Value: FullHostNameForEnvVar(nameDeviceRegistry)},
 		{Name: "HONO_CREDENTIALS_USERNAME", ValueFrom: username},
 		{Name: "HONO_CREDENTIALS_PASSWORD", ValueFrom: password},
-		{Name: "HONO_DEVICE_CONNECTION_HOST", Value: FullHostNameForEnvVar("iot-device-connection")},
-		{Name: "HONO_DEVICE_CONNECTION_USERNAME", ValueFrom: username},
-		{Name: "HONO_DEVICE_CONNECTION_PASSWORD", ValueFrom: password},
+		{Name: "HONO_DEVICECONNECTION_HOST", Value: FullHostNameForEnvVar("iot-device-connection")},
+		{Name: "HONO_DEVICECONNECTION_USERNAME", ValueFrom: username},
+		{Name: "HONO_DEVICECONNECTION_PASSWORD", ValueFrom: password},
 		{Name: "HONO_TENANT_HOST", Value: FullHostNameForEnvVar("iot-tenant-service")},
 		{Name: "HONO_TENANT_USERNAME", ValueFrom: username},
 		{Name: "HONO_TENANT_PASSWORD", ValueFrom: password},
@@ -418,7 +418,7 @@ func AppendHonoAdapterEnvs(config *iotv1alpha1.IoTConfig, container *corev1.Cont
 
 	applyServiceConnectionOptions(container, "HONO_REGISTRATION", config.Spec.ServicesConfig.DeviceRegistry.TlsVersions(config))
 	applyServiceConnectionOptions(container, "HONO_CREDENTIALS", config.Spec.ServicesConfig.DeviceRegistry.TlsVersions(config))
-	applyServiceConnectionOptions(container, "HONO_DEVICE_CONNECTION", config.Spec.ServicesConfig.DeviceConnection.TlsVersions(config))
+	applyServiceConnectionOptions(container, "HONO_DEVICECONNECTION", config.Spec.ServicesConfig.DeviceConnection.TlsVersions(config))
 	applyServiceConnectionOptions(container, "HONO_TENANT", config.Spec.ServicesConfig.Tenant.TlsVersions(config))
 
 	adapterConfig := adapter.AdapterConfigProvider(config)

@@ -368,7 +368,7 @@ public class TestUtils {
         Objects.requireNonNull(condition);
         Objects.requireNonNull(timeout);
 
-        log.info("Waiting {} ms for - {}", format(timeout), forWhat);
+        log.info("Waiting {} for - {}", format(timeout), forWhat);
         var start = Instant.now();
 
         waitUntilCondition(
@@ -510,7 +510,7 @@ public class TestUtils {
     }
 
     private static String format(final Duration duration) {
-        return String.format("%02d:%2d:%2d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
+        return String.format("%d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
     public static void waitForChangedResourceVersion(final Duration timeout, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)

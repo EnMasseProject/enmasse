@@ -245,15 +245,15 @@ func appendCommonHonoJavaEnv(container *corev1.Container, envVarPrefix string, c
 
 	// add native tls flag
 
-	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"NATIVE_TLS_REQUIRED", strconv.FormatBool(commonJavaService.IsNativeTlsRequired(config)))
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"NATIVETLSREQUIRED", strconv.FormatBool(commonJavaService.IsNativeTlsRequired(config)))
 
 	// configure tls versions
 
-	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"SECURE_PROTOCOLS", strings.Join(commonJavaService.TlsVersions(config), ","))
+	install.ApplyOrRemoveEnvSimple(container, envVarPrefix+"SECUREPROTOCOLS", strings.Join(commonJavaService.TlsVersions(config), ","))
 
 }
 
 // apply TLS versions to a connection factory
 func applyServiceConnectionOptions(container *corev1.Container, prefix string, tlsVersions []string) {
-	install.ApplyEnvSimple(container, prefix+"_SECUREPROTOCOLS", strings.Join(tlsVersions, ","))
+	install.ApplyOrRemoveEnvSimple(container, prefix+"_SECUREPROTOCOLS", strings.Join(tlsVersions, ","))
 }

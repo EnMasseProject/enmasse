@@ -20,6 +20,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.eclipse.hono.service.management.credentials.CommonCredential;
@@ -40,8 +41,8 @@ public class CredentialsRegistryClient extends HonoApiClient {
     private static final String CREDENTIALS_PATH = "v1/credentials";
     private static final Random rnd = new SecureRandom();
 
-    public CredentialsRegistryClient(final Vertx vertx, final Endpoint endpoint) {
-        super(vertx, () -> endpoint, getManagementToken());
+    public CredentialsRegistryClient(final Vertx vertx, final Endpoint endpoint, final Set<String> tlsVersions) {
+        super(vertx, () -> endpoint, getManagementToken(), tlsVersions);
     }
 
     @Override

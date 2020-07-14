@@ -15,6 +15,7 @@ import io.vertx.ext.web.client.HttpResponse;
 import org.eclipse.hono.service.management.device.Device;
 
 import java.net.HttpURLConnection;
+import java.util.Set;
 
 import static io.enmasse.systemtest.iot.DeviceManagementApi.getManagementToken;
 
@@ -22,8 +23,8 @@ public class DeviceRegistryClient extends HonoApiClient {
 
     private static final String DEVICES_PATH = "v1/devices";
 
-    public DeviceRegistryClient(final Vertx vertx, final Endpoint endpoint) {
-        super(vertx, () -> endpoint, getManagementToken());
+    public DeviceRegistryClient(final Vertx vertx, final Endpoint endpoint, final Set<String> tlsVersions) {
+        super(vertx, () -> endpoint, getManagementToken(), tlsVersions);
     }
 
     @Override
