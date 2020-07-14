@@ -1,9 +1,16 @@
 
 ## 1.0.0
 
-## 0.32.1
+## 0.32.2
+* #4839: [Agent] ensure that router disconnect cancels the timer and doesn't accumulate Rhea listeners (#4840)
+* #4873: Prevent unexpected fields at the root of addresspace, address and message from causing the controller loops to fail
+* #4860: Ensure address space controller and standard controller record stacktrace
 * #4914: Bump react from 16.12.0 -> 16.13.1 and typescript from 3.7.2 -> 3.8.3
 * #4915: Bump patternfly/react-core version 3.146.0 -> 3.153.13
+* #4970: Update Postgres to 42.2.13 [CVE-2020-13692] (#4971)
+
+## 0.32.1
+*  #4929: Readd old CRD versions to unbreak OLM upgrades (#4929)
 
 ## 0.32.0
 
