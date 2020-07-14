@@ -56,8 +56,6 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   onChangeStatus,
   onConfirmPassword,
   errorState,
-  addGateways,
-  addCredentials,
   deleteGateways,
   deleteCredentials
 }) => {
@@ -98,14 +96,13 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
           <>
             <ErrorStateAlert
               errorState={errorState}
-              addGateways={addGateways}
-              addCredentials={addCredentials}
               deleteGateways={deleteGateways}
               deleteCredentials={deleteCredentials}
             />
             <br />
           </>
         )}
+        <br />
         <Split>
           <SplitItem isFilled />
           <SplitItem>

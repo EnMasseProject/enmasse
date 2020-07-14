@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { Fragment } from "react";
 import {
   Grid,
   GridItem,
@@ -16,7 +16,9 @@ import {
   CardBody,
   CardActions,
   CardHeader,
-  ExpandableSection
+  ExpandableSection,
+  Flex,
+  FlexItem
 } from "@patternfly/react-core";
 import { PlusCircleIcon, TimesIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
@@ -116,6 +118,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
             <GridItem span={12} className={css(styles.addMoreScrets)}>
               {selectedType && (
                 <Button
+                  id="credential-list-add-more-secret-button"
                   variant="link"
                   type="button"
                   icon={<PlusCircleIcon />}
@@ -134,6 +137,7 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
             <GridItem span={12}>
               <br />
               <Button
+                id="credential-list-add-more-ext-keyvalue-button"
                 variant="link"
                 className={css(styles.addMoreExt)}
                 type="button"
@@ -142,25 +146,33 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
               >
                 Add more Ext Key/Value
               </Button>
+              <br />
+              <br />
             </GridItem>
             <GridItem span={12}>
               <DividerWithTitle title={"Status"} />
               <br />
             </GridItem>
-            <GridItem span={10}>
-              Enable or disable this credential set.
-            </GridItem>
-            <GridItem span={2}>
-              <SwitchWithToggle
-                id={"cl-status-switch-" + id}
-                label={"Enabled"}
-                labelOff={"Disabled"}
-                isChecked={isEnabledStatus}
-                onChange={(checked, event) =>
-                  onChangeStatus(id, event, checked)
-                }
-              />
-            </GridItem>
+            <Flex>
+              <FlexItem>
+                <GridItem span={9}>
+                  Enable or disable this credential set.
+                </GridItem>
+              </FlexItem>
+              <FlexItem align={{ default: "alignRight" }}>
+                <GridItem span={3}>
+                  <SwitchWithToggle
+                    id={`credential-list-status-switch-${id}`}
+                    label={"Enabled"}
+                    labelOff={"Disabled"}
+                    isChecked={isEnabledStatus}
+                    onChange={(checked, event) =>
+                      onChangeStatus(id, event, checked)
+                    }
+                  />
+                </GridItem>
+              </FlexItem>
+            </Flex>
           </Grid>
         )}
       </>
@@ -184,108 +196,105 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
   return (
     <>
       {credentials &&
-        credentials.map(credential => {
+        credentials.map((credential: ICredential, index: number) => {
           const {
             id = "",
             isExpandedAdvancedSetting = false,
             type = ""
           } = credential;
           return (
-            <Grid key={id}>
-              <GridItem span={6}>
-                <Card>
-                  <CardHeader data-codemods="true">
-                    <CardActions>
-                      {credentials.length > 1 && (
-                        <Button
-                          variant="link"
-                          type="button"
-                          onClick={() => onDeleteItem(id)}
-                          icon={
-                            <TimesIcon
-                              color={"var(--pf-c-button--m-plain--Color)"}
-                            />
-                          }
-                        />
-                      )}
-                    </CardActions>
-                  </CardHeader>
-                  <CardBody>
-                    <Form>
-                      <FormGroup
-                        fieldId={"cl-auth-id-textinput-" + id}
-                        isRequired
-                        label="Auth ID"
-                      >
-                        <TextInput
-                          id={"cl-auth-id-textinput-" + id}
-                          type="text"
-                          name="auth-id"
-                          isRequired
-                          onChange={(value, event) =>
-                            handleInputChange(id, event, value)
-                          }
-                        />
-                      </FormGroup>
-                      <FormGroup
-                        fieldId={"cl-type-dropdown-" + id}
-                        isRequired
-                        label="Credential type"
-                      >
-                        <DropdownWithToggle
-                          id={"cl-type-dropdown-" + id}
-                          name="type"
-                          className={css(styles.dropdown_align)}
-                          toggleClass={css(styles.dropdown_toggle_align)}
-                          position={DropdownPosition.left}
-                          onSelectItem={(value, event) =>
-                            onSelectType(id, event, value)
-                          }
-                          dropdownItems={credentialTypeOptions}
-                          value={type}
-                          isLabelAndValueNotSame={true}
-                        />
-                      </FormGroup>
-                      {shouldSecretsHeadingVisible(
-                        type,
-                        isExpandedAdvancedSetting
-                      ) && <DividerWithTitle title={"Secrets"} />}
-                      {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
-                      <ExpandableSection
-                        toggleText={
-                          isExpandedAdvancedSetting
-                            ? HIDE_ADVANCE_SETTING
-                            : SHOW_ADVANCE_SETTING
+            <Fragment key={id}>
+              <Card>
+                <CardHeader data-codemods="true">
+                  <CardActions>
+                    {credentials.length > 1 && (
+                      <Button
+                        id="credential-list-delete-credential-button"
+                        variant="link"
+                        type="button"
+                        onClick={() => onDeleteItem(id)}
+                        icon={
+                          <TimesIcon
+                            color={"var(--pf-c-button--m-plain--Color)"}
+                          />
                         }
-                        onToggle={() => onToggleAdvancedSetting(id)}
-                        isExpanded={isExpandedAdvancedSetting}
-                      >
-                        {""}
-                      </ExpandableSection>
-                    </Form>
-                  </CardBody>
-                </Card>
-                <br />
-              </GridItem>
-            </Grid>
+                      />
+                    )}
+                  </CardActions>
+                </CardHeader>
+                <CardBody>
+                  <Form>
+                    <FormGroup
+                      fieldId={`credential-list-authid-textinput-${id}`}
+                      isRequired
+                      label="Auth ID"
+                    >
+                      <TextInput
+                        id={`credential-list-authid-textinput-${id}`}
+                        type="text"
+                        name="auth-id"
+                        isRequired
+                        onChange={(value, event) =>
+                          handleInputChange(id, event, value)
+                        }
+                        value={credential["auth-id"]}
+                      />
+                    </FormGroup>
+                    <FormGroup
+                      fieldId={`credential-list-type-dropdown-${id}`}
+                      isRequired
+                      label="Credential type"
+                    >
+                      <DropdownWithToggle
+                        id={`credential-list-type-dropdown-${id}`}
+                        name="type"
+                        className={css(styles.dropdown_align)}
+                        toggleClass={css(styles.dropdown_toggle_align)}
+                        position={DropdownPosition.left}
+                        onSelectItem={(value, event) =>
+                          onSelectType(id, event, value)
+                        }
+                        dropdownItems={credentialTypeOptions}
+                        value={type}
+                        isLabelAndValueNotSame={true}
+                      />
+                    </FormGroup>
+                    {shouldSecretsHeadingVisible(
+                      type,
+                      isExpandedAdvancedSetting
+                    ) && <DividerWithTitle title={"Secrets"} />}
+                    {showAdvancedSetting(id, isExpandedAdvancedSetting, type)}
+                    <ExpandableSection
+                      toggleText={
+                        isExpandedAdvancedSetting
+                          ? HIDE_ADVANCE_SETTING
+                          : SHOW_ADVANCE_SETTING
+                      }
+                      onToggle={() => onToggleAdvancedSetting(id)}
+                      isExpanded={isExpandedAdvancedSetting}
+                    >
+                      {""}
+                    </ExpandableSection>
+                  </Form>
+                </CardBody>
+              </Card>
+              <br />
+            </Fragment>
           );
         })}
-      <Grid>
-        <GridItem span={6}>
-          <Card>
-            <CardBody>
-              <Button
-                variant="link"
-                type="button"
-                icon={<PlusCircleIcon />}
-                onClick={addMoreCredential}
-              >
-                Add more credentials
-              </Button>
-            </CardBody>
-          </Card>
-        </GridItem>
-      </Grid>
+      <Card>
+        <CardBody>
+          <Button
+            id="credential-list-add-more-credential-button"
+            variant="link"
+            type="button"
+            icon={<PlusCircleIcon />}
+            onClick={addMoreCredential}
+          >
+            Add more credentials
+          </Button>
+        </CardBody>
+      </Card>
     </>
   );
 };

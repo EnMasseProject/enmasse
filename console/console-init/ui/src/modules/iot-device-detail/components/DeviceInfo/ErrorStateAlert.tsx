@@ -5,11 +5,11 @@
 
 import React from "react";
 import { Alert, AlertActionLink, Flex, FlexItem } from "@patternfly/react-core";
+import { useStoreContext, types } from "context-state-reducer";
+import { DeviceActionType } from "modules/iot-device-detail/utils";
 
 export interface IErrorStateAlertProps {
   errorState?: string;
-  addGateways?: () => void;
-  addCredentials?: () => void;
   deleteGateways?: () => void;
   deleteCredentials?: () => void;
 }
@@ -21,11 +21,11 @@ export enum ErrorState {
 
 export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
   errorState,
-  addGateways,
-  addCredentials,
   deleteGateways,
   deleteCredentials
 }) => {
+  const { dispatch } = useStoreContext();
+
   const getTitle = () => {
     let title =
       errorState === ErrorState.CONFLICTING
@@ -52,13 +52,27 @@ export const ErrorStateAlert: React.FC<IErrorStateAlertProps> = ({
     }
   };
 
+  const addGateways = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.ADD_GATEWAYS }
+    });
+  };
+
+  const addCredentials = () => {
+    dispatch({
+      type: types.SET_DEVICE_ACTION_TYPE,
+      payload: { actionType: DeviceActionType.ADD_CREDENTIALS }
+    });
+  };
+
   const getActionLinks = () => {
     if (errorState === ErrorState.MISSING) {
       return (
         <Flex>
           <FlexItem>
             <AlertActionLink onClick={addGateways}>
-              Add credentials
+              Add gateways
             </AlertActionLink>
           </FlexItem>
           <FlexItem>or</FlexItem>

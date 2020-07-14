@@ -21,6 +21,7 @@ const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => {
   const history = useHistory();
 
   const handleAlertActionLink = () => {
+    updateState && updateState(false);
     history.push("/");
   };
 
