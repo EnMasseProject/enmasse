@@ -16,8 +16,6 @@ import io.enmasse.systemtest.iot.IoTTests;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
@@ -27,7 +25,6 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 @Tag(IOT)
 public class TlsVersionTest implements IoTTests {
 
-    //@OpenShift(version = OpenShiftVersion.OCP4)
     @Test
     public void testWithExplicitVersion() throws Exception {
         IoTTestSession
