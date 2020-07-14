@@ -193,15 +193,15 @@ export default function DeviceDetailPage() {
   return (
     <>
       {actionType ? (
-        <PageSection
-          variant={PageSectionVariants.light}
-          className={css(styles.no_bottom_padding)}
-        >
+        <PageSection variant={PageSectionVariants.light}>
           <ActionManager actionType={actionType} viaGateway={viaGateway} />
         </PageSection>
       ) : (
         <>
-          <PageSection variant={PageSectionVariants.light}>
+          <PageSection
+            variant={PageSectionVariants.light}
+            className={css(styles.no_bottom_padding)}
+          >
             <DeviceDetailHeader
               deviceName={deviceId}
               addedDate="2019-11-25T05:24:05.755Z"

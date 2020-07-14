@@ -13,7 +13,9 @@ import {
   DropdownItem,
   DropdownPosition,
   DropdownSeparator,
-  Switch
+  Switch,
+  PageSection,
+  PageSectionVariants
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
@@ -226,22 +228,27 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   };
 
   return (
-    <Split>
-      <DeviceDetailLayout />
-      <SplitItem isFilled />
-      <SplitItem className={css(styles.kebab_toggle_margin)}>
-        <Switch
-          id="switch-device-header-enable-btn"
-          label="Enabled"
-          labelOff="Disabled"
-          onChange={onChange}
-          isChecked={deviceStatus}
-        />
-      </SplitItem>
-      <SplitItem className={css(styles.kebab_toggle_margin)}>
-        <KebabOptionsLayout />
-      </SplitItem>
-    </Split>
+    <PageSection
+      variant={PageSectionVariants.light}
+      className={css(styles.no_bottom_padding)}
+    >
+      <Split>
+        <DeviceDetailLayout />
+        <SplitItem isFilled />
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
+          <Switch
+            id="switch-device-header-enable-btn"
+            label="Enabled"
+            labelOff="Disabled"
+            onChange={onChange}
+            isChecked={deviceStatus}
+          />
+        </SplitItem>
+        <SplitItem className={css(styles.kebab_toggle_margin)}>
+          <KebabOptionsLayout />
+        </SplitItem>
+      </Split>
+    </PageSection>
   );
 };
 
