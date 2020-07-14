@@ -25,7 +25,6 @@ import io.sundr.builder.annotations.Inline;
                 )
         )
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(value = { "prefix" })
 public class IoTProjectStatus {
 
     private String tenantName;
@@ -33,7 +32,6 @@ public class IoTProjectStatus {
     private String phase;
     private String message;
     private AcceptedStatus accepted;
-    private ManagedStatus managed;
 
     public String getTenantName() {
         return tenantName;
@@ -73,14 +71,6 @@ public class IoTProjectStatus {
 
     public AcceptedStatus getAccepted() {
         return accepted;
-    }
-
-    public void setManaged(ManagedStatus managed) {
-        this.managed = managed;
-    }
-
-    public ManagedStatus getManaged() {
-        return managed;
     }
 
 }

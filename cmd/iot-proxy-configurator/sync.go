@@ -141,7 +141,7 @@ func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
 				Direction:         r.Direction,
 				Pattern:           util.AddressName(project, r.Prefix) + "/#",
 				Connection:        iotconfig.SharedInfraConnectionName,
-				AddExternalPrefix: project.Status.MessagingInfrastructurePrefix + "/",
+				AddExternalPrefix: project.Namespace + "/",
 			})
 		})
 	}
