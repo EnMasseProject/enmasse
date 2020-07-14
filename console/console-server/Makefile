@@ -10,4 +10,4 @@ run:
 	ENMASSE_ADDRESS_SPACE_TYPE_FILE=$(MAKEDIR)/src/main/resources/addressSpaceTypes.json \
 	ENMASSE_ADDRESS_TYPE_FILE=$(MAKEDIR)/src/main/resources/addressTypes.json \
 	NAMESPACE=$(NAMESPACE) \
-	cd $(TOPDIR) && pwd && go run -mod=vendor cmd/console-server/main.go --developmentMode
+	cd $(TOPDIR) && pwd && $(GO) run -mod=vendor cmd/console-server/main.go --developmentMode

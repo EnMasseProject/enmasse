@@ -1,6 +1,6 @@
 module github.com/enmasseproject/enmasse
 
-go 1.13
+go 1.14
 
 // Replacements as per https://github.com/operator-framework/operator-sdk/blob/master/doc/migration/version-upgrade-guide.md#modules-3
 // Pinned to kubernetes-1.16.2
@@ -66,7 +66,6 @@ require (
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/code-generator v0.17.1
 	k8s.io/klog v1.0.0
-	k8s.io/kube-aggregator v0.0.0
 	pack.ag/amqp v0.12.6
 	sigs.k8s.io/controller-runtime v0.4.0
 	software.sslmate.com/src/go-pkcs12 v0.0.0-20200408181440-2981468c0ff3

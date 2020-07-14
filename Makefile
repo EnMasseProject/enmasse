@@ -19,6 +19,8 @@ DOCKER_DIRS = \
 
 
 FULL_BUILD       = true
+
+GO              ?= go
 GOOPTS          ?= -mod=vendor
 
 DOCKER_TARGETS   = docker_build docker_tag docker_push kind_load_image clean
@@ -28,6 +30,7 @@ SKIP_TESTS          ?= false
 SKIP_VERIFY_CODEGEN ?= false
 SKIP_MANIFESTS      ?= false
 MAVEN_BATCH         ?= true
+
 
 ifndef GOPATH
 	GOPATH=/tmp/go
@@ -70,24 +73,24 @@ endif
 
 test_go_codegen:
 ifeq ($(SKIP_VERIFY_CODEGEN),false)
-	GO111MODULE=on ./hack/verify-codegen.sh
+	GO111MODULE=on GO=$(GO) ./hack/verify-codegen.sh
 endif
 
 test_go_vet:
-	GO111MODULE=on time go vet $(GOOPTS) ./cmd/... ./pkg/...
+	GO111MODULE=on time $(GO) vet $(GOOPTS) ./cmd/... ./pkg/...
 
 ifeq (,$(GO2XUNIT))
 test_go_run:
-	GO111MODULE=on go test $(GOOPTS) -v ./...
+	GO111MODULE=on $(GO) test $(GOOPTS) -v ./...
 else
 test_go_run:
 	mkdir -p build
-	GO111MODULE=on go test $(GOOPTS) -v ./... 2>&1 | tee $(abspath build/go.testoutput)
+	GO111MODULE=on $(GO) test $(GOOPTS) -v ./... 2>&1 | tee $(abspath build/go.testoutput)
 	$(GO2XUNIT) -fail -input build/go.testoutput -output build/TEST-go.xml
 endif
 
 coverage_go:
-	GO111MODULE=on go test $(GOOPTS) -cover ./...
+	GO111MODULE=on $(GO) test $(GOOPTS) -cover ./...
 
 buildpush:
 	time $(MAKE)
@@ -153,8 +156,8 @@ $(CONTROLLER_GEN):
 	set -e ;\
 	CONTROLLER_GEN_TMP_DIR=$$(mktemp -d) ;\
 	cd $$CONTROLLER_GEN_TMP_DIR ;\
-	go mod init tmp ;\
-	GOPATH=$(abspath $(LOCALBIN)/../) go get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
+	$(GO) mod init tmp ;\
+	GOPATH=$(abspath $(LOCALBIN)/../) $(GO) get sigs.k8s.io/controller-tools/cmd/controller-gen@v0.3.0 ;\
 	rm -rf $$CONTROLLER_GEN_TMP_DIR ;\
 	}
 
