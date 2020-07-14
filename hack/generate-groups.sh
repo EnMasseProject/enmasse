@@ -49,6 +49,7 @@ shift 4
 SCRIPTPATH="$(cd "$(dirname "$0")" && pwd -P)"
 GENERATOR_BASE=${SCRIPTPATH}/../vendor/k8s.io/code-generator
 GOBIN="${SCRIPTPATH}/../go-bin"
+: "${GO:=go}"
 
 (
   # To support running this script from anywhere, we have to first cd into this directory
@@ -56,7 +57,7 @@ GOBIN="${SCRIPTPATH}/../go-bin"
   cd "${SCRIPTPATH}"
   
   mkdir -p "${GOBIN}"
-  GOBIN="$GOBIN" GO111MODULE=on go install -mod=vendor ${GENERATOR_BASE}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
+  GOBIN="$GOBIN" GO111MODULE=on "${GO}" install -mod=vendor ${GENERATOR_BASE}/cmd/{defaulter-gen,client-gen,lister-gen,informer-gen,deepcopy-gen}
 )
 
 function codegen::join() { local IFS="$1"; shift; echo "$*"; }

@@ -1,10 +1,11 @@
 TOPDIR=$(dir $(lastword $(MAKEFILE_LIST)))
 include $(TOPDIR)/Makefile.common
 
+GO              ?= go
 GOOPTS          ?= -mod=vendor
 
 build/$(CMD): build_deps
-	GO111MODULE=on CGO_ENABLED=0 GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) go build $(GOOPTS) -o $(abspath $@) $(abspath $(TOPDIR)/cmd/$(@F))
+	GO111MODULE=on CGO_ENABLED=0 GOOS=$(BUILD_GOOS) GOARCH=$(BUILD_GOARCH) $(GO) build $(GOOPTS) -o $(abspath $@) $(abspath $(TOPDIR)/cmd/$(@F))
 ifneq ($(FULL_BUILD),true)
 	mvn $(MAVEN_ARGS) package
 endif
