@@ -122,7 +122,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
                 setInput={setNameInput}
               />
               <Button
-                id="addr-toggle-search-name-button"
+                id="addr-togglegrp-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -136,17 +136,18 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       <ToolbarItem
         spacer={{ md: "spacerNone" }}
         data-codemods="true"
-        id="addr-toggle-toolbar-item-addresstype"
+        id="addr-togglegrp-toolbar-item-addresstype"
       >
         <ToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
-          id="addr-toggle-type-toolbar-filter"
+          id="addr-togglegrp-type-toolbar-filter"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id="addr-toggle-type-dropdown"
+              id="addr-togglegrp-addresstype-dropdown"
+              toggleId="addr-togglegrp-addresstype-dropdown-toggle"
               aria-label="select type from dropdown"
               dropdownItemIdPrefix="al-filter-select-type-dropdown-item"
               position={DropdownPosition.left}
@@ -160,17 +161,18 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       <ToolbarItem
         spacer={{ md: "spacerNone" }}
         data-codemods="true"
-        id="addr-toggle-status-toolbar-item"
+        id="addr-togglegrp-status-toolbar-item"
       >
         <ToolbarFilter
           chips={statusSelected ? [statusSelected] : []}
           deleteChip={onDelete}
           categoryName="Status"
-          id="addr-toggle-type-toolbar-filter"
+          id="addr-togglegrp-type-toolbar-filter"
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
             <DropdownWithToggle
-              id="addr-toggle-select-status-dropdown"
+              id="addr-togglegrp-select-status-dropdown"
+              toggleId="addr-togglegrp-select-status-dropdown-toggle"
               aria-label="select status from dropdown"
               dropdownItemIdPrefix="al-filter-select-status-dropdown-item"
               position={DropdownPosition.left}
@@ -188,11 +190,11 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
     <ToolbarGroup
       variant="filter-group"
       data-codemods="true"
-      id="addr-toggle-filter-toolbar-group"
+      id="addr-togglegrp-filter-toolbar-group"
     >
       <ToolbarFilter categoryName="Filter" id="addr-toggle-toolbar-filter">
         <DropdownWithToggle
-          id="addr-toggle-filter-dropdown"
+          id="addr-togglegrp-filter-dropdown"
           aria-label="select filter from dropdown"
           toggleId={"al-filter-dropdown"}
           dropdownItemIdPrefix="al-filter-dropdown"
@@ -214,7 +216,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
 
   return (
     <ToolbarToggleGroup
-      id="adr-toggle-group-filter-applied-toolbartogglegroup"
+      id="adr-togglegrp-filter-applied-toolbartogglegroup"
       toggleIcon={
         <>
           <FilterIcon />
