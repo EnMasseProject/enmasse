@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 
 import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.systemtest.Endpoint;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.utils.VertxUtils;
 import io.vertx.core.Context;
@@ -37,7 +36,7 @@ import io.vertx.proton.ProtonSender;
 import io.vertx.proton.sasl.impl.ProtonSaslExternalImpl;
 import io.vertx.proton.sasl.impl.ProtonSaslPlainImpl;
 
-public class AmqpAdapterClient implements Sender, AutoCloseable {
+public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(AmqpAdapterClient.class);
 

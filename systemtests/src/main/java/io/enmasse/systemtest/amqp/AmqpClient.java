@@ -31,6 +31,7 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,13 @@ public class AmqpClient implements AutoCloseable {
 
     public ReceiverStatus recvMessagesWithStatus(String address, Predicate<Message> done) {
         return recvMessages(options.getTerminusFactory().getSource(address), done, Optional.empty());
+    }
+
+    public ReceiverStatus recvMessagesWithStatus(String address, Consumer<Message> consumer) {
+        return recvMessages(options.getTerminusFactory().getSource(address), msg -> {
+            consumer.accept(msg);
+            return false;
+        }, Optional.empty());
     }
 
     public Future<List<Message>> recvMessages(Source source, String linkName, Predicate<Message> done) {
@@ -211,6 +219,55 @@ public class AmqpClient implements AutoCloseable {
             resultPromise.completeExceptionally(e);
         }
         return resultPromise;
+    }
+
+    public io.vertx.core.Future<ProtonDelivery> sendMessage(final Vertx vertx, final String address, final Message message) {
+
+        var context = vertx.getOrCreateContext();
+        var containerId = "systemtest-sender-" + address;
+        var connectPromise = new CompletableFuture<Void>();
+        var resultPromise = new CompletableFuture<List<ProtonDelivery>>();
+
+        var sender = new SingleSender(
+                this.options,
+                new LinkOptions(
+                        this.options.getTerminusFactory().getSource(address),
+                        this.options.getTerminusFactory().getTarget(address),
+                        Optional.empty()),
+                connectPromise, resultPromise,
+                containerId,
+                message
+        );
+
+        var deployed = Promise.<String>promise();
+        vertx.deployVerticle(sender, deployed);
+
+        var promise = Promise.<ProtonDelivery>promise();
+
+        connectPromise
+                .whenComplete((v,e) -> log.info("Connected - result: {}", v, e))
+                .thenCompose(x -> resultPromise)
+                .whenComplete((v,e) -> log.info("Sent - result: {}", v, e))
+                .whenComplete((v, e) -> {
+                    // when we processed the result, we can un-deploy
+                    deployed.future().onSuccess(vertx::undeploy);
+                })
+                .whenComplete((v,e) -> {
+                    context.runOnContext(x -> {
+                        if ( e == null ) {
+                            if ( v.size() > 0) {
+                                promise.complete(v.get(0));
+                            } else {
+                                promise.fail(new IllegalStateException("Completed without disposition"));
+                            }
+                       } else {
+                            promise.fail(e);
+                        }
+                    });
+                })
+        ;
+
+        return promise.future();
     }
 
     public CompletableFuture<List<ProtonDelivery>> sendMessage(String address, Message message) {

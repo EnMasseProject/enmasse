@@ -8,10 +8,11 @@ package io.enmasse.systemtest.iot;
 import com.google.common.base.Throwables;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.Predicates;
 import io.enmasse.systemtest.utils.VertxUtils;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PfxOptions;
@@ -47,7 +48,7 @@ public class HttpAdapterClient extends ApiClient {
     @SuppressWarnings("serial")
     public static class ResponseException extends RuntimeException {
 
-        private int statusCode;
+        private final int statusCode;
 
         public ResponseException(final String message, final int statusCode) {
             super(message);
@@ -147,29 +148,43 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     public HttpResponse<?> send(MessageType messageType, Buffer payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
-            Duration responseTimeout) throws Exception {
+                                Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
 
-    public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
-            Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
+    public Future<HttpResponse<?>> sendAsync(
+            final MessageType messageType,
+            final Buffer payload,
+            final Duration timeout,
+            final Consumer<HttpRequest<?>> requestCustomizer
+    ) {
+        return sendAsync(messageType, null, payload, timeout, requestCustomizer);
+    }
 
-        final CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
-        var ms = responseTimeout.toMillis();
-
-        log.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
+    public Future<HttpResponse<?>> sendAsync(
+            final MessageType messageType,
+            final String pathSuffix,
+            final Buffer payload,
+            final Duration timeout,
+            final Consumer<HttpRequest<?>> requestCustomizer
+    ) {
 
         // create new request
 
-        var path = messageType.path();
+        final String path;
         if (pathSuffix != null) {
-            path += pathSuffix;
+            path = messageType.path() + pathSuffix;
+        } else {
+            path = messageType.path();
         }
-        var request = getClient().post(endpoint.getPort(), endpoint.getHost(), path)
+
+        log.info("POST - path: {}, body '{}'", path, payload);
+
+        var request = getClient().post(this.endpoint.getPort(), this.endpoint.getHost(), path)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 // we send with QoS 1 by default, to get some feedback
                 .putHeader("QoS-Level", "1")
-                .timeout(ms);
+                .timeout(timeout.toMillis());
 
         if (this.authzString != null) {
             request = request.putHeader(AUTHORIZATION, authzString);
@@ -181,39 +196,58 @@ public class HttpAdapterClient extends ApiClient {
             requestCustomizer.accept(request);
         }
 
+        // result promise
+
+        final Promise<HttpResponse<?>> result = Promise.promise();
+
         // execute request with payload
 
         request.sendBuffer(payload, ar -> {
 
             // if the request failed ...
             if (ar.failed()) {
+
                 log.info("Request failed", ar.cause());
                 // ... fail the response promise
-                responsePromise.completeExceptionally(ar.cause());
-                return;
-            }
+                result.fail(ar.cause());
 
-            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
-
-            var response = ar.result();
-            var code = response.statusCode();
-
-            log.info("POST: code {} -> {}", code, response.bodyAsString());
-            if (!expectedCodePredicate.test(code)) {
-                responsePromise.completeExceptionally(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
             } else {
-                responsePromise.complete(ar.result());
+
+                log.info("POST: path: {}, body '{}' -> {} {}", path, payload, ar.result().statusCode(), ar.result().statusMessage());
+                result.complete(ar.result());
+
             }
 
         });
 
+        return result.future();
+
+    }
+
+    public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
+                                Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
+
+        final CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
+
+        sendAsync(messageType, pathSuffix, payload, responseTimeout, requestCustomizer)
+                .flatMap(response -> {
+                    var code = response.statusCode();
+
+                    log.info("POST: code {} -> {}", code, response.bodyAsString());
+                    if (!expectedCodePredicate.test(code)) {
+                        return Future.failedFuture(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
+                    } else {
+                        return Future.succeededFuture(response);
+                    }
+                });
+
         // the next line gives the timeout a bit of extra time, as the HTTP timeout should
         // kick in, we would prefer that over the timeout via the future.
-        return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
+        return responsePromise.get(((long) (responseTimeout.toMillis() * 1.1)), TimeUnit.MILLISECONDS);
     }
 
     /**
-     * Send method suitable for using as {@link Sender}.
+     * Send method suitable for using as {@link MessageSendTester.Sender}.
      */
     public boolean send(MessageSendTester.Type type, Buffer payload, Duration timeout) {
         return sendDefault(type.type(), payload, timeout);

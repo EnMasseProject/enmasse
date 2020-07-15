@@ -509,7 +509,7 @@ public class TestUtils {
 
     }
 
-    private static String format(final Duration duration) {
+    public static String format(final Duration duration) {
         return String.format("%d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 

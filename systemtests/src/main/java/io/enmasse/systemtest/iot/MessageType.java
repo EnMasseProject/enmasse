@@ -7,22 +7,30 @@ package io.enmasse.systemtest.iot;
 
 public enum MessageType {
 
-    TELEMETRY("telemetry"),
-    EVENT("event"),
-    COMMAND_RESPONSE("command/res");
+    TELEMETRY("telemetry", "telemetry"),
+    EVENT("event", "event"),
+    COMMAND("command", "command"),
+    COMMAND_RESPONSE("command_response", "command/res"),
+    ;
 
-    private String address;
+    private final String address;
+    private final String path;
 
-    private MessageType(final String address) {
+    MessageType(final String address, final String path) {
         this.address = address;
+        this.path = path;
     }
 
     public String path() {
-        return "/" + this.address;
+        return "/" + this.path;
     }
 
     public String address() {
         return this.address;
+    }
+
+    public String address(final String tenantId) {
+        return this.address + "/" + tenantId;
     }
 
 }

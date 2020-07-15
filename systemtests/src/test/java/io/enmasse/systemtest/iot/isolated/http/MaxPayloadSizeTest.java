@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot.isolated.http;
 
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
 import org.junit.jupiter.api.Tag;
