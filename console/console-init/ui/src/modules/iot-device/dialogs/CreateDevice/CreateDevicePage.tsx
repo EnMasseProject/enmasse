@@ -3,53 +3,60 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Wizard,
   WizardFooter,
   WizardContextConsumer,
   Button,
-  SelectOptionObject,
-  Grid,
+  Breadcrumb,
+  BreadcrumbItem,
+  PageSection,
+  Page,
+  PageSectionVariants,
+  Divider,
+  Title,
+  Flex,
+  FlexItem,
   GridItem,
-  Title
+  Grid
 } from "@patternfly/react-core";
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
-import { AddGateways } from "modules/iot-device/components";
-import { useStoreContext, types } from "context-state-reducer";
-import { AddCredential } from "modules/iot-device/components";
+import { AddGateways, AddCredential } from "modules/iot-device/components";
+import { useHistory, useParams } from "react-router";
+import { Link } from "react-router-dom";
+import { useBreadcrumb } from "use-patternfly";
+import { SwitchWithToggle } from "components";
 
-export interface IDeviceInfo {
-  onPropertySelect: (e: any, selection: SelectOptionObject) => void;
-  onChangePropertyInput?: (value: string) => Promise<any>;
-  onPropertyClear: () => void;
-  propertySelected?: string;
-  propertyInput?: string;
-  setPropertyInput?: (value: string) => void;
-}
-
-const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
-  onPropertySelect,
-  onChangePropertyInput,
-  onPropertyClear,
-  propertySelected,
-  propertyInput,
-  setPropertyInput
-}) => {
-  const { dispatch, state } = useStoreContext();
-  const { modalProps } = (state && state.modal) || {};
-  const { onConfirm, onClose } = modalProps || {};
+export default function CreateDevicePage() {
+  const history = useHistory();
   const [connectionType, setConnectionType] = useState<string>();
   const [addedGateways, setAddedGateways] = useState<string[]>([]);
+  const { projectname, namespace } = useParams();
+  const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
+  const breadcrumb = useMemo(
+    () => (
+      <Breadcrumb>
+        <BreadcrumbItem>
+          <Link id="cdetail-link-home" to={"/"}>
+            Home
+          </Link>
+        </BreadcrumbItem>
+        <BreadcrumbItem isActive={true}>{projectname}</BreadcrumbItem>
+      </Breadcrumb>
+    ),
+    [projectname]
+  );
+
+  useBreadcrumb(breadcrumb);
 
   const getGateways = (gateways: string[]) => {
     setAddedGateways(gateways);
   };
 
   const onCloseDialog = () => {
-    dispatch({ type: types.HIDE_MODAL });
-    onClose && onClose();
+    history.push(deviceListRouteLink);
   };
 
   const addGateway = {
@@ -111,24 +118,13 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
     // };
     // await setAddressQueryVariables(variables);
     // }
-
-    onCloseDialog();
-    onConfirm && onConfirm();
+    history.push(deviceListRouteLink);
   };
 
   const steps = [
     {
       name: "Device information",
-      component: (
-        <DeviceInformation
-          onPropertySelect={onPropertySelect}
-          onChangePropertyInput={onChangePropertyInput}
-          onPropertyClear={onPropertyClear}
-          propertySelected={propertySelected}
-          propertyInput={propertyInput}
-          setPropertyInput={setPropertyInput}
-        />
-      )
+      component: <DeviceInformation />
     },
     {
       name: "Connection Type",
@@ -216,15 +212,7 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
 
           return (
             <>
-              <Button
-                variant="primary"
-                type="submit"
-                // onClick={
-                //   firstSelectedStep && firstSelectedStep === "messaging"
-                //     ? handleMessagingProjectSave
-                //     : handleIoTProjectSave
-                // }
-              >
+              <Button variant="primary" onClick={handleSave} type="submit">
                 Finish
               </Button>
               <Button onClick={onBack} variant="secondary">
@@ -241,14 +229,34 @@ const CreateDevice: React.FunctionComponent<IDeviceInfo> = ({
   );
 
   return (
-    <Wizard
-      isOpen={true}
-      onClose={onCloseDialog}
-      onSave={handleSave}
-      footer={CustomFooter}
-      steps={steps}
-    />
+    <Page>
+      <PageSection variant={PageSectionVariants.light}>
+        <Flex>
+          <FlexItem>
+            <Title size={"2xl"} headingLevel="h1">
+              Add a device
+            </Title>
+          </FlexItem>
+          <FlexItem align={{ default: "alignRight" }}>
+            <SwitchWithToggle
+              id={"add-device-view-in-json"}
+              labelOff={"View JSON Format"}
+              onChange={() => {
+                console.log("View in JSON");
+              }}
+              label={"View Form Format"}
+            />
+          </FlexItem>
+        </Flex>
+        <br />
+        <Divider />
+      </PageSection>
+      <Wizard
+        onClose={onCloseDialog}
+        onSave={handleSave}
+        footer={CustomFooter}
+        steps={steps}
+      />
+    </Page>
   );
-};
-
-export { CreateDevice };
+}

@@ -11,11 +11,20 @@ import {
   Title,
   Divider,
   Grid,
-  GridItem
+  GridItem,
+  SelectOptionObject
 } from "@patternfly/react-core";
 import { CreateMetadata } from "modules/iot-device/components";
-import { IDeviceInfo } from ".";
 import { SwitchWithToggle } from "components/SwitchWithToggle/SwitchWithToggle";
+
+export interface IDeviceInfo {
+  onPropertySelect?: (e: any, selection: SelectOptionObject) => void;
+  onChangePropertyInput?: (value: string) => Promise<any>;
+  onPropertyClear?: () => void;
+  propertySelected?: string;
+  propertyInput?: string;
+  setPropertyInput?: (value: string) => void;
+}
 
 export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
   onChangePropertyInput
