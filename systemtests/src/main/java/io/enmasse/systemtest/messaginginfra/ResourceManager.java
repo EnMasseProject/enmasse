@@ -187,6 +187,48 @@ public class ResourceManager {
         }
     }
 
+    /**
+     * Delete all provided resources, then assert.
+     * <p>
+     * In contrast to the method {@link #deleteResource(HasMetadata[])}, this method first deletes all resources and
+     * then waits and asserts the deletion. This may have an impact on the test outcome: assume having resources
+     * A, B, and C. If A cannot be deleted when B is also being deleted, then this method would fail, while using
+     * {@link #deleteResource(HasMetadata[])} would succeed, as B only gets deleted once A is properly destroyed. This
+     * method may still pass, as there is a race of which resources get deleted first.
+     */
+    @SafeVarargs
+    public final <T extends HasMetadata> void deleteResourcesParallel(T... resources) throws Exception {
+
+        // first delete
+
+        for (T resource : resources) {
+            ResourceType<T> type = findResourceType(resource);
+            if (type == null) {
+                LOGGER.warn("Can't find resource type, please create it manually");
+                continue;
+            }
+            if (verbose) {
+                LOGGER.info("Delete of {} {} in namespace {}",
+                        resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
+            }
+            type.delete(resource);
+            cleanDefault(resource);
+        }
+
+        // now wait and assert
+
+        for (T resource : resources) {
+            assertTrue(waitResourceCondition(resource, Objects::isNull),
+                    String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
+        }
+    }
+
+    /**
+     * Delete each resource and assert.
+     * <p>
+     * This method takes each resource, delete its, waits for its destruction, and then moves on to the next resource.
+     * </p>
+     */
     @SafeVarargs
     public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
         for (T resource : resources) {
