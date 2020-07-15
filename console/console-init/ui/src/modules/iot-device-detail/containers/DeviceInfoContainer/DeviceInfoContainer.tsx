@@ -22,10 +22,10 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   id
 }) => {
   // const { dispatch } = useStoreContext();
-  const { projectname, deviceid } = useParams();
+  const { projectname, deviceid, namespace } = useParams();
 
   const { data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
   );
 
   //const [setCredentialStatusQueryVaribles]=useMutationQuery();
@@ -67,7 +67,10 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
 
   const deleteCredentials = async () => {
     const variable = {
-      iotproject: projectname,
+      iotproject: {
+        name: projectname,
+        namespace
+      },
       deviceId: deviceid
     };
     await setDeleteCredentialsQueryVariables(variable);

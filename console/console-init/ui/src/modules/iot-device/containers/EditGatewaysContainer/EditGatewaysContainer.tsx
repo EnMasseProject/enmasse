@@ -20,12 +20,12 @@ const styles = StyleSheet.create({
 });
 
 export const EditGatewaysContainer = () => {
-  const { deviceid, projectname } = useParams();
+  const { deviceid, projectname, namespace } = useParams();
   const { dispatch } = useStoreContext();
   const [gateways, addGateways] = useState<string[]>([]);
 
   const { data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
   );
 
   const { devices } = data || {

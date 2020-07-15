@@ -164,7 +164,10 @@ export default function DeviceListPage() {
   const onConfirmDeleteSelectedDevices = async (devices: IDevice[]) => {
     const variable = {
       deviceId: devices.map(({ deviceId }) => deviceId),
-      iotproject: projectname
+      iotproject: {
+        name: projectname,
+        namespace
+      }
     };
     await setDeleteDeviceQueryVariables(variable);
   };
