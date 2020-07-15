@@ -10,3 +10,7 @@ html,
 #root {
   height: 100%;
 }
+
+.app-avatar {
+  margin-right: 24px;
+}
