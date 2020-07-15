@@ -6,9 +6,11 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.collect.Lists;
+import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
@@ -398,8 +400,8 @@ public final class IoTTestSession implements IoTTestContext {
             return this;
         }
 
-        public Builder project(final ThrowingConsumer<IoTProjectBuilder> projectCustomizer) throws Exception {
-            projectCustomizer.accept(this.project);
+        public Builder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
+            customizer.accept(this.project);
             return this;
         }
 
@@ -572,6 +574,9 @@ public final class IoTTestSession implements IoTTestContext {
         private boolean awaitReady = true;
         private boolean createNamespace = false;
 
+        private ThrowingConsumer<MessagingProjectBuilder> projectCustomizer;
+        private ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer;
+
         private ProjectBuilder(
                 final IoTProjectBuilder project,
                 final Consumer<Throwable> exceptionHandler,
@@ -582,8 +587,18 @@ public final class IoTTestSession implements IoTTestContext {
             this.defaultTlsVersions = defaultTlsVersions;
         }
 
-        public ProjectBuilder project(final ThrowingConsumer<IoTProjectBuilder> projectCustomizer) throws Exception {
-            projectCustomizer.accept(this.project);
+        public ProjectBuilder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
+            customizer.accept(this.project);
+            return this;
+        }
+
+        public ProjectBuilder project(final ThrowingConsumer<MessagingProjectBuilder> projectCustomizer) {
+            this.projectCustomizer = projectCustomizer;
+            return this;
+        }
+
+        public ProjectBuilder endpoint(final ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer) {
+            this.endpointCustomizer = endpointCustomizer;
             return this;
         }
 
@@ -633,38 +648,26 @@ public final class IoTTestSession implements IoTTestContext {
 
                     // create messaging project
 
-                    var messagingProject = new MessagingProjectBuilder()
-                            .withNewMetadata()
-                            .withNamespace(namespace)
-                            .withName("default")
-                            .endMetadata()
-
-                            .withNewSpec().endSpec()
-
-                            .build();
-                    createDefaultResource(Kubernetes::messagingProjects, messagingProject, cleanup);
+                    var messagingProject = createDefaultProject(namespace);
+                    if (this.projectCustomizer != null) {
+                        this.projectCustomizer.accept(messagingProject);
+                    }
+                    createDefaultResource(Kubernetes::messagingProjects, messagingProject.build(), cleanup);
 
                     // create messaging endpoint
 
-                    var messagingEndpoint = new MessagingEndpointBuilder()
-                            .withNewMetadata()
-                            .withNamespace(namespace)
-                            .withName("downstream")
-                            .endMetadata()
-
-                            .withNewSpec()
-                            .withHost(Kubernetes.getInstance().getHost())
-                            .withNewNodePort().endNodePort()
-                            .addNewProtocol("AMQP")
-                            .endSpec()
-
-                            .build();
-                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
+                    var messagingEndpoint = createDefaultEndpoint(namespace);
+                    if (this.endpointCustomizer != null) {
+                        this.endpointCustomizer.accept(messagingEndpoint);
+                    }
+                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint.build(), cleanup);
                 }
 
-                // get the endpoint
+                // get the endpoint, we always expect a "downstream" endpoint for testing
 
-                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace).withName("downstream").get();
+                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace)
+                        .withName("downstream")
+                        .get();
                 var endpointHost = messagingEndpoint.getStatus().getHost();
 
                 // create IoT project
@@ -767,6 +770,34 @@ public final class IoTTestSession implements IoTTestContext {
                 return result;
 
             });
+        }
+
+        private MessagingProjectBuilder createDefaultProject(final String namespace) {
+
+            return new MessagingProjectBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace)
+                    .withName("default")
+                    .endMetadata()
+
+                    .withNewSpec().endSpec();
+
+        }
+
+        private MessagingEndpointBuilder createDefaultEndpoint(final String namespace) {
+
+            return new MessagingEndpointBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace)
+                    .withName("downstream")
+                    .endMetadata()
+
+                    .withNewSpec()
+                    .withHost(Kubernetes.getInstance().getHost())
+                    .withNewNodePort().endNodePort()
+                    .addNewProtocol("AMQP")
+                    .endSpec();
+
         }
     }
 

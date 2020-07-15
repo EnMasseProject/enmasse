@@ -1,6 +1,5 @@
 apiVersion: enmasse.io/v1
-kind: MessagingInfrastructure
+kind: MessagingProject
 metadata:
   name: default
-  namespace: enmasse-infra
 spec: {}

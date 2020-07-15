@@ -5,6 +5,8 @@
 
 package io.enmasse.systemtest.iot.mqtt;
 
+import static com.google.common.base.Throwables.getCausalChain;
+import static com.google.common.base.Throwables.getRootCause;
 import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -12,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
@@ -235,18 +238,33 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
 
     }
 
-    public static void assertConnectionException(final Throwable e) {
+    @SuppressWarnings("UnstableApiUsage")
+    static void assertConnectionException(final Throwable e) {
 
-        // if we get an exception, it must be an MqttSecurityException or SSLHandshakeException
+        // if we get an exception, it must be an MqttSecurityException ...
 
         if (e instanceof MqttSecurityException) {
             return;
         }
 
-        final Throwable cause = Throwables.getRootCause(e);
+        // or a cause of SSLHandshakeException
+
+        final Throwable cause = getRootCause(e);
         if (cause instanceof SSLHandshakeException) {
             return;
         }
+
+        // or contain an SSLException with "readHandshakeRecord" as the remote side
+        // already terminated the connection
+
+        if (getCausalChain(e).stream()
+                .filter(SSLException.class::isInstance).map(SSLException.class::cast)
+                .map(Exception::getMessage)
+                .anyMatch("readHandshakeRecord"::equals)) {
+            return;
+        }
+
+        // everything else, fails
 
         fail("Failed to connect with non-permitted exception", e);
 

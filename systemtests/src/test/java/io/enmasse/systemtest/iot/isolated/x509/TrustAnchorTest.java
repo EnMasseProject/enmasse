@@ -32,9 +32,9 @@ import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.utils.TestUtils;
 
 @Tag(IOT)
-public class TrustAnchorTests implements IoTTests {
+public class TrustAnchorTest implements IoTTests {
 
-    private static final Logger log = LoggerFactory.getLogger(TrustAnchorTests.class);
+    private static final Logger log = LoggerFactory.getLogger(TrustAnchorTest.class);
 
     /**
      * Test creating duplicate "subject dn".
@@ -51,7 +51,7 @@ public class TrustAnchorTests implements IoTTests {
         try (
 
                 IoTTestSession session = IoTTestSession.createDefault()
-                        .project(project -> project.editOrNewSpec()
+                        .tenant(tenant -> tenant.editOrNewSpec()
                                 .editOrNewConfiguration()
                                 .addNewTrustAnchor()
                                 .withCertificate(toPem(mgr1.getCertificate()))
@@ -65,7 +65,7 @@ public class TrustAnchorTests implements IoTTests {
                         .newProject(ns2, name2)
                         .createNamespace(true)
                         .awaitReady(false)
-                        .project(project -> project.editOrNewSpec()
+                        .tenant(tenant -> tenant.editOrNewSpec()
                                 .editOrNewConfiguration()
                                 .addNewTrustAnchor()
                                 .withCertificate(toPem(mgr2.getCertificate()))
@@ -73,6 +73,10 @@ public class TrustAnchorTests implements IoTTests {
                                 .endConfiguration()
                                 .endSpec()
                         )
+                        .endpoint(endpoint -> endpoint
+                                .editOrNewSpec()
+                                .withHost(null)
+                                .endSpec())
                         .deploy()
 
         ) {

@@ -36,12 +36,8 @@ public class TlsVersionTest implements IoTTests {
                         .withVersions("TLSv1.3")
                         .endTls()
                         .endSpec())
-                .defaultTlsVersions("TLSv1.3")
-                .defaultProjectCustomizer(project -> {
-                    // messaging endpoint only supports TLS 1.2
-                    project
-                            .consumerTlsVersions("TLSv1.2");
-                })
+                // we accept 1.2 and 1.3 for all connections we don't test explicitly
+                .defaultTlsVersions("TLSv1.2", "TLSv1.3")
                 .run(session -> {
 
                     var device = session.registerNewRandomDeviceWithPassword();

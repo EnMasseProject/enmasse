@@ -1,4 +1,4 @@
-apiVersion: enmasse.io/v1beta2
+apiVersion: enmasse.io/v1
 kind: MessagingEndpoint
 metadata:
   name: cluster

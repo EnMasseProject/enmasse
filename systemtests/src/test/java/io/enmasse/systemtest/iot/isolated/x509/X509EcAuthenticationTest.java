@@ -23,7 +23,7 @@ import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
 import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
 
 @Tag(IOT)
-public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
+public class X509EcAuthenticationTest implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
 
     private static DeviceCertificateManager certificateManager;
     private static IoTTestSession session;
@@ -31,10 +31,10 @@ public class X509RsaAuthenticationTests implements StandardX509Cases, StandardIo
     @BeforeAll
     public static void setup() throws Exception {
 
-        certificateManager = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        certificateManager = new DeviceCertificateManager(Mode.EC, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         session = IoTTestSession.createDefault()
-                .project(project -> project.editOrNewSpec()
+                .tenant(tenant -> tenant.editOrNewSpec()
                         .editOrNewConfiguration()
                         .addNewTrustAnchor()
                         .withCertificate(toPem(certificateManager.getCertificate()))
