@@ -33,11 +33,22 @@ const styles = StyleSheet.create({
     marginRight: 20
   }
 });
-interface IAddDeviceWithJsonProps {}
+interface IAddDeviceWithJsonProps {
+  deviceDetail?: string;
+  setDeviceDetail: (detail?: string) => void;
+  onLeave: () => void;
+  onSave: (detail: string) => void;
+  onPreview: (detail: string) => void;
+}
 
-const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () => {
+const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
+  deviceDetail,
+  setDeviceDetail,
+  onLeave,
+  onSave,
+  onPreview
+}) => {
   const { dispatch } = useStoreContext();
-  const [deviceDetail, setDeviceDetail] = useState<string>();
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
     TemplateType.DIRECTLY_CONNECTED
   );
@@ -50,10 +61,6 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
       setShowJsonValidationError(false);
     }
     setDeviceDetail(value);
-  };
-
-  const onLeaveModal = () => {
-    //TODO: handle onConfirm event for modal
   };
 
   const onCancel = () => {
@@ -77,13 +84,16 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
         type: types.SHOW_MODAL,
         modalType: MODAL_TYPES.LEAVE_CREATE_DEVICE,
         modalProps: {
-          onConfirm: onLeaveModal,
+          onConfirm: onLeave,
           option: "Leave",
           detail: `Do you want to leave this creation page without saving? All information will be lost.`,
           header: "Leave without saving ?",
-          confirmButtonLabel: "Leave"
+          confirmButtonLabel: "Leave",
+          iconType: "danger"
         }
       });
+    } else {
+      onLeave();
     }
   };
 
@@ -105,15 +115,20 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
     }
   };
   const onFinish = () => {
-    if (!isJsonValid()) {
-      setShowJsonValidationError(true);
-    } else {
-    }
+    if (deviceDetail)
+      if (!isJsonValid()) {
+        setShowJsonValidationError(true);
+      } else {
+        onSave(deviceDetail);
+      }
   };
-  const onPreview = () => {
-    if (!isJsonValid()) {
-      setShowJsonValidationError(true);
-    } else {
+  const handleOnPreview = () => {
+    if (deviceDetail) {
+      if (!isJsonValid()) {
+        setShowJsonValidationError(true);
+      } else {
+        onPreview(deviceDetail);
+      }
     }
   };
 
@@ -157,7 +172,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = () =
         Finish
       </Button>
       {"  "}
-      <Button variant="secondary" onClick={onPreview}>
+      <Button variant="secondary" onClick={handleOnPreview}>
         Preview
       </Button>
       {"  "}
