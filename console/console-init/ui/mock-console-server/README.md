@@ -509,11 +509,41 @@ query allProjects {
 
 ```
 query {
-  devices(iotproject: { name: "iotProjectFrance", namespace:"app1_ns" }) {
+  devices(
+    iotproject: { name: "iotProjectFrance", namespace: "app1_ns" }
+    filter: "`$.enabled` = FALSE"
+  ) {
     total
     devices {
       deviceId
-      jsonData
+      enabled
+      status {
+        created
+        updated
+      }
+    }
+  }
+}
+
+```
+
+## Retrieve Iot devices for an iot project ordered by creation date
+
+```
+query {
+  devices(
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
+    orderBy: "`$.status.created` asc"
+  ) {
+    total
+    devices {
+      deviceId
+      enabled
+      via
+      status{
+        created
+        lastUser
+      }
     }
   }
 }
@@ -531,7 +561,10 @@ query {
     devices {
       deviceId
       enabled
-      jsonData
+      status {
+        created
+        updated
+      }
     }
   }
 }
@@ -549,7 +582,10 @@ query {
     devices {
       deviceId
       enabled
-      jsonData
+      status {
+        created
+        updated
+      }
     }
   }
 }
@@ -560,7 +596,7 @@ query {
 ```
 query {
   credentials(
-    iotproject: "iotProjectIndia",
+    iotproject: { name: "iotProjectIndia", namespace:"app1_ns" },
     deviceId: "20"
   ) {
     total
@@ -575,7 +611,7 @@ query {
 query {
   credentials(
     filter: "`$['auth-id']` = 'user-1'"
-    iotproject: "iotProjectIndia",
+    iotproject: { name: "iotProjectIndia", namespace:"app1_ns" },
     deviceId: "20"
   ) {
     total
@@ -1049,12 +1085,14 @@ args:
 ```
 mutation {
   createIotDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: {
+       name: "iotProjectFrance",
+       namespace: "app1_ns"
+    },
     device: {
       deviceId: "Jens-phone"
       enabled: true
-      viaGateway: false
-      jsonData: "{ext: {brand: samsung}}"
+      ext: "{brand: samsung}"
       credentials: "[{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}]"
     }
 	) {
@@ -1068,7 +1106,7 @@ mutation {
 ```
 mutation {
   deleteIotDevices(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceIds: ["11"]
   )
 }
@@ -1079,12 +1117,11 @@ mutation {
 ```
 mutation {
   updateIotDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     device: {
       deviceId: "Jens-phone"
       enabled: true
-      viaGateway: false
-      jsonData: "{ext: {brand: apple, headphone-jack: false}}"
+      ext: "{brand: apple, headphone-jack: false}"
     }
 	) {
     deviceId
@@ -1097,7 +1134,7 @@ mutation {
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: ["{auth-id: \"pin\", type: \"password\", pwd-plain: \"1234\"}"]
 	)
@@ -1119,7 +1156,7 @@ Let's add one credential containing two secrets :
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
                 {
@@ -1178,7 +1215,7 @@ while keeping the id for the secret.
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
         {
@@ -1205,7 +1242,7 @@ Jens installed a second app on his phone, let's add another secret :
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
         {
@@ -1237,7 +1274,7 @@ To update a secret, send the new password/key/certificate value, or any other fi
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
         {
@@ -1271,7 +1308,7 @@ The couple {auth-id, type} must be unique inside an iot project.
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
         {
@@ -1312,7 +1349,7 @@ Remove it from the payload and keep what you want to keep:
 ```
 mutation {
   setCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
     jsonData: '[
         {
@@ -1343,7 +1380,7 @@ This will delete all credentials for a device.
 ```
 mutation {
   deleteCredentialsForDevice(
-    iotproject: "iotProjectFrance"
+    iotproject: { name: "iotProjectFrance", namespace:"app1_ns" },
     deviceId: "Jens-phone"
 	)
 }
