@@ -110,7 +110,7 @@ const EndPointList: React.FunctionComponent<IEndPointListProps> = ({
         aria-label="Endpoint List"
         sortBy={sortBy}
       >
-        <TableHeader id="endpoint-list-table-bodheader" />
+        <TableHeader id="endpoint-list-tableheader" />
         <TableBody />
       </Table>
       {endpoints && endpoints.length <= 0 && <EmptyEndpoints />}
