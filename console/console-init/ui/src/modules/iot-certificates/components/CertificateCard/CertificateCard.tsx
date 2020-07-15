@@ -62,7 +62,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
 
   const dropdownItems = [
     <DropdownItem
-      id={`cert-card-edit-dropdown-${id}`}
+      id={`cert-card-edit-dropdownitem-${id}`}
       key="edit"
       aria-label="Edit certificate"
       onClick={onEditCertificate}
@@ -70,7 +70,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       Edit
     </DropdownItem>,
     <DropdownItem
-      id={`cert-card-delete-dropdown-${id}`}
+      id={`cert-card-delete-dropdownitem-${id}`}
       key="delete"
       aria-label="delete certificate"
       onClick={onDeleteCertificate}
