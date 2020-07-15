@@ -2,8 +2,8 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.messaginginfra;
 
+ package io.enmasse.systemtest.messaginginfra;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,7 +45,7 @@ public class ResourceManager {
     private static final Logger LOGGER = LoggerUtils.getLogger();
     private static boolean verbose = true;
 
-    private static final Map<String, Stack<ThrowableRunner>> storedResoruces = new LinkedHashMap<>();
+    private static final Map<String, Stack<ThrowableRunner>> storedResources = new LinkedHashMap<>();
 
     private MessagingInfrastructure defaultInfra;
     private MessagingProject defaultProject;
@@ -66,15 +66,15 @@ public class ResourceManager {
         LoggerUtils.logDelimiter("-");
         LOGGER.info("Going to clear all resources for {}", testContext.getDisplayName());
         LoggerUtils.logDelimiter("-");
-        if (!storedResoruces.containsKey(testContext.getDisplayName()) || storedResoruces.get(testContext.getDisplayName()).isEmpty()) {
+        if (!storedResources.containsKey(testContext.getDisplayName()) || storedResources.get(testContext.getDisplayName()).isEmpty()) {
             LOGGER.info("Nothing to delete");
         }
-        while (storedResoruces.containsKey(testContext.getDisplayName()) && !storedResoruces.get(testContext.getDisplayName()).isEmpty()) {
-            storedResoruces.get(testContext.getDisplayName()).pop().run();
+        while (storedResources.containsKey(testContext.getDisplayName()) && !storedResources.get(testContext.getDisplayName()).isEmpty()) {
+            storedResources.get(testContext.getDisplayName()).pop().run();
         }
         LoggerUtils.logDelimiter("-");
         LOGGER.info("");
-        storedResoruces.remove(testContext.getDisplayName());
+        storedResources.remove(testContext.getDisplayName());
     }
 
     private synchronized void cleanDefault(HasMetadata resource) {
@@ -174,8 +174,8 @@ public class ResourceManager {
             type.create(resource);
 
             synchronized (this) {
-                storedResoruces.computeIfAbsent(testContext.getDisplayName(), k -> new Stack<>());
-                storedResoruces.get(testContext.getDisplayName()).push(() -> deleteResource(resource));
+                storedResources.computeIfAbsent(testContext.getDisplayName(), k -> new Stack<>());
+                storedResources.get(testContext.getDisplayName()).push(() -> deleteResource(resource));
             }
         }
 
