@@ -99,10 +99,10 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       <ToolbarItem
         spacer={{ md: "spacerNone" }}
         data-codemods="true"
-        id="addr-name-toolbar-item"
+        id="addr-list-toolbar-item-addressname"
       >
         <ToolbarFilter
-          id="addr-name-toolbar-filter"
+          id="addr-list-toolbar-filter-addressname"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -110,7 +110,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="addr-toggle-select-name-typeahead"
+                id="addr-list-filter-addname-typeahead-input"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -136,7 +136,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       <ToolbarItem
         spacer={{ md: "spacerNone" }}
         data-codemods="true"
-        id="addr-toggle-type-toolbar-item"
+        id="addr-toggle-toolbar-item-addresstype"
       >
         <ToolbarFilter
           chips={typeSelected ? [typeSelected] : []}
@@ -190,10 +190,7 @@ const AddressToggleGroup: React.FunctionComponent<IAddressToggleGroupProps> = ({
       data-codemods="true"
       id="addr-toggle-filter-toolbar-group"
     >
-      <ToolbarFilter
-        categoryName="Filter"
-        id="addr-toggle-filter-toolbar-filter"
-      >
+      <ToolbarFilter categoryName="Filter" id="addr-toggle-toolbar-filter">
         <DropdownWithToggle
           id="addr-toggle-filter-dropdown"
           aria-label="select filter from dropdown"

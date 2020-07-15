@@ -103,6 +103,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               <br />
               <DropdownWithToggle
                 id="addr-config-type-dropdown"
+                toggleId="addr-config-type-dropdown-toggle"
                 aria-label="Dropdown to select type"
                 className={css(styles.dropdown_align)}
                 toggleClass={css(styles.dropdown_toggle)}
@@ -123,6 +124,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               <br />
               <DropdownWithToggle
                 id="addr-config-plan-dropdown"
+                toggleId="addr-config-plan-dropdown-toggle"
                 aria-label="dropdown to select plan"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
@@ -144,6 +146,7 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
                 <br />
                 <DropdownWithToggle
                   id="addr-config-topic-dropdown"
+                  toggleId="addr-config-topic-dropdown-toggle"
                   aria-label="dropdown for topic"
                   className={css(styles.dropdown_align)}
                   toggleClass={css(styles.dropdown_toggle)}
