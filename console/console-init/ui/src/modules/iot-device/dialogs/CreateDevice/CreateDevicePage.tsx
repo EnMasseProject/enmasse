@@ -96,28 +96,7 @@ export default function CreateDevicePage() {
   };
 
   const handleSave = async () => {
-    // if (name) {
-    //   const getVariables = () => {
-    // let variable: any = {
-    //   metadata: {
-    //     namespace: namespace
-    //   },
-    //   spec: {
-    //     type: addressType.toLowerCase(),
-    //     plan: plan,
-    //     address: addressName
-    //   }
-    // };
-    // if (addressType && addressType.trim().toLowerCase() === "subscription")
-    //   variable.spec.topic = topic;
-    // return variable;
-    // };
-    // const variables = {
-    // a: getVariables(),
-    // as: name
-    // };
-    // await setAddressQueryVariables(variables);
-    // }
+    // Add query to add device
     history.push(deviceListRouteLink);
   };
 
