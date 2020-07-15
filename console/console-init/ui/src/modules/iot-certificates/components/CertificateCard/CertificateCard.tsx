@@ -62,7 +62,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
 
   const dropdownItems = [
     <DropdownItem
-      id={`cc-dropdown-edit-${id}`}
+      id={`cert-card-edit-dropdown-${id}`}
       key="edit"
       aria-label="Edit certificate"
       onClick={onEditCertificate}
@@ -70,9 +70,9 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
       Edit
     </DropdownItem>,
     <DropdownItem
-      id={`cc-dropdown-delete-${id}`}
+      id={`cert-card-delete-dropdown-${id}`}
       key="delete"
-      aria-label="delete"
+      aria-label="delete certificate"
       onClick={onDeleteCertificate}
     >
       Delete
@@ -82,20 +82,24 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
   const rowMargin: string = css(styles.row_margin);
 
   return (
-    <Card id={`cc-card-${id}`}>
-      <CardTitle id={`cc-dard-header-${id}`}>
+    <Card id={`cert-card-${id}`}>
+      <CardTitle id={`cert-card-title-${id}`}>
         <CardActions className={css(styles.float_right)}>
           <DropdownWithKebabToggle
             isPlain={true}
             dropdownItems={dropdownItems}
-            id={`cc-dropdown-with-kebab-${id}`}
+            id={`cert-card-kebab-dropdown-${id}`}
           />
         </CardActions>
       </CardTitle>
       <CardBody>
         <Grid>
           <GridItem span={2}>
-            <Title headingLevel="h1" size="md" id={`cc-subject-dn-title-${id}`}>
+            <Title
+              headingLevel="h1"
+              size="md"
+              id={`cert-card-subject-title-${id}`}
+            >
               <b>{getLabelByKey("subject-dn")}</b>
             </Title>
           </GridItem>
@@ -103,7 +107,11 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             {certificate["subject-dn"]}
           </GridItem>
           <GridItem span={2}>
-            <Title headingLevel="h1" size="md" id={`cc-public-key-title-${id}`}>
+            <Title
+              headingLevel="h1"
+              size="md"
+              id={`cert-card-public-key-title-${id}`}
+            >
               <b>{getLabelByKey("public-key")}</b>
             </Title>
           </GridItem>
@@ -114,14 +122,15 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             <Title
               headingLevel="h1"
               size="md"
-              id={`cc-auto-provision-title-${id}`}
+              id={`cert-card-auto-provision-title-${id}`}
             >
               <b>{getLabelByKey("auto-provisioning-enabled")}</b>
             </Title>
           </GridItem>
           <GridItem span={10} className={rowMargin}>
             <SwitchWithToggle
-              id={`cc-auto-provision-switch-${id}`}
+              id={`cert-card-auto-provision-switch-${id}`}
+              aria-label="Toggle to enable auto provisioning"
               label="Enabled"
               labelOff="Disabled"
               isChecked={certificate["auto-provisioning-enabled"] || false}
@@ -132,7 +141,7 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             <Title
               headingLevel="h1"
               size="md"
-              id={`cc-algorithm-title-${id}`}
+              id={`cert-card-algorithm-title-${id}`}
               className={css(styles.capitalize)}
             >
               <b>{getLabelByKey("algorithm")}</b>
@@ -142,7 +151,11 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             {certificate["algorithm"]}
           </GridItem>
           <GridItem span={2}>
-            <Title headingLevel="h1" size="md" id={`cc-not-before-title-${id}`}>
+            <Title
+              headingLevel="h1"
+              size="md"
+              id={`cert-card-not-before-title-${id}`}
+            >
               <b>{getLabelByKey("not-before")}</b>
             </Title>
           </GridItem>
@@ -150,7 +163,11 @@ export const CertificateCard: React.FunctionComponent<ICertificateCardProps> = (
             {certificate["not-before"]}
           </GridItem>
           <GridItem span={2}>
-            <Title headingLevel="h1" size="md" id={`cc-not-after-title-${id}`}>
+            <Title
+              headingLevel="h1"
+              size="md"
+              id={`cert-card-not-after-title-${id}`}
+            >
               <b>{getLabelByKey("not-after")}</b>
             </Title>
           </GridItem>
