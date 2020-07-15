@@ -2132,6 +2132,7 @@ function getIotDeviceStatusSection() {
   return {
     created: "2020-01-01T00:00:00+01:00",
     updated: "2020-06-10T09:45:00+01:00",
+    lastSeen: "2020-07-12T12:45:00+01:00",
     "last-user": "Keanu Reeves"
   };
 }

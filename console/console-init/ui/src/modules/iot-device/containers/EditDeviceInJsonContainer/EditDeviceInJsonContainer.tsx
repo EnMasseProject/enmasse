@@ -22,10 +22,10 @@ const styles = StyleSheet.create({
 
 export const EditDeviceInJsonContainer = () => {
   const { dispatch } = useStoreContext();
-  const { projectname, deviceid } = useParams();
+  const { projectname, deviceid, namespace } = useParams();
 
   const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
   );
 
   const { devices } = data || {

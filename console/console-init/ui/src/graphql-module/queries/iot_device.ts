@@ -9,6 +9,7 @@ import { ISortBy } from "@patternfly/react-table";
 
 const RETURN_IOT_DEVICE_DETAIL = (
   iotproject: string,
+  namespace: string,
   deviceId: string,
   queryResolver?: string
 ) => {
@@ -29,7 +30,7 @@ const RETURN_IOT_DEVICE_DETAIL = (
   const IOT_DEVICE_DETAIL = gql(
     `query iot_device_detail{
          devices(
-             iotproject:"${iotproject}"
+             iotproject: { name : "${iotproject}", namespace : "${namespace}"},
              filter: "\`$.deviceId\` = '${deviceId}'"){
               ${queryResolver}
           }
@@ -66,6 +67,7 @@ const FILTER_IOT_CREDENTIALS = (
 
 const RETURN_IOT_CREDENTIALS = (
   iotproject: string,
+  namespace: string,
   deviceId: string,
   property?: string,
   filterType?: string,
@@ -77,7 +79,7 @@ const RETURN_IOT_CREDENTIALS = (
     `query iot_credentials{
       credentials(
         filter:"${filter}",
-        iotproject:"${iotproject}",
+        iotproject:{ name : "${iotproject}", namespace : "${namespace}"},
         deviceId: "${deviceId}"
       ) {
         total   
@@ -89,14 +91,14 @@ const RETURN_IOT_CREDENTIALS = (
 };
 
 const DELETE_IOT_DEVICE = gql(
-  `mutation delete_iot_device($iotproject: String!, $deviceId: [String!]!) {
+  `mutation delete_iot_device($iotproject: ObjectMeta_v1_Input!, $deviceId: [String!]!) {
     deleteIotDevices(iotproject: $iotproject, deviceIds: $deviceId)
   }`
 );
 
 const DELETE_CREDENTIALS_FOR_IOT_DEVICE = gql(
   `mutation delete_credentials_for_device(
-    $iotproject: String!
+    $iotproject: ObjectMeta_v1_Input!
     $deviceId: String!
   ) {
     deleteCredentialsForDevice(iotproject: $iotproject, deviceId: $deviceId)
