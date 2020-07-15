@@ -6,8 +6,6 @@
 import React, { useState } from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
-import { useParams, useHistory } from "react-router-dom";
-
 export interface ICreateDeviceButtonProps {
   handleInputDeviceInfo: () => void;
   handleJSONUpload: () => void;
@@ -18,18 +16,10 @@ export const CreateDeviceButton: React.FunctionComponent<ICreateDeviceButtonProp
   handleJSONUpload
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const { projectname, namespace } = useParams();
 
-  const history = useHistory();
-  const onClickDeviceInfo = () => {
-    // handleInputDeviceInfo();
-    history.push(
-      `/iot-projects/${namespace}/${projectname}/create-device-form`
-    );
-  };
   const dropdownItems = [
     <DropdownItem
-      onClick={onClickDeviceInfo}
+      onClick={handleInputDeviceInfo}
       id="cd-dropdown-item-1"
       key="device-info"
       component="button"

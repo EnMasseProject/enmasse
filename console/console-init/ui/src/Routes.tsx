@@ -97,7 +97,7 @@ export const AppRoutes = () => (
       getComponent={getDeviceDetailPage}
     />
     <LazyRoute
-      path="/iot-projects/:namespace/:projectname/create-device-form"
+      path="/iot-projects/:namespace/:projectname/devices/addform"
       getComponent={getIoTCreateDevicePage}
       exact={true}
     />

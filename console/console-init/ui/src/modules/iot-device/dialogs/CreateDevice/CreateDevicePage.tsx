@@ -24,7 +24,6 @@ import {
 import { DeviceInformation } from "./DeviceInformation";
 import { ConnectionType } from "modules/iot-device/components/ConnectionTypeStep";
 import { AddGateways, AddCredential } from "modules/iot-device/components";
-import { AddCredentials } from "stories/AddCredential.stories";
 import { useHistory, useParams } from "react-router";
 import { Link } from "react-router-dom";
 import { useBreadcrumb } from "use-patternfly";
@@ -35,9 +34,7 @@ export default function CreateDevicePage() {
   const [connectionType, setConnectionType] = useState<string>();
   const [addedGateways, setAddedGateways] = useState<string[]>([]);
   const { projectname, namespace } = useParams();
-
   const deviceListRouteLink = `/iot-projects/${namespace}/${projectname}/devices`;
-
   const breadcrumb = useMemo(
     () => (
       <Breadcrumb>
@@ -121,8 +118,7 @@ export default function CreateDevicePage() {
     // };
     // await setAddressQueryVariables(variables);
     // }
-
-    onCloseDialog();
+    history.push(deviceListRouteLink);
   };
 
   const steps = [
@@ -216,7 +212,7 @@ export default function CreateDevicePage() {
 
           return (
             <>
-              <Button variant="primary" type="submit">
+              <Button variant="primary" onClick={handleSave} type="submit">
                 Finish
               </Button>
               <Button onClick={onBack} variant="secondary">

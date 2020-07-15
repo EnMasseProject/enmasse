@@ -38,7 +38,7 @@ import { compareObject } from "utils";
 import { useStoreContext, MODAL_TYPES, types } from "context-state-reducer";
 import { DialogTypes } from "constant";
 import { TablePagination } from "components";
-import { useLocation, useParams } from "react-router";
+import { useLocation, useParams, useHistory } from "react-router";
 import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 import { DELETE_IOT_DEVICE, TOGGLE_IOT_DEVICE_STATUS } from "graphql-module";
 
@@ -46,10 +46,10 @@ export default function DeviceListPage() {
   const { projectname, namespace } = useParams();
 
   useDocumentTitle("Device List");
-
   const [totalDevices, setTotalDevices] = useState<number>();
   const [isAllSelected, setIsAllSelected] = useState<boolean>(false);
   const location = useLocation();
+  const history = useHistory();
   const searchParams = new URLSearchParams(location.search);
   const page = parseInt(searchParams.get("page") || "", 10) || 1;
   const perPage = parseInt(searchParams.get("perPage") || "", 10) || 10;
@@ -58,6 +58,8 @@ export default function DeviceListPage() {
   const [appliedFilter, setAppliedFilter] = useState<IDeviceFilter>(
     getInitialFilter()
   );
+
+  const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
 
   const [deviceAlert, setDeviceAlert] = useState<{
     isVisible: boolean;
@@ -276,11 +278,7 @@ export default function DeviceListPage() {
   };
 
   const handleInputDeviceInfo = () => {
-    dispatch({
-      type: types.SHOW_MODAL,
-      modalType: MODAL_TYPES.CREATE_DEVICE,
-      modalProps: {}
-    });
+    history.push(createDeviceFormLink);
   };
 
   const handleJSONUpload = () => {
