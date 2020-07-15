@@ -7,8 +7,9 @@ import React from "react";
 import { useHistory } from "react-router-dom";
 import ApolloClient from "apollo-boost";
 import "@patternfly/react-core/dist/styles/base.css";
-import { AppLayout as Layout } from "use-patternfly";
-import { Brand, Avatar } from "@patternfly/react-core";
+import { AppLayoutContext } from "use-patternfly";
+import { Brand, Avatar, Page } from "@patternfly/react-core";
+
 import { ApolloProvider } from "@apollo/react-hooks";
 import {
   NavToolBar,
@@ -17,6 +18,7 @@ import {
   RootModal
 } from "components";
 import { AppRoutes } from "Routes";
+import { AppNavHeader } from "./AppNavHeader";
 import brandImg from "./assets/images/logo.svg";
 import avatarImg from "./img_avatar.svg";
 import "./App.css";
@@ -38,14 +40,31 @@ const client = new ApolloClient({
 
 const avatar = (
   <React.Fragment>
-    <Avatar src={avatarImg} alt="avatar" />
+    <Avatar src={avatarImg} className="app-avatar" alt="avatar" />
   </React.Fragment>
 );
 
-const logo = <Brand src={brandImg} alt="Console Logo" />;
+const logoText = process.env.REACT_APP_NAME
+  ? process.env.REACT_APP_NAME + " Logo"
+  : "Console Logo";
+const brandImgLogo = <Brand src={brandImg} alt={logoText} />;
 
 const AppLayout: React.FC = () => {
   history = useHistory();
+  const [breadcrumb, setBreadcrumb] = React.useState<
+    React.ReactNode | undefined
+  >();
+  const previousBreadcrumb = React.useRef<React.ReactNode | null>();
+
+  const handleSetBreadcrumb = React.useCallback(
+    (newBreadcrumb: React.ReactNode) => {
+      if (previousBreadcrumb.current !== newBreadcrumb) {
+        previousBreadcrumb.current = newBreadcrumb;
+        setBreadcrumb(previousBreadcrumb.current);
+      }
+    },
+    [setBreadcrumb, previousBreadcrumb]
+  );
   const { dispatch, state } = useStoreContext();
   states = state;
   dispactAction = dispatch;
@@ -56,19 +75,24 @@ const AppLayout: React.FC = () => {
     []
   );
 
+  const header = (
+    <AppNavHeader
+      logo={brandImgLogo}
+      logoProps={logoProps}
+      avatar={avatar}
+      toolbar={<NavToolBar />}
+    />
+  );
   return (
     <ApolloProvider client={client}>
       <RootModal />
-      <Layout
-        logoProps={logoProps}
-        logo={logo}
-        avatar={avatar}
-        toolbar={<NavToolBar />}
-      >
-        <NetworkStatusAlert />
-        <ServerMessageAlert />
-        <AppRoutes />
-      </Layout>
+      <AppLayoutContext.Provider value={{ setBreadcrumb: handleSetBreadcrumb }}>
+        <Page header={header} breadcrumb={breadcrumb}>
+          <NetworkStatusAlert />
+          <ServerMessageAlert />
+          <AppRoutes />
+        </Page>
+      </AppLayoutContext.Provider>
     </ApolloProvider>
   );
 };

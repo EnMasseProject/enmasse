@@ -12,6 +12,10 @@ img.pf-c-brand {
   max-width: 190px;
 }
 
+.pf-c-page__header {
+  min-height: 76px !important;
+}
+
 header.pf-c-page__header {
   background-color: #151515;
 }
