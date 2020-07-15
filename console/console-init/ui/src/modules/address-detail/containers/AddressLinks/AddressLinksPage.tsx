@@ -56,7 +56,7 @@ const AddressLinksPage: React.FunctionComponent<IAddressLinksListPageProps> = ({
   const renderPagination = () => {
     return (
       <TablePagination
-        id="addr-links-pgination"
+        id="addr-links-pagination"
         itemCount={addresLinksTotal}
         variant={"top"}
         page={page}
