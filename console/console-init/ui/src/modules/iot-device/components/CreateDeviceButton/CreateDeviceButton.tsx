@@ -6,7 +6,6 @@
 import React, { useState } from "react";
 import { Dropdown, DropdownToggle, DropdownItem } from "@patternfly/react-core";
 import { CaretDownIcon } from "@patternfly/react-icons";
-
 export interface ICreateDeviceButtonProps {
   handleInputDeviceInfo: () => void;
   handleJSONUpload: () => void;
