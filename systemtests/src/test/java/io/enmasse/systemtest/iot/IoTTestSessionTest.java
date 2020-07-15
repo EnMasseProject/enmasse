@@ -7,7 +7,6 @@ package io.enmasse.systemtest.iot;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import io.enmasse.systemtest.iot.IoTTestSession;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

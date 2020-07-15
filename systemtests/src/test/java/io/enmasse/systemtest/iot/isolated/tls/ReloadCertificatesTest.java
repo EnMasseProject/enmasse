@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.time.Duration;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import io.enmasse.iot.model.v1.ConfigConditionType;

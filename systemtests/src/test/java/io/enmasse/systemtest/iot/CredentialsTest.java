@@ -8,7 +8,6 @@ package io.enmasse.systemtest.iot;
 import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.enmasse.systemtest.iot.CredentialsRegistryClient;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 

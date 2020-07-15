@@ -47,17 +47,14 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +79,7 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
-public final class IoTTestSession implements IoTTestContext, AutoCloseable {
+public final class IoTTestSession implements IoTTestContext {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
     private static final String IOT_PROJECT_NAMESPACE = "iot-systemtests";

@@ -7,7 +7,6 @@ package io.enmasse.systemtest.iot.isolated.mqtt;
 
 import java.nio.charset.StandardCharsets;
 
-import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;

@@ -116,7 +116,7 @@ class IoTUtils {
         var deployments = Kubernetes.getInstance().listDeployments(IOT_LABELS);
         assertThat(deployments)
                 .are(ready)
-                .extracting("metadata.name")
+                .extracting("metadata.name", String.class)
                 .containsExactly(expectedDeployments);
 
         // assert stateful sets
@@ -124,7 +124,7 @@ class IoTUtils {
         var statefulSets = Kubernetes.getInstance().listStatefulSets(IOT_LABELS);
         assertThat(statefulSets)
                 .are(ready)
-                .extracting("metadata.name")
+                .extracting("metadata.name", String.class)
                 .containsExactly(expectedStatefulSets);
 
         // assert number of replicas for command mesh

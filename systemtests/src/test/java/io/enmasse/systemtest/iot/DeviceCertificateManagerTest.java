@@ -5,7 +5,6 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Device;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import org.junit.jupiter.api.Tag;

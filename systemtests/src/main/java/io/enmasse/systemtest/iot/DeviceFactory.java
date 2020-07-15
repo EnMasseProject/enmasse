@@ -6,9 +6,6 @@
 package io.enmasse.systemtest.iot;
 
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
-import io.enmasse.systemtest.utils.TestUtils;
-
-import java.util.UUID;
 
 public interface DeviceFactory {
 
