@@ -201,9 +201,6 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
     setSortValue({ index: index, direction: direction });
   };
 
-  console.log(devices);
-  // JSON.parse(devices?[0]?.credentials);
-
   const rows =
     devices?.map(({ deviceId, enabled, jsonData, viaGateway, credentials }) => {
       return {
