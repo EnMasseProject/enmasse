@@ -120,7 +120,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             label={getLabelByKey("subject-dn")}
           >
             <TextInput
-              id={`cert-form-subjectdn-${id}`}
+              id={`cert-form-subjectdn-textinput-${id}`}
               type="text"
               name="subject-dn"
               isRequired
@@ -134,7 +134,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             label={getLabelByKey("public-key")}
           >
             <TextInput
-              id={`cert-form-public-key-text-${id}`}
+              id={`cert-form-public-key-textinput-${id}`}
               aria-label="Text input for public key"
               type="text"
               name="public-key"
@@ -169,7 +169,7 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
                 label={getLabelByKey("not-before")}
               >
                 <TextInput
-                  id={`cert-form-not-before-text-${id}`}
+                  id={`cert-form-not-before-textinput-${id}`}
                   name="not-before"
                   isRequired
                   value={notBefore || ""}
