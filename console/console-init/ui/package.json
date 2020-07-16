@@ -27,7 +27,7 @@
     "graphql": "^14.5.8",
     "install": "^0.13.0",
     "jest-environment-jsdom-sixteen": "^1.0.3",
-    "react": "^16.12.0",
+    "react": "^16.13.1",
     "react-ace": "^8.0.0",
     "react-async": "^9.0.0",
     "react-dom": "^16.12.0",
@@ -37,7 +37,6 @@
     "react-router-last-location": "^2.0.1",
     "react-scripts": "^3.3.0",
     "request": "2.88.2",
-    "typescript": "3.8.3",
     "use-patternfly": "^0.2.0"
   },
   "scripts": {
