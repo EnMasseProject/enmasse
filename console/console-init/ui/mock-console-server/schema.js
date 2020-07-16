@@ -780,9 +780,19 @@ const typeDefs = gql`
   type Device {
     deviceId: String!
     enabled: Boolean!
-    viaGateway: Boolean!
-    jsonData: String! #The Json representation of this device.
+    via: [String!]
+    viaGroups: [String!]
+    memberOf: [String!]
+    status: Device_status!
+    ext: String! #The Json representation of the ext field for this device.
     credentials: String! #A Json array with the devices credentials.
+  }
+
+  type Device_status {
+    created: Date!
+    updated: Date!
+    lastUser: String
+    lastSeen: String
   }
 
   type DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
@@ -810,8 +820,10 @@ const typeDefs = gql`
   input Device_iot_console_input {
     deviceId: String!
     enabled: Boolean!
-    viaGateway: Boolean!
-    jsonData: String! #The Json representation of this device.
+    via: [String!]
+    viaGroups: [String!]
+    memberOf: [String!]
+    ext: String! #The Json representation of the ext field for this device.
     credentials: String! #A Json array with the devices credentials.
   }
 

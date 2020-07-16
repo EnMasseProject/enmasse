@@ -2131,206 +2131,187 @@ function deleteIotDevice(iotProject, deviceId) {
 }
 
 function getIotDeviceStatusSection() {
+  let created = getRandomCreationDate();
   return {
-    created: "2020-01-01T00:00:00+01:00",
-    updated: "2020-06-10T09:45:00+01:00",
-    lastSeen: "2020-07-12T12:45:00+01:00",
-    "last-user": "Keanu Reeves"
+    created: created,
+    updated: getRandomCreationDate(created),
+    lastSeen: getRandomCreationDate(created),
+    lastUser: "Keanu Reeves"
   };
 }
 
 createIotDevice("iotProjectFrance", {
   deviceId: "10",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: {
-      imei: "abcdef",
-      manufacturer: "company",
-      specs: {
-        sensor1: "temp",
-        sensor2: "light",
-        sensor3: {
-          lat: "nmea",
-          long: "nmea"
-        }
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({
+    imei: "abcdef",
+    manufacturer: "company",
+    specs: {
+      sensor1: "temp",
+      sensor2: "light",
+      sensor3: {
+        lat: "nmea",
+        long: "nmea"
       }
-    },
-    status: getIotDeviceStatusSection()
+    }
   }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "11",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: { ocean: "atlantic" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ ocean: "atlantic" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "12",
   enabled: true,
-  viaGateway: true,
-  jsonData: JSON.stringify({
-    via: ["device-1", "device-2"],
-    ext: { summit: "Mt Blanc" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: ["device-1", "device-2"],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ summit: "Mt Blanc" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "13",
   enabled: false,
-  viaGateway: true,
-  jsonData: JSON.stringify({
-    via: ["device-1", "device-2"],
-    ext: { site: "Notre dame" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: ["device-1", "device-2"],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ site: "Notre dame" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "14",
   enabled: false,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: { author: "Jules Verne" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ author: "Jules Verne" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "15",
   enabled: false,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: { city: "Nice" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ city: "Nice" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "16",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: { city: "Nice" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ city: "Nice" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "17",
   enabled: false,
-  viaGateway: true,
-  jsonData: JSON.stringify({
-    ext: {
-      via: ["device-1", "device-2"]
-    },
-    status: getIotDeviceStatusSection()
-  }),
+  via: ["device-1", "device-2"],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({}),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "18",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: {
-      via: []
-    },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({}),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "19",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    ext: {
-      via: []
-    },
-    status: getIotDeviceStatusSection()
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({}),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "50",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    status: getIotDeviceStatusSection(),
-    ext: {
-      via: []
-    }
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({}),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectFrance", {
   deviceId: "51",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    status: getIotDeviceStatusSection(),
-    ext: {
-      via: []
-    }
-  }),
+  via: [],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({}),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectIndia", {
   deviceId: "20",
   enabled: true,
-  viaGateway: true,
-  jsonData: JSON.stringify({
-    via: ["20", "21"],
-    default: {
-      "content-type-1": "text/plain",
-      "content-type-2": "text/plain",
-      "content-type-3": "text/plain",
-      long: 12.3544
-    },
-    ext: {
-      custom: {
-        level: 0,
-        serial_id: "0000",
-        location: {
-          long: 1.234,
-          lat: 5.678
-        },
-        features: ["foo", "bar", "baz"]
-      }
-    },
-    status: getIotDeviceStatusSection()
+  via: ["20", "21"],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({
+    custom: {
+      level: 0,
+      serial_id: "0000",
+      location: {
+        long: 1.234,
+        lat: 5.678
+      },
+      features: ["foo", "bar", "baz"]
+    }
   }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
 createIotDevice("iotProjectIndia", {
   deviceId: "21",
   enabled: true,
-  viaGateway: false,
-  jsonData: JSON.stringify({
-    via: [],
-    ext: { summit: "Kanchenjunga" },
-    status: getIotDeviceStatusSection()
-  }),
+  via: ["20", "21"],
+  viaGroups: [],
+  memberOf: [],
+  ext: JSON.stringify({ summit: "Kanchenjunga" }),
+  status: getIotDeviceStatusSection(),
   credentials: "[]"
 });
 
@@ -2764,12 +2745,18 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
 
       copy = getIotDevices(iotProject);
 
-      var as = copy.filter(as => filterer.evaluate(as)).sort(orderBy);
-      var paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
-      var page = as.slice(paginationBounds.lower, paginationBounds.upper);
+      var devices = copy
+        .filter(devices => filterer.evaluate(devices))
+        .sort(orderBy);
+      var paginationBounds = calcLowerUpper(
+        args.offset,
+        args.first,
+        devices.length
+      );
+      var page = devices.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        total: as.length,
+        total: devices.length,
         devices: page
       };
     },
