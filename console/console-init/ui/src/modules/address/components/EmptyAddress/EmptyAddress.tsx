@@ -46,6 +46,7 @@ export const EmptyAddress: React.FunctionComponent<{}> = () => {
       </EmptyStateBody>
       <Button
         id="empty-address-create-button"
+        aria-label="create address"
         variant={ButtonVariant.primary}
         onClick={onCreateAddress}
       >

@@ -31,7 +31,7 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
 }) => {
   const dropdownItems = [
     <DropdownItem
-      id="al-filter-dropdown-item-deleteall"
+      id="addr-list-deleteall-item-kebab-dropdown"
       key="delete-all"
       value="deleteAll"
       component="button"
@@ -40,7 +40,7 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
       Delete Selected
     </DropdownItem>,
     <DropdownItem
-      id="al-filter-dropdown-item-purgeall"
+      id="addr-list-purgeall-item-kebab-dropdown"
       key="purge-all"
       value="purgeAll"
       component="button"
@@ -67,7 +67,8 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
             {/* Remove is Persistent after fixing dropdown items for overflow menu */}
             <OverflowMenuItem isPersistent>
               <Button
-                id="al-filter-overflow-button"
+                id="addr-list-create-address-button"
+                aria-label="Create address button"
                 variant={ButtonVariant.primary}
                 onClick={createAddressOnClick}
               >
@@ -78,8 +79,8 @@ export const AddressListKebab: React.FunctionComponent<IAddressListKebabProps> =
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="al-select-kebab-overflow-dropdown-"
-            toggleId="al-filter-overflow-kebab"
+            id="addr-list-toolbar-kebab-dropdown"
+            toggleId="addr-list-toolbar-kebab-dropdown-toggle"
             onSelect={onKebabSelect}
             dropdownItems={dropdownItems}
             isPlain

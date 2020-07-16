@@ -76,13 +76,14 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
             <FormGroup
               label="Address"
               isRequired={true}
-              fieldId="address-name"
+              fieldId="addr-config-addressname-textinput"
               helperText={getHelperText()}
             >
               <TextInput
                 isRequired={true}
                 type="text"
-                id="address-name"
+                id="addr-config-addressname-textinput"
+                aria-label="input text for address name"
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
@@ -94,10 +95,16 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               />
             </FormGroup>
 
-            <FormGroup label="Type" isRequired={true} fieldId="address-type">
+            <FormGroup
+              label="Type"
+              isRequired={true}
+              fieldId="addr-config-type-dropdown"
+            >
               <br />
               <DropdownWithToggle
-                id="address-definition-type-dropdown"
+                id="addr-config-type-dropdown"
+                toggleId="addr-config-type-dropdown-toggle"
+                aria-label="Dropdown to select type"
                 className={css(styles.dropdown_align)}
                 toggleClass={css(styles.dropdown_toggle)}
                 dropdownItemClass={css(styles.dropdownItem)}
@@ -109,10 +116,16 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               />
             </FormGroup>
 
-            <FormGroup label="Plan" isRequired={true} fieldId="address-plan">
+            <FormGroup
+              label="Plan"
+              isRequired={true}
+              fieldId="addr-config-plan-dropdown"
+            >
               <br />
               <DropdownWithToggle
-                id="address-definition-plan-dropdown"
+                id="addr-config-plan-dropdown"
+                toggleId="addr-config-plan-dropdown-toggle"
+                aria-label="dropdown to select plan"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
                 className={css(styles.dropdown_align)}
@@ -128,11 +141,13 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               <FormGroup
                 label="Topic"
                 isRequired={true}
-                fieldId="address-topic"
+                fieldId="addr-config-topic-dropdown"
               >
                 <br />
                 <DropdownWithToggle
-                  id="address-definition-topic-dropdown"
+                  id="addr-config-topic-dropdown"
+                  toggleId="addr-config-topic-dropdown-toggle"
+                  aria-label="dropdown for topic"
                   className={css(styles.dropdown_align)}
                   toggleClass={css(styles.dropdown_toggle)}
                   dropdownItemClass={css(styles.dropdownItem)}

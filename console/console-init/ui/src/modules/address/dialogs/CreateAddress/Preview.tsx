@@ -94,7 +94,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Address name
                 </GridItem>
-                <GridItem id="preview-addr-name" span={8}>
+                <GridItem
+                  id="preview-addr-name"
+                  aria-label="preview name"
+                  span={8}
+                >
                   {name}
                 </GridItem>
               </>
@@ -104,7 +108,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Type
                 </GridItem>
-                <GridItem id="preview-addr-type" span={8}>
+                <GridItem
+                  id="preview-addr-type"
+                  aria-label="preview type"
+                  span={8}
+                >
                   {type}
                 </GridItem>
               </>
@@ -114,7 +122,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Plan
                 </GridItem>
-                <GridItem id="preview-addr-plan" span={8}>
+                <GridItem
+                  id="preview-addr-plan"
+                  aria-label="preview plan"
+                  span={8}
+                >
                   {plan}
                 </GridItem>
               </>
@@ -124,7 +136,11 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                 <GridItem span={4} style={{ marginBottom: 16, marginRight: 5 }}>
                   Topic
                 </GridItem>
-                <GridItem id="preview-addr-topic" span={8}>
+                <GridItem
+                  id="preview-addr-topic"
+                  aria-label="preview topic"
+                  span={8}
+                >
                   {topic}
                 </GridItem>
               </>
@@ -140,6 +156,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
             {`Configuration details  `}
             <Tooltip
               id="preview-addr-feedback-tooltip"
+              aria-label="Feedback for successfully copying to clipboard"
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
@@ -149,6 +166,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
               <span>
                 <Tooltip
                   id="preview-addr-copy-tooltip"
+                  aria-label="Tooltip to copy the details to clipboard"
                   position={TooltipPosition.top}
                   enableFlip={false}
                   content={
@@ -158,7 +176,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                   <Button
                     id="preview-addr-copy-configuration-button"
                     variant={ButtonVariant.link}
-                    aria-label="copy-configuration"
+                    aria-label="copy configuration"
                     onClick={() => {
                       navigator.clipboard.writeText(
                         data && data.addressCommand
@@ -169,7 +187,7 @@ export const PreviewAddress: React.FunctionComponent<IAddressPreview> = ({
                       setIsCopied(false);
                     }}
                   >
-                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                    <OutlinedCopyIcon id="preview-addr-copy-button" size="md" />
                   </Button>
                 </Tooltip>
               </span>
