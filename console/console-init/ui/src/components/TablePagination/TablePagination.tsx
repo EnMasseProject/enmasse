@@ -8,6 +8,7 @@ import { useHistory, useLocation } from "react-router";
 import { Pagination, PaginationProps } from "@patternfly/react-core";
 
 export const TablePagination: React.FC<PaginationProps> = ({
+  id,
   page,
   perPage,
   itemCount,
@@ -48,6 +49,7 @@ export const TablePagination: React.FC<PaginationProps> = ({
   if (itemCount && itemCount > 0) {
     return (
       <Pagination
+        id={id}
         itemCount={itemCount}
         perPage={perPage}
         page={page}
