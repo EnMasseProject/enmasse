@@ -18,6 +18,8 @@ spec:
       type: string
     - name: repo_url
       type: string
+    - name: repo_branch
+      type: string
   steps:
     - name: install-and-setup-packages
       image: gcr.io/cloud-builders/wget:latest
@@ -32,7 +34,7 @@ spec:
       workingDir: /workspace
       script: |
 
-        git clone $(inputs.params.repo_url)
+        git clone -b $(inputs.params.repo_branch) $(inputs.params.repo_url)
 
     - name: generate-templates
       image: gcr.io/cloud-builders/go:latest

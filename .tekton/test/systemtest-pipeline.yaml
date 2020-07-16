@@ -23,6 +23,9 @@ spec:
     - name: repo_url
       description: git of source code
       default: "https://github.com/enmasseproject/enmasse"
+    - name: repo_branch
+      description: branch of git source
+      default: "master"
   tasks:
     - name: systemtest-task
       taskRef:
@@ -40,3 +43,5 @@ spec:
           value: $(params.kube_namespace)
         - name: repo_url
           value: $(params.repo_url)
+        - name: repo_branch
+          value: $(params.repo_branch)
