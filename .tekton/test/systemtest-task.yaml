@@ -39,8 +39,6 @@ spec:
       env:
         - name: GOROOT
           value: /usr/local/go
-      securityContext:
-        privileged: true
       workingDir: /workspace
       script: |
 
