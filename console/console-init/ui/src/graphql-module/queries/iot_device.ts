@@ -231,7 +231,7 @@ const TOGGLE_IOT_DEVICE_STATUS = gql(
 
 const SET_IOT_CREDENTIAL_FOR_DEVICE = gql(
   `mutation set_iot_credential_for_device(
-    $iotproject: String!
+    $iotproject: ObjectMeta_v1_Input!
     $deviceId: String!
     $jsonData: String!
   ){

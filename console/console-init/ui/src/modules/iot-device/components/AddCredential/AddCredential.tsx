@@ -12,38 +12,61 @@ import {
   getCredentialsFieldsInitialState,
   getFormInitialStateByProperty
 } from "modules/iot-device/utils";
+import { OperationType } from "constant";
 
 export interface IAddCredentialProps {
   id?: string;
   setCredentialList?: (credentials: ICredential[]) => void;
+  operation?: OperationType.ADD | OperationType.EDIT;
+  credentials?: ICredential[];
 }
 
 export const AddCredential: React.FC<IAddCredentialProps> = ({
   id = "add-credential",
-  setCredentialList
+  setCredentialList,
+  operation = OperationType.ADD,
+  credentials: credentialList = []
 }) => {
-  const [credentials, setCredentials] = useState([
-    getCredentialsFieldsInitialState()
-  ]);
-  const [type, setType] = useState<string>(CredentialsType.PASSWORD);
   const [activeCredentialFormId, setActiveCredentialFormId] = useState<string>(
     ""
   );
+  const [operationType, setOperationType] = useState(operation);
+  const [credentials, setCredentials] = useState(
+    operationType === OperationType.EDIT
+      ? credentialList
+      : [getCredentialsFieldsInitialState()]
+  );
+  const defaultSelectedType =
+    operationType === OperationType.EDIT ? "" : CredentialsType.PASSWORD;
+  const [type, setType] = useState<string>(defaultSelectedType);
+
+  function getInitialSecretState(credentials: ICredential[] = []) {
+    let newCredentials: ICredential[] = [...credentials];
+    let initialStateSecret = {};
+    const activeFormId =
+      activeCredentialFormId || newCredentials[newCredentials?.length - 1]?.id;
+    const credIndex = findIndexByProperty(credentials, "id", activeFormId);
+    const initialState = getFormInitialStateByProperty(
+      newCredentials,
+      "secrets",
+      credIndex > 0 ? credIndex : 0
+    );
+    initialStateSecret = { id: uniqueId(), ...initialState };
+
+    return initialStateSecret;
+  }
 
   const setSecretsInitialFormState = () => {
-    const newCredentials = [...credentials];
+    let newCredentials: ICredential[] = [...credentials];
     const activeFormId =
-      activeCredentialFormId || newCredentials[newCredentials.length - 1]?.id;
+      activeCredentialFormId || newCredentials[newCredentials?.length - 1]?.id;
+
     const credIndex = findIndexByProperty(credentials, "id", activeFormId);
     if (credIndex >= 0) {
-      const initialState = getFormInitialStateByProperty(
-        newCredentials,
-        "secrets",
-        credIndex
-      );
-      newCredentials[credIndex]["secrets"] = [
-        { id: uniqueId(), ...initialState }
-      ];
+      const initialStateSecret = getInitialSecretState(newCredentials);
+      if (operationType !== OperationType.EDIT) {
+        newCredentials[credIndex]["secrets"] = [initialStateSecret];
+      }
       setCredentials(newCredentials);
     }
   };
@@ -57,6 +80,7 @@ export const AddCredential: React.FC<IAddCredentialProps> = ({
   }, [credentials]);
 
   const onSelectType = (id: string, event: any, value: string) => {
+    setOperationType(OperationType.ADD);
     setType(value);
     setActiveCredentialFormId(id);
     handleInputChange(id, event, value);

@@ -13,13 +13,13 @@ import {
   DropdownItem,
   DropdownPosition,
   DropdownSeparator,
-  Switch,
   PageSection,
-  PageSectionVariants
+  PageSectionVariants,
+  Divider
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
-import { DropdownWithKebabToggle } from "components";
+import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
 
@@ -33,14 +33,10 @@ interface IDeviceDetailHeaderProps {
   onClone: () => void;
   viaGateway?: boolean;
   credentials?: any[];
+  connectiontype?: string;
 }
 
 const styles = StyleSheet.create({
-  flex_left_border: {
-    paddingLeft: "1em",
-    borderLeft: "0.05em solid",
-    borderRightColor: "--pf-chart-global--Fill--Color--200"
-  },
   kebab_toggle_margin: {
     marginTop: 20,
     marginLeft: 10,
@@ -64,7 +60,8 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
   onClone,
   deviceStatus,
   credentials = [],
-  viaGateway = false
+  viaGateway = false,
+  connectiontype
 }) => {
   const { dispatch } = useStoreContext();
 
@@ -114,16 +111,18 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           </SplitItem>
         </Split>
         <Flex className={css(styles.namespace_info_margin)}>
+          <FlexItem>
+            Connection type : <b>{connectiontype}</b>
+          </FlexItem>
+          <Divider isVertical />
           <FlexItem id="flex-item-device-added-date">
-            Added Date :
+            Added Date :{" "}
             <b>
               <FormatDistance date={addedDate} />
             </b>
           </FlexItem>
-          <FlexItem
-            id="flex-item-device-last-seen-time"
-            className={css(styles.flex_left_border)}
-          >
+          <Divider isVertical />
+          <FlexItem id="flex-item-device-last-seen-time">
             Last time seen :{" "}
             <b>
               <FormatDistance date={lastTimeSeen} />
@@ -236,7 +235,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         <DeviceDetailLayout />
         <SplitItem isFilled />
         <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <Switch
+          <SwitchWithToggle
             id="switch-device-header-enable-btn"
             label="Enabled"
             labelOff="Disabled"

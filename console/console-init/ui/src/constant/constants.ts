@@ -67,6 +67,17 @@ enum CredentialsType {
 }
 const WIZARD_HEIGHT = 400;
 
+enum DeviceConnectionType {
+  VIA_GATEWAYS = "Via gateways",
+  CONNECTED_DIRECTLY = "Connected directly",
+  NA = "N/A"
+}
+
+enum OperationType {
+  ADD = "add",
+  EDIT = "edit"
+}
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -84,5 +95,7 @@ export {
   Protocols,
   DialogTypes,
   CredentialsType,
-  WIZARD_HEIGHT
+  WIZARD_HEIGHT,
+  DeviceConnectionType,
+  OperationType
 };

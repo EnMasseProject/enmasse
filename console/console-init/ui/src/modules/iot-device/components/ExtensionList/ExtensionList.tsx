@@ -115,7 +115,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                     toggleClass={css(styles.dropdown_toggle_align)}
                     position={DropdownPosition.left}
                     dropdownItems={typeOptions}
-                    value={ext["type"] || ""}
+                    value={ext["type"] || "String"}
                     onSelectItem={(value, event) =>
                       handleInputChangeExtension(credentialId, event, value, id)
                     }
@@ -125,24 +125,27 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                   <TextInput
                     id={`ext-list-value-textinput-${id}`}
                     name="value"
+                    value={ext["value"]}
                     onChange={(value, event) =>
                       handleInputChangeExtension(credentialId, event, value, id)
                     }
                   />
                 </GridItem>
-                <GridItem span={1}>
-                  <Button
-                    id="ext-list-delete-extension-button"
-                    variant="link"
-                    type="button"
-                    icon={
-                      <MinusCircleIcon
-                        color={"var(--pf-c-button--m-plain--Color)"}
-                      />
-                    }
-                    onClick={() => onDeleteExtension(credentialId, "ext", id)}
-                  />
-                </GridItem>
+                {extensions?.length > 1 && (
+                  <GridItem span={1}>
+                    <Button
+                      id="ext-list-delete-extension-button"
+                      variant="link"
+                      type="button"
+                      icon={
+                        <MinusCircleIcon
+                          color={"var(--pf-c-button--m-plain--Color)"}
+                        />
+                      }
+                      onClick={() => onDeleteExtension(credentialId, "ext", id)}
+                    />
+                  </GridItem>
+                )}
               </Grid>
             );
           })}

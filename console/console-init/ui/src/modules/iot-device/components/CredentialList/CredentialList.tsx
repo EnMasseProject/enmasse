@@ -197,17 +197,14 @@ export const CredentialList: React.FC<ICredentialListProps> = ({
     <>
       {credentials &&
         credentials.map((credential: ICredential, index: number) => {
-          const {
-            id = "",
-            isExpandedAdvancedSetting = false,
-            type = ""
-          } = credential;
+          const { id = "", isExpandedAdvancedSetting = false, type = "" } =
+            credential || {};
           return (
             <Fragment key={id}>
               <Card>
                 <CardHeader data-codemods="true">
                   <CardActions>
-                    {credentials.length > 1 && (
+                    {credentials?.length > 1 && (
                       <Button
                         id="credential-list-delete-credential-button"
                         variant="link"
