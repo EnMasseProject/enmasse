@@ -2447,12 +2447,12 @@ function getAddressSpacesAndOrIotProjects(projectType) {
 // A map of functions which return data for the schema.
 const resolvers = {
   ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1: {
-    __resolveType(obj, context, info){
+    __resolveType(obj, context, info) {
       switch (obj.kind) {
-        case 'IoTProject':
-          return 'IoTProject_iot_enmasse_io_v1alpha1';
-        case 'AddressSpace':
-          return 'AddressSpace_consoleapi_enmasse_io_v1beta1';
+        case "IoTProject":
+          return "IoTProject_iot_enmasse_io_v1alpha1";
+        case "AddressSpace":
+          return "AddressSpace_consoleapi_enmasse_io_v1beta1";
         default:
           return null;
       }
@@ -2786,20 +2786,16 @@ l4wOuDwKQa+upc8GftXE2C//4mKANBC6It01gUaTIpo=
       });
       // fetch iot projects
       iotProjects.forEach(pj => {
-        result.push(pj)
+        result.push(pj);
       });
 
       // filters
       let as = result.filter(as => filterer.evaluate(as)).sort(orderBy);
-      let paginationBounds = calcLowerUpper(
-        args.offset,
-        args.first,
-        as.length
-      );
+      let paginationBounds = calcLowerUpper(args.offset, args.first, as.length);
       let pageAs = as.slice(paginationBounds.lower, paginationBounds.upper);
 
       return {
-        total: result.length,
+        total: as.length,
         objects: pageAs
       };
     }
