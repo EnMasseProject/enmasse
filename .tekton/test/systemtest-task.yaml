@@ -39,10 +39,9 @@ spec:
       env:
         - name: GOROOT
           value: /usr/local/go
-      workingDir: /workspace
+      workingDir: /workspace/enmasse
       script: |
 
-        cd enmasse
         make templates
 
     - name: run-tests
