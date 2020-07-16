@@ -186,7 +186,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       <CardTitle style={{ fontSize: 20 }}>
         <Split>
           <SplitItem>
-            <Title size="xl" headingLevel="h2" id="Access-credentials-title">
+            <Title size="xl" headingLevel="h2" id="access-credentials-title">
               Access Credentials
             </Title>
           </SplitItem>
