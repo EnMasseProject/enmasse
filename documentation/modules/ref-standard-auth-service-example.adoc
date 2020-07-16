@@ -18,7 +18,7 @@ spec:
   standard:
     credentialsSecret: <2>
       name: my-admin-credentials
-    certificateSecret <3>
+    certificateSecret: <3>
       name: my-authservice-certificate
     resources: <4>
       requests:
