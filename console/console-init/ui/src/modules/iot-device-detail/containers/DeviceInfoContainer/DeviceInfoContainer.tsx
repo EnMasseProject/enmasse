@@ -24,8 +24,17 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   // const { dispatch } = useStoreContext();
   const { projectname, deviceid, namespace } = useParams();
 
+  const queryResolver = `
+    devices{
+      via
+      credentials
+      ext
+      defaults
+    }
+  `;
+
   const { data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver)
   );
 
   //const [setCredentialStatusQueryVaribles]=useMutationQuery();
@@ -36,13 +45,18 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
     refetchQueries
   );
 
-  const { credentials, jsonData, viaGateway } = data?.devices?.devices[0] || {};
+  const { credentials, ext: extString, via, defaults } =
+    data?.devices?.devices[0] || {};
   const credentialsJson = credentials && JSON.parse(credentials);
-  const deviceJson = jsonData && JSON.parse(jsonData);
+
+  const ext = extString && JSON.parse(extString);
+  const defaultObject = defaults && JSON.parse(defaults);
+
+  const viaGateway = via && via?.length > 0;
 
   const metadetaJson = {
-    default: deviceJson?.default,
-    ext: deviceJson?.ext
+    default: defaultObject,
+    ext
   };
 
   const onChangeCredentialStatus = async (authId: string) => {
@@ -93,7 +107,7 @@ export const DeviceInfoContainer: React.FC<IDeviceInfoContainerProps> = ({
   return (
     <DeviceInfo
       id={id}
-      deviceList={deviceJson?.via}
+      deviceList={via}
       metadataList={metadetaJson}
       credentials={credentialsJson}
       onChangeStatus={onChangeCredentialStatus}

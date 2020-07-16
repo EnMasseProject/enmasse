@@ -86,9 +86,11 @@ export default function DeviceDetailPage() {
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
-  const { enabled, deviceId, viaGateway, credentials } =
+  const { enabled, deviceId, via = [], credentials } =
     devices?.devices[0] || {};
   const parseCredentials = credentials && JSON.parse(credentials);
+
+  const viaGateway = via?.length > 0;
 
   const breadcrumb = useMemo(
     () => (

@@ -202,16 +202,15 @@ export const DeviceListContainer: React.FC<IDeviceListContainerProps> = ({
   };
 
   const rows =
-    devices?.map(({ deviceId, enabled, jsonData, viaGateway, credentials }) => {
+    devices?.map(({ deviceId, enabled, via, credentials, status }) => {
       return {
         deviceId,
         enabled,
-        jsonData,
-        viaGateway,
+        via,
         ...(credentials?.trim() !== "" && {
           credentials: JSON.parse(credentials)
         }),
-        ...JSON.parse(jsonData)?.status,
+        ...status,
         selected:
           selectedDevices.filter(device =>
             compareObject({ deviceId }, { deviceId: device.deviceId })

@@ -24,27 +24,57 @@ export const EditDeviceInJsonContainer = () => {
   const { dispatch } = useStoreContext();
   const { projectname, deviceid, namespace } = useParams();
 
+  const queryResolver = `
+    devices{
+      deviceId
+      enabled
+      via
+      status{
+        lastSeen
+        updated
+        created
+      }  
+      credentials
+      ext
+      defaults
+      memberOf
+      viaGroups
+    }
+  `;
+
   const { loading, data } = useQuery<IDeviceDetailResponse>(
-    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid)
+    RETURN_IOT_DEVICE_DETAIL(projectname, namespace, deviceid, queryResolver)
   );
 
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
 
-  const { enabled, viaGateway, jsonData, credentials } =
-    devices?.devices[0] || {};
+  const {
+    enabled,
+    via,
+    ext,
+    credentials,
+    memberOf,
+    viaGroups,
+    status,
+    defaults
+  } = devices?.devices[0] || {};
 
   if (loading) return <Loading />;
 
   const getDeviceJson = () => {
     const deviceinfo = {
       enabled,
-      viaGateway
+      via,
+      memberOf,
+      viaGroups,
+      status
     };
-    jsonData && Object.assign(deviceinfo, JSON.parse(jsonData));
     credentials &&
       Object.assign(deviceinfo, { credentials: JSON.parse(credentials) });
+    defaults && Object.assign(deviceinfo, { defaults: JSON.parse(defaults) });
+    ext && Object.assign(deviceinfo, { ext: JSON.parse(ext) });
 
     return deviceinfo;
   };
