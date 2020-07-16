@@ -37,7 +37,10 @@ export const IoTCertificate: React.FunctionComponent<IIoTCertificateProps> = ({
   const [onEditMode, setOnEditMode] = useState<boolean>(false);
 
   return (
-    <PageSection className={css(style.no_bottom_padding)}>
+    <PageSection
+      id="iot-cert-form-pagesection"
+      className={css(style.no_bottom_padding)}
+    >
       {onEditMode ? (
         <CertificateForm
           id={id}

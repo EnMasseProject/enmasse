@@ -79,7 +79,7 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
           {showCertificateForm && (
             <PageSection className={css(style.no_bottom_padding)}>
               <CertificateForm
-                id="pcl-add-certificate-form"
+                id="iot-cert-list-add-certificate-form"
                 setOnEditMode={setShowCertificateForm}
                 onSave={onCreate}
               />

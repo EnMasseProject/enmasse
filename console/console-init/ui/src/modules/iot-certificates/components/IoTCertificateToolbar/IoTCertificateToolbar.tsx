@@ -32,11 +32,12 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
   };
 
   return (
-    <Toolbar id="pct-data-toolbar" data-codemods="true">
+    <Toolbar id="iot-cert-toolbar" data-codemods="true">
       <ToolbarContent>
         <ToolbarItem data-codemods="true">
           <Button
-            id="pct-add-certificate-button"
+            id="iot-cert-add-button"
+            aria-label="Add Certificate"
             onClick={handleAddCertificateClick}
           >
             Add certificate
@@ -44,7 +45,8 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
         </ToolbarItem>
         <ToolbarItem data-codemods="true">
           <Button
-            id="pct-upload-certificate-button"
+            id="iot-cert-upload-button"
+            aria-label="Upload Certificate"
             variant="link"
             onClick={handleUploadCertificateClick}
           >
@@ -53,7 +55,8 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
         </ToolbarItem>
         <ToolbarItem alignment={{ md: "alignRight" }} data-codemods="true">
           <SwitchWithToggle
-            id="pct-edit-json-switch"
+            id="iot-cert-edit-json-switch"
+            aria-label="Switch for edit in Json"
             label="Edit in Json"
             isChecked={isJsonView}
             onChange={handleJsonViewChange}

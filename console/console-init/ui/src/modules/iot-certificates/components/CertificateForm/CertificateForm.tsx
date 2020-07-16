@@ -115,12 +115,12 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
       <CardBody>
         <Form>
           <FormGroup
-            fieldId={`cf-subjectdn-${id}`}
+            fieldId={`cert-form-subjectdn-${id}`}
             isRequired
             label={getLabelByKey("subject-dn")}
           >
             <TextInput
-              id={`cf-subjectdn-${id}`}
+              id={`cert-form-subjectdn-textinput-${id}`}
               type="text"
               name="subject-dn"
               isRequired
@@ -129,12 +129,13 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             />
           </FormGroup>
           <FormGroup
-            fieldId={`cf-public-key-${id}`}
+            fieldId={`cert-form-public-key-text-${id}`}
             isRequired
             label={getLabelByKey("public-key")}
           >
             <TextInput
-              id={`cf-public-key-${id}`}
+              id={`cert-form-public-key-textinput-${id}`}
+              aria-label="Text input for public key"
               type="text"
               name="public-key"
               isRequired
@@ -143,13 +144,14 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             />
           </FormGroup>
           <FormGroup
-            fieldId={`cf-algo-${id}`}
+            fieldId={`cert-form-algo-dropdown-${id}`}
             isRequired
             label={getLabelByKey("algorithm")}
             className={css(styles.capitalize)}
           >
             <DropdownWithToggle
-              id={`cf-algo-${id}`}
+              id={`cert-form-algo-dropdown-${id}`}
+              aria-label="Dropdown for selecting algorithm"
               name="algorithm"
               className={css(styles.dropdown_align)}
               toggleClass={css(styles.dropdown_toggle_align)}
@@ -162,12 +164,12 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
           <Grid>
             <GridItem span={6}>
               <FormGroup
-                fieldId={`cf-not-before-${id}`}
+                fieldId={`cert-form-not-before-text-${id}`}
                 isRequired
                 label={getLabelByKey("not-before")}
               >
                 <TextInput
-                  id={`cf-not-before-${id}`}
+                  id={`cert-form-not-before-textinput-${id}`}
                   name="not-before"
                   isRequired
                   value={notBefore || ""}
@@ -177,12 +179,12 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             </GridItem>
             <GridItem span={6}>
               <FormGroup
-                fieldId={`cf-not-after-${id}`}
+                fieldId={`cert-form-not-after-text-${id}`}
                 isRequired
                 label={getLabelByKey("not-after")}
               >
                 <TextInput
-                  id={`cf-not-after-${id}`}
+                  id={`cert-form-not-after-text-${id}`}
                   name="not-after"
                   isRequired
                   value={notAfter || ""}
@@ -200,7 +202,8 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             <SplitItem isFilled />
             <SplitItem>
               <SwitchWithToggle
-                id="cf-auto-provision-switch"
+                id="cert-form-auto-provision-switch"
+                aria-label="switch to enable auto provision"
                 label="Enabled"
                 labelOff="Disabled"
                 isChecked={autoProvision || false}
@@ -212,11 +215,17 @@ export const CertificateForm: React.FunctionComponent<ICertificateFormProps> = (
             <Button
               variant="primary"
               onClick={onSaveCertificate}
-              id="cf-save-button"
+              id="cert-form-save-button"
+              aria-label="save button"
             >
               Save
             </Button>
-            <Button variant="link" onClick={onCancelEdit} id="cf-cancel-button">
+            <Button
+              variant="link"
+              onClick={onCancelEdit}
+              id="cert-form-cancel-button"
+              aria-label="cancel button"
+            >
               Cancel
             </Button>
           </ActionGroup>
