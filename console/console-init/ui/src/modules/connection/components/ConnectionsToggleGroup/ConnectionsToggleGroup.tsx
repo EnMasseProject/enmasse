@@ -91,6 +91,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           {filterSelected && filterSelected.toLowerCase() === "hostname" && (
             <InputGroup>
               <TypeAheadSelect
+                id="connections-toggle-grp-select-hostname-typeahead"
+                aria-label="Select hostname"
                 typeAheadAriaLabel={"Select hostname"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onHostnameSelect}
@@ -102,7 +104,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostNameInput}
               />
               <Button
-                id="cl-filter-search-btn"
+                id="connections-togglegrp-search-hostname-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search hostname"
                 onClick={onSearch}
@@ -122,6 +124,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
           {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
+                id="connections-togglegrp-select-container-typeahead"
+                aria-label="Select container"
                 typeAheadAriaLabel={"Select container"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onContainerSelect}
@@ -133,7 +137,7 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
                 setInput={setHostContainerInput}
               />
               <Button
-                id="cl-filter-search"
+                id="connections-togglegrp-search-addr-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -151,8 +155,8 @@ const ConnectionsToggleGroup: React.FunctionComponent<IConnectionsToggleGroupPro
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="cl-filter-dropdown"
-          toggleId={"cl-filter-dropdown"}
+          id="connections-togglegrp-filter-dropdown"
+          toggleId={"connections-togglegrp-filter-dropdown-toggle"}
           dropdownItemIdPrefix="cl-filter-dropdown-item"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}

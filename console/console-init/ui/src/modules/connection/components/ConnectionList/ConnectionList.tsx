@@ -210,7 +210,10 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
         onSort={onSort}
         onSelect={onSelect}
       >
-        <TableHeader id="connectionlist-table-header" />
+        <TableHeader
+          id="connection-list-table-header"
+          aria-label="Table header for connections list"
+        />
         <TableBody />
       </Table>
     </div>
