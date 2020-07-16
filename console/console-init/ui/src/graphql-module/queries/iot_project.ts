@@ -17,22 +17,81 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject?: any) => {
   return filter;
 };
 
+const RETURN_ALL_PROJECTS = (filterObj?: any, queryResolver?: string) => {
+  // TODO: Default resolver is subjected to change, with respect to most used query
+  const defaultQueryResolver = `
+    total
+    objects{
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        messagingStatus: status {
+          isReady 
+          phase
+          messages
+        }
+      }
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        enabled
+      }
+    }
+  `;
+
+  if (!queryResolver) {
+    queryResolver = defaultQueryResolver;
+  }
+
+  let filter: string = "`$.kind`='IoTProject'";
+
+  if (filterObj) {
+    //TODO
+    // filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
+  }
+
+  const IOT_PROJECT_DETAIL = gql(
+    `query allProjects {
+      allProjects(
+        filter: "${filter}",
+      ) {
+         ${queryResolver}
+      }
+    }`
+  );
+
+  return IOT_PROJECT_DETAIL;
+};
+
 const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
   const defaultQueryResolver = `
     total
-    iotProjects {
-      metadata {
-        name
-        namespace
-        creationTimestamp
-      }
-      enabled
-      spec {
-        configuration
-      }
-      status {
-        phase
+    objects{
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        enabled
       }
     }
   `;
@@ -44,14 +103,15 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
   let filter: string = "";
 
   if (filterObj) {
-    filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
+    //TODO
+    filter = "`$.kind`='IoTProject'";
+    // filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
   }
 
   const IOT_PROJECT_DETAIL = gql(
     `query allProjects {
       allProjects(
         filter: "${filter}",
-        projectType: iotProject
       ) {
          ${queryResolver}
       }
@@ -84,4 +144,9 @@ const TOGGLE_IOT_PROJECTS_STATUS = gql(
   }`
 );
 
-export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, TOGGLE_IOT_PROJECTS_STATUS };
+export {
+  RETURN_IOT_PROJECTS,
+  DELETE_IOT_PROJECT,
+  TOGGLE_IOT_PROJECTS_STATUS,
+  RETURN_ALL_PROJECTS
+};

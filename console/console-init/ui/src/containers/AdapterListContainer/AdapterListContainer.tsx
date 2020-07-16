@@ -6,7 +6,7 @@
 import React from "react";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
-import { AdapterList } from "components";
+import { AdapterList, IAdapter } from "components";
 import { RETURN_IOT_PROJECTS } from "graphql-module/queries";
 import { IIoTProjectsResponse } from "schema/iot_project";
 
@@ -31,7 +31,7 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
   const { allProjects } = data || {
     allProjects: { iotProjects: [] }
   };
-  const adapters = allProjects?.iotProjects?.[0]?.endpoints || [];
+  const adapters: IAdapter[] = [];
 
   return <AdapterList id={id} adapters={adapters} />;
 };

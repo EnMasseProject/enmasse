@@ -15,6 +15,7 @@ import { IIoTProjectsResponse } from "schema/iot_project";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useHistory, useParams } from "react-router";
+import { IIotProjectType } from "schema";
 
 export const IoTProjectDetailHeaderContainer: React.FC = () => {
   const { dispatch } = useStoreContext();
@@ -36,16 +37,61 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
     setToggleIoTProjectQueryVariables
   ] = useMutationQuery(TOGGLE_IOT_PROJECTS_STATUS, ["allProjects"]);
 
+  const queryResolver = `
+    total
+    objects{
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        spec{
+          tenantId
+          addresses{
+            Telemetry{
+              name
+              plan
+              type
+            }
+            Event{
+              name
+              plan
+              type
+            }
+            Command{
+              name
+              plan
+              type
+            }
+          }
+          configuration
+        }
+        endpoints{
+          name
+          url
+          host
+          port
+          tls
+        }
+        enabled
+      }
+    }`;
   const { data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS({ projectname })
+    RETURN_IOT_PROJECTS({ projectname }, queryResolver)
   );
 
-  const { allProjects } = data || {
-    allProjects: { iotProjects: [] }
-  };
+  const objects: IIotProjectType[] = [];
 
-  const { spec, metadata, status, enabled } =
-    allProjects?.iotProjects?.[0] || {};
+  const { allProjects } = data || {
+    allProjects: { objects: objects }
+  };
+  const { spec, metadata, iotStatus, enabled } = allProjects?.objects[0] || {};
 
   const namespace = metadata?.namespace;
 
@@ -115,7 +161,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
     <IoTProjectDetailHeader
       projectName={metadata?.name}
       timeCreated={metadata?.creationTimestamp}
-      status={status?.phase}
+      status={iotStatus?.phase}
       isEnabled={enabled}
       changeStatus={handleProjectStatus}
       onDelete={handleDelete}

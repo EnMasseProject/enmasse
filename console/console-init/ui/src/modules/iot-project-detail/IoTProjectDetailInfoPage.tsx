@@ -16,37 +16,46 @@ export default function IoTProjectDetailInfoPage() {
   const { projectname } = useParams();
 
   const queryResolver = `
-    iotProjects{
-      metadata{
-        name
-        namespace
-        creationTimestamp
-      }
-      enabled
-      spec{
-        tenantId
-        configuration
-        addresses{
-              Telemetry{
-                name
-              }
-              Event{
-                name
-              }
-              Command{
-                name
-              }
+  total
+    objects{
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
         }
-      }
-      status{
-        phase
-        phaseReason
-      }
-      endpoints {
-        name
-        url
-        host
-        tls
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        enabled
+        spec{
+          tenantId
+          configuration
+          addresses{
+                Telemetry{
+                  name
+                }
+                Event{
+                  name
+                }
+                Command{
+                  name
+                }
+          }
+        }
+        status{
+          phase
+          phaseReason
+        }
+        endpoints {
+          name
+          url
+          host
+          port
+          tls
+        }
       }
     }
 `;
@@ -57,11 +66,11 @@ export default function IoTProjectDetailInfoPage() {
 
   const { allProjects } = data || {
     allProjects: {
-      iotProjects: []
+      objects: []
     }
   };
 
-  const { spec, metadata, endpoints } = allProjects?.iotProjects?.[0] || {};
+  const { spec, metadata, endpoints } = allProjects?.objects?.[0] || {};
 
   //TODO: add username and password to be updated from the server response
   //TODO: Remove addressSpace as it is not proesent in shared infra
