@@ -97,6 +97,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="addr-toggle-delete-name-filter"
+          aria-label="Filter names to be deleted"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -104,7 +106,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="ad-links-filter-select-name"
+                id="addr-toggle-select-name-typeahead"
+                aria-label="search/filter name to select"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -116,7 +119,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="addr-toggle-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -129,6 +132,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="addr-toggle-delete-container-filter"
           chips={selectedContainers.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Container"
@@ -136,6 +140,8 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
+                id="addr-toggle-select-container-typeahead"
+                aria-label="select/search container"
                 typeAheadAriaLabel={"Select container"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onContainerSelect}
@@ -147,7 +153,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
                 setInput={setContainerInput}
               />
               <Button
-                id="ad-links-filter-search-container"
+                id="addr-toggle-search-address-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -160,13 +166,15 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="addr-toggle-delete-role-filter"
           chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
           categoryName="Role"
         >
           {filterSelected && filterSelected.toLowerCase() === "role" && (
             <DropdownWithToggle
-              id="ad-links-filter-select-role"
+              id="addr-toggle-select-role-dropdown"
+              aria-label="select role to filter"
               toggleId="ad-links-filter-select-role"
               dropdownItemIdPrefix="ad-links-filter-select-option-role"
               position={DropdownPosition.left}
@@ -184,7 +192,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="ad-links-filter-dropdown"
+          id="addr-toggle-filter-type-dropdown"
           dropdownItemIdPrefix={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
@@ -208,7 +216,12 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
         <>
           <FilterIcon />
           {checkIsFilterApplied() && (
-            <Badge key={1} isRead>
+            <Badge
+              key={1}
+              isRead
+              id="addr-toggle-filter-applied-bdge"
+              aria-label="Badge to show filter applied"
+            >
               {totalRecords}
             </Badge>
           )}

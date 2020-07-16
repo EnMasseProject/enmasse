@@ -262,6 +262,7 @@ export const AddressLinksToolbarContainer: React.FunctionComponent<IAddressLinks
 
   return (
     <AddressLinksToolbar
+      id="addr-links-toolbar"
       totalRecords={totalRecords}
       filterSelected={filterSelected}
       nameSelected={nameSelected}

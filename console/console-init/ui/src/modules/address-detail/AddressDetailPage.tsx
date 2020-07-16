@@ -38,13 +38,13 @@ export default function AddressDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="ad-page-link-home" to={"/"}>
+          <Link id="addr-details-home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
           <Link
-            id="ad-page-link-addresses"
+            id="addr-details-addresses-link"
             to={`/messaging-projects/${namespace}/${name}/${type}/addresses`}
           >
             {name}
