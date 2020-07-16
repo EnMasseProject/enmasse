@@ -8,7 +8,11 @@ import styles from "@patternfly/react-styles/css/components/Page/page";
 import { css } from "@patternfly/react-styles";
 import { PageHeaderProps, PageContextConsumer } from "@patternfly/react-core";
 
-export class AppNavHeader extends React.Component<PageHeaderProps> {
+interface IAppNavHeaderProps extends PageHeaderProps {
+  toolbar?: React.ReactNode;
+  avatar?: React.ReactNode;
+}
+export class AppNavHeader extends React.Component<IAppNavHeaderProps> {
   render() {
     const {
       logo = null as React.ReactNode,
