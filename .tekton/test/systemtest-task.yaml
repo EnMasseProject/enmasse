@@ -19,34 +19,47 @@ spec:
     - name: repo_url
       type: string
   steps:
-    - name: maven-test
-      securityContext:
-        privileged: true
-      image: docker.io/library/maven:3.6.3-jdk-11
-      command:
-        - /bin/bash
+    - name: install-and-setup-packages
+      image: gcr.io/cloud-builders/wget:latest
+      workingDir: /workspace/
+      script: |
+
+        wget "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz" -q
+        tar xf oc.tar.gz
+
+    - name: clone-repo
+      image: gcr.io/cloud-builders/git:latest
+      workingDir: /workspace
+      script: |
+
+        git clone $(inputs.params.repo_url)
+
+    - name: generate-templates
+      image: gcr.io/cloud-builders/go:latest
       env:
         - name: GOROOT
           value: /usr/local/go
-      workingDir: /workspace/enmasse-repo
+      securityContext:
+        privileged: true
+      workingDir: /workspace
+      script: |
+
+        cd enmasse
+        make templates
+
+    - name: run-tests
+      image: gcr.io/cloud-builders/mvn:latest
+      securityContext:
+        privileged: true
+      command:
+        - /bin/bash
+      workingDir: /workspace
       args:
         - -c
         - |
-          apt -qq update
-          apt -qq install make gcc git -y
-
-          wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz -q
-          tar xf go1.13.3.linux-amd64.tar.gz
-          mv go /usr/local
-          export PATH=$PATH:/usr/local/go/bin
-
-          wget https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz -q
-          tar xf oc.tar.gz
           mv oc /usr/bin/oc
           oc login --token $(inputs.params.kube_token) $(inputs.params.kube_api_url) --insecure-skip-tls-verify=true
-
-          git clone $(inputs.params.repo_url)
-          cd enmasse
           export KUBERNETES_NAMESPACE=$(inputs.params.kube_namespace)
+          cd enmasse
           mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=true -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
 
