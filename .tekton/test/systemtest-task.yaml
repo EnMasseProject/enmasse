@@ -1,24 +1,23 @@
-apiVersion: tekton.dev/v1alpha1
+apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: systemtest-task
   labels:
     app: enmasse-test
 spec:
-  inputs:
-    params:
-      - name: profile
-        type: string
-      - name: testcase
-        type: string
-      - name: kube_api_url
-        type: string
-      - name: kube_token
-        type: string
-      - name: kube_namespace
-        type: string
-      - name: repo_url
-        type: string
+  params:
+    - name: profile
+      type: string
+    - name: testcase
+      type: string
+    - name: kube_api_url
+      type: string
+    - name: kube_token
+      type: string
+    - name: kube_namespace
+      type: string
+    - name: repo_url
+      type: string
   steps:
     - name: maven-test
       securityContext:
