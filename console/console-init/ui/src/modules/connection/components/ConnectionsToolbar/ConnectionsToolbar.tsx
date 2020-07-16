@@ -75,6 +75,7 @@ const ConnectionsToolbar: React.FunctionComponent<IConnectionsToolbarProps &
       component="button"
       isDisabled={selectedConnections.length <= 0}
       id="connections-toolbar-close-selected-dropdownitem"
+      aria-label="Close selected dropdown item"
     >
       Close Selected
     </DropdownItem>
