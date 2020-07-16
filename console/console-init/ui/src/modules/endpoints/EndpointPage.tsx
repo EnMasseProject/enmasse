@@ -59,6 +59,7 @@ export default function AddressPage() {
     if (data && data.total > 10) {
       return (
         <TablePagination
+          id="endpoint-page-pagination"
           itemCount={(data && data.total) || 10}
           variant={"top"}
           page={page}
@@ -68,7 +69,10 @@ export default function AddressPage() {
     }
   };
   return (
-    <PageSection variant={PageSectionVariants.light}>
+    <PageSection
+      variant={PageSectionVariants.light}
+      id="endpoint-list-pagesection"
+    >
       {renderPagination()}
       <EndPointList endpoints={endpointList} />
       {renderPagination()}
