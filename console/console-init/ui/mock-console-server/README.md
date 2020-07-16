@@ -416,89 +416,115 @@ query single_address_with_links_and_metrics {
 }
 ```
 
-## Retrieve all Iot projects
+## Retrieve list of Iot tenants and messaging projects
 
 ```
-query allProjects {
-  allProjects(
-    projectType: iotProject
-  ) {
+query {
+  allProjects {
     total
-    iotProjects {
-      metadata {
-        name
-        namespace
-        creationTimestamp
-      }
-      enabled
-      spec {
-        tenantId
-        configuration
-        addresses {
-              Telemetry {
-                name
-              }
-              Event {
-                name
-              }
-              Command {
-                name
-              }
+    objects {
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
         }
       }
-      status {
-        phase
-        phaseReason
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+        enabled
       }
-      endpoints {
-        name
-        url
-        host
+    }
+  }
+}
+
+```
+
+## Retrieve a list of iot project
+
+```
+query {
+  allProjects (
+     filter: "`$.kind`='IoTProject'"
+  ) {
+    total
+    objects {
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+      }
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+        enabled
       }
     }
   }
 }
 ```
 
-## Retrieve a filtered iot project
+## Retrieve a list of iot project and filter by state
 
 ```
-query allProjects {
-  allProjects(
-    filter: "`$.metadata.name`='iotProjectFrance'"
-    projectType: iotProject
+query {
+  allProjects (
+     filter: "`$.kind`='IoTProject' AND `$.enabled` = true"
   ) {
     total
-    iotProjects {
-      metadata {
-        name
-        namespace
-        creationTimestamp
-      }
-      enabled
-      spec {
-        tenantId
-        configuration
-        addresses {
-              Telemetry {
-                name
-              }
-              Event {
-                name
-              }
-              Command {
-                name
-              }
+    objects {
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
         }
       }
-      status {
-        phase
-        phaseReason
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+        enabled
       }
-      endpoints {
-        name
-        url
-        host
+    }
+  }
+}
+```
+
+## Retrieve a list of AddressSpace
+
+```
+query {
+  allProjects (
+     filter: "`$.kind`='AddressSpace'"
+  ) {
+    total
+    objects {
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+      }
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+        }
+        enabled
       }
     }
   }
