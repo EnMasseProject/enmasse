@@ -65,6 +65,8 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           address && (
             <React.Fragment key={`navlink-gi-command-${address}-${index}`}>
               <Button
+                id="general-info-navigate-address-button"
+                aria-label="Navigate to address button"
                 variant="link"
                 isInline
                 onClick={() => navigateToAddress(address)}
@@ -82,7 +84,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
     <PageSection>
       <Card>
         <CardTitle className={css(styles.font_size)}>
-          <Title size="xl" headingLevel="h2">
+          <Title size="xl" headingLevel="h2" id="general-info-title">
             General Info
           </Title>
         </CardTitle>
@@ -92,9 +94,16 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
             {addressSpace}
           </Button>
           <br /> */}
-          <b className={css(styles.style_margin)}>Events address name</b>
+          <b
+            className={css(styles.style_margin)}
+            id="general-info-event-address-name-title"
+          >
+            Events address name
+          </b>
           {eventAddress && (
             <Button
+              id="general-info-navigate-event-address-button"
+              aria-label="Navigate to event address button"
               variant="link"
               onClick={() => navigateToAddress(eventAddress)}
               isInline
@@ -106,6 +115,8 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Telemetry address name</b>
           {telemetryAddress && (
             <Button
+              id="general-info-navigate-telemetry-address-button"
+              aria-label="Navigate to telemetry-address button"
               variant="link"
               onClick={() => navigateToAddress(telemetryAddress)}
               isInline

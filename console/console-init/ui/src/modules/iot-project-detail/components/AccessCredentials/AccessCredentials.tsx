@@ -54,7 +54,8 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
   };
   const EditIcon = () => (
     <SwitchWithToggle
-      id="access-credential-switch"
+      id="access-credentials-view-json-switchtoggle"
+      aria-label="Switch with toggle for view in json"
       label="View JSON format"
       labelOff="View JSON format"
       isChecked={isHidden}
@@ -99,7 +100,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={url}
             isReadOnly={true}
             enableCopy={true}
-            id={"messaging-tenant-id-input"}
+            id={"access-credentials-messaging-tenant-id-input"}
             ariaLabel={"messaging tenant id"}
           />
         )}
@@ -111,7 +112,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={username}
             isReadOnly={true}
             enableCopy={true}
-            id={"messaging-username-input"}
+            id={"access-credentials-messaging-username-input"}
             ariaLabel={"messaging username"}
           />
         )}
@@ -122,7 +123,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             type={"password"}
             value={password}
             isReadOnly={true}
-            id={"messaging-password-input"}
+            id={"access-credentials-messaging-password-input"}
             ariaLabel={"messaging password"}
           />
         )}
@@ -134,7 +135,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={addressSpace}
             isReadOnly={true}
             enableCopy={true}
-            id={"messaging-addressspace-input"}
+            id={"access-credentials-messaging-addressspace-input"}
             ariaLabel={"messaging addressSpace"}
           />
         )}
@@ -146,7 +147,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={eventAddress}
             isReadOnly={true}
             enableCopy={true}
-            id={"messaging-event-address-name-input"}
+            id={"access-credentials-messaging-event-address-name-input"}
             ariaLabel={"messaging event Address Name"}
           />
         )}
@@ -158,7 +159,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             value={telemetryAddress}
             isReadOnly={true}
             enableCopy={true}
-            id={"messaging-telemetry-address-name-input"}
+            id={"access-credentials-messaging-telemetry-address-name-input"}
             ariaLabel={"messaging telemetry Address Name"}
           />
         )}
@@ -171,7 +172,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             isReadOnly={true}
             enableCopy={true}
             isExpandable={commandAddresses.length > 1}
-            id={"messaging-command-address-name-input"}
+            id={"access-credentials-messaging-command-address-name-input"}
             ariaLabel={"messaging command Address Name"}
           />
         )}
@@ -185,7 +186,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
       <CardTitle style={{ fontSize: 20 }}>
         <Split>
           <SplitItem>
-            <Title size="xl" headingLevel="h2">
+            <Title size="xl" headingLevel="h2" id="Access-credentials-title">
               Access Credentials
             </Title>
           </SplitItem>
@@ -211,7 +212,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               value={tenantId}
               isReadOnly={true}
               enableCopy={true}
-              id={"tenant-id-input"}
+              id={"access-credentials-tenant-id-input"}
               ariaLabel={"tenant id"}
             />
           )}
@@ -222,6 +223,8 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
             </GridItem>
             <GridItem span={8}>
               <Button
+                id="access-credentials-download-pem-cert-button"
+                aria-label="Download PEM certificate"
                 variant={ButtonVariant.tertiary}
                 onClick={onPemCertificateClick}
               >
@@ -229,6 +232,8 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
               </Button>
               {"  "}
               <Button
+                id="access-credentials-download-jks-cert-button"
+                aria-label="Download JKS certificate"
                 variant={ButtonVariant.tertiary}
                 onClick={onJksCertificateClick}
               >
@@ -239,7 +244,10 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <br />
           <Messaging />
           <br />
-          <AdapterList id="ac-adapter-list-container" adapters={adapters} />
+          <AdapterList
+            id="access-credentials-adapter-list-container"
+            adapters={adapters}
+          />
         </CardBody>
       )}
     </Card>
