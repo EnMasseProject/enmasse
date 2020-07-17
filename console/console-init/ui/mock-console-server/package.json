@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/k-wall/mock-console-server#readme",
   "dependencies": {
-    "apollo-server": "^2.9.5",
+    "apollo-server": "^2.14.2",
     "clone": "^2.1.2",
     "escape-string-regexp": "^2.0.0",
     "fast-json-patch": "^3.0.0-1",
