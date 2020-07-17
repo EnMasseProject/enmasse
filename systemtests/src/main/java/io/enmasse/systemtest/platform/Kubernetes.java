@@ -35,6 +35,7 @@ import io.enmasse.systemtest.condition.OpenShiftVersion;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
+import io.enmasse.systemtest.platform.cluster.KindCluster;
 import io.enmasse.systemtest.platform.cluster.KubeCluster;
 import io.enmasse.systemtest.platform.cluster.KubernetesCluster;
 import io.enmasse.systemtest.platform.cluster.MinikubeCluster;
@@ -142,6 +143,8 @@ public abstract class Kubernetes {
             }
             if (cluster.toString().equals(MinikubeCluster.IDENTIFIER)) {
                 instance = new Minikube();
+            } else if (cluster.toString().equals(KindCluster.IDENTIFIER)) {
+                instance = new Kind();
             } else if (cluster.toString().equals(KubernetesCluster.IDENTIFIER)) {
                 instance = new GenericKubernetes();
             } else {

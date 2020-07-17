@@ -116,7 +116,6 @@ public class HttpAdapterClient extends ApiClient {
         } else {
             this.keyStoreBuffer = null;
         }
-
     }
 
     private static String contentType(final Buffer payload) {

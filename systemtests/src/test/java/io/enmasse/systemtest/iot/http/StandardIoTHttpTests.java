@@ -61,7 +61,6 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
     @ParameterizedTest(name = "testHttpEventSingle-{0}")
     @MethodSource("getDevices")
     default void testHttpEventSingle(final DeviceSupplier device) throws Exception {
-
         try (HttpAdapterClient client = device.get().createHttpAdapterClient()) {
             new MessageSendTester()
                     .type(MessageSendTester.Type.EVENT)
