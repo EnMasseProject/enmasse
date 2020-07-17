@@ -30,12 +30,9 @@ type IoTProjectStatus struct {
 	Phase   ProjectPhaseType `json:"phase"`
 	Message string           `json:"message,omitempty"`
 
-	TenantName                    string `json:"tenantName"`
-	MessagingInfrastructurePrefix string `json:"prefix"` // FIXME: this will be gone in the future
+	TenantName string `json:"tenantName"`
 
 	Accepted AcceptedStatus `json:"accepted,omitempty"`
-
-	Managed *ManagedStatus `json:"managed,omitempty"`
 
 	Conditions []ProjectCondition `json:"conditions"`
 }
@@ -139,15 +136,6 @@ type AddressesConfig struct {
 
 type AddressConfig struct {
 	Plan string `json:"plan,omitempty"`
-}
-
-// endregion
-
-// region Managed Status
-
-type ManagedStatus struct {
-	PasswordTime metav1.Time `json:"passwordTime,omitempty"`
-	AddressSpace string      `json:"addressSpace,omitempty"`
 }
 
 // endregion

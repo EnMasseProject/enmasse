@@ -10,12 +10,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
+import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 import io.enmasse.systemtest.iot.IoTTests;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;

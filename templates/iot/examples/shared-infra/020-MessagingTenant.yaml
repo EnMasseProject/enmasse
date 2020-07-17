@@ -1,5 +1,0 @@
-apiVersion: enmasse.io/v1beta2
-kind: MessagingTenant
-metadata:
-  name: default
-spec: {}

@@ -40,7 +40,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
@@ -177,7 +176,7 @@ public class DeviceCertificateManager {
 
     public Device createDevice() throws Exception {
         var now = Instant.now();
-        return createDevice(UUID.randomUUID().toString(), now, now.plus(Duration.ofDays(90)));
+        return createDevice(Names.randomDevice(), now, now.plus(Duration.ofDays(90)));
     }
 
     public Device createDevice(final String deviceName, final Instant notBefore, final Duration validFor) throws Exception {

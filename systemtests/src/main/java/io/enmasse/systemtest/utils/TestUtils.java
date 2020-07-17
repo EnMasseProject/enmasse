@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.hibernate.validator.internal.util.logging.formatter.DurationFormatter;
 import org.junit.jupiter.api.Assertions;
@@ -68,11 +69,14 @@ public class TestUtils {
 
         static TimeoutHandler<AssertionError> explain(final ThrowingSupplier<String> supplier) {
             return () -> {
+                final String info;
                 try {
-                    Assertions.fail("Operation did not complete in time:" + supplier.get());
+                    info = supplier.get();
                 } catch (Throwable e) {
                     Assertions.fail("Failed to explain timeout", e);
+                    return; // "fail" is expected to "throw", but Java doesn't know that
                 }
+                Assertions.fail("Operation did not complete in time:" + info);
             };
         }
     }
@@ -356,16 +360,21 @@ public class TestUtils {
     }
 
     public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final TimeoutBudget budget) {
+        waitUntilCondition(forWhat, condition, budget.remaining());
+    }
+
+    public static void waitUntilCondition(final String forWhat, final Predicate<WaitPhase> condition, final Duration timeout) {
 
         Objects.requireNonNull(condition);
-        Objects.requireNonNull(budget);
+        Objects.requireNonNull(timeout);
 
-        log.info("Waiting {} ms for - {}", budget.timeLeft(), forWhat);
+        log.info("Waiting {} for - {}", format(timeout), forWhat);
+        var start = Instant.now();
 
         waitUntilCondition(
 
                 () -> condition.test(WaitPhase.LOOP),
-                budget.remaining(), Duration.ofSeconds(5),
+                timeout, Duration.ofSeconds(5),
 
                 () -> {
                     // try once more
@@ -377,7 +386,7 @@ public class TestUtils {
                     throw new IllegalStateException("Failed to wait for: " + forWhat);
                 });
 
-        log.info("Successfully waited for: {}, it took {} ms", forWhat, budget.timeSpent());
+        log.info("Successfully waited for: {}, it took {}", forWhat, format(Duration.between(start, Instant.now())));
 
     }
 
@@ -501,10 +510,10 @@ public class TestUtils {
     }
 
     private static String format(final Duration duration) {
-        return String.format("%02d:%2d:%2d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
+        return String.format("%d:%02d:%02d", duration.toHours(), duration.toMinutesPart(), duration.toSecondsPart());
     }
 
-    public static void waitForChangedResourceVersion(final TimeoutBudget budget, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
+    public static void waitForChangedResourceVersion(final Duration timeout, final String currentResourceVersion, final ThrowingSupplier<String> provideNewResourceVersion)
             throws Exception {
         Objects.requireNonNull(currentResourceVersion, "'currentResourceVersion' must not be null");
 
@@ -517,7 +526,7 @@ public class TestUtils {
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }
-        }, budget);
+        }, timeout);
     }
 
     /**

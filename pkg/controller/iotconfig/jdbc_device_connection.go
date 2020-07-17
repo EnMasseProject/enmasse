@@ -102,6 +102,7 @@ func (r *ReconcileIoTConfig) reconcileJdbcDeviceConnectionDeployment(config *iot
 			{Name: "HONO_AUTH_VALIDATION_SHARED_SECRET", ValueFrom: install.FromSecret(nameAuthServicePskSecret, keyInterServicePsk)},
 		}
 
+		applyServiceConnectionOptions(container, "HONO_AUTH", config.Spec.ServicesConfig.Authentication.TlsVersions(config))
 		appendCommonHonoJavaEnv(container, "ENMASSE_IOT_AMQP_", config, &service.JDBC.CommonServiceConfig)
 
 		SetupTracing(config, deployment, container)

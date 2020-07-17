@@ -108,7 +108,7 @@ func (r *ReconcileIoTConfig) reconcileAuthServiceDeployment(config *iotv1alpha1.
 			return err
 		}
 
-		appendCommonHonoJavaEnv(container, "HONO_AUTH_", config, &service)
+		appendCommonHonoJavaEnv(container, "HONO_AUTH_AMQP_", config, &service)
 
 		SetupTracing(config, deployment, container)
 		AppendStandardHonoJavaOptions(container)

@@ -40,9 +40,6 @@ func componentNotFound(objectKind schema.ObjectKind, namespace string, name stri
 
 func componentApps(objectKind schema.ObjectKind, namespace string, name string, err error, numReady int32, numTotal int32) (*result, error) {
 
-	ready := numReady > 0
-	degraded := numReady < numTotal
-
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return componentNotFound(objectKind, namespace, name), nil
@@ -50,6 +47,9 @@ func componentApps(objectKind schema.ObjectKind, namespace string, name string, 
 			return nil, err
 		}
 	}
+
+	ready := numReady > 0
+	degraded := numReady < numTotal
 
 	kind := objectKind.GroupVersionKind().Kind
 	reason := ""
@@ -141,12 +141,17 @@ func newAggregator(config *iotv1alpha1.IoTConfig) *conditionAggregator {
 	// add protocol adapters
 
 	for _, a := range adapters {
+		// The next line is important, it makes a copy of the reference to the current item.
+		// The reference value "a" points to is not moved to the context of the lambda,
+		// so the actual value of "a" will change, to the last element of "adapters" and all
+		// lamdbas would use the same, last value of "adapters".
+		ax := a
 		components = append(components, component{
-			Type: a.ReadyCondition,
+			Type: ax.ReadyCondition,
 			Enabled: func(config *iotv1alpha1.IoTConfig) bool {
-				return a.IsEnabled(config)
+				return ax.IsEnabled(config)
 			},
-			Check: componentDeployment(config.Namespace, a.FullName()),
+			Check: componentDeployment(config.Namespace, ax.FullName()),
 		})
 	}
 
@@ -241,9 +246,10 @@ func (c *conditionAggregator) Aggregate(ctx context.Context, client client.Clien
 	if ready.IsOk() {
 		return iotv1alpha1.ConfigPhaseActive, ""
 	} else if configErr != nil {
+		// configuration error has a higher priority in the user facing message
 		return iotv1alpha1.ConfigPhaseFailed, configErr.Error()
 	} else {
-		return iotv1alpha1.ConfigPhaseFailed, ready.Message
+		return iotv1alpha1.ConfigPhaseConfiguring, ready.Message
 	}
 
 }

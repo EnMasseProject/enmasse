@@ -1,0 +1,5 @@
+apiVersion: enmasse.io/v1
+kind: MessagingProject
+metadata:
+  name: default
+spec: {}

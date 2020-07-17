@@ -11,6 +11,8 @@ import io.vertx.core.net.PemTrustOptions;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
 
+import java.util.function.Consumer;
+
 import static io.enmasse.systemtest.amqp.TerminusFactory.queue;
 
 public class AmqpConnectOptions {
@@ -67,6 +69,13 @@ public class AmqpConnectOptions {
 
     public AmqpConnectOptions setProtonClientOptions(ProtonClientOptions protonClientOptions) {
         this.protonClientOptions = protonClientOptions;
+        return this;
+    }
+
+    public AmqpConnectOptions customizeProtonClientOptions(Consumer<ProtonClientOptions> customizer) {
+        if (customizer != null) {
+            customizer.accept(this.protonClientOptions);
+        }
         return this;
     }
 

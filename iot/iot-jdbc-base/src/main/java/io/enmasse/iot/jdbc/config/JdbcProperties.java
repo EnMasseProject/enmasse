@@ -32,6 +32,7 @@ public class JdbcProperties {
     public void setUrl(String url) {
         this.url = url;
     }
+
     public String getUrl() {
         return url;
     }
@@ -39,6 +40,7 @@ public class JdbcProperties {
     public void setDriverClass(String driverClassName) {
         this.driverClass = driverClassName;
     }
+
     public String getDriverClass() {
         return driverClass;
     }
@@ -46,6 +48,7 @@ public class JdbcProperties {
     public void setUsername(String username) {
         this.username = username;
     }
+
     public String getUsername() {
         return username;
     }
@@ -53,6 +56,7 @@ public class JdbcProperties {
     public void setPassword(String password) {
         this.password = password;
     }
+
     public String getPassword() {
         return password;
     }
@@ -60,6 +64,7 @@ public class JdbcProperties {
     public void setMaximumPoolSize(Integer maximumPoolSize) {
         this.maximumPoolSize = maximumPoolSize;
     }
+
     public Integer getMaximumPoolSize() {
         return maximumPoolSize;
     }
@@ -67,6 +72,7 @@ public class JdbcProperties {
     public String getTableName() {
         return tableName;
     }
+
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
@@ -96,7 +102,12 @@ public class JdbcProperties {
             config.put("max_pool_size", dataSourceProperties.getMaximumPoolSize());
         }
 
-        log.info("Creating new SQL client: {} - table: {}", config, dataSourceProperties.getTableName());
+        if (log.isInfoEnabled()) {
+            var logConfig = config.copy();
+            logConfig.remove("password");
+            log.info("Creating new SQL client: {} - table: {}", logConfig, dataSourceProperties.getTableName());
+        }
+
 
         return JDBCClient.createShared(vertx, config);
 

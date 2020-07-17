@@ -22,10 +22,14 @@ import io.enmasse.iot.model.v1.ServicesConfigBuilder;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.apps.SystemtestsKubernetesApps;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
 
 public final class DefaultDeviceRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultDeviceRegistry.class);
 
     private DefaultDeviceRegistry() {}
 
@@ -141,9 +145,13 @@ public final class DefaultDeviceRegistry {
      * Delete the server which got created by {@link #newDefaultInstance()}.
      */
     public static void deleteDefaultServer() throws Exception {
+
+        log.info("Deleting mixed mode device registry");
+
         // align with newDefaultInstance
         SystemtestsKubernetesApps.deletePostgresqlServer();
         SystemtestsKubernetesApps.deleteInfinispanServer();
+
     }
 
     public static DeviceRegistryServiceConfigBuilder applyDeviceRegistryEndpoint(final DeviceRegistryServiceConfigBuilder registry) {
@@ -189,6 +197,8 @@ public final class DefaultDeviceRegistry {
     }
 
     public static ServicesConfig newMixed() throws Exception {
+        log.info("Installing mixed mode device registry");
+
         var jdbcEndpoint = SystemtestsKubernetesApps.deployPostgresqlServer();
         var infinispanEndpoint = SystemtestsKubernetesApps.deployInfinispanServer();
 

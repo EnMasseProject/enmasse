@@ -8,6 +8,7 @@ package iotproject
 import (
 	"context"
 	"fmt"
+	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	corev1 "k8s.io/api/core/v1"
 	"time"
 
@@ -21,9 +22,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
-
-	"github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 
 	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
@@ -57,33 +55,13 @@ func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result,
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTProject")
 	}
 
-	return deconstructManagedResources(project, ctx)
-}
-
-func deconstructManagedResources(project *iotv1alpha1.IoTProject, ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
-
-	rc := recon.ReconcileContext{}
-
-	if project.Status.Managed != nil {
-		rc.Process(func() (result reconcile.Result, e error) {
-			return cleanupManagedResources(ctx.Context, ctx.Client, project)
-		})
-	}
-
-	return rc.Result()
-
+	return cleanupManagedResources(ctx.Context, ctx.Client, project)
 }
 
 // delete all managed resources by the project
 func cleanupManagedResources(ctx context.Context, c client.Client, project *iotv1alpha1.IoTProject) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
-
-	managed := project.Status.Managed
-
-	if managed == nil {
-		return rc.Result()
-	}
 
 	for _, a := range Addresses {
 		rc.Process(func() (result reconcile.Result, e error) {
@@ -94,24 +72,10 @@ func cleanupManagedResources(ctx context.Context, c client.Client, project *iotv
 			return cleanupResource(ctx, c, project, client.ObjectKey{
 				Namespace: project.Namespace,
 				Name:      addressMetaName,
-			}, &v1beta1.Address{})
+			}, &enmassev1.MessagingAddress{})
 
 		})
 	}
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return cleanupResource(ctx, c, project, client.ObjectKey{
-			Namespace: project.Namespace,
-			Name:      managed.AddressSpace,
-		}, &v1beta1.AddressSpace{})
-	})
-
-	rc.Process(func() (result reconcile.Result, e error) {
-		return cleanupResource(ctx, c, project, client.ObjectKey{
-			Namespace: project.Namespace,
-			Name:      managed.AddressSpace + "." + string(project.UID),
-		}, &userv1beta1.MessagingUser{})
-	})
 
 	return rc.Result()
 

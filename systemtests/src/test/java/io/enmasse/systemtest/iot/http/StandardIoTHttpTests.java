@@ -23,12 +23,10 @@ import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
 import io.enmasse.systemtest.iot.StandardIoTTests;
 
 import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Tag(IOT)
 public interface StandardIoTHttpTests extends StandardIoTTests {
 
     Logger log = LoggerFactory.getLogger(StandardIoTHttpTests.class);
@@ -56,7 +54,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
 
     /**
      * Test a single event message.
-     * <br>
+     * <p>
      * Send a single message, no consumer attached. The message gets delivered
      * when the consumer attaches.
      */
@@ -79,7 +77,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
 
     /**
      * Test a batch of telemetry messages, consumer is started before sending.
-     * <br>
+     * <p>
      * This is the normal telemetry case.
      */
     @ParameterizedTest(name = "testHttpTelemetryBatch50-{0}")
@@ -101,7 +99,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
 
     /**
      * Test a batch of events, having no consumer attached.
-     * <br>
+     * <p>
      * As events get buffered by the broker, there is no requirement to start
      * a consumer before sending the messages. However when the consumer is
      * attached, it should receive those messages.
@@ -126,7 +124,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
 
     /**
      * Test a batch of events, starting the consumer before sending.
-     * <br>
+     * <p>
      * This is the default use case with events, and should simply work
      * as with telemetry.
      */
@@ -150,7 +148,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
 
     /**
      * Test for an invalid device.
-     * <br>
+     * <p>
      * With an invalid device, no messages must pass.
      */
     @ParameterizedTest(name = "testHttpDeviceFails-{0}")

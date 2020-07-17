@@ -5,18 +5,12 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.systemtest.iot.IoTTestSession.Device;
-import org.junit.jupiter.params.provider.MethodSource;
+import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 
 import java.util.Objects;
 
 /**
  * A supplier for devices. Required due to an issue in Surefire.
- * <p>
- * This is a workaround for SUREFIRE-1799, which silently drops unit tests in case
- * there is an exception being thrown in a method of a {@link MethodSource}. As we
- * create {@link Device}s for parametrized tests and creation of devices might fail,
- * that will be an issue.
  * <p>
  * The idea is to delay the actual execution of the device creation until it
  * is running in the actual test case. So instead of creating devices, we create
@@ -28,7 +22,7 @@ import java.util.Objects;
 @FunctionalInterface
 public interface DeviceSupplier {
 
-    public Device get() throws Exception;
+    Device get() throws Exception;
 
     /**
      * Allows to override the output of the {@link #toString()} method.

@@ -11,7 +11,6 @@ import java.util.function.BooleanSupplier;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.utils.Serialization;
 
 public final class Conditions {
 
@@ -32,7 +31,7 @@ public final class Conditions {
     public static <T extends HasMetadata, L, D> BooleanSupplier condition(
             final MixedOperation<T, L, D, Resource<T, D>> client,
             final T resource,
-            final String conditionType
+            final Object conditionType
     ) {
         return condition(client, resource, conditionType, true);
     }
@@ -52,11 +51,49 @@ public final class Conditions {
     public static <T extends HasMetadata, L, D> BooleanSupplier condition(
             final MixedOperation<T, L, D, Resource<T, D>> client,
             final T resource,
-            final String conditionType,
-            boolean expected
+            final Object conditionType,
+            final boolean expected
+    ) {
+           return condition(
+                   client
+                           .inNamespace(resource.getMetadata().getNamespace())
+                           .withName(resource.getMetadata().getName()),
+                   conditionType,
+                   expected);
+    }
+
+    /**
+     * Create a condition, checking for a Kubernetes condition.
+     *
+     * @param access The resource to check.
+     * @param conditionType The of the condition to check.
+     * @param <T> Type of resource.
+     * @param <D> The "doneable" of the resource.
+     * @return a boolean condition, which can evaluate if the Kubernetes resource condition has the expected state.
+     */
+    public static <T extends HasMetadata, D> BooleanSupplier condition(
+            final Resource<T, D> access,
+            final Object conditionType
+    ) {
+        return condition(access, conditionType, true);
+    }
+
+    /**
+     * Create a condition, checking for a Kubernetes condition.
+     *
+     * @param access The resource to check.
+     * @param conditionType The of the condition to check.
+     * @param expected The expected status.
+     * @param <T> Type of resource.
+     * @param <D> The "doneable" of the resource.
+     * @return a boolean condition, which can evaluate if the Kubernetes resource condition has the expected state.
+     */
+    public static <T extends HasMetadata, D> BooleanSupplier condition(
+            final Resource<T, D> access,
+            final Object conditionType,
+            final boolean expected
     ) {
 
-        var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
         var expectedString = expected ? "True" : "False";
 
         return new BooleanSupplier() {
@@ -70,15 +107,7 @@ public final class Conditions {
 
             @Override
             public String toString() {
-                var state = statusSection(access.get());
-                return String.format("Failed to detect condition '%s' of '%s/%s' (%s/%s) as '%s': %s",
-                        conditionType,
-                        resource.getMetadata().getNamespace(),
-                        resource.getMetadata().getName(),
-                        resource.getApiVersion(), resource.getKind(),
-                        expectedString,
-                        state.map(Serialization::asJson).orElse("<no status>")
-                );
+                return reasonFromStatus(String.format("Failed to detect condition '%s' as '%s'", conditionType, expectedString), access);
             }
         };
 
@@ -92,9 +121,13 @@ public final class Conditions {
         }
     }
 
-    static String conditionStatus(final Object current, final String conditionType) {
+    static String conditionStatus(final Object current, final Object conditionType) {
         try {
-            var status = statusSection(current).get();
+            var statusSection = statusSection(current);
+            if (statusSection.isEmpty()){
+                return null;
+            }
+            var status = statusSection.get();
             var conditions = status.getClass().getMethod("getConditions").invoke(status);
             for (Object o : (Iterable<?>) conditions) {
                 var clazz = o.getClass();
@@ -107,6 +140,32 @@ public final class Conditions {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata,?> resource) {
+        return new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return resource.get() == null;
+            }
+
+            @Override
+            public String toString() {
+                return reasonFromStatus("Resource should be gone, but is not", resource);
+            }
+        };
+    }
+
+    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata,?> access) {
+        var resource = access.get();
+        var state = statusSection(resource);
+        return String.format("%s: '%s/%s' (%s/%s): %s",
+                message,
+                resource.getMetadata().getNamespace(),
+                resource.getMetadata().getName(),
+                resource.getApiVersion(), resource.getKind(),
+                state.map(Serialization::toYaml).orElse("<no status>")
+        );
     }
 
 }

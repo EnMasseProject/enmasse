@@ -76,15 +76,19 @@ hono:
   registration:
     port: 5671
     trustStoreFormat: PEM
+    tlsEnabled: true
   credentials:
     port: 5671
     trustStoreFormat: PEM
+    tlsEnabled: true
   deviceConnection:
     port: 5671
     trustStoreFormat: PEM
+    tlsEnabled: true
   tenant:
     port: 5671
     trustStoreFormat: PEM
+    tlsEnabled: true
 `
 
 	change.AddStringsFromMap(configMap.Data, "application.yml", "logback-spring.xml")

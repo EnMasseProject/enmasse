@@ -266,18 +266,6 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 			})
 	})
 
-	// lookup infrastructure
-
-	// FIXME: the following has to be removed once we no longer need an active endpoint
-	project.Status.MessagingInfrastructurePrefix = ""
-	rc.ProcessSimple(func() error {
-		endpoint, err := findFirstActiveEndpoint(ctx, r.client, project)
-		if endpoint != nil {
-			project.Status.MessagingInfrastructurePrefix = endpoint.Status.Host
-		}
-		return err
-	})
-
 	rc.Process(func() (result reconcile.Result, e error) {
 		return r.reconcileManaged(ctx, project)
 	})

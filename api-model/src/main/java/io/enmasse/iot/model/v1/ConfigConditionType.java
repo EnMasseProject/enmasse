@@ -21,6 +21,7 @@ public enum ConfigConditionType {
     DEVICE_REGISTRY_ADAPTER_SERVICE_READY("DeviceRegistryAdapterServiceReady"),
     DEVICE_REGISTRY_MANAGEMENT_SERVICE_READY("DeviceRegistryManagementServiceReady"),
 
+    AMQP_ADAPTER_READY("AmqpAdapterReady"),
     HTTP_ADAPTER_READY("HttpAdapterReady"),
     LORAWAN_ADAPTER_READY("LorawanAdapterReady"),
     MQTT_ADAPTER_READY("MqttAdapterReady"),

@@ -1,4 +1,4 @@
-FROM quay.io/enmasse/java-base:11-5
+FROM quay.io/enmasse/java-base:11-6
 
 ARG version
 ARG maven_version

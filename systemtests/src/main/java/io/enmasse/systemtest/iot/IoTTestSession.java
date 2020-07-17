@@ -6,9 +6,11 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.collect.Lists;
+import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
+import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
@@ -38,6 +40,8 @@ import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.ThrowingCallable;
 import io.enmasse.systemtest.utils.ThrowingConsumer;
+import io.enmasse.systemtest.utils.ThrowingFunction;
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -45,13 +49,12 @@ import io.vertx.core.Vertx;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -60,22 +63,25 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.enmasse.systemtest.amqp.AmqpConnectOptions.defaultQueue;
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.iot.DeviceManagementApi.createManagementServiceAccount;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 import static io.enmasse.systemtest.platform.Kubernetes.isOpenShiftCompatible;
 import static io.enmasse.systemtest.utils.Conditions.condition;
+import static io.enmasse.systemtest.utils.Conditions.gone;
 import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
-public final class IoTTestSession implements AutoCloseable {
+public final class IoTTestSession implements IoTTestContext {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
     private static final String IOT_PROJECT_NAMESPACE = "iot-systemtests";
@@ -205,195 +211,38 @@ public final class IoTTestSession implements AutoCloseable {
         void run(IoTTestSession session) throws Exception;
     }
 
-    public class Device {
-
-        private final String deviceId;
-        private String authId;
-        private String password;
-        private PrivateKey key;
-        private X509Certificate certificate;
-
-        private Device(String deviceId) {
-            this.deviceId = deviceId;
-        }
-
-        public Device register() throws Exception {
-            IoTTestSession.this.registryClient.registerDevice(getTenantId(), this.deviceId);
-            return this;
-        }
-
-        /**
-         * Set username and password to random combination.
-         *
-         * @return This instance, for chained method calls.
-         * @throws Exception in case anything went wrong.
-         */
-        public Device setPassword() throws Exception {
-            return setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
-        }
-
-        public Device setPassword(final String authId, final String password) throws Exception {
-            this.authId = authId;
-            this.password = password;
-
-            var pwd = CredentialsRegistryClient.createPlainPasswordCredentialsObject(authId, password, null);
-            IoTTestSession.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(pwd));
-            return this;
-        }
-
-        /**
-         * Use a different password then stored in the device registry (using {@link #setPassword()}.
-         * <p>
-         * Uses a new random password.
-         *
-         * @return This instance, for chained method calls.
-         */
-        public Device overridePassword() {
-            this.password = UUID.randomUUID().toString();
-            return this;
-        }
-
-        /**
-         * Use a different password then stored in the device registry (using {@link #setPassword()}.
-         *
-         * @param password The new password to use.
-         * @return This instance, for chained method calls.
-         */
-        public Device overridePassword(final String password) {
-            this.password = password;
-            return this;
-        }
-
-        public Device enableX509(io.enmasse.systemtest.iot.DeviceCertificateManager.Device device) throws Exception {
-            return enableX509(device.getKey().getPrivate(), device.getCertificate());
-        }
-
-        public Device enableX509(final PrivateKey key, final X509Certificate certificate) throws Exception {
-            this.key = key;
-            this.certificate = certificate;
-
-            var x509 = CredentialsRegistryClient.createX509CertificateCredentialsObject(certificate.getSubjectX500Principal().getName(), null);
-            IoTTestSession.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(x509));
-            return this;
-        }
-
-        /**
-         * Create a new http adapter client.
-         *
-         * @return The new instance. It will automatically be closed when the test session is being cleaned
-         * up.
-         */
-        public HttpAdapterClient createHttpAdapterClient() throws Exception {
-            return createHttpAdapterClient(null);
-        }
-
-        /**
-         * Create a new http adapter client.
-         *
-         * @param tlsVersions The supported TLS versions.
-         * @return The new instance. It will automatically be closed when the test session is being cleaned
-         * up.
-         */
-        public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) throws Exception {
-            if (this.key != null) {
-                return IoTTestSession.this.createHttpAdapterClient(this.key, this.certificate, tlsVersions);
-            } else {
-                return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, tlsVersions);
-            }
-        }
-
-        /**
-         * Create a new mqtt adapter client.
-         *
-         * @return The new instance. It will automatically be closed when the test session is being cleaned
-         * up.
-         */
-        public MqttAdapterClient createMqttAdapterClient() throws Exception {
-            if (key != null) {
-                return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.key, this.certificate);
-            } else {
-                return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.authId, this.password);
-            }
-        }
-
-        /**
-         * Create a new AMQP adapter client.
-         *
-         * @return The new instance. It will automatically be closed when the test session is being cleaned
-         * up.
-         */
-        public AmqpAdapterClient createAmqpAdapterClient() throws Exception {
-            return createAmqpAdapterClient(null);
-        }
-
-        /**
-         * Create a new AMQP adapter client.
-         *
-         * @param tlsVersions The supported TLS versions.
-         * @return The new instance. It will automatically be closed when the test session is being cleaned
-         * up.
-         */
-        public AmqpAdapterClient createAmqpAdapterClient(final Set<String> tlsVersions) throws Exception {
-            if (this.key != null) {
-                return IoTTestSession.this.createAmqpAdapterClient(this.key, this.certificate, tlsVersions);
-            } else {
-                return IoTTestSession.this.createAmqpAdapterClient(this.authId, this.password, tlsVersions);
-            }
-        }
-
-        public String getTenantId() {
-            return IoTTestSession.this.getTenantId();
-        }
-    }
-
     private final Vertx vertx;
     private final IoTConfig config;
-    private final IoTProject project;
     private final Consumer<Throwable> exceptionHandler;
+    private final Set<String> defaultTlsVersions;
     private final List<ThrowingCallable> cleanup;
-    private final DeviceRegistryClient registryClient;
-    private final CredentialsRegistryClient credentialsClient;
-    private final AmqpClient consumerClient;
+
+    private IoTTestContext defaultProject;
 
     private IoTTestSession(
             final Vertx vertx,
             final IoTConfig config,
-            final IoTProject project,
-            final DeviceRegistryClient registryClient,
-            final CredentialsRegistryClient credentialsClient,
-            final AmqpClient consumerClient,
             final Consumer<Throwable> exceptionHandler,
+            final Set<String> defaultTlsVersions,
             final List<ThrowingCallable> cleanup) {
 
         this.vertx = vertx;
-
         this.config = config;
-        this.project = project;
-
-        this.registryClient = registryClient;
-        this.credentialsClient = credentialsClient;
-
-        this.consumerClient = consumerClient;
 
         this.exceptionHandler = exceptionHandler;
+        this.defaultTlsVersions = defaultTlsVersions;
         this.cleanup = cleanup;
 
     }
 
-    public String getTenantId() {
-        return getTenantId(this.project);
-    }
-
+    @Override
     public IoTConfig getConfig() {
-        return this.config;
+        return this.defaultProject.getConfig();
     }
 
+    @Override
     public IoTProject getProject() {
-        return this.project;
-    }
-
-    private static String getTenantId(final IoTProject project) {
-        return project.getMetadata().getNamespace() + "." + project.getMetadata().getName();
+        return this.defaultProject.getProject();
     }
 
     private HttpAdapterClient createHttpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
@@ -459,8 +308,9 @@ public final class IoTTestSession implements AutoCloseable {
 
     }
 
+    @Override
     public AmqpClient getConsumerClient() {
-        return this.consumerClient;
+        return this.defaultProject.getConsumerClient();
     }
 
     /**
@@ -505,6 +355,8 @@ public final class IoTTestSession implements AutoCloseable {
     @Override
     public void close() throws Exception {
 
+        log.info("Cleaning up test instance: {}/{}", this.config.getMetadata().getNamespace(), this.config.getMetadata().getName());
+
         var e = cleanup(this.cleanup, null);
         if (e != null) {
             throw e;
@@ -523,8 +375,10 @@ public final class IoTTestSession implements AutoCloseable {
         private final List<PreDeployProcessor> preDeploy = new LinkedList<>();
 
         private IoTConfigBuilder config;
+        private Set<String> defaultTlsVersions;
 
         private Consumer<Throwable> exceptionHandler = IoTTestSession::defaultExceptionHandler;
+        private Consumer<ProjectBuilder> defaultProjectCustomizer;
 
         private Builder(final IoTConfigBuilder config, final IoTProjectBuilder project) {
             this.config = config;
@@ -536,8 +390,18 @@ public final class IoTTestSession implements AutoCloseable {
             return this;
         }
 
-        public Builder project(final ThrowingConsumer<IoTProjectBuilder> projectCustomizer) throws Exception {
-            projectCustomizer.accept(this.project);
+        public Builder defaultTlsVersions(final String... defaultTlsVersions) {
+            this.defaultTlsVersions = defaultTlsVersions == null || defaultTlsVersions.length == 0 ? null : Set.of(defaultTlsVersions);
+            return this;
+        }
+
+        public Builder defaultTlsVersions(final Set<String> defaultTlsVersions) {
+            this.defaultTlsVersions = defaultTlsVersions == null ? null : Set.copyOf(defaultTlsVersions);
+            return this;
+        }
+
+        public Builder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
+            customizer.accept(this.project);
             return this;
         }
 
@@ -574,6 +438,11 @@ public final class IoTTestSession implements AutoCloseable {
             return adapters(EnumSet.copyOf(Arrays.asList(adapters)));
         }
 
+        public Builder defaultProjectCustomizer(final Consumer<ProjectBuilder> customizer) {
+            this.defaultProjectCustomizer = customizer;
+            return this;
+        }
+
         /**
          * Deploy the setup, run the code and clean up.
          *
@@ -603,11 +472,7 @@ public final class IoTTestSession implements AutoCloseable {
          */
         public IoTTestSession deploy() throws Exception {
 
-            // stuff to clean up
-
-            final List<ThrowingCallable> cleanup = new LinkedList<>();
-
-            try {
+            return trackingCleanup(this.exceptionHandler, cleanup -> {
 
                 // pre deploy
 
@@ -623,7 +488,6 @@ public final class IoTTestSession implements AutoCloseable {
                 // build objects
 
                 var config = this.config.build();
-                var project = this.project.build();
 
                 /*
                  * Create resources: in order to properly clean up, register cleanups first, then perform the operation
@@ -633,7 +497,7 @@ public final class IoTTestSession implements AutoCloseable {
 
                 // create device manager role, we do not clean it up
 
-                DeviceManagementApi.createManagementServiceAccount(infraNamespace);
+                createManagementServiceAccount(infraNamespace);
 
                 // deploy certificates, we do not clean them up
 
@@ -655,56 +519,155 @@ public final class IoTTestSession implements AutoCloseable {
                         .build();
                 createDefaultResource(Kubernetes::messagingInfrastructures, messagingInfrastructure, cleanup);
 
-                // create IoT config
+                // create vertx context
 
+                log.info("Creating vert.x instance");
                 final Vertx vertx = Vertx.factory.vertx();
                 cleanup.add(vertx::close);
 
-                if (!Environment.getInstance().skipCleanup()) {
+                // create IoT config
+
+                if (shouldCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(config));
                 }
                 IoTUtils.createIoTConfig(config);
+
+                // create result
+
+                var result = new IoTTestSession(vertx, config, this.exceptionHandler, this.defaultTlsVersions, new ArrayList<>(cleanup));
+
+                /*
+                 * We handed off responsibility of cleaning up our close list to the "test session". So we can clean
+                 * the list, and add a reference to the "iot test session", which knows now what to clean up so far.
+                 */
+
+                cleanup.clear();
+                cleanup.add(result::close);
+
+                // create default project
+
+                var defaultProjectBuilder = result
+                        .newProject(this.project)
+                        .createNamespace(true);
+                if (this.defaultProjectCustomizer != null) {
+                    this.defaultProjectCustomizer.accept(defaultProjectBuilder);
+                }
+                var defaultProject = defaultProjectBuilder.deploy();
+                result.setDefaultProject(defaultProject);
+
+                // done
+
+                return result;
+
+            });
+        }
+
+    }
+
+    public class ProjectBuilder {
+
+        private final IoTProjectBuilder project;
+        private final Consumer<Throwable> exceptionHandler;
+        private final Set<String> defaultTlsVersions;
+
+        private Set<String> consumerTlsVersions;
+        private boolean awaitReady = true;
+        private boolean createNamespace = false;
+
+        private ThrowingConsumer<MessagingProjectBuilder> projectCustomizer;
+        private ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer;
+
+        private ProjectBuilder(
+                final IoTProjectBuilder project,
+                final Consumer<Throwable> exceptionHandler,
+                final Set<String> defaultTlsVersions
+        ) {
+            this.project = project;
+            this.exceptionHandler = exceptionHandler;
+            this.defaultTlsVersions = defaultTlsVersions;
+        }
+
+        public ProjectBuilder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
+            customizer.accept(this.project);
+            return this;
+        }
+
+        public ProjectBuilder project(final ThrowingConsumer<MessagingProjectBuilder> projectCustomizer) {
+            this.projectCustomizer = projectCustomizer;
+            return this;
+        }
+
+        public ProjectBuilder endpoint(final ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer) {
+            this.endpointCustomizer = endpointCustomizer;
+            return this;
+        }
+
+        public ProjectBuilder consumerTlsVersions(final String... consumerTlsVersions) {
+            return consumerTlsVersions(consumerTlsVersions != null ? Set.of(consumerTlsVersions) : null);
+        }
+
+        public ProjectBuilder consumerTlsVersions(final Set<String> consumerTlsVersions) {
+            this.consumerTlsVersions = consumerTlsVersions;
+            return this;
+        }
+
+        public ProjectBuilder awaitReady(boolean enabled) {
+            this.awaitReady = enabled;
+            return this;
+        }
+
+        public ProjectBuilder createNamespace(boolean enabled) {
+            this.createNamespace = enabled;
+            return this;
+        }
+
+        public ProjectBuilder createNamespace() {
+            return createNamespace(true);
+        }
+
+        public IoTTestContext deploy() throws Exception {
+
+            return trackingCleanup(this.exceptionHandler, cleanup -> {
+
+                // build the project object
+
+                var project = this.project.build();
 
                 // the project namespace
 
                 var namespace = project.getMetadata().getNamespace();
 
-                // create namespace if not created
+                if (this.createNamespace) {
 
-                if (!Environment.getInstance().skipCleanup()) {
-                    cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(namespace));
+                    // create namespace if not created
+
+                    if (!Environment.getInstance().skipCleanup()) {
+                        cleanup.add(() -> Kubernetes.getInstance().deleteNamespace(namespace));
+                    }
+                    Kubernetes.getInstance().createNamespace(namespace);
+
+                    // create messaging project
+
+                    var messagingProject = createDefaultProject(namespace);
+                    if (this.projectCustomizer != null) {
+                        this.projectCustomizer.accept(messagingProject);
+                    }
+                    createDefaultResource(Kubernetes::messagingProjects, messagingProject.build(), cleanup);
+
+                    // create messaging endpoint
+
+                    var messagingEndpoint = createDefaultEndpoint(namespace);
+                    if (this.endpointCustomizer != null) {
+                        this.endpointCustomizer.accept(messagingEndpoint);
+                    }
+                    createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint.build(), cleanup);
                 }
-                Kubernetes.getInstance().createNamespace(namespace);
 
-                // create messaging project
+                // get the endpoint, we always expect a "downstream" endpoint for testing
 
-                var messagingProject = new MessagingProjectBuilder()
-                        .withNewMetadata()
-                        .withNamespace(namespace)
-                        .withName("default")
-                        .endMetadata()
-
-                        .withNewSpec().endSpec()
-
-                        .build();
-                createDefaultResource(Kubernetes::messagingProjects, messagingProject, cleanup);
-
-                // create messaging endpoint
-
-                var messagingEndpoint = new MessagingEndpointBuilder()
-                        .withNewMetadata()
-                        .withNamespace(namespace)
+                var messagingEndpoint = Kubernetes.messagingEndpoints(namespace)
                         .withName("downstream")
-                        .endMetadata()
-
-                        .withNewSpec()
-                        .withHost(Kubernetes.getInstance().getHost())
-                        .withNewNodePort().endNodePort()
-                        .addNewProtocol("AMQP")
-                        .endSpec()
-
-                        .build();
-                messagingEndpoint = createDefaultResource(Kubernetes::messagingEndpoints, messagingEndpoint, cleanup);
+                        .get();
                 var endpointHost = messagingEndpoint.getStatus().getHost();
 
                 // create IoT project
@@ -712,14 +675,22 @@ public final class IoTTestSession implements AutoCloseable {
                 if (!Environment.getInstance().skipCleanup()) {
                     cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(project));
                 }
-                IoTUtils.createIoTProject(project);
+                IoTUtils.createIoTProject(project, this.awaitReady);
 
                 // create endpoints
 
                 final Endpoint deviceRegistryEndpoint = IoTUtils.getDeviceRegistryManagementEndpoint();
-                final DeviceRegistryClient registryClient = new DeviceRegistryClient(vertx, deviceRegistryEndpoint);
+
+                final DeviceRegistryClient registryClient = new DeviceRegistryClient(
+                        IoTTestSession.this.vertx,
+                        deviceRegistryEndpoint,
+                        this.defaultTlsVersions);
                 cleanup.add(registryClient::close);
-                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(vertx, deviceRegistryEndpoint);
+
+                final CredentialsRegistryClient credentialsClient = new CredentialsRegistryClient(
+                        IoTTestSession.this.vertx,
+                        deviceRegistryEndpoint,
+                        this.defaultTlsVersions);
                 cleanup.add(credentialsClient::close);
 
                 // create user
@@ -772,42 +743,269 @@ public final class IoTTestSession implements AutoCloseable {
                         .getPorts().stream()
                         .filter(p -> "AMQP".equals(p.getProtocol()))
                         .map(MessagingEndpointPort::getPort)
-                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'amqp' in endpoint status"));
+                        .findAny().orElseThrow(() -> new IllegalStateException("Unable to find port 'AMQP' in endpoint status"));
                 final Endpoint amqpEndpoint = new Endpoint(endpointHost, port);
 
                 // create AMQP client
 
-                AmqpClient client = new AmqpClient(defaultQueue(amqpEndpoint));
+                AmqpClient client = new AmqpClient(
+                        defaultQueue(amqpEndpoint)
+                                .customizeProtonClientOptions(options -> {
+                                    if (consumerTlsVersions != null) {
+                                        options.setEnabledSecureTransportProtocols(this.consumerTlsVersions);
+                                    } else if (this.defaultTlsVersions != null) {
+                                        options.setEnabledSecureTransportProtocols(this.defaultTlsVersions);
+                                    }
+                                })
+                );
                 cleanup.add(client::close);
 
-                // done
+                // we are all set up, register ourselves with the session
 
-                return new IoTTestSession(vertx, config, project, registryClient, credentialsClient, client, this.exceptionHandler, cleanup);
+                var result = new ProjectInstance(IoTTestSession.this.config, project, registryClient, credentialsClient, client, cleanup);
+                IoTTestSession.this.cleanup.add(result::close);
 
-                // the method returned and the IoTTestSession took ownership of the "cleanup" list.
+                // return result
 
-            } catch (Throwable e) {
+                return result;
 
-                if (log.isDebugEnabled()) {
-                    log.debug("Caught exception during deployment", e);
+            });
+        }
+
+        private MessagingProjectBuilder createDefaultProject(final String namespace) {
+
+            return new MessagingProjectBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace)
+                    .withName("default")
+                    .endMetadata()
+
+                    .withNewSpec().endSpec();
+
+        }
+
+        private MessagingEndpointBuilder createDefaultEndpoint(final String namespace) {
+
+            return new MessagingEndpointBuilder()
+                    .withNewMetadata()
+                    .withNamespace(namespace)
+                    .withName("downstream")
+                    .endMetadata()
+
+                    .withNewSpec()
+                    .withHost(Kubernetes.getInstance().getHost())
+                    .withNewNodePort().endNodePort()
+                    .addNewProtocol("AMQP")
+                    .endSpec();
+
+        }
+    }
+
+    public class ProjectInstance implements IoTTestContext {
+
+        public class Device {
+
+            private final String deviceId;
+            private String authId;
+            private String password;
+            private PrivateKey key;
+            private X509Certificate certificate;
+
+            private Device(String deviceId) {
+                this.deviceId = deviceId;
+            }
+
+            public Device register() throws Exception {
+                ProjectInstance.this.registryClient.registerDevice(getTenantId(), this.deviceId);
+                return this;
+            }
+
+            /**
+             * Set username and password to random combination.
+             *
+             * @return This instance, for chained method calls.
+             * @throws Exception in case anything went wrong.
+             */
+            public Device setPassword() throws Exception {
+                return setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+            }
+
+            public Device setPassword(final String authId, final String password) throws Exception {
+                this.authId = authId;
+                this.password = password;
+
+                var pwd = CredentialsRegistryClient.createPlainPasswordCredentialsObject(authId, password, null);
+                ProjectInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(pwd));
+                return this;
+            }
+
+            /**
+             * Use a different password then stored in the device registry (using {@link #setPassword()}.
+             * <p>
+             * Uses a new random password.
+             *
+             * @return This instance, for chained method calls.
+             */
+            public Device overridePassword() {
+                this.password = UUID.randomUUID().toString();
+                return this;
+            }
+
+            /**
+             * Use a different password then stored in the device registry (using {@link #setPassword()}.
+             *
+             * @param password The new password to use.
+             * @return This instance, for chained method calls.
+             */
+            public Device overridePassword(final String password) {
+                this.password = password;
+                return this;
+            }
+
+            public Device enableX509(io.enmasse.systemtest.iot.DeviceCertificateManager.Device device) throws Exception {
+                return enableX509(device.getKey().getPrivate(), device.getCertificate());
+            }
+
+            public Device enableX509(final PrivateKey key, final X509Certificate certificate) throws Exception {
+                this.key = key;
+                this.certificate = certificate;
+
+                var x509 = CredentialsRegistryClient.createX509CertificateCredentialsObject(certificate.getSubjectX500Principal().getName(), null);
+                ProjectInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(x509));
+                return this;
+            }
+
+            /**
+             * Create a new http adapter client.
+             *
+             * @return The new instance. It will automatically be closed when the test session is being cleaned
+             * up.
+             */
+            public HttpAdapterClient createHttpAdapterClient() throws Exception {
+                return createHttpAdapterClient(null);
+            }
+
+            /**
+             * Create a new http adapter client.
+             *
+             * @param tlsVersions The supported TLS versions.
+             * @return The new instance. It will automatically be closed when the test session is being cleaned
+             * up.
+             */
+            public HttpAdapterClient createHttpAdapterClient(final Set<String> tlsVersions) throws Exception {
+                if (this.key != null) {
+                    return IoTTestSession.this.createHttpAdapterClient(this.key, this.certificate, tlsVersions);
                 } else {
-                    log.info("Caught exception during deployment, running exception handler", e);
+                    return IoTTestSession.this.createHttpAdapterClient(this.authId, this.password, tlsVersions);
                 }
+            }
 
-                // first run exception handler
-                try {
-                    this.exceptionHandler.accept(e);
-                } catch (Exception e2) {
-                    log.info("Failed to run exception handler", e2);
-                    e.addSuppressed(new RuntimeException("Failed to run exception handler", e2));
+            /**
+             * Create a new mqtt adapter client.
+             *
+             * @return The new instance. It will automatically be closed when the test session is being cleaned
+             * up.
+             */
+            public MqttAdapterClient createMqttAdapterClient() throws Exception {
+                if (key != null) {
+                    return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.key, this.certificate);
+                } else {
+                    return IoTTestSession.this.createMqttAdapterClient(this.deviceId, this.authId, this.password);
                 }
+            }
 
-                // cleanup in case any creation step failed
-                throw cleanup(cleanup, e);
+            /**
+             * Create a new AMQP adapter client.
+             *
+             * @return The new instance. It will automatically be closed when the test session is being cleaned
+             * up.
+             */
+            public AmqpAdapterClient createAmqpAdapterClient() throws Exception {
+                return createAmqpAdapterClient(null);
+            }
 
+            /**
+             * Create a new AMQP adapter client.
+             *
+             * @param tlsVersions The supported TLS versions.
+             * @return The new instance. It will automatically be closed when the test session is being cleaned
+             * up.
+             */
+            public AmqpAdapterClient createAmqpAdapterClient(final Set<String> tlsVersions) throws Exception {
+                if (this.key != null) {
+                    return IoTTestSession.this.createAmqpAdapterClient(this.key, this.certificate, tlsVersions);
+                } else {
+                    return IoTTestSession.this.createAmqpAdapterClient(this.authId, this.password, tlsVersions);
+                }
+            }
+
+            public String getTenantId() {
+                return IoTTestSession.this.getTenantId();
             }
         }
 
+        private final IoTConfig config;
+        private final IoTProject project;
+        private final DeviceRegistryClient registryClient;
+        private final CredentialsRegistryClient credentialsClient;
+        private final AmqpClient consumerClient;
+        private final List<ThrowingCallable> cleanup;
+        private final AtomicBoolean closed = new AtomicBoolean();
+
+        public ProjectInstance(
+                final IoTConfig config,
+                final IoTProject project,
+                final DeviceRegistryClient registryClient,
+                final CredentialsRegistryClient credentialsClient,
+                final AmqpClient consumerClient,
+                final List<ThrowingCallable> cleanup) {
+
+            this.config = config;
+            this.project = project;
+
+            this.registryClient = registryClient;
+            this.credentialsClient = credentialsClient;
+            this.consumerClient = consumerClient;
+
+            this.cleanup = cleanup;
+
+        }
+
+        @Override
+        public IoTConfig getConfig() {
+            return this.config;
+        }
+
+        @Override
+        public IoTProject getProject() {
+            return this.project;
+        }
+
+        @Override
+        public AmqpClient getConsumerClient() {
+            return this.consumerClient;
+        }
+
+        @Override
+        public Device newDevice(final String deviceId) {
+            return new Device(deviceId);
+        }
+
+        @Override
+        public void close() throws Exception {
+
+            if (closed.getAndSet(true)) {
+                return;
+            }
+
+            log.info("Cleaning up project instance: {}/{}", this.project.getMetadata().getNamespace(), this.project.getMetadata().getName());
+
+            var e = cleanup(this.cleanup, null);
+            if (e != null) {
+                throw e;
+            }
+
+        }
     }
 
     /**
@@ -825,11 +1023,11 @@ public final class IoTTestSession implements AutoCloseable {
 
         // we use the same name for the IoTProject and the AddressSpace
 
-        var name = UUID.randomUUID().toString();
+        var name = Names.randomName();
 
         // create new default project setup
 
-        var project = new IoTProjectBuilder(createDefaultTenant(IOT_PROJECT_NAMESPACE, name));
+        var project = createDefaultTenant(IOT_PROJECT_NAMESPACE, name);
 
         // done
 
@@ -872,7 +1070,7 @@ public final class IoTTestSession implements AutoCloseable {
                 isOpenShiftCompatible(OCP4));
     }
 
-    public static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
+    static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
 
         var config = new IoTConfigBuilder()
                 .withNewMetadata()
@@ -955,15 +1153,14 @@ public final class IoTTestSession implements AutoCloseable {
      * @param name The name of the object
      * @return The new project instance, ready to be created.
      */
-    public static IoTProject createDefaultTenant(final String namespace, final String name) {
+    static IoTProjectBuilder createDefaultTenant(final String namespace, final String name) {
         return new IoTProjectBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
                 .endMetadata()
                 .withNewSpec()
-                .endSpec()
-                .build();
+                .endSpec();
     }
 
     private static IoTConfigBuilder useSystemtestKeys(IoTConfigBuilder config, final Adapter... adapters) {
@@ -976,7 +1173,9 @@ public final class IoTTestSession implements AutoCloseable {
         return config;
     }
 
-    private static Exception cleanup(final List<ThrowingCallable> cleanup, Throwable initialException) {
+    private static Exception cleanup(final List<ThrowingCallable> cleanup, final Throwable initialException) {
+
+        var resultingException = initialException;
 
         if (!Environment.getInstance().skipCleanup()) {
 
@@ -986,10 +1185,10 @@ public final class IoTTestSession implements AutoCloseable {
                 try {
                     f.call();
                 } catch (Throwable e) {
-                    if (initialException == null) {
-                        initialException = e;
+                    if (resultingException == null) {
+                        resultingException = e;
                     } else {
-                        initialException.addSuppressed(e);
+                        resultingException.addSuppressed(e);
                     }
                 }
             }
@@ -1002,13 +1201,37 @@ public final class IoTTestSession implements AutoCloseable {
 
         }
 
-        if (initialException == null || initialException instanceof Exception) {
+        // log
+
+        if (resultingException != null) {
+            if (initialException == null) {
+                log.info("Reporting initial exception", resultingException);
+            } else {
+                log.info("Cleanup resulting in error", resultingException);
+            }
+        }
+
+        // now throw
+
+        if (resultingException == null || resultingException instanceof Exception) {
             // return the Exception (or null)
-            return (Exception) initialException;
+            return (Exception) resultingException;
         } else {
             // return Throwable wrapped in exception
-            return new Exception(initialException);
+            return new Exception(resultingException);
         }
+    }
+
+    private void setDefaultProject(final IoTTestContext defaultProject) {
+        this.defaultProject = defaultProject;
+    }
+
+    private ProjectBuilder newProject(final IoTProjectBuilder project) {
+        return new ProjectBuilder(project, this.exceptionHandler, this.defaultTlsVersions);
+    }
+
+    public ProjectBuilder newProject(final String namespace, final String name) {
+        return newProject(createDefaultTenant(namespace, name));
     }
 
     /**
@@ -1016,20 +1239,11 @@ public final class IoTTestSession implements AutoCloseable {
      *
      * @param deviceId The ID of the device to create.
      * @return The new device creation instance. The device will only be created when the
-     * {@link Device#register()} method is being called.
+     * {@link ProjectInstance.Device#register()} method is being called.
      */
-    public Device newDevice(final String deviceId) {
-        return new Device(deviceId);
-    }
-
-    public Device newDevice() {
-        return newDevice(TestUtils.randomCharacters(23 /* max MQTT client ID length */));
-    }
-
-    public Device registerNewRandomDeviceWithPassword() throws Exception {
-        return newDevice()
-                .register()
-                .setPassword(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+    @Override
+    public ProjectInstance.Device newDevice(final String deviceId) {
+        return this.defaultProject.newDevice(deviceId);
     }
 
     /**
@@ -1090,6 +1304,8 @@ public final class IoTTestSession implements AutoCloseable {
 
     private static void deployDefaultCerts(final String namespace) {
 
+        log.info("Deploying default certificates");
+
         final Path examplesIoT = Paths.get(Environment.getInstance().getTemplatesPath())
                 .resolve("install/components/iot/examples");
 
@@ -1105,19 +1321,28 @@ public final class IoTTestSession implements AutoCloseable {
                         "NAMESPACE", namespace));
     }
 
-    private static <T extends HasMetadata, L, D> T createDefaultResource(
+    private static <T extends HasMetadata, L, D> void createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
             final List<ThrowingCallable> cleanup) {
+
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
         if (shouldCleanup()) {
-            cleanup.add(() -> client.delete(Collections.singletonList(resource)));
+            cleanup.add(() -> {
+                var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
+                access
+                        .withPropagationPolicy(DeletionPropagation.FOREGROUND)
+                        .delete();
+                waitUntilConditionOrFail(gone(access), ofMinutes(5), ofSeconds(5));
+            });
         }
         client.create(resource);
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
+
         log.info("Creating successful. Resource is ready.");
-        return client.withName(resource.getMetadata().getName()).get();
+
     }
 
     /**
@@ -1130,5 +1355,45 @@ public final class IoTTestSession implements AutoCloseable {
      */
     private static boolean shouldCleanup() {
         return !Environment.getInstance().skipCleanup();
+    }
+
+    /**
+     * Track cleanup during creation of resources.
+     * <p>
+     * This method will create a cleanup list, and then call the provided code, passing in the cleanup list. When the
+     * provided code fails, it will clean up all elements in the cleanup list. If the code returns without throwing
+     * an exception, the result of the code will simply be returned, and no cleanup will take place.
+     *
+     * @param code The code which will create a set of resources.
+     * @param exceptionHandler The exception handler to call.
+     * @param <R> The type of the result.
+     * @return the value of the provided code.
+     * @throws Exception If anything goes wrong.
+     */
+    private static <R> R trackingCleanup(final Consumer<Throwable> exceptionHandler, final ThrowingFunction<List<ThrowingCallable>, R> code) throws Exception {
+
+        final List<ThrowingCallable> cleanup = new LinkedList<>();
+
+        try {
+            return code.apply(cleanup);
+        } catch (Throwable e) {
+            if (log.isDebugEnabled()) {
+                log.debug("Caught exception during deployment", e);
+            } else {
+                log.info("Caught exception during deployment, running exception handler", e);
+            }
+
+            // first run exception handler
+            try {
+                exceptionHandler.accept(e);
+            } catch (Exception e2) {
+                log.info("Failed to run exception handler", e2);
+                e.addSuppressed(new RuntimeException("Failed to run exception handler", e2));
+            }
+
+            // cleanup in case any creation step failed
+            throw cleanup(cleanup, e);
+        }
+
     }
 }
