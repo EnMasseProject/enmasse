@@ -12,4 +12,4 @@ ENV VERSION=${version} MAVEN_VERSION=${maven_version} REVISION=${revision}
 
 ADD target/console-server-${maven_version}-dist.tar.gz /
 
-ENTRYPOINT /console-server
+ENTRYPOINT ["/console-server"]
