@@ -26,10 +26,11 @@ import {
   DELETE_ADDRESS_SPACE,
   RETURN_IOT_PROJECTS,
   DELETE_IOT_PROJECT,
-  TOGGLE_IOT_PROJECTS_STATUS
+  TOGGLE_IOT_PROJECTS_STATUS,
+  RETURN_ALL_PROJECTS
 } from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
-import { IIoTProjectsResponse } from "schema/iot_project";
+import { IAllProjectsResponse } from "schema/iot_project";
 import { POLL_INTERVAL, FetchPolicy } from "constant";
 
 export interface IProjectListContainerProps {
@@ -92,21 +93,25 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
 
   const queryResolver = `
-  total
-  iotProjects {
-    metadata {
-      name
-      namespace
-      creationTimestamp
-    }
-    enabled    
-    status {
-      phase
-    }
-  }`;
+    total
+    objects{
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        enabled
+      }
+    }`;
 
-  const { loading, data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS(undefined, queryResolver),
+  const { loading, data } = useQuery<IAllProjectsResponse>(
+    RETURN_ALL_PROJECTS(undefined, queryResolver),
     {
       fetchPolicy: FetchPolicy.NETWORK_ONLY,
       pollInterval: POLL_INTERVAL
@@ -118,10 +123,10 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   }
 
   const { allProjects } = data || {
-    allProjects: { total: 0, iotProjects: [] }
+    allProjects: { total: 0, objects: [] }
   };
 
-  const projects = allProjects?.iotProjects || [];
+  const projects = allProjects?.objects || [];
 
   setTotalProjects(allProjects?.total || 0);
 
@@ -298,23 +303,35 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const getProjects = () => {
     return projects?.map((project: any) => {
-      const { metadata, status, enabled } = project || {};
-      return {
-        projectType: ProjectTypes.IOT,
-        name: metadata?.name,
-        displayName: metadata?.name,
-        isEnabled: enabled,
-        type: "",
-        namespace: metadata?.namespace,
-        plan: "",
-        status: status?.phase,
-        authService: "none",
-        isReady: true,
-        creationTimestamp: metadata?.creationTimestamp,
-        errorMessageRate: 3,
-        addressCount: 15,
-        connectionCount: 3
-      };
+      if (project.kind === "IoTProject") {
+        const { metadata, iotStatus, enabled } = project || {};
+        return {
+          projectType: ProjectTypes.IOT,
+          name: metadata?.name,
+          displayName: metadata?.name,
+          isEnabled: enabled,
+          namespace: metadata?.namespace,
+          status: iotStatus?.phase,
+          creationTimestamp: metadata?.creationTimestamp,
+          errorMessageRate: 3
+        };
+      } else return { projectType: ProjectTypes.MESSAGING };
+      // return {
+      //   projectType: ProjectTypes.IOT,
+      //   name: metadata?.name,
+      //   displayName: metadata?.name,
+      //   isEnabled: enabled,
+      //   type: "",
+      //   namespace: metadata?.namespace,
+      //   plan: "",
+      //   status: status?.phase,
+      //   authService: "none",
+      //   isReady: true,
+      //   creationTimestamp: metadata?.creationTimestamp,
+      //   errorMessageRate: 3,
+      //   addressCount: 15,
+      //   connectionCount: 3
+      // };
     });
   };
 

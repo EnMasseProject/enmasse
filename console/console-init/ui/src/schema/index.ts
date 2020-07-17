@@ -5,3 +5,4 @@
 
 export * from "./ResponseTypes";
 export * from "./iot_device";
+export * from "./iot_project";
