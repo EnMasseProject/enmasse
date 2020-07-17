@@ -11,6 +11,8 @@ endif
 PROFILE ?= systemtests
 PIPELINE_NAMESPACE ?= enmasse-pipelines
 KUBERNETES_NAMESPACE ?= enmasse-infra
+REPO_URL ?= https://github.com/enmasseproject/enmasse
+REPO_BRANCH ?= master
 
 ifeq (oc, $(CMDTOOL))
 KUBERNETES_API_TOKEN  ?= $(shell oc whoami -t)
@@ -50,4 +52,6 @@ systemtests-tekton:
 				--param kube_namespace=$(KUBERNETES_NAMESPACE) \
 				--param profile=$(PROFILE) \
 				--param testcase='$(TESTCASE)' \
+				--param repo_url=$(REPO_URL) \
+				--param repo_branch=$(REPO_BRANCH) \
 				--showlog -n $(PIPELINE_NAMESPACE)
