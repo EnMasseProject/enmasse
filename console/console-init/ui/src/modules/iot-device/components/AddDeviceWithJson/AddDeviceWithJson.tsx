@@ -142,7 +142,6 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
         title="Error"
         description="Invalid JSON syntax, unable to parse JSON"
       />
-
       <br />
       <Grid>
         <GridItem span={9} className={css(styles.box_align_style)}>
@@ -168,15 +167,23 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       </Grid>
       <br />
 
-      <Button variant="primary" onClick={onFinish}>
+      <Button
+        id="add-device-finish-button"
+        variant="primary"
+        onClick={onFinish}
+      >
         Finish
       </Button>
       {"  "}
-      <Button variant="secondary" onClick={handleOnPreview}>
+      <Button
+        id="add-device-preview-button"
+        variant="secondary"
+        onClick={handleOnPreview}
+      >
         Preview
       </Button>
       {"  "}
-      <Button variant="link" onClick={onCancel}>
+      <Button id="add-device-cancel-button" variant="link" onClick={onCancel}>
         Cancel
       </Button>
     </PageSection>

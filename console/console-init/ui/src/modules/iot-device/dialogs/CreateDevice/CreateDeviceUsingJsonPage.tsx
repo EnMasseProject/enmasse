@@ -27,7 +27,7 @@ export default function CreateDeviceUsingJsonPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="cdetail-link-home" to={"/"}>
+          <Link id="crt-dvc-brdcmb-home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>
@@ -40,7 +40,7 @@ export default function CreateDeviceUsingJsonPage() {
   useBreadcrumb(breadcrumb);
 
   const onSave = (detail: string) => {
-    //Add query to save iot device
+    //TODO: Add query to save iot device
     history.push(deviceListRouteLink);
   };
 
