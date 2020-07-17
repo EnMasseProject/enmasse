@@ -10,13 +10,13 @@ configuring the system. Example inventory files can be found in the `ansible/inv
 
 The following example inventory file enables a minimal installation of {ProductName}:
 
-[source,options="nowrap"]
+[source,options="nowrap",subs="+quotes,attributes"]
 ----
 [enmasse]
 localhost ansible_connection=local
 
 [enmasse:vars]
-namespace=enmasse-infra
+namespace={ProductNamespace}
 enable_rbac=False
 api_server=True
 service_catalog=False
