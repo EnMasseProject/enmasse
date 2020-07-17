@@ -9,9 +9,18 @@ export interface IDeviceDetailResponse {
     devices: Array<{
       deviceId?: string;
       enabled?: boolean;
-      viaGateway?: boolean;
       jsonData?: string;
+      via?: string[];
+      ext?: string;
+      defaults?: string;
       credentials?: string;
+      viaGroups?: string[];
+      memberOf?: string[];
+      status?: {
+        created?: string;
+        updated?: string;
+        lastSeen?: string;
+      };
     }>;
   };
 }
@@ -28,9 +37,13 @@ export interface IIoTDevicesResponse {
     total: number;
     devices: Array<{
       deviceId: string;
-      jsonData: string;
+      status: {
+        lastSeen: string;
+        updated: string;
+        created: string;
+      };
       enabled: boolean;
-      viaGateway: boolean;
+      via: string[];
       credentials: string;
     }>;
   };

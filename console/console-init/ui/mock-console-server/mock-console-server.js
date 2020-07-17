@@ -2289,6 +2289,12 @@ createIotDevice("iotProjectIndia", {
   via: ["20", "21"],
   viaGroups: [],
   memberOf: [],
+  defaults: JSON.stringify({
+    "content-type-1": "text/plain",
+    "content-type-2": "text/plain",
+    "content-type-3": "text/plain",
+    long: 12.3544
+  }),
   ext: JSON.stringify({
     custom: {
       level: 0,

@@ -26,7 +26,7 @@ const renderDeviceType = (type: string) => {
 export const getTableCells = (row: IDevice) => {
   const {
     enabled,
-    viaGateway,
+    via,
     credentials,
     deviceId,
     updated,
@@ -34,9 +34,11 @@ export const getTableCells = (row: IDevice) => {
     lastSeen
   } = row;
 
+  const viaGateway = via && via?.length > 0;
+
   let deviceType: string;
 
-  if (!viaGateway === !credentials?.length) {
+  if (!via?.length === !credentials?.length) {
     deviceType = "N/A";
   } else if (viaGateway) {
     deviceType = "Via gateways";

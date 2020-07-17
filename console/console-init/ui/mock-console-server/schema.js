@@ -249,7 +249,7 @@ const typeDefs = gql`
 
   type AddressSpace_consoleapi_enmasse_io_v1beta1 {
     metadata: ObjectMeta_v1!
-    kind: String!  
+    kind: String!
     spec: AddressSpaceSpec_enmasse_io_v1beta1!
     status: AddressSpaceStatus_enmasse_io_v1beta1
     connections(
@@ -785,6 +785,7 @@ const typeDefs = gql`
     memberOf: [String!]
     status: Device_status!
     ext: String! #The Json representation of the ext field for this device.
+    defaults: String
     credentials: String! #A Json array with the devices credentials.
   }
 
@@ -792,7 +793,7 @@ const typeDefs = gql`
     created: Date!
     updated: Date!
     lastUser: String
-    lastSeen: String
+    lastSeen: Date!
   }
 
   type DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
@@ -811,7 +812,8 @@ const typeDefs = gql`
   }
 
   union ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1 =
-      AddressSpace_consoleapi_enmasse_io_v1beta1 | IoTProject_iot_enmasse_io_v1alpha1
+      AddressSpace_consoleapi_enmasse_io_v1beta1
+    | IoTProject_iot_enmasse_io_v1alpha1
 
   #
   # Inputs Types

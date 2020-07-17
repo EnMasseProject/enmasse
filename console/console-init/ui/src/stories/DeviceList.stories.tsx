@@ -28,7 +28,7 @@ export default {
 const rows: IDevice[] = [
   {
     deviceId: "littlesensor1",
-    viaGateway: true,
+    via: ["device-1", "device-2"],
     enabled: true,
     selected: true,
     lastSeen: "2020-01-20T11:44:28.607Z",
@@ -38,7 +38,7 @@ const rows: IDevice[] = [
   },
   {
     deviceId: "jboss20",
-    viaGateway: false,
+    via: [],
     enabled: false,
     selected: false,
     lastSeen: "2020-04-20T11:44:28.607Z",
@@ -52,7 +52,7 @@ const rows: IDevice[] = [
   },
   {
     deviceId: "jboss20",
-    viaGateway: false,
+    via: [],
     enabled: null,
     selected: null,
     lastSeen: "2020-04-20T11:44:28.607Z",

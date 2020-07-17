@@ -32,9 +32,7 @@ export const EditGatewaysContainer = () => {
     devices: { total: 0, devices: [] }
   };
 
-  const { jsonData } = devices?.devices[0] || {};
-  const parseJsonData = jsonData && JSON.parse(jsonData);
-  const gatewayList = parseJsonData?.via;
+  const { via: gatewayList } = devices?.devices[0] || {};
 
   const getGateways = (gateway: string[]) => {
     addGateways(gateway);

@@ -18,8 +18,13 @@ const RETURN_IOT_DEVICE_DETAIL = (
         devices{
           deviceId
           enabled
-          viaGateway
-          jsonData  
+          via
+          status{
+            lastSeen
+            updated
+            created
+          }
+          ext
           credentials 
         }`;
 
@@ -185,9 +190,13 @@ const RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (
     total
     devices {
       deviceId
-      jsonData
+      status{
+        lastSeen
+        updated
+        created
+      }
       enabled
-      viaGateway
+      via
       credentials
     }
   `;
