@@ -15,6 +15,7 @@ import io.enmasse.k8s.api.LogEventLogger;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretKeySelector;
 import io.fabric8.kubernetes.client.NamespacedKubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import org.junit.jupiter.api.BeforeAll;
@@ -217,13 +218,13 @@ public class RouterConfigControllerTest {
 
                 .withNewTls()
                 .withNewCaCert()
-                .withNewValueFromSecret("ca.crt", "remote-certs", false)
+                .withValueFromSecret(new SecretKeySelector("ca.crt", "remote-certs", false))
                 .endCaCert()
                 .withNewClientCert()
-                .withNewValueFromSecret("tls.crt", "remote-certs", false)
+                .withValueFromSecret(new SecretKeySelector("tls.crt", "remote-certs", false))
                 .endClientCert()
                 .withNewClientKey()
-                .withNewValueFromSecret("tls.key", "remote-certs", false)
+                .withValueFromSecret(new SecretKeySelector("tls.key", "remote-certs", false))
                 .endClientKey()
                 .endTls()
                 .withNewCredentials()
