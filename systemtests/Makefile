@@ -54,4 +54,6 @@ systemtests-tekton:
 				--param testcase='$(TESTCASE)' \
 				--param repo_url=$(REPO_URL) \
 				--param repo_branch=$(REPO_BRANCH) \
+				--param image_registry=$(DOCKER_REGISTRY) \
+				--param image_org=$(DOCKER_ORG) \
 				--showlog -n $(PIPELINE_NAMESPACE)

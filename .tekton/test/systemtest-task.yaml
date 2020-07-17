@@ -20,6 +20,10 @@ spec:
       type: string
     - name: repo_branch
       type: string
+    - name: image_registry
+      type: string
+    - name: image_org
+      type: string
   steps:
     - name: install-and-setup-packages
       image: gcr.io/cloud-builders/wget:latest
@@ -38,10 +42,14 @@ spec:
 
     - name: generate-templates
       image: gcr.io/cloud-builders/go:latest
-      env:
-        - name: GOROOT
-          value: /usr/local/go
       workingDir: /workspace/enmasse
+      env:
+        - name: DEFAULT_PROJECT
+          value: $(inputs.params.kube_namespace)
+        - name: DOCKER_ORG
+          value: $(inputs.params.image_org)
+        - name: DOCKER_REGISTRY
+          value: $(inputs.params.image_registry)
       script: |
 
         make templates
@@ -50,15 +58,14 @@ spec:
       image: gcr.io/cloud-builders/mvn:latest
       securityContext:
         privileged: true
-      command:
-        - /bin/bash
       workingDir: /workspace
-      args:
-        - -c
-        - |
-          mv oc /usr/bin/oc
-          oc login --token $(inputs.params.kube_token) $(inputs.params.kube_api_url) --insecure-skip-tls-verify=true
-          export KUBERNETES_NAMESPACE=$(inputs.params.kube_namespace)
-          cd enmasse
-          mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=true -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
+      env:
+        - name: KUBERNETES_NAMESPACE
+          value: $(inputs.params.kube_namespace)
+      script: |
+
+        mv oc /usr/bin/oc
+        oc login --token $(inputs.params.kube_token) $(inputs.params.kube_api_url) --insecure-skip-tls-verify=true
+        cd enmasse
+        mvn test -pl systemtests -am -P$(inputs.params.profile) -Djava.net.preferIPv4Stack=true -DfailIfNoTests=true -Dstyle.color=always -DskipTests --no-transfer-progress -Dtest=$(inputs.params.testcase)
 
