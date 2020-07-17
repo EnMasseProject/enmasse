@@ -5,7 +5,12 @@
 
 import React, { useState } from "react";
 import { BreadcrumbItem, Breadcrumb } from "@patternfly/react-core";
-import { useBreadcrumb, useA11yRouteChange, Loading } from "use-patternfly";
+import {
+  useBreadcrumb,
+  useA11yRouteChange,
+  Loading,
+  useDocumentTitle
+} from "use-patternfly";
 import { Link, useHistory } from "react-router-dom";
 import { useParams } from "react-router";
 import { useQuery } from "@apollo/react-hooks";
@@ -25,6 +30,7 @@ import { NoDataFound } from "components";
 import { useMutationQuery } from "hooks";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 export default function AddressDetailPage() {
+  useDocumentTitle("Address Details");
   const { namespace, name, type, addressname } = useParams();
   const { dispatch } = useStoreContext();
 
@@ -32,14 +38,14 @@ export default function AddressDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="ad-page-link-home" to={"/"}>
+          <Link id="addr-details-home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
           <Link
-            id="ad-page-link-addresses"
-            to={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+            id="addr-details-addresses-link"
+            to={`/messaging-projects/${namespace}/${name}/${type}/addresses`}
           >
             {name}
           </Link>
@@ -73,7 +79,9 @@ export default function AddressDetailPage() {
   const resetDeleteFormState = (data: any) => {
     const deleteAddress = data && data.deleteAddress;
     if (deleteAddress) {
-      history.push(`/address-spaces/${namespace}/${name}/${type}/addresses`);
+      history.push(
+        `/messaging-projects/${namespace}/${name}/${type}/addresses`
+      );
     }
   };
 
@@ -99,7 +107,7 @@ export default function AddressDetailPage() {
       <NoDataFound
         type={"Address"}
         name={addressname || ""}
-        routeLink={`/address-spaces/${namespace}/${name}/${type}/addresses`}
+        routeLink={`/messaging-projects/${namespace}/${name}/${type}/addresses`}
       />
     );
   }

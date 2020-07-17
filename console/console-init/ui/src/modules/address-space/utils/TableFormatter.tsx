@@ -9,7 +9,7 @@ import { FormatDistance } from "use-patternfly";
 import { IRowData, sortable } from "@patternfly/react-table";
 import { AddressSpaceStatus, AddressSpaceIcon } from "./AddressSpaceFormatter";
 import { IAddressSpace } from "modules/address-space/components/AddressSpaceList";
-import { getType } from "utils";
+import { getAddressSpaceLabelForType } from "utils";
 
 const getTableCells = (row: IAddressSpace) => {
   const tableRow: IRowData = {
@@ -20,7 +20,7 @@ const getTableCells = (row: IAddressSpace) => {
         title: (
           <span>
             <Link
-              to={`address-spaces/${row.nameSpace}/${row.name}/${row.type}/addresses`}
+              to={`messaging-projects/${row.nameSpace}/${row.name}/${row.type}/addresses`}
             >
               {row.name}
             </Link>
@@ -34,7 +34,7 @@ const getTableCells = (row: IAddressSpace) => {
         title: (
           <span>
             <AddressSpaceIcon />
-            {getType(row.type)}
+            {getAddressSpaceLabelForType(row.type)}
           </span>
         )
       },

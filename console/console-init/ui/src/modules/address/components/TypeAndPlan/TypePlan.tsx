@@ -25,7 +25,7 @@ export const TypePlan: React.FunctionComponent<ITypePlanProps> = address => {
   return (
     <div>
       <Tooltip
-        id="type-tooltip"
+        id="type-plan-tooltip"
         position={TooltipPosition.top}
         content={<div>{address.type}</div>}
       >

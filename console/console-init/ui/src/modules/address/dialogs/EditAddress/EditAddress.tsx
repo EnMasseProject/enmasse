@@ -106,15 +106,17 @@ export const EditAddress: React.FunctionComponent = () => {
 
   return (
     <Modal
-      id="al-modal-edit-address"
+      id="edit-addr-modal"
+      aria-label="modal for edit address"
       title="Edit"
-      isSmall
+      variant="small"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
           key="confirm"
-          id="al-edit-confirm"
+          id="edit-addr-confirm-button"
+          aria-label="Button to confirm edit"
           variant="primary"
           onClick={onConfirmDialog}
         >
@@ -122,44 +124,47 @@ export const EditAddress: React.FunctionComponent = () => {
         </Button>,
         <Button
           key="cancel"
-          id="al-edit-cancel"
+          id="edit-addr-cancel-button"
+          aria-label="Button to cancel editing"
           variant="link"
           onClick={onCloseDialog}
         >
           Cancel
         </Button>
       ]}
-      isFooterLeftAligned
     >
       <Form>
-        <FormGroup label="Name" fieldId="simple-form-name">
+        <FormGroup label="Name" fieldId="edit-addr-name">
           <TextInput
             type="text"
             id="edit-addr-name"
+            aria-label="Edit address name"
             name="simple-form-name"
             isDisabled
             aria-describedby="simple-form-name-helper"
             value={address.name}
           />
         </FormGroup>
-        <FormGroup label="Type" fieldId="simple-form-name">
+        <FormGroup label="Type" fieldId="edit-addr-type">
           <FormSelect
             isDisabled
-            aria-label="FormSelect Input"
+            aria-label="Edit address type"
             id="edit-addr-type"
           >
             <FormSelectOption value={address.type} label={address.type} />
           </FormSelect>
         </FormGroup>
-        <FormGroup label="Plan" fieldId="simple-form-name">
+        <FormGroup label="Plan" fieldId="edit-addr-plan">
           <FormSelect
             id="edit-addr-plan"
             value={plan.value}
             onChange={value => onPlanChanged(value)}
-            aria-label="FormSelect Input"
+            aria-label="Edit plan for address"
           >
             {optionsPlan.map((option, index) => (
               <FormSelectOption
+                id="edit-addr-option"
+                aria-label="option to edit address"
                 isDisabled={option.disabled}
                 key={index}
                 value={option.value}

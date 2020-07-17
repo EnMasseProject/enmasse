@@ -17,10 +17,10 @@ export const EmptyEndpoints = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full}>
       <EmptyStateIcon icon={GlobeRouteIcon} />
-      <Title id="empty-connection-text" size="lg">
+      <Title headingLevel="h2" id="empty-endpoints-title" size="lg">
         No endpoints
       </Title>
-      <EmptyStateBody id="empty-connection-body">
+      <EmptyStateBody id="empty-endpoints-body">
         You currently don't have any endpoints
       </EmptyStateBody>
     </EmptyState>

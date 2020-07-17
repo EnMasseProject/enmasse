@@ -12,7 +12,7 @@ import {
   BanIcon
 } from "@patternfly/react-icons";
 import { Badge } from "@patternfly/react-core";
-import { getType } from "utils";
+import { getAddressSpaceLabelForType } from "utils";
 
 interface AddressSpaceTypeProps {
   type: string;
@@ -68,7 +68,7 @@ const statusToDisplay = (phase: string) => {
 const AddressSpaceType: React.FunctionComponent<AddressSpaceTypeProps> = ({
   type
 }) => {
-  return <>{getType(type)}</>;
+  return <>{getAddressSpaceLabelForType(type)}</>;
 };
 
 const AddressSpaceStatus: React.FunctionComponent<AddressSpaceStatusProps> = ({

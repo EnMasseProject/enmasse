@@ -12,7 +12,7 @@ import {
   TextInput,
   DropdownPosition
 } from "@patternfly/react-core";
-import { StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { IDropdownOption, DropdownWithToggle } from "components";
 
 const styles = StyleSheet.create({
@@ -76,49 +76,64 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
             <FormGroup
               label="Address"
               isRequired={true}
-              fieldId="address-name"
+              fieldId="addr-config-addressname-textinput"
               helperText={getHelperText()}
             >
               <TextInput
                 isRequired={true}
                 type="text"
-                id="address-name"
+                id="addr-config-addressname-textinput"
+                aria-label="input text for address name"
                 name="address-name"
                 value={addressName}
                 onChange={handleAddressChange}
-                isValid={
+                validated={
                   (addressName && addressName.trim() === "") || isNameValid
+                    ? "default"
+                    : "error"
                 }
               />
             </FormGroup>
 
-            <FormGroup label="Type" isRequired={true} fieldId="address-type">
+            <FormGroup
+              label="Type"
+              isRequired={true}
+              fieldId="addr-config-type-dropdown"
+            >
               <br />
               <DropdownWithToggle
-                id="address-definition-type-dropdown"
-                className={styles.dropdown_align}
-                toggleClass={styles.dropdown_toggle}
-                dropdownItemClass={styles.dropdownItem}
+                id="addr-config-type-dropdown"
+                toggleId="addr-config-type-dropdown-toggle"
+                aria-label="Dropdown to select type"
+                className={css(styles.dropdown_align)}
+                toggleClass={css(styles.dropdown_toggle)}
+                dropdownItemClass={css(styles.dropdownItem)}
                 position={DropdownPosition.left}
                 onSelectItem={onTypeSelect}
                 value={type}
                 dropdownItems={typeOptions}
-                dropdownItemId="address-definition-type-dropdown-item"
+                dropdownItemIdPrefix="address-definition-type-dropdown-item"
               />
             </FormGroup>
 
-            <FormGroup label="Plan" isRequired={true} fieldId="address-plan">
+            <FormGroup
+              label="Plan"
+              isRequired={true}
+              fieldId="addr-config-plan-dropdown"
+            >
               <br />
               <DropdownWithToggle
-                id="address-definition-plan-dropdown"
+                id="addr-config-plan-dropdown"
+                toggleId="addr-config-plan-dropdown-toggle"
+                aria-label="dropdown to select plan"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
-                className={styles.dropdown_align}
-                toggleClass={styles.dropdown_toggle}
-                dropdownItemClass={styles.dropdownItem}
+                className={css(styles.dropdown_align)}
+                toggleClass={css(styles.dropdown_toggle)}
+                dropdownItemClass={css(styles.dropdownItem)}
                 value={plan}
                 dropdownItems={planOptions}
-                dropdownItemId="address-definition-plan-dropdown-item"
+                dropdownItemIdPrefix="address-definition-plan-dropdown-item"
                 isDisabled={type.trim() === ""}
               />
             </FormGroup>
@@ -126,21 +141,23 @@ const AddressConfiguration: React.FunctionComponent<IAddressConfigurationProps> 
               <FormGroup
                 label="Topic"
                 isRequired={true}
-                fieldId="address-topic"
+                fieldId="addr-config-topic-dropdown"
               >
                 <br />
                 <DropdownWithToggle
-                  id="address-definition-topic-dropdown"
-                  className={styles.dropdown_align}
-                  toggleClass={styles.dropdown_toggle}
-                  dropdownItemClass={styles.dropdownItem}
+                  id="addr-config-topic-dropdown"
+                  toggleId="addr-config-topic-dropdown-toggle"
+                  aria-label="dropdown for topic"
+                  className={css(styles.dropdown_align)}
+                  toggleClass={css(styles.dropdown_toggle)}
+                  dropdownItemClass={css(styles.dropdownItem)}
                   position={DropdownPosition.left}
                   onSelectItem={onTopicSelect}
                   value={topic}
                   dropdownItems={topicsForSubscription}
-                  dropdownItemId="address-definition-topic-dropdown-item"
+                  dropdownItemIdPrefix="address-definition-topic-dropdown-item"
                   isDisabled={type.trim() !== "subscription"}
-                  isDisplayLabelAndValue={true}
+                  shouldDisplayLabelAndValue={true}
                 />
               </FormGroup>
             )}

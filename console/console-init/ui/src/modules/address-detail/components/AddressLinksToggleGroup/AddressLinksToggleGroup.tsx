@@ -6,17 +6,17 @@
 import React from "react";
 import {
   SelectOptionObject,
-  DataToolbarToggleGroup,
-  DataToolbarGroup,
-  DataToolbarFilter,
+  ToolbarToggleGroup,
+  ToolbarGroup,
+  ToolbarFilter,
   InputGroup,
   Button,
-  DataToolbarItem,
+  ToolbarItem,
   ButtonVariant,
-  DataToolbarChip,
-  DataToolbarChipGroup,
   DropdownPosition,
-  Badge
+  Badge,
+  ToolbarChip,
+  ToolbarChipGroup
 } from "@patternfly/react-core";
 import { ISelectOption } from "utils";
 import { FilterIcon, SearchIcon } from "@patternfly/react-icons";
@@ -41,8 +41,8 @@ export interface IAddressLinksToggleGroupProps {
   onRoleSelect: (selection: string) => void;
   onSearch: () => void;
   onDelete: (
-    category: string | DataToolbarChipGroup,
-    chip: string | DataToolbarChip
+    category: string | ToolbarChipGroup,
+    chip: string | ToolbarChip
   ) => void;
   onChangeNameInput?: (value: string) => Promise<any>;
   onChangeContainerInput?: (value: string) => Promise<any>;
@@ -95,10 +95,10 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
   };
   const toggleItems = (
     <>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
+          id="addr-toggle-delete-name-filter"
+          aria-label="Filter names to be deleted"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -106,9 +106,10 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="ad-links-filter-select-name"
-                ariaLabelTypeAhead={"Select name"}
-                ariaLabelledBy={"typeahead-select-id"}
+                id="addr-toggle-select-name-typeahead"
+                aria-label="search/filter name to select"
+                typeAheadAriaLabel={"Select name"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
                 onClear={onNameClear}
                 selected={nameSelected}
@@ -118,7 +119,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
                 setInput={setNameInput}
               />
               <Button
-                id="ad-links-filter-search-name"
+                id="addr-toggle-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -127,12 +128,11 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
+          id="addr-toggle-delete-container-filter"
           chips={selectedContainers.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Container"
@@ -140,8 +140,10 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           {filterSelected && filterSelected.toLowerCase() === "container" && (
             <InputGroup>
               <TypeAheadSelect
-                ariaLabelTypeAhead={"Select container"}
-                ariaLabelledBy={"typeahead-select-id"}
+                id="addr-toggle-select-container-typeahead"
+                aria-label="select/search container"
+                typeAheadAriaLabel={"Select container"}
+                aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onContainerSelect}
                 onClear={onContainerClear}
                 selected={containerSelected}
@@ -151,7 +153,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
                 setInput={setContainerInput}
               />
               <Button
-                id="ad-links-filter-search-container"
+                id="addr-toggle-search-address-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -160,38 +162,38 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
               </Button>
             </InputGroup>
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
-      <DataToolbarItem
-        breakpointMods={[{ modifier: "spacer-none", breakpoint: "md" }]}
-      >
-        <DataToolbarFilter
+        </ToolbarFilter>
+      </ToolbarItem>
+      <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
+        <ToolbarFilter
+          id="addr-toggle-delete-role-filter"
           chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
           categoryName="Role"
         >
           {filterSelected && filterSelected.toLowerCase() === "role" && (
             <DropdownWithToggle
-              id="ad-links-filter-select-role"
+              id="addr-toggle-select-role-dropdown"
+              aria-label="select role to filter"
               toggleId="ad-links-filter-select-role"
-              dropdownItemId="ad-links-filter-select-option-role"
+              dropdownItemIdPrefix="ad-links-filter-select-option-role"
               position={DropdownPosition.left}
               onSelectItem={onRoleSelect}
               dropdownItems={roleOptions}
               value={roleSelected || "Select Role"}
             />
           )}
-        </DataToolbarFilter>
-      </DataToolbarItem>
+        </ToolbarFilter>
+      </ToolbarItem>
     </>
   );
 
   const toggleGroupItems = (
-    <DataToolbarGroup variant="filter-group">
-      <DataToolbarFilter categoryName="Filter">
+    <ToolbarGroup variant="filter-group" data-codemods="true">
+      <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="ad-links-filter-dropdown"
-          dropdownItemId={"ad-links-filter-dropdown-item"}
+          id="addr-toggle-filter-type-dropdown"
+          dropdownItemIdPrefix={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}
@@ -204,17 +206,22 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
           }
         />
         {toggleItems}
-      </DataToolbarFilter>
-    </DataToolbarGroup>
+      </ToolbarFilter>
+    </ToolbarGroup>
   );
 
   return (
-    <DataToolbarToggleGroup
+    <ToolbarToggleGroup
       toggleIcon={
         <>
           <FilterIcon />
           {checkIsFilterApplied() && (
-            <Badge key={1} isRead>
+            <Badge
+              key={1}
+              isRead
+              id="addr-toggle-filter-applied-bdge"
+              aria-label="Badge to show filter applied"
+            >
               {totalRecords}
             </Badge>
           )}
@@ -223,7 +230,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
       breakpoint="xl"
     >
       {toggleGroupItems}
-    </DataToolbarToggleGroup>
+    </ToolbarToggleGroup>
   );
 };
 export { AddressLinksToggleGroup };

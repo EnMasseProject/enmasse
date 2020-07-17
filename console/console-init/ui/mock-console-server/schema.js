@@ -249,6 +249,7 @@ const typeDefs = gql`
 
   type AddressSpace_consoleapi_enmasse_io_v1beta1 {
     metadata: ObjectMeta_v1!
+    kind: String!
     spec: AddressSpaceSpec_enmasse_io_v1beta1!
     status: AddressSpaceStatus_enmasse_io_v1beta1
     connections(
@@ -521,6 +522,36 @@ const typeDefs = gql`
       filter: String
       orderBy: String
     ): MessagingEndpointQueryResult_consoleapi_enmasse_io_v1beta1
+
+    # iot queries
+
+    "Returns the messaging projects and iot tenants visible to this user."
+    #This extends the existing "addressSpaces" query
+    allProjects(
+      first: Int
+      offset: Int
+      filter: String
+      orderBy: String
+    ): ProjectListQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+
+    "Returns the devices in the given iot project visible to this user, optionally filtering"
+    devices(
+      iotproject: ObjectMeta_v1_Input!
+      first: Int
+      offset: Int
+      filter: String
+      orderBy: String
+    ): DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1
+
+    "Returns the credentials for the given device"
+    credentials(
+      filter: String
+      iotproject: ObjectMeta_v1_Input!
+      deviceId: String!
+    ): CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1!
+
+    "Returns the command-line that, if executed, would create the given iotproject"
+    iotProjectCommand(input: IotProject_iot_enmasse_io_v1alpha1_input!): String!
   }
 
   #
@@ -618,6 +649,189 @@ const typeDefs = gql`
     purgeAddresses(input: [ObjectMeta_v1_Input!]!): Boolean
 
     closeConnections(input: [ObjectMeta_v1_Input!]!): Boolean
+
+    # iot mutations
+    createIotDevice(
+      iotproject: ObjectMeta_v1_Input!
+      device: Device_iot_console_input!
+    ): Device
+    deleteIotDevices(
+      iotproject: ObjectMeta_v1_Input!
+      deviceIds: [String!]!
+    ): Boolean
+    updateIotDevice(
+      iotproject: ObjectMeta_v1_Input!
+      device: Device_iot_console_input!
+    ): Device
+
+    setCredentialsForDevice(
+      iotproject: ObjectMeta_v1_Input!
+      deviceId: String!
+      jsonData: String!
+    ): Boolean
+    deleteCredentialsForDevice(
+      iotproject: ObjectMeta_v1_Input!
+      deviceId: String!
+    ): Boolean
+
+    createIotProject(
+      input: IotProject_iot_enmasse_io_v1alpha1_input
+    ): ObjectMeta_v1!
+    patchIotProject(
+      input: ObjectMeta_v1_Input!
+      jsonPatch: String!
+      patchType: String!
+    ): Boolean
+    deleteIotProjects(input: [ObjectMeta_v1_Input!]!): Boolean
+    toggleIoTProjectsStatus(
+      input: [ObjectMeta_v1_Input!]!
+      status: Boolean!
+    ): Boolean
+    toggleIoTDevicesStatus(
+      iotproject: ObjectMeta_v1_Input!
+      devices: [String!]!
+      status: Boolean!
+    ): Boolean
+  }
+
+  #
+  # iot definitions
+  #
+
+  enum ProjectPhaseType {
+    Active
+    Configuring
+    Terminating
+    Failed
+  }
+
+  enum IotCredentials {
+    psk
+    hashed_password
+    x509
+  }
+
+  enum IotEndpointName {
+    HttpAdapter
+    MqttAdapter
+    AmqpAdapter
+    CoapAdapter
+    DeviceRegistrationManagement
+    DeviceCredentialManagement
+  }
+
+  type IoTProjectStatus_iot_enmasse_io_v1alpha1 {
+    phase: ProjectPhaseType!
+    phaseReason: String
+  }
+
+  type AddressSpaceConfig_iot_enmasse_io_v1alpha1 {
+    name: String!
+    plan: String!
+    type: String!
+  }
+
+  type AddressConfig_iot_enmasse_io_v1alpha1 {
+    name: String!
+    plan: String!
+    type: String!
+  }
+
+  type AddressesConfig_iot_enmasse_io_v1alpha1 {
+    Telemetry: AddressConfig_iot_enmasse_io_v1alpha1!
+    Event: AddressConfig_iot_enmasse_io_v1alpha1!
+    Command: [AddressConfig_iot_enmasse_io_v1alpha1!]!
+  }
+
+  type IotProjectSpec_iot_enmasse_io_v1alpha1 {
+    tenantId: String!
+    addresses: AddressesConfig_iot_enmasse_io_v1alpha1!
+    configuration: String!
+  }
+
+  type IoTProject_iot_enmasse_io_v1alpha1 {
+    metadata: ObjectMeta_v1!
+    kind: String!
+    enabled: Boolean!
+    spec: IotProjectSpec_iot_enmasse_io_v1alpha1!
+    status: IoTProjectStatus_iot_enmasse_io_v1alpha1!
+    messagingEndpoints: [MessagingEndpoint_enmasse_io_v1!]!
+    devices(
+      iotproject: String!
+      first: Int
+      offset: Int
+      filter: String
+      orderBy: String
+    ): DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1
+
+    #This field contain the routes and connection details from the iotconfig
+    #it doesn't match with the k8s API
+    endpoints: [IotEndpoint]
+  }
+
+  type IotEndpoint {
+    name: IotEndpointName!
+    url: String
+    host: String!
+    port: Int!
+    tls: Boolean
+  }
+
+  type Device {
+    deviceId: String!
+    enabled: Boolean!
+    via: [String!]
+    viaGroups: [String!]
+    memberOf: [String!]
+    status: Device_status!
+    ext: String! #The Json representation of the ext field for this device.
+    defaults: String
+    credentials: String! #A Json array with the devices credentials.
+  }
+
+  type Device_status {
+    created: Date!
+    updated: Date!
+    lastUser: String
+    lastSeen: Date!
+  }
+
+  type DevicesQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
+    total: Int!
+    devices: [Device!]!
+  }
+
+  type CredentialsQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
+    total: Int!
+    credentials: String! #The Json representation of the credentials for device.
+  }
+
+  type ProjectListQueryResult_consoleapi_iot_enmasse_io_v1alpha1 {
+    total: Int!
+    objects: [ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1!]!
+  }
+
+  union ProjectListResult_consoleapi_iot_enmasse_io_v1alpha1 =
+      AddressSpace_consoleapi_enmasse_io_v1beta1
+    | IoTProject_iot_enmasse_io_v1alpha1
+
+  #
+  # Inputs Types
+  #
+
+  input Device_iot_console_input {
+    deviceId: String!
+    enabled: Boolean!
+    via: [String!]
+    viaGroups: [String!]
+    memberOf: [String!]
+    ext: String! #The Json representation of the ext field for this device.
+    credentials: String! #A Json array with the devices credentials.
+  }
+
+  input IotProject_iot_enmasse_io_v1alpha1_input {
+    metadata: ObjectMeta_v1_Input
+    enabled: Boolean!
   }
 `;
 

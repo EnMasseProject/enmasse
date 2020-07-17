@@ -38,3 +38,13 @@ header.pf-c-page__header {
 .App-link {
   color: #09d3ac;
 }
+
+/*
+ * override patternfly css 
+*/
+
+@media screen and (min-width: 1200px) {
+  .pf-c-modal-box.pf-m-lg {
+    --pf-c-modal-box--MaxWidth: 85rem;
+  }
+}

@@ -5,17 +5,20 @@
 
 import React from "react";
 import ReactDom from "react-dom";
-import { render, cleanup, wait } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
 import { AddressSpaceListContainer } from "./AddressSpaceListContainer";
 import { RETURN_ALL_ADDRESS_SPACES } from "graphql-module/queries";
+import { MemoryRouter } from "react-router";
 
 afterEach(cleanup);
 
 const setup = (mocks: any, props: any) => {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <AddressSpaceListContainer {...props} />
+      <MemoryRouter>
+        <AddressSpaceListContainer {...props} />
+      </MemoryRouter>
     </MockedProvider>
   );
 };
@@ -36,36 +39,34 @@ describe("<AddressSpaceListContainer/>", () => {
     onSelectAllAddressSpace: jest.fn()
   };
 
-  const addressSpaces = {
-    addressSpaces: [
-      {
-        metadata: {
-          namespace: "app1_ns",
-          name: "jupiter_as1",
-          creationTimestamp: "2020-03-29T18:19:15.068Z"
-        },
-        spec: {
-          type: "standard",
-          plan: {
-            metadata: {
-              name: "standard-small"
-            },
-            spec: {
-              displayName: "Small"
-            }
+  const addressSpaces = [
+    {
+      metadata: {
+        namespace: "app1_ns",
+        name: "jupiter_as1",
+        creationTimestamp: "2020-03-29T18:19:15.068Z"
+      },
+      spec: {
+        type: "standard",
+        plan: {
+          metadata: {
+            name: "standard-small"
           },
-          authenticationService: {
-            name: "none-authservice"
+          spec: {
+            displayName: "Small"
           }
         },
-        status: {
-          isReady: true,
-          phase: "Active",
-          messages: []
+        authenticationService: {
+          name: "none-authservice"
         }
+      },
+      status: {
+        isReady: true,
+        phase: "Active",
+        messages: []
       }
-    ]
-  };
+    }
+  ];
 
   it("should render without crashing", () => {
     const div = document.createElement("div");
@@ -81,7 +82,7 @@ describe("<AddressSpaceListContainer/>", () => {
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
     // expect(container).toHaveTextContent("Loading");
-    wait(() => expect(container).toHaveTextContent("Loading"));
+    waitFor(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -98,7 +99,7 @@ describe("<AddressSpaceListContainer/>", () => {
 
     const { container } = setup(mocks, props);
     //wait for response
-    await wait(() => expect(container).not.toHaveTextContent("Loading"));
+    await waitFor(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <AddressSpaceList/> component if loading is false", async () => {
@@ -115,7 +116,7 @@ describe("<AddressSpaceListContainer/>", () => {
     const { container } = setup(mocks, props);
     //wait for response
     //check table headers
-    await wait(() => expect(container).toHaveTextContent("Name"));
+    await waitFor(() => expect(container).toHaveTextContent("Name"));
     expect(container).toHaveTextContent("Namespace");
   });
 
@@ -136,7 +137,7 @@ describe("<AddressSpaceListContainer/>", () => {
       }
     ];
     const { container } = setup(mocks, props);
-    await wait(() =>
+    await waitFor(() =>
       expect(container).toHaveTextContent("Create an address space")
     );
   });
@@ -160,7 +161,7 @@ describe("<AddressSpaceListContainer/>", () => {
 
     const { container } = setup(mocks, props);
     cleanup();
-    await wait(() =>
+    await waitFor(() =>
       expect(container).not.toHaveTextContent("Create an address space")
     );
   });
@@ -189,13 +190,9 @@ describe("<AddressSpaceListContainer/>", () => {
 
     cleanup();
     // await wait(0);
-    await wait(() =>
-      expect(
-        findByText(addressSpaces.addressSpaces[0].metadata.name)
-      ).toBeDefined()
+    await waitFor(() =>
+      expect(findByText(addressSpaces[0].metadata.name)).toBeDefined()
     );
-    expect(
-      findByText(addressSpaces.addressSpaces[0].metadata.namespace)
-    ).toBeDefined();
+    expect(findByText(addressSpaces[0].metadata.namespace)).toBeDefined();
   });
 });

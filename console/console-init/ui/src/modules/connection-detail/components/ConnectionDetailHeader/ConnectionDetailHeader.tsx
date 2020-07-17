@@ -9,8 +9,8 @@ import {
   Flex,
   FlexItem,
   Card,
-  CardHeader,
-  CardBody
+  CardBody,
+  CardTitle
 } from "@patternfly/react-core";
 import { AngleDownIcon, AngleUpIcon } from "@patternfly/react-icons";
 import { FormatDistance } from "use-patternfly";
@@ -18,7 +18,7 @@ import {
   ConnectionDetailHeaderAttributes,
   MessagesDetailHeaderAttributes
 } from "modules/connection-detail/components";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
 
@@ -62,13 +62,14 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
 }) => {
   const [isHidden, setIsHidden] = useState(true);
   const { width } = useWindowDimensions();
+
   return (
     <Card>
-      <CardHeader>
+      <CardTitle>
         <Title id="cd-header-title" headingLevel="h1" size="4xl">
           {hostname}
         </Title>
-      </CardHeader>
+      </CardTitle>
       <CardBody>
         <Flex>
           <FlexItem
@@ -119,12 +120,9 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
         </Flex>
         <Flex
           id="cd-header-connection-messages"
-          breakpointMods={[
-            { modifier: "column", breakpoint: "sm" },
-            { modifier: "row", breakpoint: "lg" }
-          ]}
+          direction={{ sm: "column", lg: "row" }}
         >
-          {width < 992 || !isHidden ? (
+          {(width < 992 || !isHidden) && (
             <>
               <ConnectionDetailHeaderAttributes
                 product={product}
@@ -140,8 +138,6 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
                 addressSpaceType={addressSpaceType}
               />
             </>
-          ) : (
-            ""
           )}
         </Flex>
       </CardBody>

@@ -5,11 +5,11 @@
 
 import React, { useState, useEffect } from "react";
 import {
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarItem,
-  DataToolbarToggleGroup
-} from "@patternfly/react-core/dist/js/experimental";
+  Toolbar,
+  ToolbarContent,
+  ToolbarItem,
+  ToolbarToggleGroup
+} from "@patternfly/react-core";
 import {
   SortAmountDownAltIcon,
   SortAmountUpAltIcon,
@@ -76,8 +76,8 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
   );
 
   const toolbarItems = (
-    <DataToolbarToggleGroup toggleIcon={<SortAmountDownIcon />} breakpoint="xl">
-      <DataToolbarItem>
+    <ToolbarToggleGroup toggleIcon={<SortAmountDownIcon />} breakpoint="xl">
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <>
             <DropdownWithToggle
@@ -86,25 +86,24 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
               onSelectItem={onSortSelect}
               value={sortData}
               dropdownItems={sortMenu}
-              dropdownItemId="sort-mobilevw-dropdown"
+              dropdownItemIdPrefix="sort-mobilevw-dropdown"
             />
             &nbsp;&nbsp;
             {SortIcons}
           </>
         )}
-      </DataToolbarItem>
-    </DataToolbarToggleGroup>
+      </ToolbarItem>
+    </ToolbarToggleGroup>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
+      data-codemods="true"
     >
-      <DataToolbarContent style={{ width: 180 }}>
-        {toolbarItems}
-      </DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent style={{ width: 180 }}>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };

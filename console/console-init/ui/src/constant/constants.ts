@@ -7,8 +7,8 @@ const UNKNOWN: string = "unknown";
 const POLL_INTERVAL: number = 5000;
 const POLL_INTERVAL_USER: number = 20000;
 const QUERY: string = "query";
-const MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN = 10;
-const NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA = 10;
+const MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN = 10;
+const SERVER_DATA_THRESHOLD = 10;
 const TYPEAHEAD_REQUIRED_LENGTH: number = 5;
 enum FetchPolicy {
   NETWORK_ONLY = "network-only",
@@ -35,6 +35,38 @@ enum AddressTypes {
   SUBSCRIPTION = "subscription"
 }
 
+enum TemplateType {
+  DIRECTLY_CONNECTED = "directly-connected",
+  VIA_GATEWAY = "via-gateway"
+}
+
+enum DataType {
+  ARRAY = "array",
+  OBJECT = "object"
+}
+
+enum Protocols {
+  HTTP = "http",
+  HTTPS = "https",
+  MQTT = "mqtt",
+  AMQP = "amqp",
+  AMQPS = "amqps",
+  COAP = "coap"
+}
+
+enum DialogTypes {
+  ENABLE = "Enable",
+  DISABLE = "Disable",
+  DELETE = "Delete"
+}
+
+enum CredentialsType {
+  PASSWORD = "hashed-password",
+  PSK = "psk",
+  X509_CERTIFICATE = "x509-cert"
+}
+const WIZARD_HEIGHT = 400;
+
 export {
   UNKNOWN,
   POLL_INTERVAL,
@@ -42,9 +74,15 @@ export {
   FetchPolicy,
   QUERY,
   TYPEAHEAD_REQUIRED_LENGTH,
-  MAX_ITEM_TO_FETCH_IN_TYPEAHEAD_DROPDOWN as MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA,
+  MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
+  SERVER_DATA_THRESHOLD,
   TypeAheadMessage,
   ErrorCodes,
-  AddressTypes
+  AddressTypes,
+  TemplateType,
+  DataType,
+  Protocols,
+  DialogTypes,
+  CredentialsType,
+  WIZARD_HEIGHT
 };

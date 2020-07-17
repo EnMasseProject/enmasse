@@ -4,27 +4,43 @@
  */
 
 import React from "react";
-import { NavLink } from "react-router-dom";
-import { Alert, PageSection } from "@patternfly/react-core";
+import { useHistory } from "react-router-dom";
+import { StyleSheet, css } from "aphrodite";
+import { Alert, PageSection, AlertActionLink } from "@patternfly/react-core";
 
+const styles = StyleSheet.create({
+  alert: {
+    backgroundColor: "var(--pf-c-alert--m-inline--BackgroundColor)"
+  }
+});
 interface INotFoundProps {
   updateState: (error: boolean) => void;
 }
 
-const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => (
-  <PageSection>
-    <Alert variant="danger" title="Unexpected Error">
-      Something went wrong. Please try again!
-    </Alert>
-    <br />
-    <NavLink
-      to="/"
-      className="pf-c-nav__link"
-      onClick={() => updateState(false)}
-    >
-      Take me home
-    </NavLink>
-  </PageSection>
-);
+const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => {
+  const history = useHistory();
+
+  const handleAlertActionLink = () => {
+    updateState && updateState(false);
+    history.push("/");
+  };
+
+  return (
+    <PageSection>
+      <Alert
+        variant="danger"
+        title="Unexpected Error"
+        className={css(styles.alert)}
+        actionLinks={
+          <AlertActionLink onClick={handleAlertActionLink}>
+            Take me home
+          </AlertActionLink>
+        }
+      >
+        Something went wrong. Please try again!
+      </Alert>
+    </PageSection>
+  );
+};
 
 export { NotFound };

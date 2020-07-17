@@ -6,7 +6,7 @@
 import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
-  NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
+  SERVER_DATA_THRESHOLD
 } from "constant";
 import {
   forbiddenBackslashRegexp,
@@ -18,6 +18,8 @@ export interface ISelectOption {
   value: string;
   isDisabled?: boolean;
   key?: string;
+  label?: string;
+  id?: string;
 }
 
 /**
@@ -26,7 +28,12 @@ export interface ISelectOption {
  * @param isDisabled
  */
 const createSelectOptionObject = (value: string, isDisabled: boolean) => {
-  const data: ISelectOption = { value: value, isDisabled: isDisabled };
+  const data: ISelectOption = {
+    key: `key-${value}`,
+    id: `id-${value}`,
+    value: value,
+    isDisabled: isDisabled
+  };
   return data;
 };
 
@@ -40,11 +47,8 @@ const getSelectOptionList = (list: string[], totalRecords: number) => {
   let records: ISelectOption[] = [];
   if (totalRecords > MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN) {
     const allRecords = [...uniqueList];
-    const top_10_records = allRecords.splice(
-      0,
-      NUMBER_OF_RECORDS_TO_DISPLAY_IF_SERVER_HAS_MORE_DATA
-    );
-    if (top_10_records.length >= 10) {
+    const top_10_records = allRecords.splice(0, SERVER_DATA_THRESHOLD);
+    if (top_10_records.length >= SERVER_DATA_THRESHOLD) {
       records.push({
         value: TypeAheadMessage.MORE_CHAR_REQUIRED,
         isDisabled: true
@@ -67,7 +71,7 @@ const compareObject = (obj1: any, obj2: any) => {
   }
 };
 
-const getType = (type: string) => {
+const getAddressSpaceLabelForType = (type: string) => {
   switch (type && type.toLowerCase()) {
     case "standard":
       return " Standard";
@@ -75,6 +79,7 @@ const getType = (type: string) => {
       return " Brokered";
   }
 };
+
 const removeForbiddenChars = (input: string) => {
   let escapedInput = input.replace(forbiddenBackslashRegexp, "\\\\");
   escapedInput = escapedInput.replace(forbiddenSingleQuoteRegexp, "''");
@@ -108,16 +113,230 @@ export const getTypeColor = (type: string) => {
   }
   return iconColor;
 };
+
 const dnsSubDomainRfc1123NameRegexp = new RegExp(
   "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$"
 );
 const messagingAddressNameRegexp = new RegExp("^[^#*\\s]+$");
 
+const kFormatter = (num: number) => {
+  const absoluteNumber: number = Math.abs(num);
+  const sign = Math.sign(num);
+  return absoluteNumber > 999
+    ? sign * parseInt((absoluteNumber / 1000).toFixed(1)) + "k"
+    : sign * absoluteNumber;
+};
+
+const uniqueId = () => {
+  return Math.random()
+    .toString(16)
+    .slice(-4);
+};
+
+const findIndexByProperty = (
+  items: any[],
+  targetProperty: string,
+  targetPropertyValue: any
+) => {
+  if (items && targetProperty && targetPropertyValue) {
+    return items.findIndex(
+      item => item[targetProperty] === targetPropertyValue
+    );
+  }
+  return -1;
+};
+
+const hasOwnProperty = (obj: Object, property: string) => {
+  if (obj && property && property.trim() !== "") {
+    return obj.hasOwnProperty(property);
+  }
+};
+
+const getLabelForTypeOfObject = (value: any) => {
+  switch (typeof value) {
+    case "object": {
+      if (Array.isArray(value)) {
+        return "Array";
+      } else {
+        return "Object";
+      }
+    }
+    case "string": {
+      //TODO: add validations for date and time
+      return "String";
+    }
+    case "number":
+      return "Numeric";
+    case "boolean":
+      return "Boolean";
+  }
+};
+
+/**
+ * Accepts a json object and convert it into array of objects with
+ * key,value,type and typeLabel as key with values
+ * @Examle
+    input ={
+      'asdf':"ASD"
+    }
+    output=
+    [
+      {
+        key:'asdf',
+        value:"ASD",
+        type:"string",
+        typeLabel:"String"
+      }
+    ]
+ * @param object 
+ * @param type 
+ */
+const convertJsonToMetadataOptions = (object: any, type?: string) => {
+  const keys = Object.keys(object);
+  let metadataArray = [];
+  for (var key of keys) {
+    if (typeof object[key] === "object") {
+      if (Array.isArray(object[key])) {
+        const datas: any[] = convertJsonToMetadataOptions(object[key], "array");
+        metadataArray.push({
+          key: key,
+          value: datas,
+          type: "array",
+          typeLabel: getLabelForTypeOfObject(object[key])
+        });
+      } else {
+        const datas: any[] = convertJsonToMetadataOptions(object[key]);
+        metadataArray.push({
+          key: type && type === "array" ? "" : key,
+          value: datas,
+          type: "object",
+          typeLabel: getLabelForTypeOfObject(object[key])
+        });
+      }
+    } else {
+      metadataArray.push({
+        key: type && type === "array" ? "" : key,
+        value: object[key],
+        type: typeof object[key],
+        typeLabel: getLabelForTypeOfObject(object[key])
+      });
+    }
+  }
+  return metadataArray;
+};
+
+/** Accepts a object with key,value,type and typeLabel as convet into a exact json
+ * with key and values from the form
+ * @param object
+ * Internal function used in convertMetadataOptionsToJson
+ * */
+const convertObjectIntoJson = (object: any) => {
+  const obj: any = {};
+  switch (object.type) {
+    case "array":
+      let res: any[] = [];
+      for (let objectValue of object.value) {
+        const data = convertMetadataOptionsToJson(objectValue);
+        res.push(data[objectValue.key]);
+      }
+      obj[object.key] = res;
+      break;
+    case "object":
+      let objs: any = {};
+      for (let objectValue of object.value) {
+        const data = convertObjectIntoJson(objectValue);
+        const key = Object.keys(data)[0];
+        const value = data[key];
+        objs[key] = value;
+      }
+      obj[object.key] = objs;
+      break;
+    default:
+      obj[object.key] = object.value;
+      break;
+  }
+  return obj;
+};
+
+/**
+ * Accepts a array of objects with key,value,type and typeLabel as key and values from the form
+ * And converts it into actual Json
+ * @Examle
+    input =
+    [
+      {
+        key:'asdf',
+        value:"ASD",
+        type:"string",
+        typeLabel:"String"
+      }
+    ]
+    output ={
+      'asdf':"ASD"
+    }
+ * @param object 
+ * @param type 
+ */
+const convertMetadataOptionsToJson = (objects: any[]) => {
+  let options: any[];
+  if (!Array.isArray(objects)) {
+    options = [objects];
+  } else {
+    options = objects;
+  }
+  let object: any = {};
+  for (let option of options) {
+    const data = convertObjectIntoJson(option);
+    object = Object.assign(object, data);
+  }
+  return object;
+};
+
+const createDeepCopy = (object: any) => {
+  return JSON.parse(JSON.stringify(object));
+};
+
+const getFormattedJsonString = (json: any) => {
+  return JSON.stringify(json, undefined, 2);
+};
+
+const getLabelByKey = (key: string) => {
+  const keyLabels: any = {
+    "auth-id": "Auth ID",
+    type: "Credential type",
+    "not-after": "Not after",
+    "not-before": "Not before",
+    "pwd-hash": "Password",
+    "hashed-password": "Password",
+    psk: "PSK",
+    "x-509": "X-509 certificate",
+    "subject-dn": "Subject-dn",
+    "public-key": "Public key",
+    "auto-provisioning-enabled": "Auto-provision",
+    "x509-cert": "X-509 certificate"
+  };
+
+  if (key in keyLabels) {
+    return keyLabels[key];
+  }
+
+  return key;
+};
+
 export {
   getSelectOptionList,
   compareObject,
-  getType,
+  getAddressSpaceLabelForType,
   removeForbiddenChars,
   dnsSubDomainRfc1123NameRegexp,
-  messagingAddressNameRegexp
+  messagingAddressNameRegexp,
+  kFormatter,
+  uniqueId,
+  findIndexByProperty,
+  hasOwnProperty,
+  convertJsonToMetadataOptions,
+  convertMetadataOptionsToJson,
+  createDeepCopy,
+  getFormattedJsonString,
+  getLabelByKey
 };

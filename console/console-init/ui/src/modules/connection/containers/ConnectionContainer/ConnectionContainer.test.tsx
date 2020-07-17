@@ -5,7 +5,7 @@
 
 import React from "react";
 import ReactDom from "react-dom";
-import { render, cleanup, wait } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
 import { ConnectionContainer } from "./ConnectionContainer";
 import { RETURN_ALL_CONECTION_LIST } from "graphql-module/queries";
@@ -47,7 +47,7 @@ describe("<ConnectionContainer/>", () => {
 
   it("should render loader if loading is true", () => {
     const { container } = setup([], props);
-    wait(() => expect(container).toHaveTextContent("Loading"));
+    waitFor(() => expect(container).toHaveTextContent("Loading"));
   });
 
   it("should not render loader if loading false", async () => {
@@ -73,7 +73,7 @@ describe("<ConnectionContainer/>", () => {
     const { container } = setup(mocks, props);
     //wait for response
 
-    await wait(() => expect(container).not.toHaveTextContent("Loading"));
+    await waitFor(() => expect(container).not.toHaveTextContent("Loading"));
   });
 
   it("should render <ConnectionList/> component if loading is false", async () => {
@@ -100,7 +100,7 @@ describe("<ConnectionContainer/>", () => {
     //wait for response
 
     //check table headers
-    await wait(() => expect(container).toHaveTextContent("Hostname"));
+    await waitFor(() => expect(container).toHaveTextContent("Hostname"));
     expect(container).toHaveTextContent("Protocol");
   });
 
@@ -126,7 +126,7 @@ describe("<ConnectionContainer/>", () => {
 
     const { container } = setup(mocks, props);
 
-    await wait(() => expect(container).toHaveTextContent("No connections"));
+    await waitFor(() => expect(container).toHaveTextContent("No connections"));
     expect(container).toHaveTextContent(
       "You currently don't have any connections"
     );
@@ -147,7 +147,7 @@ describe("<ConnectionContainer/>", () => {
           )
         },
         result: {
-          data: { connections: { total: 5 } }
+          data: { connections: { total: 5, connections: [] } }
         }
       }
     ];
@@ -155,7 +155,9 @@ describe("<ConnectionContainer/>", () => {
     const { container } = setup(mocks, props);
     cleanup();
 
-    await wait(() => expect(container).not.toHaveTextContent("No connections"));
+    await waitFor(() =>
+      expect(container).not.toHaveTextContent("No connections")
+    );
     expect(container).not.toHaveTextContent(
       "You currently don't have any connections"
     );

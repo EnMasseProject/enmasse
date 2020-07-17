@@ -11,6 +11,7 @@ import {
   CreateMessagingProject
 } from "modules/address-space/dialogs";
 import { EditAddress, CreateAddress } from "modules/address/dialogs";
+import { UpdatePassword } from "components/UpdatePassword";
 
 const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.CREATE_ADDRESS_SPACE]: CreateMessagingProject,
@@ -20,7 +21,12 @@ const MODAL_COMPONENTS: any = {
   [MODAL_TYPES.DELETE_ADDRESS_SPACE]: DialogPrompt,
   [MODAL_TYPES.DELETE_ADDRESS]: DialogPrompt,
   [MODAL_TYPES.PURGE_ADDRESS]: DialogPrompt,
-  [MODAL_TYPES.CLOSE_CONNECTIONS]: DialogPrompt
+  [MODAL_TYPES.CLOSE_CONNECTIONS]: DialogPrompt,
+  [MODAL_TYPES.LEAVE_CREATE_DEVICE]: DialogPrompt,
+  [MODAL_TYPES.UPDATE_PASSWORD]: UpdatePassword,
+  [MODAL_TYPES.DELETE_PROJECT]: DialogPrompt,
+  [MODAL_TYPES.DELETE_IOT_DEVICE]: DialogPrompt,
+  [MODAL_TYPES.UPDATE_DEVICE_STATUS]: DialogPrompt
 };
 
 export const RootModal: React.FC<{}> = () => {

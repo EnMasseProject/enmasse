@@ -16,10 +16,16 @@ import {
   IExtraData
 } from "@patternfly/react-table";
 import { FormatDistance } from "use-patternfly";
-import { css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { ConnectionProtocolFormat } from "utils";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/address-space";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IConnectionListProps {
   rows: IConnection[];
@@ -168,7 +174,7 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
   };
 
   const onSelect = (
-    event: React.MouseEvent,
+    event: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number,
     rowData: IRowData,
@@ -204,7 +210,10 @@ export const ConnectionList: React.FunctionComponent<IConnectionListProps> = ({
         onSort={onSort}
         onSelect={onSelect}
       >
-        <TableHeader id="connectionlist-table-header" />
+        <TableHeader
+          id="connection-list-table-header"
+          aria-label="Table header for connections list"
+        />
         <TableBody />
       </Table>
     </div>

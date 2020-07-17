@@ -11,12 +11,14 @@ import {
   DropdownItem,
   DropdownProps,
   DropdownPosition,
-  DropdownToggleProps
+  DropdownToggleProps,
+  DropdownSeparator
 } from "@patternfly/react-core";
-import { css, StyleSheet } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
 export const dropdown_styles = StyleSheet.create({
-  format_description: { whiteSpace: "normal", textAlign: "justify" }
+  format_description: { whiteSpace: "normal", textAlign: "justify" },
+  dropdown_alignment: { minHeight: "37px" }
 });
 
 export interface IDropdownOption {
@@ -25,6 +27,7 @@ export interface IDropdownOption {
   disabled?: boolean;
   description?: string;
   key?: string;
+  separator?: boolean;
 }
 
 export interface IDropdownWithToggleProps
@@ -34,16 +37,19 @@ export interface IDropdownWithToggleProps
   toggleIcon?: React.ReactElement<any>;
   component?: React.ReactNode;
   toggleClass?: string;
-  value?: string;
-  onSelectItem?: (value: string) => void;
-  dropdownItemId?: string;
+  value: string;
+  onSelectItem?: (value: string, event?: any) => void;
+  dropdownItemIdPrefix?: string;
   dropdownItemClass?: string;
-  isDisplayLabelAndValue?: boolean;
+  shouldDisplayLabelAndValue?: boolean;
+  isLabelAndValueNotSame?: boolean;
+  name?: string;
 }
 
 export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   DropdownToggleProps> = ({
   id,
+  name,
   toggleId,
   position,
   onSelectItem,
@@ -54,12 +60,17 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   toggleClass,
   value,
   isDisabled,
-  dropdownItemId,
+  dropdownItemIdPrefix,
   dropdownItemClass,
-  isDisplayLabelAndValue
+  shouldDisplayLabelAndValue,
+  isLabelAndValueNotSame
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>();
   const dropdowItemCss = classNames(dropdownItemClass);
+  const dropdownClass = classNames(
+    css(dropdown_styles.dropdown_alignment),
+    className
+  );
 
   const onToggle = (isOpen: boolean) => {
     setIsOpen(isOpen);
@@ -82,7 +93,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
         }
       }
     }
-  }, [dropdownItems]);
+  }, [dropdownItems, value, onSelectItem]);
 
   const onSelect = (e: any) => {
     const value =
@@ -92,12 +103,15 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
     setIsOpen(!isOpen);
     onFocus();
     if (onSelectItem) {
-      onSelectItem(value);
+      if (name && !e.target.name) {
+        e.target.name = name;
+      }
+      onSelectItem(value, e);
     }
   };
 
   const getItems = (option: IDropdownOption) => {
-    if (isDisplayLabelAndValue) {
+    if (shouldDisplayLabelAndValue) {
       return (
         <>
           <span className={dropdowItemCss}>{option.label || option.value}</span>
@@ -126,37 +140,55 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   const getDropdownItems = () => {
     let items: React.ReactElement<IDropdownOption>[] = [];
     if (dropdownItems && dropdownItems.length > 0) {
-      items = dropdownItems.map((option: IDropdownOption) => (
-        <DropdownItem
-          id={`${dropdownItemId || id}${option.key}`}
-          key={option.key}
-          value={option.value}
-          itemID={option.key}
-          component={component || "button"}
-        >
-          {getItems(option)}
-        </DropdownItem>
-      ));
+      items = dropdownItems.map((option: IDropdownOption) => {
+        const { key, value, label, separator } = option;
+        return (
+          <>
+            <DropdownItem
+              id={`${dropdownItemIdPrefix || id}${key}`}
+              key={key}
+              value={value}
+              itemID={key}
+              component={component || "button"}
+              label={label}
+            >
+              {getItems(option)}
+            </DropdownItem>
+            {separator && <DropdownSeparator key="dropdown separator" />}
+          </>
+        );
+      });
     }
     return items;
+  };
+
+  const getSelectedValue = () => {
+    if (isLabelAndValueNotSame) {
+      const filteredOption = dropdownItems?.filter(
+        item => item.value === value
+      )[0];
+      return filteredOption?.label;
+    }
+    return value;
   };
 
   return (
     <Dropdown
       id={id}
-      className={className}
+      name={name}
+      className={dropdownClass}
       position={position || DropdownPosition.left}
       onSelect={onSelect}
       isOpen={isOpen}
       toggle={
         <DropdownToggle
-          id={toggleId}
+          id={toggleId || id}
           onToggle={onToggle}
           className={toggleClass}
           isDisabled={isDisabled}
         >
           {toggleIcon}
-          {value}
+          {getSelectedValue()}
         </DropdownToggle>
       }
       dropdownItems={getDropdownItems()}

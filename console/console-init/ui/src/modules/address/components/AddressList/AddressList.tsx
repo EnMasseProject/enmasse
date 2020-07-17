@@ -15,10 +15,9 @@ import {
   IExtraData,
   ISortBy
 } from "@patternfly/react-table";
-import { css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
 import { useWindowDimensions } from "components";
-import { StyleForTable } from "modules/address-space/components";
 import {
   AddressStatus,
   AddressErrorMessage,
@@ -26,6 +25,13 @@ import {
   Messages
 } from "modules/address";
 import { AddressTypes } from "constant";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 export interface IAddress {
   name: string;
@@ -78,17 +84,17 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     ) {
       return [
         {
-          id: "edit-address",
+          id: "addr-list-edit-button",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
-          id: "delete-address",
+          id: "addr-list-delete-button",
           title: "Delete",
           onClick: () => onDelete(originalData)
         },
         {
-          id: "purge-address",
+          id: "addr-list-purge-button",
           title: "Purge",
           onClick: () => onPurge(originalData)
         }
@@ -96,12 +102,12 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
     } else {
       return [
         {
-          id: "edit-address",
+          id: "address-list-edit-button",
           title: "Edit",
           onClick: () => onEdit(originalData)
         },
         {
-          id: "delete-address",
+          id: "address-list-delete-button",
           title: "Delete",
           onClick: () => onDelete(originalData)
         }
@@ -229,7 +235,7 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
   ];
 
   const onSelect = (
-    event: React.MouseEvent,
+    event: React.FormEvent<HTMLInputElement>,
     isSelected: boolean,
     rowIndex: number,
     rowData: IRowData,
@@ -265,7 +271,10 @@ export const AddressList: React.FunctionComponent<IAddressListProps> = ({
         sortBy={sortBy}
         onSort={onSort}
       >
-        <TableHeader id="address-list-table-bodheader" />
+        <TableHeader
+          id="address-list-tableheader"
+          aria-label="Table Header for address list"
+        />
         <TableBody />
       </Table>
     </div>

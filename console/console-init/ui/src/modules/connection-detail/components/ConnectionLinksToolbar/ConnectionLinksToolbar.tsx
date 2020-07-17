@@ -5,10 +5,10 @@
 
 import React from "react";
 import {
-  DataToolbarItem,
-  DataToolbar,
-  DataToolbarContent,
-  DataToolbarContentProps
+  ToolbarItem,
+  Toolbar,
+  ToolbarContent,
+  ToolbarContentProps
 } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import {
@@ -24,7 +24,7 @@ export interface IConnectionLinksToolbarProps
   onClearAllFilters: () => void;
 }
 const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarProps &
-  DataToolbarContentProps> = ({
+  ToolbarContentProps> = ({
   totalRecords,
   filterSelected,
   nameSelected,
@@ -87,7 +87,7 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
         setNameInput={setNameInput}
         setAddressInput={setAddressInput}
       />
-      <DataToolbarItem>
+      <ToolbarItem data-codemods="true">
         {width < 769 && (
           <SortForMobileView
             sortMenu={sortMenuItems}
@@ -95,19 +95,20 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
             setSortValue={setSortValue}
           />
         )}
-      </DataToolbarItem>
+      </ToolbarItem>
     </>
   );
 
   return (
-    <DataToolbar
+    <Toolbar
       id="data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}
+      data-codemods="true"
     >
-      <DataToolbarContent>{toolbarItems}</DataToolbarContent>
-    </DataToolbar>
+      <ToolbarContent>{toolbarItems}</ToolbarContent>
+    </Toolbar>
   );
 };
 export { ConnectionLinksToolbar };

@@ -13,8 +13,14 @@ import {
   sortable,
   ISortBy
 } from "@patternfly/react-table";
-import { StyleForTable } from "modules/address-space/components";
-import { css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IConnectionLinksListProps {
   rows: ILink[];

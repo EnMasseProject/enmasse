@@ -3,9 +3,11 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-export * from "./User";
-export * from "./Address";
-export * from "./AddressSpace";
-export * from "./Connection";
-export * from "./NameSpace";
+export * from "./user";
+export * from "./address";
+export * from "./address_space";
+export * from "./connection";
+export * from "./name_space";
 export * from "./Endpoints";
+export * from "./iot_device";
+export * from "./iot_project";

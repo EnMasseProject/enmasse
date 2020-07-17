@@ -7,25 +7,25 @@ import React from "react";
 import { SwitchWith404, LazyRoute } from "use-patternfly";
 import { Redirect } from "react-router";
 
-const getConnections = () => import("../connection/ConnectionPage");
+const getConnections = () => import("modules/connection/ConnectionPage");
 const getAddresses = () => import("modules/address/AddressPage");
 const getEndpoints = () => import("modules/endpoints/EndpointPage");
 
 export const Routes = () => (
   <SwitchWith404>
-    <Redirect path="/" to="/address-spaces" exact={true} />
+    <Redirect path="/" to="/messaging-projects" exact={true} />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/addresses/"
+      path="/messaging-projects/:namespace/:name/:type/addresses/"
       getComponent={getAddresses}
       exact={true}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/connections/"
+      path="/messaging-projects/:namespace/:name/:type/connections/"
       getComponent={getConnections}
       exact={true}
     />
     <LazyRoute
-      path="/address-spaces/:namespace/:name/:type/endpoints/"
+      path="/messaging-projects/:namespace/:name/:type/endpoints/"
       getComponent={getEndpoints}
       exact={true}
     />

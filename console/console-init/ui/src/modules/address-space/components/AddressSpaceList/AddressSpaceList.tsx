@@ -13,9 +13,9 @@ import {
   TableProps,
   SortByDirection
 } from "@patternfly/react-table";
-import { StyleSheet, css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 
-export const StyleForTable = StyleSheet.create({
+const StyleForTable = StyleSheet.create({
   scroll_overflow: {
     overflowY: "auto",
     paddingBottom: 100

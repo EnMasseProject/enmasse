@@ -14,10 +14,16 @@ import {
   ISortBy
 } from "@patternfly/react-table";
 import { ExternalLinkAltIcon } from "@patternfly/react-icons";
-import { css } from "@patternfly/react-styles";
+import { StyleSheet, css } from "aphrodite";
 import { Link } from "react-router-dom";
 import { Tooltip, TooltipPosition } from "@patternfly/react-core";
-import { StyleForTable } from "modules/address-space/components/AddressSpaceList/AddressSpaceList";
+
+const StyleForTable = StyleSheet.create({
+  scroll_overflow: {
+    overflowY: "auto",
+    paddingBottom: 100
+  }
+});
 
 interface IAddressLinksProps {
   rows: IAddressLink[];
@@ -52,9 +58,11 @@ export const AddressLinks: React.FunctionComponent<IAddressLinksProps> = ({
             <>
               {row.name}{" "}
               <Link
-                to={`/address-spaces/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
+                id="addr-link-connections"
+                to={`/messaging-projects/${row.addressSpaceNamespace}/${row.addressSpaceName}/${row.addressSpaceType}/connections/${row.connectionName}`}
               >
                 <Tooltip
+                  id="addr-link-goto-tooltip"
                   position={TooltipPosition.top}
                   content={<div>Go to the link</div>}
                 >
