@@ -15,12 +15,12 @@ public class KindCluster implements KubeCluster{
     @Override
     public boolean isAvailable() {
         return Exec.isExecutableOnPath(IDENTIFIER)
-                && !Exec.execute(IDENTIFIER, "get", "clusters").getStdOut().contains("No kind clusters found.");
+                && !Exec.execute(Arrays.asList(IDENTIFIER, "get", "clusters"), false).getStdOut().contains("No kind clusters found.");
     }
 
     @Override
     public boolean isClusterUp() {
-        return Exec.execute(Arrays.asList(IDENTIFIER, "get", "nodes")).getStdOut().contains("kind-control-plane");
+        return Exec.execute(Arrays.asList(IDENTIFIER, "get", "nodes"), false).getStdOut().contains("kind-control-plane");
     }
 
     @Override
