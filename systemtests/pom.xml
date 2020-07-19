@@ -128,10 +128,6 @@
             <artifactId>assertj-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.enmasse</groupId>
             <artifactId>api-model</artifactId>
         </dependency>
