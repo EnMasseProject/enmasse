@@ -4,8 +4,7 @@
  */
 package io.enmasse.systemtest.time;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import org.slf4j.Logger;
@@ -198,13 +197,13 @@ public class TimeMeasuringSystem {
 
     private void saveResults(Map<?, ?> data, String name) {
         try {
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(data);
             Date timestamp = new Date(System.currentTimeMillis());
             Path logPath = Environment.getInstance().testLogDir().resolve("timeMeasuring");
             Files.createDirectories(logPath);
-            Files.write(Paths.get(logPath.toString(),
-                    String.format("%s-%s.json", name, dateFormat.format(timestamp))), json.getBytes());
+            Path file = Paths.get(logPath.toString(), String.format("%s-%s.json", name, dateFormat.format(timestamp)));
+
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.writerWithDefaultPrettyPrinter().writeValue(file.toFile(), data);
         } catch (Exception ex) {
             log.warn("Cannot save output of time measuring: " + ex.getMessage());
         }
