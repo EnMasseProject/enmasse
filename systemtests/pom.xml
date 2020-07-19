@@ -27,11 +27,6 @@
     </dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-admin-client</artifactId>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-client</artifactId>
         </dependency>

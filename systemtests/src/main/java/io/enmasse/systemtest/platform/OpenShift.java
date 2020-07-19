@@ -71,20 +71,6 @@ public class OpenShift extends Kubernetes {
     }
 
     @Override
-    public Endpoint getKeycloakEndpoint() {
-        OpenShiftClient openShift = client.adapt(OpenShiftClient.class);
-        Route route = openShift.routes().inNamespace(infraNamespace).withName("keycloak").get();
-        Endpoint endpoint = new Endpoint(route.getSpec().getHost(), 443);
-        log.info("Testing endpoint : " + endpoint);
-        if (TestUtils.resolvable(endpoint)) {
-            return endpoint;
-        } else {
-            log.info("Endpoint didn't resolve, falling back to service endpoint");
-            return getEndpoint("standard-authservice", infraNamespace, "https");
-        }
-    }
-
-    @Override
     public Endpoint getExternalEndpoint(String endpointName) {
         return getExternalEndpoint(endpointName, infraNamespace);
     }

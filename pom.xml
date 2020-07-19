@@ -70,7 +70,6 @@
         <artemis.version>2.13.0</artemis.version>
         <paho.version>1.2.1</paho.version>
         <netty.version>4.1.50.Final</netty.version>
-        <keycloak.version>4.8.3.Final</keycloak.version>
         <jboss.logging.version>3.3.0.Final</jboss.logging.version>
         <jboss.logging.processor.version>2.1.0.Final</jboss.logging.processor.version>
         <protonj.version>0.33.4</protonj.version>
@@ -383,37 +382,6 @@
                         <artifactId>jcip-annotations</artifactId>
                     </exclusion>
                 </exclusions>
-            </dependency>
-
-            <dependency>
-                <groupId>org.keycloak</groupId>
-                <artifactId>keycloak-admin-client</artifactId>
-                <version>${keycloak.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.bouncycastle</groupId>
-                        <artifactId>bcprov-jdk15on</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.bouncycastle</groupId>
-                        <artifactId>bcpkix-jdk15on</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.keycloak</groupId>
-                <artifactId>keycloak-services</artifactId>
-                <version>${keycloak.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.keycloak</groupId>
-                <artifactId>keycloak-server-spi</artifactId>
-                <version>${keycloak.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.keycloak</groupId>
-                <artifactId>keycloak-server-spi-private</artifactId>
-                <version>${keycloak.version}</version>
             </dependency>
 
             <dependency>

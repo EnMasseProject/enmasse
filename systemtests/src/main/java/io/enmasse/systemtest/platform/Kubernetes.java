@@ -322,8 +322,6 @@ public abstract class Kubernetes {
 
     public abstract Endpoint getRestEndpoint();
 
-    public abstract Endpoint getKeycloakEndpoint();
-
     /**
      * Assumes infra namespace
      *
