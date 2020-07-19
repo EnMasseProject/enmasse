@@ -24,6 +24,7 @@ spec:
     listKind: MessagingUserList
     plural: messagingusers
     shortNames:
+    - msgu
     - msgusr
     - msguser
     - msgusers
@@ -49,7 +50,7 @@ spec:
         spec:
           properties:
             password:
-              description: Password user to authenticate
+              description: Password user to authenticate, required
               type: string
           required:
           - password
