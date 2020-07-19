@@ -14,7 +14,6 @@ spec:
       default: "''"
     - name: kube_api_url
       description: url of cluster for running tests
-      default: ""
     - name: kube_token
       description: login token
     - name: kube_namespace
