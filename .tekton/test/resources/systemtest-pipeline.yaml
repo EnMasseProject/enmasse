@@ -14,7 +14,6 @@ spec:
       default: "''"
     - name: kube_api_url
       description: url of cluster for running tests
-      default: ""
     - name: kube_token
       description: login token
     - name: kube_namespace
@@ -26,6 +25,12 @@ spec:
     - name: repo_branch
       description: branch of git source
       default: "master"
+    - name: image_registry
+      description: registry of enmasse imgages
+      default: "quay.io"
+    - name: image_org
+      description: organisation of enmasse imgages
+      default: "enmasse"
   tasks:
     - name: systemtest-task
       taskRef:
@@ -45,3 +50,7 @@ spec:
           value: $(params.repo_url)
         - name: repo_branch
           value: $(params.repo_branch)
+        - name: image_registry
+          value: $(params.image_registry)
+        - name: image_org
+          value: $(params.image_org)

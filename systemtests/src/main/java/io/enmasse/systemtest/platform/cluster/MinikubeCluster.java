@@ -14,7 +14,7 @@ public class MinikubeCluster implements KubeCluster {
 
     @Override
     public boolean isAvailable() {
-        return Exec.isExecutableOnPath(IDENTIFIER) && Exec.execute(IDENTIFIER, "status").getRetCode();
+        return Exec.isExecutableOnPath(IDENTIFIER) && Exec.execute(Arrays.asList(IDENTIFIER, "status"), false).getRetCode();
     }
 
     @Override

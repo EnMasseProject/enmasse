@@ -1,0 +1,95 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: systemtest-task
+  labels:
+    app: enmasse-test
+spec:
+  params:
+    - name: profile
+      type: string
+    - name: testcase
+      type: string
+    - name: kube_api_url
+      type: string
+    - name: kube_token
+      type: string
+    - name: kube_namespace
+      type: string
+    - name: repo_url
+      type: string
+    - name: repo_branch
+      type: string
+    - name: image_registry
+      type: string
+    - name: image_org
+      type: string
+  steps:
+    ##############################################################################################
+    - name: install-and-setup-packages
+      image: gcr.io/cloud-builders/wget:latest
+      workingDir: /workspace/
+      script: |
+
+        wget "https://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz" -q
+        tar xf oc.tar.gz
+
+    ###############################################################################################
+    - name: clone-repo
+      image: gcr.io/cloud-builders/git:latest
+      workingDir: /workspace
+      script: |
+
+        git clone -b $(inputs.params.repo_branch) $(inputs.params.repo_url)
+
+    ##############################################################################################
+    - name: generate-templates
+      image: gcr.io/cloud-builders/go:latest
+      workingDir: /workspace/enmasse
+      env:
+        - name: DEFAULT_PROJECT
+          value: $(inputs.params.kube_namespace)
+        - name: DOCKER_ORG
+          value: $(inputs.params.image_org)
+        - name: DOCKER_REGISTRY
+          value: $(inputs.params.image_registry)
+      script: |
+
+        make templates
+
+    ##############################################################################################
+    - name: run-tests
+      image: docker.io/library/maven:3.6.3-openjdk-11
+      securityContext:
+        privileged: true
+      workingDir: /workspace
+      env:
+        - name: KUBERNETES_NAMESPACE
+          value: $(inputs.params.kube_namespace)
+        - name: TEST_LOGDIR
+          value: /workspace/testlogs
+      script: |
+
+        mv oc /usr/bin/oc
+        oc login $(inputs.params.kube_api_url) \
+          --token $(inputs.params.kube_token) \
+          --insecure-skip-tls-verify=true \
+
+        cd enmasse
+        if ! mvn test -pl systemtests \
+                  -am \
+                  -P$(inputs.params.profile) \
+                  -Djava.net.preferIPv4Stack=true \
+                  -DfailIfNoTests=true \
+                  -Dstyle.color=always \
+                  -DskipTests \
+                  --no-transfer-progress \
+                  -Dtest=$(inputs.params.testcase)
+        then
+          ls -laR /workspace/testlogs/
+          cat /workspace/testlogs/**
+          return 1
+        fi
+
+    ##############################################################################################
+

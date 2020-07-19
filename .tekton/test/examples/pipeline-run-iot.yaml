@@ -1,0 +1,28 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: pipeline-run-iot
+  labels:
+    app: enmasse-test
+spec:
+  params:
+    - name: profile
+      value: iot
+    - name: testcase
+      value: "''"
+    - name: kube_api_url
+      value: $${API_URL}
+    - name: kube_token
+      value: $${API_TOKEN}
+    - name: kube_namespace
+      value: "enmasse-infra"
+    - name: repo_url
+      value: "https://github.com/enmasseproject/enmasse"
+    - name: repo_branch
+      value: "master"
+    - name: image_registry
+      value: "quay.io"
+    - name: image_org
+      value: "enmasse"
+  pipelineRef:
+    name: systemtest-pipeline

@@ -45,7 +45,7 @@ systemtests:
 
 systemtests-tekton:
 		$(CMDTOOL) create namespace $(PIPELINE_NAMESPACE) || true
-		$(CMDTOOL) apply -f ../.tekton/test/ -n $(PIPELINE_NAMESPACE)
+		$(CMDTOOL) apply -f ../.tekton/test/resources/ -n $(PIPELINE_NAMESPACE)
 		tkn pipeline start systemtest-pipeline \
 				--param kube_api_url=$(KUBERNETES_API_URL) \
 				--param kube_token=$(KUBERNETES_API_TOKEN) \
@@ -54,4 +54,6 @@ systemtests-tekton:
 				--param testcase='$(TESTCASE)' \
 				--param repo_url=$(REPO_URL) \
 				--param repo_branch=$(REPO_BRANCH) \
+				--param image_registry=$(DOCKER_REGISTRY) \
+				--param image_org=$(DOCKER_ORG) \
 				--showlog -n $(PIPELINE_NAMESPACE)
