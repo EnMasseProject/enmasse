@@ -18,7 +18,6 @@ import io.fabric8.kubernetes.client.utils.HttpClientUtils;
 import okhttp3.OkHttpClient;
 import okhttp3.Protocol;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,11 +78,6 @@ public class Kind extends Kubernetes{
     @Override
     public Endpoint getRestEndpoint() {
         return new Endpoint(client.getMasterUrl());
-    }
-
-    @Override
-    public Endpoint getKeycloakEndpoint() {
-        return null;
     }
 
     @Override

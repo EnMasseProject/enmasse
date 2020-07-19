@@ -47,11 +47,6 @@ public class GenericKubernetes extends Kubernetes {
     }
 
     @Override
-    public Endpoint getKeycloakEndpoint() {
-        return getExternalEndpoint("standard-authservice");
-    }
-
-    @Override
     public Endpoint getExternalEndpoint(String name) {
         return getExternalEndpoint(name, infraNamespace);
     }
