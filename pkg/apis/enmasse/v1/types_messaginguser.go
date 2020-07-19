@@ -18,6 +18,7 @@ import (
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +kubebuilder:resource:shortName=msgusr;msguser;msgusers,categories=enmasse
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Phase",type="string",JSONPath=".status.phase",description="The current phase."
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type MessagingUser struct {
 	metav1.TypeMeta   `json:",inline"`
@@ -27,11 +28,12 @@ type MessagingUser struct {
 }
 
 type MessagingUserSpec struct {
-	Password string `json:"password,omitempty"`
+	// Password user to authenticate, required
+	Password string `json:"password"`
 }
 
 type MessagingUserStatus struct {
-	// The current phase of the identity provider.
+	// The current phase of the messaging user.
 	Phase MessagingUserPhase `json:"phase,omitempty"`
 }
 

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package identityprovider
+package messaginguser
 
 import (
 	"context"
@@ -26,10 +26,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-var log = logf.Log.WithName("controller_identityprovider")
-var _ reconcile.Reconciler = &ReconcileIdentityProvider{}
+var log = logf.Log.WithName("controller_messaginguser")
+var _ reconcile.Reconciler = &ReconcileMessagingUser{}
 
-type ReconcileIdentityProvider struct {
+type ReconcileMessagingUser struct {
 	client        client.Client
 	reader        client.Reader
 	recorder      record.EventRecorder
@@ -43,28 +43,28 @@ func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
 }
 
-func newReconciler(mgr manager.Manager) *ReconcileIdentityProvider {
+func newReconciler(mgr manager.Manager) *ReconcileMessagingUser {
 	namespace := util.GetEnvOrDefault("NAMESPACE", "enmasse-infra")
 
 	clientManager := state.GetClientManager()
-	return &ReconcileIdentityProvider{
+	return &ReconcileMessagingUser{
 		client:        mgr.GetClient(),
 		clientManager: clientManager,
 		reader:        mgr.GetAPIReader(),
-		recorder:      mgr.GetEventRecorderFor("identityprovider"),
+		recorder:      mgr.GetEventRecorderFor("messaginguser"),
 		scheme:        mgr.GetScheme(),
 		namespace:     namespace,
 	}
 }
 
-func add(mgr manager.Manager, r *ReconcileIdentityProvider) error {
+func add(mgr manager.Manager, r *ReconcileMessagingUser) error {
 
-	c, err := controller.New("identityprovider-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("messaginguser-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	err = c.Watch(&source.Kind{Type: &v1.IdentityProvider{}}, &handler.EnqueueRequestForObject{})
+	err = c.Watch(&source.Kind{Type: &v1.MessagingUser{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -72,23 +72,23 @@ func add(mgr manager.Manager, r *ReconcileIdentityProvider) error {
 	return err
 }
 
-func (r *ReconcileIdentityProvider) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+func (r *ReconcileMessagingUser) Reconcile(request reconcile.Request) (reconcile.Result, error) {
 
 	logger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 
 	ctx := context.Background()
 
-	logger.Info("Reconciling ReconcileIdentityProvider")
+	logger.Info("Reconciling MessagingUser")
 
-	found := &v1.IdentityProvider{}
+	found := &v1.MessagingUser{}
 	err := r.reader.Get(ctx, request.NamespacedName, found)
 
 	if err != nil {
 		if k8errors.IsNotFound(err) {
-			logger.Info("IdentityProvider resource not found. Ignoring since object must be deleted")
+			logger.Info("MessagingUser resource not found. Ignoring since object must be deleted")
 			return reconcile.Result{}, nil
 		}
-		logger.Error(err, "Failed to get IdentityProvider")
+		logger.Error(err, "Failed to get MessagingUser")
 		return reconcile.Result{}, err
 	}
 
@@ -99,15 +99,10 @@ func (r *ReconcileIdentityProvider) Reconcile(request reconcile.Request) (reconc
 		client:   r.client,
 	}
 
-	rc.Process(func(identityProvider *v1.IdentityProvider) (processorResult, error) {
-		// First set configuring state if not set to indicate we are processing the identityProvider.
+	rc.Process(func(identityProvider *v1.MessagingUser) (processorResult, error) {
+		// First set configuring state if not set to indicate we are processing the messagingUser.
 		if identityProvider.Status.Phase == "" {
-			identityProvider.Status.Phase = v1.IdentityProviderPhaseConfiguring
-		}
-		if identityProvider.Spec.AnonymousProvider != nil {
-			identityProvider.Status.Type = v1.IdentityProviderTypeAnonymous
-		} else if identityProvider.Spec.NamespaceProvider != nil {
-			identityProvider.Status.Type = v1.IdentityProviderTypeNamespace
+			identityProvider.Status.Phase = v1.MessagingUserPhaseConfiguring
 		}
 		return processorResult{}, nil
 	})
@@ -122,11 +117,10 @@ func (r *ReconcileIdentityProvider) Reconcile(request reconcile.Request) (reconc
 	//}
 
 	// Mark identity provider status as all-OK
-	result, err := rc.Process(func(identityProvider *v1.IdentityProvider) (processorResult, error) {
+	result, err := rc.Process(func(identityProvider *v1.MessagingUser) (processorResult, error) {
 
 		originalStatus := identityProvider.Status.DeepCopy()
-		identityProvider.Status.Phase = v1.IdentityProviderPhaseActive
-		identityProvider.Status.Message = ""
+		identityProvider.Status.Phase = v1.MessagingUserPhaseActive
 		if !reflect.DeepEqual(originalStatus, identityProvider.Status) {
 			// If there was an error and the status has changed, perform an update so that
 			// errors are visible to the user.
@@ -145,8 +139,8 @@ func (r *ReconcileIdentityProvider) Reconcile(request reconcile.Request) (reconc
 type resourceContext struct {
 	ctx      context.Context
 	client   client.Client
-	status   *v1.IdentityProviderStatus
-	endpoint *v1.IdentityProvider
+	status   *v1.MessagingUserStatus
+	endpoint *v1.MessagingUser
 }
 
 type processorResult struct {
@@ -155,7 +149,7 @@ type processorResult struct {
 	Return       bool
 }
 
-func (r *resourceContext) Process(processor func(identityProvider *v1.IdentityProvider) (processorResult, error)) (processorResult, error) {
+func (r *resourceContext) Process(processor func(messagingUser *v1.MessagingUser) (processorResult, error)) (processorResult, error) {
 	result, err := processor(r.endpoint)
 	if !reflect.DeepEqual(r.status, r.endpoint.Status) {
 		if err != nil || result.Requeue || result.RequeueAfter > 0 {
@@ -164,7 +158,7 @@ func (r *resourceContext) Process(processor func(identityProvider *v1.IdentityPr
 			statuserr := r.client.Status().Update(r.ctx, r.endpoint)
 			if statuserr != nil {
 				// If this fails, report the status error if everything else went ok, otherwise report the original error
-				log.Error(statuserr, "Status update failed", "identityProvider", r.endpoint.Name)
+				log.Error(statuserr, "Status update failed", "messagingUser", r.endpoint.Name)
 				if err == nil {
 					err = statuserr
 				}

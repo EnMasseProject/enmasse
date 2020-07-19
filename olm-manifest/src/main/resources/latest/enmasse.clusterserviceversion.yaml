@@ -434,6 +434,8 @@ spec:
                   value: "true"
                 - name: CONTROLLER_ENABLE_MESSAGING_ENDPOINT
                   value: "true"
+                - name: CONTROLLER_ENABLE_MESSAGING_USER
+                  value: "true"
                 - name: CONTROLLER_ENABLE_IDENTITY_PROVIDER
                   value: "true"
                 - name: CONTROLLER_ENABLE_CONSOLE_SERVICE

@@ -9,6 +9,10 @@ metadata:
   name: messagingusers.enmasse.io
 spec:
   additionalPrinterColumns:
+  - JSONPath: .status.phase
+    description: The current phase.
+    name: Phase
+    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
@@ -45,12 +49,15 @@ spec:
         spec:
           properties:
             password:
+              description: Password user to authenticate
               type: string
+          required:
+          - password
           type: object
         status:
           properties:
             phase:
-              description: The current phase of the identity provider.
+              description: The current phase of the messaging user.
               type: string
           type: object
       type: object

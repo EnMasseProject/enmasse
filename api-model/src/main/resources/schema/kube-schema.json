@@ -939,6 +939,10 @@
       "type": "object",
       "description": "",
       "properties": {
+        "accessControl": {
+          "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureSpecAccessControl",
+          "javaType": "MessagingInfrastructureSpecAccessControl"
+        },
         "broker": {
           "$ref": "#/definitions/github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureSpecBroker",
           "javaType": "MessagingInfrastructureSpecBroker"
@@ -954,6 +958,21 @@
       },
       "additionalProperties": true,
       "javaType": "MessagingInfrastructureSpec",
+      "javaInterfaces": [
+        "io.fabric8.kubernetes.api.model.KubernetesResource"
+      ]
+    },
+    "github_com_enmasseproject_enmasse_pkg_apis_enmasse_v1_MessagingInfrastructureSpecAccessControl": {
+      "type": "object",
+      "description": "",
+      "properties": {
+        "replicas": {
+          "type": "integer",
+          "description": ""
+        }
+      },
+      "additionalProperties": true,
+      "javaType": "MessagingInfrastructureSpecAccessControl",
       "javaInterfaces": [
         "io.fabric8.kubernetes.api.model.KubernetesResource"
       ]
