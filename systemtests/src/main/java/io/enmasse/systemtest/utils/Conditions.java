@@ -167,29 +167,29 @@ public final class Conditions {
         }
     }
 
-    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource) {
-        return ignoreKubernetesError(new BooleanSupplier() {
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource, final String uid) {
+        return new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                var current = resource.get();
-
-                if (current != null) {
-                    var json = statusJson(current);
-                    log.info("{} {}/{} exists - phase: {}, finalizers: {}",
-                            current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
-                            json.getString("phase", "<unknown>"),
-                            current.getMetadata().getFinalizers()
-                    );
+                var r = resource.get();
+                if (r == null) {
+                    return true;
                 }
-
-                return current == null;
+                if (uid == null) {
+                    return false;
+                }
+                return uid.equals(r.getMetadata().getUid());
             }
 
             @Override
             public String toString() {
                 return reasonFromStatus("Resource should be gone, but is not", resource);
             }
-        });
+        };
+    }
+
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource) {
+        return gone(resource, null);
     }
 
     private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata, ?> access) {
