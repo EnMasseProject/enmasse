@@ -587,6 +587,9 @@ spec:
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotprojects" ]
           verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ] # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1856413
+          resources: [ "pods" ]
+          verbs: [ "list" ]
       - serviceAccountName: iot-device-registry
         rules:
         - apiGroups: [ "authentication.k8s.io" ]
@@ -608,6 +611,9 @@ spec:
         - apiGroups: [ "iot.enmasse.io" ]
           resources: [ "iotprojects" ]
           verbs: [ "get", "list", "watch" ]
+        - apiGroups: [ "" ] # Workaround https://bugzilla.redhat.com/show_bug.cgi?id=1856413
+          resources: [ "pods" ]
+          verbs: [ "get" ]
       deployments:
       - name: enmasse-operator
         spec:
