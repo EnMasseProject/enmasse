@@ -39,17 +39,7 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
     allProjects.objects?.length > 0 &&
     allProjects.objects[0].endpoints
   ) {
-    const { endpoints } = allProjects.objects[0];
-    let adapterlist = endpoints.map(endpoint => {
-      const adapter: IAdapter = {};
-      adapter.host = endpoint.host;
-      adapter.port = endpoint.port;
-      adapter.url = endpoint.url;
-      adapter.tls = endpoint.tls;
-      adapter.name = endpoint.name;
-      return adapter;
-    });
-    adapters = adapterlist;
+    adapters = allProjects.objects[0].endpoints;
   }
 
   return <AdapterList id={id} adapters={adapters} />;
