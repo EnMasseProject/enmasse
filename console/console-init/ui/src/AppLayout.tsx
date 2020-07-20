@@ -28,7 +28,7 @@ import {
   IntrospectionFragmentMatcher,
   InMemoryCache
 } from "apollo-cache-inmemory";
-import introspectionQueryResultData from "./framgmentTypes.json";
+import introspectionQueryResultData from "./types/framgmentTypes.json";
 
 let history: any, dispactAction: any, states: any;
 

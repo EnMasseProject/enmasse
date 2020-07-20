@@ -8,6 +8,7 @@ export * from "./address";
 export * from "./address_space";
 export * from "./connection";
 export * from "./name_space";
-export * from "./Endpoints";
+export * from "./endpoint";
 export * from "./iot_device";
 export * from "./iot_project";
+export * from "./project";
