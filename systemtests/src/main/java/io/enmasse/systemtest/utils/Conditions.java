@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.utils;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
@@ -54,12 +55,12 @@ public final class Conditions {
             final Object conditionType,
             final boolean expected
     ) {
-           return condition(
-                   client
-                           .inNamespace(resource.getMetadata().getNamespace())
-                           .withName(resource.getMetadata().getName()),
-                   conditionType,
-                   expected);
+        return condition(
+                client
+                        .inNamespace(resource.getMetadata().getNamespace())
+                        .withName(resource.getMetadata().getName()),
+                conditionType,
+                expected);
     }
 
     /**
@@ -124,7 +125,7 @@ public final class Conditions {
     static String conditionStatus(final Object current, final Object conditionType) {
         try {
             var statusSection = statusSection(current);
-            if (statusSection.isEmpty()){
+            if (statusSection.isEmpty()) {
                 return null;
             }
             var status = statusSection.get();
@@ -142,11 +143,18 @@ public final class Conditions {
         }
     }
 
-    public static BooleanSupplier gone(final Resource<? extends HasMetadata,?> resource) {
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource, final String uid) {
         return new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                return resource.get() == null;
+                var r = resource.get();
+                if (r == null) {
+                    return true;
+                }
+                if (uid == null) {
+                    return false;
+                }
+                return uid.equals(r.getMetadata().getUid());
             }
 
             @Override
@@ -156,7 +164,11 @@ public final class Conditions {
         };
     }
 
-    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata,?> access) {
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource) {
+        return gone(resource, null);
+    }
+
+    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata, ?> access) {
         var resource = access.get();
         var state = statusSection(resource);
         return String.format("%s: '%s/%s' (%s/%s): %s",
@@ -166,6 +178,21 @@ public final class Conditions {
                 resource.getApiVersion(), resource.getKind(),
                 state.map(Serialization::toYaml).orElse("<no status>")
         );
+    }
+
+    public static BooleanSupplier not(final BooleanSupplier condition) {
+        Objects.requireNonNull(condition);
+        return new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                return !condition.getAsBoolean();
+            }
+
+            @Override
+            public String toString() {
+                return "not: " + super.toString();
+            }
+        };
     }
 
 }
