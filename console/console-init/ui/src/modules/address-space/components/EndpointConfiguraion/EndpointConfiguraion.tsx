@@ -132,7 +132,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
     <Form>
       {getProtocolOptions() && getProtocolOptions().length > 0 && (
         <FormGroup
-          fieldId="form-group-endpoint-protocol"
+          fieldId="endpoint-config-protocol-checkbox"
           label="Protocols"
           isRequired={true}
         >
@@ -145,7 +145,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                 onChange={onProtocolChange}
                 value={protocol.value}
                 aria-label={`Protocol checkbox to select ${protocol.value}`}
-                id={`checkbox-${protocol.key}`}
+                id={`endpoint-config-protocol-checkbox-${protocol.key}`}
                 key={protocol.key}
                 name={protocol.key}
               />
@@ -155,7 +155,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
       )}
       {getCertificateOptions() && getCertificateOptions().length > 0 && (
         <FormGroup
-          fieldId="form-group-endpoint-tls-certs"
+          fieldId="endpoint-config-certificate-radio"
           label="TLS Certificates"
           isRequired={true}
         >
@@ -168,7 +168,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
                 onChange={onCertificateChange}
                 name={`radio-${certificate.key}`}
                 label={certificate.label}
-                id={`radio-${certificate.key}`}
+                id={`endpoint-config-certificate-radio-${certificate.key}`}
                 value={certificate.value}
               />
             </div>
@@ -176,10 +176,13 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
         </FormGroup>
       )}
 
-      <FormGroup fieldId="form-group-create-routes" label="Create Routes">
+      <FormGroup
+        fieldId="endpoint-config-create-routes-switchtoggle"
+        label="Create Routes"
+      >
         <br />
         <SwitchWithToggle
-          id="switch-configure-route-btn"
+          id="endpoint-config-create-routes-switchtoggle"
           onChange={onRouteChange}
           label={"Enable routing to make the address space publicly visible"}
           isChecked={projectDetail.addRoutes}

@@ -29,12 +29,13 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
     <Nav variant="tertiary" onSelect={onSelect1}>
       <NavList>
         <NavItem
+          id="addr-space-navigation-addresses-navitem"
           key="addresses"
           itemId="addresses"
           isActive={active === "addresses"}
         >
           <NavLink
-            id="ad-space-nav-addresses"
+            id="addr-space-navigation-addresses-navlink"
             to={`addresses`}
             className={css(styles.nav_item_color)}
           >
@@ -42,12 +43,13 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           </NavLink>
         </NavItem>
         <NavItem
+          id="addr-space-navigation-connections-navitem"
           key="connections"
           itemId="connections"
           isActive={active === "connections"}
         >
           <NavLink
-            id="ad-space-nav-connections"
+            id="addr-space-navigation-connections-navlink"
             to={`connections`}
             className={css(styles.nav_item_color)}
           >
@@ -55,12 +57,13 @@ export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigat
           </NavLink>
         </NavItem>
         <NavItem
+          id="addr-space-navigation-endpoints-navitem"
           key="endpoints"
           itemId="endpoints"
           isActive={active === "endpoints"}
         >
           <NavLink
-            id="ad-space-nav-endpoints"
+            id="addr-space-navigation-endpoints-navlink"
             to={`endpoints`}
             className={css(styles.nav_item_color)}
           >

@@ -25,14 +25,14 @@ const EndpointCertificateConfiguration: React.FunctionComponent<IEndpointCertifi
     <Form>
       <FormGroup
         label="Certificate"
-        fieldId="text-file-upload-certificate"
+        fieldId="endpoint-cert-config-certificate-uploadfile"
         helperText="The PEM format certificate. Upload file by dragging & dropping, selecting it, or pasting from the clipboard"
         helperTextInvalid="Must be a PEM file"
         isRequired={true}
         validated={isCertRejected ? "error" : "default"}
       >
         <UploadFile
-          id={"text-file-upload-certificate"}
+          id={"endpoint-cert-config-certificate-uploadfile"}
           value={certificate}
           setValue={setCertificate}
           isRejected={isCertRejected}
@@ -43,14 +43,14 @@ const EndpointCertificateConfiguration: React.FunctionComponent<IEndpointCertifi
       <br />
       <FormGroup
         label="Private key"
-        fieldId="text-file-uplod-private-key"
+        fieldId="endpoint-cert-config-private-key-uploadfile"
         helperText="The PEM format key. Upload file by dragging & dropping, selecting it, or pasting from the clipboard"
         helperTextInvalid="Must be a PEM file"
         isRequired={true}
         validated={isKeyRejected ? "error" : "default"}
       >
         <UploadFile
-          id={"text-file-uplod-private-key"}
+          id={"endpoint-cert-config-private-key-uploadfile"}
           value={privateKey}
           setValue={setPrivateKey}
           isRejected={isKeyRejected}

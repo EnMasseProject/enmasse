@@ -134,6 +134,7 @@ export default function AddressSpacePage() {
   const renderPagination = () => {
     return (
       <TablePagination
+        id="addres-space-page-table-pagination"
         itemCount={totalAddressSpaces}
         variant={"top"}
         page={page}

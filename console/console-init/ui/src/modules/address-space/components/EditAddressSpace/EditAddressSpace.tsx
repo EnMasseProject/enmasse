@@ -41,14 +41,15 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
   return (
     <Modal
       variant="large"
-      id="as-list-edit-modal"
+      id="addr-space-edit-modal"
       title="Edit"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
           key="confirm"
-          id="as-list-edit-confirm"
+          id="addr-space-confirm-edit-button"
+          aria-label="confirm button"
           variant="primary"
           onClick={onConfirmDialog}
         >
@@ -56,7 +57,8 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
         </Button>,
         <Button
           key="cancel"
-          id="as-list-edit-cancel"
+          id="addr-space-cancel-button"
+          aria-label="cancel button"
           variant="link"
           onClick={onCloseDialog}
         >
@@ -68,30 +70,39 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
         <TextContent>
           <Text component={TextVariants.h2}>Choose a new plan.</Text>
         </TextContent>
-        <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
+        <FormGroup
+          label="Namespace"
+          fieldId="addr-space-edit-namespace-formselect"
+          isRequired={true}
+        >
           <FormSelect
-            id="edit-namespace"
+            id="addr-space-edit-namespace-formselect"
             isDisabled
             value={addressSpace.nameSpace}
             aria-label="FormSelect Input"
           >
             <FormSelectOption
+              id="addr-space-edit-namespace-formselectoption"
               value={addressSpace.nameSpace}
               label={addressSpace.nameSpace}
             />
           </FormSelect>
         </FormGroup>
-        <FormGroup label="Name" fieldId="address-space" isRequired={true}>
+        <FormGroup
+          label="Name"
+          fieldId="address-space-name-input"
+          isRequired={true}
+        >
           <TextInput
             type="text"
-            id="as-name"
+            id="address-space-name-input"
             isDisabled
             value={addressSpace.name}
           />
         </FormGroup>
         <FormGroup
           label="Type"
-          fieldId="address-space-type"
+          fieldId="address-space-type-radio"
           isInline
           isRequired={true}
         >
@@ -99,7 +110,7 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
             name="radio-1"
             isDisabled
             label="Standard"
-            id="radio-standard"
+            id="address-space-standard-radio"
             value="standard"
             isChecked={addressSpace.type === "standard"}
           />
@@ -107,24 +118,25 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
             name="radio-2"
             isDisabled
             label="Brokered"
-            id="radio-brokered"
+            id="address-space-brokered-radio"
             value="brokered"
             isChecked={addressSpace.type === "brokered"}
           />
         </FormGroup>
         <FormGroup
           label="Address space plan"
-          fieldId="simple-form-name"
+          fieldId="addr-space-plan-formselect"
           isRequired={true}
         >
           <FormSelect
-            id="edit-addr-plan"
+            id="addr-space-plan-formselect"
             value={addressSpace.planValue}
             onChange={val => onPlanChange(val)}
             aria-label="FormSelect Input"
           >
             {planOptions.map((option, index) => (
               <FormSelectOption
+                id="addr-space-plan-formselectoption"
                 isDisabled={option.disabled}
                 key={index}
                 value={option.value}
@@ -135,17 +147,18 @@ export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
         </FormGroup>
         <FormGroup
           label="Authentication Service"
-          fieldId="simple-form-name"
+          fieldId="addr-space-authentication-formselect"
           isRequired={true}
         >
           <FormSelect
-            id="edit-addr-auth"
+            id="addr-space-authentication-formselect"
             value={addressSpace.authenticationService}
             onChange={val => onAuthServiceChange(val)}
             aria-label="FormSelect Input"
           >
             {authServiceOptions.map((option, index) => (
               <FormSelectOption
+                id="addr-space-authentication-formselectoption"
                 isDisabled={option.disabled}
                 key={index}
                 value={option.value}

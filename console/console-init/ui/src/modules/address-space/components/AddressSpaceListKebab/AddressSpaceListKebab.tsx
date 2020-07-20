@@ -27,7 +27,7 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
 }) => {
   const dropdownItems = [
     <DropdownItem
-      id="as-list-delete-all"
+      id="addr-space-list-kebab-delete-all-dropdownitem"
       key="delete-all"
       component="button"
       value="deleteAll"
@@ -45,7 +45,8 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
             {/* Remove is Persistent after fixing dropdown items for overflow menu */}
             <OverflowMenuItem isPersistent>
               <Button
-                id="al-filter-overflow-button"
+                id="addr-space-list-kebab-create-button"
+                aria-label="create address space button"
                 variant={ButtonVariant.primary}
                 onClick={onCreateAddressSpace}
               >
@@ -56,8 +57,8 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="al-filter-overflow-dropdown"
-            toggleId="al-filter-overflow-kebab"
+            id="addr-space-list-kebab-filter-dropdowntoggle"
+            toggleId="addr-space-list-kebab-filter-dropdown-toggle"
             onSelect={onSelectDeleteAll}
             dropdownItems={dropdownItems}
             isPlain

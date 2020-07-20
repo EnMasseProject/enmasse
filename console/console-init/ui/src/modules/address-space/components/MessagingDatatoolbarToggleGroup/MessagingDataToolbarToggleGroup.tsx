@@ -117,6 +117,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="messaging-data-togglegrp-name-filter"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -124,7 +125,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-name"
+                id="messaging-data-togglegrp-name-typeahead"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -136,7 +137,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameInput}
               />
               <Button
-                id="al-filter-search-name"
+                id="messaging-data-togglegrp-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -149,6 +150,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="messaging-data-togglegrp-namespace-filter"
           chips={selectedNamespaces.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Namespace"
@@ -156,7 +158,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-namespace"
+                id="messaging-data-togglegrp-namespace-typeahead"
                 typeAheadAriaLabel={"Select namespace"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNamespaceSelect}
@@ -168,7 +170,7 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
                 setInput={setNameSpaceInput}
               />
               <Button
-                id="al-filter-search-namespace"
+                id="messaging-data-togglegrp-search-namespace-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search namespace"
                 onClick={onSearch}
@@ -181,13 +183,15 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="messaging-data-togglegrp-type-filter"
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id={"al-filter-dropdown-type"}
+              id={"messaging-data-togglegrp-type-dropdowntoggle"}
+              toggleId="messaging-data-togglegrp-type-dropdown-toggle"
               dropdownItemIdPrefix={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
               onSelectItem={onTypeSelect}
@@ -199,14 +203,17 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="messaging-data-togglegrp-status-filter"
           chips={statusSelected ? [statusSelected] : []}
           deleteChip={onDelete}
           categoryName="Status"
         >
           {filterSelected && filterSelected.toLowerCase() === "status" && (
             <DropdownWithToggle
-              id={"al-filter-dropdown-status"}
-              dropdownItemIdPrefix={"al-filter-dropdown-item-status"}
+              id={"messaging-data-togglegrp-status-dropdowntoggle"}
+              dropdownItemIdPrefix={
+                "messaging-data-togglegrp-type-dropdown-toggle"
+              }
               position={DropdownPosition.left}
               onSelectItem={onStatusSelect}
               dropdownItems={statusOptions}
@@ -222,8 +229,8 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="messaging-data-togglegrp-filter-dropdowntoggle"
+          toggleId={"messaging-data-togglegrp-filter-dropdown-toggle"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
           dropdownItems={filterMenuItems}
@@ -246,7 +253,11 @@ const MessagingToolbarToggleGroup: React.FunctionComponent<IMessagingToolbarTogg
         <>
           <FilterIcon />
           {checkIsFilterApplied() && (
-            <Badge key={1} isRead>
+            <Badge
+              id="messaging-data-togglegrp-total-records-badge"
+              key={1}
+              isRead
+            >
               {totalRecords}
             </Badge>
           )}

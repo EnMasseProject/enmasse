@@ -29,16 +29,17 @@ export const EmptyAddressSpace: React.FunctionComponent<{}> = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-ad-space">
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title headingLevel="h2" id="empty-ad-space-title" size="lg">
+      <Title headingLevel="h2" id="empty-addr-space-title" size="lg">
         Create an address space
       </Title>
-      <EmptyStateBody id="empty-ad-space-body">
+      <EmptyStateBody id="empty-addr-space-body">
         There are currently no address spaces available. Please click on the
         button below to create one.Learn more about this in the
         <a href={process.env.REACT_APP_DOCS}> documentation</a>
       </EmptyStateBody>
       <Button
-        id="empty-ad-space-create-button"
+        id="empty-addr-space-create-button"
+        aria-label="create address space"
         variant={ButtonVariant.primary}
         onClick={onCreateAddressSpace}
       >

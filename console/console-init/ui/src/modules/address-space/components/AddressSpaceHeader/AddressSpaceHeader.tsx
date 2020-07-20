@@ -64,7 +64,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
   const dropdownItems = [
     <DropdownItem
       key="edit"
-      id="as-header-edit"
+      id="addr-space-header-edit-dropdownitem"
       aria-label="edit"
       onClick={() => onEdit()}
     >
@@ -72,7 +72,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
     </DropdownItem>,
     <DropdownItem
       key="delete"
-      id="as-header-delete"
+      id="addr-space-header-delete-dropdownitem"
       aria-label="delete"
       onClick={() => onDelete({ name, namespace })}
     >
@@ -80,7 +80,7 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
     </DropdownItem>,
     <DropdownItem
       key="download"
-      id="as-header-download"
+      id="addr-space-header-download-dropdownitem"
       aria-label="download"
       onClick={() => onDownload({ name, namespace })}
       style={{ paddingRight: 50 }}
@@ -122,8 +122,8 @@ export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProp
         <SplitItem isFilled></SplitItem>
         <SplitItem className={css(styles.kebab_toggle_margin)}>
           <DropdownWithKebabToggle
-            id="as-header-dropdown"
-            toggleId={"as-header-kebab"}
+            id="addr-space-header-dropdowntoggle"
+            toggleId={"addr-space-header-dropdown-toggle"}
             position={DropdownPosition.right}
             isPlain={true}
             dropdownItems={dropdownItems}

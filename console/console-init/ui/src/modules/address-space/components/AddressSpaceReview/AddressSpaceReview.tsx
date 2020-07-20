@@ -226,7 +226,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
           >
             {`Configuration details  `}
             <Tooltip
-              id="preview-as-feedback-tooltip"
+              id="addr-space-review-successfully-copied-tooltip"
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
@@ -235,7 +235,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
             >
               <span>
                 <Tooltip
-                  id="preview-as-copy-tooltip"
+                  id="addr-space-review-copy-configuration-tooltip"
                   position={TooltipPosition.top}
                   enableFlip={false}
                   content={
@@ -243,7 +243,7 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                   }
                 >
                   <Button
-                    id="preview-addr-copy-configuration-button"
+                    id="addr-space-review-copy-configuration-button"
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
@@ -254,7 +254,10 @@ export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
                       setIsCopied(false);
                     }}
                   >
-                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                    <OutlinedCopyIcon
+                      id="addr-space-review-copyicon"
+                      size="md"
+                    />
                   </Button>
                 </Tooltip>
               </span>

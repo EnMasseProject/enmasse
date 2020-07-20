@@ -63,7 +63,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> =
           onSort={onSort}
           sortBy={sortBy}
         >
-          <TableHeader id="aslist-table-header" />
+          <TableHeader id="addr-space-list-table-header" />
           <TableBody />
         </Table>
       </div>
