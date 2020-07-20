@@ -418,7 +418,7 @@ const CreateProject: React.FunctionComponent = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  id="c-project-next-button"
+                  id="create-project-next-button"
                   onClick={onNext}
                   className={
                     handleNextIsEnabled(activeStep.name) ? "" : "pf-m-disabled"
@@ -428,14 +428,14 @@ const CreateProject: React.FunctionComponent = () => {
                 </Button>
                 <Button
                   variant="secondary"
-                  id="c-project-back-button"
+                  id="create-project-back-button"
                   onClick={onBack}
                 >
                   Back
                 </Button>
                 <Button
                   variant="link"
-                  id="c-project-cancel-button"
+                  id="create-project-cancel-button"
                   onClick={onClose}
                 >
                   Cancel
@@ -458,7 +458,11 @@ const CreateProject: React.FunctionComponent = () => {
               >
                 Finish
               </Button>
-              <Button onClick={onBack} id="back-button" variant="secondary">
+              <Button
+                onClick={onBack}
+                id="create-project-back-button"
+                variant="secondary"
+              >
                 Back
               </Button>
               <Button variant="link" id="cancel-button" onClick={onClose}>
