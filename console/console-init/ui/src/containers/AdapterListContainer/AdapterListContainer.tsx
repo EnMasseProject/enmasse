@@ -14,7 +14,8 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
   const { projectname } = useParams();
 
   const queryResolver = `
-  iotProjects {
+  objects {
+    ... on IoTProject_iot_enmasse_io_v1alpha1 {
     endpoints{
       name
       url
@@ -22,6 +23,7 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
       port
       tls
     }
+  }
   }`;
 
   const { data } = useQuery<IIoTProjectsResponse>(
@@ -29,9 +31,26 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
   );
 
   const { allProjects } = data || {
-    allProjects: { iotProjects: [] }
+    allProjects: { objects: [] }
   };
-  const adapters: IAdapter[] = [];
+  let adapters: IAdapter[] = [];
+  if (
+    allProjects &&
+    allProjects.objects?.length > 0 &&
+    allProjects.objects[0].endpoints
+  ) {
+    const { endpoints } = allProjects.objects[0];
+    let adapterlist = endpoints.map(endpoint => {
+      const adapter: IAdapter = {};
+      adapter.host = endpoint.host;
+      adapter.port = endpoint.port;
+      adapter.url = endpoint.url;
+      adapter.tls = endpoint.tls;
+      adapter.name = endpoint.name;
+      return adapter;
+    });
+    adapters = adapterlist;
+  }
 
   return <AdapterList id={id} adapters={adapters} />;
 };
