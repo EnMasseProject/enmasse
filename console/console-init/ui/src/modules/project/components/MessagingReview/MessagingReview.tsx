@@ -229,7 +229,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
           >
             {`Configuration details  `}
             <Tooltip
-              id="preview-as-feedback-tooltip"
+              id="messaging-review-successfully-copied-tooltip"
               position={TooltipPosition.top}
               enableFlip={false}
               trigger={"manual"}
@@ -238,7 +238,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
             >
               <span>
                 <Tooltip
-                  id="preview-as-copy-tooltip"
+                  id="messaging-review-copy-config-details-tooltip"
                   position={TooltipPosition.top}
                   enableFlip={false}
                   content={
@@ -246,7 +246,7 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                   }
                 >
                   <Button
-                    id="preview-addr-copy-configuration-button"
+                    id="messaging-review-copy-configuration-button"
                     variant={ButtonVariant.link}
                     aria-label="copy-configuration"
                     onClick={() => {
@@ -257,7 +257,10 @@ export const MessagingReview: React.FC<IMessagingReviewProps> = ({
                       setIsCopied(false);
                     }}
                   >
-                    <OutlinedCopyIcon id="preview-addr-copy-btn" size="md" />
+                    <OutlinedCopyIcon
+                      id="messaging-review-copyicon"
+                      size="md"
+                    />
                   </Button>
                 </Tooltip>
               </span>

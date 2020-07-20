@@ -108,6 +108,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               variant={ButtonVariant.link}
               isInline
               onClick={() => setIsExpanded(!isExpanded)}
+              id="iot-review-expand-button"
             >
               {" "}
               {!isExpanded
@@ -125,7 +126,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
             >
               {`Configuration details  `}
               <Tooltip
-                id="iot-preview-feedback"
+                id="iot-review-successfully-copied-tooltip"
                 position={TooltipPosition.top}
                 enableFlip={false}
                 trigger={"manual"}
@@ -134,7 +135,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
               >
                 <span>
                   <Tooltip
-                    id="iot-preview-copy-feedback"
+                    id="iot-review-copy-configuration-tooltip"
                     position={TooltipPosition.top}
                     enableFlip={false}
                     content={
@@ -142,7 +143,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                     }
                   >
                     <Button
-                      id="preview-iot-copy-button"
+                      id="iot-review-copy-button"
                       variant={ButtonVariant.link}
                       aria-label="copy iot configuration"
                       onClick={() => {
@@ -151,7 +152,7 @@ export const IoTReview: React.FunctionComponent<IIoTReviewProps> = ({
                       }}
                       onMouseLeave={() => setIsCopied(false)}
                     >
-                      <OutlinedCopyIcon id="preview-iot-copy-icon" size="md" />
+                      <OutlinedCopyIcon id="iot-review-copy-icon" size="md" />
                     </Button>
                   </Tooltip>
                 </span>

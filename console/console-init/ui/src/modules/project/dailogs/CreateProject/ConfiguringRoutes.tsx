@@ -194,13 +194,13 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                     </Title>
                     <br />
                     <FormGroup
-                      fieldId="form-group-route-hostname"
+                      fieldId={`configuring-routes-hostname-input-${protocol}`}
                       label="Hostname"
                       helperText="Public hostname for the route.If not specified, a hostname is generated"
                     >
                       <TextInput
                         type="text"
-                        id={`text-input-hostname-${protocol}`}
+                        id={`configuring-routes-hostname-input-${protocol}`}
                         name="text-input-hostname"
                         aria-describedby="text-input-hostname-helper"
                         value={hostname}
@@ -213,7 +213,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                       <>
                         <br />
                         <FormGroup
-                          fieldId="form-group-endpoint-tls-certs"
+                          fieldId="configuring-routes-tls-terminations-radio"
                           label="TLS Terminations"
                           isRequired={true}
                         >
@@ -231,7 +231,7 @@ const ConfiguringRoutes: React.FunctionComponent<IConfiguringRoutes> = ({
                                   name={`radio-${termination.key}-${protocol}`}
                                   key={`${protocol}-${termination.key}`}
                                   label={termination.label}
-                                  id={`radio-${termination.key}-${protocol}`}
+                                  id={`configuring-routes-tls-terminations-radio-${termination.key}-${protocol}`}
                                   value={termination.value}
                                   style={{ marginLeft: 20 }}
                                 />

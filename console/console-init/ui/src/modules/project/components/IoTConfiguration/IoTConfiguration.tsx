@@ -53,7 +53,7 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               <FormGroup
                 label="Project name"
                 isRequired={true}
-                fieldId="iot"
+                fieldId="iot-config-project-name-input"
                 helperText={
                   name.trim() !== "" && !isNameValid ? (
                     <small>
@@ -71,7 +71,7 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
                     name.trim() === "" || isNameValid ? "default" : "error"
                   }
                   type="text"
-                  id="iot-name"
+                  id="iot-config-project-name-input"
                   name="iot-name"
                   onChange={handleNameChange}
                   value={name}
@@ -80,19 +80,23 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
               <FormGroup
                 label="Namespace"
                 isRequired={true}
-                fieldId="name-space"
+                fieldId="iot-config-name-space-selecttoggle"
               >
                 <SelectWithToggle
                   selectOptions={namespaceOptions}
                   onSelectItem={onNameSpaceSelect}
                   selections={namespace}
                   ariaLabel={"iot namespace"}
-                  id="iot-config-select-namespace"
+                  id="iot-config-name-space-selecttoggle"
                   optionId="iot-namespace-select-option"
                   variant={SelectVariant.typeahead}
                 />
               </FormGroup>
-              <FormGroup isInline label="Enable" fieldId="iot-enabled">
+              <FormGroup
+                isInline
+                label="Enable"
+                fieldId="iot-config-enabled-switch"
+              >
                 <Split hasGutter>
                   <SplitItem>
                     Enable the connections between IoT project and devices
@@ -100,7 +104,8 @@ const IoTConfiguration: React.FC<IIoTConfigurationProps> = ({
                   <SplitItem isFilled> </SplitItem>
                   <SplitItem>
                     <Switch
-                      id="iot-enable-switch"
+                      id="iot-config-enabled-switch"
+                      aria-label="switch to enable connections between IoT projects and devices"
                       isChecked={isEnabled}
                       onChange={() => handleEnabledChange(!isEnabled)}
                     />

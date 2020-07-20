@@ -188,6 +188,7 @@ export default function ProjectPage() {
   const renderPagination = () => {
     return (
       <TablePagination
+        id="project-page-table-pagination"
         itemCount={totalProjects}
         variant={"top"}
         page={page}

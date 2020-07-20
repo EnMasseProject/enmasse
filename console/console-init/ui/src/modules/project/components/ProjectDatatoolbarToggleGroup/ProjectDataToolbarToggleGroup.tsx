@@ -99,6 +99,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="project-data-togglegrp-name-filter"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -106,7 +107,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-name"
+                id="project-data-togglegrp-input-name-typeahead"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectName}
@@ -118,7 +119,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
                 setInput={setNameInput}
               />
               <Button
-                id="al-filter-search-name"
+                id="project-data-togglegrp-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -131,6 +132,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="project-data-togglegrp-namespace-filter"
           chips={selectedNamespaces.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Namespace"
@@ -138,7 +140,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
-                id="al-filter-input-namespace"
+                id="project-data-togglegrp-input-namespace-typeahead"
                 typeAheadAriaLabel={"Select namespace"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectNamespace}
@@ -150,7 +152,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
                 setInput={setNameSpaceInput}
               />
               <Button
-                id="al-filter-search-namespace"
+                id="project-data-togglegrp-search-namespace-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search namespace"
                 onClick={onSearch}
@@ -163,13 +165,15 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="project-data-togglegrp-type-filter"
           chips={typeSelected ? [typeSelected] : []}
           deleteChip={onDelete}
           categoryName="Type"
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id={"al-filter-dropdown-type"}
+              id={"project-data-togglegrp-type-dropdowntoggle"}
+              toggleId={"project-data-togglegrp-type-dropdown-toggle"}
               dropdownItemIdPrefix={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
               onSelectItem={onSelectType}
@@ -186,8 +190,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="al-filter-dropdown"
-          toggleId={"al-filter-dropdown"}
+          id="project-data-togglegrp-filter-menu-dropdowntoggle"
+          toggleId={"project-data-togglegrp-filter-menu-dropdown-toggle"}
           position={DropdownPosition.left}
           onSelectItem={onSelectFilter}
           dropdownItems={filterMenuItems}
@@ -210,7 +214,11 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           <>
             <FilterIcon />
             {isFilterApplied() && (
-              <Badge key={1} isRead>
+              <Badge
+                id="project-data-togglegrp-total-records-badge"
+                key={1}
+                isRead
+              >
                 {totalRecords}
               </Badge>
             )}
@@ -220,13 +228,13 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
       >
         <ToolbarItem
           variant="bulk-select"
-          id="device-list-toolbar-item-1"
+          id="project-data-togglegrp-device-list-toolbaritem"
           key="bulk-select"
           aria-label="Select multiple devices"
           data-codemods="true"
         >
           <DropdownWithBulkSelect
-            dropdownId="device-bulk-select"
+            dropdownId="project-data-togglegrp-device-bulk-select-dropdown"
             dropdownToggleId="device-bulk-select-toggle"
             checkBoxId="device-bulk-select-checkbox"
             ariaLabel="Bulk select dropdown for device list"

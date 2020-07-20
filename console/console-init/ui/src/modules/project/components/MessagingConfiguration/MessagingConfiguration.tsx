@@ -88,10 +88,14 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
       <Grid>
         <GridItem span={6}>
           <Form>
-            <FormGroup label="Namespace" isRequired={true} fieldId="name-space">
+            <FormGroup
+              label="Namespace"
+              isRequired={true}
+              fieldId="messaging-config-name-space-dropdowntoggle"
+            >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-namespace"
+                id="messaging-config-name-space-dropdowntoggle"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
                 dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
@@ -104,7 +108,7 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             <FormGroup
               label="Name"
               isRequired={true}
-              fieldId="address-space"
+              fieldId="messaging-config-address-space-input"
               helperText={getHelperText()}
             >
               <TextInput
@@ -113,7 +117,8 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
                   name.trim() === "" || isNameValid ? "default" : "error"
                 }
                 type="text"
-                id="address-space"
+                id="messaging-config-address-space-input"
+                aria-label="Input address space"
                 name="address-space"
                 onChange={handleNameChange}
                 value={name}
@@ -122,21 +127,21 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             <FormGroup
               isInline
               label="Type"
-              fieldId="simple-form-name"
+              fieldId="messaging-config-type-radio"
               isRequired={true}
             >
               <Radio
                 isChecked={type === "standard"}
                 onChange={handleTypeChange}
                 value={"standard"}
-                id="cas-standard-radio"
+                id="messaging-config-standard-radio"
                 label="Standard"
                 name="radio-5"
               />
               <Radio
                 isChecked={type === "brokered"}
                 onChange={handleTypeChange}
-                id="cas-brokered-radio"
+                id="messaging-config-brokered-radio"
                 value={"brokered"}
                 label="Brokered"
                 name="radio-6"
@@ -145,11 +150,11 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             <FormGroup
               label="Address space plan"
               isRequired={true}
-              fieldId="address-space-plan"
+              fieldId="messaging-config-plan-dropdowntoggle"
             >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-plan"
+                id="messaging-config-plan-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
@@ -163,11 +168,11 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             <FormGroup
               label="Authentication service"
               isRequired={true}
-              fieldId="authentication-service"
+              fieldId="messaging-config-auth-service-dropdowntoggle"
             >
               <br />
               <DropdownWithToggle
-                id="cas-dropdown-auth-service"
+                id="messaging-config-auth-service-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onAuthenticationServiceSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
@@ -179,10 +184,10 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
               />
             </FormGroup>
 
-            <FormGroup fieldId="customize-endpoint">
+            <FormGroup fieldId="messaging-config-customize-endpoint-switch">
               <br />
               <Switch
-                id="asc-switch-customize-endpoint"
+                id="messaging-config-customize-endpoint-switch"
                 label={"Customize Endpoint"}
                 isChecked={customizeEndpoint}
                 onChange={handleCustomEndpointChange}

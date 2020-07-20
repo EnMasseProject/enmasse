@@ -26,7 +26,7 @@ export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
 }) => {
   const dropdownItems = [
     <DropdownItem
-      id="as-list-delete-all"
+      id="project-list-kebab-delete-selected-dropdownitem"
       key="delete-all"
       component="button"
       value="deleteAll"
@@ -49,8 +49,8 @@ export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="al-filter-overflow-dropdown"
-            toggleId="al-filter-overflow-kebab"
+            id="project-list-kebab-dropdowntoggle"
+            toggleId="project-list-kebab-dropdown-toggle"
             onSelect={onSelectDeleteAll}
             dropdownItems={dropdownItems}
             isPlain
