@@ -140,6 +140,7 @@ export default function CreateDevicePage() {
             return (
               <>
                 <Button
+                  id="create-device-page-next-button"
                   variant="primary"
                   type="submit"
                   onClick={onNext}
@@ -152,6 +153,7 @@ export default function CreateDevicePage() {
                   Next
                 </Button>
                 <Button
+                  id="create-device-page-back-button"
                   variant="secondary"
                   onClick={onBack}
                   className={
@@ -162,7 +164,11 @@ export default function CreateDevicePage() {
                 >
                   Back
                 </Button>
-                <Button variant="link" onClick={onClose}>
+                <Button
+                  id="create-device-page-cancel-button"
+                  variant="link"
+                  onClick={onClose}
+                >
                   Cancel
                 </Button>
               </>
@@ -172,6 +178,7 @@ export default function CreateDevicePage() {
             return (
               <>
                 <Button
+                  id="create-device-page-next-button"
                   variant="primary"
                   type="submit"
                   onClick={onNext}
@@ -179,10 +186,18 @@ export default function CreateDevicePage() {
                 >
                   Next
                 </Button>
-                <Button variant="secondary" onClick={onBack}>
+                <Button
+                  id="create-device-page-back-button"
+                  variant="secondary"
+                  onClick={onBack}
+                >
                   Back
                 </Button>
-                <Button variant="link" onClick={onClose}>
+                <Button
+                  id="create-device-page-cancel-button"
+                  variant="link"
+                  onClick={onClose}
+                >
                   Cancel
                 </Button>
               </>
@@ -191,13 +206,26 @@ export default function CreateDevicePage() {
 
           return (
             <>
-              <Button variant="primary" onClick={handleSave} type="submit">
+              <Button
+                id="create-device-page-finish-button"
+                variant="primary"
+                onClick={handleSave}
+                type="submit"
+              >
                 Finish
               </Button>
-              <Button onClick={onBack} variant="secondary">
+              <Button
+                id="create-device-page-back-button"
+                onClick={onBack}
+                variant="secondary"
+              >
                 Back
               </Button>
-              <Button variant="link" onClick={onClose}>
+              <Button
+                id="create-device-page-cancel-button"
+                variant="link"
+                onClick={onClose}
+              >
                 Cancel
               </Button>
             </>
@@ -218,7 +246,7 @@ export default function CreateDevicePage() {
           </FlexItem>
           <FlexItem align={{ default: "alignRight" }}>
             <SwitchWithToggle
-              id={"add-device-view-in-json"}
+              id={"create-device-page-view-json-switchtoggle"}
               labelOff={"View JSON Format"}
               onChange={() => {
                 console.log("View in JSON");
@@ -231,6 +259,7 @@ export default function CreateDevicePage() {
         <Divider />
       </PageSection>
       <Wizard
+        id="create-device-page-wizard"
         onClose={onCloseDialog}
         onSave={handleSave}
         footer={CustomFooter}

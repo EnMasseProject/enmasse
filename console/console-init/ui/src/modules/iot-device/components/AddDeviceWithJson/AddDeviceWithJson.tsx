@@ -135,7 +135,7 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
   return (
     <PageSection variant={PageSectionVariants.light}>
       <DeviceListAlert
-        id="alert-error-invalid-json"
+        id="add-device-json-invalid-device-list-alert"
         variant="danger"
         isInline
         visible={showJsonValidationError}
@@ -168,7 +168,8 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       <br />
 
       <Button
-        id="add-device-finish-button"
+        id="add-device-json-finish-button"
+        aria-label="Finish button"
         variant="primary"
         onClick={onFinish}
       >
@@ -176,14 +177,20 @@ const AddDeviceWithJson: React.FunctionComponent<IAddDeviceWithJsonProps> = ({
       </Button>
       {"  "}
       <Button
-        id="add-device-preview-button"
+        id="add-device-json-preview-button"
+        aria-label="Preview button"
         variant="secondary"
         onClick={handleOnPreview}
       >
         Preview
       </Button>
       {"  "}
-      <Button id="add-device-cancel-button" variant="link" onClick={onCancel}>
+      <Button
+        id="add-device-json-cancel-button"
+        aria-label="cancel button"
+        variant="link"
+        onClick={onCancel}
+      >
         Cancel
       </Button>
     </PageSection>

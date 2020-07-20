@@ -82,7 +82,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
             id="ag-form-group"
             isRequired
             helperTextInvalid="Age has to be a number"
-            fieldId="device-id"
+            fieldId="add-gateway-device-id-input"
             validated="default"
           >
             <Flex>
@@ -90,7 +90,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
                 <TextInput
                   validated="default"
                   value={inputID}
-                  id="ag-text-input-id"
+                  id="add-gateway-device-id-input"
                   aria-label="Input device ID"
                   aria-describedby="Input device ID"
                   onChange={onChangeID}
@@ -99,7 +99,7 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
               <FlexItem>
                 <Button
                   isDisabled={!isValid}
-                  id="ag-btn-add-device-gateway"
+                  id="add-gateway-button"
                   variant="secondary"
                   onClick={addGateway}
                 >
@@ -116,11 +116,11 @@ export const AddGateways: React.FunctionComponent<IGatewaysProps> = ({
               Added Gateways
             </Title>
             <br />
-            <ChipGroup id="ag-chip-group">
+            <ChipGroup id="add-gateway-remove-chipgroup">
               {gateways.map((gateway: string) => (
                 <Chip
                   key={gateway}
-                  id={`ag-device-chip-${gateway}`}
+                  id={`add-gateway-remove-chip-${gateway}`}
                   value={gateway}
                   onClick={() => removeGateway(gateway)}
                 >

@@ -50,7 +50,7 @@ export const AddGatewaysContainer = () => {
       <Flex className={css(styles.button_padding)}>
         <FlexItem>
           <Button
-            id="ag-save-gateways-button"
+            id="add-gateways-container-save-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
           >
@@ -59,7 +59,7 @@ export const AddGatewaysContainer = () => {
         </FlexItem>
         <FlexItem>
           <Button
-            id="ad-cancel-gateways-button"
+            id="add-gateways-container-cancel-button"
             variant={ButtonVariant.link}
             onClick={onCancel}
           >

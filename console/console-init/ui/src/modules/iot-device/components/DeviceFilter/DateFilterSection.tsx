@@ -35,7 +35,7 @@ const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
       </InputGroupText>
       <TextInput
         name="added-start-date"
-        id="device-filter-text-input-added-start-date"
+        id="device-filter-section-added-start-date"
         type="date"
         aria-label="Added Start Date"
         className={css(styles.input_size)}
@@ -44,7 +44,7 @@ const DateFilterSection: React.FunctionComponent<IDateFilterSectionProps> = ({
       />
       <TextInput
         name="added-end-date"
-        id="device-filter-text-input-added-end-date"
+        id="device-filter-section-added-end-date-input"
         type="date"
         aria-label="Added End Date"
         className={css(styles.input_size)}

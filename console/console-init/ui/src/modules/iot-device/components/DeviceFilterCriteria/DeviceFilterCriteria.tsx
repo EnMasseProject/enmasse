@@ -134,7 +134,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
           <Select
             variant={SelectVariant.typeahead}
             typeAheadAriaLabel="Select a parameter"
-            id={"device-filter-typeahead-select-parameter" + criteria.key}
+            id={"device-filter-typeahead-select-parameter-" + criteria.key}
             onToggle={onToggle}
             onSelect={onSelect}
             onClear={onClearParameter}
@@ -148,7 +148,12 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
-            id={"filter-dropdown-criteria-operator-" + criteria.key}
+            id={
+              "device-filter-criteria-operator-dropdowntoggle-" + criteria.key
+            }
+            toggleId={
+              "device-filter-criteria-operator-dropdown-toggle-" + criteria.key
+            }
             name="Filter Criteria Operator"
             onSelectItem={onSelectOperator}
             dropdownItems={operatordropdownOptions}
@@ -160,7 +165,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
           <TextInput
             isRequired
             type="text"
-            id={"filter-text -input-criteria-value-" + criteria.key}
+            id={"device-filter-criteria-value-input-" + criteria.key}
             name="device-id"
             aria-describedby="Filter criteria value input"
             value={criteria.value}
@@ -170,7 +175,7 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
       </Grid>
       <Button
         variant="link"
-        id={"remove-criteria" + criteria.key}
+        id={"device-filter-criteria-remove-button-" + criteria.key}
         icon={<MinusCircleIcon />}
         onClick={() => deleteCriteria(criteria)}
       />

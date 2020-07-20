@@ -32,7 +32,8 @@ export const CreateMetadata: React.FC = () => {
         <Grid>
           <GridItem span={3}>
             <Button
-              id="cd-metadata-buttom-Add-More"
+              id="create-metadata-add-more-button"
+              aria-label="add more"
               variant="link"
               icon={<PlusCircleIcon />}
               onClick={handleAddParentRow}

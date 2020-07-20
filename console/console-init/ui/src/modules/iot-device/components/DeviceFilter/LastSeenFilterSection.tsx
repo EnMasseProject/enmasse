@@ -78,7 +78,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       <TextInput
         className={css(styles.time_input_box)}
         name="last-start-time-number"
-        id="device-filter-text-input-last-start-time-number"
+        id="last-seen-filter-last-start-input"
         type="number"
         aria-describedby="Device Id for filter"
         value={lastSeen.startTime && lastSeen.startTime.time}
@@ -87,7 +87,8 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       <DropdownWithToggle
         className={css(styles.dropdown_align)}
         toggleClass={css(styles.dropdown_toggle_align)}
-        id="device-filter-dropdown-last-seen-start-time-format"
+        id="last-seen-filter-dropdowntoggle"
+        toggleId="last-seen-filter-dropdown-toggle"
         position={DropdownPosition.left}
         onSelectItem={onStartTimeFormatChange}
         value={lastSeen.startTime ? lastSeen.startTime.form : ""}
@@ -98,7 +99,7 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       <TextInput
         className={css(styles.time_input_box)}
         name="last-end-time-number"
-        id="device-filter-text-input-last-end-time-number"
+        id="last-seen-filter-end-time-input"
         type="number"
         aria-describedby="Device Id for filter"
         value={lastSeen.endTime && lastSeen.endTime.time}
@@ -106,7 +107,8 @@ const LastSeenFilterSection: React.FunctionComponent<ILastSeenFilterSectionProps
       />
       <DropdownWithToggle
         className={css(styles.end_dropdown_align)}
-        id="device-filter-dropdown-last-seen-end-time-format"
+        id="last-seen-filter-end-time-dropdowntoggle"
+        toggleId="last-seen-filter-end-time-dropdown-toggle"
         position={DropdownPosition.left}
         onSelectItem={onEndTimeFormatChange}
         value={lastSeen.endTime ? lastSeen.endTime.form : ""}

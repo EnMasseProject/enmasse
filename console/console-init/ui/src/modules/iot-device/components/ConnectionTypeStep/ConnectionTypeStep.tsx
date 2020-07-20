@@ -23,7 +23,7 @@ const ConnectionType: React.FunctionComponent<IConnectionTypeProps> = ({
           onChange={onConnectionChange}
           label={"Directly connected"}
           name="radio-directly-connected-option"
-          id="radio-directly-connected-option"
+          id="connection-type-step-directly-connected-radio"
         />
         <Radio
           value="via-device"
@@ -31,7 +31,7 @@ const ConnectionType: React.FunctionComponent<IConnectionTypeProps> = ({
           onChange={onConnectionChange}
           label={"Connected via other permitted devices as gateways"}
           name="radio-connected-via-gateway-option"
-          id="radio-connected-via-gateway-option"
+          id="connection-type-step-via-gateway-radio"
         />
       </Form>
     </>
