@@ -101,7 +101,7 @@ const ConnectionLinksToolbar: React.FunctionComponent<IConnectionLinksToolbarPro
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="connection-links-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}

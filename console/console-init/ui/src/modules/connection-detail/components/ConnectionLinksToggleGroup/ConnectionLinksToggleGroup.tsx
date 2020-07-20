@@ -100,6 +100,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
     <>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="connection-links-togglegrp-name-filter"
           chips={selectedNames.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Name"
@@ -107,7 +108,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="cl-filter-select-name"
+                id="connection-links-togglegrp-name-typeahead"
+                aria-label="select name"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onNameSelect}
@@ -119,7 +121,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
                 setInput={setNameInput}
               />
               <Button
-                id="cl-filter-search-name"
+                id="connection-links-togglegrp-search-name-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search name"
                 onClick={onSearch}
@@ -132,6 +134,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="connection-links-togglegrp-address-filter"
           chips={selectedAddresses.map(filter => filter.value)}
           deleteChip={onDelete}
           categoryName="Address"
@@ -139,6 +142,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAheadSelect
+                id="connection-links-togglegrp-address-typeahead"
+                aria-label="select address"
                 typeAheadAriaLabel={"Select address"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onAddressSelect}
@@ -150,7 +155,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
                 setInput={setAddressInput}
               />
               <Button
-                id="ad-links-filter-search-address"
+                id="connection-links-togglegrp-search-address-button"
                 variant={ButtonVariant.control}
                 aria-label="search button for search address"
                 onClick={onSearch}
@@ -163,12 +168,14 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
       </ToolbarItem>
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
+          id="connection-links-togglegrp-role-filter"
           chips={roleSelected ? [roleSelected] : []}
           deleteChip={onDelete}
           categoryName="Role"
         >
           {filterSelected === "Role" && (
             <SelectWithToggle
+              id="connection-links-togglegrp-role-selectwithtoggle"
               variant={SelectVariant.single}
               ariaLabel="Select Role"
               onSelectItem={onRoleSelect}
@@ -185,8 +192,8 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="cl-filter-dropdown"
-          toggleId="cl-filter-dropdown"
+          id="connection-links-togglegrp-filter-dropdowntoggle"
+          toggleId="connectionlink-filter-dropdown-toggle"
           dropdownItemIdPrefix="cl-filter-dropdown"
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}
@@ -210,7 +217,11 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
         <>
           <FilterIcon />
           {checkIsFilterApplied() && (
-            <Badge key={1} isRead>
+            <Badge
+              id="connection-links-togglegrp-total-records-badge"
+              key={1}
+              isRead
+            >
               {totalRecords}
             </Badge>
           )}
