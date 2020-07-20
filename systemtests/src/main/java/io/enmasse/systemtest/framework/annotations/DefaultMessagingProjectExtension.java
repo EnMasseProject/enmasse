@@ -29,9 +29,11 @@ public class DefaultMessagingProjectExtension implements BeforeTestExecutionCall
     }
 
     private void createDefaultTenant(ExtensionContext extensionContext) {
-        MessagingProject project = MessagingProjectResourceType.getDefault();
-        ResourceManager.getInstance().createResource(extensionContext, project);
-        ResourceManager.getInstance().setDefaultMessagingProject(project);
+        synchronized (this) {
+            MessagingProject project = MessagingProjectResourceType.getDefault();
+            ResourceManager.getInstance().createResource(extensionContext, project);
+            ResourceManager.getInstance().addDefaultResource(project);
+        }
     }
 
     @Override

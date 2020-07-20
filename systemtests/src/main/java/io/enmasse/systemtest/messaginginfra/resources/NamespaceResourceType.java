@@ -22,7 +22,7 @@ public class NamespaceResourceType implements ResourceType<Namespace> {
     }
 
     public static Namespace getDefault() {
-        return new NamespaceBuilder().withNewMetadata().withName(String.format("enmasse-project-%s", UUID.randomUUID().toString().split("-")[0])).addToLabels("app", "enmasse").endMetadata().build();
+        return new NamespaceBuilder().withNewMetadata().withName("enmasse-project-default").addToLabels("app", "enmasse").endMetadata().build();
     }
 
     @Override

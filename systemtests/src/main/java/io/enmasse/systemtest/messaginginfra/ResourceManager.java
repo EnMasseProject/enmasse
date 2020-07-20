@@ -3,13 +3,11 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
- package io.enmasse.systemtest.messaginginfra;
+package io.enmasse.systemtest.messaginginfra;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.enmasse.api.model.MessagingInfrastructure;
-import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.UserCredentials;
 import io.enmasse.systemtest.amqp.AmqpClientFactory;
 import io.enmasse.systemtest.framework.LoggerUtils;
@@ -28,10 +26,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,9 +47,7 @@ public class ResourceManager {
     private static boolean verbose = true;
 
     private static final Map<String, Stack<ThrowableRunner>> storedResources = new LinkedHashMap<>();
-
-    private MessagingInfrastructure defaultInfra;
-    private MessagingProject defaultProject;
+    private static final Map<String, Map<String, AtomicLong>> defaultResources = new HashMap<>();
 
     private final Kubernetes kubeClient = Kubernetes.getInstance();
     private AmqpClientFactory amqpClientFactory = new AmqpClientFactory(new UserCredentials("dummy", "dummy"));
@@ -77,15 +76,6 @@ public class ResourceManager {
         storedResources.remove(testContext.getDisplayName());
     }
 
-    private synchronized void cleanDefault(HasMetadata resource) {
-        if (defaultInfra != null && defaultInfra.getKind().equals(resource.getKind()) && defaultInfra.getMetadata().getName().equals(resource.getMetadata().getName())) {
-            defaultInfra = null;
-        }
-        if (defaultProject != null && defaultProject.getKind().equals(resource.getKind()) && defaultProject.getMetadata().getName().equals(resource.getMetadata().getName())) {
-            defaultProject = null;
-        }
-    }
-
     public void enableVerboseLogging() {
         verbose = true;
     }
@@ -95,22 +85,23 @@ public class ResourceManager {
     }
 
     //------------------------------------------------------------------------------------------------
-    // Pointers to default resources
+    // Default resources methods
     //------------------------------------------------------------------------------------------------
-    public MessagingInfrastructure getDefaultInfra() {
-        return defaultInfra;
+    public synchronized void addDefaultResource(HasMetadata resource) {
+        defaultResources.computeIfAbsent(resource.getKind(), k -> new HashMap<>());
+        defaultResources.get(resource.getKind()).putIfAbsent(buildIdentifier(resource), new AtomicLong(0));
+        defaultResources.get(resource.getKind()).get(buildIdentifier(resource)).incrementAndGet();
+        LOGGER.info("Default resource of kind {} with name {}, usage {}", resource.getKind(), resource.getMetadata().getName(), defaultResources.get(resource.getKind()).get(buildIdentifier(resource)));
     }
 
-    public MessagingProject getDefaultMessagingProject() {
-        return defaultProject;
+    @SuppressWarnings(value = "unchecked")
+    public synchronized <T extends HasMetadata> T getDefaultResource(String kind) {
+        String identifier = defaultResources.get(kind).entrySet().iterator().next().getKey();
+        return (T) Objects.requireNonNull(findResourceType(kind)).get(getNamespaceFromIdentifier(identifier), getNameFromIdentifier(identifier));
     }
 
-    public void setDefaultInfra(MessagingInfrastructure infra) {
-        defaultInfra = infra;
-    }
-
-    public void setDefaultMessagingProject(MessagingProject project) {
-        defaultProject = project;
+    public synchronized void removeDefaultResource(HasMetadata resource) {
+        Optional.ofNullable(defaultResources.get(resource.getKind())).ifPresent(m -> m.remove(resource.getKind()));
     }
 
     //------------------------------------------------------------------------------------------------
@@ -199,19 +190,28 @@ public class ResourceManager {
     @SafeVarargs
     public final <T extends HasMetadata> void deleteResource(T... resources) throws Exception {
         for (T resource : resources) {
+            boolean deletable = true;
             ResourceType<T> type = findResourceType(resource);
             if (type == null) {
-                LOGGER.warn("Can't find resource type, please create it manually");
+                LOGGER.warn("Can't find resource type, please delete it manually");
                 continue;
             }
             if (verbose) {
                 LOGGER.info("Delete of {} {} in namespace {}",
                         resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace() == null ? "(not set)" : resource.getMetadata().getNamespace());
             }
-            type.delete(resource);
-            assertTrue(waitResourceCondition(resource, Objects::isNull),
-                    String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
-            cleanDefault(resource);
+            if (isDefaultResource(resource)) {
+                defaultResources.get(resource.getKind()).get(buildIdentifier(resource)).decrementAndGet();
+                LOGGER.info("Default resource of kind {} with name {}, usage {}",
+                        resource.getKind(), resource.getMetadata().getName(),
+                        defaultResources.get(resource.getKind()).get(buildIdentifier(resource)));
+                deletable = isDefaultResourceDeletable(resource);
+            }
+            if (deletable) {
+                type.delete(resource);
+                assertTrue(waitResourceCondition(resource, Objects::isNull),
+                        String.format("Timed out deleting %s %s in namespace %s", resource.getKind(), resource.getMetadata().getName(), resource.getMetadata().getNamespace()));
+            }
         }
     }
 
@@ -268,5 +268,40 @@ public class ResourceManager {
             }
         }
         return null;
+    }
+
+    @SuppressWarnings(value = "unchecked")
+    private <T extends HasMetadata> ResourceType<T> findResourceType(String kind) {
+        for (ResourceType<?> type : resourceTypes) {
+            if (type.getKind().equals(kind)) {
+                return (ResourceType<T>) type;
+            }
+        }
+        return null;
+    }
+
+    private String buildIdentifier(HasMetadata resource) {
+        return String.format("%s__%s", resource.getMetadata().getName(), resource.getMetadata().getNamespace());
+    }
+
+    private String getNamespaceFromIdentifier(String id) {
+        return id.split("__")[1];
+    }
+
+    private String getNameFromIdentifier(String id) {
+        return id.split("__")[0];
+    }
+
+    private boolean isDefaultResource(HasMetadata resource) {
+        return defaultResources.containsKey(resource.getKind()) &&
+                defaultResources.get(resource.getKind()).containsKey(buildIdentifier(resource));
+    }
+
+    private boolean isDefaultResourceDeletable(HasMetadata resource) {
+        if (defaultResources.get(resource.getKind()).get(buildIdentifier(resource)).get() > 0) {
+            LOGGER.info("Default resource of kind {}, with name {} still in use deletion skipped", resource.getKind(), resource.getMetadata().getName());
+            return false;
+        }
+        return true;
     }
 }

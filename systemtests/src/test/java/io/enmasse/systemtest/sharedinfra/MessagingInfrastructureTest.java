@@ -19,6 +19,7 @@ import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.AssertionUtils;
 import io.enmasse.systemtest.utils.TestUtils;
@@ -44,7 +45,7 @@ public class MessagingInfrastructureTest extends TestBase {
     public void testInfraStaticScalingStrategy(ExtensionContext extensionContext) throws Exception {
         MessagingInfrastructure infra = new MessagingInfrastructureBuilder()
                 .withNewMetadata()
-                .withName("default-infra")
+                .withName("test-infra")
                 .withNamespace(environment.namespace())
                 .endMetadata()
                 .withNewSpec()
@@ -55,8 +56,8 @@ public class MessagingInfrastructureTest extends TestBase {
 
         waitForConditionsTrue(infra, null);
 
-        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
-        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
+        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router", "infra", infra.getMetadata().getName())).size());
+        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker", "infra", infra.getMetadata().getName())).size());
 
         // Scale up
         infra = new MessagingInfrastructureBuilder(infra)
@@ -86,8 +87,8 @@ public class MessagingInfrastructureTest extends TestBase {
         waitForConditionsTrue(infra, null);
 
         // Ensure that we can find the pods as the above conditions are true
-        assertEquals(3, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
-        assertEquals(2, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
+        assertEquals(3, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router", "infra", infra.getMetadata().getName())).size());
+        assertEquals(2, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker", "infra", infra.getMetadata().getName())).size());
 
         // Scale down
         infra = new MessagingInfrastructureBuilder(infra)
@@ -116,8 +117,8 @@ public class MessagingInfrastructureTest extends TestBase {
         waitForConditionsTrue(infra, null);
 
         // Conditions are not set to false when scaling down, so we must wait for replicas
-        TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
-        TestUtils.waitForNReplicas(1, infra.getMetadata().getNamespace(), Map.of("component", "broker"), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+        TestUtils.waitForNReplicas(2, infra.getMetadata().getNamespace(), Map.of("component", "router", "infra", infra.getMetadata().getName()), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
+        TestUtils.waitForNReplicas(1, infra.getMetadata().getNamespace(), Map.of("component", "broker", "infra", infra.getMetadata().getName()), Collections.emptyMap(), TimeoutBudget.ofDuration(Duration.ofMinutes(5)));
     }
 
     /**
@@ -129,7 +130,7 @@ public class MessagingInfrastructureTest extends TestBase {
     @DefaultMessagingInfrastructure
     @DefaultMessagingProject
     public void testInfraRestart(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
 
         MessagingAddress queue = new MessagingAddressBuilder()
                 .editOrNewMetadata()
@@ -166,7 +167,7 @@ public class MessagingInfrastructureTest extends TestBase {
                 .build();
 
         resourceManager.createResource(extensionContext, endpoint, anycast, queue);
-        MessagingInfrastructure defaultInfra = resourceManager.getDefaultInfra();
+        MessagingInfrastructure defaultInfra = resourceManager.getDefaultResource("MessagingInfrastructure");
         waitForConditionsTrue(defaultInfra, endpoint, anycast, queue);
 
         // Make sure endpoints work first
@@ -192,7 +193,7 @@ public class MessagingInfrastructureTest extends TestBase {
         AssertionUtils.assertDefaultMessaging(clientRunner);
     }
 
-    private void waitForConditionsTrue(MessagingInfrastructure infra, MessagingEndpoint endpoint, MessagingAddress ... addresses) {
+    private void waitForConditionsTrue(MessagingInfrastructure infra, MessagingEndpoint endpoint, MessagingAddress... addresses) {
         assertTrue(resourceManager.waitResourceCondition(infra, messagingInfra -> checkConditions("True", MessagingInfrastructureResourceType.getConditions(messagingInfra))));
         if (endpoint != null) {
             assertTrue(resourceManager.waitResourceCondition(endpoint, messagingEndpoint -> checkConditions("True", MessagingEndpointResourceType.getConditions(messagingEndpoint))));

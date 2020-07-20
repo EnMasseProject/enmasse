@@ -29,9 +29,11 @@ public class DefaultMessagingInfrastructureExtension implements BeforeTestExecut
     }
 
     private void createDefaultInfra(ExtensionContext extensionContext) {
-        MessagingInfrastructure infra = MessagingInfrastructureResourceType.getDefault();
-        ResourceManager.getInstance().createResource(extensionContext, infra);
-        ResourceManager.getInstance().setDefaultInfra(infra);
+        synchronized (this) {
+            MessagingInfrastructure infra = MessagingInfrastructureResourceType.getDefault();
+            ResourceManager.getInstance().createResource(extensionContext, infra);
+            ResourceManager.getInstance().addDefaultResource(infra);
+        }
     }
 
     @Override

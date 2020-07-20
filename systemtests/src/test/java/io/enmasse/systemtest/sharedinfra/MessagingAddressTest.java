@@ -21,6 +21,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messagingclients.ClientArgument;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import io.enmasse.systemtest.utils.AssertionUtils;
 import io.vertx.proton.ProtonClientOptions;
 import io.vertx.proton.ProtonQoS;
@@ -54,7 +55,7 @@ public class MessagingAddressTest extends TestBase {
 
     @BeforeAll
     public void createEndpoint(ExtensionContext extensionContext) {
-        project = resourceManager.getDefaultMessagingProject();
+        project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
