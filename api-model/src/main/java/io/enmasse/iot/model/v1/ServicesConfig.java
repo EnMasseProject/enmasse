@@ -27,7 +27,6 @@ public class ServicesConfig {
     private DeviceRegistryServiceConfig deviceRegistry;
     private AuthenticationServiceConfig authentication;
     private TenantServiceConfig tenant;
-    private CollectorConfig collector;
     private OperatorConfig operator;
 
     public DeviceConnectionServiceConfig getDeviceConnection() {
@@ -56,13 +55,6 @@ public class ServicesConfig {
     }
     public void setTenant(TenantServiceConfig tenant) {
         this.tenant = tenant;
-    }
-
-    public CollectorConfig getCollector() {
-        return collector;
-    }
-    public void setCollector(CollectorConfig collector) {
-        this.collector = collector;
     }
 
     public OperatorConfig getOperator() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019, EnMasse authors.
+ * Copyright 2018-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -13,7 +13,6 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/logs"
 
 	enmasse "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 
@@ -24,10 +23,6 @@ import (
 
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/runtime/signals"
-)
-
-var (
-	ephemeralCertBase string
 )
 
 var log = logf.Log.WithName("cmd")
@@ -47,27 +42,9 @@ func main() {
 
 	log.Info("Starting up...")
 
-	if ephemeralCertBase != "" {
-		fi, err := os.Stat(ephemeralCertBase)
-		if err != nil {
-			log.Error(err, "Ephemeral certificate base is configured, but unable to access: %v", err.Error())
-			os.Exit(1)
-		}
-		if !fi.IsDir() {
-			log.Info("Ephemeral certificate base is configured, but is not a directory")
-			os.Exit(1)
-		}
-	}
-
 	cfg, err := rest.InClusterConfig()
 	if err != nil {
 		log.Error(err, "Error getting in-cluster config")
-		os.Exit(1)
-	}
-
-	kubeClient, err := kubernetes.NewForConfig(cfg)
-	if err != nil {
-		log.Error(err, "Error building kubernetes client")
 		os.Exit(1)
 	}
 
@@ -85,9 +62,8 @@ func main() {
 	enmasseInformerFactory := informers.NewSharedInformerFactory(enmasseClient, refreshPeriod())
 
 	configurator := NewConfigurator(
-		kubeClient, enmasseClient,
+		enmasseClient,
 		enmasseInformerFactory.Iot().V1alpha1().IoTProjects(),
-		ephemeralCertBase,
 	)
 
 	enmasseInformerFactory.Start(stopCh)
@@ -112,14 +88,4 @@ func refreshPeriod() time.Duration {
 	// return default
 
 	return DefaultInformerRefreshPeriod
-}
-
-func init() {
-
-	ephemeralCertBase = "/var/qdr-certs"
-
-	if value, present := os.LookupEnv("EPHEMERAL_CERT_BASE"); present {
-		ephemeralCertBase = value
-	}
-
 }
