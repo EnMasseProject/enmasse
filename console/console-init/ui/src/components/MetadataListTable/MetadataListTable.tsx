@@ -68,7 +68,10 @@ const TableHeader: React.FC<IHeaderProps> = ({
   return (
     <DataListItem aria-labelledby={ariaLabelledby}>
       <DataListItemRow>
-        <DataListItemCells dataListCells={dataListCells()}></DataListItemCells>
+        <DataListItemCells
+          id="metadata-list-item-cells"
+          dataListCells={dataListCells()}
+        ></DataListItemCells>
       </DataListItemRow>
     </DataListItem>
   );
@@ -102,7 +105,7 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
                 {metadataOptions &&
                   metadataOptions.map((row: IRowOption) => (
                     <TableRow
-                      id={"ml-table-row-" + row.key}
+                      id={"metadata-list-table-row-" + row.key}
                       rowData={row}
                       key={row.key}
                     />
@@ -113,7 +116,10 @@ export const MetadataListTable: React.FC<IMetadataListTablePorps> = ({
         </DataList>
       )}
       {dataList?.length <= 0 && (
-        <NoMetadataFound id="nometadata-found" addMetadata={addMetadata} />
+        <NoMetadataFound
+          id="metadata-list-nometadata-found"
+          addMetadata={addMetadata}
+        />
       )}
     </div>
   );

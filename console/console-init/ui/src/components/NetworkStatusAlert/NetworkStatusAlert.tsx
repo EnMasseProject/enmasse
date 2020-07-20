@@ -55,12 +55,17 @@ const NetworkStatusAlert: React.FunctionComponent = () => {
     return (
       <PageSection>
         <Alert
+          id="network-status-disconnected-alert"
+          aria-label="Disconnected from server"
           variant="danger"
           title="Disconnected from server"
           actionClose={<AlertActionCloseButton onClose={onClose} />}
           className={css(styles.alert)}
           actionLinks={
-            <AlertActionLink onClick={handleAlertActionLink}>
+            <AlertActionLink
+              id="network-status-redirect-text-alert-action-link"
+              onClick={handleAlertActionLink}
+            >
               {redirectText}
             </AlertActionLink>
           }

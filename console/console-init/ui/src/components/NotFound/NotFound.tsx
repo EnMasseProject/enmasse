@@ -28,11 +28,15 @@ const NotFound: React.FunctionComponent<INotFoundProps> = ({ updateState }) => {
   return (
     <PageSection>
       <Alert
+        id="not-found-unexpected error-alert"
         variant="danger"
         title="Unexpected Error"
         className={css(styles.alert)}
         actionLinks={
-          <AlertActionLink onClick={handleAlertActionLink}>
+          <AlertActionLink
+            id="not-found-take-me-home-alert-action-link"
+            onClick={handleAlertActionLink}
+          >
             Take me home
           </AlertActionLink>
         }

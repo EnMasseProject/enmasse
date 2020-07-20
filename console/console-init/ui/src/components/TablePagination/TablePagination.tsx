@@ -48,6 +48,7 @@ export const TablePagination: React.FC<PaginationProps> = ({
   if (itemCount && itemCount > 0) {
     return (
       <Pagination
+        id="table-pagination"
         itemCount={itemCount}
         perPage={perPage}
         page={page}

@@ -51,6 +51,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
   const renderSuccesState = () => {
     return (
       <EmptyState
+        id="finished-step-empty-state"
         variant={EmptyStateVariant.full}
         className={css(styles.empty_state)}
       >
@@ -68,7 +69,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
         </EmptyStateBody>
         <br />
         <br />
-        <Button id="error-state-cancel-button" variant="link" onClick={onClose}>
+        <Button id="finished-step-error-state-cancel-button" variant="link" onClick={onClose}>
           Cancel
         </Button>
       </EmptyState>
@@ -96,7 +97,7 @@ const FinishedStep: React.FunctionComponent<IFinishedStepProps> = ({
         <br />
         <Link to={projectDetailUrl()}>
           <Button
-            id="success-state-view-project-button"
+            id="finished-step-success-state-view-project-button"
             variant={ButtonVariant.primary}
             component="a"
           >

@@ -43,13 +43,18 @@ export const PasswordInputFieldWithToggle: React.FC<IPasswordInputFieldWithToggl
       if (shouldShowPassword) {
         return (
           <EyeSlashIcon
+            id="password-input-eyeslashicon"
             className={css(styles.icon)}
             onClick={() => onToggle(false)}
           />
         );
       }
       return (
-        <EyeIcon className={css(styles.icon)} onClick={() => onToggle(true)} />
+        <EyeIcon
+          id="password-input-eyeicon"
+          className={css(styles.icon)}
+          onClick={() => onToggle(true)}
+        />
       );
     }
   };

@@ -32,7 +32,12 @@ export const NoMetadataFound: React.FC<INoMetadataFoundProps> = ({
         </Title>
       </EmptyState>
       <EmptyStateSecondaryActions>
-        <Button variant="primary" onClick={addMetadata}>
+        <Button
+          id="no-metadata-add-button"
+          aria-label="add metadata button"
+          variant="primary"
+          onClick={addMetadata}
+        >
           Add metadata
         </Button>
       </EmptyStateSecondaryActions>

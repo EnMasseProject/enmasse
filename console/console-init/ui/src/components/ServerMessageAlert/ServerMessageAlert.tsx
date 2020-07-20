@@ -34,7 +34,7 @@ export const ServerMessageAlert: React.FC = () => {
     let messages: string[] = [];
     if (errors && Array.isArray(errors)) {
       return (
-        <List>
+        <List id="serever-message-alert-list">
           {errors &&
             errors.map((error: any, index: number) => {
               const { networkError, graphQLErrors } = error;
@@ -74,6 +74,7 @@ export const ServerMessageAlert: React.FC = () => {
     return (
       <PageSection>
         <Alert
+          id="server-mesage-error-alert"
           variant="danger"
           title="Server Error"
           actionClose={<AlertActionCloseButton onClose={onClose} />}

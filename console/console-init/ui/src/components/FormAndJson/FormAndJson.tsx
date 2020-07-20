@@ -41,7 +41,11 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
   return (
     <>
       {!isValid && <h1 style={{ color: "red" }}>inValid</h1>}
-      <Switch id="iot-enable-switch" isChecked={showJson} onChange={onToggle} />
+      <Switch
+        id="form-json-iot-enable-switch"
+        isChecked={showJson}
+        onChange={onToggle}
+      />
       {showJson ? (
         <>
           <Editor

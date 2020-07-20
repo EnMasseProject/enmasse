@@ -33,10 +33,12 @@ export const NoDataFound: React.FunctionComponent<INoDataFoundProps> = ({
           <Title headingLevel="h5" size="lg">
             {type} Not Found
           </Title>
-          <EmptyStateBody id="empty-no-longer-exists">
+          <EmptyStateBody id="data-no-longer-exists-body">
             {type} <b>{name}</b> no longer exists.
           </EmptyStateBody>
-          <Link to={routeLink}>Go to {type} list</Link>
+          <Link to={routeLink} id="no-data-list-link">
+            Go to {type} list
+          </Link>
         </EmptyState>
       </PageSection>
     </PageSection>

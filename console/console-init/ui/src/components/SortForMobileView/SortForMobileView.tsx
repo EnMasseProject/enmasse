@@ -81,7 +81,8 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
         {width < 769 && (
           <>
             <DropdownWithToggle
-              id="sort-mobilevw-dropdown"
+              id="sort-mobile-view-dropdowntoggle"
+              toggleId="sort-mobile-view-dropdown-toggle"
               position={DropdownPosition.left}
               onSelectItem={onSortSelect}
               value={sortData}
@@ -98,7 +99,7 @@ export const SortForMobileView: React.FunctionComponent<ISortForMobileViewProps>
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="sort-mobile-view-data-toolbar-with-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       data-codemods="true"

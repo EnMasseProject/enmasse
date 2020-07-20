@@ -84,14 +84,15 @@ export const UpdatePassword = () => {
 
   return (
     <Modal
-      id="update-password-dialog"
+      id="update-password-modal"
       title={"Change password"}
       variant="small"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
-          id="up-save-password-button"
+          id="update-password-save-button"
+          aria-label="save updated password"
           key={"update-password-save-button"}
           variant={ButtonVariant.primary}
           onClick={onConfirmDialog}
@@ -100,7 +101,8 @@ export const UpdatePassword = () => {
           Save
         </Button>,
         <Button
-          id="up-cancel-password-button"
+          id="update-password-cancel-button"
+          aria-label="Cancel button"
           key="update-password-cancel-button"
           variant="link"
           onClick={onCloseDialog}
@@ -115,6 +117,8 @@ export const UpdatePassword = () => {
         title="Want to update the secrets?"
         actionLinks={
           <Button
+            id="update-password-edit-credentials-button"
+            aria-label="Edit credentials"
             variant={ButtonVariant.secondary}
             onClick={onClickEditCredentials}
           >

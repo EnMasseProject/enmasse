@@ -43,7 +43,7 @@ const NavToolBar: React.FC = () => {
   const dropdownItems = [
     <a href={process.env.REACT_APP_DOCS}>
       <DropdownItem
-        id="navtb-item-help"
+        id="nav-toolbar-help-dropdownitem"
         key="help"
         className={css(styles.navtb_dropdownitem_help)}
       >
@@ -51,7 +51,7 @@ const NavToolBar: React.FC = () => {
       </DropdownItem>
     </a>,
     <DropdownItem
-      id="navtb-item-about"
+      id="nav-toolbar-about-dropdownitem"
       key="About"
       className={css(styles.navtb_dropdownitem_about)}
       onClick={selectAbout}
@@ -60,17 +60,22 @@ const NavToolBar: React.FC = () => {
     </DropdownItem>
   ];
   const userDropdownItems = [
-    <DropdownItem id="dd-menuitem-logout" key={"logout"} href="oauth/sign_in">
+    <DropdownItem
+      id="nav-toolbar-logout-dropdownitem"
+      key={"logout"}
+      href="oauth/sign_in"
+    >
       Logout
     </DropdownItem>
   ];
   return (
     <React.Fragment>
       <Dropdown
-        id="navtb-item-help-about"
+        id="nav-toolbar-help-about-dropdown"
         position={DropdownPosition.right}
         toggle={
           <DropdownToggle
+            id="nav-toolbar-applications-dropdown-toggle"
             toggleIndicator={null}
             onToggle={onToggle}
             aria-label="Applications"
@@ -83,7 +88,7 @@ const NavToolBar: React.FC = () => {
         dropdownItems={dropdownItems}
       />
       <Dropdown
-        id="dd-user"
+        id="nav-toolbar-user-dropdown"
         isPlain
         position="right"
         onSelect={onUserDropdownSelect}
