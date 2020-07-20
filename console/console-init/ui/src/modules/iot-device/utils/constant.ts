@@ -95,6 +95,7 @@ const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "string", label: "String", value: "string" },
   { key: "number", label: "Numeric", value: "number" },
   { key: "boolean", label: "Boolean", value: "boolean" },
+  { key: "datetime", label: "DateTime", value: "datetime" },
   { key: "object", label: "Object", value: "object" },
   { key: "array", label: "Array", value: "array" }
 ];

@@ -57,6 +57,10 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
               value={deviceIdInput}
               onChange={handleTextInputChange1}
             />
+            <small>
+              A device ID will be automatically generated if it's not specified
+              here.
+            </small>
           </FormGroup>
           <FormGroup
             id="cd-device-info-form-switch"
