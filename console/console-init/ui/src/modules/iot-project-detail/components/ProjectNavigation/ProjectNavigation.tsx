@@ -30,18 +30,30 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
   return (
     <Nav variant="tertiary" onSelect={onSelect1}>
       <NavList>
-        <NavItem key="detail" itemId="detail" isActive={active === "detail"}>
+        <NavItem
+          key="detail"
+          itemId="detail"
+          isActive={active === "detail"}
+          id="project-navigation-detail-navitem"
+        >
           <NavLink
-            id="ad-space-nav-detail"
+            id="project-navigation-detail-navlink"
+            aria-label="navigate to detail"
             to={`detail`}
             className={css(styles.navlink)}
           >
             Detail
           </NavLink>
         </NavItem>
-        <NavItem key="devices" itemId="devices" isActive={active === "devices"}>
+        <NavItem
+          key="devices"
+          itemId="devices"
+          isActive={active === "devices"}
+          id="project-navigation-devices-navitem"
+        >
           <NavLink
-            id="ad-space-nav-devices"
+            id="project-navigation-devices-navlink"
+            aria-label="navigate to devices"
             to={`devices`}
             className={css(styles.navlink)}
           >
@@ -49,12 +61,14 @@ export const ProjectNavigation: React.FunctionComponent<ProjectNavigationProps> 
           </NavLink>
         </NavItem>
         <NavItem
+          id="project-navigation-certificates-navitem"
           key="certificates"
           itemId="certificates"
           isActive={active === "certificates"}
         >
           <NavLink
-            id="ad-space-nav-certificates"
+            id="project-navigation-certificates-navlink"
+            aria-label="navigate to certificates"
             to={`certificates`}
             className={css(styles.navlink)}
           >
