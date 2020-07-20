@@ -199,11 +199,6 @@ class UpgradeTest extends TestBase implements ITestIsolatedStandard {
                 log.warn("Skipping OLM test from version {} , because replaces version is {}", version, environment.enmasseOlmReplaces());
                 return;
             }
-            if (olmType == OLMInstallationType.DEFAULT && (version.equals("0.31.0") || version.equals("1.4.0"))) {
-                //versions with known fsgroup issue
-                log.warn("Skipping OLM test for version {}, because of known issue without fix", version);
-                return;
-            }
             installEnmasseOLM(Paths.get(templates), version);
         } else {
             installEnmasseBundle(Paths.get(templates), version);
