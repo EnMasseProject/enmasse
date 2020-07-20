@@ -24,7 +24,6 @@ import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import {
   DELETE_ADDRESS_SPACE,
-  RETURN_IOT_PROJECTS,
   DELETE_IOT_PROJECT,
   TOGGLE_IOT_PROJECTS_STATUS,
   RETURN_ALL_PROJECTS
@@ -76,42 +75,13 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const [
     setToggleIoTProjectQueryVariables
   ] = useMutationQuery(TOGGLE_IOT_PROJECTS_STATUS, ["allProjects"]);
-  // const { loading, data } = useQuery<IProjectsResponse>(
-  //   RETURN_ALL_ADDRESS_SPACES(
-  //     page,
-  //     perPage,
-  //     filterNames,
-  //     filterNamespaces,
-  //     filterType,
-  //     sortBy
-  //   ),
-  //   { pollInterval: POLL_INTERVAL, fetchPolicy: FetchPolicy.NETWORK_ONLY }
-  // );
 
   const [
     setDeleteIoTProjectQueryVariables
   ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
 
-  const queryResolver = `
-    total
-    objects{
-      ... on IoTProject_iot_enmasse_io_v1alpha1 {
-        kind
-        metadata {
-          name
-          namespace
-          creationTimestamp
-        }
-        iotStatus: status{
-          phase
-          phaseReason 
-        }
-        enabled
-      }
-    }`;
-
   const { loading, data } = useQuery<IAllProjectsResponse>(
-    RETURN_ALL_PROJECTS(undefined, queryResolver),
+    RETURN_ALL_PROJECTS(undefined, undefined),
     {
       fetchPolicy: FetchPolicy.NETWORK_ONLY,
       pollInterval: POLL_INTERVAL
@@ -312,10 +282,19 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           isEnabled: enabled,
           namespace: metadata?.namespace,
           status: iotStatus?.phase,
-          creationTimestamp: metadata?.creationTimestamp,
-          errorMessageRate: 3
+          creationTimestamp: metadata?.creationTimestamp
         };
-      } else return { projectType: ProjectTypes.MESSAGING };
+      } else {
+        const { metadata, spec, messagingStatus } = project || {};
+        return {
+          projectType: ProjectTypes.MESSAGING,
+          name: metadata?.name,
+          displayName: metadata?.name,
+          namespace: metadata?.namespace,
+          creationTimestamp: metadata?.creationTimestamp,
+          status: messagingStatus?.phase
+        };
+      }
       // return {
       //   projectType: ProjectTypes.IOT,
       //   name: metadata?.name,
@@ -337,6 +316,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const projectList: IProject[] = getProjects();
 
+  console.log(projectList);
   setTotalProjects(projectList.length);
 
   const ioTCount: IProjectCount = {

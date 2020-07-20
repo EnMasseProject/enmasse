@@ -91,7 +91,7 @@ export const IoTProjectDetailHeaderContainer: React.FC = () => {
   const { allProjects } = data || {
     allProjects: { objects: objects }
   };
-  const { spec, metadata, iotStatus, enabled } = allProjects?.objects[0] || {};
+  const { metadata, iotStatus, enabled } = allProjects?.objects[0] || {};
 
   const namespace = metadata?.namespace;
 

@@ -55,7 +55,7 @@ const RETURN_ALL_PROJECTS = (filterObj?: any, queryResolver?: string) => {
     queryResolver = defaultQueryResolver;
   }
 
-  let filter: string = "`$.kind`='IoTProject'";
+  let filter: string = "";
 
   if (filterObj) {
     //TODO
@@ -104,8 +104,7 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
 
   if (filterObj) {
     //TODO
-    filter = "`$.kind`='IoTProject'";
-    // filter = FILTER_RETURN_IOT_PROJECTS(filterObj);
+    FILTER_RETURN_IOT_PROJECTS(filterObj);
   }
 
   const IOT_PROJECT_DETAIL = gql(

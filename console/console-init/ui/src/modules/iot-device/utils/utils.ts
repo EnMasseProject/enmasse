@@ -105,6 +105,7 @@ const getFormInitialStateByProperty = (
   switch (property?.toLowerCase()) {
     case "credentials":
       initialState = getCredentialsFieldsInitialState();
+      break;
     case "secrets":
       initialState = getSecretsFieldsInitialState(credentials, credIndex);
       break;

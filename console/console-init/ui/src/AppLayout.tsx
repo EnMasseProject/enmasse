@@ -24,14 +24,24 @@ import avatarImg from "./img_avatar.svg";
 import "./App.css";
 import { useStoreContext } from "./context-state-reducer";
 import { onServerError } from "./graphql-module";
+import {
+  IntrospectionFragmentMatcher,
+  InMemoryCache
+} from "apollo-cache-inmemory";
+import introspectionQueryResultData from "./framgmentTypes.json";
 
 let history: any, dispactAction: any, states: any;
 
+const fragmentMatcher = new IntrospectionFragmentMatcher({
+  introspectionQueryResultData
+});
+const cache = new InMemoryCache({ fragmentMatcher });
 const graphqlEndpoint = process.env.REACT_APP_GRAPHQL_ENDPOINT
   ? process.env.REACT_APP_GRAPHQL_ENDPOINT
   : "http://localhost:4000";
 
 const client = new ApolloClient({
+  cache,
   uri: graphqlEndpoint,
   onError(error: any) {
     onServerError(error, dispactAction, states);

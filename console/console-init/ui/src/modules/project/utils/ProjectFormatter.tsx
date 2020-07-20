@@ -93,12 +93,15 @@ const ProjectError: React.FunctionComponent<IProjectErrorProps> = ({
 }) => {
   return (
     <>
-      {errorCount &&
-        (errorCount >= 25 ? (
+      {errorCount ? (
+        errorCount >= 25 ? (
           <span className={css(style.red_color)}>{errorCount}%</span>
         ) : (
           errorCount + "%"
-        ))}
+        )
+      ) : (
+        "-"
+      )}
       {errorMessages && (
         <>
           {errorCount && <br />}
