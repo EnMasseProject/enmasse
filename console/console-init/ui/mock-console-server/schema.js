@@ -767,6 +767,8 @@ const typeDefs = gql`
     #This field contain the routes and connection details from the iotconfig
     #it doesn't match with the k8s API
     endpoints: [IotEndpoint]
+
+    metrics: [Metric_consoleapi_enmasse_io_v1beta1!]
   }
 
   type IotEndpoint {
