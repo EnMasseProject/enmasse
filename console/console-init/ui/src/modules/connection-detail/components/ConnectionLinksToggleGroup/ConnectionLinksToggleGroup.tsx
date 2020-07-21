@@ -108,7 +108,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="connection-links-togglegrp-name-typeahead"
+                id="connection-links-togglegrp-input-name-autopopulate"
                 aria-label="select name"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
@@ -142,7 +142,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAheadSelect
-                id="connection-links-togglegrp-address-typeahead"
+                id="connection-links-togglegrp-input-address-autopopulate"
                 aria-label="select address"
                 typeAheadAriaLabel={"Select address"}
                 aria-LabelledBy={"typeahead-select-id"}
@@ -175,7 +175,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
         >
           {filterSelected === "Role" && (
             <SelectWithToggle
-              id="connection-links-togglegrp-role-selectwithtoggle"
+              id="connection-links-togglegrp-select-role-toggle"
               variant={SelectVariant.single}
               ariaLabel="Select Role"
               onSelectItem={onRoleSelect}
@@ -192,7 +192,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="connection-links-togglegrp-filter-dropdowntoggle"
+          id="connection-links-filter-select-dropdowntoggle"
           toggleId="connectionlink-filter-dropdown-toggle"
           dropdownItemIdPrefix="cl-filter-dropdown"
           position={DropdownPosition.left}
@@ -218,7 +218,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           <FilterIcon />
           {checkIsFilterApplied() && (
             <Badge
-              id="connection-links-togglegrp-total-records-badge"
+              id="connection-links-togglegrp-total-records-toggle"
               key={1}
               isRead
             >
