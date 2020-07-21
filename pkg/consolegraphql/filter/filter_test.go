@@ -63,7 +63,11 @@ func TestFilterEval(t *testing.T) {
 		FooInt64 int64
 		FooUint  uint
 		FooBool  bool
-	}{"Bar", 10, 11, 12, 13, true}
+		FooIntArr   [3]int
+		FooStrArr   [3]string
+	}{"Bar", 10, 11, 12, 13, true,
+		[3]int{1,2,3}, [3]string{"abc", "def", "ghi"}}
+
 
 	testCases := []struct {
 		expr     string
@@ -117,6 +121,13 @@ func TestFilterEval(t *testing.T) {
 
 		{"'a' NOT LIKE 'b'", true},
 
+		//{"1 IN [1,2,3]", true},
+		//{"4 IN [1,2,3]", false},
+		//{"10 IN [1,2,3]", false},
+		//{"'abc' IN ['abc','def']", true},
+		//{"'ghi' IN ['abc','def']", false},
+		//{"'a' IN ['abc','def']", false},
+
 		{"NULL IS NULL", true},
 		{"'a' IS NULL", false},
 		{"'' IS NULL", false},
@@ -165,6 +176,13 @@ func TestFilterEval(t *testing.T) {
 		{"`$.FooInt` IS NOT NULL", true},
 		{"`$.NonExistentNode` IS NULL", true},
 		{"`$.FooStr.NonExistentSubNode` IS NULL", true},
+
+		{"'1' IN `$.FooIntArr`", true},
+		{"'9' IN `$.FooIntArr`", false},
+		{"'10' IN `$.FooIntArr`", false},
+		{"'abc' IN `$.FooStrArr`", true},
+		{"'xyz' IN `$.FooStrArr`", false},
+		{"'a' IN `$.FooStrArr`", false},
 	}
 
 	for _, tc := range testCases {

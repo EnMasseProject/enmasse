@@ -46,7 +46,7 @@ func setOrderByTree(yylex interface{}, expr OrderBy) {
 %right <bytes> NOT
 
 
-%left <bytes> '=' '<' '>' LE GE NE LIKE IS
+%left <bytes> '=' '<' '>' LE GE NE LIKE IS IN
 
 %token <bytes> '('
 %token <bytes> ')'
@@ -169,6 +169,10 @@ compare:
 | NE
   {
     $$ = NotEqualStr
+  }
+| IN
+  {
+    $$ = InStr
   }
 
 value:

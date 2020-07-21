@@ -77,6 +77,8 @@ query
 {$$ = yy.binaryExpression.lessThanExpression($1, $3)}
 |   literal LTE literal
 {$$ = yy.binaryExpression.lessThanEqualsExpression($1, $3)}
+|   literal IN literal
+{$$ = yy.binaryExpression.inExpression($1, $3)}
 ;
 
 literal

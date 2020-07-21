@@ -40,17 +40,18 @@ const GE = 57350
 const NE = 57351
 const LIKE = 57352
 const IS = 57353
-const STRING = 57354
-const INTEGRAL = 57355
-const FLOAT = 57356
-const JSON_PATH = 57357
-const NULL = 57358
-const TRUE = 57359
-const FALSE = 57360
-const START_EXPRESSION = 57361
-const ASC = 57362
-const DESC = 57363
-const START_ORDER_LIST = 57364
+const IN = 57354
+const STRING = 57355
+const INTEGRAL = 57356
+const FLOAT = 57357
+const JSON_PATH = 57358
+const NULL = 57359
+const TRUE = 57360
+const FALSE = 57361
+const START_EXPRESSION = 57362
+const ASC = 57363
+const DESC = 57364
+const START_ORDER_LIST = 57365
 
 var FilterToknames = [...]string{
 	"$end",
@@ -67,6 +68,7 @@ var FilterToknames = [...]string{
 	"NE",
 	"LIKE",
 	"IS",
+	"IN",
 	"'('",
 	"')'",
 	"STRING",
@@ -97,69 +99,69 @@ var FilterExca = [...]int{
 	1, 8,
 	4, 8,
 	5, 8,
-	16, 8,
+	17, 8,
 	-2, 15,
 }
 
 const FilterPrivate = 57344
 
-const FilterLast = 64
+const FilterLast = 66
 
 var FilterAct = [...]int{
 
 	8, 19, 9, 7, 13, 14, 15, 16, 17, 10,
-	11, 35, 6, 50, 13, 14, 15, 16, 17, 10,
-	11, 37, 38, 20, 45, 47, 43, 43, 42, 44,
-	2, 4, 22, 21, 3, 22, 21, 48, 23, 24,
-	46, 21, 1, 36, 41, 18, 43, 12, 49, 25,
-	5, 0, 0, 39, 40, 27, 29, 30, 31, 32,
-	33, 34, 26, 28,
+	11, 38, 39, 6, 51, 13, 14, 15, 16, 17,
+	10, 11, 36, 20, 46, 48, 44, 44, 43, 45,
+	2, 21, 4, 1, 3, 22, 21, 37, 49, 23,
+	24, 47, 22, 21, 18, 12, 25, 44, 42, 50,
+	5, 0, 0, 0, 40, 41, 27, 29, 30, 31,
+	32, 33, 34, 26, 28, 35,
 }
 var FilterPact = [...]int{
 
-	6, -1000, -3, 3, 31, -1000, -3, -3, -1000, 49,
-	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -16, -1000,
-	-4, -3, -3, 28, -1000, -13, -13, 11, 19, -1000,
-	-1000, -1000, -1000, -1000, -1000, 3, -1000, -1000, -1000, -1000,
-	36, -1000, -1000, -1000, -1000, -13, -1000, -8, -1000, -1000,
-	-1000,
+	5, -1000, -3, 2, 38, -1000, -3, -3, -1000, 50,
+	-1000, -1000, -1000, -1000, -1000, -1000, -1000, -1000, -6, -1000,
+	-15, -3, -3, 31, -1000, -14, -14, 11, 19, -1000,
+	-1000, -1000, -1000, -1000, -1000, -1000, 2, -1000, -1000, -1000,
+	-1000, 26, -1000, -1000, -1000, -1000, -14, -1000, -8, -1000,
+	-1000, -1000,
 }
 var FilterPgo = [...]int{
 
-	0, 31, 50, 49, 47, 2, 0, 45, 1, 43,
-	42,
+	0, 32, 50, 46, 45, 2, 0, 44, 1, 37,
+	33,
 }
 var FilterR1 = [...]int{
 
 	0, 10, 10, 1, 1, 1, 1, 1, 1, 2,
 	2, 2, 2, 2, 5, 5, 3, 3, 3, 3,
-	3, 3, 4, 4, 4, 4, 4, 6, 6, 7,
-	7, 7, 8, 9, 9, 9,
+	3, 3, 3, 4, 4, 4, 4, 4, 6, 6,
+	7, 7, 7, 8, 9, 9, 9,
 }
 var FilterR2 = [...]int{
 
 	0, 2, 2, 1, 3, 3, 3, 2, 1, 3,
 	3, 4, 3, 4, 1, 1, 1, 1, 1, 1,
-	1, 1, 1, 1, 1, 1, 1, 1, 1, 0,
-	1, 3, 2, 0, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 1, 3, 2, 0, 1, 1,
 }
 var FilterChk = [...]int{
 
-	-1000, -10, 24, 28, -1, -2, 15, 6, -6, -5,
-	22, 23, -4, 17, 18, 19, 20, 21, -7, -8,
-	20, 5, 4, -1, -1, -3, 13, 6, 14, 7,
-	8, 9, 10, 11, 12, 27, -9, 25, 26, -1,
-	-1, 16, -5, -6, -5, 13, 21, 6, -8, -5,
-	21,
+	-1000, -10, 25, 29, -1, -2, 16, 6, -6, -5,
+	23, 24, -4, 18, 19, 20, 21, 22, -7, -8,
+	21, 5, 4, -1, -1, -3, 13, 6, 14, 7,
+	8, 9, 10, 11, 12, 15, 28, -9, 26, 27,
+	-1, -1, 17, -5, -6, -5, 13, 22, 6, -8,
+	-5, 22,
 }
 var FilterDef = [...]int{
 
-	0, -2, 0, 29, 1, 3, 0, 0, -2, 0,
-	27, 28, 14, 22, 23, 24, 25, 26, 2, 30,
-	33, 0, 0, 0, 7, 0, 0, 0, 0, 16,
-	17, 18, 19, 20, 21, 0, 32, 34, 35, 5,
-	6, 4, 9, 15, 10, 0, 12, 0, 31, 11,
-	13,
+	0, -2, 0, 30, 1, 3, 0, 0, -2, 0,
+	28, 29, 14, 23, 24, 25, 26, 27, 2, 31,
+	34, 0, 0, 0, 7, 0, 0, 0, 0, 16,
+	17, 18, 19, 20, 21, 22, 0, 33, 35, 36,
+	5, 6, 4, 9, 15, 10, 0, 12, 0, 32,
+	11, 13,
 }
 var FilterTok1 = [...]int{
 
@@ -167,15 +169,15 @@ var FilterTok1 = [...]int{
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-	15, 16, 3, 3, 27, 3, 3, 3, 3, 3,
+	16, 17, 3, 3, 28, 3, 3, 3, 3, 3,
 	3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 	8, 7, 9,
 }
 var FilterTok2 = [...]int{
 
 	2, 3, 4, 5, 6, 10, 11, 12, 13, 14,
-	17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-	28,
+	15, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+	27, 29,
 }
 var FilterTok3 = [...]int{
 	0,
@@ -646,78 +648,78 @@ Filterdefault:
 		}
 	case 22:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:176
+//line pkg/consolegraphql/filter/parser.y:174
 		{
-			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
+			FilterVAL.str = InStr
 		}
 	case 23:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:180
 		{
-			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
+			FilterVAL.expr = StringVal(FilterDollar[1].stringValue)
 		}
 	case 24:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:184
 		{
-			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
+			FilterVAL.expr = IntVal(FilterDollar[1].integralValue)
 		}
 	case 25:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:188
 		{
-			FilterVAL.expr = FilterDollar[1].jsonPathValue
+			FilterVAL.expr = FloatVal(FilterDollar[1].floatValue)
 		}
 	case 26:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:192
 		{
-			FilterVAL.expr = NewNullVal()
+			FilterVAL.expr = FilterDollar[1].jsonPathValue
 		}
 	case 27:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:198
+//line pkg/consolegraphql/filter/parser.y:196
 		{
-			FilterVAL.boolVal = BoolVal(true)
+			FilterVAL.expr = NewNullVal()
 		}
 	case 28:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:202
 		{
-			FilterVAL.boolVal = BoolVal(false)
+			FilterVAL.boolVal = BoolVal(true)
 		}
 	case 29:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:206
+		{
+			FilterVAL.boolVal = BoolVal(false)
+		}
+	case 30:
 		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:207
+//line pkg/consolegraphql/filter/parser.y:211
 		{
 			FilterVAL.orderList = NewEmptyOrderBy()
 		}
-	case 30:
+	case 31:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:211
+//line pkg/consolegraphql/filter/parser.y:215
 		{
 			FilterVAL.orderList = NewOrderBy(FilterDollar[1].order)
 		}
-	case 31:
+	case 32:
 		FilterDollar = FilterS[Filterpt-3 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:215
+//line pkg/consolegraphql/filter/parser.y:219
 		{
 			FilterVAL.orderList = append(FilterDollar[1].orderList, FilterDollar[3].order)
 		}
-	case 32:
+	case 33:
 		FilterDollar = FilterS[Filterpt-2 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:221
+//line pkg/consolegraphql/filter/parser.y:225
 		{
 			FilterVAL.order = NewOrder(FilterDollar[1].jsonPathValue, FilterDollar[2].str)
 		}
-	case 33:
-		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
-//line pkg/consolegraphql/filter/parser.y:226
-		{
-			FilterVAL.str = AscScr
-		}
 	case 34:
-		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+		FilterDollar = FilterS[Filterpt-0 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:230
 		{
 			FilterVAL.str = AscScr
@@ -725,6 +727,12 @@ Filterdefault:
 	case 35:
 		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
 //line pkg/consolegraphql/filter/parser.y:234
+		{
+			FilterVAL.str = AscScr
+		}
+	case 36:
+		FilterDollar = FilterS[Filterpt-1 : Filterpt+1]
+//line pkg/consolegraphql/filter/parser.y:238
 		{
 			FilterVAL.str = DescScr
 		}

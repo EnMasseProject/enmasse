@@ -120,6 +120,30 @@ describe("filter_parser", function() {
         }),
         true
       );
+      assert.strictEqual(
+        parser.parse("'a' IN `$.foo`").evaluate({
+          foo: ["a", "b", "c"]
+        }),
+        true
+      );
+      assert.strictEqual(
+        parser.parse("'c' IN `$.foo`").evaluate({
+          foo: ["a", "b"]
+        }),
+        false
+      );
+      assert.strictEqual(
+        parser.parse("'1' IN `$.foo`").evaluate({
+          foo: [1, 2, 3]
+        }),
+        true
+      );
+      assert.strictEqual(
+        parser.parse("'9' IN `$.foo`").evaluate({
+          foo: [1, 2, 3]
+        }),
+        false
+      );
     });
   });
 });

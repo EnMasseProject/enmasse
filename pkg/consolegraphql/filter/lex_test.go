@@ -30,6 +30,7 @@ func TestLexSimpleLexemes(t *testing.T) {
 		{"TRUE AND FALSE", []int{TRUE, AND, FALSE}},
 		{"( TRUE )", []int{'(', TRUE, ')'}},
 		{"(TRUE)", []int{'(', TRUE, ')'}},
+		{"IN", []int{IN}},
 	}
 
 	for _, tc := range testCases {

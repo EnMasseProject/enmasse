@@ -32,6 +32,7 @@ const (
 	NotLikeStr      = "not like"
 	IsNull          = "is null"
 	IsNotNull       = "is not null"
+	InStr		    = "in"
 )
 
 func ParseFilterExpression(s string) (Expr, error) {
@@ -248,6 +249,13 @@ func (e ComparisonExpr) Eval(v interface{}) (interface{}, error) {
 				return l < r, nil
 			case LessEqualStr:
 				return l <= r, nil
+			default:
+				return false, nil
+			}
+		case []int:
+			switch e.Operator {
+			case InStr:
+				return sort.SearchInts(r, l), nil
 			default:
 				return false, nil
 			}
@@ -494,6 +502,13 @@ func (e ComparisonExpr) Eval(v interface{}) (interface{}, error) {
 			default:
 				return false, nil
 			}
+		case []float64:
+			switch e.Operator {
+			case InStr:
+				return sort.SearchFloat64s(r, l), nil
+			default:
+				return false, nil
+			}
 		default:
 			return false, nil
 		}
@@ -524,6 +539,13 @@ func (e ComparisonExpr) Eval(v interface{}) (interface{}, error) {
 				return like(l, r), nil
 			case NotLikeStr:
 				return !like(l, r), nil
+			default:
+				return false, nil
+			}
+		case []string:
+			switch e.Operator {
+			case InStr:
+				return sort.SearchStrings(r, l), nil
 			default:
 				return false, nil
 			}

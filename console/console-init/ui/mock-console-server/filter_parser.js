@@ -77,6 +77,19 @@ parser.yy = {
           return res !== null;
         }
       };
+    },
+    inExpression: function(x, y) {
+      return {
+        evaluate: function(target) {
+          var lhs = x.evaluate(target);
+          var rhs = y.evaluate(target);
+
+          if (typeof rhs == "object") {
+            var res = rhs.find(e => e == lhs);
+            return res != undefined;
+          } else return false;
+        }
+      };
     }
   },
   logicExpression: {
