@@ -108,7 +108,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="connection-links-togglegrp-input-name-autopopulate"
+                id="connection-links-togglegrp-input-name-dropdown"
                 aria-label="select name"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
@@ -142,7 +142,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
           {filterSelected && filterSelected === "Address" && (
             <InputGroup>
               <TypeAheadSelect
-                id="connection-links-togglegrp-input-address-autopopulate"
+                id="connection-links-togglegrp-input-address-dropdown"
                 aria-label="select address"
                 typeAheadAriaLabel={"Select address"}
                 aria-LabelledBy={"typeahead-select-id"}
@@ -217,11 +217,7 @@ const ConnectionLinksToggleGroup: React.FunctionComponent<IConnectionLinksToggle
         <>
           <FilterIcon />
           {checkIsFilterApplied() && (
-            <Badge
-              id="connection-links-togglegrp-total-records-toggle"
-              key={1}
-              isRead
-            >
+            <Badge id="connection-links-total-records-toggle" key={1} isRead>
               {totalRecords}
             </Badge>
           )}
