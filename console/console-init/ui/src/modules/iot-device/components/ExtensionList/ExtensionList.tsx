@@ -7,7 +7,6 @@ import React from "react";
 import {
   Grid,
   GridItem,
-  FormGroup,
   TextInput,
   DropdownPosition,
   Button,

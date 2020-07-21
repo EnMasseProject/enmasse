@@ -142,15 +142,19 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
       cells: [
         {
           title: (
-            <Link
-              to={
-                projectType === ProjectTypes.MESSAGING
-                  ? `messaging-projects/${namespace}/${name}/${type}/addresses`
-                  : `iot-projects/${namespace}/${name}/detail`
-              }
-            >
-              {displayName}
-            </Link>
+            <>
+              <Link
+                to={
+                  projectType === ProjectTypes.MESSAGING
+                    ? `messaging-projects/${namespace}/${name}/${type}/addresses`
+                    : `iot-projects/${namespace}/${name}/detail`
+                }
+              >
+                {displayName}
+              </Link>
+              <br />
+              {namespace}
+            </>
           ),
           key: displayName
         },
