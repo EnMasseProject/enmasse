@@ -5,18 +5,12 @@
 
 package io.enmasse.systemtest.iot.mqtt;
 
-import static com.google.common.base.Throwables.getCausalChain;
-import static com.google.common.base.Throwables.getRootCause;
-import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLHandshakeException;
-
+import io.enmasse.systemtest.iot.CommandTester;
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.MqttAdapterClient;
+import io.enmasse.systemtest.iot.StandardIoTTests;
 import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,13 +18,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLHandshakeException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.MqttAdapterClient;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import static com.google.common.base.Throwables.getCausalChain;
+import static com.google.common.base.Throwables.getRootCause;
+import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.ONE_WAY;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Standard MQTT IoT tests
@@ -234,6 +233,67 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
         } catch (Exception e) {
             assertConnectionException(e);
             log.debug("Accepting MQTT exception", e);
+        }
+
+    }
+
+
+    /**
+     * Test a simple one-way command pattern.
+     */
+    @ParameterizedTest(name = "testMqttOneWayCommand-{0}")
+    @MethodSource("getDevices")
+    default void testMqttOneWayCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new MqttSubordinate(device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(ONE_WAY)
+                    .subordinate(subordinate)
+                    .commanderFactory(CommandTester.CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
+        }
+
+    }
+
+    /**
+     * Test a simple request/response command pattern.
+     */
+    @ParameterizedTest(name = "testMqttRequestResponseCommand-{0}")
+    @MethodSource("getDevices")
+    default void testMqttRequestResponseCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new MqttSubordinate(device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(REQUEST_RESPONSE)
+                    .subordinate(subordinate)
+                    .commanderFactory(CommandTester.CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
         }
 
     }

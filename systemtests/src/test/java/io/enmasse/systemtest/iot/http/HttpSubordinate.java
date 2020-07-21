@@ -7,6 +7,7 @@ package io.enmasse.systemtest.iot.http;
 
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.iot.CommandTester;
+import io.enmasse.systemtest.iot.CommandTester.AbstractSubordinate;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.IoTTestSession;
@@ -25,7 +26,7 @@ import java.util.function.Consumer;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 
-public class HttpSubordinate implements CommandTester.Subordinate, AutoCloseable  {
+public class HttpSubordinate extends AbstractSubordinate implements  AutoCloseable  {
 
     private static final Logger log = LoggerFactory.getLogger(HttpSubordinate.class);
 
@@ -36,11 +37,12 @@ public class HttpSubordinate implements CommandTester.Subordinate, AutoCloseable
     private final Vertx vertx;
     private final ReceiverStatus receiver;
     private final HttpAdapterClient client;
-    private final String deviceId;
 
     private Consumer<ReceivedCommand> commandReceiver;
 
     HttpSubordinate(final IoTTestSession session, final Device device) throws Exception {
+        super(device.getDeviceId());
+
         this.vertx = session.getVertx();
         this.receiver = session
                 .getConsumerClient()
@@ -48,12 +50,6 @@ public class HttpSubordinate implements CommandTester.Subordinate, AutoCloseable
                         TELEMETRY.address(session.getTenantId()),
                         this::receivedMessage);
         this.client = device.createHttpAdapterClient();
-        this.deviceId = device.getDeviceId();
-    }
-
-    @Override
-    public String getDeviceId() {
-        return this.deviceId;
     }
 
     private void receivedMessage(final Message message) {

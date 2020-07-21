@@ -267,6 +267,21 @@ public class CommandTester {
 
     }
 
+    public static abstract class AbstractSubordinate implements Subordinate {
+
+        private final String deviceId;
+
+        protected AbstractSubordinate(final String deviceId) {
+            this.deviceId = deviceId;
+        }
+
+        @Override
+        public String getDeviceId() {
+            return this.deviceId;
+        }
+
+    }
+
     public interface Commander extends AutoCloseable {
         Future<?> command(Command command);
 
