@@ -87,7 +87,11 @@ const AppLayout: React.FC = () => {
     <ApolloProvider client={client}>
       <RootModal />
       <AppLayoutContext.Provider value={{ setBreadcrumb: handleSetBreadcrumb }}>
-        <Page header={header} breadcrumb={breadcrumb}>
+        <Page
+          header={header}
+          breadcrumb={breadcrumb}
+          mainContainerId="main-container"
+        >
           <NetworkStatusAlert />
           <ServerMessageAlert />
           <AppRoutes />
