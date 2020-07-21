@@ -6,6 +6,7 @@
 * #4915: Bump patternfly/react-core version 3.146.0 -> 3.153.13
 * #4970: Update Postgres to 42.2.13 [CVE-2020-13692] (#4971)
 * #5001: Ensure that IoT roles iot-tenant-service/iot-device-connection have distinct perms sets (#5019)
+* #5031: Bump postgresql-jdbc from 42.2.13 -> 42.2.14 
 
 ## 0.32.1
 
