@@ -18,6 +18,7 @@ type RequestState struct {
 	User                 userapiv1.User
 	UserAccessToken      string
 	UseSession           bool
+	NewSession           bool
 	ImpersonatedUser     string
 }
 
