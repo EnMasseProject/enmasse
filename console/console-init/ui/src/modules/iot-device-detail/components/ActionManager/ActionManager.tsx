@@ -53,7 +53,12 @@ export const ActionManager: React.FC<IActionManagerProps> = ({
 
   return (
     <>
-      <Title headingLevel="h2" size="xl">
+      <Title
+        headingLevel="h2"
+        size="xl"
+        id="action-manager-edit-device-title"
+        aria-label="Edit device Title"
+      >
         Edit device {deviceid}
       </Title>
       <br />

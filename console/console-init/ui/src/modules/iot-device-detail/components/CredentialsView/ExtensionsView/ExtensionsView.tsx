@@ -82,7 +82,7 @@ export const ExtensionsView: React.FC<IExtensionsViewProps> = ({
             </Title>
           </GridItem>
           <Table aria-label="extensions view table" cells={columns} rows={rows}>
-            <TableHeader />
+            <TableHeader id="extensions-view-table" />
             <TableBody />
           </Table>
         </Grid>

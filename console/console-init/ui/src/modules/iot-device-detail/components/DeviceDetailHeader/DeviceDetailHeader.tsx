@@ -106,7 +106,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
       <SplitItem>
         <Split hasGutter>
           <SplitItem>
-            <Title headingLevel="h1" size="4xl" id="title-device-name">
+            <Title headingLevel="h1" size="4xl" id="device-detail-name-title">
               {deviceName}
             </Title>
           </SplitItem>
@@ -139,7 +139,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     if (!(credentials.length > 0) && viaGateway) {
       additionalKebabOptions.push(
         <DropdownItem
-          id="device-detail-header-kebab-option-edit-gateways"
+          id="device-detail-edit-gateways-dropdownitem"
           key="edit-gateways"
           aria-label="edit gateways"
           onClick={onSelctEditGateways}
@@ -150,7 +150,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     } else if (!viaGateway && credentials?.length > 0) {
       additionalKebabOptions.push(
         <DropdownItem
-          id="device-detail-header-kebab-option-edit-credentials"
+          id="device-detail-edit-credentials-dropdownitem"
           key="edit-credentials"
           aria-label="edit credentials"
           onClick={onSelectEditCredentials}
@@ -166,7 +166,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     ) {
       additionalKebabOptions.push(
         <DropdownItem
-          id="device-detail-header-kebab-option-change-connection-type"
+          id="device-detail-change-connection-type-dropdownitem"
           key="change-connection-type"
           aria-label="change connection type"
           onClick={onSelectChangeConnectionType}
@@ -183,7 +183,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
     const dropdownItems: React.ReactNode[] = [
       ...additionalKebebOptions(),
       <DropdownItem
-        id="device-detail-header-kebab-option-edit-metadata"
+        id="device-detail-edit-metadata-dropdownitem"
         key="edit-metadata"
         aria-label="edit metadata"
         onClick={onSelectEditMetadata}
@@ -191,7 +191,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         Edit metadata
       </DropdownItem>,
       <DropdownItem
-        id="device-detail-header-kebab-option-edit-json"
+        id="device-detail-edit-json-dropdownitem"
         key="edit-in-json"
         aria-label="edit device in json"
         onClick={onSelectEditDeviceInJson}
@@ -200,7 +200,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
       </DropdownItem>,
       <DropdownSeparator key="separator" />,
       <DropdownItem
-        id="device-detail-header-kebab-option-delete"
+        id="device-detail-delete-dropdownitem"
         key="delete-device"
         aria-label="delete device"
         onClick={onDelete}
@@ -208,7 +208,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         Delete Device
       </DropdownItem>,
       <DropdownItem
-        id="device-detail-header-kebab-option-clone"
+        id="device-detail-clone-dropdownitem"
         key="clone-device"
         aria-label="clone"
         onClick={onClone}
@@ -221,7 +221,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
-        toggleId="device-detail-header-kebab-toggle"
+        toggleId="device-detail-header-dropdown-toggle"
         dropdownItems={dropdownItems}
       />
     );
