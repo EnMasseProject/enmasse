@@ -69,7 +69,7 @@ const TableHeader: React.FC<IHeaderProps> = ({
     <DataListItem aria-labelledby={ariaLabelledby}>
       <DataListItemRow>
         <DataListItemCells
-          id="metadata-list-item-cells"
+          id="metadata-list-row"
           dataListCells={dataListCells()}
         ></DataListItemCells>
       </DataListItemRow>

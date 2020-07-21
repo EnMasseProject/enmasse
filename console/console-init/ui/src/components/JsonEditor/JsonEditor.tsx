@@ -39,7 +39,7 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
       <Flex>
         <FlexItem align={{ default: "alignRight" }}>
           <Tooltip
-            id={`json-editor-successfuly-copied-tooltip-${tooltipKey}`}
+            id={`json-editor-successfully-copied-tooltip-${tooltipKey}`}
             position={TooltipPosition.left}
             enableFlip={false}
             trigger={"manual"}

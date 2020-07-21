@@ -74,7 +74,7 @@ export const ServerMessageAlert: React.FC = () => {
     return (
       <PageSection>
         <Alert
-          id="server-mesage-error-alert"
+          id="server-message-error-alert"
           variant="danger"
           title="Server Error"
           actionClose={<AlertActionCloseButton onClose={onClose} />}
