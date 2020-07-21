@@ -4,7 +4,7 @@
  *
  */
 
-package server
+package query
 
 import (
 	"bytes"
@@ -14,6 +14,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	"github.com/enmasseproject/enmasse/pkg/consolegraphql/accesscontroller"
+	"github.com/enmasseproject/enmasse/pkg/consolegraphql/server"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	userapiv1 "github.com/openshift/api/user/v1"
 	userv1 "github.com/openshift/client-go/user/clientset/versioned/typed/user/v1"
@@ -44,6 +45,8 @@ type ImpersonationConfig struct {
 	UserHeader *string
 }
 
+type clientSetsCreator func(config *restclient.Config) (kubeClient kubernetes.Interface, userClient userv1.UserV1Interface, coreClient v1beta1.EnmasseV1beta1Interface, err error)
+
 func getImpersonatedUser(req *http.Request, impersonationConfig *ImpersonationConfig) string {
 	if impersonationConfig != nil {
 		userHeader := forwardedUserHeader
@@ -55,11 +58,11 @@ func getImpersonatedUser(req *http.Request, impersonationConfig *ImpersonationCo
 	return ""
 }
 
-func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, impersonationConfig *ImpersonationConfig) http.Handler {
+func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, impersonationConfig *ImpersonationConfig, clientSetsCreator clientSetsCreator) http.Handler {
 	gob.Register(userapiv1.User{})
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		var state *RequestState
+		var state *server.RequestState
 
 		useSession := true
 		if healthProbe, _ := strconv.ParseBool(req.Header.Get("X-Health")); healthProbe {
@@ -82,6 +85,7 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 			rw.WriteHeader(500)
 		}
 
+		newSession := false
 		if useSession {
 			if sessionManager.Exists(req.Context(), sessionOwnerSessionAttribute) {
 				sessionOwnerAccessTokenSha := sessionManager.Get(req.Context(), sessionOwnerSessionAttribute).([]byte)
@@ -90,9 +94,11 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 					// New session created automatically.
 					_ = sessionManager.Destroy(req.Context())
 					sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, sessionSha)
+					newSession = true
 				}
 			} else {
 				sessionManager.Put(req.Context(), sessionOwnerSessionAttribute, sessionSha)
+				newSession = true
 			}
 		}
 
@@ -114,6 +120,11 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 		}
 
 		config, err := kubeConfig.ClientConfig()
+		if err != nil {
+			log.Printf("Failed to build config : %v", err)
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		// Set impersonation configuration options if they are provided.
 		if impersonatedUser != "" {
@@ -126,21 +137,7 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 		// 	return &Tracer{RoundTripper: rt}
 		// }
 
-		kubeClient, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		userClient, err := userv1.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		coreClient, err := v1beta1.NewForConfig(config)
+		kubeClient, userClient, coreClient, err := clientSetsCreator(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -165,22 +162,23 @@ func AuthHandler(next http.Handler, sessionManager *scs.SessionManager, imperson
 		}
 
 		controller := accesscontroller.NewKubernetesRBACAccessController(kubeClient, accessControllerState)
-		state = &RequestState{
+		state = &server.RequestState{
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     controller,
 			User:                 loggedOnUser,
 			UserAccessToken:      config.BearerToken,
 			UseSession:           useSession,
+			NewSession:           newSession,
 			ImpersonatedUser:     impersonatedUser,
 		}
 
-		ctx := ContextWithRequestState(state, req.Context())
+		ctx := server.ContextWithRequestState(state, req.Context())
 
 		next.ServeHTTP(rw, req.WithContext(ctx))
 	})
 }
 
-func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, accessToken string) http.Handler {
+func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, accessToken string, clientSetsCreator clientSetsCreator) http.Handler {
 	gob.Register(userapiv1.User{})
 
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -197,15 +195,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		userclient, err := userv1.NewForConfig(config)
-		if err != nil {
-			log.Printf("Failed to build client set : %v", err)
-			http.Error(rw, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		coreClient, err := v1beta1.NewForConfig(config)
+		_, userclient, coreClient, err := clientSetsCreator(config)
 		if err != nil {
 			log.Printf("Failed to build client set : %v", err)
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -220,7 +210,7 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			sessionManager.Put(req.Context(), loggedOnUserSessionAttribute, loggedOnUser)
 		}
 
-		requestState := &RequestState{
+		requestState := &server.RequestState{
 			EnmasseV1beta1Client: coreClient,
 			AccessController:     accesscontroller.NewAllowAllAccessController(),
 			User:                 loggedOnUser,
@@ -229,13 +219,13 @@ func DevelopmentHandler(next http.Handler, sessionManager *scs.SessionManager, a
 			ImpersonatedUser:     "",
 		}
 
-		ctx := ContextWithRequestState(requestState, req.Context())
+		ctx := server.ContextWithRequestState(requestState, req.Context())
 		next.ServeHTTP(rw, req.WithContext(ctx))
 	})
 }
 
 func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessionManager *scs.SessionManager) string {
-	requestState := GetRequestStateFromContext(ctx)
+	requestState := server.GetRequestStateFromContext(ctx)
 	if requestState != nil {
 		loggedOnUser = requestState.User.Name
 		if requestState.UseSession {
@@ -251,7 +241,25 @@ func UpdateAccessControllerState(ctx context.Context, loggedOnUser string, sessi
 	return loggedOnUser
 }
 
-func getLoggedOnUser(req *http.Request, userClient *userv1.UserV1Client, impersonatedUser string) userapiv1.User {
+func CreateClientSets(config *restclient.Config) (kubeClient kubernetes.Interface, userClient userv1.UserV1Interface, coreClient v1beta1.EnmasseV1beta1Interface, err error) {
+	kubeClient, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		return
+	}
+
+	userClient, err = userv1.NewForConfig(config)
+	if err != nil {
+		return
+	}
+
+	coreClient, err = v1beta1.NewForConfig(config)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func getLoggedOnUser(req *http.Request, userClient userv1.UserV1Interface, impersonatedUser string) userapiv1.User {
 	createUser := func(userId string) userapiv1.User {
 		return userapiv1.User{
 			ObjectMeta: metav1.ObjectMeta{
