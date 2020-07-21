@@ -5,8 +5,8 @@
 
 import gql from "graphql-tag";
 
-const FILTER_RETURN_PROJECTS = (filterObject?: any) => {
-  const { projectname, projectType } = filterObject;
+const FILTER_RETURN_PROJECTS = (projectFilterParams?: any) => {
+  const { projectname } = projectFilterParams;
   let filter: string = "";
   if (projectname && projectname.trim() !== "") {
     filter += "`$.metadata.name` = '" + projectname + "'";
@@ -16,7 +16,10 @@ const FILTER_RETURN_PROJECTS = (filterObject?: any) => {
   return filter;
 };
 
-const RETURN_ALL_PROJECTS = (filterObj?: any, queryResolver?: string) => {
+const RETURN_ALL_PROJECTS = (
+  projectFilterParams?: any,
+  queryResolver?: string
+) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
   const defaultQueryResolver = `
       total
@@ -56,9 +59,9 @@ const RETURN_ALL_PROJECTS = (filterObj?: any, queryResolver?: string) => {
 
   let filter: string = "";
 
-  if (filterObj) {
+  if (projectFilterParams) {
     //TODO
-    filter = FILTER_RETURN_PROJECTS(filterObj);
+    filter = FILTER_RETURN_PROJECTS(projectFilterParams);
   }
 
   const ALL_PROJECTS = gql(
