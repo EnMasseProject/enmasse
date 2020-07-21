@@ -5,8 +5,8 @@
 
 import gql from "graphql-tag";
 
-const FILTER_RETURN_IOT_PROJECTS = (filterObject?: any) => {
-  const { projectName } = filterObject;
+const FILTER_RETURN_IOT_PROJECTS = (projectFilterParams?: any) => {
+  const { projectName } = projectFilterParams;
   let filter: string = "";
   if (projectName && projectName.trim() !== "") {
     filter += "`$.metadata.name` = '" + projectName + "'";
@@ -14,6 +14,67 @@ const FILTER_RETURN_IOT_PROJECTS = (filterObject?: any) => {
 
   // TODO: Filters to be incrementally added
   return filter;
+};
+
+const RETURN_ALL_PROJECTS = (
+  projectFilterParams?: any,
+  queryResolver?: string
+) => {
+  // TODO: Default resolver is subjected to change, with respect to most used query
+  const defaultQueryResolver = `
+    total
+    objects{
+      ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        messagingStatus: status {
+          isReady 
+          phase
+          messages
+        }
+      }
+      ... on IoTProject_iot_enmasse_io_v1alpha1 {
+        kind
+        metadata {
+          name
+          namespace
+          creationTimestamp
+        }
+        iotStatus: status{
+          phase
+          phaseReason 
+        }
+        enabled
+      }
+    }
+  `;
+
+  if (!queryResolver) {
+    queryResolver = defaultQueryResolver;
+  }
+
+  let filter: string = "`$.kind`='IoTProject'";
+
+  if (projectFilterParams) {
+    //TODO
+    // filter = FILTER_RETURN_IOT_PROJECTS(projectFilterParams);
+  }
+
+  const IOT_PROJECT_DETAIL = gql(
+    `query allProjects {
+      allProjects(
+        filter: "${filter}",
+      ) {
+         ${queryResolver}
+      }
+    }`
+  );
+
+  return IOT_PROJECT_DETAIL;
 };
 
 const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
