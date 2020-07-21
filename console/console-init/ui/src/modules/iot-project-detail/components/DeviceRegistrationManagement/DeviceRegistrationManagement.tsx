@@ -236,7 +236,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
                 value={endpoiuntUrl}
                 isReadOnly={true}
                 enableCopy={true}
-                id={"device-reg-endpoiunt-url-input"}
+                id={"device-reg-endpoint-url-input"}
                 ariaLabel={"endpoiunt url"}
               />
             </>
