@@ -60,6 +60,7 @@ export default function DeviceListPage() {
   );
 
   const createDeviceFormLink = `/iot-projects/${namespace}/${projectname}/devices/addform`;
+  const createDeviceJsonLink = `/iot-projects/${namespace}/${projectname}/devices/addjson`;
 
   const [deviceAlert, setDeviceAlert] = useState<{
     isVisible: boolean;
@@ -285,7 +286,7 @@ export default function DeviceListPage() {
   };
 
   const handleJSONUpload = () => {
-    // TODO: After create device is ready
+    history.push(createDeviceJsonLink);
   };
 
   const renderPagination = () => {
