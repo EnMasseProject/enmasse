@@ -64,15 +64,15 @@ const RETURN_ALL_PROJECTS = (
     filter = FILTER_RETURN_PROJECTS(projectFilterParams);
   }
 
-  const ALL_PROJECTS = gql(
-    `query allProjects {
+  const ALL_PROJECTS = gql`
+    query allProjects {
         allProjects(
           filter: "${filter}",
         ) {
            ${queryResolver}
         }
-      }`
-  );
+      }
+  `;
 
   return ALL_PROJECTS;
 };
