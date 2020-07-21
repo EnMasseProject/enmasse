@@ -316,7 +316,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const projectList: IProject[] = getProjects();
 
-  console.log(projectList);
   setTotalProjects(projectList.length);
 
   const ioTCount: IProjectCount = {
