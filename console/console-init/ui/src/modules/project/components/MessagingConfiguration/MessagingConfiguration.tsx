@@ -95,7 +95,7 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             >
               <br />
               <DropdownWithToggle
-                id="messaging-config-name-space-dropdowntoggle"
+                id="messaging-config-namespace-dropdowntoggle"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
                 dropdownItemClass={css(dropdown_item_styles.dropdown_item)}

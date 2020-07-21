@@ -107,7 +107,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           {filterSelected && filterSelected.toLowerCase() === "name" && (
             <InputGroup>
               <TypeAheadSelect
-                id="project-data-togglegrp-input-name-typeahead"
+                id="project-data-togglegrp-input-name-dropdown"
                 typeAheadAriaLabel={"Select name"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectName}
@@ -140,7 +140,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
           {filterSelected && filterSelected.toLowerCase() === "namespace" && (
             <InputGroup>
               <TypeAheadSelect
-                id="project-data-togglegrp-input-namespace-typeahead"
+                id="project-data-togglegrp-input-namespace-dropdown"
                 typeAheadAriaLabel={"Select namespace"}
                 aria-LabelledBy={"typeahead-select-id"}
                 onSelect={onSelectNamespace}
