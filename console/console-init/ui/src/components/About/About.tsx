@@ -59,7 +59,7 @@ export const About: React.FunctionComponent<IAboutProps> = ({
   if (docs) {
     docsElement = (
       <>
-        <TextListItem component="dt" id="about-documentation-dropdown">
+        <TextListItem component="dt" id="about-documentation-textlistitem">
           Documentation
         </TextListItem>
         <TextListItem component="dd">

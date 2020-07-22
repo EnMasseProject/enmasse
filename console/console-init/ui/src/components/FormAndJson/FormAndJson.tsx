@@ -42,7 +42,7 @@ const FormAndJson: React.FunctionComponent<IFormAndJsonProps> = ({
     <>
       {!isValid && <h1 style={{ color: "red" }}>inValid</h1>}
       <Switch
-        id="form-json-toggle-switch-button"
+        id="form-json-switch-button"
         isChecked={showJson}
         onChange={onToggle}
       />
