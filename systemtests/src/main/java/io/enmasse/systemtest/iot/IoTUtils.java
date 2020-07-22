@@ -249,7 +249,7 @@ class IoTUtils {
 
             tenantClient
                     .withName(project.getMetadata().getName())
-                    .withPropagationPolicy(DeletionPropagation.BACKGROUND)
+                    .withPropagationPolicy(DeletionPropagation.FOREGROUND)
                     .delete();
 
             // wait until the IoTProject is deleted
