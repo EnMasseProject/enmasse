@@ -4,7 +4,7 @@ import {
   IDeviceFilterCriteria,
   DeviceFilterCriteria,
   operator
-} from "../DeviceFilterCriteria";
+} from "modules/iot-device/components/DeviceFilterCriteria";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { findIndexByProperty, uniqueId } from "utils";
 import { IDeviceFilter } from "./DeviceFilter";
