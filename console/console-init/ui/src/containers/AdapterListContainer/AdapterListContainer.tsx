@@ -27,20 +27,13 @@ export const AdapterListContainer: React.FC<{ id: string }> = ({ id }) => {
   }`;
 
   const { data } = useQuery<IIoTProjectsResponse>(
-    RETURN_IOT_PROJECTS({ projectName: projectname }, queryResolver)
+    RETURN_IOT_PROJECTS({ projectname }, queryResolver)
   );
 
   const { allProjects } = data || {
     allProjects: { objects: [] }
   };
-  let adapters: IAdapter[] = [];
-  if (
-    allProjects &&
-    allProjects.objects?.length > 0 &&
-    allProjects.objects[0].endpoints
-  ) {
-    adapters = allProjects.objects[0].endpoints;
-  }
+  const adapters: IAdapter[] = allProjects.objects[0]?.endpoints || [];
 
   return <AdapterList id={id} adapters={adapters} />;
 };

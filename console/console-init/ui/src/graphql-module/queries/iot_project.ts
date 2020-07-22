@@ -6,10 +6,10 @@
 import gql from "graphql-tag";
 
 const FILTER_RETURN_IOT_PROJECTS = (projectFilterParams?: any) => {
-  const { projectName } = projectFilterParams;
+  const { projectname } = projectFilterParams;
   let filter: string = "";
-  if (projectName && projectName.trim() !== "") {
-    filter += "`$.metadata.name` = '" + projectName + "'";
+  if (projectname && projectname.trim() !== "") {
+    filter += "`$.metadata.name` = '" + projectname + "'";
   }
 
   // TODO: Filters to be incrementally added
