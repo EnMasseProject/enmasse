@@ -36,6 +36,20 @@ const RETURN_ALL_PROJECTS = (
             phase
             messages
           }
+          spec{
+            plan{
+              spec{
+                displayName
+              }
+              metadata{
+                name
+              }
+            }
+            type
+            authenticationService{
+              name
+            }
+          }
         }
         ... on IoTProject_iot_enmasse_io_v1alpha1 {
           kind

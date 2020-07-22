@@ -10,7 +10,7 @@ import {
   ErrorCircleOIcon,
   PendingIcon
 } from "@patternfly/react-icons";
-import { Flex, FlexItem } from "@patternfly/react-core";
+import { Flex, FlexItem, Label } from "@patternfly/react-core";
 import { kFormatter } from "utils";
 import { StyleSheet, css } from "aphrodite";
 import { ProjectTypes } from "./constant";
@@ -81,9 +81,9 @@ const ProjectTypePlan: React.FunctionComponent<IProjectTypePlanProps> = ({
   msgType
 }) => {
   return (
-    <>
-      {projectType} {formatString(msgType)}
-    </>
+    <Label color={projectType === ProjectTypes.MESSAGING ? "green" : "blue"}>
+      {projectType}
+    </Label>
   );
 };
 
