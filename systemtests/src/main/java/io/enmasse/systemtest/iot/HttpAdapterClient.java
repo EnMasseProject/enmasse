@@ -40,6 +40,7 @@ import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.time.Duration.ofMillis;
 
 public class HttpAdapterClient extends ApiClient {
 
@@ -232,7 +233,7 @@ public class HttpAdapterClient extends ApiClient {
 
         // the next line gives the timeout a bit of extra time, as the HTTP timeout should
         // kick in, we would prefer that over the timeout via the future.
-        return MoreFutures.await(f, responseTimeout.plusMillis((long) (responseTimeout.toMillis() * 1.1)));
+        return MoreFutures.await(f, ofMillis((long) (responseTimeout.toMillis() * 1.1)));
     }
 
     /**
