@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot.mqtt;
 import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.systemtest.iot.CommandTester.AbstractSubordinate;
 import io.enmasse.systemtest.iot.CommandTester.CommandResponse;
+import io.enmasse.systemtest.iot.CommandTester.Context;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.MqttAdapterClient;
@@ -17,7 +18,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -25,7 +25,6 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
 
     private static final Logger log = LoggerFactory.getLogger(MqttSubordinate.class);
 
-    private final Duration responseTimeout = Duration.ofSeconds(10);
     private final MqttAdapterClient client;
 
     MqttSubordinate(final IoTTestSession.ProjectInstance.Device device) throws Exception {
@@ -67,7 +66,7 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
     }
 
     @Override
-    public Future<?> subscribe(final Consumer<ReceivedCommand> commandReceiver) {
+    public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
 
         var result = this.client.subscribe("command///req/#", 1, (topic, message) -> {
             processCommandMessage(topic, message).ifPresent(commandReceiver);
@@ -78,8 +77,13 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
     }
 
     @Override
-    public void respond(final CommandResponse response) {
+    public Future<?> respond(final Context context, final CommandResponse response) {
+
         var address = String.format("command///res/%s/%s", response.getId(), response.getStatus());
-        this.client.sendAsync(1, address, response.getPayload());
+        var result = this.client
+                .sendAsync(1, address, response.getPayload());
+
+        return MoreFutures.map(result);
+
     }
 }

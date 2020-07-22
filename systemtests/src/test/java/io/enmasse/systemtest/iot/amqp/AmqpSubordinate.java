@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot.amqp;
 import io.enmasse.systemtest.iot.AmqpAdapterClient;
 import io.enmasse.systemtest.iot.CommandTester.AbstractSubordinate;
 import io.enmasse.systemtest.iot.CommandTester.CommandResponse;
+import io.enmasse.systemtest.iot.CommandTester.Context;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.vertx.core.Future;
@@ -97,7 +98,7 @@ public class AmqpSubordinate extends AbstractSubordinate implements AutoCloseabl
     }
 
     @Override
-    public Future<?> subscribe(final Consumer<ReceivedCommand> commandReceiver) {
+    public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
 
         return this.client.subscribe("command", message -> {
             processCommandMessage(message).ifPresent(commandReceiver);
@@ -106,18 +107,16 @@ public class AmqpSubordinate extends AbstractSubordinate implements AutoCloseabl
     }
 
     @Override
-    public void respond(final CommandResponse response) {
+    public Future<?> respond(final Context context, final CommandResponse response) {
 
         var id = response.getId();
         if (id == null) {
-            // FIXME: error
-            return;
+            return Future.failedFuture("Unable to send response without id");
         }
 
         var toks = id.split(";");
         if (toks.length != 2) {
-            // FIXME: error
-            return;
+            return Future.failedFuture("Wrong format of id: " + id);
         }
 
         var correlationId = URLDecoder.decode(toks[0], UTF_8);
@@ -135,6 +134,6 @@ public class AmqpSubordinate extends AbstractSubordinate implements AutoCloseabl
             message.setBody(new Data(new Binary(response.getPayload().getBytes())));
         }
 
-        this.client.send(message);
+        return this.client.send(message);
     }
 }

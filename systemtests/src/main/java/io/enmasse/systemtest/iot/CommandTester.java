@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.systemtest.amqp.AmqpClient;
+import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.Future;
@@ -18,6 +19,7 @@ import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.Data;
 import org.assertj.core.api.Condition;
+import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 
 import java.time.Duration;
@@ -31,15 +33,15 @@ import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import static io.enmasse.iot.utils.MoreFutures.await;
 import static io.enmasse.systemtest.iot.CommandTester.Commander.fullResponseAddress;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
+import static io.vertx.core.Future.succeededFuture;
+import static java.time.Instant.now;
 import static java.util.Optional.ofNullable;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 public class CommandTester {
 
@@ -261,9 +263,28 @@ public class CommandTester {
 
         String getDeviceId();
 
-        Future<?> subscribe(Consumer<ReceivedCommand> commandReceiver);
+        Future<?> subscribe(Context context, Consumer<ReceivedCommand> commandReceiver);
 
-        void respond(CommandResponse response);
+        Future<?> respond(Context context, CommandResponse response);
+
+    }
+
+    @FunctionalInterface
+    public interface Initiator {
+
+        /**
+         * Initiate the next command.
+         * <p>
+         * Some protocols like HTTP require an action before the command can be sent. The initiator has the
+         * responsibility of performing such action. As the action itself can take some time, a future is returned.
+         * The outcome of the future signals if and when the command can be sent.
+         * <p>
+         * The initiator itself is triggered by a periodic timer.
+         *
+         * @param context The test context.
+         * @return A future which indicates that the command is ready to be sent.
+         */
+        Future<?> initiate(Context context);
 
     }
 
@@ -294,7 +315,7 @@ public class CommandTester {
     public interface CommanderFactory {
 
         static CommanderFactory of(final AmqpClient client, final String tenantId) {
-            return (vertx, replyTo, commandResponseConsumer) -> {
+            return (context, replyTo, commandResponseConsumer) -> {
 
                 var address = fullResponseAddress(tenantId, replyTo);
                 var receiver = client.recvMessagesWithStatus(address, message -> {
@@ -330,7 +351,7 @@ public class CommandTester {
                         message.setBody(new Data(new Binary(command.getPayload().getBytes())));
                         message.setAddress(COMMAND.address(tenantId) + "/" + command.getDeviceId());
                         return client
-                                .sendMessage(vertx, COMMAND.address(tenantId), message)
+                                .sendMessage(context.vertx(), COMMAND.address(tenantId), message)
                                 .onSuccess(r -> log.info("Command processed -> {}", r.getRemoteState()))
                                 .onFailure(e -> log.info("Command failed", e));
                     }
@@ -343,7 +364,17 @@ public class CommandTester {
             };
         }
 
-        Commander start(Vertx vertx, String replyTo, Consumer<ReceivedCommandResponse> messageConsumer);
+        Commander start(Context context, String replyTo, Consumer<ReceivedCommandResponse> messageConsumer);
+    }
+
+    public interface Context {
+        SoftAssertions runtimeAssertions();
+
+        Vertx vertx();
+
+        default void runtimeAssert(final Consumer<SoftAssertions> code) {
+            code.accept(runtimeAssertions());
+        }
     }
 
     private Vertx vertx;
@@ -353,7 +384,7 @@ public class CommandTester {
     private Duration operationDuration = Duration.ofSeconds(1);
     private Subordinate subordinate;
     private CommanderFactory commanderFactory;
-    private Supplier<Future<?>> initiator = Future::succeededFuture;
+    private Initiator initiator = Future::succeededFuture;
     private int amount;
     private double acceptableLoss = 0.0;
 
@@ -395,7 +426,7 @@ public class CommandTester {
         return this;
     }
 
-    public CommandTester initiator(final Supplier<Future<?>> initiator) {
+    public CommandTester initiator(final Initiator initiator) {
         this.initiator = initiator;
         return this;
     }
@@ -441,18 +472,25 @@ public class CommandTester {
         }
 
         private final AtomicReference<RequestResponse> currentRequest = new AtomicReference<>();
+        private final AtomicReference<Future<?>> lastResponseFuture = new AtomicReference<>();
         private final String replyId = UUID.randomUUID().toString();
+        private final Promise<?> complete = Promise.promise();
+
+        /**
+         * Assertions which are accumulated during the runtime of the test execution.
+         */
+        private final SoftAssertions runtimeAssertions = new SoftAssertions();
+        private final Context context;
 
         private final Mode mode;
         private final String deviceId;
         private final Duration delay;
         private final Duration operationDuration;
         private final int amount;
-        private final Supplier<Future<?>> initiator;
+        private final Initiator initiator;
         private final Duration timeout;
         private final Subordinate subordinate;
         private final CommanderFactory commanderFactory;
-        private final Promise<?> complete;
         private final List<RequestResponse> result;
         private final Vertx vertx;
         private final Vertx vertxToClose;
@@ -465,19 +503,24 @@ public class CommandTester {
         private Instant end;
 
         Executor() {
+
             this.mode = CommandTester.this.mode != null ? CommandTester.this.mode : Mode.REQUEST_RESPONSE;
             this.delay = Objects.requireNonNull(CommandTester.this.delay);
             this.amount = CommandTester.this.amount;
             this.commanderFactory = Objects.requireNonNull(CommandTester.this.commanderFactory, "CommandFactory must be provided");
             this.subordinate = Objects.requireNonNull(CommandTester.this.subordinate, "Need subordinate implementation");
-            this.initiator = CommandTester.this.initiator != null ? CommandTester.this.initiator : Future::succeededFuture;
+            this.initiator = CommandTester.this.initiator != null ? CommandTester.this.initiator : x -> Future.succeededFuture();
             this.operationDuration = CommandTester.this.operationDuration;
+
+            // get device ID for testing
 
             if (CommandTester.this.deviceId == null)
                 this.deviceId = this.subordinate.getDeviceId();
             else {
                 this.deviceId = CommandTester.this.deviceId;
             }
+
+            // validate amount
 
             if (this.amount <= 0) {
                 throw new IllegalArgumentException("Amount must be a positive integer, was: " + this.amount);
@@ -492,9 +535,12 @@ public class CommandTester {
             this.timeout = Duration.ofMillis((long) timeout);
             log.info("Calculated timeout as: {}", TestUtils.format(this.timeout));
 
+            // create result list
+
             this.result = new ArrayList<>(this.amount);
 
             // create vertx last, allocates resources
+
             if (CommandTester.this.vertx != null) {
                 this.vertx = CommandTester.this.vertx;
                 this.vertxToClose = null;
@@ -503,7 +549,19 @@ public class CommandTester {
                 this.vertxToClose = this.vertx;
             }
 
-            this.complete = Promise.promise();
+            // create the context
+
+            this.context = new Context() {
+                @Override
+                public SoftAssertions runtimeAssertions() {
+                    return Executor.this.runtimeAssertions;
+                }
+
+                @Override
+                public Vertx vertx() {
+                    return Executor.this.vertx;
+                }
+            };
         }
 
         @Override
@@ -517,12 +575,14 @@ public class CommandTester {
 
             this.vertx.getOrCreateContext().runOnContext(v -> {
 
+                // check if we really need to re-schedule another run
+
                 if (this.current >= this.amount) {
                     // we can abort
                     log.info("Mission accomplished, abort...");
                     complete.complete();
                     return;
-                } else if (Instant.now().isAfter(this.end)) {
+                } else if (now().isAfter(this.end)) {
                     // we can abort
                     log.info("Timed out, abort...");
                     complete.fail(new TimeoutException("Test timed out after " + TestUtils.format(this.timeout)));
@@ -533,12 +593,22 @@ public class CommandTester {
 
                 log.info("Scheduling next run...");
 
-                this.vertx.setTimer(this.delay.toMillis(), t -> {
-                    var next = this.initiator.get();
-                    next
-                            .flatMap(x -> nextRun(commander))
-                            .onComplete(x -> log.info("Run completed - {}", x))
-                            .onComplete(x -> scheduleNext(commander));
+                var lastResponseFuture = this.lastResponseFuture.getAndSet(null);
+                if (lastResponseFuture == null) {
+                    // we use a succeeded future to keep the following code simpler, not requiring an "if"
+                    lastResponseFuture = succeededFuture();
+                }
+
+                lastResponseFuture.onComplete(c -> {
+
+                    this.vertx.setTimer(this.delay.toMillis(), t -> {
+                        var next = this.initiator.initiate(this.context);
+                        next
+                                .flatMap(x -> nextRun(commander))
+                                .onComplete(r -> log.info("Run completed - {}", r))
+                                .onComplete(x -> scheduleNext(commander));
+                    });
+
                 });
 
             });
@@ -709,14 +779,14 @@ public class CommandTester {
 
         public void execute() throws Exception {
 
-            this.end = Instant.now().plus(this.timeout);
+            this.end = now().plus(this.timeout);
 
-            try (final Commander commander = this.commanderFactory.start(this.vertx, this.replyId, this::receivedResponse)) {
+            try (final Commander commander = this.commanderFactory.start(this.context, this.replyId, this::receivedResponse)) {
 
                 // subscribe, then schedule next (first) command
 
                 this.subordinate
-                        .subscribe(this::handleCommand)
+                        .subscribe(context, this::handleCommand)
                         .onSuccess(x -> scheduleNext(commander))
                         .onFailure(this.complete::fail);
 
@@ -730,13 +800,23 @@ public class CommandTester {
         }
 
         private void handleCommand(ReceivedCommand command) {
+
             var response = createResponse(command);
+
             log.info("Responding - command: {}, response: {}", command, response);
+
             if (response.isPresent()) {
-                this.subordinate.respond(response.get());
+                var newFuture = this.subordinate.respond(this.context, response.get());
+                var oldFuture = this.lastResponseFuture.getAndSet(newFuture);
+                if (oldFuture != null) {
+                    log.warn("Dangling response future detected: {}", oldFuture);
+                }
             } else if (this.mode == Mode.REQUEST_RESPONSE) {
-                // FIXME: need to fail the response
+                this.runtimeAssertions.fail(
+                        "Unable to generate response for received command in request/response mode - receivedCommand: %s",
+                        command);
             }
+
         }
 
         /**
@@ -744,52 +824,55 @@ public class CommandTester {
          */
         private void assertResult() {
 
-            // copy, just in case
+            // copy, just in case something append in the background
 
             var result = new ArrayList<>(this.result);
 
-            // start asserting
+            // start asserting, append to existing runtime assertions
 
-            assertSoftly(softly -> {
+            var softly = this.runtimeAssertions;
 
-                // there must be no unsolicited responses
+            // there must be no unsolicited responses
 
-                softly.assertThat(result)
-                        .areNot(unsolicitedResponse);
+            softly.assertThat(result)
+                    .areNot(unsolicitedResponse);
 
-                switch (this.mode) {
+            switch (this.mode) {
 
-                    case REQUEST_RESPONSE:
+                case REQUEST_RESPONSE:
 
-                        var numMissingResponses = result.stream().filter(p -> p.response == null).count();
-                        var numResponses = result.size() - numMissingResponses;
-                        var acceptableLoss = (long) (this.amount * CommandTester.this.acceptableLoss);
+                    var numMissingResponses = result.stream().filter(p -> p.response == null).count();
+                    var numResponses = result.size() - numMissingResponses;
+                    var acceptableLoss = (long) (this.amount * CommandTester.this.acceptableLoss);
 
-                        log.info("Result - responses: {}, missing responses: {}", numResponses, numMissingResponses);
-                        log.info("   Acceptable loss: {}", acceptableLoss);
+                    log.info("Result - responses: {}, missing responses: {}", numResponses, numMissingResponses);
+                    log.info("   Acceptable loss: {}", acceptableLoss);
 
-                        softly.assertThat(numResponses)
-                                .as("exact number of responses")
-                                .isEqualTo(this.amount);
+                    softly.assertThat(numResponses)
+                            .as("exact number of responses")
+                            .isEqualTo(this.amount);
 
 
-                        softly.assertThat(numMissingResponses)
-                                .as("Not more than %s%% (%s) of missing responses", CommandTester.this.acceptableLoss * 100.0, acceptableLoss)
-                                .isLessThanOrEqualTo(acceptableLoss);
+                    softly.assertThat(numMissingResponses)
+                            .as("Not more than %s%% (%s) of missing responses", CommandTester.this.acceptableLoss * 100.0, acceptableLoss)
+                            .isLessThanOrEqualTo(acceptableLoss);
 
-                        break;
+                    break;
 
-                    case ONE_WAY:
+                case ONE_WAY:
 
-                        softly.assertThat(result)
-                                .as("We must not have any response for one-way tests")
-                                .allSatisfy(p -> assertThat(p.response).isNull());
+                    softly.assertThat(result)
+                            .as("We must not have any response for one-way tests")
+                            .allSatisfy(p -> assertThat(p.response).isNull());
 
-                        break;
+                    break;
 
-                }
+            }
 
-            });
+            // hard assert gathered assertions errors
+
+            softly.assertAll();
+
         }
 
     }

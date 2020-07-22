@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot.http;
 import io.enmasse.systemtest.amqp.ReceiverStatus;
 import io.enmasse.systemtest.iot.CommandTester;
 import io.enmasse.systemtest.iot.CommandTester.AbstractSubordinate;
+import io.enmasse.systemtest.iot.CommandTester.Context;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.HttpAdapterClient;
 import io.enmasse.systemtest.iot.IoTTestSession;
@@ -26,7 +27,7 @@ import java.util.function.Consumer;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 
-public class HttpSubordinate extends AbstractSubordinate implements  AutoCloseable  {
+public class HttpSubordinate extends AbstractSubordinate implements AutoCloseable  {
 
     private static final Logger log = LoggerFactory.getLogger(HttpSubordinate.class);
 
@@ -67,7 +68,7 @@ public class HttpSubordinate extends AbstractSubordinate implements  AutoCloseab
         this.receiver.close();
     }
 
-    public Future<?> initiate() {
+    public Future<?> initiate(final Context context) {
         var p = Promise.promise();
 
         this.vertx.setTimer(
@@ -88,9 +89,18 @@ public class HttpSubordinate extends AbstractSubordinate implements  AutoCloseab
                     var deviceId = response.getHeader("hono-cmd-target-device");
                     var payload = response.bodyAsBuffer();
 
+                    // assert response code
+
+                    context.runtimeAssert(softly -> {
+                        softly.assertThat(response.statusCode())
+                                .as("Expected by receiving a command")
+                                .isEqualTo(200);
+                    });
+
+                    // pass on to command receiver
+
                     this.commandReceiver.accept(new ReceivedCommand(id, command, deviceId, contentType, payload));
 
-                    // FIXME: assert response.statusCode()
                 });
 
         this.nextCommand.set(p);
@@ -98,16 +108,16 @@ public class HttpSubordinate extends AbstractSubordinate implements  AutoCloseab
     }
 
     @Override
-    public Future<?> subscribe(final Consumer<ReceivedCommand> commandReceiver) {
+    public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
         this.commandReceiver = commandReceiver;
         // we do not subscribe, but trigger via the initiator
         return Future.succeededFuture();
     }
 
     @Override
-    public void respond(final CommandTester.CommandResponse response) {
+    public Future<?> respond(final Context context, final CommandTester.CommandResponse response) {
 
-        this.client.sendAsync(
+        return this.client.sendAsync(
                 COMMAND_RESPONSE,
                 "/" + response.getId(),
                 response.getPayload(),

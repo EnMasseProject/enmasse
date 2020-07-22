@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot;
 import io.enmasse.systemtest.iot.CommandTester.Command;
 import io.enmasse.systemtest.iot.CommandTester.CommandResponse;
 import io.enmasse.systemtest.iot.CommandTester.CommanderFactory;
+import io.enmasse.systemtest.iot.CommandTester.Context;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommand;
 import io.enmasse.systemtest.iot.CommandTester.ReceivedCommandResponse;
 import io.enmasse.systemtest.iot.CommandTester.Subordinate;
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -27,7 +27,10 @@ import java.util.stream.Stream;
 import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
 import static io.enmasse.systemtest.iot.CommandTester.Mode.ONE_WAY;
 import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static io.vertx.core.buffer.Buffer.buffer;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -77,7 +80,7 @@ public class CommandTesterTest {
         private Function<CommandResponse, Stream<CommandResponse>> interceptResponse = DEFAULT_RESPONSE_INTERCEPTOR;
 
         Mock() {
-            this(UUID.randomUUID().toString());
+            this(randomUUID().toString());
         }
 
         Mock(final String deviceId) {
@@ -102,7 +105,7 @@ public class CommandTesterTest {
                         Mock.this.interceptCommand
                                 .apply(command)
                                 .forEach(Mock.this::sendCommand);
-                        return Future.succeededFuture();
+                        return succeededFuture();
                     }
 
                     @Override
@@ -114,16 +117,17 @@ public class CommandTesterTest {
             this.subordinate = new Subordinate() {
 
                 @Override
-                public Future<?> subscribe(Consumer<ReceivedCommand> commandReceiver) {
+                public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
                     Mock.this.commandReceiver = commandReceiver;
-                    return Future.succeededFuture();
+                    return succeededFuture();
                 }
 
                 @Override
-                public void respond(CommandResponse response) {
+                public Future<?> respond(final Context context, final CommandResponse response) {
                     Mock.this.interceptResponse
                             .apply(response)
                             .forEach(Mock.this::sendResponse);
+                    return succeededFuture();
                 }
 
                 @Override
@@ -133,9 +137,12 @@ public class CommandTesterTest {
             };
         }
 
+        /**
+         * Mock sending a command to the device.
+         */
         public void sendCommand(final Command command) {
             this.commandReceiver.accept(new ReceivedCommand(
-                    UUID.randomUUID().toString(),
+                    randomUUID().toString(),
                     command.getCommand(),
                     command.getDeviceId(),
                     command.getContentType(),
@@ -143,6 +150,9 @@ public class CommandTesterTest {
             ));
         }
 
+        /**
+         * Mock sending a response to the tester.
+         */
         public void sendResponse(final CommandResponse response) {
             this.responseReceiver.accept(new ReceivedCommandResponse(
                     response.getId(),
@@ -282,12 +292,45 @@ public class CommandTesterTest {
 
     }
 
+    /**
+     * Test what happens when two commands get sent, rather than one.
+     * <p>
+     * This must fail the test, as we would get two responses, while having a single active command in progress.
+     * <p>
+     * <strong>Note:</strong> This should also cause warnings in the log about "dangling response futures", which we accept.
+     */
     @Test
-    public void testDuplicateResponse() {
+    public void testDuplicateCommand() {
 
         final Mock mock = new Mock()
                 .interceptCommand(command -> Stream.of(
                         command, command
+                ));
+
+        assertThatThrownBy(() -> {
+            new CommandTester()
+                    .amount(5)
+                    .commanderFactory(mock.commander)
+                    .subordinate(mock.subordinate)
+                    .execute();
+        })
+
+                // we detect unsolicited responses, and fail when asserting
+                .isInstanceOf(AssertionError.class);
+
+    }
+
+    /**
+     * Simulate that we receive two responses for each command, rather than one.
+     * <p>
+     * This must fail the test, as this should be counted as unsolicited response. Which must not happen.
+     */
+    @Test
+    public void testDuplicateResponse() {
+
+        final Mock mock = new Mock()
+                .interceptResponse(response -> Stream.of(
+                        response, response
                 ));
 
         assertThatThrownBy(() -> {
@@ -424,7 +467,7 @@ public class CommandTesterTest {
                     .commanderFactory((vertx, replyTo, messageConsumer) -> new CommandTester.Commander() {
                         @Override
                         public Future<?> command(Command command) {
-                            return Future.succeededFuture();
+                            return succeededFuture();
                         }
 
                         @Override
@@ -433,17 +476,18 @@ public class CommandTesterTest {
                     })
                     .subordinate(new Subordinate() {
                         @Override
-                        public Future<?> subscribe(Consumer<ReceivedCommand> commandReceiver) {
-                            return Future.failedFuture(new MyException());
+                        public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
+                            return failedFuture(new MyException());
                         }
 
                         @Override
-                        public void respond(CommandResponse response) {
+                        public Future<?> respond(final Context context, final CommandResponse response) {
+                            return succeededFuture();
                         }
 
                         @Override
                         public String getDeviceId() {
-                            return UUID.randomUUID().toString();
+                            return randomUUID().toString();
                         }
                     })
                     .execute();
@@ -460,10 +504,10 @@ public class CommandTesterTest {
 
             new CommandTester()
                     .amount(5)
-                    .commanderFactory((vertx, replyTo,messageConsumer) -> new CommandTester.Commander() {
+                    .commanderFactory((vertx, replyTo, messageConsumer) -> new CommandTester.Commander() {
                         @Override
                         public Future<?> command(Command command) {
-                            return Future.failedFuture(new MyException());
+                            return failedFuture(new MyException());
                         }
 
                         @Override
@@ -472,17 +516,18 @@ public class CommandTesterTest {
                     })
                     .subordinate(new Subordinate() {
                         @Override
-                        public Future<?> subscribe(Consumer<ReceivedCommand> commandReceiver) {
-                            return Future.succeededFuture();
+                        public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
+                            return succeededFuture();
                         }
 
                         @Override
-                        public void respond(CommandResponse response) {
+                        public Future<?> respond(final Context context, final CommandResponse response) {
+                            return succeededFuture();
                         }
 
                         @Override
                         public String getDeviceId() {
-                            return UUID.randomUUID().toString();
+                            return randomUUID().toString();
                         }
                     })
                     .execute();
@@ -491,7 +536,5 @@ public class CommandTesterTest {
                 .hasCauseInstanceOf(TimeoutException.class);
 
     }
-
-    // FIXME: add test for missing "replyTo" in command to device
 
 }
