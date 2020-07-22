@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { JsonEditor } from "components";
 import {
   IoTCertificateToolbar,
   CertificateForm,
@@ -86,16 +87,22 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
               <br />
             </PageSection>
           )}
-          {certificates.map((certificate: IIoTCertificate, index: number) => (
-            <IoTCertificate
-              key={`certificate-${index}`}
-              id={`certificate-${index}`}
-              certificate={certificate}
-              onEdit={onSave}
-              onChangeStatus={onChangeStatus}
-              onDelete={onDelete}
+          {isJsonView ? (
+            <JsonEditor
+              value={certificates && JSON.stringify(certificates, undefined, 2)}
             />
-          ))}
+          ) : (
+            certificates.map((certificate: IIoTCertificate, index: number) => (
+              <IoTCertificate
+                key={`certificate-${index}`}
+                id={`certificate-${index}`}
+                certificate={certificate}
+                onEdit={onSave}
+                onChangeStatus={onChangeStatus}
+                onDelete={onDelete}
+              />
+            ))
+          )}
         </GridItem>
       </Grid>
     </PageSection>
