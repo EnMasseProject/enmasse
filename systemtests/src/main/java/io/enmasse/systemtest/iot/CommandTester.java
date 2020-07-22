@@ -763,12 +763,16 @@ public class CommandTester {
 
                         var numMissingResponses = result.stream().filter(p -> p.response == null).count();
                         var numResponses = result.size() - numMissingResponses;
+                        var acceptableLoss = (long) (this.amount * CommandTester.this.acceptableLoss);
+
+                        log.info("Result - responses: {}, missing responses: {}", numResponses, numMissingResponses);
+                        log.info("   Acceptable loss: {}", acceptableLoss);
 
                         softly.assertThat(numResponses)
                                 .as("exact number of responses")
                                 .isEqualTo(this.amount);
 
-                        var acceptableLoss = (long) (this.amount * CommandTester.this.acceptableLoss * 100.0);
+
                         softly.assertThat(numMissingResponses)
                                 .as("Not more than %s%% (%s) of missing responses", CommandTester.this.acceptableLoss * 100.0, acceptableLoss)
                                 .isLessThanOrEqualTo(acceptableLoss);
