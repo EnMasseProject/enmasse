@@ -33,8 +33,6 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -42,7 +40,6 @@ import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.time.Duration.ofSeconds;
 
 public class HttpAdapterClient extends ApiClient {
 
@@ -199,29 +196,22 @@ public class HttpAdapterClient extends ApiClient {
 
         // result promise
 
-        final Promise<HttpResponse<?>> result = Promise.promise();
+        final Promise<HttpResponse<Buffer>> result = Promise.promise();
 
         // execute request with payload
 
-        request.sendBuffer(payload, ar -> {
+        request.sendBuffer(payload, result);
 
-            // if the request failed ...
-            if (ar.failed()) {
+        // return result
 
-                log.info("Request failed", ar.cause());
-                // ... fail the response promise
-                result.fail(ar.cause());
-
-            } else {
-
-                log.info("POST: path: {}, body '{}' -> {} {}", path, payload, ar.result().statusCode(), ar.result().statusMessage());
-                result.complete(ar.result());
-
-            }
-
-        });
-
-        return result.future();
+        return result.future()
+                .onFailure(cause -> {
+                    log.info("Request failed", cause);
+                })
+                .onSuccess(r -> {
+                    log.info("POST: path: {}, body '{}' -> {} {}", path, payload, r.statusCode(), r.statusMessage());
+                })
+                .map(x -> x);
 
     }
 

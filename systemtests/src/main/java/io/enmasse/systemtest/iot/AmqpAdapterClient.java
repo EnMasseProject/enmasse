@@ -10,7 +10,9 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
+import io.vertx.proton.ProtonReceiver;
 import org.apache.qpid.proton.Proton;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -50,19 +52,19 @@ public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseabl
 
     private final String password;
 
-    private ProtonClientOptions options;
+    private final ProtonClientOptions options;
 
     private ProtonConnection connection;
 
     private ProtonSender sender;
 
     public AmqpAdapterClient(final Vertx vertx, final Endpoint endpoint, final PrivateKey key, final X509Certificate certificate,
-            final Set<String> tlsVersions) throws Exception {
+                             final Set<String> tlsVersions) throws Exception {
         this(vertx, endpoint, key, certificate, null, null, tlsVersions);
     }
 
     public AmqpAdapterClient(final Vertx vertx, final Endpoint endpoint, final String authId, final String tenantId, final String password,
-            final Set<String> tlsVersions)
+                             final Set<String> tlsVersions)
             throws Exception {
         this(vertx, endpoint, null, null, authId + "@" + tenantId, password, tlsVersions);
     }
@@ -186,17 +188,9 @@ public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseabl
     }
 
     @Override
-    public boolean send(final Type type, final Buffer payload, final Duration sendTimeout) throws Exception {
+    public boolean send(final Type type, final Buffer payload, final Duration sendTimeout) {
 
-        // prepare message
-
-        final Message message = Proton.message();
-        message.setBody(new Data(new Binary(payload.getBytes())));
-        message.setAddress(type.type().address());
-
-        // send
-
-        var outcome = send(message);
+        var outcome = send(type.type().address(), payload);
 
         // evaluate outcome
 
@@ -211,7 +205,21 @@ public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseabl
 
     }
 
-    private Future<?> send(final Message message) {
+    public Future<?> send(final String address, final Buffer payload) {
+
+        // prepare message
+
+        final Message message = Proton.message();
+        message.setBody(new Data(new Binary(payload.getBytes())));
+        message.setAddress(address);
+
+        // send
+
+        return send(message);
+
+    }
+
+    public Future<?> send(final Message message) {
 
         final Promise<?> promise = Promise.promise();
 
@@ -255,15 +263,40 @@ public class AmqpAdapterClient implements MessageSendTester.Sender, AutoCloseabl
 
     }
 
+    public Future<?> subscribe(final String address, final Consumer<Message> handler) {
+
+        var promise = Promise.promise();
+
+        this.vertx.getOrCreateContext().runOnContext(x -> {
+            this.connection.createReceiver(address)
+                    .openHandler(opened -> {
+                        if (opened.succeeded()) {
+                            promise.complete();
+                        } else {
+                            promise.fail(opened.cause());
+                        }
+                    })
+                    .closeHandler(closed -> {
+                        promise.tryFail("Link closed");
+                    })
+                    .handler((delivery, message) -> handler.accept(message))
+                    .open();
+        });
+
+        return promise.future();
+    }
+
     @Override
-    public void close() throws Exception {
+    public void close() {
 
         this.context.runOnContext(x -> {
-            if (this.connection != null) {
-                this.connection.close();
-                this.connection = null;
+            var connection = this.connection;
+            this.connection = null;
+            if (connection != null) {
+                connection.close();
             }
         });
+
     }
 
 }

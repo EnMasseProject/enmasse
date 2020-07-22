@@ -5,31 +5,29 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
-import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.framework.TestTag.IOT;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
-
-import java.time.Duration;
-import java.util.Optional;
-
-import javax.security.auth.x500.X500Principal;
-
-import io.enmasse.systemtest.iot.IoTTestContext;
-import io.enmasse.systemtest.iot.Names;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectStatus;
 import io.enmasse.iot.model.v1.ProjectConditionType;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import io.enmasse.systemtest.iot.IoTTestContext;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTests;
+import io.enmasse.systemtest.iot.Names;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.security.auth.x500.X500Principal;
+import java.time.Duration;
+import java.util.Optional;
+
+import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.framework.TestTag.IOT;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(IOT)
 public class TrustAnchorTest implements IoTTests {

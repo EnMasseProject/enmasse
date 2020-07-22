@@ -5,26 +5,27 @@
 
 package io.enmasse.systemtest.iot.amqp;
 
-import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
-
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
+import com.google.common.base.Throwables;
+import io.enmasse.systemtest.iot.AmqpAdapterClient;
+import io.enmasse.systemtest.iot.CommandTester;
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.StandardIoTTests;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Throwables;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
-import io.enmasse.systemtest.iot.AmqpAdapterClient;
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.ONE_WAY;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public interface StandardIoTAmqpTests extends StandardIoTTests {
 
@@ -191,6 +192,68 @@ public interface StandardIoTAmqpTests extends StandardIoTTests {
         } catch (Exception e) {
             assertConnectionException(e);
             log.debug("Accepting AMQP exception", e);
+        }
+
+    }
+
+
+
+    /**
+     * Test a simple one-way command pattern.
+     */
+    @ParameterizedTest(name = "testAmqpOneWayCommand-{0}")
+    @MethodSource("getDevices")
+    default void testAmqpOneWayCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new AmqpSubordinate(device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(ONE_WAY)
+                    .subordinate(subordinate)
+                    .commanderFactory(CommandTester.CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
+        }
+
+    }
+
+    /**
+     * Test a simple request/response command pattern.
+     */
+    @ParameterizedTest(name = "testAmqpRequestResponseCommand-{0}")
+    @MethodSource("getDevices")
+    default void testAmqpRequestResponseCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new AmqpSubordinate(device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(REQUEST_RESPONSE)
+                    .subordinate(subordinate)
+                    .commanderFactory(CommandTester.CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
         }
 
     }

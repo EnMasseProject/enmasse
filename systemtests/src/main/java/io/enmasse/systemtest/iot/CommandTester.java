@@ -473,7 +473,7 @@ public class CommandTester {
             this.initiator = CommandTester.this.initiator != null ? CommandTester.this.initiator : Future::succeededFuture;
             this.operationDuration = CommandTester.this.operationDuration;
 
-            if ( CommandTester.this.deviceId == null )
+            if (CommandTester.this.deviceId == null)
                 this.deviceId = this.subordinate.getDeviceId();
             else {
                 this.deviceId = CommandTester.this.deviceId;
@@ -768,16 +768,17 @@ public class CommandTester {
                                 .as("exact number of responses")
                                 .isEqualTo(this.amount);
 
+                        var acceptableLoss = (long) (this.amount * CommandTester.this.acceptableLoss * 100.0);
                         softly.assertThat(numMissingResponses)
-                                .as("Max %s%% of missing responses", acceptableLoss * 100.0)
-                                .isLessThanOrEqualTo((long) (this.amount * acceptableLoss));
+                                .as("Not more than %s%% (%s) of missing responses", CommandTester.this.acceptableLoss * 100.0, acceptableLoss)
+                                .isLessThanOrEqualTo(acceptableLoss);
 
                         break;
 
                     case ONE_WAY:
 
                         softly.assertThat(result)
-                                .as("We must not have any response")
+                                .as("We must not have any response for one-way tests")
                                 .allSatisfy(p -> assertThat(p.response).isNull());
 
                         break;

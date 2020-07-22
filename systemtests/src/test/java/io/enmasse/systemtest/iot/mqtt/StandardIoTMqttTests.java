@@ -237,7 +237,6 @@ public interface StandardIoTMqttTests extends StandardIoTTests {
 
     }
 
-
     /**
      * Test a simple one-way command pattern.
      */

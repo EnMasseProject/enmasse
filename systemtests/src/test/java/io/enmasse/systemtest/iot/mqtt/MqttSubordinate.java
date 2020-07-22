@@ -40,6 +40,7 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
     }
 
     Optional<ReceivedCommand> processCommandMessage(final String topic, final MqttMessage message) {
+
         var toks = topic.split("/", 6);
         if (toks.length != 6) {
             handleIllegalCommand(topic, message, String.format("Command topic has '%s' segments, expected: 6", toks.length));
@@ -58,6 +59,7 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
                 "application/octet-stream",
                 Buffer.buffer(payload)
         ));
+
     }
 
     private void handleIllegalCommand(final String topic, final MqttMessage message, final String reason) {
@@ -72,6 +74,7 @@ public class MqttSubordinate extends AbstractSubordinate implements AutoCloseabl
         });
 
         return MoreFutures.map(result);
+
     }
 
     @Override
