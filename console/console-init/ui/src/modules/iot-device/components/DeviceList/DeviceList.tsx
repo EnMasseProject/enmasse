@@ -50,7 +50,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
 }) => {
   const tableColumns = [
     { title: "Device ID", transforms: [sortable] },
-    { title: "Device type", transforms: [sortable] },
+    { title: "Connection type" },
     { title: "Status", transforms: [sortable] },
     { title: "Last seen", transforms: [sortable] },
     { title: "Last updated", transforms: [sortable] },

@@ -118,10 +118,18 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
         orderBy = "`$.deviceId` ";
         break;
       case 2:
-        orderBy = "`$.viaGateway` ";
         break;
       case 3:
         orderBy = "`$.enabled` ";
+        break;
+      case 4:
+        orderBy = "`$.status.lastSeen` ";
+        break;
+      case 5:
+        orderBy = "`$.status.updated` ";
+        break;
+      case 6:
+        orderBy = "`$.status.created` ";
         break;
       default:
         break;
