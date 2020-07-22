@@ -117,6 +117,8 @@ const SORT_RETURN_ALL_DEVICES_FOR_IOT_PROJECT = (sortBy?: ISortBy) => {
       case 1:
         orderBy = "`$.deviceId` ";
         break;
+      case 2:
+        break;
       case 3:
         orderBy = "`$.enabled` ";
         break;
