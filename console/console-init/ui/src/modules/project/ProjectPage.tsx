@@ -29,7 +29,8 @@ import {
   setInitialProjcetCount,
   ProjectType,
   getDetailForDeleteDialog,
-  getHeaderForDeleteDialog
+  getHeaderForDeleteDialog,
+  ProjectTypes
 } from "./utils";
 import { ProjectToolbarContainer, ProjectListContainer } from "./containers";
 
@@ -73,7 +74,7 @@ export default function ProjectPage() {
     setSelectedProjects([]);
   };
 
-  const refetchQueries: string[] = ["all_address_spaces"];
+  const refetchQueries: string[] = ["allProjects"];
   const [setDeleteProjectQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
     refetchQueries,
@@ -105,30 +106,34 @@ export default function ProjectPage() {
   };
 
   const onConfirmDeleteAll = async () => {
-    /**
-     * Todo: projectType is temporary check for demo. it will remove later;
-     */
-    const projectType = "iot";
     if (selectedProjects && selectedProjects.length > 0) {
-      let queryVariables: Array<{ name: string; namespace: string }> = [];
+      let iotQueryVariables: Array<{ name: string; namespace: string }> = [];
+      let msgQueryVariables: Array<{ name: string; namespace: string }> = [];
       selectedProjects.forEach(
         (project: IProject) =>
           project.name &&
           project.namespace &&
-          queryVariables.push({
-            name: project.name,
-            namespace: project.namespace
-          })
+          (project.projectType === ProjectTypes.IOT
+            ? iotQueryVariables.push({
+                name: project.name,
+                namespace: project.namespace
+              })
+            : msgQueryVariables.push({
+                name: project.name,
+                namespace: project.namespace
+              }))
       );
-      if (queryVariables.length > 0) {
+      if (iotQueryVariables.length > 0) {
         const queryVariable = {
-          as: queryVariables
+          a: iotQueryVariables
         };
-        if (projectType === "iot") {
-          await setDeleteIoTProjectQueryVariables(queryVariable);
-        } else {
-          await setDeleteProjectQueryVariables(queryVariable);
-        }
+        await setDeleteIoTProjectQueryVariables(queryVariable);
+      }
+      if (msgQueryVariables.length > 0) {
+        const queryVariable = {
+          as: msgQueryVariables
+        };
+        await setDeleteProjectQueryVariables(queryVariable);
       }
     }
   };

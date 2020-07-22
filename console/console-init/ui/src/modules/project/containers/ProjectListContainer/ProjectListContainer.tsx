@@ -159,8 +159,9 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
       };
       if (project.projectType === ProjectTypes.MESSAGING) {
         setDeleteProjectQueryVariables(queryVariable);
+      } else {
+        setDeleteIoTProjectQueryVariables(queryVariable);
       }
-      setDeleteIoTProjectQueryVariables(queryVariable);
     }
   };
 

@@ -62,8 +62,8 @@ const RETURN_IOT_PROJECTS = (filterObj?: any, queryResolver?: string) => {
 };
 
 const DELETE_IOT_PROJECT = gql(
-  `  mutation delete_iot_project($as: [ObjectMeta_v1_Input!]!) {
-    deleteIotProjects(input: $as)
+  `  mutation delete_iot_project($a: [ObjectMeta_v1_Input!]!) {
+    deleteIotProjects(input: $a)
   }`
 );
 
@@ -84,4 +84,17 @@ const TOGGLE_IOT_PROJECTS_STATUS = gql(
   }`
 );
 
-export { RETURN_IOT_PROJECTS, DELETE_IOT_PROJECT, TOGGLE_IOT_PROJECTS_STATUS };
+const IOT_PROJECT_COMMAND_REVIEW_DETAIL = gql`
+  query iotProjectCommand(
+    $iotProject: IotProject_iot_enmasse_io_v1alpha1_input!
+  ) {
+    iotProjectCommand(input: $iotProject)
+  }
+`;
+
+export {
+  RETURN_IOT_PROJECTS,
+  DELETE_IOT_PROJECT,
+  TOGGLE_IOT_PROJECTS_STATUS,
+  IOT_PROJECT_COMMAND_REVIEW_DETAIL
+};
