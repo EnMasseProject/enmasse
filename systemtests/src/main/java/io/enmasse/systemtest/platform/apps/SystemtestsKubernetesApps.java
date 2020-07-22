@@ -418,7 +418,7 @@ public class SystemtestsKubernetesApps {
             for (final Path path : resolveAll(INFINISPAN_EXAMPLE_BASE, INFINISPAN_OPENSHIFT)) {
                 KubeCMDClient.deleteFromFile(INFINISPAN_PROJECT, path);
             }
-
+            kube.deleteNamespace(INFINISPAN_PROJECT);
         }
     }
 
@@ -527,6 +527,7 @@ public class SystemtestsKubernetesApps {
             log.info("Postgresql server will be removed");
 
             KubeCMDClient.deleteFromFile(POSTGRESQL_PROJECT, POSTGRESQL_EXAMPLE_BASE);
+            kube.deleteNamespace(POSTGRESQL_PROJECT);
         }
     }
 
@@ -624,6 +625,7 @@ public class SystemtestsKubernetesApps {
             log.info("H2 server will be removed");
 
             KubeCMDClient.deleteFromFile(H2_PROJECT, H2_EXAMPLE_BASE);
+            kube.deleteNamespace(H2_PROJECT);
         }
     }
 
@@ -710,6 +712,7 @@ public class SystemtestsKubernetesApps {
         kube.deleteDeployment(namespace, name);
         kube.deleteExternalEndpoint(namespace, name);
         Thread.sleep(5000);
+        kube.deleteNamespace(namespace);
     }
 
     public static void collectAMQBrokerLogs(Path path, String namespace) {
