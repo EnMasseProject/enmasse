@@ -115,7 +115,7 @@ const GeneralInfo: React.FunctionComponent<IGeneralInfoProps> = ({
           <b className={css(styles.style_margin)}>Telemetry address name</b>
           {telemetryAddress && (
             <Button
-              id="general-info-navigate-telemetry-address-button"
+              id="general-info-navigate-telemetry-address"
               aria-label="Navigate to telemetry-address button"
               variant="link"
               onClick={() => navigateToAddress(telemetryAddress)}
