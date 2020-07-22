@@ -245,7 +245,7 @@ const AccessCredentials: React.FunctionComponent<IAccessCredentialsProps> = ({
           <Messaging />
           <br />
           <AdapterList
-            id="access-credentials-adapter-list-container"
+            id="access-credentials-adapter-list"
             adapters={adapters}
           />
         </CardBody>
