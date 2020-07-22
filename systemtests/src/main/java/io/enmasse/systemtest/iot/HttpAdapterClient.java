@@ -6,6 +6,7 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.base.Throwables;
+import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
 import io.enmasse.systemtest.framework.LoggerUtils;
@@ -38,8 +39,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
-import static io.enmasse.systemtest.iot.MessageType.EVENT;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofSeconds;
 
@@ -227,23 +228,21 @@ public class HttpAdapterClient extends ApiClient {
     public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
                                 Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
-        final CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
-
-        sendAsync(messageType, pathSuffix, payload, responseTimeout, requestCustomizer)
+        var f = sendAsync(messageType, pathSuffix, payload, responseTimeout, requestCustomizer)
                 .flatMap(response -> {
                     var code = response.statusCode();
 
                     log.info("POST: code {} -> {}", code, response.bodyAsString());
-                    if (!expectedCodePredicate.test(code)) {
-                        return Future.failedFuture(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
+                    if (expectedCodePredicate.test(code)) {
+                        return succeededFuture(response);
                     } else {
-                        return Future.succeededFuture(response);
+                        return failedFuture(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
                     }
                 });
 
         // the next line gives the timeout a bit of extra time, as the HTTP timeout should
         // kick in, we would prefer that over the timeout via the future.
-        return responsePromise.get(((long) (responseTimeout.toMillis() * 1.1)), TimeUnit.MILLISECONDS);
+        return MoreFutures.await(f, responseTimeout.plusMillis((long) (responseTimeout.toMillis() * 1.1)));
     }
 
     /**
@@ -265,18 +264,6 @@ public class HttpAdapterClient extends ApiClient {
 
     public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
         return send(type, payload, expectedCodePredicate, null, timeout);
-    }
-
-    public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(type, payload, expectedCodePredicate, null, ofSeconds(15));
-    }
-
-    public HttpResponse<?> sendTelemetry(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(TELEMETRY, payload, expectedCodePredicate);
-    }
-
-    public HttpResponse<?> sendEvent(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(EVENT, payload, expectedCodePredicate);
     }
 
     private static String getBasicAuth(final String user, final String password) {
