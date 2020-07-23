@@ -8,6 +8,7 @@ package io.enmasse.systemtest.iot.isolated.x509;
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectStatus;
 import io.enmasse.iot.model.v1.ProjectConditionType;
+import io.enmasse.systemtest.certs.ssl.SSLUtils;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import io.enmasse.systemtest.iot.IoTTestContext;
@@ -28,7 +29,6 @@ import java.util.Optional;
 import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
 import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(IOT)
 public class TrustAnchorTest implements IoTTests {
@@ -57,7 +57,7 @@ public class TrustAnchorTest implements IoTTests {
                         .tenant(tenant -> tenant.editOrNewSpec()
                                 .editOrNewConfiguration()
                                 .addNewTrustAnchor()
-                                .withCertificate(toPem(mgr1.getCertificate()))
+                                .withCertificate(SSLUtils.toPem(mgr1.getCertificate()))
                                 .endTrustAnchor()
                                 .endConfiguration()
                                 .endSpec())
@@ -71,7 +71,7 @@ public class TrustAnchorTest implements IoTTests {
                         .tenant(tenant -> tenant.editOrNewSpec()
                                 .editOrNewConfiguration()
                                 .addNewTrustAnchor()
-                                .withCertificate(toPem(mgr2.getCertificate()))
+                                .withCertificate(SSLUtils.toPem(mgr2.getCertificate()))
                                 .endTrustAnchor()
                                 .endConfiguration()
                                 .endSpec()

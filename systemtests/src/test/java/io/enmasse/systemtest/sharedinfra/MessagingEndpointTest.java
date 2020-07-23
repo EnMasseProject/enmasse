@@ -14,7 +14,7 @@ import io.enmasse.api.model.MessagingProject;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.certs.CertBundle;
-import io.enmasse.systemtest.certs.openssl.OpenSSLUtil;
+import io.enmasse.systemtest.certs.ssl.SSLUtils;
 import io.enmasse.systemtest.condition.Kubernetes;
 import io.enmasse.systemtest.condition.OpenShift;
 import io.enmasse.systemtest.condition.OpenShiftVersion;
@@ -25,7 +25,6 @@ import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceTy
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
 import io.enmasse.systemtest.utils.AssertionUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -242,7 +241,7 @@ public class MessagingEndpointTest extends TestBase {
     @OpenShift
     public void testExternalCert(ExtensionContext extensionContext) throws Exception {
         MessagingProject project = resourceManager.getDefaultMessagingProject();
-        CertBundle messagingCert = OpenSSLUtil.createCertBundle("messaging.example.com");
+        CertBundle messagingCert = SSLUtils.createCertBundle("messaging.example.com");
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())

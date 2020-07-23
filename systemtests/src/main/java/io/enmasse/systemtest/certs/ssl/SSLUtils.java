@@ -3,25 +3,28 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.certs.openssl;
+package io.enmasse.systemtest.certs.ssl;
 
 import io.enmasse.systemtest.certs.BrokerCertBundle;
 import io.enmasse.systemtest.certs.CertBundle;
 import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.executor.ExecutionResultData;
 import org.apache.commons.io.FileUtils;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.cert.X509Certificate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-public class OpenSSLUtil {
+public class SSLUtils {
     public static final String DEFAULT_SUBJECT = "/O=enmasse-systemtests";
 
     public static CertPair createSelfSignedCert() {
@@ -214,6 +217,32 @@ public class OpenSSLUtil {
         } finally {
             deleteFiles(ca.getCert(), ca.getKey());
         }
+    }
+
+    /**
+     * Encode an X509 certificate into PEM format.
+     *
+     * @param certificates The certificates to encode.
+     * @return the PEM encoded certificate, or {@code null} if the input was {@code null}.
+     */
+    public static String toPem(final X509Certificate... certificates) {
+
+        if (certificates == null) {
+            return null;
+        }
+
+        final StringWriter sw = new StringWriter();
+
+        try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
+            for (X509Certificate certificate : certificates) {
+                pw.writeObject(certificate);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return sw.toString();
+
     }
 
     private static void deleteFiles(File... files) {

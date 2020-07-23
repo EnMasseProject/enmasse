@@ -661,31 +661,4 @@ public class TestUtils {
     public static Path getLogsPath(String rootFolder) {
         return Environment.getInstance().testLogDir().resolve(rootFolder);
     }
-
-    /**
-     * Encode an X509 certificate into PEM format.
-     *
-     * @param certificates The certificates to encode.
-     * @return the PEM encoded certificate, or {@code null} if the input was {@code null}.
-     */
-    public static String toPem(final X509Certificate... certificates) {
-
-        if (certificates == null) {
-            return null;
-        }
-
-        final StringWriter sw = new StringWriter();
-
-        try (JcaPEMWriter pw = new JcaPEMWriter(sw)) {
-            for (X509Certificate certificate : certificates) {
-                pw.writeObject(certificate);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return sw.toString();
-
-    }
-
 }
