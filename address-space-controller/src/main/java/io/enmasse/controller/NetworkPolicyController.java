@@ -9,6 +9,7 @@ import io.enmasse.admin.model.v1.InfraConfig;
 import io.enmasse.admin.model.v1.NetworkPolicy;
 import io.enmasse.config.AnnotationKeys;
 import io.enmasse.config.LabelKeys;
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.networking.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -16,6 +17,7 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import static io.enmasse.controller.InfraConfigs.parseCurrentInfraConfig;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class NetworkPolicyController implements Controller {
@@ -78,17 +80,31 @@ public class NetworkPolicyController implements Controller {
             .endPodSelector()
             .endSpec();
 
-        if (networkPolicy.getIngress() != null) {
+        NetworkPolicyPeer enmassePolicyPeer = new NetworkPolicyPeerBuilder()
+                .withPodSelector(new LabelSelectorBuilder()
+                        .addToMatchLabels(Map.of(LabelKeys.APP, "enmasse"))
+                        .build())
+                .build();
+
+        if (networkPolicy.getIngress() != null && !networkPolicy.getIngress().isEmpty()) {
+            NetworkPolicyIngressRule enmasse = new NetworkPolicyIngressRuleBuilder()
+                    .addToFrom(enmassePolicyPeer)
+                    .build();
             builder.editOrNewSpec()
                     .addToPolicyTypes("Ingress")
                     .addAllToIngress(networkPolicy.getIngress())
+                    .addToIngress(enmasse)
                     .endSpec();
         }
 
-        if (networkPolicy.getEgress() != null) {
+        if (networkPolicy.getEgress() != null && !networkPolicy.getEgress().isEmpty()) {
+            NetworkPolicyEgressRule enmasse = new NetworkPolicyEgressRuleBuilder()
+                    .addToTo(enmassePolicyPeer)
+                    .build();
             builder.editOrNewSpec()
                     .addToPolicyTypes("Egress")
                     .addAllToEgress(networkPolicy.getEgress())
+                    .addToEgress(enmasse)
                     .endSpec();
         }
 

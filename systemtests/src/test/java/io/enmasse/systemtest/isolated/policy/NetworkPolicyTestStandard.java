@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -76,14 +77,15 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
     @Tag(ACCEPTANCE)
     void testNetworkPolicyWithPodSelector() throws Exception {
         int expectedMsgCount = 5;
-        HashMap<String, String> map = new HashMap<>();
-        map.put("app", allowedSpace);
-
+        LabelSelector namespace = new LabelSelectorBuilder()
+                .withMatchLabels(Collections.singletonMap("allowed", "true"))
+                .build();
         LabelSelector pod = new LabelSelectorBuilder()
-                .withMatchLabels(map)
+                .withMatchLabels(Map.of("app", allowedSpace))
                 .build();
         NetworkPolicyPeer networkPolicyPeer = new NetworkPolicyPeerBuilder()
                 .withPodSelector(pod)
+                .withNamespaceSelector(namespace)
                 .build();
 
         StandardInfraConfig standardInfraConfig = prepareConfig(networkPolicyPeer);
@@ -121,7 +123,7 @@ class NetworkPolicyTestStandard extends TestBase implements ITestIsolatedStandar
         int expectedMsgCount = 5;
 
         LabelSelector namespace = new LabelSelectorBuilder()
-                .withMatchLabels(Collections.singletonMap("allowed", "true"))
+                .withMatchLabels(Map.of("allowed", "true"))
                 .build();
         NetworkPolicyPeer networkPolicyPeer = new NetworkPolicyPeerBuilder()
                 .withNamespaceSelector(namespace)
