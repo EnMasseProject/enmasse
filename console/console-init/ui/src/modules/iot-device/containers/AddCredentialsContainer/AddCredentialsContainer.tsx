@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
 });
 
 export const AddCredentialsContainer = () => {
-  const { projectname, deviceid } = useParams();
+  const { projectname, deviceid, namespace } = useParams();
   const { dispatch } = useStoreContext();
   const [credentials, setCredentials] = useState<ICredential[]>();
   const [setCredentialQueryVariable] = useMutationQuery(
@@ -47,7 +47,7 @@ export const AddCredentialsContainer = () => {
 
   const onSave = async () => {
     const variable = {
-      iotproject: projectname,
+      iotproject: { name: projectname, namespace },
       deviceId: deviceid,
       jsonData: serializeCredentials(credentials)
     };

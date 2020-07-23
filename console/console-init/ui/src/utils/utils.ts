@@ -6,13 +6,15 @@
 import {
   MAX_ITEM_TO_DISPLAY_IN_TYPEAHEAD_DROPDOWN,
   TypeAheadMessage,
-  SERVER_DATA_THRESHOLD
+  SERVER_DATA_THRESHOLD,
+  DeviceConnectionType
 } from "constant";
 import {
   forbiddenBackslashRegexp,
   forbiddenSingleQuoteRegexp,
   forbiddenDoubleQuoteRegexp
 } from "types/Configs";
+import { ICredential } from "modules/iot-device/components";
 
 export interface ISelectOption {
   value: string;
@@ -191,7 +193,11 @@ const getLabelForTypeOfObject = (value: any) => {
  * @param object 
  * @param type 
  */
-const convertJsonToMetadataOptions = (object: any, type?: string) => {
+const convertJsonToMetadataOptions = (
+  object: any,
+  type?: string,
+  isTypeLabel?: boolean
+) => {
   const keys = Object.keys(object);
   let metadataArray = [];
   for (var key of keys) {
@@ -215,9 +221,12 @@ const convertJsonToMetadataOptions = (object: any, type?: string) => {
       }
     } else {
       metadataArray.push({
+        id: uniqueId(),
         key: type && type === "array" ? "" : key,
         value: object[key],
-        type: typeof object[key],
+        type: isTypeLabel
+          ? getLabelForTypeOfObject(object[key])
+          : typeof object[key],
         typeLabel: getLabelForTypeOfObject(object[key])
       });
     }
@@ -323,6 +332,44 @@ const getLabelByKey = (key: string) => {
   return key;
 };
 
+const getDeviceConnectionType = (
+  viaGateway: boolean,
+  credentials: ICredential[]
+) => {
+  let connectionType: string = "";
+  if (viaGateway && !credentials?.length) {
+    connectionType = DeviceConnectionType.VIA_GATEWAYS;
+  } else if (!viaGateway && credentials?.length > 0) {
+    connectionType = DeviceConnectionType.CONNECTED_DIRECTLY;
+  } else {
+    connectionType = DeviceConnectionType.NA;
+  }
+  return connectionType;
+};
+
+const deepClean = (obj: object, omitAttributes?: string[]) => {
+  for (let propName in obj) {
+    let propValue = (obj as any)[propName];
+    if (
+      propValue === null ||
+      propValue === undefined ||
+      propValue === "" ||
+      omitAttributes?.includes(propName)
+    ) {
+      delete (obj as any)[propName];
+    } else if (
+      Object.prototype.toString.call(propValue) === "[object Object]"
+    ) {
+      deepClean(propValue);
+    } else if (Array.isArray(propValue)) {
+      for (let propName in obj) {
+        let propValue = (obj as any)[propName];
+        deepClean(propValue);
+      }
+    }
+  }
+};
+
 export {
   getSelectOptionList,
   compareObject,
@@ -338,5 +385,7 @@ export {
   convertMetadataOptionsToJson,
   createDeepCopy,
   getFormattedJsonString,
-  getLabelByKey
+  getLabelByKey,
+  getDeviceConnectionType,
+  deepClean
 };

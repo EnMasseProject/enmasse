@@ -2,8 +2,12 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-import _ from "lodash";
-import { convertMetadataOptionsToJson, uniqueId } from "utils";
+import {
+  convertMetadataOptionsToJson,
+  uniqueId,
+  convertJsonToMetadataOptions,
+  deepClean
+} from "utils";
 import {
   ICredential,
   ISecret,
@@ -30,14 +34,68 @@ const getDetailForDialog = (devices: any[], dialogType: string) => {
 const serializeCredentials = (credentials: ICredential[] = []) => {
   let newCredentials: any = [...credentials];
   newCredentials?.map((cred: any, index: number) => {
-    newCredentials[index] = _.omit(cred, ["isExpandedAdvancedSetting"]);
+    deepClean(cred, ["isExpandedAdvancedSetting", "id"]);
     if ("ext" in cred) {
       (newCredentials[index]["ext"] as any) = convertMetadataOptionsToJson(
         newCredentials?.[index]?.ext
       );
     }
   });
+
   newCredentials = newCredentials && JSON.stringify(newCredentials);
+  return newCredentials;
+};
+
+const deserializeCredentials = (
+  credentials: ICredential[] = [],
+  initialSecret?: any
+) => {
+  const newCredentials = [...credentials];
+  newCredentials?.map((cred: ICredential, credIndex: number) => {
+    const { secrets } = cred || {};
+    newCredentials[credIndex]["id"] = uniqueId();
+    /**
+     * merge initial secret state with server response
+     */
+    if (secrets?.length > 0) {
+      secrets?.map((secret: any, srtIndex: number) => {
+        (newCredentials[credIndex]["secrets"] as any)[srtIndex] = {
+          ...initialSecret,
+          ...secret
+        };
+      });
+    } else {
+      /**
+       * set initial secret state in case secrets doesn't available in server response
+       */
+      let initialStateSecret = {};
+      const initialState = getFormInitialStateByProperty(
+        newCredentials,
+        "secrets",
+        credIndex || 0
+      );
+      initialStateSecret = { id: uniqueId(), ...initialState };
+      (newCredentials[credIndex]["secrets"] as any) = [initialStateSecret];
+    }
+    /**
+     * merge initial ext state with server response
+     */
+    const ext = newCredentials[credIndex]["ext"] || {};
+    if (Object.keys(ext)?.length > 0) {
+      (newCredentials[credIndex]["ext"] as any) = convertJsonToMetadataOptions(
+        ext,
+        undefined,
+        true
+      );
+    } else {
+      /**
+       * set initial ext state in case ext doesn't available in server response
+       */
+      (newCredentials[credIndex]["ext"] as any) = [
+        getExtensionsFieldsInitialState()
+      ];
+    }
+  });
   return newCredentials;
 };
 
@@ -88,7 +146,15 @@ const getCredentialsFieldsInitialState = () => {
     id: uniqueId(),
     "auth-id": "",
     type: "hashed-password",
-    secrets: [{ "pwd-hash": "" }],
+    secrets: [
+      {
+        id: uniqueId(),
+        "pwd-hash": "",
+        "not-before": "",
+        "not-after": "",
+        comment: ""
+      }
+    ],
     ext: [getExtensionsFieldsInitialState()],
     enabled: true,
     isExpandedAdvancedSetting: false
@@ -125,5 +191,6 @@ export {
   getFormInitialStateByProperty,
   getCredentialsFieldsInitialState,
   getExtensionsFieldsInitialState,
-  getSecretsFieldsInitialState
+  getSecretsFieldsInitialState,
+  deserializeCredentials
 };

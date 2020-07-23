@@ -40,9 +40,9 @@ import {
   getDetailForDialog,
   getHeaderForDialog
 } from "modules/iot-device/utils";
-
 import "./pf-overrides.css";
 import { StyleSheet, css } from "aphrodite";
+import { getDeviceConnectionType } from "utils";
 
 const styles = StyleSheet.create({
   no_bottom_padding: {
@@ -86,10 +86,9 @@ export default function DeviceDetailPage() {
   const { devices } = data || {
     devices: { total: 0, devices: [] }
   };
-  const { enabled, deviceId, via = [], credentials } =
+  const { enabled, deviceId, via = [], credentials, status } =
     devices?.devices[0] || {};
   const parseCredentials = credentials && JSON.parse(credentials);
-
   const viaGateway = via?.length > 0;
 
   const breadcrumb = useMemo(
@@ -206,14 +205,18 @@ export default function DeviceDetailPage() {
           >
             <DeviceDetailHeader
               deviceName={deviceId}
-              addedDate="2019-11-25T05:24:05.755Z"
-              lastTimeSeen="2019-11-25T05:24:05.755Z"
+              addedDate={status?.created || ""}
+              lastTimeSeen={status?.lastSeen || ""}
               onChange={onChangeDeviceStatus}
               onDelete={onDeleteDevice}
               onClone={onCloneDevice}
               deviceStatus={enabled}
               credentials={parseCredentials}
               viaGateway={viaGateway}
+              connectiontype={getDeviceConnectionType(
+                viaGateway || false,
+                parseCredentials
+              )}
             />
             <DeviceDetailNavigation activeItem={subList || "device-info"} />
           </PageSection>
