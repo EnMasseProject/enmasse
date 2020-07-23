@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, EnMasse authors.
+ * Copyright 2019-2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
@@ -175,20 +175,25 @@ func TestRemove1(t *testing.T) {
 
 }
 
-type FinalizerTestStep struct {
-	RequestRequeue      bool
-	RequestRequeueAfter time.Duration
-	RequestError        error
-
-	Called       string
-	Error        error
+type finalizerInput struct {
+	Name         string
 	Requeue      bool
 	RequeueAfter time.Duration
-	Finalizers   []string
+	Error        error
+}
+
+type FinalizerTestStep struct {
+	Input []finalizerInput
+
+	ExpectedCalled       []string
+	ExpectedError        error
+	ExpectedRequeue      bool
+	ExpectedRequeueAfter time.Duration
+	ExpectedFinalizers   []string
 }
 
 //noinspection GoNilness
-func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []string, steps []FinalizerTestStep) {
+func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, steps []FinalizerTestStep) {
 	objs := []runtime.Object{project}
 
 	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
@@ -201,35 +206,36 @@ func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, finalizers []
 		i++
 
 		t.Run(fmt.Sprintf("Step%03d", i), func(t *testing.T) {
-			called := ""
+			called := make([]string, 0)
 
 			mockFinalizers := make([]Finalizer, 0)
-			for _, f := range finalizers {
+			for _, f := range s.Input {
+				// you need to copy iterator values in go, otherwise it will be replaced with the next iteration value
 				var fcopy = f
 				mockFinalizers = append(mockFinalizers, Finalizer{
-					Name: fcopy, Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
-						called += fcopy
-						return reconcile.Result{Requeue: s.RequestRequeue, RequeueAfter: s.RequestRequeueAfter}, s.RequestError
+					Name: fcopy.Name, Deconstruct: func(ctx DeconstructorContext) (result reconcile.Result, e error) {
+						called = append(called, fcopy.Name)
+						return reconcile.Result{Requeue: fcopy.Requeue, RequeueAfter: fcopy.RequeueAfter}, fcopy.Error
 					},
 				})
 			}
 
 			result, err := ProcessFinalizers(context.TODO(), client, client, recorder, project, mockFinalizers)
 
-			if (err != nil) != (s.Error != nil) {
-				t.Errorf("Error state mismatch - expected: %v, found: %v", s.Error, err)
+			if (err != nil) != (s.ExpectedError != nil) {
+				t.Errorf("Error state mismatch - expected: %v, found: %v", s.ExpectedError, err)
 			}
-			if called != s.Called {
-				t.Errorf("Called state mismatch - expected: %v, found: %v", s.Called, called)
+			if !reflect.DeepEqual(called, s.ExpectedCalled) {
+				t.Errorf("Called state mismatch - expected: %v, found: %v", s.ExpectedCalled, called)
 			}
-			if result.Requeue != s.Requeue {
-				t.Errorf("Requeue state mismatch - expected: %v, found: %v", s.Requeue, result.Requeue)
+			if result.Requeue != s.ExpectedRequeue {
+				t.Errorf("Requeue state mismatch - expected: %v, found: %v", s.ExpectedRequeue, result.Requeue)
 			}
-			if result.RequeueAfter != s.RequeueAfter {
-				t.Errorf("RequeueAfter state mismatch - expected: %v, found: %v", s.RequeueAfter, result.RequeueAfter)
+			if result.RequeueAfter != s.ExpectedRequeueAfter {
+				t.Errorf("RequeueAfter state mismatch - expected: %v, found: %v", s.ExpectedRequeueAfter, result.RequeueAfter)
 			}
-			if !reflect.DeepEqual(project.Finalizers, s.Finalizers) {
-				t.Errorf("Finalizer mismatch - expected: %v, found: %v", s.Finalizers, project.Finalizers)
+			if !reflect.DeepEqual(project.Finalizers, s.ExpectedFinalizers) {
+				t.Errorf("Finalizers mismatch - expected: %v, found: %v", s.ExpectedFinalizers, project.Finalizers)
 			}
 		})
 
@@ -246,45 +252,53 @@ func TestFinalizersSimple1(t *testing.T) {
 		},
 	}
 
-	RunFinalizerSteps(t, project, []string{"foo"}, []FinalizerTestStep{
+	RunFinalizerSteps(t, project, []FinalizerTestStep{
 
-		// #1: First call, process started, but delayed
+		// #1: First call, process started for "foo", but delayed
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "foo",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo"},
+			ExpectedCalled:       []string{"foo"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
 		},
 
 		// #2: "foo" is done
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "foo",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{},
+			ExpectedCalled:       []string{"foo"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
 		},
 
 		// #3: deletion complete
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{},
 
-			Called:       "",
-			Error:        nil,
-			Requeue:      false,
-			RequeueAfter: 0,
-			Finalizers:   []string{},
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
 		},
 	})
 
@@ -299,17 +313,22 @@ func TestFinalizersNotDeleted(t *testing.T) {
 		},
 	}
 
-	RunFinalizerSteps(t, project, []string{"foo"}, []FinalizerTestStep{
+	RunFinalizerSteps(t, project, []FinalizerTestStep{
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "",
-			Error:        nil,
-			Requeue:      false,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo"},
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
 		},
 	})
 
@@ -325,104 +344,240 @@ func TestTwoFinalizers(t *testing.T) {
 		},
 	}
 
-	RunFinalizerSteps(t, project, []string{"foo", "bar"}, []FinalizerTestStep{
+	RunFinalizerSteps(t, project, []FinalizerTestStep{
 
-		// #1: we report that we need another try
+		// #1: we report that we need another try for "foo" and "bar
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "foo",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo", "bar"},
+			ExpectedCalled:       []string{"foo", "bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo", "bar"},
 		},
 
 		// #2: no change ... another try
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "foo",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo", "bar"},
+			ExpectedCalled:       []string{"foo", "bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo", "bar"},
 		},
 
-		// #3: "foo" is done
+		// #3: "foo" is done, "bar" needs more time
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "foo",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"bar"},
+			ExpectedCalled:       []string{"foo"}, // "foo" must be persisted, so "bar" not called
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"bar"},
 		},
 
-		// #4: "bar" called, we ask for more time
+		// #4: "bar" called again, we ask for more time
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"bar"},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"bar"},
 		},
 
 		// #5: "bar" is still working
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"bar"},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"bar"},
 		},
 
 		// #6: "bar" is done
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
 		},
 
 		// #7: we should be all done
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{},
 
-			Called:       "",
-			Error:        nil,
-			Requeue:      false,
-			RequeueAfter: 0,
-			Finalizers:   []string{},
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
+		},
+	})
+
+}
+
+func TestTwoFinalizersOneEarly(t *testing.T) {
+
+	ts := v1.Time{}
+	project := &v1alpha1.IoTProject{
+		ObjectMeta: v1.ObjectMeta{
+			Finalizers:        []string{"foo", "bar"},
+			DeletionTimestamp: &ts,
+		},
+	}
+
+	RunFinalizerSteps(t, project, []FinalizerTestStep{
+
+		// #1: we report that we need another try for "foo", but "bar" passes
+
+		{
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+				{
+					Name:         "bar",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
+
+			ExpectedCalled:       []string{"foo", "bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
+		},
+
+		// #2: no change ... another try
+
+		{
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
+
+			ExpectedCalled:       []string{"foo"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
+		},
+
+		// #3: "foo" is done
+
+		{
+			Input: []finalizerInput{
+				{
+					Name:         "foo",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
+
+			ExpectedCalled:       []string{"foo"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
+		},
+
+		// #4: we should be all done
+
+		{
+			Input: []finalizerInput{},
+
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{},
 		},
 	})
 
@@ -438,76 +593,87 @@ func TestTwoFinalizersOneUnknown(t *testing.T) {
 		},
 	}
 
-	RunFinalizerSteps(t, project, []string{"bar"}, []FinalizerTestStep{
+	RunFinalizerSteps(t, project, []FinalizerTestStep{
 
 		// #1: we report that we need another try
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo", "bar"},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo", "bar"},
 		},
 
 		// #2: no change ... another try
 
 		{
-			RequestRequeue:      true,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      true,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo", "bar"},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo", "bar"},
 		},
 
 		// #3: "bar" is done
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{
+				{
+					Name:         "bar",
+					Requeue:      false,
+					RequeueAfter: 0,
+					Error:        nil,
+				},
+			},
 
-			Called:       "bar",
-			Error:        nil,
-			Requeue:      true,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo"},
+			ExpectedCalled:       []string{"bar"},
+			ExpectedError:        nil,
+			ExpectedRequeue:      true,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
 		},
 
 		// #4: but we don't known about "foo"
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{},
 
-			Called:       "",
-			Error:        nil,
-			Requeue:      false,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo"},
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
 		},
 
 		// #5: still don't known about "foo"
 
 		{
-			RequestRequeue:      false,
-			RequestRequeueAfter: 0,
-			RequestError:        nil,
+			Input: []finalizerInput{},
 
-			Called:       "",
-			Error:        nil,
-			Requeue:      false,
-			RequeueAfter: 0,
-			Finalizers:   []string{"foo"},
+			ExpectedCalled:       []string{},
+			ExpectedError:        nil,
+			ExpectedRequeue:      false,
+			ExpectedRequeueAfter: 0,
+			ExpectedFinalizers:   []string{"foo"},
 		},
 	})
 

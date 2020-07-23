@@ -8,6 +8,7 @@ package finalizer
 import (
 	"context"
 	"fmt"
+	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"github.com/pkg/errors"
 	"k8s.io/client-go/tools/record"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
@@ -116,14 +117,21 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 			return reconcile.Result{Requeue: true}, nil
 		}
 
+		// return
+
+		return reconcile.Result{}, nil
+
 	} else {
 
 		// the object _is_ scheduled for deletion
 
 		current := object.GetFinalizers()
 
+		rc := recon.ReconcileContext{}
+
 		for _, f := range finalizers {
 
+			// we only process finalizers we know about, there may be others involved, which we ignore
 			if hasFinalizer(f.Name, current) {
 
 				// if the finalizer is still present ...
@@ -142,7 +150,7 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 					})
 				}
 
-				// process the result
+				// ... process the result
 
 				if err != nil {
 					return reconcile.Result{}, errors.Wrap(err, "Failed processing finalizers")
@@ -150,31 +158,34 @@ func ProcessFinalizers(ctx context.Context, client client.Client, reader client.
 
 				if !result.Requeue && result.RequeueAfter <= 0 {
 
-					// we had no error, and do not need to check again, so remove the finalizer
+					// we had no error, and do not need to check again, so remove the finalizer ...
 
-					// remove it from the list, and set the update
+					// ... remove it from the list, and set the update
 
 					c := current
 					object.SetFinalizers(removeFinalizer(f.Name, c))
 
-					// persist, and re-schedule for the next finalizer
+					// ... persist, and re-schedule for the next finalizer
 					log.Info("Re-queue: removed finalizer")
 					return reconcile.Result{Requeue: true}, nil
 
 				} else {
 
-					// return the re-queue request
-					return result, nil
+					// ... collect the re-queue request
+					rc.AddResult(result, nil)
+
+					// ... and process the next finalizer
 
 				}
 
-			}
-		}
+			} // end-has-finalizer
+
+		} // end-for
+
+		// return all the aggregated requeue requests
+
+		return rc.Result()
 
 	}
-
-	// nothing had to be done
-
-	return reconcile.Result{}, nil
 
 }
