@@ -27,7 +27,13 @@ import {
 } from "modules/iot-device/utils";
 import { useMutationQuery } from "hooks";
 import { SET_IOT_CREDENTIAL_FOR_DEVICE } from "graphql-module/queries";
-import styles from "./edit-credentials.module.css";
+import { css, StyleSheet } from "aphrodite";
+
+const styles = StyleSheet.create({
+  marginLeft: {
+    "margin-left": 25
+  }
+});
 
 export const EditCredentialsContainer = () => {
   const { dispatch } = useStoreContext();
@@ -75,7 +81,7 @@ export const EditCredentialsContainer = () => {
   return (
     <Grid>
       <GridItem span={6}>
-        <Title headingLevel="h2" size="xl" className={styles.marginLeft}>
+        <Title headingLevel="h2" size="xl" className={css(styles.marginLeft)}>
           Edit credentials
         </Title>
         <br />
@@ -85,7 +91,7 @@ export const EditCredentialsContainer = () => {
           setCredentialList={setCredentialList}
         />
         <br />
-        <Flex className={styles.marginLeft}>
+        <Flex className={css(styles.marginLeft)}>
           <FlexItem>
             <Button
               id="edit-credentials-save-button"

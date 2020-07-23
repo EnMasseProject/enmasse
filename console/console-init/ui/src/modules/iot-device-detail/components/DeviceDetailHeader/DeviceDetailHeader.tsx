@@ -15,7 +15,8 @@ import {
   DropdownSeparator,
   PageSection,
   PageSectionVariants,
-  Divider
+  Divider,
+  Switch
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
@@ -111,18 +112,18 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
           </SplitItem>
         </Split>
         <Flex className={css(styles.namespace_info_margin)}>
-          <FlexItem>
+          <FlexItem id="device-detail-header-connection-type-flexitem">
             Connection type : <b>{connectiontype}</b>
           </FlexItem>
           <Divider isVertical />
-          <FlexItem id="flex-item-device-added-date">
+          <FlexItem id="device-detail-header-added-date-flexitem">
             Added Date :{" "}
             <b>
               <FormatDistance date={addedDate} />
             </b>
           </FlexItem>
           <Divider isVertical />
-          <FlexItem id="flex-item-device-last-seen-time">
+          <FlexItem id="device-detail-header-last-time-seen-flexitem">
             Last time seen :{" "}
             <b>
               <FormatDistance date={lastTimeSeen} />
@@ -235,8 +236,8 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         <DeviceDetailLayout />
         <SplitItem isFilled />
         <SplitItem className={css(styles.kebab_toggle_margin)}>
-          <SwitchWithToggle
-            id="switch-device-header-enable-btn"
+          <Switch
+            id="device-detail-header-status-switch-button"
             label="Enabled"
             labelOff="Disabled"
             onChange={onChange}
