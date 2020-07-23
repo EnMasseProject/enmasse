@@ -15,13 +15,15 @@ import io.enmasse.api.model.MessagingInfrastructureCondition;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class MessagingEndpointResourceType implements ResourceType<MessagingEndpoint> {
-    private static final MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
+    private static final MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> operation =
+            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingEndpoints()), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
 
     @Override
     public String getKind() {
