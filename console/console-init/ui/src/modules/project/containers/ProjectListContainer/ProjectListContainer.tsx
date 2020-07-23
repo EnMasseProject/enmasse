@@ -6,7 +6,7 @@
 import React, { useState } from "react";
 import { useA11yRouteChange, useDocumentTitle, Loading } from "use-patternfly";
 import { ISortBy, SortByDirection } from "@patternfly/react-table";
-import { useQuery } from "@apollo/react-hooks";
+import { useQuery, useApolloClient } from "@apollo/react-hooks";
 import { compareObject } from "utils";
 import {
   IProject,
@@ -26,7 +26,8 @@ import {
   DELETE_ADDRESS_SPACE,
   DELETE_IOT_PROJECT,
   TOGGLE_IOT_PROJECTS_STATUS,
-  RETURN_ALL_PROJECTS
+  RETURN_ALL_PROJECTS,
+  DOWNLOAD_CERTIFICATE
 } from "graphql-module";
 import { IAddressSpace } from "modules/address-space";
 import { IAllProjectsResponse } from "schema/iot_project";
@@ -65,6 +66,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 }) => {
   useDocumentTitle("Addressspace List");
   useA11yRouteChange();
+  const client = useApolloClient();
   const { dispatch } = useStoreContext();
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["allProjects"];
@@ -105,46 +107,13 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   }
 
   const onChangeEdit = (project: IProject) => {
-    const {
-      name,
-      namespace,
-      type,
-      isReady,
-      authService,
-      plan,
-      displayName,
-      status
-    } = project;
-    if (
-      name &&
-      namespace &&
-      type &&
-      isReady !== undefined &&
-      authService &&
-      plan &&
-      displayName &&
-      status
-    ) {
-      const addressSpace: IAddressSpace = {
-        name: name,
-        nameSpace: namespace,
-        type: type,
-        isReady: false,
-        authenticationService: authService,
-        creationTimestamp: "",
-        planValue: plan,
-        displayName: displayName,
-        messages: [],
-        phase: status
-      };
-      dispatch({
-        type: types.SHOW_MODAL,
-        modalType: MODAL_TYPES.EDIT_ADDRESS_SPACE,
-        modalProps: {
-          addressSpace
-        }
-      });
-    }
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.EDIT_PROJECT,
+      modalProps: {
+        project
+      }
+    });
   };
 
   const onDeleteProject = (project: IProject) => {
@@ -201,28 +170,28 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   //Download the certificate function
   const onDownloadCertificate = async (project: IProject) => {
-    // const dataToDownload = await client.query({
-    //   query: DOWNLOAD_CERTIFICATE,
-    //   variables: {
-    //     as: {
-    //       name: data.name,
-    //       namespace: data.namespace,
-    //     },
-    //   },
-    //   fetchPolicy: FetchPolicy.NETWORK_ONLY,
-    // });
-    // if (dataToDownload.errors) {
-    //   console.log("Error while download", dataToDownload.errors);
-    // }
-    // const url = window.URL.createObjectURL(
-    //   new Blob([dataToDownload.data.messagingCertificateChain])
-    // );
-    // const link = document.createElement("a");
-    // link.href = url;
-    // link.setAttribute("download", `${data.name}.crt`);
-    // document.body.appendChild(link);
-    // link.click();
-    // if (link.parentNode) link.parentNode.removeChild(link);
+    const dataToDownload = await client.query({
+      query: DOWNLOAD_CERTIFICATE,
+      variables: {
+        as: {
+          name: project.name,
+          namespace: project.namespace
+        }
+      },
+      fetchPolicy: FetchPolicy.NETWORK_ONLY
+    });
+    if (dataToDownload.errors) {
+      console.log("Error while download", dataToDownload.errors);
+    }
+    const url = window.URL.createObjectURL(
+      new Blob([dataToDownload.data.messagingCertificateChain])
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${project.name}.crt`);
+    document.body.appendChild(link);
+    link.click();
+    if (link.parentNode) link.parentNode.removeChild(link);
   };
 
   const handleOnChangeEnable = (project: IProject) => {
@@ -287,31 +256,20 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
         };
       } else {
         const { metadata, spec, messagingStatus } = project || {};
-        return {
+
+        const a = {
           projectType: ProjectTypes.MESSAGING,
           name: metadata?.name,
           displayName: metadata?.name,
           namespace: metadata?.namespace,
           creationTimestamp: metadata?.creationTimestamp,
-          status: messagingStatus?.phase
+          status: messagingStatus?.phase,
+          type: spec?.type,
+          authService: spec.authenticationService?.name,
+          plan: spec?.plan?.metadata?.name
         };
+        return a;
       }
-      // return {
-      //   projectType: ProjectTypes.IOT,
-      //   name: metadata?.name,
-      //   displayName: metadata?.name,
-      //   isEnabled: enabled,
-      //   type: "",
-      //   namespace: metadata?.namespace,
-      //   plan: "",
-      //   status: status?.phase,
-      //   authService: "none",
-      //   isReady: true,
-      //   creationTimestamp: metadata?.creationTimestamp,
-      //   errorMessageRate: 3,
-      //   addressCount: 15,
-      //   connectionCount: 3
-      // };
     });
   };
 

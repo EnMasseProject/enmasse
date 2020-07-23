@@ -14,6 +14,20 @@ interface IAddressSpaceType {
     phase: string;
     messages: Array<string>;
   };
+  spec?: {
+    plan: {
+      spec: {
+        displayName?: string;
+      };
+      metadata: {
+        name?: string;
+      };
+    };
+    type?: string;
+    authenticationService?: {
+      name?: string;
+    };
+  };
 }
 
 export interface IIotProjectType {

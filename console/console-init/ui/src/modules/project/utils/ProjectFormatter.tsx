@@ -10,7 +10,7 @@ import {
   ErrorCircleOIcon,
   PendingIcon
 } from "@patternfly/react-icons";
-import { Flex, FlexItem } from "@patternfly/react-core";
+import { Flex, FlexItem, Label } from "@patternfly/react-core";
 import { kFormatter } from "utils";
 import { StyleSheet, css } from "aphrodite";
 import { ProjectTypes } from "./constant";
@@ -20,9 +20,8 @@ const style = StyleSheet.create({
     color: "var(--pf-global--palette--red-100)"
   }
 });
-interface IProjectTypePlanProps {
+interface IProjectTypeProps {
   projectType: string;
-  msgType?: string;
 }
 
 interface IProjectStatusProps {
@@ -76,15 +75,11 @@ const formatString = (string?: string) => {
     return formattedString;
   }
 };
-const ProjectTypePlan: React.FunctionComponent<IProjectTypePlanProps> = ({
-  projectType,
-  msgType
+const ProjectTypeLabel: React.FunctionComponent<IProjectTypeProps> = ({
+  projectType
 }) => {
-  return (
-    <>
-      {projectType} {formatString(msgType)}
-    </>
-  );
+  const color = projectType === ProjectTypes.MESSAGING ? "green" : "blue";
+  return <Label color={color}>{projectType}</Label>;
 };
 
 const ProjectError: React.FunctionComponent<IProjectErrorProps> = ({
@@ -189,7 +184,7 @@ export {
   ProjectStatus,
   ProjectError,
   ProjectEntities,
-  ProjectTypePlan,
+  ProjectTypeLabel,
   getStatusIconByPhase,
   ProjectErrorMessages
 };

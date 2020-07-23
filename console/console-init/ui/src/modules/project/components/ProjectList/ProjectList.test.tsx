@@ -76,7 +76,7 @@ describe("<ProjectList/>", () => {
     );
     // table Header
     getByText("Name");
-    getByText("Type/Plan");
+    getByText("Type");
     getByText("Status");
     getByText("Time created");
     getByText("Error messages");
@@ -93,7 +93,7 @@ describe("<ProjectList/>", () => {
     };
     //first row's data
     getByText(projects[0].displayName || "");
-    getByText(projects[0].projectType + " " + getProjectPlan());
+    getByText(projects[0].projectType);
     //second row's data
     getByText(projects[1].displayName || "");
   });
