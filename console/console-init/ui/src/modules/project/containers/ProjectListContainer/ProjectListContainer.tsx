@@ -268,7 +268,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           authService: spec.authenticationService?.name,
           plan: spec?.plan?.metadata?.name
         };
-        console.log(a);
         return a;
       }
     });
@@ -276,7 +275,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const projectList: IProject[] = getProjects();
 
-  // console.log(projectList)
   setTotalProjects(projectList.length);
 
   const ioTCount: IProjectCount = {
