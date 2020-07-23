@@ -39,9 +39,6 @@ public class Environment {
     private static final String ENMASSE_DOCS_SYSTEM_PROPERTY = "enmasse.docs";
     private static final String ENMASSE_OLM_REPLACES_SYSTEM_PROPERTY = "enmasse.olm.replaces";
     private static final String K8S_DOMAIN_ENV = "KUBERNETES_DOMAIN";
-    private static final String K8S_API_CONNECT_TIMEOUT = "KUBERNETES_API_CONNECT_TIMEOUT";
-    private static final String K8S_API_READ_TIMEOUT = "KUBERNETES_API_READ_TIMEOUT";
-    private static final String K8S_API_WRITE_TIMEOUT = "KUBERNETES_API_WRITE_TIMEOUT";
     private static final String UPGRADE_TEPLATES_ENV = "UPGRADE_TEMPLATES";
     private static final String START_TEMPLATES_ENV = "START_TEMPLATES";
     private static final String TEMPLATES_PATH = "TEMPLATES";
@@ -93,9 +90,6 @@ public class Environment {
     private final String infinispanProject = getOrDefault(jsonEnv, INFINISPAN_PROJECT, "systemtests-infinispan");
     private final String postgresqlProject = getOrDefault(jsonEnv, POSTGRESQL_PROJECT, "systemtests-postgresql");
     private final String h2Project = getOrDefault(jsonEnv, H2_PROJECT, "systemtests-h2");
-    private final Duration kubernetesApiConnectTimeout = getOrDefault(jsonEnv, K8S_API_CONNECT_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
-    private final Duration kubernetesApiReadTimeout = getOrDefault(jsonEnv, K8S_API_READ_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
-    private final Duration kubernetesApiWriteTimeout = getOrDefault(jsonEnv, K8S_API_WRITE_TIMEOUT, i -> Duration.ofSeconds(Long.parseLong(i)), Duration.ofSeconds(60));
     private final EnmasseInstallType installType = getOrDefault(jsonEnv, INSTALL_TYPE, value -> EnmasseInstallType.valueOf(value.toUpperCase()), EnmasseInstallType.BUNDLE);
     private final OLMInstallationType olmInstallType = Optional.ofNullable(getOrDefault(jsonEnv, OLM_INSTALL_TYPE, "")).map(s -> s.isEmpty() ? OLMInstallationType.SPECIFIC.name() : s).map(value -> OLMInstallationType.valueOf(value.toUpperCase())).orElse(OLMInstallationType.SPECIFIC);
     private final String templatesPath = getOrDefault(jsonEnv, TEMPLATES_PATH, Paths.get(System.getProperty("user.dir"), "..", "templates", "build", "enmasse-latest").toString());
@@ -285,18 +279,6 @@ public class Environment {
 
     public String getTemplatesPath() {
         return templatesPath;
-    }
-
-    public Duration getKubernetesApiConnectTimeout() {
-        return kubernetesApiConnectTimeout;
-    }
-
-    public Duration getKubernetesApiReadTimeout() {
-        return kubernetesApiReadTimeout;
-    }
-
-    public Duration getKubernetesApiWriteTimeout() {
-        return kubernetesApiWriteTimeout;
     }
 
     public String getInfinispanProject() {
