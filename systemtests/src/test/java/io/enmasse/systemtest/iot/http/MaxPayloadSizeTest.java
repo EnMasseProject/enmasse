@@ -3,12 +3,12 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.http;
+package io.enmasse.systemtest.iot.http;
 
+import io.enmasse.systemtest.iot.AbstractMaxPayloadSizeTest;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 import io.enmasse.systemtest.iot.MessageSendTester.Sender;
-import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
 import org.junit.jupiter.api.Tag;
 
 import static io.enmasse.systemtest.framework.TestTag.IOT;

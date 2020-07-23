@@ -3,13 +3,13 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.mqtt;
+package io.enmasse.systemtest.iot.mqtt;
 
+import io.enmasse.systemtest.iot.AbstractMaxPayloadSizeTest;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
-import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
 
 import java.nio.charset.StandardCharsets;
 

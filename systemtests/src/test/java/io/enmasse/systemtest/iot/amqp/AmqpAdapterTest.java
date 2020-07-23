@@ -1,13 +1,12 @@
 /*
- * Copyright 2019-2020, EnMasse authors.
+ * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.http;
+package io.enmasse.systemtest.iot.amqp;
 
 import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.http.StandardIoTHttpTests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -17,17 +16,17 @@ import java.util.List;
 
 import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.DeviceSupplier.named;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 
 @Tag(IOT)
-public class HttpAdapterTest implements StandardIoTHttpTests {
+public class AmqpAdapterTest implements StandardIoTAmqpTests {
 
     private static IoTTestSession session;
 
     @BeforeAll
     public static void setup() throws Exception {
         session = IoTTestSession.createDefault()
-                .adapters(HTTP)
+                .adapters(AMQP)
                 .deploy();
     }
 

@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.tls;
+package io.enmasse.systemtest.iot.tls;
 
 import io.enmasse.iot.model.v1.ConfigConditionType;
 import io.enmasse.systemtest.framework.condition.OpenShift;

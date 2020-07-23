@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.x509;
+package io.enmasse.systemtest.iot.x509;
 
 import io.enmasse.systemtest.certs.ssl.SSLUtils;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
@@ -22,7 +22,7 @@ import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
 
 @Tag(IOT)
-public class X509EcAuthenticationTest implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
+public class X509RsaAuthenticationTest implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
 
     private static DeviceCertificateManager certificateManager;
     private static IoTTestSession session;
@@ -30,7 +30,7 @@ public class X509EcAuthenticationTest implements StandardX509Cases, StandardIoTH
     @BeforeAll
     public static void setup() throws Exception {
 
-        certificateManager = new DeviceCertificateManager(Mode.EC, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
+        certificateManager = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
         session = IoTTestSession.createDefault()
                 .tenant(tenant -> tenant.editOrNewSpec()

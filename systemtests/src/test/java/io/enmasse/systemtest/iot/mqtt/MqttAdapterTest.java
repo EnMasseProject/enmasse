@@ -3,11 +3,10 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-package io.enmasse.systemtest.iot.isolated.mqtt;
+package io.enmasse.systemtest.iot.mqtt;
 
 import io.enmasse.systemtest.iot.DeviceSupplier;
 import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.mqtt.StandardIoTMqttTests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
