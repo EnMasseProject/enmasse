@@ -5,6 +5,7 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
+import io.enmasse.systemtest.certs.ssl.SSLUtils;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
 import io.enmasse.systemtest.iot.IoTTestSession;
@@ -19,7 +20,6 @@ import javax.security.auth.x500.X500Principal;
 import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.MQTT;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(IOT)
 public class X509EcAuthenticationTest implements StandardX509Cases, StandardIoTHttpTests, StandardIoTMqttTests {
@@ -36,7 +36,7 @@ public class X509EcAuthenticationTest implements StandardX509Cases, StandardIoTH
                 .tenant(tenant -> tenant.editOrNewSpec()
                         .editOrNewConfiguration()
                         .addNewTrustAnchor()
-                        .withCertificate(toPem(certificateManager.getCertificate()))
+                        .withCertificate(SSLUtils.toPem(certificateManager.getCertificate()))
                         .endTrustAnchor()
                         .endConfiguration()
                         .endSpec())
