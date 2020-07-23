@@ -1,3 +1,6 @@
 ---
 - name: Apply the EnMasse Operator
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/enmasse-operator
+- name: Disable IoT modules
+  shell: oc set env deployment/enmasse-operator CONTROLLER_ENABLE_IOT_CONFIG=false CONTROLLER_ENABLE_IOT_PROJECT=false
+  when: not enable_iot
