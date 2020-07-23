@@ -20,7 +20,7 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { FormatDistance } from "use-patternfly";
-import { DropdownWithKebabToggle, SwitchWithToggle } from "components";
+import { DropdownWithKebabToggle } from "components";
 import { useStoreContext, types } from "context-state-reducer";
 import { DeviceActionType } from "modules/iot-device-detail/utils";
 
