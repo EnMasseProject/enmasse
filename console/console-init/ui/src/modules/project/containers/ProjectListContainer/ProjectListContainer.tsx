@@ -83,7 +83,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
 
   const { loading, data } = useQuery<IAllProjectsResponse>(
-    RETURN_ALL_PROJECTS(undefined, undefined),
+    RETURN_ALL_PROJECTS(filter, undefined),
     {
       fetchPolicy: FetchPolicy.NETWORK_ONLY,
       pollInterval: POLL_INTERVAL

@@ -12,11 +12,11 @@ import {
 import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
 import { FetchPolicy } from "constant";
-import { getSelectOptionList } from "utils";
+import { getSelectOptionList, ISelectOption } from "utils";
 import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
 import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
 import { IProjectFilter } from "modules/project/ProjectPage";
-import { initialiseFilterForProject } from "modules/project/utils";
+import { initialiseFilterForProject, typeOptions } from "modules/project/utils";
 import { ProjectToolbar } from "modules/project/components";
 
 export interface IProjectToolbarContainerProps {
@@ -142,7 +142,10 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   };
 
   const onSelectType = (selection: string) => {
-    setFilter({ ...filter, type: selection });
+    const selectedOption: ISelectOption[] = typeOptions.filter(
+      type => type.value === selection
+    );
+    setFilter({ ...filter, type: selectedOption[0] });
   };
 
   const onSearch = () => {

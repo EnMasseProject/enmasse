@@ -30,7 +30,6 @@ const defaultCertificates = [
   }
 ];
 export default function IoTCertificates() {
-  console.log(":ASFSAFA");
   useDocumentTitle("IoT Certificates");
   useA11yRouteChange();
   //   const { name, namespace } = useParams();

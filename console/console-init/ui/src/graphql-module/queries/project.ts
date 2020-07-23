@@ -4,15 +4,61 @@
  */
 
 import gql from "graphql-tag";
+import { IProjectFilter } from "modules/project/ProjectPage";
+import { generateFilterPattern } from "./query";
 
-const FILTER_RETURN_PROJECTS = (projectFilterParams?: any) => {
-  const { projectname } = projectFilterParams;
+const FILTER_RETURN_PROJECTS = (projectFilterParams: IProjectFilter) => {
+  const { names, namespaces, type, status } = projectFilterParams;
   let filter: string = "";
-  if (projectname && projectname.trim() !== "") {
-    filter += "`$.metadata.name` = '" + projectname + "'";
+  let filterNamesLength = names && names.length;
+  let filterNameSpacesLength = namespaces && namespaces.length;
+
+  //filter names
+  filter += generateFilterPattern("metadata.name", names);
+
+  if (
+    filterNamesLength &&
+    filterNameSpacesLength &&
+    filterNameSpacesLength > 0
+  ) {
+    filter += " AND ";
   }
 
-  // TODO: Filters to be incrementally added
+  //filter namsespaces
+  filter += generateFilterPattern("metadata.namespace", namespaces);
+
+  if (
+    ((filterNamesLength && filterNamesLength > 0) ||
+      (filterNameSpacesLength && filterNameSpacesLength > 0)) &&
+    type?.value?.trim()
+  ) {
+    filter += " AND ";
+  }
+
+  //filter tye
+  if (type) {
+    if (type && type.value.trim() !== "") {
+      filter += "`$.kind`= '" + type.value + "'";
+    }
+  }
+
+  if (type?.value.trim() && status?.trim()) {
+    filter += " AND ";
+  }
+
+  //filter status
+  if (status) {
+    if (status !== "Pending") {
+      filter += generateFilterPattern("status.phase", [
+        { value: status, isExact: true }
+      ]);
+    } else {
+      filter += generateFilterPattern("status.phase", [
+        { value: status, isExact: true },
+        { value: "", isExact: true }
+      ]);
+    }
+  }
   return filter;
 };
 
@@ -74,7 +120,6 @@ const RETURN_ALL_PROJECTS = (
   let filter: string = "";
 
   if (projectFilterParams) {
-    //TODO
     filter = FILTER_RETURN_PROJECTS(projectFilterParams);
   }
 

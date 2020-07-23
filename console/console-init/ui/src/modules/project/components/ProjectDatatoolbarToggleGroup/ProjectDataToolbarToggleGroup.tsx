@@ -25,6 +25,7 @@ import {
   DropdownWithBulkSelect
 } from "components";
 import { typeOptions, filterMenuItems } from "modules/project/utils";
+import { ISelectOption } from "utils";
 
 export interface IProjectToolbarToggleGroupProps {
   totalRecords: number;
@@ -35,7 +36,7 @@ export interface IProjectToolbarToggleGroupProps {
   namespaceInput?: string;
   nameOptions?: any[];
   namespaceOptions?: any[];
-  typeSelected?: string | null;
+  typeSelected?: ISelectOption;
   selectedNames: Array<{ value: string; isExact: boolean }>;
   selectedNamespaces: Array<{ value: string; isExact: boolean }>;
   onSelectFilter: (value: string) => void;
@@ -86,7 +87,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     if (
       (selectedNames && selectedNames.length > 0) ||
       (selectedNamespaces && selectedNamespaces.length > 0) ||
-      (typeSelected && typeSelected.trim() !== "")
+      (typeSelected && typeSelected.value.trim() !== "")
     ) {
       return true;
     }
@@ -166,7 +167,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
       <ToolbarItem spacer={{ md: "spacerNone" }} data-codemods="true">
         <ToolbarFilter
           id="project-data-togglegrp-type-filter"
-          chips={typeSelected ? [typeSelected] : []}
+          chips={typeSelected?.label ? [typeSelected.label] : []}
           deleteChip={onDelete}
           categoryName="Type"
         >
@@ -178,7 +179,7 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
               position={DropdownPosition.left}
               onSelectItem={onSelectType}
               dropdownItems={typeOptions}
-              value={typeSelected || "Select Type"}
+              value={typeSelected?.label || "Select Type"}
             />
           )}
         </ToolbarFilter>

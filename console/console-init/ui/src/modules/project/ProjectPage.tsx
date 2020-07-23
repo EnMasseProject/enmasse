@@ -19,7 +19,7 @@ import {
   DELETE_ADDRESS_SPACE,
   DELETE_IOT_PROJECT
 } from "graphql-module/queries";
-import { compareObject } from "utils";
+import { compareObject, ISelectOption } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { TablePagination } from "components";
 import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
@@ -42,7 +42,7 @@ export interface IProjectFilter {
   filterType: string;
   names: ISelectSearchOption[];
   namespaces: ISelectSearchOption[];
-  type?: string;
+  type?: ISelectOption;
   status?: string;
   projectType?: string;
 }
@@ -212,7 +212,6 @@ export default function ProjectPage() {
       setMsgCount(count);
     }
   };
-
   return (
     <>
       <Page>

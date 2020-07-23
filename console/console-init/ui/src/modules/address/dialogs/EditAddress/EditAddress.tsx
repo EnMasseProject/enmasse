@@ -34,7 +34,6 @@ export const EditAddress: React.FunctionComponent = () => {
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose, address } = modalProps || {};
-  console.log(address);
   const [plan, setPlan] = useState(
     { planLabel: address.planLabel, value: address.planValue } || {}
   );
