@@ -20,9 +20,8 @@ const style = StyleSheet.create({
     color: "var(--pf-global--palette--red-100)"
   }
 });
-interface IProjectTypePlanProps {
+interface IProjectTypeProps {
   projectType: string;
-  msgType?: string;
 }
 
 interface IProjectStatusProps {
@@ -76,15 +75,11 @@ const formatString = (string?: string) => {
     return formattedString;
   }
 };
-const ProjectTypePlan: React.FunctionComponent<IProjectTypePlanProps> = ({
-  projectType,
-  msgType
+const ProjectTypeLabel: React.FunctionComponent<IProjectTypeProps> = ({
+  projectType
 }) => {
-  return (
-    <Label color={projectType === ProjectTypes.MESSAGING ? "green" : "blue"}>
-      {projectType}
-    </Label>
-  );
+  const color = projectType === ProjectTypes.MESSAGING ? "green" : "blue";
+  return <Label color={color}>{projectType}</Label>;
 };
 
 const ProjectError: React.FunctionComponent<IProjectErrorProps> = ({
@@ -189,7 +184,7 @@ export {
   ProjectStatus,
   ProjectError,
   ProjectEntities,
-  ProjectTypePlan,
+  ProjectTypeLabel,
   getStatusIconByPhase,
   ProjectErrorMessages
 };

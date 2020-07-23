@@ -22,7 +22,7 @@ import {
   ProjectStatus,
   ProjectError,
   ProjectEntities,
-  ProjectTypePlan,
+  ProjectTypeLabel,
   ProjectTypes
 } from "modules/project/utils";
 import { EmptyProject } from "modules/project";
@@ -159,7 +159,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
           key: displayName
         },
         {
-          title: <ProjectTypePlan projectType={projectType} msgType={type} />,
+          title: <ProjectTypeLabel projectType={projectType} />,
           key: displayName + "-" + projectType
         },
         {
@@ -206,7 +206,7 @@ export const ProjectList: React.FunctionComponent<IProjectListProps> = ({
   const tableRows = projects?.map(toTableCells);
   const tableColumns = [
     { title: "Name", transforms: [sortable] },
-    { title: "Type/Plan", transforms: [sortable] },
+    { title: "Type", transforms: [sortable] },
     { title: "Status", transforms: [sortable] },
     { title: "Time created", transforms: [sortable] },
     {
