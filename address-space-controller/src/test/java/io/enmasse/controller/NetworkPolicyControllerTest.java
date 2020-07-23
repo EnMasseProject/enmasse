@@ -6,12 +6,16 @@ package io.enmasse.controller;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collections;
+import java.util.List;
 
+import io.fabric8.kubernetes.api.model.networking.NetworkPolicyIngressRule;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +76,13 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         assertEquals("enmasse", networkPolicy.getMetadata().getLabels().get(LabelKeys.APP));
         assertEquals("1234", networkPolicy.getMetadata().getLabels().get(LabelKeys.INFRA_UUID));
         assertThat(networkPolicy.getSpec().getPolicyTypes(), hasItem("Ingress"));
-        assertEquals("label", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
+        assertThat(networkPolicy.getSpec().getPolicyTypes(), not(hasItem("Egress")));
+        assertTrue(networkPolicy.getSpec().getEgress().isEmpty());
+
+        List<NetworkPolicyIngressRule> ingresses = networkPolicy.getSpec().getIngress();
+        assertEquals(2, ingresses.size());
+        assertEquals("label", ingresses.get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
+        assertEquals("enmasse", ingresses.get(1).getFrom().get(0).getPodSelector().getMatchLabels().get(LabelKeys.APP), "should permit enmasse traffic");
     }
 
     @Test
@@ -89,7 +99,13 @@ public class NetworkPolicyControllerTest extends JULInitializingTest {
         assertEquals("enmasse", networkPolicy.getMetadata().getLabels().get(LabelKeys.APP));
         assertEquals("1234", networkPolicy.getMetadata().getLabels().get(LabelKeys.INFRA_UUID));
         assertThat(networkPolicy.getSpec().getPolicyTypes(), hasItem("Ingress"));
-        assertEquals("label", networkPolicy.getSpec().getIngress().get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
+        assertThat(networkPolicy.getSpec().getPolicyTypes(), not(hasItem("Egress")));
+        assertTrue(networkPolicy.getSpec().getEgress().isEmpty());
+
+        List<NetworkPolicyIngressRule> ingresses = networkPolicy.getSpec().getIngress();
+        assertEquals(2, ingresses.size());
+        assertEquals("label", ingresses.get(0).getFrom().get(0).getPodSelector().getMatchLabels().get("my"));
+        assertEquals("enmasse", ingresses.get(1).getFrom().get(0).getPodSelector().getMatchLabels().get(LabelKeys.APP), "should permit enmasse traffic");
     }
 
     @Test
