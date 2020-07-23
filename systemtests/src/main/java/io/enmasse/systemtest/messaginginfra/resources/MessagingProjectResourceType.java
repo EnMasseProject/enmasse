@@ -13,11 +13,13 @@ import io.enmasse.api.model.MessagingProjectList;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 import java.util.List;
 
 public class MessagingProjectResourceType implements ResourceType<MessagingProject> {
-    private static final MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingProjects(), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
+    private static final MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> operation =
+            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingProjects()), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
 
     @Override
     public String getKind() {

@@ -14,6 +14,7 @@ import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingInfrastructureResourceType implements ResourceType<MessagingInfrastructure> {
-    private static final MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> operation = Kubernetes.getClient().customResources(CoreCrd.messagingInfras(), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
+    private static final MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> operation =
+            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingInfras()), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
 
     @Override
     public String getKind() {

@@ -75,6 +75,7 @@ import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable;
 import io.fabric8.kubernetes.client.dsl.PodResource;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import io.fabric8.openshift.api.model.Route;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
@@ -1237,7 +1238,7 @@ public abstract class Kubernetes {
      * @return The client instance.
      */
     public static MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigs(final String namespace) {
-        var result = getClient().customResources(IoTCrd.config(), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class);
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.config()), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class);
         if (namespace != null) {
             result = (MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>>) result.inNamespace(namespace);
         }
@@ -1251,7 +1252,7 @@ public abstract class Kubernetes {
      * @return The client instance.
      */
     public static MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotTenants(String namespace) {
-        var result = getClient().customResources(IoTCrd.project(), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.project()), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
         if (namespace != null) {
             result = (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) result.inNamespace(namespace);
         }
@@ -1265,7 +1266,7 @@ public abstract class Kubernetes {
      * @return The client instance.
      */
     public static MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>> messagingEndpoints(final String namespace) {
-        var result = getClient().customResources(CoreCrd.messagingEndpoints(), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingEndpoints()), MessagingEndpoint.class, MessagingEndpointList.class, DoneableMessagingEndpoint.class);
         if (namespace != null ) {
             result = (MixedOperation<MessagingEndpoint, MessagingEndpointList, DoneableMessagingEndpoint, Resource<MessagingEndpoint, DoneableMessagingEndpoint>>) result.inNamespace(namespace);
         }
@@ -1279,7 +1280,7 @@ public abstract class Kubernetes {
      * @return The client instance.
      */
     public static MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> messagingProjects(final String namespace) {
-        var result = getClient().customResources(CoreCrd.messagingProjects(), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingProjects()), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
         if (namespace != null ) {
             result = (MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>>) result.inNamespace(namespace);
         }
@@ -1293,7 +1294,7 @@ public abstract class Kubernetes {
      * @return The client instance.
      */
     public static MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> messagingInfrastructures(final String namespace) {
-        var result = getClient().customResources(CoreCrd.messagingInfras(), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingInfras()), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
         if (namespace != null ) {
             result = (MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>>) result.inNamespace(namespace);
         }
