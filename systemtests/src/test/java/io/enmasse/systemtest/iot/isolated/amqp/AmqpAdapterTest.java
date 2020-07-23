@@ -5,20 +5,19 @@
 
 package io.enmasse.systemtest.iot.isolated.amqp;
 
-import static io.enmasse.systemtest.framework.TestTag.IOT;
-import static io.enmasse.systemtest.iot.DeviceSupplier.named;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
-
-import java.util.Arrays;
-import java.util.List;
-
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.amqp.StandardIoTAmqpTests;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.amqp.StandardIoTAmqpTests;
+import java.util.Arrays;
+import java.util.List;
+
+import static io.enmasse.systemtest.framework.TestTag.IOT;
+import static io.enmasse.systemtest.iot.DeviceSupplier.named;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 
 @Tag(IOT)
 public class AmqpAdapterTest implements StandardIoTAmqpTests {

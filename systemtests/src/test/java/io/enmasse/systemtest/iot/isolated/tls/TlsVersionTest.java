@@ -5,22 +5,21 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
-import static io.enmasse.systemtest.framework.TestTag.IOT;
-import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
+import io.enmasse.systemtest.iot.IoTTests;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
-import io.enmasse.systemtest.iot.IoTTests;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import static io.enmasse.systemtest.framework.TestTag.IOT;
+import static java.util.Collections.singleton;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Tag(IOT)
 public class TlsVersionTest implements IoTTests {

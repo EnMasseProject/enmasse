@@ -942,6 +942,10 @@ public final class IoTTestSession implements IoTTestContext {
             public String getTenantId() {
                 return IoTTestSession.this.getTenantId();
             }
+
+            public String getDeviceId() {
+                return this.deviceId;
+            }
         }
 
         private final IoTConfig config;
@@ -1253,6 +1257,10 @@ public final class IoTTestSession implements IoTTestContext {
      */
     public void addCleanup(final ThrowingCallable cleanup) {
         this.cleanup.add(cleanup);
+    }
+
+    public Vertx getVertx() {
+        return this.vertx;
     }
 
     protected static void defaultExceptionHandler(final Throwable error) {

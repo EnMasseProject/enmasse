@@ -5,13 +5,12 @@
 
 package io.enmasse.systemtest.iot;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;

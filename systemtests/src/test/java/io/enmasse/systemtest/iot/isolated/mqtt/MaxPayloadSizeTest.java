@@ -5,13 +5,13 @@
 
 package io.enmasse.systemtest.iot.isolated.mqtt;
 
-import java.nio.charset.StandardCharsets;
-
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
+import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 import io.enmasse.systemtest.iot.isolated.AbstractMaxPayloadSizeTest;
+
+import java.nio.charset.StandardCharsets;
 
 public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
 
@@ -28,7 +28,7 @@ public class MaxPayloadSizeTest extends AbstractMaxPayloadSizeTest {
 
     @SuppressWarnings("resource")
     @Override
-    protected Sender sender(Device device) throws Exception {
+    protected MessageSendTester.Sender sender(Device device) throws Exception {
         return cleanup(device.createMqttAdapterClient())::sendQos1;
     }
 

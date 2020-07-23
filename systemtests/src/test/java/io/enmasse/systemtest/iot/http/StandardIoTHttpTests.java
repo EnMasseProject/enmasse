@@ -5,26 +5,28 @@
 
 package io.enmasse.systemtest.iot.http;
 
-import java.time.Duration;
-import java.util.concurrent.TimeoutException;
-
-import javax.net.ssl.SSLHandshakeException;
-
+import io.enmasse.systemtest.iot.CommandTester;
+import io.enmasse.systemtest.iot.CommandTester.CommanderFactory;
+import io.enmasse.systemtest.iot.DeviceSupplier;
+import io.enmasse.systemtest.iot.HttpAdapterClient;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.StandardIoTTests;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.enmasse.systemtest.iot.DeviceSupplier;
-import io.enmasse.systemtest.iot.HttpAdapterClient;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.iot.StandardIoTTests;
+import javax.net.ssl.SSLHandshakeException;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 
 import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.ONE_WAY;
+import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
+import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public interface StandardIoTHttpTests extends StandardIoTTests {
@@ -141,6 +143,68 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
                     .amount(5)
                     .consume(MessageSendTester.Consume.BEFORE)
                     .execute();
+        }
+
+    }
+
+    /**
+     * Test a simple one-way command pattern.
+     */
+    @ParameterizedTest(name = "testHttpOneWayCommand-{0}")
+    @MethodSource("getDevices")
+    default void testHttpOneWayCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new HttpSubordinate(getSession(), device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(ONE_WAY)
+                    .subordinate(subordinate)
+                    .initiator(subordinate::initiate)
+                    .commanderFactory(CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
+        }
+
+    }
+
+    /**
+     * Test a simple request/response command pattern.
+     */
+    @ParameterizedTest(name = "testHttpRequestResponseCommand-{0}")
+    @MethodSource("getDevices")
+    default void testHttpRequestResponseCommand(final DeviceSupplier deviceSupplier) throws Exception {
+
+        var device = deviceSupplier.get();
+        var vertx = getSession().getVertx();
+
+        try (
+                var subordinate = new HttpSubordinate(getSession(), device);
+        ) {
+
+            new CommandTester()
+                    .vertx(vertx)
+                    .mode(REQUEST_RESPONSE)
+                    .subordinate(subordinate)
+                    .initiator(subordinate::initiate)
+                    .commanderFactory(CommanderFactory.of(
+                            getSession().getConsumerClient(),
+                            getSession().getTenantId()
+                    ))
+                    .amount(5)
+                    .delay(Duration.ofSeconds(1))
+                    .execute();
+
         }
 
     }

@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class MessageSendTester {
 
     private static final Logger log = LoggerUtils.getLogger();
+
     private Type type = Type.TELEMETRY;
     private int amount = 1;
     private int payloadSize = 0;
@@ -199,12 +200,12 @@ public class MessageSendTester {
         return sendDuration.plus(MessageSendTester.this.additionalSendTimeout);
     }
 
-    public static enum Type {
+    public enum Type {
         TELEMETRY(MessageType.TELEMETRY), EVENT(MessageType.EVENT);
 
         private MessageType type;
 
-        private Type(final MessageType type) {
+        Type(final MessageType type) {
             this.type = type;
         }
 
@@ -213,7 +214,7 @@ public class MessageSendTester {
         }
     }
 
-    public static enum Consume {
+    public enum Consume {
         BEFORE, AFTER;
     }
 
@@ -234,29 +235,25 @@ public class MessageSendTester {
     @FunctionalInterface
     public interface ConsumerFactory {
 
-        public static ConsumerFactory of(final AmqpClient client, final String tenantId) {
-            return new ConsumerFactory() {
+        static ConsumerFactory of(final AmqpClient client, final String tenantId) {
+            return (type, messageConsumer) -> {
 
-                @Override
-                public AutoCloseable start(final Type type, final Consumer<Message> messageConsumer) {
+                var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
+                    messageConsumer.accept(msg);
+                    return false;
+                });
 
-                    var receiver = client.recvMessagesWithStatus(type.type().address() + "/" + tenantId, msg -> {
-                        messageConsumer.accept(msg);
-                        return false;
-                    });
+                return new AutoCloseable() {
 
-                    return new AutoCloseable() {
-
-                        @Override
-                        public void close() throws Exception {
-                            receiver.close();
-                        }
-                    };
-                }
+                    @Override
+                    public void close() throws Exception {
+                        receiver.close();
+                    }
+                };
             };
         }
 
-        public AutoCloseable start(Type type, Consumer<Message> messageConsumer);
+        AutoCloseable start(Type type, Consumer<Message> messageConsumer);
     }
 
     /**
@@ -264,8 +261,8 @@ public class MessageSendTester {
      */
     public static class ReceivedMessage {
 
-        private Message message;
-        private JsonObject payload;
+        private final Message message;
+        private final JsonObject payload;
 
         public ReceivedMessage(final Message message, final JsonObject payload) {
             this.message = message;

@@ -5,31 +5,30 @@
 
 package io.enmasse.systemtest.iot.isolated.x509;
 
-import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
-import static io.enmasse.systemtest.framework.TestTag.IOT;
-import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
-import static io.enmasse.systemtest.utils.TestUtils.toPem;
-
-import java.time.Duration;
-import java.util.Optional;
-
-import javax.security.auth.x500.X500Principal;
-
-import io.enmasse.systemtest.iot.IoTTestContext;
-import io.enmasse.systemtest.iot.Names;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import io.enmasse.iot.model.v1.IoTProject;
 import io.enmasse.iot.model.v1.IoTProjectStatus;
 import io.enmasse.iot.model.v1.ProjectConditionType;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
+import io.enmasse.systemtest.iot.IoTTestContext;
 import io.enmasse.systemtest.iot.IoTTestSession;
 import io.enmasse.systemtest.iot.IoTTests;
+import io.enmasse.systemtest.iot.Names;
 import io.enmasse.systemtest.utils.TestUtils;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.security.auth.x500.X500Principal;
+import java.time.Duration;
+import java.util.Optional;
+
+import static io.enmasse.systemtest.framework.TestTag.ACCEPTANCE;
+import static io.enmasse.systemtest.framework.TestTag.IOT;
+import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
+import static io.enmasse.systemtest.utils.TestUtils.toPem;
 
 @Tag(IOT)
 public class TrustAnchorTest implements IoTTests {
@@ -41,7 +40,11 @@ public class TrustAnchorTest implements IoTTests {
      */
     @Test
     @Tag(ACCEPTANCE)
+    @Disabled("Causes stability issues")
     public void testDuplicateSubjectDn() throws Exception {
+
+        // create two CAs with the same name
+
         var mgr1 = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
         var mgr2 = new DeviceCertificateManager(Mode.RSA, new X500Principal("OU=Tenant 1,OU=IoT,O=EnMasse,C=IO"));
 
@@ -61,7 +64,7 @@ public class TrustAnchorTest implements IoTTests {
                         .adapters(HTTP)
                         .deploy();
 
-                IoTTestContext ctx2 = session
+                IoTTestContext secondTenant = session
                         .newProject(ns2, name2)
                         .createNamespace(true)
                         .awaitReady(false)
@@ -87,7 +90,7 @@ public class TrustAnchorTest implements IoTTests {
 
                 // wait until the condition 'TrustAnchorsUnique' becomes false
                 return Optional
-                        .ofNullable(ctx2.tenant().get())
+                        .ofNullable(secondTenant.tenant().get())
                         .map(IoTProject::getStatus)
                         .map(IoTProjectStatus::getConditions)
                         .flatMap(c -> c.stream()
@@ -97,9 +100,9 @@ public class TrustAnchorTest implements IoTTests {
                                 "DuplicateTrustAnchors".equals(c.getReason()))
                         .orElse(false);
 
-            }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "Conditions 'TrustAnchorsUnique' should become 'false'");
+            }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "Condition 'TrustAnchorsUnique' should become 'false'");
 
-            log.info("Successfully detected 'DuplicateTrustAnchors' problem on second project");
+            log.info("Successfully detected 'DuplicateTrustAnchors' condition on second project");
 
         }
 

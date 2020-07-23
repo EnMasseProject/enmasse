@@ -5,13 +5,12 @@
 
 package io.enmasse.systemtest.iot;
 
-import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import io.vertx.core.json.JsonObject;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import io.vertx.core.json.JsonObject;
+import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @Tag(FRAMEWORK)
 public class CredentialsTest {

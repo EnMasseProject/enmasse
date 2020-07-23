@@ -6,12 +6,14 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.base.Throwables;
+import io.enmasse.iot.utils.MoreFutures;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.apiclients.ApiClient;
-import io.enmasse.systemtest.iot.MessageSendTester.Sender;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.Predicates;
 import io.enmasse.systemtest.utils.VertxUtils;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.net.PfxOptions;
@@ -31,23 +33,21 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
-import static io.enmasse.systemtest.iot.MessageType.EVENT;
-import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
+import static io.vertx.core.Future.failedFuture;
+import static io.vertx.core.Future.succeededFuture;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.time.Duration.ofSeconds;
+import static java.time.Duration.ofMillis;
 
 public class HttpAdapterClient extends ApiClient {
 
     @SuppressWarnings("serial")
     public static class ResponseException extends RuntimeException {
 
-        private int statusCode;
+        private final int statusCode;
 
         public ResponseException(final String message, final int statusCode) {
             super(message);
@@ -147,29 +147,43 @@ public class HttpAdapterClient extends ApiClient {
     }
 
     public HttpResponse<?> send(MessageType messageType, Buffer payload, Predicate<Integer> expectedCodePredicate, Consumer<HttpRequest<?>> requestCustomizer,
-            Duration responseTimeout) throws Exception {
+                                Duration responseTimeout) throws Exception {
         return send(messageType, null, payload, expectedCodePredicate, requestCustomizer, responseTimeout);
     }
 
-    public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
-            Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
+    public Future<HttpResponse<?>> sendAsync(
+            final MessageType messageType,
+            final Buffer payload,
+            final Duration timeout,
+            final Consumer<HttpRequest<?>> requestCustomizer
+    ) {
+        return sendAsync(messageType, null, payload, timeout, requestCustomizer);
+    }
 
-        final CompletableFuture<HttpResponse<?>> responsePromise = new CompletableFuture<>();
-        var ms = responseTimeout.toMillis();
-
-        log.info("POST-{}: body {}", messageType.name().toLowerCase(), payload);
+    public Future<HttpResponse<?>> sendAsync(
+            final MessageType messageType,
+            final String pathSuffix,
+            final Buffer payload,
+            final Duration timeout,
+            final Consumer<HttpRequest<?>> requestCustomizer
+    ) {
 
         // create new request
 
-        var path = messageType.path();
+        final String path;
         if (pathSuffix != null) {
-            path += pathSuffix;
+            path = messageType.path() + pathSuffix;
+        } else {
+            path = messageType.path();
         }
-        var request = getClient().post(endpoint.getPort(), endpoint.getHost(), path)
+
+        log.info("POST - path: {}, body '{}'", path, payload);
+
+        var request = getClient().post(this.endpoint.getPort(), this.endpoint.getHost(), path)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
                 // we send with QoS 1 by default, to get some feedback
                 .putHeader("QoS-Level", "1")
-                .timeout(ms);
+                .timeout(timeout.toMillis());
 
         if (this.authzString != null) {
             request = request.putHeader(AUTHORIZATION, authzString);
@@ -181,39 +195,49 @@ public class HttpAdapterClient extends ApiClient {
             requestCustomizer.accept(request);
         }
 
+        // result promise
+
+        final Promise<HttpResponse<Buffer>> result = Promise.promise();
+
         // execute request with payload
 
-        request.sendBuffer(payload, ar -> {
+        request.sendBuffer(payload, result);
 
-            // if the request failed ...
-            if (ar.failed()) {
-                log.info("Request failed", ar.cause());
-                // ... fail the response promise
-                responsePromise.completeExceptionally(ar.cause());
-                return;
-            }
+        // return result
 
-            log.debug("POST-{}: body {} -> {} {}", messageType.name().toLowerCase(), payload, ar.result().statusCode(), ar.result().statusMessage());
+        return result.future()
+                .onFailure(cause -> {
+                    log.info("Request failed", cause);
+                })
+                .onSuccess(r -> {
+                    log.info("POST: path: {}, body '{}' -> {} {}", path, payload, r.statusCode(), r.statusMessage());
+                })
+                .map(x -> x);
 
-            var response = ar.result();
-            var code = response.statusCode();
+    }
 
-            log.info("POST: code {} -> {}", code, response.bodyAsString());
-            if (!expectedCodePredicate.test(code)) {
-                responsePromise.completeExceptionally(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
-            } else {
-                responsePromise.complete(ar.result());
-            }
+    public HttpResponse<?> send(MessageType messageType, String pathSuffix, Buffer payload, Predicate<Integer> expectedCodePredicate,
+                                Consumer<HttpRequest<?>> requestCustomizer, Duration responseTimeout) throws Exception {
 
-        });
+        var f = sendAsync(messageType, pathSuffix, payload, responseTimeout, requestCustomizer)
+                .flatMap(response -> {
+                    var code = response.statusCode();
+
+                    log.info("POST: code {} -> {}", code, response.bodyAsString());
+                    if (expectedCodePredicate.test(code)) {
+                        return succeededFuture(response);
+                    } else {
+                        return failedFuture(new ResponseException(String.format("Did not match expected status: %s - was: %s", expectedCodePredicate, code), code));
+                    }
+                });
 
         // the next line gives the timeout a bit of extra time, as the HTTP timeout should
         // kick in, we would prefer that over the timeout via the future.
-        return responsePromise.get(((long) (ms * 1.1)), TimeUnit.MILLISECONDS);
+        return MoreFutures.await(f, ofMillis((long) (responseTimeout.toMillis() * 1.1)));
     }
 
     /**
-     * Send method suitable for using as {@link Sender}.
+     * Send method suitable for using as {@link MessageSendTester.Sender}.
      */
     public boolean send(MessageSendTester.Type type, Buffer payload, Duration timeout) {
         return sendDefault(type.type(), payload, timeout);
@@ -231,18 +255,6 @@ public class HttpAdapterClient extends ApiClient {
 
     public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate, Duration timeout) throws Exception {
         return send(type, payload, expectedCodePredicate, null, timeout);
-    }
-
-    public HttpResponse<?> send(MessageType type, Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(type, payload, expectedCodePredicate, null, ofSeconds(15));
-    }
-
-    public HttpResponse<?> sendTelemetry(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(TELEMETRY, payload, expectedCodePredicate);
-    }
-
-    public HttpResponse<?> sendEvent(Buffer payload, Predicate<Integer> expectedCodePredicate) throws Exception {
-        return send(EVENT, payload, expectedCodePredicate);
     }
 
     private static String getBasicAuth(final String user, final String password) {

@@ -5,8 +5,25 @@
 
 package io.enmasse.systemtest.iot.isolated.tls;
 
-import static io.enmasse.systemtest.framework.TestTag.IOT;
+import io.enmasse.iot.model.v1.ConfigConditionType;
+import io.enmasse.systemtest.condition.OpenShift;
+import io.enmasse.systemtest.iot.IoTTestSession;
+import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.IoTTests;
+import io.enmasse.systemtest.iot.MessageSendTester;
+import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
+import io.enmasse.systemtest.iot.Names;
+import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+
+import java.time.Duration;
+import java.util.Map;
+import java.util.UUID;
+
 import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.framework.TestTag.IOT;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;
 import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 import static io.enmasse.systemtest.time.TimeoutBudget.ofDuration;
@@ -18,24 +35,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Optional.ofNullable;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import java.time.Duration;
-import java.util.Map;
-import java.util.UUID;
-
-import io.enmasse.iot.model.v1.ConfigConditionType;
-import io.enmasse.systemtest.iot.IoTTests;
-import io.enmasse.systemtest.iot.Names;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-
-import io.enmasse.systemtest.condition.OpenShift;
-import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
-import io.enmasse.systemtest.iot.MessageSendTester;
-import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;
-import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.TimeoutBudget;
 
 @Tag(IOT)
 public class ReloadCertificatesTest implements IoTTests {
