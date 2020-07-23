@@ -15,7 +15,11 @@ import { useStoreContext, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { EDIT_ADDRESS_SPACE } from "graphql-module/queries";
 import { IAddressSpaceAuthService } from "modules/address-space/dialogs";
-import { IProject } from "modules/project/components";
+import {
+  IProject,
+  IPlanOption,
+  IAuthenticationServiceOptions
+} from "modules/project/components";
 import { EditMsgProject } from "modules/messaging-project";
 
 export interface IAddressSpaceAuthServiceResponse {
@@ -54,7 +58,7 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   const getPlanOptions = () => {
-    let planOptions: any[] = [];
+    let planOptions: IPlanOption[] = [];
     if (msgProject.type) {
       planOptions =
         addressSpacePlans
@@ -71,7 +75,7 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   const getAuthServiceOptions = () => {
-    let authServiceOptions: any[] = [];
+    let authServiceOptions: IAuthenticationServiceOptions[] = [];
     if (authServices.addressSpaceSchema_v2[0])
       authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
         authService => {

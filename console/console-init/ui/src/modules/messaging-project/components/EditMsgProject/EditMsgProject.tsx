@@ -17,15 +17,19 @@ import {
   Button,
   Modal
 } from "@patternfly/react-core";
-import { IProject } from "modules/project";
+import {
+  IProject,
+  IAuthenticationServiceOptions,
+  IPlanOption
+} from "modules/project";
 
 export interface IEditMsgProjectProps {
   onCloseDialog: () => void;
   onConfirmDialog: () => void;
   onPlanChange: (plan: string) => void;
   onAuthServiceChange: (authservice: string) => void;
-  authServiceOptions: any[];
-  planOptions: any[];
+  authServiceOptions: IAuthenticationServiceOptions[];
+  planOptions: IPlanOption[];
   project: IProject;
 }
 
@@ -41,14 +45,14 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
   return (
     <Modal
       variant="large"
-      id="as-list-edit-modal"
+      id="edit-msg-edit-modal"
       title="Edit"
       isOpen={true}
       onClose={onCloseDialog}
       actions={[
         <Button
           key="confirm"
-          id="as-list-edit-confirm"
+          id="edit-msg-edit-confirm-button"
           variant="primary"
           onClick={onConfirmDialog}
         >
@@ -56,7 +60,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </Button>,
         <Button
           key="cancel"
-          id="as-list-edit-cancel"
+          id="edit-msg-edit-cancel-button"
           variant="link"
           onClick={onCloseDialog}
         >
@@ -68,26 +72,40 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         <TextContent>
           <Text component={TextVariants.h2}>Choose a new plan.</Text>
         </TextContent>
-        <FormGroup label="Namespace" fieldId="name-space" isRequired={true}>
+        <FormGroup
+          label="Namespace"
+          fieldId="edit-msg-project-namespace-formselect"
+          isRequired={true}
+        >
           <FormSelect
-            id="edit-namespace"
+            id="edit-msg-project-namespace-formselect"
             isDisabled
             value={project.namespace}
             aria-label="FormSelect Input"
           >
             <FormSelectOption
               id="edit-msg-project-namespace-option"
+              key={`project-form-select-option-${project?.namespace}`}
               value={project?.namespace}
               label={project?.namespace || ""}
             />
           </FormSelect>
         </FormGroup>
-        <FormGroup label="Name" fieldId="address-space" isRequired={true}>
-          <TextInput type="text" id="as-name" isDisabled value={project.name} />
+        <FormGroup
+          label="Name"
+          fieldId="edit-msg-project-name-input"
+          isRequired={true}
+        >
+          <TextInput
+            type="text"
+            id="edit-msg-project-name-input"
+            isDisabled
+            value={project.name}
+          />
         </FormGroup>
         <FormGroup
           label="Type"
-          fieldId="address-space-type"
+          fieldId="edit-msg-project-type-input"
           isInline
           isRequired={true}
         >
@@ -96,6 +114,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             isDisabled
             label="Standard"
             id="edit-msg-project-radio-standard"
+            key="radio-standard"
             value="standard"
             isChecked={project.type === "standard"}
           />
@@ -104,6 +123,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             isDisabled
             label="Brokered"
             id="edit-msg-project-radio-brokered"
+            key="radio-standard"
             value="brokered"
             isChecked={project.type === "brokered"}
           />
@@ -119,10 +139,9 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             onChange={val => onPlanChange(val)}
             aria-label="FormSelect Input"
           >
-            {planOptions.map((option, index) => (
+            {planOptions.map(option => (
               <FormSelectOption
-                isDisabled={option.disabled}
-                key={index}
+                key={option.value}
                 value={option.value}
                 label={option.label}
               />
@@ -131,7 +150,7 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
         </FormGroup>
         <FormGroup
           label="Authentication Service"
-          fieldId="simple-form-name"
+          fieldId="edit-msg-project-auth-service"
           isRequired={true}
         >
           <FormSelect
@@ -140,11 +159,10 @@ export const EditMsgProject: React.FC<IEditMsgProjectProps> = ({
             onChange={val => onAuthServiceChange(val)}
             aria-label="FormSelect Input"
           >
-            {authServiceOptions.map((option, index) => (
+            {authServiceOptions.map(option => (
               <FormSelectOption
                 id={`edit-msg-project-auth-service-option-${option.value}`}
-                isDisabled={option.disabled}
-                key={index}
+                key={option.value}
                 value={option.value}
                 label={option.label}
               />
