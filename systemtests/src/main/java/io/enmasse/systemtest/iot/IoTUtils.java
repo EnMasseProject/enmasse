@@ -258,7 +258,8 @@ class IoTUtils {
             TestUtils.waitUntilConditionOrFail(() -> {
                 var updated = tenantClient.withName(project.getMetadata().getName()).get();
                 if (updated != null) {
-                    log.info("IoTProject {} still exists -> {}", projectName, updated.getStatus().getPhase());
+                    var finalizers = updated.getMetadata().getFinalizers();
+                    log.info("IoTProject {} still exists -> {} ({})", projectName, updated.getStatus().getPhase(), finalizers);
                 }
                 return updated == null;
             }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "IoT project failed to delete in time");
