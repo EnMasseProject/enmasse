@@ -5,12 +5,12 @@
 
 package io.enmasse.systemtest.utils;
 
-import java.util.Optional;
-import java.util.function.BooleanSupplier;
-
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 public final class Conditions {
 
@@ -159,11 +159,12 @@ public final class Conditions {
     private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata,?> access) {
         var resource = access.get();
         var state = statusSection(resource);
-        return String.format("%s: '%s/%s' (%s/%s): %s",
+        return String.format("%s: '%s/%s' (%s/%s) - finalizers: %s\n%s",
                 message,
                 resource.getMetadata().getNamespace(),
                 resource.getMetadata().getName(),
                 resource.getApiVersion(), resource.getKind(),
+                resource.getMetadata().getFinalizers(),
                 state.map(Serialization::toYaml).orElse("<no status>")
         );
     }
