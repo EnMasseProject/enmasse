@@ -44,24 +44,38 @@ echo "${FAILED_TESTS}"
 echo "Creating body ..."
 
 
-if [[ -n "${FAILED_TESTS}" ]]
-then
-  FAILED_TEST_BODY="### :heavy_exclamation_mark: Test Failures :heavy_exclamation_mark:${FAILED_TESTS}"
-fi
+TITLE="Test Summary"
+BODY=""
+MARK=":question:" # init with unknown default
 
 if [[ "${TEST_COUNT}" == 0 ]]
 then
-  BODY="{\"body\":\":heavy_exclamation_mark: **Build Failed** :heavy_exclamation_mark:\"}"
+  # no tests executed
+  MARK=":heavy_exclamation_mark:"
+  FAILED_TEST_BODY="### :heavy_exclamation_mark: No tests executed :heavy_exclamation_mark:"
+elif [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]]
+then
+  # no failed tests, may be overridden by the following job status check
+  MARK=":heavy_check_mark:"
 else
-  if [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]] && [[ "${JOB_STATUS}" != "FAILURE" ]] && [[ "${JOB_STATUS}" != "ABORTED" ]]
-  then
-    BODY="{\"body\":\"### :heavy_check_mark: Test Summary :heavy_check_mark:\n${SUMMARY}${FAILED_TEST_BODY}\"}"
-  else
-    BODY="{\"body\":\"### :x: Test Summary :x:\n${SUMMARY}${FAILED_TEST_BODY}\"}"
-  fi
+  # some failed
+  MARK=":x:"
+  FAILED_TEST_BODY="### :heavy_exclamation_mark: Test Failures :heavy_exclamation_mark:${FAILED_TESTS}"
 fi
 
-echo "${BODY}" > ${JSON_FILE_RESULTS}
+# finally override status
+case "${JOB_STATUS}" in
+  ABORTED)
+    MARK=":white_circle:"
+    TITLE="**Build Aborted**"
+    ;;
+  FAILURE)
+    MARK=":heavy_exclamation_mark:"
+    TITLE="**Build Failed**"
+    ;;
+esac
 
-# Cat created file
-cat ${JSON_FILE_RESULTS}
+BODY="### ${MARK} ${TITLE} ${MARK}\n${SUMMARY}${FAILED_TEST_BODY}"
+
+# encode as JSON in the field 'body'
+echo "${BODY}" | jq -sR '{"body": .}' | tee "${JSON_FILE_RESULTS}"
