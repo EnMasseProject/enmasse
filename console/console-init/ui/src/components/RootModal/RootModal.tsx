@@ -39,5 +39,5 @@ export const RootModal: React.FC<{}> = () => {
     return null;
   }
 
-  return <ModalComponent {...modalProps} />;
+  return <ModalComponent id="root-modal-component" {...modalProps} />;
 };

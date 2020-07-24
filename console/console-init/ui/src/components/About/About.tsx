@@ -59,7 +59,9 @@ export const About: React.FunctionComponent<IAboutProps> = ({
   if (docs) {
     docsElement = (
       <>
-        <TextListItem component="dt">Documentation</TextListItem>
+        <TextListItem component="dt" id="about-documentation-textlistitem">
+          Documentation
+        </TextListItem>
         <TextListItem component="dd">
           <a href={process.env.REACT_APP_DOCS}>{process.env.REACT_APP_DOCS}</a>
         </TextListItem>
@@ -76,8 +78,12 @@ export const About: React.FunctionComponent<IAboutProps> = ({
     >
       <TextContent>
         <TextList component="dl">
-          <TextListItem component="dt">EnMasse Version</TextListItem>
-          <TextListItem component="dd">{productVersion}</TextListItem>
+          <TextListItem component="dt" id="about-enmasse-version-textlistitem">
+            EnMasse Version
+          </TextListItem>
+          <TextListItem component="dd" id="about-product-version-textlistitem">
+            {productVersion}
+          </TextListItem>
           {docsElement}
         </TextList>
       </TextContent>

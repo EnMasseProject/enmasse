@@ -28,12 +28,13 @@ export const NoResultFound: React.FunctionComponent<INoResultFound> = ({
       <Title headingLevel="h2" id="no-result-title" size="lg">
         No results found
       </Title>
-      <EmptyStateBody id="no-result-body">
+      <EmptyStateBody id="no-result-match-body">
         No results match the filter criteria.
       </EmptyStateBody>
       <EmptyStatePrimary>
         <Button
-          id="no-result-btn"
+          id="no-result-clear-filters-button"
+          aria-label="Clear all filters"
           onClick={() => clearFilters()}
           variant="link"
         >

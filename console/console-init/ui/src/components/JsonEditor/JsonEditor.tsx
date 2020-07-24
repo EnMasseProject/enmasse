@@ -39,7 +39,7 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
       <Flex>
         <FlexItem align={{ default: "alignRight" }}>
           <Tooltip
-            id={`tooltip-feedback-for-success-copy-${tooltipKey}`}
+            id={`json-editor-successfully-copied-tooltip-${tooltipKey}`}
             position={TooltipPosition.left}
             enableFlip={false}
             trigger={"manual"}
@@ -48,13 +48,13 @@ const JsonEditor: React.FunctionComponent<IJsonEditorProps> = ({
           >
             <span>
               <Tooltip
-                id={`tooltip-with-copy-info-${tooltipKey}`}
+                id={`json-editor-copy-data-tooltip-${tooltipKey}`}
                 position={TooltipPosition.left}
                 enableFlip={false}
                 content={<div>Copy data to the clipboard</div>}
               >
                 <CopyIcon
-                  id={`copy-to-clipboard-${tooltipKey}`}
+                  id={`json-editor-clipboard-copyicon-${tooltipKey}`}
                   size="md"
                   onClick={() => {
                     navigator.clipboard.writeText(value ? value.trim() : "");
