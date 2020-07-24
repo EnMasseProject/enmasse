@@ -49,8 +49,8 @@ export const ProjectListKebab: React.FC<IProjectListKebabProps> = ({
         </OverflowMenuContent>
         <OverflowMenuControl hasAdditionalOptions>
           <DropdownWithKebabToggle
-            id="project-list-kebab-dropdowntoggle"
-            toggleId="project-list-kebab-dropdown-toggle"
+            id="project-list-kebab-dropdown"
+            toggleId="project-list-kebab-dropdowntoggle"
             onSelect={onSelectDeleteAll}
             dropdownItems={dropdownItems}
             isPlain

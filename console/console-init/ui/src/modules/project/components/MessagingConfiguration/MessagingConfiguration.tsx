@@ -95,7 +95,8 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             >
               <br />
               <DropdownWithToggle
-                id="messaging-config-namespace-dropdowntoggle"
+                id="messaging-config-namespace-dropdown"
+                toggleId="messaging-config-namespace-dropdowntoggle"
                 className={css(dropdown_item_styles.dropdown_align)}
                 toggleClass={css(dropdown_item_styles.dropdown_toggle_align)}
                 dropdownItemClass={css(dropdown_item_styles.dropdown_item)}
@@ -154,7 +155,8 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             >
               <br />
               <DropdownWithToggle
-                id="messaging-config-plan-dropdowntoggle"
+                id="messaging-config-plan-dropdown"
+                toggleId="messaging-config-plan-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onPlanSelect}
                 className={css(dropdown_item_styles.dropdown_align)}
@@ -172,7 +174,8 @@ export const MessagingConfiguration: React.FC<IMessagingConfigurationProps> = ({
             >
               <br />
               <DropdownWithToggle
-                id="messaging-config-auth-service-dropdowntoggle"
+                id="messaging-config-auth-service-dropdown"
+                toggleId="messaging-config-auth-service-dropdowntoggle"
                 position={DropdownPosition.left}
                 onSelectItem={onAuthenticationServiceSelect}
                 className={css(dropdown_item_styles.dropdown_align)}

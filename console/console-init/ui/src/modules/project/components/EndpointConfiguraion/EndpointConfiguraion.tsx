@@ -182,7 +182,7 @@ const EndpointConfiguration: React.FunctionComponent<IEndpointConfigurationProps
       >
         <br />
         <SwitchWithToggle
-          id="endpoint-config-enable-routing-switchtoggle"
+          id="endpoint-config-enable-routing-switch"
           onChange={onRouteChange}
           label={"Enable routing to make the address space publicly visible"}
           isChecked={projectDetail.addRoutes}

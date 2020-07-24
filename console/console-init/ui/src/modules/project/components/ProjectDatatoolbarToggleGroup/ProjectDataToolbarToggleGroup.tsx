@@ -190,8 +190,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
     <ToolbarGroup variant="filter-group" data-codemods="true">
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
-          id="project-data-togglegrp-filter-menu-dropdowntoggle"
-          toggleId={"project-data-togglegrp-filter-menu-dropdown-toggle"}
+          id="project-data-togglegrp-filter-menu-dropdown"
+          toggleId={"project-data-togglegrp-filter-menu-dropdowntoggle"}
           position={DropdownPosition.left}
           onSelectItem={onSelectFilter}
           dropdownItems={filterMenuItems}
