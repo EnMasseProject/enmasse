@@ -23,7 +23,7 @@ import { ExtensionsView } from "./ExtensionsView";
 import { hasOwnProperty } from "utils";
 import { DialogTypes } from "constant";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { CheckCircleIcon } from "@patternfly/react-icons";
+import { CheckCircleIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -36,10 +36,15 @@ const styles = StyleSheet.create({
   devider_margin: {
     marginTop: 35,
     marginBottom: 35
+  },
+  card_border: {
+    padding: 15,
+    borderColor: "grey",
+    border: "0.05em solid"
   }
 });
 
-interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
+export interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
   "auth-id": string;
   type?: string;
   ext?: any;
@@ -54,6 +59,7 @@ export interface ICredentialsViewProps
     Pick<ISecretsViewProps, "onConfirmPassword"> {
   id: string;
   credentials: ICredentialView[];
+  enableActions?: boolean;
 }
 
 export interface ICredentialProps
@@ -65,12 +71,14 @@ export interface ICredentialProps
     credentialType: string
   ) => void;
   onConfirmCredentialsStatus?: (data: any) => Promise<void>;
+  enableActions: boolean;
 }
 
 export const Credential: React.FC<ICredentialProps> = ({
   credential,
   onConfirmPassword,
-  toggleCredentialsStatus
+  toggleCredentialsStatus,
+  enableActions
 }) => {
   const {
     secrets = [],
@@ -112,6 +120,7 @@ export const Credential: React.FC<ICredentialProps> = ({
           id={"credetials-view-secrets-" + authId}
           heading={"Secrets"}
           onConfirmPassword={onConfirmPassword}
+          enableActions={enableActions}
         />
         <ExtensionsView
           id={"credetials-view-extensions-" + authId}
@@ -139,6 +148,7 @@ export const Credential: React.FC<ICredentialProps> = ({
               </Title>
             </GridItem>
             <GridItem span={9}>
+              {enableActions ? (
               <Switch
                 id={"credentials-view-status-switch-button"}
                 label={"On"}
@@ -146,6 +156,15 @@ export const Credential: React.FC<ICredentialProps> = ({
                 isChecked={enabled}
                 onChange={onChange}
               />
+              ) : enabled ? (
+                <>
+                  <CheckCircleIcon color="green" /> &nbsp; On
+                </>
+              ) : (
+                <>
+                  <ExclamationCircleIcon color="grey" /> &nbsp; Off
+                </>
+              )}
             </GridItem>
           </>
         )}
@@ -158,7 +177,8 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   id,
   credentials,
   onConfirmPassword,
-  onConfirmCredentialsStatus
+  onConfirmCredentialsStatus,
+  enableActions = true
 }) => {
   const { dispatch } = useStoreContext();
 
@@ -193,12 +213,14 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   };
 
   return (
-    <Card id={id}>
-      <CardTitle>
-        <Title id="credentials-view-title" headingLevel="h1" size="2xl">
-          Credentials
-        </Title>
-      </CardTitle>
+    <Card id={id} className={enableActions ? "" : css(styles.card_border)}>
+      {enableActions && (
+        <CardTitle>
+          <Title id="credentials-view-title" headingLevel="h1" size="2xl">
+            Credentials
+          </Title>
+        </CardTitle>
+      )}
       <CardBody>
         {credentials &&
           credentials.map((credential: ICredentialView, index: number) => {
@@ -210,6 +232,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
                   key={authId}
                   toggleCredentialsStatus={toggleCredentialsStatus}
                   onConfirmPassword={onConfirmPassword}
+                  enableActions={enableActions}
                 />
                 {index < credentials.length - 1 && (
                   <Divider className={css(styles.devider_margin)} />
