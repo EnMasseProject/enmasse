@@ -72,7 +72,11 @@ export const Credential: React.FC<ICredentialProps> = ({
     <>
       <Grid>
         <GridItem span={3}>
-          <Title headingLevel="h1" size="md">
+          <Title
+            headingLevel="h1"
+            size="md"
+            id="credentials-view-auth-id-title"
+          >
             {getLabelByKey("auth-id")}
           </Title>
         </GridItem>
@@ -80,7 +84,7 @@ export const Credential: React.FC<ICredentialProps> = ({
           {authId}
         </GridItem>
         <GridItem span={3}>
-          <Title headingLevel="h1" size="md">
+          <Title headingLevel="h1" size="md" id="credentials-view-type-title">
             {getLabelByKey("type")}
           </Title>
         </GridItem>
@@ -101,12 +105,20 @@ export const Credential: React.FC<ICredentialProps> = ({
         {hasOwnProperty(credential, "enabled") && (
           <>
             <GridItem span={12} className={css(styles.status_section_margin)}>
-              <Title headingLevel="h6" size="xl">
+              <Title
+                headingLevel="h6"
+                size="xl"
+                id="credentials-view-status-title"
+              >
                 Status
               </Title>
             </GridItem>
             <GridItem span={3}>
-              <Title headingLevel="h1" size="md">
+              <Title
+                headingLevel="h1"
+                size="md"
+                id="credentials-view-enable-title"
+              >
                 Enable
               </Title>
             </GridItem>
@@ -133,7 +145,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   onConfirmPassword
 }) => {
   const CredentialsNotFound = () => (
-    <Text component={TextVariants.p}>
+    <Text component={TextVariants.p} id="credentials-view-not-found-text">
       There are no credentials for this device. This device is connected to the
       other devices as gateways.
     </Text>
@@ -142,7 +154,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   return (
     <Card id={id}>
       <CardTitle>
-        <Title id="credential-view-header" headingLevel="h1" size="2xl">
+        <Title id="credentials-view-title" headingLevel="h1" size="2xl">
           Credentials
         </Title>
       </CardTitle>
