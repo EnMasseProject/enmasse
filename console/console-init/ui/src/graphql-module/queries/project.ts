@@ -6,6 +6,7 @@
 import gql from "graphql-tag";
 import { IProjectFilter } from "modules/project/ProjectPage";
 import { generateFilterPattern } from "./query";
+import { removeForbiddenChars } from "utils";
 
 const FILTER_RETURN_PROJECTS = (projectFilterParams: IProjectFilter) => {
   const { names, namespaces, type, status } = projectFilterParams;
@@ -136,4 +137,42 @@ const RETURN_ALL_PROJECTS = (
   return ALL_PROJECTS;
 };
 
-export { RETURN_ALL_PROJECTS };
+const RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE = (
+  propertyName: string,
+  value: string
+) => {
+  let filter = "";
+  value = removeForbiddenChars(value);
+  if (value && propertyName) {
+    filter += "`$.metadata." + [propertyName] + "` LIKE '" + value + "%'";
+  }
+
+  const all_proejcts = gql(`
+    query all_projects {
+      allProjects(filter: "${filter}" first:100 offset:0) {
+      total
+      objects{
+        ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+          kind
+          metadata {
+            name
+            namespace
+            creationTimestamp
+          }
+        }
+        ... on IoTProject_iot_enmasse_io_v1alpha1 {
+          kind
+          metadata {
+            name
+            namespace
+            creationTimestamp
+          }
+        }
+      }
+     }
+    }
+    `);
+  return all_proejcts;
+};
+
+export { RETURN_ALL_PROJECTS, RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE };

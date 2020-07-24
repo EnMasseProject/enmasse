@@ -13,8 +13,8 @@ import { ISortBy } from "@patternfly/react-table";
 import { useApolloClient } from "@apollo/react-hooks";
 import { FetchPolicy } from "constant";
 import { getSelectOptionList, ISelectOption } from "utils";
-import { RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
-import { ISearchNameOrNameSpaceAddressSpaceListResponse } from "schema/ResponseTypes";
+import { RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE } from "graphql-module/queries";
+import { ISearchNameOrNameSpaceProjectListResponse } from "schema";
 import { IProjectFilter } from "modules/project/ProjectPage";
 import { initialiseFilterForProject, typeOptions } from "modules/project/utils";
 import { ProjectToolbar } from "modules/project/components";
@@ -87,9 +87,9 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
     propertyName: string
   ) => {
     const response = await client.query<
-      ISearchNameOrNameSpaceAddressSpaceListResponse
+      ISearchNameOrNameSpaceProjectListResponse
     >({
-      query: RETURN_ALL_ADDRESS_SPACES_FOR_NAME_OR_NAMESPACE(
+      query: RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE(
         propertyName,
         value.trim()
       ),
@@ -99,21 +99,21 @@ export const ProjectToolbarContainer: React.FunctionComponent<IProjectToolbarCon
   };
 
   const getOptions = (
-    response: ISearchNameOrNameSpaceAddressSpaceListResponse,
+    response: ISearchNameOrNameSpaceProjectListResponse,
     propertyname: string
   ) => {
     if (
-      response.addressSpaces &&
-      response.addressSpaces.addressSpaces &&
-      response.addressSpaces.addressSpaces.length > 0
+      response.allProjects &&
+      response.allProjects.objects &&
+      response.allProjects.objects.length > 0
     ) {
-      let obtainedList = response.addressSpaces.addressSpaces.map(
+      let obtainedList = response.allProjects.objects.map(
         (link: any) => link.metadata[propertyname]
       );
       //get list of unique records to display in the select dropdown based on total records and 100 fetched objects
       const filteredNameOptions = getSelectOptionList(
         obtainedList,
-        response.addressSpaces.total
+        response.allProjects.total
       );
       if (filteredNameOptions.length > 0) return filteredNameOptions;
     }
