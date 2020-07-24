@@ -58,7 +58,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={url}
             isReadOnly={true}
             enableCopy={true}
-            id={"registration-api-url-input"}
+            id={"device-reg-api-url-input"}
             ariaLabel={"registration-api-url"}
             isExpandable={false}
           />
@@ -71,7 +71,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={host}
             isReadOnly={true}
             enableCopy={true}
-            id={"registration-api-host-input"}
+            id={"device-reg-api-host-input"}
             ariaLabel={"registration-api-host"}
             isExpandable={false}
           />
@@ -84,7 +84,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={port}
             isReadOnly={true}
             enableCopy={true}
-            id={"registration-api-port-input"}
+            id={"device-reg-api-port-input"}
             ariaLabel={"registration-api-port"}
             isExpandable={false}
           />
@@ -106,7 +106,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={url}
             isReadOnly={true}
             enableCopy={true}
-            id={"credential-api-url-input"}
+            id={"device-reg-credential-api-url-input"}
             ariaLabel={"credential-api-url"}
             isExpandable={false}
           />
@@ -119,7 +119,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={host}
             isReadOnly={true}
             enableCopy={true}
-            id={"credential-api-host-input"}
+            id={"device-reg-credential-api-host-input"}
             ariaLabel={"credential-api-host"}
             isExpandable={false}
           />
@@ -132,7 +132,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
             value={port}
             isReadOnly={true}
             enableCopy={true}
-            id={"credential-api-port-input"}
+            id={"device-reg-credential-api-port-input"}
             ariaLabel={"credential-api-port"}
             isExpandable={false}
           />
@@ -156,14 +156,15 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
       <CardTitle className={css(styles.fontSize)}>
         <Split>
           <SplitItem>
-            <Title size="xl" headingLevel="h2">
+            <Title size="xl" headingLevel="h2" id="device-reg-management-title">
               Device Registration Management
             </Title>
           </SplitItem>
           <SplitItem isFilled />
           <SplitItem>
             <SwitchWithToggle
-              id="device-registration-management-switch"
+              id="device-reg-view-json-switchtoggle"
+              aria-label="Switch to view Json format"
               label="View JSON format"
               labelOff="View JSON format"
               isChecked={isHidden}
@@ -190,7 +191,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
                 value={username}
                 isReadOnly={true}
                 enableCopy={true}
-                id={"username-input"}
+                id={"device-reg-username-input"}
                 ariaLabel={"username"}
                 isExpandable={false}
               />
@@ -204,7 +205,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
                 type={"password"}
                 value={password}
                 isReadOnly={true}
-                id={"password-input"}
+                id={"device-reg-password-input"}
                 ariaLabel={"password"}
               />
             </>
@@ -217,7 +218,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
                 type={"password"}
                 value={token}
                 isReadOnly={true}
-                id={"drm-input-token"}
+                id={"device-reg-input-token"}
                 ariaLabel={"token"}
               />
             </>
@@ -225,7 +226,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
           {endpoiuntUrl && (
             <>
               <br />
-              <Title size="xl" headingLevel="h2">
+              <Title size="xl" headingLevel="h2" id="device-reg-endpoint-title">
                 Endpoint
               </Title>
               <br />
@@ -235,7 +236,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
                 value={endpoiuntUrl}
                 isReadOnly={true}
                 enableCopy={true}
-                id={"drm-input-endpoiunt-url"}
+                id={"device-reg-endpoint-url-input"}
                 ariaLabel={"endpoiunt url"}
               />
             </>

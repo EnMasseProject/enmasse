@@ -77,7 +77,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const AddressTitle = () => (
     <Split hasGutter>
       <SplitItem>
-        <Title headingLevel="h1" size="4xl" id="iot-project-name">
+        <Title headingLevel="h1" size="4xl" id="iot-project-detail-name-title">
           {projectName}
         </Title>
       </SplitItem>
@@ -86,7 +86,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
 
   const AddressDetailInFlex = () => (
     <Flex className={css(project_header_styles.namespace_info_margin)}>
-      <FlexItem id="iot-project-status">
+      <FlexItem id="iot-project-detail-status-flexitem">
         Status : <b>{status}</b>
       </FlexItem>
       {timeCreated && (
@@ -103,7 +103,13 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const AddressDetailLayout = () => (
     <>
       <SplitItem className={css(project_header_styles.address_icon_align)}>
-        <Badge className={css(project_header_styles.badge_style)}>IoT</Badge>
+        <Badge
+          id="iot-project-detail-badge"
+          aria-label="IoT badge"
+          className={css(project_header_styles.badge_style)}
+        >
+          IoT
+        </Badge>
       </SplitItem>
       <SplitItem>
         <AddressTitle />
@@ -116,7 +122,8 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   };
   const EnabledIcon = () => (
     <Switch
-      id="iot-project-header-switch"
+      id="iot-project-detail-enabled-switch"
+      aria-label="switch for enabled"
       isChecked={isEnabled}
       onChange={onChangeStatus}
     />
@@ -125,7 +132,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
   const KebabOptionsLayout = () => {
     const dropdownItems = [
       <DropdownItem
-        id="iot-project-header-kebab-option-delete"
+        id="iot-project-detail-delete-dropdownitem"
         key="delete"
         aria-label="delete"
         onClick={() => onDelete()}
@@ -135,7 +142,7 @@ const IoTProjectDetailHeader: React.FunctionComponent<IIoTProjectDetailHeaderPro
     ];
     return (
       <DropdownWithKebabToggle
-        id="iot-project-header-kebab-dropdown"
+        id="iot-project-detail-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
         toggleId="iot-project-header-kebab-toggle"
