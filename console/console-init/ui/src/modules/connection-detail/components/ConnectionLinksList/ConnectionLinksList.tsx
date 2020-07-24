@@ -89,7 +89,7 @@ export const ConnectionLinksList: React.FunctionComponent<IConnectionLinksListPr
         onSort={onSort}
         sortBy={sortBy}
       >
-        <TableHeader />
+        <TableHeader id="connection-link-list-tableheader" />
         <TableBody />
       </Table>
     </div>

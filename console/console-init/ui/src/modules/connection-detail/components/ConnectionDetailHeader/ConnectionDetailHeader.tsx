@@ -66,20 +66,20 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
   return (
     <Card>
       <CardTitle>
-        <Title id="cd-header-title" headingLevel="h1" size="4xl">
+        <Title id="connection-detail-header-title" headingLevel="h1" size="4xl">
           {hostname}
         </Title>
       </CardTitle>
       <CardBody>
         <Flex>
           <FlexItem
-            id="cd-header-container-id"
+            id="connection-detail-header-container-id-flexitem"
             className={css(styles.flex_right_border)}
           >
             in container <b>{containerId}</b>
           </FlexItem>
           <FlexItem
-            id="cd-header-protocol"
+            id="connection-detail-header-protocol-flexitem"
             className={css(styles.flex_right_border)}
           >
             <ConnectionProtocolFormat
@@ -87,7 +87,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
               encrypted={encrypted}
             />
           </FlexItem>
-          <FlexItem id="cd-header-protocol">
+          <FlexItem id="connection-detail-header-protocol-created-flexitem">
             Created &nbsp;
             <b>
               {creationTimestamp && (
@@ -99,7 +99,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           </FlexItem>
           {width > 992 && (
             <FlexItem
-              id="cd-header-see-hide-more"
+              id="connection-detail-header-see-hide-details-flexitem"
               onClick={() => {
                 setIsHidden(!isHidden);
               }}
@@ -119,7 +119,7 @@ export const ConnectionDetailHeader: React.FunctionComponent<IConnectionHeaderDe
           )}
         </Flex>
         <Flex
-          id="cd-header-connection-messages"
+          id="connection-detail-header-connection-messages-flex"
           direction={{ sm: "column", lg: "row" }}
         >
           {(width < 992 || !isHidden) && (

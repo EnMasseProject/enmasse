@@ -39,13 +39,13 @@ export default function ConnectionDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="cdetail-link-home" to={"/"}>
+          <Link id="connection-detail-page-home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>
         <BreadcrumbItem>
           <Link
-            id="cdetail-link-connections"
+            id="connection-detail-connections-link"
             to={`/messaging-projects/${namespace}/${name}/${type}/connections`}
           >
             {name}

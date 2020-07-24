@@ -44,25 +44,25 @@ export const ConnectionDetailHeaderAttributes: React.FunctionComponent<IConnecti
       }
     >
       <Flex>
-        <FlexItem>
+        <FlexItem id="connection-detail-header-attr-product-flexitem">
           <b>Product</b> {product || "-"}
         </FlexItem>
-        <FlexItem>
+        <FlexItem id="connection-detail-header-attr-version-flexitem">
           <b>Version </b>
           {version || "-"}
         </FlexItem>
       </Flex>
       <Flex>
-        <FlexItem>
+        <FlexItem id="connection-detail-header-attr-platform-flexitem">
           <b>Platform</b>
         </FlexItem>
         <FlexItem>
           <Flex direction={{ lg: "row", sm: "column" }}>
-            <FlexItem>
+            <FlexItem id="connection-detail-header-attr-jvm-flexitem">
               <b>JVM: </b>
               {jvm || "-"}
             </FlexItem>
-            <FlexItem>
+            <FlexItem id="connection-detail-header-attr-os-flexitem">
               <b>OS: </b>
               {os || "-"}
             </FlexItem>

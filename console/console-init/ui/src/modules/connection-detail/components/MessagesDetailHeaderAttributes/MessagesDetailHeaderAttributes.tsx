@@ -29,9 +29,9 @@ export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDe
   isMobileView
 }) => {
   return (
-    <Split id="message-detail">
+    <Split id="message-detail-split">
       <SplitItem
-        id="message-detail-message-in"
+        id="message-detail-message-in-splititem"
         span={6}
         className={css(styles.message_split)}
       >
@@ -42,7 +42,7 @@ export const MessagesDetailHeaderAttributes: React.FunctionComponent<IMessagesDe
         ""
       ) : (
         <SplitItem
-          id="message-detail-message-out"
+          id="message-detail-message-out-splititem"
           span={6}
           className={css(styles.message_split)}
         >
