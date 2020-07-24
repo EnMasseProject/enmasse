@@ -37,15 +37,23 @@ else
   BUILD_ENV="oc cluster up"
 fi
 
-SUMMARY="**TEST_PROFILE**: ${TEST_PROFILE}\n**TEST_CASE:** ${TEST_CASE}\n**TOTAL:** ${TEST_COUNT}\n**PASS:** $((TEST_COUNT - TEST_ALL_FAILED_COUNT - TEST_SKIPPED_COUNT))\n**FAIL:** ${TEST_ALL_FAILED_COUNT}\n**SKIP:** ${TEST_SKIPPED_COUNT}\n**BUILD_NUMBER:** ${BUILD_ID}\n**BUILD_ENV:** ${BUILD_ENV}\n"
+SUMMARY="$(cat <<__EOF__
+**TEST_PROFILE**: ${TEST_PROFILE}
+**TEST_CASE:** ${TEST_CASE}
+**TOTAL:** ${TEST_COUNT}
+**PASS:** $((TEST_COUNT - TEST_ALL_FAILED_COUNT - TEST_SKIPPED_COUNT))
+**FAIL:** ${TEST_ALL_FAILED_COUNT}
+**SKIP:** ${TEST_SKIPPED_COUNT}
+**BUILD_NUMBER:** ${BUILD_ID}
+**BUILD_ENV:** ${BUILD_ENV}
+__EOF__
+)"
 
-FAILED_TESTS=$(find "${RESULTS_PATH}" -name 'TEST*.xml' -type f -print0 | xargs -0 awk '/<testcase.*>/{ getline x; if (x ~ "<error" || x ~ "<failure") {  gsub(/classname=|name=|\"/, "", $0); if ($3 ~ "time=") {print "\\n- " $2 } else {print "\\n- " $2 " in " $3 }}}')
+FAILED_TESTS=$(find "${RESULTS_PATH}" -name 'TEST*.xml' -type f -print0 | xargs -0 awk '/<testcase.*>/{ getline x; if (x ~ "<error" || x ~ "<failure") {  gsub(/classname=|name=|\"/, "", $0); if ($3 ~ "time=") {print "\n- " $2 } else {print "\n- " $2 " in " $3 }}}')
 echo "${FAILED_TESTS}"
 echo "Creating body ..."
 
-
 TITLE="Test Summary"
-BODY=""
 MARK=":question:" # init with unknown default
 
 if [[ "${TEST_COUNT}" == 0 ]]
@@ -75,7 +83,11 @@ case "${JOB_STATUS}" in
     ;;
 esac
 
-BODY="### ${MARK} ${TITLE} ${MARK}\n${SUMMARY}${FAILED_TEST_BODY}"
-
 # encode as JSON in the field 'body'
-echo "${BODY}" | jq -sR '{"body": .}' | tee "${JSON_FILE_RESULTS}"
+(
+jq -sR '{"body": .}' <<__EOF__
+### ${MARK} ${TITLE} ${MARK}
+${SUMMARY}
+${FAILED_TEST_BODY}
+__EOF__
+) | tee "${JSON_FILE_RESULTS}"
