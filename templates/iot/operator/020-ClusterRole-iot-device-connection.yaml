@@ -12,5 +12,5 @@ rules:
     resources: [ "subjectaccessreviews" ]
     verbs: [ "create" ]
   - apiGroups: [ "iot.enmasse.io" ]
-    resources: [ "iotprojects" ]
+    resources: [ "iottenants" ]
     verbs: [ "get", "list", "watch" ]

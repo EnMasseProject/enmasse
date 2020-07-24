@@ -1,5 +1,0 @@
-apiVersion: iot.enmasse.io/v1alpha1
-kind: IoTProject
-metadata:
-  name: iot
-spec: {}

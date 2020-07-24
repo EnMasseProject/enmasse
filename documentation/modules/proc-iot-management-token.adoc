@@ -75,7 +75,7 @@ metadata:
   name: device-manager-role # <1>
 rules: # <2>
 - apiGroups: ["iot.enmasse.io"]
-  resources: ["iotprojects"]
+  resources: ["iottenants"]
   verbs: ["create", "update", "get", "list", "delete"]
 ----
 <1> The name of the role.

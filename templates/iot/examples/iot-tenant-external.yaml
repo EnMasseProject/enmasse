@@ -1,6 +1,6 @@
 ---
-kind: IoTProject
-apiVersion: iot.enmasse.io/v1alpha1
+kind: IoTTenant
+apiVersion: iot.enmasse.io/v1
 metadata:
   name: default
 spec:

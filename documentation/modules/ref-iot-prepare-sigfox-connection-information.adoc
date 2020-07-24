@@ -10,19 +10,19 @@ link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-iot-creating-new-sigfox
 
 IoT tenant name::
 The name of the IoT tenant consists of the {KubePlatform} namespace and the name
-of the IoT project resource, for example, `namespace.iotproject`.
+of the IoT project resource, for example, `namespace.iottenant`.
 
 HTTP authorization header::
 For the Sigfox backend to authenticate, you must convert the username and password combination of the gateway device into an HTTP "Basic Authorization" header. Be sure to specify the full user name using the following syntax: `_authentication id_ @_IoT tenant name_`.
 +
-Example: `sigfox-user@namespace.iotproject`
+Example: `sigfox-user@namespace.iottenant`
 +
 The basic authentication header value can be generated on the command line using
 the following command:
 +
 [options="nowrap",subs="attributes"]
 ----
-echo "Basic $(echo -n "sigfox-user@namespace.iotproject:password" | base64)"
+echo "Basic $(echo -n "sigfox-user@namespace.iottenant:password" | base64)"
 ----
 
 URL pattern::

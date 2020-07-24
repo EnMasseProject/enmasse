@@ -10,5 +10,5 @@ rules:
     resources: [ "messagingaddresses", "messagingprojects", "messagingendpoints" ]
     verbs: [ "get", "list", "watch" ]
   - apiGroups: [ "iot.enmasse.io" ]
-    resources: [ "iotprojects" ]
+    resources: [ "iottenants" ]
     verbs: [ "get", "list", "watch" ]

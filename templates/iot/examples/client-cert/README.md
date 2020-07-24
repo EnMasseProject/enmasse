@@ -10,7 +10,7 @@ Run the script:
 
 Add the trust anchor to the `IoTProject`:
 
-    oc patch iotproject iot --type merge -p "{\"spec\": {\"configuration\": {\"trustAnchors\": [{\"certificate\": \"$(cat build/ca-cert.pem | sed 's/$/\\n/g' | tr -d '\n')\"}]}}}"
+    oc patch iottenant iot --type merge -p "{\"spec\": {\"configuration\": {\"trustAnchors\": [{\"certificate\": \"$(cat build/ca-cert.pem | sed 's/$/\\n/g' | tr -d '\n')\"}]}}}"
 
 ## Create a new device
 

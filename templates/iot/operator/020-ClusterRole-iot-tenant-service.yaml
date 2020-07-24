@@ -6,5 +6,5 @@ metadata:
   name: enmasse.io:iot-tenant-service
 rules:
   - apiGroups: [ "iot.enmasse.io" ]
-    resources: [ "iotprojects" ]
+    resources: [ "iottenants" ]
     verbs: [ "get", "list", "watch" ]

@@ -1,6 +1,6 @@
 {
-    "apiVersion": "iot.enmasse.io/v1alpha1",
-    "kind": "IoTProject",
+    "apiVersion": "iot.enmasse.io/v1",
+    "kind": "IoTTenant",
     "metadata": {
         "creationTimestamp": "2020-01-31T13:47:37Z",
         "finalizers": [
@@ -11,7 +11,7 @@
         "name": "iot",
         "namespace": "enmasse-infra",
         "resourceVersion": "184096172",
-        "selfLink": "/apis/iot.enmasse.io/v1alpha1/namespaces/enmasse-infra/iotprojects/iot",
+        "selfLink": "/apis/iot.enmasse.io/v1alpha1/namespaces/enmasse-infra/iottenants/iot",
         "uid": "3d98d3bc-4430-11ea-863e-00163e294db3"
     },
     "spec": {

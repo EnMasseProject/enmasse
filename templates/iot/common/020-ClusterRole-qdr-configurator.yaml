@@ -10,7 +10,7 @@ rules:
   - apiGroups:
     - iot.enmasse.io
     resources:
-    - iotprojects
+    - iottenants
     verbs:
     - get
     - list

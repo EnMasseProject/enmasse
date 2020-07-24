@@ -27,7 +27,7 @@ rules:
     resources: [ "consoleservices", "consoleservices/finalizers" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
   - apiGroups: [ "iot.enmasse.io" ]
-    resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status", "iotprojects", "iotprojects/finalizers", "iotprojects/status" ]
+    resources: [ "iotconfigs", "iotconfigs/finalizers", "iotconfigs/status", "iottenants", "iottenants/finalizers", "iottenants/status" ]
     verbs: [ "get", "list", "watch", "update", "create", "patch" ]
   - apiGroups: [ "batch" ]
     resources: [ "jobs" ]
