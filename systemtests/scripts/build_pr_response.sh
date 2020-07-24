@@ -37,31 +37,57 @@ else
   BUILD_ENV="oc cluster up"
 fi
 
-SUMMARY="**TEST_PROFILE**: ${TEST_PROFILE}\n**TEST_CASE:** ${TEST_CASE}\n**TOTAL:** ${TEST_COUNT}\n**PASS:** $((TEST_COUNT - TEST_ALL_FAILED_COUNT - TEST_SKIPPED_COUNT))\n**FAIL:** ${TEST_ALL_FAILED_COUNT}\n**SKIP:** ${TEST_SKIPPED_COUNT}\n**BUILD_NUMBER:** ${BUILD_ID}\n**BUILD_ENV:** ${BUILD_ENV}\n"
+SUMMARY="$(cat <<__EOF__
+**TEST_PROFILE**: ${TEST_PROFILE}
+**TEST_CASE:** ${TEST_CASE}
+**TOTAL:** ${TEST_COUNT}
+**PASS:** $((TEST_COUNT - TEST_ALL_FAILED_COUNT - TEST_SKIPPED_COUNT))
+**FAIL:** ${TEST_ALL_FAILED_COUNT}
+**SKIP:** ${TEST_SKIPPED_COUNT}
+**BUILD_NUMBER:** ${BUILD_ID}
+**BUILD_ENV:** ${BUILD_ENV}
+__EOF__
+)"
 
-FAILED_TESTS=$(find "${RESULTS_PATH}" -name 'TEST*.xml' -type f -print0 | xargs -0 awk '/<testcase.*>/{ getline x; if (x ~ "<error" || x ~ "<failure") {  gsub(/classname=|name=|\"/, "", $0); if ($3 ~ "time=") {print "\\n- " $2 } else {print "\\n- " $2 " in " $3 }}}')
+FAILED_TESTS=$(find "${RESULTS_PATH}" -name 'TEST*.xml' -type f -print0 | xargs -0 awk '/<testcase.*>/{ getline x; if (x ~ "<error" || x ~ "<failure") {  gsub(/classname=|name=|\"/, "", $0); if ($3 ~ "time=") {print "\n- " $2 } else {print "\n- " $2 " in " $3 }}}')
 echo "${FAILED_TESTS}"
 echo "Creating body ..."
 
-
-if [[ -n "${FAILED_TESTS}" ]]
-then
-  FAILED_TEST_BODY="### :heavy_exclamation_mark: Test Failures :heavy_exclamation_mark:${FAILED_TESTS}"
-fi
+TITLE="Test Summary"
+MARK=":question:" # init with unknown default
 
 if [[ "${TEST_COUNT}" == 0 ]]
 then
-  BODY="{\"body\":\":heavy_exclamation_mark: **Build Failed** :heavy_exclamation_mark:\"}"
+  # no tests executed
+  MARK=":heavy_exclamation_mark:"
+  FAILED_TEST_BODY="### :heavy_exclamation_mark: No tests executed :heavy_exclamation_mark:"
+elif [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]]
+then
+  # no failed tests, may be overridden by the following job status check
+  MARK=":heavy_check_mark:"
 else
-  if [[ "${TEST_ALL_FAILED_COUNT}" == 0 ]] && [[ "${JOB_STATUS}" != "FAILURE" ]] && [[ "${JOB_STATUS}" != "ABORTED" ]]
-  then
-    BODY="{\"body\":\"### :heavy_check_mark: Test Summary :heavy_check_mark:\n${SUMMARY}${FAILED_TEST_BODY}\"}"
-  else
-    BODY="{\"body\":\"### :x: Test Summary :x:\n${SUMMARY}${FAILED_TEST_BODY}\"}"
-  fi
+  # some failed
+  MARK=":x:"
+  FAILED_TEST_BODY="### :heavy_exclamation_mark: Test Failures :heavy_exclamation_mark:${FAILED_TESTS}"
 fi
 
-echo "${BODY}" > ${JSON_FILE_RESULTS}
+# finally override status
+case "${JOB_STATUS}" in
+  ABORTED)
+    MARK=":white_circle:"
+    TITLE="**Build Aborted**"
+    ;;
+  FAILURE)
+    MARK=":heavy_exclamation_mark:"
+    TITLE="**Build Failed**"
+    ;;
+esac
 
-# Cat created file
-cat ${JSON_FILE_RESULTS}
+# encode as JSON in the field 'body'
+(
+jq -sR '{"body": .}' <<__EOF__
+### ${MARK} ${TITLE} ${MARK}
+${SUMMARY}
+${FAILED_TEST_BODY}
+__EOF__
+) | tee "${JSON_FILE_RESULTS}"
