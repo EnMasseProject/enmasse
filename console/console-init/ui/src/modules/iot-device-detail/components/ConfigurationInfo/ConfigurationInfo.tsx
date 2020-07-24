@@ -111,7 +111,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   return (
     <>
       <Tooltip
-        id="config-info-help-tooltip"
+        id="device-detail-config-info-help-tooltip"
         aria-label="Information needed to configure device"
         position={TooltipPosition.bottom}
         enableFlip={false}
@@ -123,7 +123,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
         }
       >
         <Button
-          id="config-info-help-icon-button"
+          id="device-detail-config-info-help-icon-button"
           icon={<ExclamationCircleIcon />}
           variant={ButtonVariant.link}
         >
@@ -140,7 +140,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                     Adapters
                   </Title>
                   <br />
-                  <AdapterListContainer id="config-info-adapter-container" />
+                  <AdapterListContainer id="device-detail-config-info-adapterlist" />
                 </CardBody>
               </Card>
             </GridItem>
@@ -150,8 +150,10 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                   <Card>
                     <CardBody>
                       <DropdownWithToggle
-                        id="config-info-credential-type-dropdowntoggle"
-                        toggleId={"config-info-credential-type-dropdown-toggle"}
+                        id="device-detail-config-info-credential-type-dropdown"
+                        toggleId={
+                          "device-detail-config-info-credential-type-dropdowntoggle"
+                        }
                         aria-label="Select credential type"
                         position={DropdownPosition.left}
                         onSelectItem={onSelectCredentialType}
@@ -167,8 +169,10 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                       />
                       {filterOptions?.length > 0 && (
                         <DropdownWithToggle
-                          id="config-info-filter-dropdowntoggle"
-                          toggleId={"config-info-filter-dropdown-toggle"}
+                          id="device-detail-config-info-credential-filter-dropdown"
+                          toggleId={
+                            "device-detail-config-info-credential-filter-dropdowntoggle"
+                          }
                           aria-label="set filter value"
                           position={DropdownPosition.left}
                           onSelectItem={setFilterValue}
@@ -183,7 +187,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
                 </GridItem>
               </Grid>
               <CredentialsView
-                id="config-info-credentials-view"
+                id="device-detail-config-info-credentials-view"
                 credentials={credentials}
               />
             </GridItem>
