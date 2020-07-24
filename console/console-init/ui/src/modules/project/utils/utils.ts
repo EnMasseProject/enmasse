@@ -38,15 +38,16 @@ const filterMenuItems = [
 ];
 
 const typeOptions: ISelectOption[] = [
-  { key: "iot", value: "IoT Project", isDisabled: false },
   {
-    key: "standard",
-    value: "Messaging Project - Standard",
+    key: "iot",
+    value: "IoTProject",
+    label: "IoT Project",
     isDisabled: false
   },
   {
-    key: "brokered",
-    value: "Messaging Project - Brokered Messaging",
+    key: "messaging",
+    value: "AddressSpace",
+    label: "Messaging Project",
     isDisabled: false
   }
 ];

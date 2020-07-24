@@ -4,15 +4,58 @@
  */
 
 import gql from "graphql-tag";
+import { IProjectFilter } from "modules/project/ProjectPage";
+import { generateFilterPattern } from "./query";
+import { removeForbiddenChars } from "utils";
 
-const FILTER_RETURN_PROJECTS = (projectFilterParams?: any) => {
-  const { projectname } = projectFilterParams;
+const FILTER_PROJECTS = (projectFilterParams: IProjectFilter) => {
+  const { names, namespaces, type, status } = projectFilterParams;
   let filter: string = "";
-  if (projectname && projectname.trim() !== "") {
-    filter += "`$.metadata.name` = '" + projectname + "'";
+  let namesLength = names?.length;
+  let namespacesLength = namespaces?.length;
+
+  //filter names
+  filter += generateFilterPattern("metadata.name", names);
+
+  if (namesLength && namespacesLength && namespacesLength > 0) {
+    filter += " AND ";
   }
 
-  // TODO: Filters to be incrementally added
+  //filter namespaces
+  filter += generateFilterPattern("metadata.namespace", namespaces);
+
+  if (
+    ((namesLength && namesLength > 0) ||
+      (namespacesLength && namespacesLength > 0)) &&
+    type?.value?.trim()
+  ) {
+    filter += " AND ";
+  }
+
+  //filter type
+  if (type && type.value.trim() !== "") {
+    filter += "`$.kind`= '" + type.value + "'";
+  }
+
+  if (type?.value.trim() && status?.trim()) {
+    filter += " AND ";
+  }
+
+  //filter status
+  if (status) {
+    if (status !== "Pending") {
+      filter += generateFilterPattern("status.phase", [
+        { value: status, isExact: true }
+      ]);
+    } else {
+      filter += generateFilterPattern("status.phase", [
+        { value: status, isExact: true },
+        // add object to fetch all projects whose status.phase is empty string
+        // as initially when the project is created the phase var is initialised as empty string
+        { value: "", isExact: true }
+      ]);
+    }
+  }
   return filter;
 };
 
@@ -74,8 +117,7 @@ const RETURN_ALL_PROJECTS = (
   let filter: string = "";
 
   if (projectFilterParams) {
-    //TODO
-    filter = FILTER_RETURN_PROJECTS(projectFilterParams);
+    filter = FILTER_PROJECTS(projectFilterParams);
   }
 
   const ALL_PROJECTS = gql`
@@ -91,4 +133,42 @@ const RETURN_ALL_PROJECTS = (
   return ALL_PROJECTS;
 };
 
-export { RETURN_ALL_PROJECTS };
+const RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE = (
+  propertyName: string,
+  value: string
+) => {
+  let filter = "";
+  value = removeForbiddenChars(value);
+  if (value && propertyName) {
+    filter += "`$.metadata." + [propertyName] + "` LIKE '" + value + "%'";
+  }
+
+  const all_proejcts = gql(`
+    query all_projects {
+      allProjects(filter: "${filter}" first:100 offset:0) {
+      total
+      objects{
+        ... on AddressSpace_consoleapi_enmasse_io_v1beta1 {
+          kind
+          metadata {
+            name
+            namespace
+            creationTimestamp
+          }
+        }
+        ... on IoTProject_iot_enmasse_io_v1alpha1 {
+          kind
+          metadata {
+            name
+            namespace
+            creationTimestamp
+          }
+        }
+      }
+     }
+    }
+    `);
+  return all_proejcts;
+};
+
+export { RETURN_ALL_PROJECTS, RETURN_ALL_PROJECTS_FOR_NAME_OR_NAMESPACE };
