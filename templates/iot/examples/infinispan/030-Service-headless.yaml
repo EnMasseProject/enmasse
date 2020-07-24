@@ -4,7 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/name: infinispan
     app.kubernetes.io/instance: infinispan-1
-  name: infinispan-jgroups # align name with operator version
+  name: infinispan-jgroups # align with "jgroups.dns.query" in statefulset
 spec:
   type: ClusterIP
   clusterIP: None

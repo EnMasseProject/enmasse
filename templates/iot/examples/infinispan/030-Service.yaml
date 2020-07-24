@@ -2,16 +2,14 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: infinispan
-  name: infinispan # align name with operator version
+    app.kubernetes.io/name: infinispan
+    app.kubernetes.io/instance: infinispan-1
+  name: infinispan # align name with IoTConfiguration
 spec:
   ports:
   - port: 11222
-    targetPort: 11222
+    targetPort: hotrod
     name: infinispan
-  - port: 9990
-    targetPort: 9990
-    name: management
   selector:
-    name: infinispan
-    app: infinispan
+    app.kubernetes.io/name: infinispan
+    app.kubernetes.io/instance: infinispan-1

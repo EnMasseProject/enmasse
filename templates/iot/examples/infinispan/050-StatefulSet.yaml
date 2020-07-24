@@ -33,7 +33,7 @@ spec:
             - name: JDK_JAVA_OPTIONS
               value: "-XX:MinRAMPercentage=85 -XX:MaxRAMPercentage=85"
             - name: JAVA_OPTIONS
-              value: "-Djgroups.dns.query=infinispan-jgroups" # align with service name
+              value: "-Djgroups.dns.query=infinispan-jgroups" # align with headless service name
           ports:
             - containerPort: 11222
               name: hotrod
