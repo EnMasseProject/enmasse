@@ -1,10 +1,9 @@
 ---
-- name: Install the CRDs
-  shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/crds
+- name: Install the core CRDs (excluding IoT)
   shell: |
-    for i in $(find "{{ playbook_dir }}/install/crds" ! -name "010-iot*"); do oc apply -n {{ namespace }} -f "$i"; done
-  with: not enable_iot
+    for i in $(find "{{ playbook_dir }}/install/crds" -type f ! -name "010-iot*"); do oc apply -f "$i"; done
+  when: not enable_iot
 
-- name: Install the IoT CRDs
+- name: Install the CRDs (including IoT)
   shell: oc apply -n {{ namespace }} -f {{ playbook_dir }}/install/crds
-  with: enable_iot
+  when: enable_iot

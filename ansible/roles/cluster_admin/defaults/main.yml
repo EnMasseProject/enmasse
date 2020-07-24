@@ -1,4 +1,4 @@
 ---
 monitoring_operator: False
 monitoring: False
-enable_iot: False
+enable_iot: True
