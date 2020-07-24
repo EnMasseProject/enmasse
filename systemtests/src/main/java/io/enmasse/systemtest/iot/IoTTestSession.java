@@ -1337,6 +1337,7 @@ public final class IoTTestSession implements IoTTestContext {
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
         if (shouldCleanup()) {
             cleanup.add(() -> {
+                log.info("Deleting {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
                 var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
                 access
                         .withPropagationPolicy(DeletionPropagation.FOREGROUND)

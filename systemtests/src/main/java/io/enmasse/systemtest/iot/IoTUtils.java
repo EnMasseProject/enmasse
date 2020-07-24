@@ -154,7 +154,7 @@ class IoTUtils {
         try (var ignored = startOperation(SystemtestsOperation.DELETE_IOT_CONFIG)) {
             iotConfigs(config.getMetadata().getNamespace())
                     .withName(config.getMetadata().getName())
-                    .withPropagationPolicy(DeletionPropagation.BACKGROUND)
+                    .withPropagationPolicy(DeletionPropagation.FOREGROUND)
                     .delete();
             TestUtils.waitForNReplicas(0, false, config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap(), new TimeoutBudget(5, TimeUnit.MINUTES), 5000);
         }
