@@ -8,7 +8,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
+	"github.com/enmasseproject/enmasse/pkg/controller/iotinfra"
 	"reflect"
 	"strings"
 
@@ -140,7 +140,7 @@ func (c *Configurator) syncProject(project *v1.IoTTenant) (bool, error) {
 				NamedResource:     namedResource(project, "linkRoute/"+r.Tag),
 				Direction:         r.Direction,
 				Pattern:           util.AddressName(project, r.Prefix) + "/#",
-				Connection:        iotconfig.SharedInfraConnectionName,
+				Connection:        iotinfra.SharedInfraConnectionName,
 				AddExternalPrefix: project.Namespace + "/",
 			})
 		})

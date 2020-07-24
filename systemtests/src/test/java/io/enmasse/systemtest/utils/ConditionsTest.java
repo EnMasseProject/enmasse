@@ -7,12 +7,12 @@ package io.enmasse.systemtest.utils;
 
 import java.time.Instant;
 
-import io.enmasse.iot.model.v1.ConfigConditionType;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.enmasse.api.model.MessagingEndpointBuilder;
+import io.enmasse.iot.model.v1.ConfigConditionType;
+import io.enmasse.iot.model.v1.IoTInfrastructureBuilder;
 
 import static io.enmasse.systemtest.framework.TestTag.FRAMEWORK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,7 +57,7 @@ public class ConditionsTest {
 
     @Test
     public void testIoTConfigExtractConditionStatus() {
-        var config = new IoTConfigBuilder()
+        var config = new IoTInfrastructureBuilder()
                 .withNewStatus()
 
                 .addNewCondition()

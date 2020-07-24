@@ -16,25 +16,26 @@ public class IoTCrd {
     public static final String API_VERSION = GROUP + "/" + VERSION;
 
     private static final CustomResourceDefinition TENANT_CRD;
-    private static final CustomResourceDefinition CONFIG_CRD;
+    private static final CustomResourceDefinition INFRASTRUCTURE_CRD;
 
     static {
         TENANT_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTTenant.KIND);
-        CONFIG_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTConfig.KIND);
+        INFRASTRUCTURE_CRD = CustomResources.createCustomResource(GROUP, VERSION, IoTInfrastructure.KIND);
     }
 
     public static void registerCustomCrds() {
         KubernetesDeserializer.registerCustomKind(API_VERSION, IoTTenant.KIND, IoTTenant.class);
         KubernetesDeserializer.registerCustomKind(API_VERSION, IoTTenantList.KIND, IoTTenantList.class);
-        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTConfig.KIND, IoTConfig.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTInfrastructure.KIND, IoTInfrastructure.class);
+        KubernetesDeserializer.registerCustomKind(API_VERSION, IoTInfrastructureList.KIND, IoTInfrastructureList.class);
     }
 
     public static CustomResourceDefinition tenant() {
         return TENANT_CRD;
     }
 
-    public static CustomResourceDefinition config() {
-        return CONFIG_CRD;
+    public static CustomResourceDefinition infrastructure() {
+        return INFRASTRUCTURE_CRD;
     }
 
 }

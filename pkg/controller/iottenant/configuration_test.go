@@ -6,7 +6,7 @@
 package iottenant
 
 import (
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
@@ -49,8 +49,8 @@ c0/MYxV/W7QNg/WV/Om7uqmTXQO3
 func setup(t *testing.T) *ReconcileIoTTenant {
 	s := scheme.Scheme
 
-	s.AddKnownTypes(iotv1alpha1.SchemeGroupVersion, &iotv1alpha1.IoTTenant{})
-	s.AddKnownTypes(iotv1alpha1.SchemeGroupVersion, &iotv1alpha1.IoTConfig{})
+	s.AddKnownTypes(iotv1.SchemeGroupVersion, &iotv1.IoTTenant{})
+	s.AddKnownTypes(iotv1.SchemeGroupVersion, &iotv1.IoTInfrastructure{})
 
 	var objs []runtime.Object
 
@@ -72,11 +72,11 @@ func TestEcCertClaim(t *testing.T) {
 
 	// dummy tenant
 
-	tenant := iotv1alpha1.IoTTenant{}
+	tenant := iotv1.IoTTenant{}
 
 	// EC based trust anchor
 
-	trustAnchor := iotv1alpha1.TrustAnchor{
+	trustAnchor := iotv1.TrustAnchor{
 		Certificate: EC_CA_PEM_1,
 	}
 
@@ -124,11 +124,11 @@ func TestEcCertName(t *testing.T) {
 
 	// dummy tenant
 
-	tenant := iotv1alpha1.IoTTenant{}
+	tenant := iotv1.IoTTenant{}
 
 	// EC based trust anchor
 
-	trustAnchor := iotv1alpha1.TrustAnchor{
+	trustAnchor := iotv1.TrustAnchor{
 		Certificate: EC_CA_PEM_2,
 	}
 

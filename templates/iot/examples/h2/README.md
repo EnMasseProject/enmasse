@@ -27,7 +27,7 @@ will be later on used by the device registry.
 
 **Note:** You need to drop in all required dependencies of the JDBC driver as well.
 
-Also see: [iot-config.yaml](iot-config.yaml)
+Also see: [iot-config.yaml](iot-infra.yaml)
 
 ## Enter the SQL shell
 

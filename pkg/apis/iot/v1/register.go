@@ -34,8 +34,8 @@ func addKnownTypes(scheme *runtime.Scheme) error {
 		&IoTTenant{},
 		&IoTTenantList{},
 
-		&IoTConfig{},
-		&IoTConfigList{},
+		&IoTInfrastructure{},
+		&IoTInfrastructureList{},
 	)
 
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)

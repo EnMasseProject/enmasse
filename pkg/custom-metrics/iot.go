@@ -12,40 +12,40 @@ import (
 
 var (
 
-	// region IoTConfig
+	// region IoTInfrastructure
 
-	IoTConfig = prometheus.NewGauge(
+	IoTInfrastructure = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_configs",
-			Help:        "Number of IoT Configs",
+			Name:        "iot_infrastructures",
+			Help:        "Number of IoT Infrastructures",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTConfigActive = prometheus.NewGauge(
+	IoTInfrastructureActive = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_configs_active",
-			Help:        "Number of IoT Configs with status 'active'",
+			Name:        "iot_infrastructures_active",
+			Help:        "Number of IoT Infrastructures with status 'active'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTConfigConfiguring = prometheus.NewGauge(
+	IoTInfrastructureConfiguring = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_configs_configuring",
-			Help:        "Number of IoT Configs with status 'configuring'",
+			Name:        "iot_infrastructures_configuring",
+			Help:        "Number of IoT Infrastructures with status 'configuring'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTConfigTerminating = prometheus.NewGauge(
+	IoTInfrastructureTerminating = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_configs_terminating",
-			Help:        "Number of IoT Configs with status 'terminating'",
+			Name:        "iot_infrastructures_terminating",
+			Help:        "Number of IoT Infrastructures with status 'terminating'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTConfigFailed = prometheus.NewGauge(
+	IoTInfrastructureFailed = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_configs_failed",
-			Help:        "Number of IoT Configs with status 'failed'",
+			Name:        "iot_infrastructures_failed",
+			Help:        "Number of IoT Infrastructures with status 'failed'",
 			ConstLabels: defaultLabels(),
 		},
 	)
@@ -98,11 +98,11 @@ func init() {
 	// Register custom metrics with the global prometheus registry
 	metrics.Registry.MustRegister(
 
-		IoTConfig,
-		IoTConfigActive,
-		IoTConfigConfiguring,
-		IoTConfigTerminating,
-		IoTConfigFailed,
+		IoTInfrastructure,
+		IoTInfrastructureActive,
+		IoTInfrastructureConfiguring,
+		IoTInfrastructureTerminating,
+		IoTInfrastructureFailed,
 
 		IoTTenant,
 		IoTTenantActive,

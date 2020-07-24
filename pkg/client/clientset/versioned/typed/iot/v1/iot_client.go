@@ -15,7 +15,7 @@ import (
 
 type IotV1Interface interface {
 	RESTClient() rest.Interface
-	IoTConfigsGetter
+	IoTInfrastructuresGetter
 	IoTTenantsGetter
 }
 
@@ -24,8 +24,8 @@ type IotV1Client struct {
 	restClient rest.Interface
 }
 
-func (c *IotV1Client) IoTConfigs(namespace string) IoTConfigInterface {
-	return newIoTConfigs(c, namespace)
+func (c *IotV1Client) IoTInfrastructures(namespace string) IoTInfrastructureInterface {
+	return newIoTInfrastructures(c, namespace)
 }
 
 func (c *IotV1Client) IoTTenants(namespace string) IoTTenantInterface {

@@ -10,7 +10,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,12 +31,12 @@ const annotationTenantSubjectName = "iot.enmasse.io/tenant-subject-dn"
 
 var namespaceSubjectDn = uuid.MustParse("dedf9da2-98e5-11ea-b0a4-f875a464d175")
 
-func (r *ReconcileIoTTenant) acceptConfiguration(project *iotv1alpha1.IoTTenant) error {
+func (r *ReconcileIoTTenant) acceptConfiguration(project *iotv1.IoTTenant) error {
 
 	// set the tenant name in the status section
 
 	project.Status.TenantName = project.TenantName()
-	project.Status.Accepted = iotv1alpha1.AcceptedStatus{}
+	project.Status.Accepted = iotv1.AcceptedStatus{}
 
 	// prepare variables
 
@@ -77,7 +77,7 @@ func (r *ReconcileIoTTenant) acceptConfiguration(project *iotv1alpha1.IoTTenant)
 
 }
 
-func (r *ReconcileIoTTenant) acceptResourceLimits(limits *iotv1alpha1.ResourceLimits) *iotv1alpha1.AcceptedResourceLimits {
+func (r *ReconcileIoTTenant) acceptResourceLimits(limits *iotv1.ResourceLimits) *iotv1.AcceptedResourceLimits {
 
 	// we have no limits
 
@@ -101,14 +101,14 @@ func (r *ReconcileIoTTenant) acceptResourceLimits(limits *iotv1alpha1.ResourceLi
 
 	// return result
 
-	return &iotv1alpha1.AcceptedResourceLimits{
+	return &iotv1.AcceptedResourceLimits{
 		MaximumConnections:       maxConnections,
 		MaximumTimeToLiveSeconds: maxTtl,
 	}
 
 }
 
-func (r *ReconcileIoTTenant) acceptTrustAnchors(project *iotv1alpha1.IoTTenant, anchors []iotv1alpha1.TrustAnchor) ([]iotv1alpha1.AcceptedTrustAnchor, error) {
+func (r *ReconcileIoTTenant) acceptTrustAnchors(project *iotv1.IoTTenant, anchors []iotv1.TrustAnchor) ([]iotv1.AcceptedTrustAnchor, error) {
 
 	var err error
 	acceptedTrustAnchors := make(map[string]bool, 0)
@@ -116,7 +116,7 @@ func (r *ReconcileIoTTenant) acceptTrustAnchors(project *iotv1alpha1.IoTTenant, 
 
 	// create new trust anchors
 
-	result := make([]iotv1alpha1.AcceptedTrustAnchor, 0)
+	result := make([]iotv1.AcceptedTrustAnchor, 0)
 
 	// we iterate over all trust anchors and see of we can accept them
 
@@ -139,7 +139,7 @@ func (r *ReconcileIoTTenant) acceptTrustAnchors(project *iotv1alpha1.IoTTenant, 
 
 	// trust anchor condition
 
-	cond := project.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeTrustAnchorsUnique)
+	cond := project.Status.GetTenantCondition(iotv1.TenantConditionTypeTrustAnchorsUnique)
 	if len(duplicateTrustAnchors) > 0 {
 		// go doesn't have '.keys()'
 		tas := make([]string, 0, len(duplicateTrustAnchors))
@@ -174,17 +174,17 @@ func (r *ReconcileIoTTenant) acceptTrustAnchors(project *iotv1alpha1.IoTTenant, 
 //
 // When dropping a trust anchor from the configuration, we ensure that we delete if first, before accepting the new
 // configuration.
-func (r *ReconcileIoTTenant) acceptTrustAnchor(project *iotv1alpha1.IoTTenant, trustAnchor iotv1alpha1.TrustAnchor, accepted map[string]bool, duplicate map[string]bool) (iotv1alpha1.AcceptedTrustAnchor, error) {
+func (r *ReconcileIoTTenant) acceptTrustAnchor(project *iotv1.IoTTenant, trustAnchor iotv1.TrustAnchor, accepted map[string]bool, duplicate map[string]bool) (iotv1.AcceptedTrustAnchor, error) {
 
 	block, _ := pem.Decode([]byte(trustAnchor.Certificate))
 
 	if block == nil {
-		return iotv1alpha1.AcceptedTrustAnchor{}, util.NewConfigurationError("Failed to parse PEM certificate")
+		return iotv1.AcceptedTrustAnchor{}, util.NewConfigurationError("Failed to parse PEM certificate")
 	}
 
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return iotv1alpha1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to parse tenant certificate"))
+		return iotv1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to parse tenant certificate"))
 	}
 
 	var algorithm string
@@ -194,29 +194,29 @@ func (r *ReconcileIoTTenant) acceptTrustAnchor(project *iotv1alpha1.IoTTenant, t
 	case x509.ECDSA:
 		algorithm = "EC"
 	default:
-		return iotv1alpha1.AcceptedTrustAnchor{}, util.NewConfigurationError("Unsupported public key algorithm: %s", cert.PublicKeyAlgorithm)
+		return iotv1.AcceptedTrustAnchor{}, util.NewConfigurationError("Unsupported public key algorithm: %s", cert.PublicKeyAlgorithm)
 	}
 
 	publicKey, err := x509.MarshalPKIXPublicKey(cert.PublicKey)
 	if err != nil {
-		return iotv1alpha1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to encode public key into DER format"))
+		return iotv1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to encode public key into DER format"))
 	}
 
 	// ensure the subjectDN is unique
 
 	subjectDn, err := util.ToX500Name(cert.RawSubject)
 	if err != nil {
-		return iotv1alpha1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to decode subject DN"))
+		return iotv1.AcceptedTrustAnchor{}, util.WrapAsNonRecoverable(errors.Wrap(err, "Failed to decode subject DN"))
 	}
 	if err := r.ensureSubjectDnIsUnique(project, cert); err != nil {
 		duplicate[subjectDn] = true
-		return iotv1alpha1.AcceptedTrustAnchor{}, err
+		return iotv1.AcceptedTrustAnchor{}, err
 	}
 
 	// return result
 
 	accepted[subjectDn] = true
-	return iotv1alpha1.AcceptedTrustAnchor{
+	return iotv1.AcceptedTrustAnchor{
 		SubjectDN: subjectDn,
 		PublicKey: publicKey,
 		Algorithm: algorithm,
@@ -230,7 +230,7 @@ func (r *ReconcileIoTTenant) acceptTrustAnchor(project *iotv1alpha1.IoTTenant, t
 	}, nil
 }
 
-func (r *ReconcileIoTTenant) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTTenant, cert *x509.Certificate) error {
+func (r *ReconcileIoTTenant) ensureSubjectDnIsUnique(project *iotv1.IoTTenant, cert *x509.Certificate) error {
 
 	ctx := context.Background()
 	subjectDn, err := util.ToX500Name(cert.RawSubject)
@@ -287,14 +287,14 @@ func (r *ReconcileIoTTenant) ensureSubjectDnIsUnique(project *iotv1alpha1.IoTTen
 	return err
 }
 
-func isLockMapOwnedByTenant(cm *corev1.ConfigMap, project *iotv1alpha1.IoTTenant) bool {
+func isLockMapOwnedByTenant(cm *corev1.ConfigMap, project *iotv1.IoTTenant) bool {
 	ownerNamespace := cm.Labels[labelTenantOwnerNamespace]
 	ownerName := cm.Labels[labelTenantOwnerName]
 	return project.Namespace == ownerNamespace && project.Name == ownerName
 }
 
 // remove the lock of a previously accepted trust anchor
-func (r *ReconcileIoTTenant) unacceptTrustAnchor(project *iotv1alpha1.IoTTenant, subjectDn string) error {
+func (r *ReconcileIoTTenant) unacceptTrustAnchor(project *iotv1.IoTTenant, subjectDn string) error {
 
 	ctx := context.Background()
 	cm := &corev1.ConfigMap{}
@@ -334,16 +334,16 @@ func nameToId(subjectDn string) string {
 	return uuid.NewSHA1(namespaceSubjectDn, []byte(subjectDn)).String()
 }
 
-func (r *ReconcileIoTTenant) acceptAdapters(adapters map[string]iotv1alpha1.AdapterConfiguration) []iotv1alpha1.AcceptedAdapterConfiguration {
+func (r *ReconcileIoTTenant) acceptAdapters(adapters map[string]iotv1.AdapterConfiguration) []iotv1.AcceptedAdapterConfiguration {
 
 	// We basically transform a map[string]Config into an array of Config's with a name property, ensuring uniqueness
 	// of the name.
 
-	result := make([]iotv1alpha1.AcceptedAdapterConfiguration, 0)
+	result := make([]iotv1.AcceptedAdapterConfiguration, 0)
 
 	for k, a := range adapters {
 
-		aa := iotv1alpha1.AcceptedAdapterConfiguration{
+		aa := iotv1.AcceptedAdapterConfiguration{
 			Type:                 acceptAdapterName(k),
 			AdapterConfiguration: a,
 		}
@@ -365,13 +365,13 @@ func acceptAdapterName(name string) string {
 	}
 }
 
-func (r *ReconcileIoTTenant) acceptTracing(tracing *iotv1alpha1.TracingConfiguration) *iotv1alpha1.AcceptedTracingConfiguration {
+func (r *ReconcileIoTTenant) acceptTracing(tracing *iotv1.TracingConfiguration) *iotv1.AcceptedTracingConfiguration {
 
 	if tracing == nil {
 		return nil
 	}
 
-	return &iotv1alpha1.AcceptedTracingConfiguration{
+	return &iotv1.AcceptedTracingConfiguration{
 		SamplingMode:          tracing.SamplingMode,
 		SamplingModePerAuthId: tracing.SamplingModePerAuthId,
 	}

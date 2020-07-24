@@ -14,8 +14,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var _ v1beta1.ImageOverridesProvider = &IoTConfig{}
-var _ v1beta1.ImageOverridesProvider = &IoTConfigSpec{}
+var _ v1beta1.ImageOverridesProvider = &IoTInfrastructure{}
+var _ v1beta1.ImageOverridesProvider = &IoTInfrastructureSpec{}
 
 // Get the IoT tenant name from an IoT project.
 // This is not in any way encoded
@@ -23,7 +23,7 @@ func (project *IoTTenant) TenantName() string {
 	return util.TenantNameForObject(project)
 }
 
-func (config *IoTConfig) WantDefaultRoutes(endpoint EndpointConfig) bool {
+func (config *IoTInfrastructure) WantDefaultRoutes(endpoint EndpointConfig) bool {
 
 	if endpoint.EnableDefaultRoute != nil {
 		return *endpoint.EnableDefaultRoute
@@ -32,7 +32,7 @@ func (config *IoTConfig) WantDefaultRoutes(endpoint EndpointConfig) bool {
 	return config.Spec.WantDefaultRoutes()
 }
 
-func (spec *IoTConfigSpec) WantDefaultRoutes() bool {
+func (spec *IoTInfrastructureSpec) WantDefaultRoutes() bool {
 
 	if spec.EnableDefaultRoutes != nil {
 		return *spec.EnableDefaultRoutes
@@ -42,15 +42,15 @@ func (spec *IoTConfigSpec) WantDefaultRoutes() bool {
 
 }
 
-func (config *IoTConfig) GetImageOverrides() map[string]v1beta1.ImageOverride {
+func (config *IoTInfrastructure) GetImageOverrides() map[string]v1beta1.ImageOverride {
 	return config.Spec.ImageOverrides
 }
 
-func (spec *IoTConfigSpec) GetImageOverrides() map[string]v1beta1.ImageOverride {
+func (spec *IoTInfrastructureSpec) GetImageOverrides() map[string]v1beta1.ImageOverride {
 	return spec.ImageOverrides
 }
 
-func (spec *IoTConfigSpec) HasNoInterServiceConfig() bool {
+func (spec *IoTInfrastructureSpec) HasNoInterServiceConfig() bool {
 	if spec.InterServiceCertificates == nil {
 		return true
 	}
@@ -63,7 +63,7 @@ func (a *EndpointConfig) HasCustomCertificate() bool {
 	return a.SecretNameStrategy != nil
 }
 
-func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
+func (c *IoTInfrastructureSpec) DefaultNativeTlsRequired() bool {
 	if c.JavaDefaults.RequireNativeTls != nil {
 		return *c.JavaDefaults.RequireNativeTls
 	}
@@ -72,7 +72,7 @@ func (c *IoTConfigSpec) DefaultNativeTlsRequired() bool {
 
 //region MeshConfig
 
-func (m MeshConfig) TlsVersions(config *IoTConfig) []string {
+func (m MeshConfig) TlsVersions(config *IoTInfrastructure) []string {
 	if len(m.Tls.Versions) > 0 {
 		return m.Tls.Versions
 	} else {
@@ -84,14 +84,14 @@ func (m MeshConfig) TlsVersions(config *IoTConfig) []string {
 
 // region CommonAdapterConfig
 
-func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTConfig) bool {
+func (c *CommonAdapterConfig) IsNativeTlsRequired(config *IoTInfrastructure) bool {
 	if c.Containers.Adapter.RequireNativeTls == nil {
 		return config.Spec.DefaultNativeTlsRequired()
 	}
 	return *c.Containers.Adapter.RequireNativeTls
 }
 
-func (c *CommonAdapterConfig) TlsVersions(config *IoTConfig) []string {
+func (c *CommonAdapterConfig) TlsVersions(config *IoTInfrastructure) []string {
 	if len(c.Tls.Versions) > 0 {
 		return c.Tls.Versions
 	} else {
@@ -103,14 +103,14 @@ func (c *CommonAdapterConfig) TlsVersions(config *IoTConfig) []string {
 
 // region CommonServiceConfig
 
-func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTConfig) bool {
+func (c *CommonServiceConfig) IsNativeTlsRequired(config *IoTInfrastructure) bool {
 	if c.Container.RequireNativeTls == nil {
 		return config.Spec.DefaultNativeTlsRequired()
 	}
 	return *c.Container.RequireNativeTls
 }
 
-func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
+func (c *CommonServiceConfig) TlsVersions(config *IoTInfrastructure) []string {
 	if len(c.Tls.Versions) > 0 {
 		return c.Tls.Versions
 	} else {
@@ -122,7 +122,7 @@ func (c *CommonServiceConfig) TlsVersions(config *IoTConfig) []string {
 
 // region TlsVersions
 
-func (c *DeviceConnectionServiceConfig) TlsVersions(config *IoTConfig) []string {
+func (c *DeviceConnectionServiceConfig) TlsVersions(config *IoTInfrastructure) []string {
 
 	if c.JDBC != nil && !c.JDBC.Disabled {
 		return c.JDBC.TlsVersions(config)
@@ -134,7 +134,7 @@ func (c *DeviceConnectionServiceConfig) TlsVersions(config *IoTConfig) []string 
 	return config.Spec.TlsDefaults.Versions
 }
 
-func (c *DeviceRegistryServiceConfig) TlsVersions(config *IoTConfig) []string {
+func (c *DeviceRegistryServiceConfig) TlsVersions(config *IoTInfrastructure) []string {
 
 	if c.Infinispan != nil && !c.Infinispan.Disabled {
 		return c.Infinispan.TlsVersions(config)
@@ -175,14 +175,14 @@ func (p *IoTTenantStatus) GetTenantCondition(t TenantConditionType) *TenantCondi
 	return &p.Conditions[len(p.Conditions)-1]
 }
 
-func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *ConfigCondition {
+func (config *IoTInfrastructureStatus) GetInfrastructureCondition(t InfrastructureConditionType) *InfrastructureCondition {
 	for i, c := range config.Conditions {
 		if c.Type == t {
 			return &config.Conditions[i]
 		}
 	}
 
-	nc := ConfigCondition{
+	nc := InfrastructureCondition{
 		Type: t,
 		CommonCondition: CommonCondition{
 			Status:             corev1.ConditionUnknown,
@@ -197,7 +197,7 @@ func (config *IoTConfigStatus) GetConfigCondition(t ConfigConditionType) *Config
 
 //region CommonCondition
 
-func (config *IoTConfigStatus) RemoveCondition(t ConfigConditionType) {
+func (config *IoTInfrastructureStatus) RemoveCondition(t InfrastructureConditionType) {
 
 	for i := len(config.Conditions) - 1; i >= 0; i-- {
 		c := config.Conditions[i]
@@ -289,7 +289,7 @@ const (
 	DeviceConnectionJdbc
 )
 
-func (config IoTConfig) EvalDeviceConnectionImplementation() DeviceConnectionImplementation {
+func (config IoTInfrastructure) EvalDeviceConnectionImplementation() DeviceConnectionImplementation {
 
 	var infinispan = config.Spec.ServicesConfig.DeviceConnection.Infinispan
 	if infinispan != nil && infinispan.Disabled {
@@ -324,7 +324,7 @@ const (
 	DeviceRegistryJdbc
 )
 
-func (config IoTConfig) EvalDeviceRegistryImplementation() DeviceRegistryImplementation {
+func (config IoTInfrastructure) EvalDeviceRegistryImplementation() DeviceRegistryImplementation {
 
 	var infinispan = config.Spec.ServicesConfig.DeviceRegistry.Infinispan
 	if infinispan != nil && infinispan.Disabled {
@@ -365,7 +365,7 @@ func (r JdbcDeviceRegistry) IsSplitRegistry() (bool, error) {
 
 type DefaultLoggingRenderer func(rootLogger LogLevel, loggers map[string]LogLevel) string
 
-func (log LogbackConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
+func (log LogbackConfig) RenderConfiguration(config *IoTInfrastructure, defaultRenderer DefaultLoggingRenderer, override string) string {
 
 	// did we get overridden
 	if override != "" {
@@ -399,7 +399,7 @@ func (log LogbackConfig) RenderConfiguration(config *IoTConfig, defaultRenderer 
 
 }
 
-func (csc CommonServiceConfig) RenderConfiguration(config *IoTConfig, defaultRenderer DefaultLoggingRenderer, override string) string {
+func (csc CommonServiceConfig) RenderConfiguration(config *IoTInfrastructure, defaultRenderer DefaultLoggingRenderer, override string) string {
 	return csc.Container.Logback.RenderConfiguration(config, defaultRenderer, override)
 }
 

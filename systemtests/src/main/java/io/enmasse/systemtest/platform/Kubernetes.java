@@ -4,6 +4,38 @@
  */
 package io.enmasse.systemtest.platform;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.apache.commons.io.output.CloseShieldOutputStream;
+import org.slf4j.Logger;
+
 import io.enmasse.address.model.CoreCrd;
 import io.enmasse.admin.model.v1.AdminCrd;
 import io.enmasse.admin.model.v1.ConsoleService;
@@ -18,11 +50,11 @@ import io.enmasse.api.model.MessagingInfrastructure;
 import io.enmasse.api.model.MessagingInfrastructureList;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectList;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
+import io.enmasse.iot.model.v1.DoneableIoTInfrastructure;
 import io.enmasse.iot.model.v1.DoneableIoTTenant;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTCrd;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
+import io.enmasse.iot.model.v1.IoTInfrastructureList;
 import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.iot.model.v1.IoTTenantList;
 import io.enmasse.model.CustomResourceDefinitions;
@@ -80,37 +112,6 @@ import io.fabric8.openshift.api.model.Route;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.json.JsonObject;
 import okhttp3.Response;
-import org.apache.commons.io.output.CloseShieldOutputStream;
-import org.slf4j.Logger;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -1251,15 +1252,15 @@ public abstract class Kubernetes {
     }
 
     /**
-     * Get a client for {@link IoTConfig}s.
+     * Get a client for {@link IoTInfrastructure}s.
      *
      * @param namespace The namespace to bind the client to.
      * @return The client instance.
      */
-    public static MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>> iotConfigs(final String namespace) {
-        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.config()), IoTConfig.class, IoTConfigList.class, DoneableIoTConfig.class);
+    public static MixedOperation<IoTInfrastructure, IoTInfrastructureList, DoneableIoTInfrastructure, Resource<IoTInfrastructure, DoneableIoTInfrastructure>> iotInfrastructures(final String namespace) {
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.infrastructure()), IoTInfrastructure.class, IoTInfrastructureList.class, DoneableIoTInfrastructure.class);
         if (namespace != null) {
-            result = (MixedOperation<IoTConfig, IoTConfigList, DoneableIoTConfig, Resource<IoTConfig, DoneableIoTConfig>>) result.inNamespace(namespace);
+            result = (MixedOperation<IoTInfrastructure, IoTInfrastructureList, DoneableIoTInfrastructure, Resource<IoTInfrastructure, DoneableIoTInfrastructure>>) result.inNamespace(namespace);
         }
         return result;
     }

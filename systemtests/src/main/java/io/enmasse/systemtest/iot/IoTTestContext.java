@@ -5,9 +5,9 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
+import io.enmasse.iot.model.v1.DoneableIoTInfrastructure;
 import io.enmasse.iot.model.v1.DoneableIoTTenant;
-import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
 import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -22,7 +22,7 @@ public interface IoTTestContext extends AutoCloseable, DeviceFactory {
      *
      * @return The original instance.
      */
-    IoTConfig getConfig();
+    IoTInfrastructure getConfig();
 
     /**
      * Get the IoTTenant instance that was used during creation.
@@ -34,8 +34,8 @@ public interface IoTTestContext extends AutoCloseable, DeviceFactory {
     IoTTenant getTenant();
     AmqpClient getConsumerClient();
 
-    default Resource<IoTConfig, DoneableIoTConfig> config() {
-        return Kubernetes.iotConfigs(getConfig().getMetadata().getNamespace()).withName(getConfig().getMetadata().getName());
+    default Resource<IoTInfrastructure, DoneableIoTInfrastructure> config() {
+        return Kubernetes.iotInfrastructures(getConfig().getMetadata().getNamespace()).withName(getConfig().getMetadata().getName());
     }
 
     default Resource<IoTTenant, DoneableIoTTenant> tenant() {

@@ -19,7 +19,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,7 +58,7 @@ func add(mgr manager.Manager, r *ReconcileIoTTenant) error {
 	}
 
 	// Watch for changes to primary resource IoTTenant
-	err = c.Watch(&source.Kind{Type: &iotv1alpha1.IoTTenant{}}, loghandler.New(&handler.EnqueueRequestForObject{}, log, "IoTTenant"))
+	err = c.Watch(&source.Kind{Type: &iotv1.IoTTenant{}}, loghandler.New(&handler.EnqueueRequestForObject{}, log, "IoTTenant"))
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func add(mgr manager.Manager, r *ReconcileIoTTenant) error {
 	/*
 		err = c.Watch(&source.Kind{Type: &userv1beta1.MessagingUser{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 			IsController: true,
-			OwnerType:    &iotv1alpha1.IoTTenant{},
+			OwnerType:    &iotv1.IoTTenant{},
 		}, log.V(2), "MessagingUser"))
 		if err != nil {
 			return err
@@ -80,7 +80,7 @@ func add(mgr manager.Manager, r *ReconcileIoTTenant) error {
 
 	err = c.Watch(&source.Kind{Type: &enmassev1.MessagingAddress{}}, loghandler.New(&handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &iotv1alpha1.IoTTenant{},
+		OwnerType:    &iotv1.IoTTenant{},
 	}, log.V(2), "Address"))
 	if err != nil {
 		return err
@@ -100,7 +100,7 @@ type ReconcileIoTTenant struct {
 	recorder record.EventRecorder
 }
 
-func (r *ReconcileIoTTenant) updateTenantStatus(ctx context.Context, originalTenant *iotv1alpha1.IoTTenant, reconciledTenant *iotv1alpha1.IoTTenant, rc *recon.ReconcileContext) (reconcile.Result, error) {
+func (r *ReconcileIoTTenant) updateTenantStatus(ctx context.Context, originalTenant *iotv1.IoTTenant, reconciledTenant *iotv1.IoTTenant, rc *recon.ReconcileContext) (reconcile.Result, error) {
 
 	reqLogger := log.WithValues("Request.Namespace", originalTenant.Namespace, "Request.Name", originalTenant.Name)
 
@@ -108,13 +108,13 @@ func (r *ReconcileIoTTenant) updateTenantStatus(ctx context.Context, originalTen
 
 	// get conditions for ready
 
-	resourcesCreatedCondition := newTenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeResourcesCreated)
-	resourcesReadyCondition := newTenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeResourcesReady)
-	readyCondition := newTenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeReady)
+	resourcesCreatedCondition := newTenant.Status.GetTenantCondition(iotv1.TenantConditionTypeResourcesCreated)
+	resourcesReadyCondition := newTenant.Status.GetTenantCondition(iotv1.TenantConditionTypeResourcesReady)
+	readyCondition := newTenant.Status.GetTenantCondition(iotv1.TenantConditionTypeReady)
 
 	if reconciledTenant.DeletionTimestamp != nil {
 
-		newTenant.Status.Phase = iotv1alpha1.TenantPhaseTerminating
+		newTenant.Status.Phase = iotv1.TenantPhaseTerminating
 		newTenant.Status.Message = "Tenant deleted"
 		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Tenant is being deleted")
 		resourcesCreatedCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Tenant is being deleted")
@@ -129,10 +129,10 @@ func (r *ReconcileIoTTenant) updateTenantStatus(ctx context.Context, originalTen
 			resourcesCreatedCondition.IsOk() &&
 			resourcesReadyCondition.IsOk() {
 
-			newTenant.Status.Phase = iotv1alpha1.TenantPhaseActive
+			newTenant.Status.Phase = iotv1.TenantPhaseActive
 			newTenant.Status.Message = ""
 		} else {
-			newTenant.Status.Phase = iotv1alpha1.TenantPhaseConfiguring
+			newTenant.Status.Phase = iotv1.TenantPhaseConfiguring
 		}
 
 		// fill main "ready" condition
@@ -144,7 +144,7 @@ func (r *ReconcileIoTTenant) updateTenantStatus(ctx context.Context, originalTen
 			reason = "ProcessingError"
 			message = rc.Error().Error()
 		}
-		if newTenant.Status.Phase == iotv1alpha1.TenantPhaseActive {
+		if newTenant.Status.Phase == iotv1.TenantPhaseActive {
 			status = corev1.ConditionTrue
 			newTenant.Status.Message = ""
 		} else {
@@ -201,7 +201,7 @@ func (r *ReconcileIoTTenant) Reconcile(request reconcile.Request) (reconcile.Res
 	ctx := context.Background()
 
 	// Get tenant
-	tenant := &iotv1alpha1.IoTTenant{}
+	tenant := &iotv1.IoTTenant{}
 	err := r.client.Get(ctx, request.NamespacedName, tenant)
 
 	if err != nil {
@@ -230,7 +230,7 @@ func (r *ReconcileIoTTenant) Reconcile(request reconcile.Request) (reconcile.Res
 
 	// check for deconstruction
 
-	if tenant.DeletionTimestamp != nil && tenant.Status.Phase != iotv1alpha1.TenantPhaseTerminating {
+	if tenant.DeletionTimestamp != nil && tenant.Status.Phase != iotv1.TenantPhaseTerminating {
 		reqLogger.Info("Re-queue after setting phase to terminating")
 		return r.updateTenantStatus(ctx, original, tenant, rc)
 	}
@@ -248,7 +248,7 @@ func (r *ReconcileIoTTenant) Reconcile(request reconcile.Request) (reconcile.Res
 	// start construction
 
 	rc.ProcessSimple(func() error {
-		return tenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeConfigurationAccepted).
+		return tenant.Status.GetTenantCondition(iotv1.TenantConditionTypeConfigurationAccepted).
 			RunWith("ConfigurationNotAccepted", func() error {
 				return r.acceptConfiguration(tenant)
 			})
@@ -262,7 +262,7 @@ func (r *ReconcileIoTTenant) Reconcile(request reconcile.Request) (reconcile.Res
 
 }
 
-func (r *ReconcileIoTTenant) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, tenant *iotv1alpha1.IoTTenant) (reconcile.Result, error) {
+func (r *ReconcileIoTTenant) checkDeconstruct(ctx context.Context, reqLogger logr.Logger, tenant *iotv1.IoTTenant) (reconcile.Result, error) {
 
 	rc := &recon.ReconcileContext{}
 	original := tenant.DeepCopy()

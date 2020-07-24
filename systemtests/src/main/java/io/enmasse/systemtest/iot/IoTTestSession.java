@@ -20,11 +20,11 @@ import io.enmasse.iot.model.v1.AdaptersConfigFluent.LoraWanNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.MqttNested;
 import io.enmasse.iot.model.v1.AdaptersConfigFluent.SigfoxNested;
 import io.enmasse.iot.model.v1.ConfigConditionType;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigBuilder;
-import io.enmasse.iot.model.v1.IoTConfigFluent.SpecNested;
-import io.enmasse.iot.model.v1.IoTConfigSpec;
-import io.enmasse.iot.model.v1.IoTConfigSpecFluent.AdaptersNested;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
+import io.enmasse.iot.model.v1.IoTInfrastructureBuilder;
+import io.enmasse.iot.model.v1.IoTInfrastructureFluent.SpecNested;
+import io.enmasse.iot.model.v1.IoTInfrastructureSpec;
+import io.enmasse.iot.model.v1.IoTInfrastructureSpecFluent.AdaptersNested;
 import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.iot.model.v1.IoTTenantBuilder;
 import io.enmasse.iot.model.v1.TenantConditionType;
@@ -92,7 +92,7 @@ public final class IoTTestSession implements IoTTestContext {
     public enum Adapter {
         AMQP(AdaptersConfig::getAmqp) {
             @Override
-            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+            public IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewAmqp, AmqpNested::endAmqp, a -> {
                     consumer.accept(a);
                     return a;
@@ -101,7 +101,7 @@ public final class IoTTestSession implements IoTTestContext {
         },
         HTTP(AdaptersConfig::getHttp) {
             @Override
-            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+            public IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewHttp, HttpNested::endHttp, a -> {
                     consumer.accept(a);
                     return a;
@@ -110,7 +110,7 @@ public final class IoTTestSession implements IoTTestContext {
         },
         MQTT(AdaptersConfig::getMqtt) {
             @Override
-            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+            public IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewMqtt, MqttNested::endMqtt, a -> {
                     consumer.accept(a);
                     return a;
@@ -119,7 +119,7 @@ public final class IoTTestSession implements IoTTestContext {
         },
         SIGFOX(AdaptersConfig::getSigfox) {
             @Override
-            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+            public IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewSigfox, SigfoxNested::endSigfox, a -> {
                     consumer.accept(a);
                     return a;
@@ -128,7 +128,7 @@ public final class IoTTestSession implements IoTTestContext {
         },
         LORAWAN(AdaptersConfig::getLoraWan) {
             @Override
-            public IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
+            public IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer) {
                 return Adapter.editAdapter(config, AdaptersConfigFluent::editOrNewLoraWan, LoraWanNested::endLoraWan, a -> {
                     consumer.accept(a);
                     return a;
@@ -137,13 +137,13 @@ public final class IoTTestSession implements IoTTestContext {
         },
         ;
 
-        private static <X extends AdapterConfigFluent<X>> IoTConfigBuilder editAdapter(
-                final IoTConfigBuilder config,
-                final Function<AdaptersNested<SpecNested<IoTConfigBuilder>>, X> editOrNew,
-                final Function<X, AdaptersNested<SpecNested<IoTConfigBuilder>>> end,
+        private static <X extends AdapterConfigFluent<X>> IoTInfrastructureBuilder editAdapter(
+                final IoTInfrastructureBuilder config,
+                final Function<AdaptersNested<SpecNested<IoTInfrastructureBuilder>>, X> editOrNew,
+                final Function<X, AdaptersNested<SpecNested<IoTInfrastructureBuilder>>> end,
                 final Function<X, X> editor) {
 
-            final AdaptersNested<SpecNested<IoTConfigBuilder>> a = config
+            final AdaptersNested<SpecNested<IoTInfrastructureBuilder>> a = config
                     .editOrNewSpec()
                     .editOrNewAdapters();
 
@@ -163,29 +163,29 @@ public final class IoTTestSession implements IoTTestContext {
 
         private final Function<AdaptersConfig, ? extends AdapterConfig> getter;
 
-        public abstract IoTConfigBuilder edit(IoTConfigBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer);
+        public abstract IoTInfrastructureBuilder edit(IoTInfrastructureBuilder config, Consumer<? super AdapterConfigFluent<?>> consumer);
 
-        public Optional<AdapterConfig> getConfig(IoTConfig config) {
+        public Optional<AdapterConfig> getConfig(IoTInfrastructure config) {
             return Optional
                     .ofNullable(config)
-                    .map(IoTConfig::getSpec)
-                    .map(IoTConfigSpec::getAdapters)
+                    .map(IoTInfrastructure::getSpec)
+                    .map(IoTInfrastructureSpec::getAdapters)
                     .map(getter);
         }
 
-        public <T> T apply(final IoTConfig config, final Function<Optional<AdapterConfig>, T> function) {
+        public <T> T apply(final IoTInfrastructure config, final Function<Optional<AdapterConfig>, T> function) {
             return function.apply(getConfig(config));
         }
 
-        public IoTConfigBuilder enable(final IoTConfigBuilder config, boolean enabled) {
+        public IoTInfrastructureBuilder enable(final IoTInfrastructureBuilder config, boolean enabled) {
             return edit(config, a -> a.withEnabled(enabled));
         }
 
-        public IoTConfigBuilder enable(final IoTConfigBuilder config) {
+        public IoTInfrastructureBuilder enable(final IoTInfrastructureBuilder config) {
             return enable(config, true);
         }
 
-        public IoTConfigBuilder disable(final IoTConfigBuilder config) {
+        public IoTInfrastructureBuilder disable(final IoTInfrastructureBuilder config) {
             return enable(config, false);
         }
 
@@ -198,7 +198,7 @@ public final class IoTTestSession implements IoTTestContext {
          * @param config The configuration to check.
          * @return {@code true} if the adapter is enabled, {@code false} otherwise.
          */
-        public boolean isEnabled(final IoTConfig config) {
+        public boolean isEnabled(final IoTInfrastructure config) {
             return getConfig(config)
                     .map(adapterConfig -> adapterConfig.getEnabled() == null || Boolean.TRUE.equals(adapterConfig.getEnabled()))
                     .orElse(Boolean.TRUE);
@@ -215,7 +215,7 @@ public final class IoTTestSession implements IoTTestContext {
     }
 
     private final Vertx vertx;
-    private final IoTConfig config;
+    private final IoTInfrastructure config;
     private final Consumer<Throwable> exceptionHandler;
     private final Set<String> defaultTlsVersions;
     private final List<ThrowingCallable> cleanup;
@@ -224,7 +224,7 @@ public final class IoTTestSession implements IoTTestContext {
 
     private IoTTestSession(
             final Vertx vertx,
-            final IoTConfig config,
+            final IoTInfrastructure config,
             final Consumer<Throwable> exceptionHandler,
             final Set<String> defaultTlsVersions,
             final List<ThrowingCallable> cleanup) {
@@ -239,7 +239,7 @@ public final class IoTTestSession implements IoTTestContext {
     }
 
     @Override
-    public IoTConfig getConfig() {
+    public IoTInfrastructure getConfig() {
         return this.defaultTenant.getConfig();
     }
 
@@ -371,24 +371,24 @@ public final class IoTTestSession implements IoTTestContext {
 
         @FunctionalInterface
         interface BuildProcessor<T, X extends Throwable> {
-            T process(IoTConfig config, IoTTenant tenant) throws X;
+            T process(IoTInfrastructure config, IoTTenant tenant) throws X;
         }
 
         private final IoTTenantBuilder tenant;
         private final List<PreDeployProcessor> preDeploy = new LinkedList<>();
 
-        private IoTConfigBuilder config;
+        private IoTInfrastructureBuilder config;
         private Set<String> defaultTlsVersions;
 
         private Consumer<Throwable> exceptionHandler = IoTTestSession::defaultExceptionHandler;
         private Consumer<TenantBuilder> defaultTenantCustomizer;
 
-        private Builder(final IoTConfigBuilder config, final IoTTenantBuilder tenant) {
+        private Builder(final IoTInfrastructureBuilder config, final IoTTenantBuilder tenant) {
             this.config = config;
             this.tenant = tenant;
         }
 
-        public Builder config(final ThrowingConsumer<IoTConfigBuilder> configCustomizer) throws Exception {
+        public Builder config(final ThrowingConsumer<IoTInfrastructureBuilder> configCustomizer) throws Exception {
             configCustomizer.accept(this.config);
             return this;
         }
@@ -464,7 +464,7 @@ public final class IoTTestSession implements IoTTestContext {
 
         @FunctionalInterface
         public interface PreDeployProcessor {
-            void preDeploy(PreDeployContext context, IoTConfigBuilder config, IoTTenantBuilder tenant) throws Exception;
+            void preDeploy(PreDeployContext context, IoTInfrastructureBuilder config, IoTTenantBuilder tenant) throws Exception;
         }
 
         /**
@@ -530,7 +530,7 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT config
 
-                createDefaultResource(Kubernetes::iotConfigs, config, ConfigConditionType.READY, cleanup,
+                createDefaultResource(Kubernetes::iotInfrastructures, config, ConfigConditionType.READY, cleanup,
                         IoTUtils::assertIoTConfigReady,
                         IoTUtils::assertIoTConfigGone
                 );
@@ -950,7 +950,7 @@ public final class IoTTestSession implements IoTTestContext {
             }
         }
 
-        private final IoTConfig config;
+        private final IoTInfrastructure config;
         private final IoTTenant tenant;
         private final DeviceRegistryClient registryClient;
         private final CredentialsRegistryClient credentialsClient;
@@ -959,7 +959,7 @@ public final class IoTTestSession implements IoTTestContext {
         private final AtomicBoolean closed = new AtomicBoolean();
 
         public TenantInstance(
-                final IoTConfig config,
+                final IoTInfrastructure config,
                 final IoTTenant tenant,
                 final DeviceRegistryClient registryClient,
                 final CredentialsRegistryClient credentialsClient,
@@ -978,7 +978,7 @@ public final class IoTTestSession implements IoTTestContext {
         }
 
         @Override
-        public IoTConfig getConfig() {
+        public IoTInfrastructure getConfig() {
             return this.config;
         }
 
@@ -1017,7 +1017,7 @@ public final class IoTTestSession implements IoTTestContext {
     /**
      * Create a new test session builder.
      *
-     * @param infraNamespace The namespace for the IoTConfig.
+     * @param infraNamespace The namespace for the IoTInfrastructure.
      * @param isOpenshiftFour Create configuration for OCP4.
      * @return The new instance.
      */
@@ -1070,15 +1070,15 @@ public final class IoTTestSession implements IoTTestContext {
      * {@link Kubernetes#getInfraNamespace()}, which requires an active Kubernetes
      * environment.
      */
-    public static IoTConfigBuilder createDefaultConfig() {
+    public static IoTInfrastructureBuilder createDefaultConfig() {
         return createDefaultConfig(
                 Kubernetes.getInstance().getInfraNamespace(),
                 isOpenShiftCompatible(OCP4));
     }
 
-    static IoTConfigBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
+    static IoTInfrastructureBuilder createDefaultConfig(final String namespace, final boolean isOpenshiftFour) {
 
-        var config = new IoTConfigBuilder()
+        var config = new IoTInfrastructureBuilder()
                 .withNewMetadata()
                 .withName("default")
                 .withNamespace(namespace)
@@ -1169,7 +1169,7 @@ public final class IoTTestSession implements IoTTestContext {
                 .endSpec();
     }
 
-    private static IoTConfigBuilder useSystemtestKeys(IoTConfigBuilder config, final Adapter... adapters) {
+    private static IoTInfrastructureBuilder useSystemtestKeys(IoTInfrastructureBuilder config, final Adapter... adapters) {
         for (Adapter adapter : adapters) {
             config = adapter.edit(config, c -> c
                     .editOrNewEndpoint()

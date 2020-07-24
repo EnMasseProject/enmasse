@@ -6,8 +6,8 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
-import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTConfigSpec;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
+import io.enmasse.iot.model.v1.IoTInfrastructureSpec;
 import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.ServiceConfig;
@@ -61,7 +61,7 @@ class IoTUtils {
                     .orElse(false),
             "ready");
 
-    public static void assertIoTConfigGone(final IoTConfig config, final SoftAssertions softly) {
+    public static void assertIoTConfigGone(final IoTInfrastructure config, final SoftAssertions softly) {
 
         var iotPods = getInstance().listPods(config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap());
 
@@ -70,7 +70,7 @@ class IoTUtils {
 
     }
 
-    public static void assertIoTConfigReady(final IoTConfig config, final SoftAssertions softly) {
+    public static void assertIoTConfigReady(final IoTInfrastructure config, final SoftAssertions softly) {
 
         // gather expected deployments
 
@@ -111,8 +111,8 @@ class IoTUtils {
                 .get();
 
         var meshReplicas = Optional.of(config)
-                .map(IoTConfig::getSpec)
-                .map(IoTConfigSpec::getMesh)
+                .map(IoTInfrastructure::getSpec)
+                .map(IoTInfrastructureSpec::getMesh)
                 .map(MeshConfig::getServiceConfig)
                 .map(ServiceConfig::getReplicas)
                 .orElse(1);
@@ -122,7 +122,7 @@ class IoTUtils {
 
     }
 
-    private static String[] getExpectedDeploymentsNames(IoTConfig config) {
+    private static String[] getExpectedDeploymentsNames(IoTInfrastructure config) {
 
         final Collection<String> expectedDeployments = new ArrayList<>();
 
@@ -159,7 +159,7 @@ class IoTUtils {
         return expectedDeployments.toArray(String[]::new);
     }
 
-    private static void addIfEnabled(Collection<String> adapters, IoTConfig config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+    private static void addIfEnabled(Collection<String> adapters, IoTInfrastructure config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
         Optional<Boolean> enabled = ofNullable(config.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
         if (enabled.orElse(true)) {
             adapters.add(name);

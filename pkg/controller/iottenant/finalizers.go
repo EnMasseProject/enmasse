@@ -23,7 +23,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/finalizer"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -49,7 +49,7 @@ var finalizers = []finalizer.Finalizer{
 
 func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
 
-	tenant, ok := ctx.Object.(*iotv1alpha1.IoTTenant)
+	tenant, ok := ctx.Object.(*iotv1.IoTTenant)
 
 	if !ok {
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTTenant")
@@ -59,7 +59,7 @@ func deconstructResources(ctx finalizer.DeconstructorContext) (reconcile.Result,
 }
 
 // delete all managed resources by the tenant
-func cleanupManagedResources(ctx context.Context, c client.Client, tenant *iotv1alpha1.IoTTenant) (reconcile.Result, error) {
+func cleanupManagedResources(ctx context.Context, c client.Client, tenant *iotv1.IoTTenant) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
 
@@ -81,7 +81,7 @@ func cleanupManagedResources(ctx context.Context, c client.Client, tenant *iotv1
 
 }
 
-func cleanupResource(ctx context.Context, c client.Client, tenant *iotv1alpha1.IoTTenant, key client.ObjectKey, obj runtime.Object) (reconcile.Result, error) {
+func cleanupResource(ctx context.Context, c client.Client, tenant *iotv1.IoTTenant, key client.ObjectKey, obj runtime.Object) (reconcile.Result, error) {
 
 	err := c.Get(ctx, key, obj)
 
@@ -136,7 +136,7 @@ func cleanupResource(ctx context.Context, c client.Client, tenant *iotv1alpha1.I
 
 func cleanupDeviceRegistry(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
 
-	tenant, ok := ctx.Object.(*iotv1alpha1.IoTTenant)
+	tenant, ok := ctx.Object.(*iotv1.IoTTenant)
 
 	if !ok {
 		return reconcile.Result{}, fmt.Errorf("provided wrong object type to finalizer, only supports IoTTenant")
@@ -201,7 +201,7 @@ func deleteJob(ctx finalizer.DeconstructorContext, job *batchv1.Job) error {
 
 func cleanupTrustAnchors(ctx finalizer.DeconstructorContext) (reconcile.Result, error) {
 
-	tenant, ok := ctx.Object.(*iotv1alpha1.IoTTenant)
+	tenant, ok := ctx.Object.(*iotv1.IoTTenant)
 
 	namespace := util.MustGetInfrastructureNamespace()
 

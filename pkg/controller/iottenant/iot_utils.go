@@ -7,14 +7,14 @@ package iottenant
 
 import (
 	"context"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 )
 
-func (r *ReconcileIoTTenant) findIoTProjectsByPredicate(predicate func(project *iotv1alpha1.IoTTenant) bool) ([]iotv1alpha1.IoTTenant, error) {
+func (r *ReconcileIoTTenant) findIoTProjectsByPredicate(predicate func(project *iotv1.IoTTenant) bool) ([]iotv1.IoTTenant, error) {
 
-	var result []iotv1alpha1.IoTTenant
+	var result []iotv1.IoTTenant
 
-	list := &iotv1alpha1.IoTTenantList{}
+	list := &iotv1.IoTTenantList{}
 
 	err := r.client.List(context.TODO(), list)
 	if err != nil {

@@ -7,6 +7,6 @@
 
 package v1
 
-type IoTConfigExpansion interface{}
+type IoTInfrastructureExpansion interface{}
 
 type IoTTenantExpansion interface{}

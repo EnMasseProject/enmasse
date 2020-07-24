@@ -5,7 +5,7 @@
 
 package io.enmasse.systemtest.iot;
 
-import io.enmasse.iot.model.v1.IoTConfig;
+import io.enmasse.iot.model.v1.IoTInfrastructure;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ public class IoTTestSessionTest {
 
     }
 
-    private void assertDefaultConfig(IoTConfig config) {
+    private void assertDefaultConfig(IoTInfrastructure config) {
         assertNotNull(config);
 
         assertNotNull(config.getMetadata());

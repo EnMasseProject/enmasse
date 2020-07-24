@@ -50,7 +50,7 @@ spec:
           value: "${env.VERSION}"
         - name: CONTROLLER_DISABLE_ALL
           value: "true"
-        - name: CONTROLLER_ENABLE_IOT_CONFIG
+        - name: CONTROLLER_ENABLE_IOT_INFRASTRUCTURE
           value: "true"
         - name: CONTROLLER_ENABLE_IOT_TENANT
           value: "true"

@@ -17,7 +17,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 )
 
 const annotationBase = "iot.enmasse.io"
@@ -44,18 +44,18 @@ func (r *ReconcileIoTTenant) ensureControllerOwnerIsSet(owner, object v1.Object)
 }
 
 // get infrastructure config
-func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1alpha1.IoTConfig, error) {
+func getIoTConfigInstance(ctx context.Context, r client.Reader) (*iotv1.IoTInfrastructure, error) {
 
 	namespace, err := util.GetInfrastructureNamespace()
 	if err != nil {
 		return nil, err
 	}
-	name, err := iot.GetIoTConfigName()
+	name, err := iot.GetIoTInfrastructureName()
 	if err != nil {
 		return nil, err
 	}
 
-	config := &iotv1alpha1.IoTConfig{}
+	config := &iotv1.IoTInfrastructure{}
 	if err := r.Get(ctx, client.ObjectKey{
 		Namespace: namespace,
 		Name:      name,

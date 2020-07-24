@@ -21,9 +21,9 @@ func StartIoTMetrics(mgr manager.Manager) {
 	log.Info("Starting IoT metrics")
 
 	cache := mgr.GetCache()
-	configInformer, err := cache.GetInformer(&iotv1alpha1.IoTConfig{})
+	configInformer, err := cache.GetInformer(&iotv1alpha1.IoTInfrastructure{})
 	if err != nil {
-		log.Error(err, "Failed to get IoTConfig informer")
+		log.Error(err, "Failed to get IoTInfrastructure informer")
 	}
 	projectInformer, err := cache.GetInformer(&iotv1alpha1.IoTTenant{})
 	if err != nil {
@@ -36,16 +36,16 @@ func StartIoTMetrics(mgr manager.Manager) {
 
 			if configInformer != nil && configInformer.HasSynced() {
 
-				configList := iotv1alpha1.IoTConfigList{}
+				configList := iotv1alpha1.IoTInfrastructureList{}
 				if err := cache.List(context.Background(), &configList); err != nil {
 					log.Error(err, "Failed to gather IoT Config metrics")
 				} else {
 					total, active, configuring, terminating, failed := sumIoTConfig(&configList)
-					custom_metrics.IoTConfig.Set(total)
-					custom_metrics.IoTConfigActive.Set(active)
-					custom_metrics.IoTConfigConfiguring.Set(configuring)
-					custom_metrics.IoTConfigTerminating.Set(terminating)
-					custom_metrics.IoTConfigFailed.Set(failed)
+					custom_metrics.IoTInfrastructure.Set(total)
+					custom_metrics.IoTInfrastructureActive.Set(active)
+					custom_metrics.IoTInfrastructureConfiguring.Set(configuring)
+					custom_metrics.IoTInfrastructureTerminating.Set(terminating)
+					custom_metrics.IoTInfrastructureFailed.Set(failed)
 				}
 
 			}
@@ -69,18 +69,18 @@ func StartIoTMetrics(mgr manager.Manager) {
 
 }
 
-func sumIoTConfig(list *iotv1alpha1.IoTConfigList) (total float64, active float64, configuring float64, terminating float64, failed float64) {
+func sumIoTConfig(list *iotv1alpha1.IoTInfrastructureList) (total float64, active float64, configuring float64, terminating float64, failed float64) {
 
 	for _, c := range list.Items {
 		total++
 		switch c.Status.Phase {
-		case iotv1alpha1.ConfigPhaseActive:
+		case iotv1alpha1.InfrastructurePhaseActive:
 			active++
-		case iotv1alpha1.ConfigPhaseConfiguring:
+		case iotv1alpha1.InfrastructurePhaseConfiguring:
 			configuring++
-		case iotv1alpha1.ConfigPhaseFailed:
+		case iotv1alpha1.InfrastructurePhaseFailed:
 			failed++
-		case iotv1alpha1.ConfigPhaseTerminating:
+		case iotv1alpha1.InfrastructurePhaseTerminating:
 			terminating++
 		}
 	}

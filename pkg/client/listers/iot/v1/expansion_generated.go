@@ -7,13 +7,13 @@
 
 package v1
 
-// IoTConfigListerExpansion allows custom methods to be added to
-// IoTConfigLister.
-type IoTConfigListerExpansion interface{}
+// IoTInfrastructureListerExpansion allows custom methods to be added to
+// IoTInfrastructureLister.
+type IoTInfrastructureListerExpansion interface{}
 
-// IoTConfigNamespaceListerExpansion allows custom methods to be added to
-// IoTConfigNamespaceLister.
-type IoTConfigNamespaceListerExpansion interface{}
+// IoTInfrastructureNamespaceListerExpansion allows custom methods to be added to
+// IoTInfrastructureNamespaceLister.
+type IoTInfrastructureNamespaceListerExpansion interface{}
 
 // IoTTenantListerExpansion allows custom methods to be added to
 // IoTTenantLister.

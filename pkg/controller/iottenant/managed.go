@@ -13,7 +13,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -37,7 +37,7 @@ type managedStatus struct {
 	remainingReady   map[string]bool
 }
 
-func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondition, reason string) {
+func updateFromMap(resources map[string]bool, condition *iotv1.CommonCondition, reason string) {
 
 	message := ""
 
@@ -66,23 +66,23 @@ func updateFromMap(resources map[string]bool, condition *iotv1alpha1.CommonCondi
 
 }
 
-func updateManagedReadyStatus(m *managedStatus, tenant *iotv1alpha1.IoTTenant) {
+func updateManagedReadyStatus(m *managedStatus, tenant *iotv1.IoTTenant) {
 
-	createdCondition := tenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeResourcesCreated)
+	createdCondition := tenant.Status.GetTenantCondition(iotv1.TenantConditionTypeResourcesCreated)
 	updateFromMap(m.remainingCreated, &createdCondition.CommonCondition, "Missing resources")
 
-	readyCondition := tenant.Status.GetTenantCondition(iotv1alpha1.TenantConditionTypeResourcesReady)
+	readyCondition := tenant.Status.GetTenantCondition(iotv1.TenantConditionTypeResourcesReady)
 	updateFromMap(m.remainingReady, &readyCondition.CommonCondition, "Non-ready resources")
 
 	if createdCondition.Status == corev1.ConditionTrue && readyCondition.Status == corev1.ConditionTrue {
-		tenant.Status.Phase = iotv1alpha1.TenantPhaseActive
+		tenant.Status.Phase = iotv1.TenantPhaseActive
 	} else {
-		tenant.Status.Phase = iotv1alpha1.TenantPhaseConfiguring
+		tenant.Status.Phase = iotv1.TenantPhaseConfiguring
 	}
 
 }
 
-func (r *ReconcileIoTTenant) reconcileManaged(ctx context.Context, tenant *iotv1alpha1.IoTTenant) (reconcile.Result, error) {
+func (r *ReconcileIoTTenant) reconcileManaged(ctx context.Context, tenant *iotv1.IoTTenant) (reconcile.Result, error) {
 
 	managedStatus := &managedStatus{
 		remainingCreated: map[string]bool{},
@@ -93,7 +93,7 @@ func (r *ReconcileIoTTenant) reconcileManaged(ctx context.Context, tenant *iotv1
 
 	rc := recon.ReconcileContext{}
 
-	tenant.Status.Phase = iotv1alpha1.TenantPhaseConfiguring
+	tenant.Status.Phase = iotv1.TenantPhaseConfiguring
 
 	// create a set of addresses
 
@@ -112,7 +112,7 @@ func (r *ReconcileIoTTenant) reconcileManaged(ctx context.Context, tenant *iotv1
 }
 
 func (r *ReconcileIoTTenant) reconcileAddress(
-	tenant *iotv1alpha1.IoTTenant,
+	tenant *iotv1.IoTTenant,
 	addressName string,
 	addressType AddressType,
 	existing *enmassev1.MessagingAddress,
@@ -143,7 +143,7 @@ func (r *ReconcileIoTTenant) reconcileAddress(
 	return nil
 }
 
-func (r *ReconcileIoTTenant) createOrUpdateAddress(ctx context.Context, tenant *iotv1alpha1.IoTTenant, addressBaseName string, addressType AddressType, managedStatus *managedStatus) error {
+func (r *ReconcileIoTTenant) createOrUpdateAddress(ctx context.Context, tenant *iotv1.IoTTenant, addressBaseName string, addressType AddressType, managedStatus *managedStatus) error {
 
 	addressName := util.AddressName(tenant, addressBaseName)
 	addressMetaName := util.EncodeAddressSpaceAsMetaName(addressName)
@@ -175,7 +175,7 @@ func (r *ReconcileIoTTenant) createOrUpdateAddress(ctx context.Context, tenant *
 	return err
 }
 
-func (r *ReconcileIoTTenant) reconcileAddressSet(ctx context.Context, tenant *iotv1alpha1.IoTTenant, managedStatus *managedStatus) (reconcile.Result, error) {
+func (r *ReconcileIoTTenant) reconcileAddressSet(ctx context.Context, tenant *iotv1.IoTTenant, managedStatus *managedStatus) (reconcile.Result, error) {
 
 	rc := recon.ReconcileContext{}
 

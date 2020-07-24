@@ -7,7 +7,7 @@ package iottenant
 
 import (
 	"encoding/json"
-	"github.com/enmasseproject/enmasse/pkg/controller/iotconfig"
+	"github.com/enmasseproject/enmasse/pkg/controller/iotinfra"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/ext"
 	"github.com/pkg/errors"
@@ -26,7 +26,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 )
 
 const EventReasonTenantTermination = "TenantTermination"
@@ -54,7 +54,7 @@ func isFailed(job *batchv1.Job) bool {
 // Create or get cleanup job
 //
 // The function returns either a newly created, or the currently existing job. Or returns "nil" if no cleanup job is needed.
-func createIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, tenant *iotv1alpha1.IoTTenant, config *iotv1alpha1.IoTConfig) (*batchv1.Job, error) {
+func createIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, tenant *iotv1.IoTTenant, config *iotv1.IoTInfrastructure) (*batchv1.Job, error) {
 
 	tenantId := tenant.Status.TenantName + "/" + tenant.CreationTimestamp.UTC().Format(time.RFC3339)
 	id := uuid.NewMD5(tenantCleanupNamespace, []byte(tenantId)).String()
@@ -147,8 +147,8 @@ func applyJsonEnvVar(container *corev1.Container, name string, value interface{}
 }
 
 type infinispanProperties struct {
-	iotv1alpha1.ExternalInfinispanServer `json:",inline"`
-	CacheNames                           map[string]string `json:"cacheNames"`
+	iotv1.ExternalInfinispanServer `json:",inline"`
+	CacheNames                     map[string]string `json:"cacheNames"`
 }
 
 type cleanerConfig struct {
@@ -156,7 +156,7 @@ type cleanerConfig struct {
 	Infinispan infinispanProperties `json:"infinispan"`
 }
 
-func tenantCleanerConfigInfinispan(tenantId string, external iotv1alpha1.ExternalInfinispanServer, cacheNames map[string]string) *cleanerConfig {
+func tenantCleanerConfigInfinispan(tenantId string, external iotv1.ExternalInfinispanServer, cacheNames map[string]string) *cleanerConfig {
 
 	return &cleanerConfig{
 		TenantId: tenantId,
@@ -168,10 +168,10 @@ func tenantCleanerConfigInfinispan(tenantId string, external iotv1alpha1.Externa
 
 }
 
-func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batchv1.Job, tenantId string, config *iotv1alpha1.IoTConfig, tenant *iotv1alpha1.IoTTenant) (bool, error) {
+func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batchv1.Job, tenantId string, config *iotv1.IoTInfrastructure, tenant *iotv1.IoTTenant) (bool, error) {
 
-	var connectionExtensions []iotv1alpha1.ExtensionImage = nil
-	var registryExtensions []iotv1alpha1.ExtensionImage = nil
+	var connectionExtensions []iotv1.ExtensionImage = nil
+	var registryExtensions []iotv1.ExtensionImage = nil
 
 	job.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyOnFailure
 	var v int32 = 100
@@ -206,13 +206,13 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 		switch config.EvalDeviceConnectionImplementation() {
 
-		case iotv1alpha1.DeviceRegistryInfinispan:
+		case iotv1.DeviceRegistryInfinispan:
 
 			// we can set this to "noop", because we don't need cleaning
 			// but if the cleaner gets called, we let it know about that
 			install.ApplyOrRemoveEnvSimple(container, "deviceConnection.type", "noop")
 
-		case iotv1alpha1.DeviceConnectionJdbc:
+		case iotv1.DeviceConnectionJdbc:
 
 			requireCleaner = true
 
@@ -220,7 +220,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 				install.ApplyOrRemoveEnvSimple(container, "deviceConnection.type", "jdbc")
 
-				deviceConnection, err := iotconfig.ExternalJdbcConnectionConnections(config)
+				deviceConnection, err := iotinfra.ExternalJdbcConnectionConnections(config)
 				if err != nil {
 					return err
 				}
@@ -247,7 +247,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 		switch config.EvalDeviceRegistryImplementation() {
 
-		case iotv1alpha1.DeviceRegistryInfinispan:
+		case iotv1.DeviceRegistryInfinispan:
 
 			requireCleaner = true
 
@@ -275,7 +275,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 			}
 
-		case iotv1alpha1.DeviceRegistryJdbc:
+		case iotv1.DeviceRegistryJdbc:
 
 			requireCleaner = true
 
@@ -283,7 +283,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 				install.ApplyOrRemoveEnvSimple(container, "registry.type", "jdbc")
 
-				devices, err := iotconfig.ExternalJdbcRegistryConnections(config)
+				devices, err := iotinfra.ExternalJdbcRegistryConnections(config)
 				if err != nil {
 					return err
 				}
@@ -309,7 +309,7 @@ func reconcileIoTTenantCleanerJob(ctx *finalizer.DeconstructorContext, job *batc
 
 		// add standard hono options
 
-		iotconfig.AppendStandardHonoJavaOptions(container)
+		iotinfra.AppendStandardHonoJavaOptions(container)
 
 		// map volume
 

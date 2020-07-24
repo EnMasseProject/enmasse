@@ -6,8 +6,8 @@
 package v1
 
 type CommonJavaContainerOptions interface {
-	IsNativeTlsRequired(config *IoTConfig) bool
-	TlsVersions(config *IoTConfig) []string
+	IsNativeTlsRequired(config *IoTInfrastructure) bool
+	TlsVersions(config *IoTInfrastructure) []string
 }
 
 // ensure we implement the interface
