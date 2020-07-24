@@ -46,12 +46,12 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
             id="cd-device-info-device-id"
             label="Device ID"
             isRequired
-            fieldId="cd-device-info-device-id"
+            fieldId="device-info-id-input"
           >
             <TextInput
               isRequired
               type="text"
-              id="cd-device-info-text-device-id"
+              id="device-info-id-input"
               name="device-id"
               aria-describedby="device-id-helper"
               value={deviceIdInput}
@@ -61,12 +61,12 @@ export const DeviceInformation: React.FunctionComponent<IDeviceInfo> = ({
           <FormGroup
             id="cd-device-info-form-switch"
             label="Status"
-            fieldId="cd-device-info-form-switch"
+            fieldId="device-info-switchtoggle"
           >
             <br />
             Enable or disable this device{" "}
             <SwitchWithToggle
-              id="cd-device-info-switch"
+              id="device-info-switchtoggle"
               label="Enabled"
               labelOff="Disabled"
               isChecked={isChecked}

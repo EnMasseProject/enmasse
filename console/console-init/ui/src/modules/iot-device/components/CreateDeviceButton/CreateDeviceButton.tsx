@@ -45,7 +45,7 @@ export const CreateDeviceButton: React.FunctionComponent<ICreateDeviceButtonProp
           onToggle={() => setIsOpen(!isOpen)}
           toggleIndicator={CaretDownIcon}
           isPrimary
-          id="create-device-toggle"
+          id="create-device-add-dropdown"
         >
           Add device
         </DropdownToggle>

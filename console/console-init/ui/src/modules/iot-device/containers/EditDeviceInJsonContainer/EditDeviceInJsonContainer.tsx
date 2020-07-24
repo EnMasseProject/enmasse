@@ -106,7 +106,7 @@ export const EditDeviceInJsonContainer = () => {
       <Flex>
         <FlexItem>
           <Button
-            id="ed-save-device-button"
+            id="edit-device-json-container-save-button"
             variant={ButtonVariant.primary}
             onClick={onSave}
           >
@@ -115,7 +115,7 @@ export const EditDeviceInJsonContainer = () => {
         </FlexItem>
         <FlexItem>
           <Button
-            id="ed-cancel-device-button"
+            id="edit-device-json-container-cancel-button"
             variant={ButtonVariant.secondary}
             onClick={onCancel}
           >

@@ -71,7 +71,7 @@ export const AddCredentialsContainer = () => {
         <Flex className={css(styles.button_alignment)}>
           <FlexItem>
             <Button
-              id="ac-save-credentials-button"
+              id="add-credentials-container-save-button"
               variant={ButtonVariant.primary}
               onClick={onSave}
             >
@@ -80,7 +80,7 @@ export const AddCredentialsContainer = () => {
           </FlexItem>
           <FlexItem>
             <Button
-              id="ac-cancel-credentials-button"
+              id="add-credentials-container-cancel-button"
               variant={ButtonVariant.secondary}
               onClick={onCancel}
             >

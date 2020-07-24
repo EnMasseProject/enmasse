@@ -80,12 +80,12 @@ const DefaultSecretsSetting: React.FC<IDefaultSecretsSetting> = ({
       {hasOwnProperty(secret, "pwd-hash") && (
         <GridItem span={12}>
           <FormGroup
-            fieldId={`secret-list-password-textinput-${id}`}
+            fieldId={`secret-list-password-input-${id}`}
             label="Password"
             isRequired={isRequired}
           >
             <TextInput
-              id={`secret-list-password-textinput-${id}`}
+              id={`secret-list-password-input-${id}`}
               isRequired={isRequired}
               type="password"
               name="pwd-hash"
@@ -99,12 +99,12 @@ const DefaultSecretsSetting: React.FC<IDefaultSecretsSetting> = ({
       {hasOwnProperty(secret, "key") && (
         <GridItem span={12}>
           <FormGroup
-            fieldId={`secret-list-key-textinput-${id}`}
+            fieldId={`secret-list-key-input-${id}`}
             label="Key"
             isRequired={isRequired}
           >
             <TextInput
-              id={`secret-list-key-textinput-${id}`}
+              id={`secret-list-key-input-${id}`}
               isRequired={isRequired}
               type="text"
               name="key"
@@ -144,12 +144,12 @@ const AdvancedSecretsSetting: React.FC<Pick<
       {hasOwnProperty(secret, "not-before") && (
         <GridItem span={6}>
           <FormGroup
-            fieldId={`secret-list-not-before-textinput-${id}`}
+            fieldId={`secret-list-not-before-input-${id}`}
             label="Not before"
             className={css(styles.not_before)}
           >
             <TextInput
-              id={`secret-list-not-before-textinput-${id}`}
+              id={`secret-list-not-before-input-${id}`}
               type="datetime-local"
               name="not-before"
               placeholder="YYYY-MM-DD 00:00"
@@ -162,11 +162,11 @@ const AdvancedSecretsSetting: React.FC<Pick<
       {hasOwnProperty(secret, "not-after") && (
         <GridItem span={6}>
           <FormGroup
-            fieldId={`secret-list-not-after-textinput-"${id}`}
+            fieldId={`secret-list-not-after-input-"${id}`}
             label="Not after"
           >
             <TextInput
-              id={`secret-list-not-after-textinput-${id}`}
+              id={`secret-list-not-after-input-${id}`}
               type="datetime-local"
               name="not-after"
               placeholder="YYYY-MM-DD 00:00"
@@ -180,11 +180,11 @@ const AdvancedSecretsSetting: React.FC<Pick<
         <GridItem span={12}>
           <br />
           <FormGroup
-            fieldId={`secret-list-comment-textinput-${id}`}
+            fieldId={`secret-list-comment-input-${id}`}
             label="Comment"
           >
             <TextArea
-              id={`secret-list-comment-textinput-${id}`}
+              id={`secret-list-comment-input-${id}`}
               name="comment"
               onChange={handleInputChangeSecret}
               value={secret["comment"]}
@@ -195,7 +195,7 @@ const AdvancedSecretsSetting: React.FC<Pick<
       {secrets.length > 1 && (
         <GridItem span={12}>
           <Button
-            id="secret-list-delete-secret-button"
+            id="secret-list-delete-button"
             className={css(styles.delete_secret)}
             variant="link"
             type="button"

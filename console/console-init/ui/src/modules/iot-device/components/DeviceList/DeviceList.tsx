@@ -83,7 +83,7 @@ export const DeviceList: React.FunctionComponent<IDeviceListProps> = ({
         onSort={onSort}
         actionResolver={actionResolver}
       >
-        <TableHeader id="devicelist-table-header" />
+        <TableHeader id="device-list-table-header" />
         <TableBody />
       </Table>
     </div>

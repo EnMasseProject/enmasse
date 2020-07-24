@@ -75,7 +75,7 @@ const AddCriteria: React.FunctionComponent<IAddCriteriaProps> = ({
       )}
       <Button
         variant="link"
-        id="device-filter-btn-add-criteria"
+        id="add-criteria-button"
         icon={<PlusCircleIcon />}
         onClick={addCriteria}
       >

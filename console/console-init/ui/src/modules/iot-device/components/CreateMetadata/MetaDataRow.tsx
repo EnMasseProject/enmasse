@@ -79,7 +79,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         <GridItem span={5}>
           <InputGroup>
             <TextInput
-              id="cd-metadata-text-parameter"
+              id="metadata-row-text-parameter-input"
               value={metadataRow.key}
               type="text"
               onChange={handlePropertyInputChange}
@@ -87,6 +87,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
             />
             {isObjectOrArray(metadataRow.type) && (
               <Button
+                id="metadata-row-add-child-button"
                 variant="control"
                 aria-label="Add child on button click"
                 onClick={handleAddChildRow}
@@ -98,7 +99,8 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
-            id="cd-metadata-dropdown-type"
+            id="metadata-row-type-dropdowntoggle"
+            toggleId="metadata-row-type-dropdown-toggle"
             position={DropdownPosition.left}
             onSelectItem={onSelectType}
             dropdownItems={deviceRegistrationTypeOptions}
@@ -110,7 +112,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
         <GridItem span={5}>
           <InputGroup>
             <TextInput
-              id="cd-metadata-text-value"
+              id="metadat-row-text-value-input"
               value={metadataRow.value}
               type="text"
               onChange={handleValueChange}
@@ -118,7 +120,8 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
               isDisabled={isObjectOrArray(metadataRow.type)}
             />
             <Button
-              id="cd-metadata-button-delete"
+              id="metadata-row-delete-button"
+              aria-label="delete button"
               variant="link"
               icon={<MinusCircleIcon />}
               onClick={handleDeleteRow}

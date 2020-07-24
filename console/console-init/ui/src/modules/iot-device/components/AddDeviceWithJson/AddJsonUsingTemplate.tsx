@@ -94,7 +94,7 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
         isChecked={selectedTemplate === TemplateType.DIRECTLY_CONNECTED}
         onClick={onChange}
         label="Device connected directly"
-        id="radio-device-connected-directly-template"
+        id="add-json-template-device-connected-directly-radio"
         name="device-connected-directly"
       />
       <br />
@@ -104,11 +104,15 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
         isChecked={selectedTemplate === TemplateType.VIA_GATEWAY}
         onClick={onChange}
         label="Device connected via gateway"
-        id="radio-device-via-gateway-template"
+        id="add-json-template-device-via-gateway-radio"
         name="device-via-gateway"
       />
       <br />
-      <Button id="add-json-try-button" variant="secondary" onClick={onClickTry}>
+      <Button
+        variant="secondary"
+        onClick={onClickTry}
+        id="add-json-template-try-it-button"
+      >
         Try it
       </Button>
       <br />
@@ -118,16 +122,16 @@ const AddJsonUsingTemplate: React.FunctionComponent<IAddJsonUsingTemplate> = ({
       </Title>
       <br />
       <Button
-        id="add-json-upload-button"
         variant="secondary"
         onClick={onClickUpload}
+        id="add-json-template-upload-json-button"
       >
         <UploadIcon /> Upload a JSON file
       </Button>
       {showModal && (
         <Modal title="" isOpen={showModal} onClose={() => setShowModal(false)}>
           <FileUpload
-            id="file-upload-json"
+            id="add-json-template-file-upload"
             value={""}
             filename={""}
             onChange={onUploadFile}

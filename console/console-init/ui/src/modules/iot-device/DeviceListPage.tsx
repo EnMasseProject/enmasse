@@ -257,18 +257,21 @@ export default function DeviceListPage() {
 
   const kebabItems: React.ReactNode[] = [
     <DropdownItem
+      id="device-list-page-enable-dropdownitem"
       onClick={onSelectEnableDevices}
       isDisabled={isEnableDevicesOptionDisabled()}
     >
       Enable
     </DropdownItem>,
     <DropdownItem
+      id="device-list-page-disable-dropdownitem"
       onClick={onSelectDisableDevice}
       isDisabled={isDisableDevicesOptionDisabled()}
     >
       Disable
     </DropdownItem>,
     <DropdownItem
+      id="device-list-page-delete-dropdownitem"
       onClick={onSelectDeleteDevice}
       isDisabled={isDeleteDevicesOptionDisabled()}
     >
@@ -292,6 +295,7 @@ export default function DeviceListPage() {
   const renderPagination = () => {
     return (
       <TablePagination
+        id="device-list-page-table-pagination"
         itemCount={totalDevices || 0}
         variant={"top"}
         page={page}

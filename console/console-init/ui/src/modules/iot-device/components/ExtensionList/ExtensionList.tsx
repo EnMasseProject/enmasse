@@ -99,7 +99,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
               <Grid key={id}>
                 <GridItem span={4}>
                   <TextInput
-                    id={`ext-list-key-textinput-${id}`}
+                    id={`extension-list-key-input-${id}`}
                     name="key"
                     onChange={(value, event) =>
                       handleInputChangeExtension(credentialId, event, value, id)
@@ -109,7 +109,8 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={3} className={css(styles.type_margin)}>
                   <DropdownWithToggle
-                    id={`ext-list-type-dropdwon-${id}`}
+                    id={`extension-list-type-dropdown-toggle-${id}`}
+                    toggleId={`extension-list-type-dropdown-toggle-${id}`}
                     name="type"
                     className={css(styles.dropdown_align)}
                     toggleClass={css(styles.dropdown_toggle_align)}
@@ -123,7 +124,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={4}>
                   <TextInput
-                    id={`ext-list-value-textinput-${id}`}
+                    id={`extension-list-value-input-${id}`}
                     name="value"
                     value={ext["value"]}
                     onChange={(value, event) =>
@@ -134,7 +135,7 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 {extensions?.length > 1 && (
                   <GridItem span={1}>
                     <Button
-                      id="ext-list-delete-extension-button"
+                      id="extension-list-delete-button"
                       variant="link"
                       type="button"
                       icon={

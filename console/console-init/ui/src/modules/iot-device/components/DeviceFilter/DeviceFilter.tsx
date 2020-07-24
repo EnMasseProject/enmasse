@@ -125,7 +125,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   const kebabDropdownItems = [
     <DropdownItem
       key="redo-last-filter"
-      id="dropdown-item-redo-last-filter"
+      id="device-filter-redo-last-dropdownitem"
       isDisabled={!isRedoEnabled}
       onClick={onRedoFilter}
     >
@@ -133,7 +133,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     </DropdownItem>,
     <DropdownItem
       key="clear-all-filter"
-      id="dropdown-item-clear-all-filter"
+      id="device-filter-clear-all-dropdownitem"
       component="button"
       isDisabled={isEnabledRunFilter()}
       onClick={onClearFilter}
@@ -147,7 +147,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
     <Split>
       <SplitItem>
         <Button
-          id="device-filter-btn-run-filter"
+          id="device-filter-run-filter-button"
           variant={ButtonVariant.secondary}
           onClick={onRunFilter}
           isDisabled={isEnabledRunFilter()}
@@ -158,7 +158,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
       <SplitItem>&nbsp;</SplitItem>
       <SplitItem>
         <DropdownWithKebabToggle
-          id="device-filter-options-dropdown"
+          id="device-filter-options-kebab-dropdown"
           isPlain={true}
           toggleId="device-filter-options-kebab"
           dropdownItems={kebabDropdownItems}
@@ -172,20 +172,24 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
   return (
     <>
       <Form>
-        <FormGroup label="Device ID" fieldId="filter-device-id">
+        <FormGroup label="Device ID" fieldId="device-filter-id-input">
           <TextInput
             isRequired
             type="text"
-            id="device-filter-text-input-device-id"
+            id="device-filter-id-input"
             name="device-id"
             aria-describedby="Device Id for filter"
             value={deviceId}
             onChange={onChangeDeviceId}
           />
         </FormGroup>
-        <FormGroup label="Device Type" fieldId="filter-device-type">
+        <FormGroup
+          label="Device Type"
+          fieldId="device-filter-type-dropdowntoggle"
+        >
           <DropdownWithToggle
-            id={"device-filter-dropdown-device-type"}
+            id={"device-filter-type-dropdowntoggle"}
+            toggleId="device-filter-type-dropdown-toggle"
             name="Device Type"
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}
@@ -196,9 +200,10 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
             isLabelAndValueNotSame={true}
           />
         </FormGroup>
-        <FormGroup label="Status" fieldId="filter-device-status">
+        <FormGroup label="Status" fieldId="device-filter-status-dropdowntoggle">
           <DropdownWithToggle
-            id={"device-filter-dropdown-device-status"}
+            id={"device-filter-status-dropdowntoggle"}
+            toggleId="device-filter-status-dropdown-toggle"
             name="Status"
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}
