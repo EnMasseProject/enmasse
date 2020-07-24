@@ -190,6 +190,7 @@ export default function ProjectPage() {
     return true;
   };
 
+  console.log(totalProjects);
   const renderPagination = () => {
     return (
       <TablePagination
