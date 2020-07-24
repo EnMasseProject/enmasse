@@ -11,32 +11,28 @@ import { removeForbiddenChars } from "utils";
 const FILTER_PROJECTS = (projectFilterParams: IProjectFilter) => {
   const { names, namespaces, type, status } = projectFilterParams;
   let filter: string = "";
-  let filterNamesLength = names && names.length;
-  let filterNameSpacesLength = namespaces && namespaces.length;
+  let namesLength = names?.length;
+  let namespacesLength = namespaces?.length;
 
   //filter names
   filter += generateFilterPattern("metadata.name", names);
 
-  if (
-    filterNamesLength &&
-    filterNameSpacesLength &&
-    filterNameSpacesLength > 0
-  ) {
+  if (namesLength && namespacesLength && namespacesLength > 0) {
     filter += " AND ";
   }
 
-  //filter namsespaces
+  //filter namespaces
   filter += generateFilterPattern("metadata.namespace", namespaces);
 
   if (
-    ((filterNamesLength && filterNamesLength > 0) ||
-      (filterNameSpacesLength && filterNameSpacesLength > 0)) &&
+    ((namesLength && namesLength > 0) ||
+      (namespacesLength && namespacesLength > 0)) &&
     type?.value?.trim()
   ) {
     filter += " AND ";
   }
 
-  //filter tye
+  //filter type
   if (type && type.value.trim() !== "") {
     filter += "`$.kind`= '" + type.value + "'";
   }
