@@ -18,10 +18,10 @@ export const EmptyProject: React.FunctionComponent<{}> = () => {
   return (
     <EmptyState variant={EmptyStateVariant.full} id="empty-ad-space">
       <EmptyStateIcon icon={PlusCircleIcon} />
-      <Title headingLevel="h2" id="empty-ad-space-title" size="lg">
+      <Title headingLevel="h2" id="empty-project-title" size="lg">
         Create a project
       </Title>
-      <EmptyStateBody id="empty-ad-space-body">
+      <EmptyStateBody id="empty-project-body">
         There are currently no projects available. Please click on the button
         below to create one. Learn more about this in the
         <a href={process.env.REACT_APP_DOCS}> documentation</a>

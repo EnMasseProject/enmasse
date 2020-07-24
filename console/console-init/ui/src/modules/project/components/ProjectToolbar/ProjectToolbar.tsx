@@ -112,7 +112,7 @@ const ProjectToolbar: React.FunctionComponent<IProjectToolbarProps &
 
   return (
     <Toolbar
-      id="data-toolbar-with-filter"
+      id="project-toolbar-filter"
       className="pf-m-toggle-group-container"
       collapseListedFiltersBreakpoint="xl"
       clearAllFilters={onClearAllFilters}

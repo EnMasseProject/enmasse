@@ -393,7 +393,7 @@ const CreateProject: React.FunctionComponent = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  id="next-btn"
+                  id="create-project-next-button"
                   onClick={onNext}
                   className={!firstSelectedStep ? "pf-m-disabled" : ""}
                 >
@@ -401,7 +401,7 @@ const CreateProject: React.FunctionComponent = () => {
                 </Button>
                 <Button
                   variant="secondary"
-                  id="back-btn"
+                  id="create-project-back-button"
                   onClick={onBack}
                   className={
                     activeStep.name === "Project Type" ? "pf-m-disabled" : ""
@@ -409,7 +409,11 @@ const CreateProject: React.FunctionComponent = () => {
                 >
                   Back
                 </Button>
-                <Button variant="link" id="cancel-btn" onClick={onClose}>
+                <Button
+                  variant="link"
+                  id="create-project-cancel-button"
+                  onClick={onClose}
+                >
                   Cancel
                 </Button>
               </>
@@ -421,7 +425,7 @@ const CreateProject: React.FunctionComponent = () => {
                 <Button
                   variant="primary"
                   type="submit"
-                  id="submit-btn"
+                  id="create-project-next-button"
                   onClick={onNext}
                   className={
                     handleNextIsEnabled(activeStep.name) ? "" : "pf-m-disabled"
@@ -429,10 +433,18 @@ const CreateProject: React.FunctionComponent = () => {
                 >
                   Next
                 </Button>
-                <Button variant="secondary" id="back-btn" onClick={onBack}>
+                <Button
+                  variant="secondary"
+                  id="create-project-back-button"
+                  onClick={onBack}
+                >
                   Back
                 </Button>
-                <Button variant="link" id="cancel-btn" onClick={onClose}>
+                <Button
+                  variant="link"
+                  id="create-project-cancel-button"
+                  onClick={onClose}
+                >
                   Cancel
                 </Button>
               </>
@@ -444,7 +456,7 @@ const CreateProject: React.FunctionComponent = () => {
               <Button
                 variant="primary"
                 type="submit"
-                id="submit-btn"
+                id="create-project-finish-button"
                 onClick={
                   firstSelectedStep && firstSelectedStep === "messaging"
                     ? handleMessagingProjectSave
@@ -453,10 +465,14 @@ const CreateProject: React.FunctionComponent = () => {
               >
                 Finish
               </Button>
-              <Button onClick={onBack} id="back-btn" variant="secondary">
+              <Button
+                onClick={onBack}
+                id="create-project-back-button"
+                variant="secondary"
+              >
                 Back
               </Button>
-              <Button variant="link" id="cancel-btn" onClick={onClose}>
+              <Button variant="link" id="cancel-button" onClick={onClose}>
                 Cancel
               </Button>
             </>
@@ -468,7 +484,7 @@ const CreateProject: React.FunctionComponent = () => {
 
   return (
     <>
-      <Button variant="primary" id="create-project-btn" onClick={onToggle}>
+      <Button variant="primary" id="create-project-button" onClick={onToggle}>
         Create
       </Button>
       {isWizardOpen && (
@@ -476,7 +492,7 @@ const CreateProject: React.FunctionComponent = () => {
           isOpen={isWizardOpen}
           onClose={onToggle}
           footer={CustomFooter}
-          id={"create-project"}
+          id={"create-project-wizard"}
           title="Create"
           description="Following three steps to create new project"
           steps={steps}

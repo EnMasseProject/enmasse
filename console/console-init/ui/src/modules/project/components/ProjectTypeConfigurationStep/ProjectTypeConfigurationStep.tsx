@@ -40,7 +40,7 @@ const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigur
           }
           description="Manages millions of devices and messaging to everywhere"
           name="radio-step-create-iot"
-          id="radio-step-create-iot"
+          id="prject-config-step-iot-project-radio"
         />
       </span>
       <br />
@@ -56,7 +56,7 @@ const ProjectTypeConfigurationStep: React.FunctionComponent<IProjectTypeConfigur
           }
           description="Developers can provision messaging with Messaging Project"
           name="radio-step-create-messaging"
-          id="radio-step-create-messaging"
+          id="prject-config-step-messaging-project-radio"
         />
       </span>
     </div>
