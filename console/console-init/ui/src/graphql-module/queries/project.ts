@@ -8,7 +8,7 @@ import { IProjectFilter } from "modules/project/ProjectPage";
 import { generateFilterPattern } from "./query";
 import { removeForbiddenChars } from "utils";
 
-const FILTER_RETURN_PROJECTS = (projectFilterParams: IProjectFilter) => {
+const FILTER_PROJECTS = (projectFilterParams: IProjectFilter) => {
   const { names, namespaces, type, status } = projectFilterParams;
   let filter: string = "";
   let filterNamesLength = names && names.length;
@@ -37,10 +37,8 @@ const FILTER_RETURN_PROJECTS = (projectFilterParams: IProjectFilter) => {
   }
 
   //filter tye
-  if (type) {
-    if (type && type.value.trim() !== "") {
-      filter += "`$.kind`= '" + type.value + "'";
-    }
+  if (type && type.value.trim() !== "") {
+    filter += "`$.kind`= '" + type.value + "'";
   }
 
   if (type?.value.trim() && status?.trim()) {
@@ -56,6 +54,8 @@ const FILTER_RETURN_PROJECTS = (projectFilterParams: IProjectFilter) => {
     } else {
       filter += generateFilterPattern("status.phase", [
         { value: status, isExact: true },
+        // add object to fetch all projects whose status.phase is empty string
+        // as initially when the project is created the phase var is initialised as empty string
         { value: "", isExact: true }
       ]);
     }
@@ -121,7 +121,7 @@ const RETURN_ALL_PROJECTS = (
   let filter: string = "";
 
   if (projectFilterParams) {
-    filter = FILTER_RETURN_PROJECTS(projectFilterParams);
+    filter = FILTER_PROJECTS(projectFilterParams);
   }
 
   const ALL_PROJECTS = gql`

@@ -2,14 +2,14 @@
  * Copyright 2020, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-interface Object_Metadata {
+interface IObject_Metadata {
   name?: string;
   namespace?: string;
   creationTimestamp?: string;
 }
 interface IAddressSpaceType {
   kind: string;
-  metadata: Object_Metadata;
+  metadata: IObject_Metadata;
   messagingStatus?: {
     isReady: boolean;
     phase: string;
@@ -33,7 +33,7 @@ interface IAddressSpaceType {
 
 export interface IIotProjectType {
   kind: string;
-  metadata: Object_Metadata;
+  metadata: IObject_Metadata;
   iotStatus?: {
     phase: string;
     phaseReason: string;
@@ -80,7 +80,7 @@ export interface ISearchNameOrNameSpaceProjectListResponse {
     total: number;
     objects: Array<{
       kind?: string;
-      metadata: Object_Metadata;
+      metadata: IObject_Metadata;
     }>;
   };
 }
