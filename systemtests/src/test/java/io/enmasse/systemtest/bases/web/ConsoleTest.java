@@ -51,6 +51,7 @@ import io.enmasse.systemtest.selenium.resources.ConnectionWebItem;
 import io.enmasse.systemtest.selenium.resources.FilterType;
 import io.enmasse.systemtest.selenium.resources.SortType;
 import io.enmasse.systemtest.time.TimeoutBudget;
+import io.enmasse.systemtest.time.WaitPhase;
 import io.enmasse.systemtest.utils.AddressSpaceUtils;
 import io.enmasse.systemtest.utils.AddressUtils;
 import io.enmasse.systemtest.utils.AuthServiceUtils;
@@ -1898,6 +1899,10 @@ public abstract class ConsoleTest extends TestBase {
                 doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
                 return true;
             } catch (Exception e) {
+                if (waitPhase == WaitPhase.LAST_TRY) {
+                    selenium.takeScreenShot();
+                    log.error("Failed to await {}", forWhat, e);
+                }
                 return false;
             }
         }, new TimeoutBudget(5, TimeUnit.MINUTES));
