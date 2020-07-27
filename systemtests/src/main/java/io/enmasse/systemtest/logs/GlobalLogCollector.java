@@ -330,6 +330,7 @@ public class GlobalLogCollector {
             }
 
             //resource specific logs
+            Files.writeString(path.resolve("describe_jobs.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "jobs", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_projects.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "messagingprojects", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_addresses.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "messagingaddresses", "--all-namespaces").getStdOut());
             Files.writeString(path.resolve("describe_endpoints.txt"), KubeCMDClient.runOnClusterWithoutLogger("describe", "messagingendpoints", "--all-namespaces").getStdOut());
