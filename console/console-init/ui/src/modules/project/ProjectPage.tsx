@@ -23,7 +23,7 @@ import { compareObject, ISelectOption } from "utils";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
 import { TablePagination } from "components";
 import { IProjectCount, ProjectHeaderCard, IProject } from "./components";
-import { useMutationQuery } from "hooks";
+import { useMutationQuery, useSearchParamsPageChange } from "hooks";
 import {
   initialiseFilterForProject,
   setInitialProjcetCount,
@@ -54,6 +54,14 @@ export default function ProjectPage() {
   const [filter, setFilter] = useState<IProjectFilter>(
     initialiseFilterForProject()
   );
+
+  useSearchParamsPageChange([
+    filter.names,
+    filter.namespaces,
+    filter.projectType,
+    filter.status,
+    filter.type
+  ]);
   const [totalProjects, setTotalProjects] = useState<number>(0);
   const [msgCount, setMsgCount] = useState<IProjectCount>(
     setInitialProjcetCount()
@@ -190,7 +198,6 @@ export default function ProjectPage() {
     return true;
   };
 
-  console.log(totalProjects);
   const renderPagination = () => {
     return (
       <TablePagination
