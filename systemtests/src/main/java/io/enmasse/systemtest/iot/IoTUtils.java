@@ -74,20 +74,23 @@ class IoTUtils {
                     .orElse(false),
             "ready");
 
-    static void waitForIoTConfigReady(IoTConfig config) throws Exception {
+    static void waitForIoTConfigReady(IoTConfig config) {
         var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         var iotConfigAccess = iotConfigs(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
-                    var currentState = iotConfigAccess.get();
-                    var currentPhase = ofNullable(currentState)
-                            .map(IoTConfig::getStatus)
+                    var currentStatus = ofNullable(iotConfigAccess.get()).map(IoTConfig::getStatus);
+                    var currentPhase = currentStatus
                             .map(IoTConfigStatus::getPhase)
                             .orElse(null);
                     if ("Active".equals(currentPhase)) {
-                        log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
+                        log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, toJson(false, currentStatus.get()));
                         return true;
                     } else {
-                        log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
+                        log.info("Waiting until IoTConfig: '{}' will be in ready state: {}/{}",
+                                config.getMetadata().getName(),
+                                currentStatus.map(IoTConfigStatus::getPhase).orElse("<none>"),
+                                currentStatus.map(IoTConfigStatus::getMessage).orElse("<none>")
+                        );
                         return false;
                     }
                 },
@@ -210,16 +213,19 @@ class IoTUtils {
         var tenantAccess = tenantClient.withName(project.getMetadata().getName());
 
         TestUtils.waitUntilCondition(() -> {
-                    var currentState = tenantAccess.get();
-                    var currentPhase = ofNullable(currentState)
-                            .map(IoTProject::getStatus)
+                    var currentState = ofNullable(tenantAccess.get()).map(IoTProject::getStatus);
+                    var currentPhase = currentState
                             .map(IoTProjectStatus::getPhase)
                             .orElse(null);
                     if ("Active".equals(currentPhase)) {
-                        log.info("IoTProject is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
+                        log.info("IoTProject is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.get()));
                         return true;
                     } else {
-                        log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), currentPhase);
+                        log.info("Waiting until IoTProject: '{}' will be in ready state: {}/{}",
+                                project.getMetadata().getName(),
+                                currentState.map(IoTProjectStatus::getPhase).orElse("<none>"),
+                                currentState.map(IoTProjectStatus::getMessage).orElse("<none>")
+                        );
                         return false;
                     }
                 },
@@ -269,7 +275,7 @@ class IoTUtils {
 
     }
 
-    static void createIoTConfig(IoTConfig config) throws Exception {
+    static void createIoTConfig(IoTConfig config) {
         var name = config.getMetadata().getName();
         log.info("Creating IoTConfig - name: {}", name);
         try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_CONFIG)) {

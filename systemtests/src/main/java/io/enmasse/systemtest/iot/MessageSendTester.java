@@ -316,59 +316,65 @@ public class MessageSendTester {
                 startConsumer();
             }
 
-            // duration = amount * delay * factor
-            var sendDuration = calcSendTimeout();
-            log.info("Sending messages - total timeout: {} - delay: {} ms", sendDuration, delay);
-            var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
+            try {
 
-            // send
-            if (payloadSize > 0) {
-                log.info("Sending messages - payloadSize: {}", payloadSize);
-            }
-            int i = 0;
-            while (i < amount) {
+                // duration = amount * delay * factor
+                var sendDuration = calcSendTimeout();
+                log.info("Sending messages - total timeout: {} - delay: {} ms", sendDuration, delay);
+                var sendTimeout = TimeoutBudget.ofDuration(sendDuration);
 
-                if (sendTimeout.timeoutExpired()) {
-                    log.info("Send timeout");
-                    throw new TimeoutException("Failed to execute message send test due to send timeout.");
+                // send
+                if (payloadSize > 0) {
+                    log.info("Sending messages - payloadSize: {}", payloadSize);
+                }
+                int i = 0;
+                while (i < amount) {
+
+                    if (sendTimeout.timeoutExpired()) {
+                        log.info("Send timeout");
+                        throw new TimeoutException("Failed to execute message send test due to send timeout.");
+                    }
+
+                    var payload = new JsonObject();
+                    payload.put("timestamp", System.currentTimeMillis());
+                    payload.put("test-id", this.testId);
+                    payload.put("index", i);
+                    final Buffer filledPayload = fillWithPayload(payload, payloadSize);
+                    if (MessageSendTester.this.sender.send(MessageSendTester.this.type, filledPayload, Duration.ofSeconds(1))) {
+                        i++;
+                    }
+
+                    Thread.sleep(delay);
+
                 }
 
-                var payload = new JsonObject();
-                payload.put("timestamp", System.currentTimeMillis());
-                payload.put("test-id", this.testId);
-                payload.put("index", i);
-                final Buffer filledPayload = fillWithPayload(payload, payloadSize);
-                if (MessageSendTester.this.sender.send(MessageSendTester.this.type, filledPayload, Duration.ofSeconds(1))) {
-                    i++;
+                log.info("Done sending messages");
+
+                // setup consumer (after)
+                if (Consume.AFTER == MessageSendTester.this.consume) {
+                    startConsumer();
                 }
 
-                Thread.sleep(delay);
-
-            }
-
-            log.info("Done sending messages");
-
-            // setup consumer (after)
-            if (Consume.AFTER == MessageSendTester.this.consume) {
-                startConsumer();
-            }
-
-            // consumer ready?
-            final Duration receiveTimeout = calcReceiveTimeout();
-            log.info("Receive timeout: {}", receiveTimeout);
-            var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
-            var receiveSleep = Math.min(receiveTimeout.toMillis() / 10, 1_000);
-            log.info("Receive sleep period: {}", receiveSleep);
-            while (!isConsumerReady(receiveBudget)) {
-                if (receiveBudget.timeoutExpired()) {
-                    log.info("Receive timeout");
-                    throw new TimeoutException("Failed to execute message send test due to receive timeout.");
+                // consumer ready?
+                final Duration receiveTimeout = calcReceiveTimeout();
+                log.info("Receive timeout: {}", receiveTimeout);
+                var receiveBudget = TimeoutBudget.ofDuration(receiveTimeout);
+                var receiveSleep = Math.min(receiveTimeout.toMillis() / 10, 1_000);
+                log.info("Receive sleep period: {}", receiveSleep);
+                while (!isConsumerReady(receiveBudget)) {
+                    if (receiveBudget.timeoutExpired()) {
+                        log.info("Receive timeout");
+                        throw new TimeoutException("Failed to execute message send test due to receive timeout.");
+                    }
+                    Thread.sleep(receiveSleep);
                 }
-                Thread.sleep(receiveSleep);
-            }
 
-            // stop consumer
-            stopConsumer();
+            } finally {
+
+                // always stop consumer
+                stopConsumer();
+
+            }
 
             // assert result
             assertResult();
@@ -445,7 +451,8 @@ public class MessageSendTester {
             handleValidMessage(message, timestamp, json);
         }
 
-        private void handleInvalidMessage(final Message message) {}
+        private void handleInvalidMessage(final Message message) {
+        }
 
         private void handleValidMessage(final Message message, long timestamp, final JsonObject payload) {
             var diff = System.currentTimeMillis() - timestamp;
@@ -490,7 +497,7 @@ public class MessageSendTester {
      * @param payload The payload to modify.
      * @param payloadSize The target payload size. If this is zero or less, this operation is a no-op.
      * @throws IllegalArgumentException if the target payload size is lower than the already provided
-     *         payload.
+     * payload.
      */
     static Buffer fillWithPayload(final JsonObject payload, final int payloadSize) {
 

@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.enmasse.systemtest.iot.MessageType.TELEMETRY;
 
-public class HttpSubordinate extends AbstractSubordinate implements AutoCloseable  {
+public class HttpSubordinate extends AbstractSubordinate implements AutoCloseable {
 
     private static final Logger log = LoggerFactory.getLogger(HttpSubordinate.class);
 
@@ -71,14 +71,15 @@ public class HttpSubordinate extends AbstractSubordinate implements AutoCloseabl
     public Future<?> initiate(final Context context) {
         var p = Promise.promise();
 
-        this.vertx.setTimer(
-                this.ttd.toMillis(), x -> {
+        this.vertx.setTimer(this.ttd.toMillis(),
+                x -> {
                     p.tryFail("Failed to wait for inbound telemetry");
                 });
 
-        this.client.sendAsync(TELEMETRY, null, ttd.plusSeconds(2), request -> {
-            request.putHeader("hono-ttd", Long.toString(ttd.toSeconds()));
-        })
+        this.client.sendAsync(TELEMETRY, null, this.ttd.plusSeconds(2),
+                request -> {
+                    request.putHeader("hono-ttd", Long.toString(this.ttd.toSeconds()));
+                })
                 .onSuccess(response -> {
 
                     log.info("Response - headers: {}", response.headers());

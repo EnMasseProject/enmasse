@@ -39,6 +39,7 @@ import java.util.function.Predicate;
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.System.lineSeparator;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofMillis;
 
@@ -177,7 +178,7 @@ public class HttpAdapterClient extends ApiClient {
             path = messageType.path();
         }
 
-        log.info("POST - path: {}, body '{}'", path, payload);
+        log.info("POST(pre) - path: {}, body '{}'", path, payload);
 
         var request = getClient().post(this.endpoint.getPort(), this.endpoint.getHost(), path)
                 .putHeader(HttpHeaders.CONTENT_TYPE, contentType(payload))
@@ -195,6 +196,8 @@ public class HttpAdapterClient extends ApiClient {
             requestCustomizer.accept(request);
         }
 
+        log.info("POST(pre) - path: {}, headers: {}{}", path, lineSeparator(), request.headers());
+
         // result promise
 
         final Promise<HttpResponse<Buffer>> result = Promise.promise();
@@ -210,7 +213,7 @@ public class HttpAdapterClient extends ApiClient {
                     log.info("Request failed", cause);
                 })
                 .onSuccess(r -> {
-                    log.info("POST: path: {}, body '{}' -> {} {}", path, payload, r.statusCode(), r.statusMessage());
+                    log.info("POST(completed): path: {}, body '{}' -> {} {}", path, payload, r.statusCode(), r.statusMessage());
                 })
                 .map(x -> x);
 
@@ -223,7 +226,7 @@ public class HttpAdapterClient extends ApiClient {
                 .flatMap(response -> {
                     var code = response.statusCode();
 
-                    log.info("POST: code {} -> {}", code, response.bodyAsString());
+                    log.info("POST(assert): code {} -> {}", code, response.bodyAsString());
                     if (expectedCodePredicate.test(code)) {
                         return succeededFuture(response);
                     } else {

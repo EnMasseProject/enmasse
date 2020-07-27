@@ -23,7 +23,7 @@ public abstract class ClientHandlerBase<T> extends AbstractVerticle {
     protected final LinkOptions linkOptions;
     protected final CompletableFuture<Void> connectPromise;
     protected final CompletableFuture<T> resultPromise;
-    private final String containerId;
+    protected final String containerId;
 
     public ClientHandlerBase(AmqpConnectOptions clientOptions, LinkOptions linkOptions, CompletableFuture<Void> connectPromise, CompletableFuture<T> resultPromise, String containerId) {
         this.clientOptions = clientOptions;
