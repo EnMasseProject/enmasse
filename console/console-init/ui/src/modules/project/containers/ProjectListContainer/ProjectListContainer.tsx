@@ -70,7 +70,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   const { dispatch } = useStoreContext();
   const [sortBy, setSortBy] = useState<ISortBy>();
   const refetchQueries: string[] = ["allProjects"];
-  const [setDeleteProjectQueryVariables] = useMutationQuery(
+  const [setDeleteMsgProjectQueryVariables] = useMutationQuery(
     DELETE_ADDRESS_SPACE,
     refetchQueries
   );
@@ -83,7 +83,7 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   ] = useMutationQuery(DELETE_IOT_PROJECT, ["allProjects"]);
 
   const { loading, data } = useQuery<IAllProjectsResponse>(
-    RETURN_ALL_PROJECTS(filter, undefined),
+    RETURN_ALL_PROJECTS(page, perPage, filter, undefined, sortBy),
     {
       fetchPolicy: FetchPolicy.NETWORK_ONLY,
       pollInterval: POLL_INTERVAL
@@ -118,17 +118,25 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
 
   const onDeleteProject = (project: IProject) => {
     if (project && project.name && project.namespace) {
-      const queryVariable = {
-        as: [
-          {
-            name: project.name,
-            namespace: project.namespace
-          }
-        ]
-      };
       if (project.projectType === ProjectTypes.MESSAGING) {
-        setDeleteProjectQueryVariables(queryVariable);
+        const queryVariable = {
+          as: [
+            {
+              name: project.name,
+              namespace: project.namespace
+            }
+          ]
+        };
+        setDeleteMsgProjectQueryVariables(queryVariable);
       } else {
+        const queryVariable = {
+          a: [
+            {
+              name: project.name,
+              namespace: project.namespace
+            }
+          ]
+        };
         setDeleteIoTProjectQueryVariables(queryVariable);
       }
     }
@@ -274,8 +282,6 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
   };
 
   const projectList: IProject[] = getProjects();
-
-  setTotalProjects(projectList.length);
 
   const ioTCount: IProjectCount = {
     total: getFilteredProjectsCount(ProjectTypes.IOT, projectList),

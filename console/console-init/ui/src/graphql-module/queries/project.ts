@@ -7,6 +7,7 @@ import gql from "graphql-tag";
 import { IProjectFilter } from "modules/project/ProjectPage";
 import { generateFilterPattern } from "./query";
 import { removeForbiddenChars } from "utils";
+import { ISortBy } from "@patternfly/react-table";
 
 const FILTER_PROJECTS = (projectFilterParams: IProjectFilter) => {
   const { names, namespaces, type, status } = projectFilterParams;
@@ -59,9 +60,38 @@ const FILTER_PROJECTS = (projectFilterParams: IProjectFilter) => {
   return filter;
 };
 
+const ALL_PROJECTS_SORT = (sortBy?: ISortBy) => {
+  let orderBy = "";
+  if (sortBy) {
+    switch (sortBy.index) {
+      case 1:
+        orderBy = "`$.metadata.name` ";
+        break;
+      case 2:
+        orderBy = "`$.kind` ";
+        break;
+      case 3:
+        orderBy = "`$.status.phase` ";
+        break;
+      case 4:
+        orderBy = "`$.metadata.creationTimestamp` ";
+        break;
+      default:
+        break;
+    }
+    if (orderBy.trim() != "" && sortBy.direction) {
+      orderBy += sortBy.direction;
+    }
+  }
+  return orderBy;
+};
+
 const RETURN_ALL_PROJECTS = (
+  page: number,
+  perPage: number,
   projectFilterParams?: any,
-  queryResolver?: string
+  queryResolver?: string,
+  sortBy?: ISortBy
 ) => {
   // TODO: Default resolver is subjected to change, with respect to most used query
   const defaultQueryResolver = `
@@ -120,10 +150,13 @@ const RETURN_ALL_PROJECTS = (
     filter = FILTER_PROJECTS(projectFilterParams);
   }
 
+  let orderBy = ALL_PROJECTS_SORT(sortBy);
+
   const ALL_PROJECTS = gql`
     query allProjects {
         allProjects(
-          filter: "${filter}",
+          filter: "${filter}"
+        first:${perPage} offset:${perPage * (page - 1)} orderBy:"${orderBy}"
         ) {
            ${queryResolver}
         }
