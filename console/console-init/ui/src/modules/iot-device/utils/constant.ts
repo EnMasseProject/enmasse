@@ -4,7 +4,7 @@
  */
 
 import { ISelectOption } from "utils";
-import { IDeviceFilter } from "modules/iot-device/components";
+import { IDeviceFilter, IMetadataProps } from "modules/iot-device/components";
 import { AlertVariant } from "@patternfly/react-core";
 
 /**
