@@ -28,7 +28,6 @@ import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.ResponseException.statusCode;
 import static io.enmasse.systemtest.iot.HttpAdapterClient.causedBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public interface StandardIoTHttpTests extends StandardIoTTests {
 
