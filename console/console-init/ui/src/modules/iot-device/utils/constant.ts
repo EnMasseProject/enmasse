@@ -4,7 +4,7 @@
  */
 
 import { ISelectOption } from "utils";
-import { IDeviceFilter } from "modules/iot-device/components";
+import { IDeviceFilter, IMetadataProps } from "modules/iot-device/components";
 import { AlertVariant } from "@patternfly/react-core";
 
 /**
@@ -99,15 +99,6 @@ const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "object", label: "Object", value: "object" },
   { key: "array", label: "Array", value: "array" }
 ];
-
-const getInitialMetadataState = () => {
-  const initialState = {
-    key: "",
-    value: [],
-    type: deviceRegistrationTypeOptions[0].value
-  };
-  return initialState;
-};
 
 const MAX_DEVICE_LIST_COUNT = 500;
 

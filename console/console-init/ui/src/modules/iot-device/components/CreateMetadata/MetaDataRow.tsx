@@ -14,7 +14,10 @@ import {
 } from "@patternfly/react-core";
 import { DropdownWithToggle } from "components";
 import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
-import { deviceRegistrationTypeOptions } from "modules/iot-device";
+import {
+  deviceRegistrationTypeOptions,
+  IMetadataProps
+} from "modules/iot-device";
 import { DataType } from "constant";
 import { ValidationStatusType } from "modules/iot-device/utils";
 
@@ -86,12 +89,16 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
 
   const handleAddChildRow = (event: any) => {
     let parentKey: string = metadataRow.key;
-    let newRow = {
+    let newRow: IMetadataProps = {
       key: parentKey + "/",
-      value: [],
+      value: "",
       type: deviceRegistrationTypeOptions[0].value
     };
-    setMetadataList([...metadataList, newRow]);
+    let updatedValueMetadata = [...metadataList];
+    updatedValueMetadata[rowIndex].value = newRow;
+    console.log("updatedValueMetadata", updatedValueMetadata);
+    setMetadataList(updatedValueMetadata);
+    // setMetadataList([...metadataList, newRow]);
   };
 
   const handleDeleteRow = (index: any) => {

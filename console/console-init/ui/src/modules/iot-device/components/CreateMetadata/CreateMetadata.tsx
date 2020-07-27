@@ -8,27 +8,63 @@ import { Button, GridItem, Grid } from "@patternfly/react-core";
 import { PlusCircleIcon } from "@patternfly/react-icons";
 import { MetaDataHeader } from "./MetaDataHeader";
 import { MetaDataRow } from "./MetaDataRow";
-import { getInitialMetadataState } from "modules/iot-device/utils";
+import { deviceRegistrationTypeOptions } from "modules/iot-device/utils";
+
+export interface IMetadataProps {
+  key: string;
+  type: string;
+  value: string | IMetadataProps[];
+}
+
+const getInitialMetadataState: IMetadataProps[] = [
+  {
+    key: "",
+    value: "",
+    type: deviceRegistrationTypeOptions[0].value
+  }
+];
 
 export const CreateMetadata: React.FC = () => {
-  const [metadataList, setMetadataList] = useState([getInitialMetadataState()]);
-
+  const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
+    getInitialMetadataState
+  );
+  // console.log("metadataList", metadataList);
   const handleAddParentRow = () => {
-    setMetadataList([...metadataList, getInitialMetadataState()]);
+    setMetadataList([
+      ...metadataList,
+      {
+        key: "",
+        value: "",
+        type: deviceRegistrationTypeOptions[0].value
+      }
+    ]);
+  };
+  //TODO: Add child rows
+  const getMetadataRows = (metaDataListing: IMetadataProps[]) => {
+    console.log("metadataListing", metaDataListing);
+    return metaDataListing.map((metadataRow, index: number) => {
+      // console.log("metadata row value", metadataRow);
+      if (typeof metadataRow.value === "object") {
+        console.log("Object Identified");
+        getMetadataRows(metadataRow.value as IMetadataProps[]);
+      } else {
+        return (
+          <MetaDataRow
+            key={index}
+            metadataList={metaDataListing}
+            setMetadataList={setMetadataList}
+            rowIndex={index}
+          />
+        );
+      }
+    });
   };
 
   return (
     <Grid>
       <GridItem span={12}>
         <MetaDataHeader sectionName="Default properties" />
-        {metadataList.map((matadataRow, index: number) => (
-          <MetaDataRow
-            key={index}
-            metadataList={metadataList}
-            setMetadataList={setMetadataList}
-            rowIndex={index}
-          />
-        ))}
+        {getMetadataRows(metadataList)}
         <Grid>
           <GridItem span={3}>
             <Button
