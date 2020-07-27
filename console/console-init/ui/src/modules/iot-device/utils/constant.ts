@@ -111,6 +111,11 @@ const getInitialMetadataState = () => {
 
 const MAX_DEVICE_LIST_COUNT = 500;
 
+enum ValidationStatusType {
+  DEFAULT = "default",
+  ERROR = "error"
+}
+
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -121,5 +126,6 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getInitialMetadataState,
-  MAX_DEVICE_LIST_COUNT
+  MAX_DEVICE_LIST_COUNT,
+  ValidationStatusType
 };
