@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,7 +30,10 @@ import static io.enmasse.systemtest.iot.CommandTester.Mode.ONE_WAY;
 import static io.enmasse.systemtest.iot.CommandTester.Mode.REQUEST_RESPONSE;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static io.vertx.core.Promise.promise;
 import static io.vertx.core.buffer.Buffer.buffer;
+import static java.time.Duration.ofMillis;
+import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,7 +48,7 @@ public class CommandTesterTest {
     /**
      * Create an interceptor which skips the first X items.
      */
-    <T> Function<T, Stream<T>> skip(int skip) {
+    static <T> Function<T, Stream<T>> skip(int skip) {
         return new Function<>() {
 
             private int skipped;
@@ -61,8 +65,51 @@ public class CommandTesterTest {
         };
     }
 
-    <T> Function<T, Stream<T>> drop() {
+    /**
+     * Create an interceptor that drops all items.
+     */
+    static <T> Function<T, Stream<T>> drop() {
         return x -> Stream.empty();
+    }
+
+    private static long toMillis(final Duration delay) {
+        return ofNullable(delay).map(Duration::toMillis).orElse(0L);
+    }
+
+    /**
+     * Create a succeeded future, which may have a time delay.
+     * <p>
+     * This is intended to be used to detect race conditions.
+     * <p>
+     * If the delay is not positive, or sub-millisecond, then a succeeded
+     * future will be returned. Otherwise a future will be returned, which
+     * succeeds after the provided duration.
+     *
+     * @param vertx The vertx instance to run on.
+     * @param delay The delay, may be {@code null}, zero or negative.
+     * @return The future, which is guaranteed to succeed in the provided delay.
+     */
+    static Future<?> timedSuccess(final Vertx vertx, final Duration delay) {
+        long millis = toMillis(delay);
+        if (millis <= 0) {
+            return succeededFuture();
+        }
+
+        var promise = promise();
+        vertx.setTimer(millis, x -> {
+            promise.complete();
+        });
+
+        return promise.future();
+    }
+
+    static void delayed(final Context context, final Duration delay, final Runnable runnable) {
+        var millis = toMillis(delay);
+        if (millis <= 0) {
+            runnable.run();
+        } else {
+            context.vertx().setTimer(millis, x -> runnable.run());
+        }
     }
 
     static class Mock {
@@ -79,12 +126,20 @@ public class CommandTesterTest {
         private Function<Command, Stream<Command>> interceptCommand = DEFAULT_COMMAND_INTERCEPTOR;
         private Function<CommandResponse, Stream<CommandResponse>> interceptResponse = DEFAULT_RESPONSE_INTERCEPTOR;
 
+        Duration subscribeDelay;
+
+        Duration commandDelay;
+        Duration commandOffsetDelay;
+        Duration respondDelay;
+        Duration respondOffsetDelay;
+
         Mock() {
             this(randomUUID().toString());
         }
 
         Mock(final String deviceId) {
-            this.commander = (vertx, replyTo, messageConsumer) -> {
+
+            this.commander = (context, replyTo, messageConsumer) -> {
 
                 Mock.this.responseReceiver = response -> {
                     if (response.getId() == null) {
@@ -102,10 +157,15 @@ public class CommandTesterTest {
 
                     @Override
                     public Future<?> command(Command command) {
-                        Mock.this.interceptCommand
-                                .apply(command)
-                                .forEach(Mock.this::sendCommand);
-                        return succeededFuture();
+
+                        delayed(context, Mock.this.commandOffsetDelay, () -> {
+                            Mock.this.interceptCommand
+                                    .apply(command)
+                                    .forEach(Mock.this::sendCommand);
+                        });
+
+                        return timedSuccess(context.vertx(), Mock.this.commandDelay);
+
                     }
 
                     @Override
@@ -119,15 +179,20 @@ public class CommandTesterTest {
                 @Override
                 public Future<?> subscribe(final Context context, final Consumer<ReceivedCommand> commandReceiver) {
                     Mock.this.commandReceiver = commandReceiver;
-                    return succeededFuture();
+                    return timedSuccess(context.vertx(), Mock.this.subscribeDelay);
                 }
 
                 @Override
                 public Future<?> respond(final Context context, final CommandResponse response) {
-                    Mock.this.interceptResponse
-                            .apply(response)
-                            .forEach(Mock.this::sendResponse);
-                    return succeededFuture();
+
+                    delayed(context, Mock.this.respondOffsetDelay, () -> {
+                        Mock.this.interceptResponse
+                                .apply(response)
+                                .forEach(Mock.this::sendResponse);
+                    });
+
+                    return timedSuccess(context.vertx(), Mock.this.respondDelay);
+
                 }
 
                 @Override
@@ -135,6 +200,7 @@ public class CommandTesterTest {
                     return deviceId;
                 }
             };
+
         }
 
         /**
@@ -193,6 +259,94 @@ public class CommandTesterTest {
 
         new CommandTester()
                 .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedCommand() throws Exception {
+
+        final Mock mock = new Mock();
+        mock.commandOffsetDelay = ofMillis(100);
+
+        new CommandTester()
+                .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedCommandOutcome() throws Exception {
+
+        final Mock mock = new Mock();
+        mock.commandDelay = ofMillis(100);
+
+        new CommandTester()
+                .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedSubscription() throws Exception {
+
+        final Mock mock = new Mock();
+        mock.subscribeDelay = ofMillis(100);
+
+        new CommandTester()
+                .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedResponse() throws Exception {
+
+        final Mock mock = new Mock();
+        mock.respondOffsetDelay = ofMillis(100);
+
+        new CommandTester()
+                .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedResponseOutcome() throws Exception {
+
+        final Mock mock = new Mock();
+        mock.respondDelay = ofMillis(100);
+
+        new CommandTester()
+                .amount(5)
+                .commanderFactory(mock.commander)
+                .subordinate(mock.subordinate)
+                .execute();
+
+    }
+
+    @Test
+    public void testBasicRequestResponseDelayedInitiator() throws Exception {
+
+        final Mock mock = new Mock();
+
+        new CommandTester()
+                .amount(5)
+                .initiator(context -> {
+                    var promise = promise();
+                    context.vertx().setTimer(100, x -> promise.complete());
+                    return promise.future();
+                })
                 .commanderFactory(mock.commander)
                 .subordinate(mock.subordinate)
                 .execute();

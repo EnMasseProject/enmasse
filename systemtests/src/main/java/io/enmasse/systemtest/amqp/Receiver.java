@@ -56,9 +56,9 @@ public class Receiver extends ClientHandlerBase<List<Message>> {
         receiver.setPrefetch(0);
         receiver.setAutoAccept(false);
         receiver.handler((protonDelivery, message) -> {
-            log.info("Got message, count is {} [{}]", messageCount.get(), containerId);
             messages.add(message);
             messageCount.incrementAndGet();
+            log.info("Got message, count is {} [{}]", messageCount.get(), containerId);
             deliveryHandler.handle(protonDelivery);
             if (done.test(message)) {
                 resultPromise.complete(messages);

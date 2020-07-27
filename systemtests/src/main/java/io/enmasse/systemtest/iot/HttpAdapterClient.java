@@ -39,6 +39,7 @@ import java.util.function.Predicate;
 import static com.google.common.net.HttpHeaders.AUTHORIZATION;
 import static io.vertx.core.Future.failedFuture;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.System.lineSeparator;
 import static java.net.HttpURLConnection.HTTP_ACCEPTED;
 import static java.time.Duration.ofMillis;
 
@@ -195,7 +196,7 @@ public class HttpAdapterClient extends ApiClient {
             requestCustomizer.accept(request);
         }
 
-        log.info("POST(pre) - path: {}, headers: {}", path, request.headers());
+        log.info("POST(pre) - path: {}, headers: {}{}", path, lineSeparator(), request.headers());
 
         // result promise
 
