@@ -67,6 +67,7 @@ import org.eclipse.hono.util.Strings;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchSessionException;
 import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 
@@ -103,6 +104,7 @@ public abstract class ConsoleTest extends TestBase {
     SeleniumProvider selenium = SeleniumProvider.getInstance();
     private List<ExternalMessagingClient> clientsList;
     private ConsoleWebPage consolePage;
+
 
     @AfterEach
     public void tearDownWebConsoleTests(ExtensionContext context) throws Exception {
@@ -1869,8 +1871,6 @@ public abstract class ConsoleTest extends TestBase {
             awaitCertChange(ca, oauth.get(), oauthRoute.get());
 
             awaitEnMasseConsoleAvailable("Ensuring console functional after certificate change");
-            SeleniumProvider.getInstance().tearDownDrivers();
-            SeleniumProvider.getInstance().setupDriver(this.getClass().getSimpleName().toLowerCase().contains("chrome") ? TestUtils.getChromeDriver() : TestUtils.getFirefoxDriver());
         } finally {
             Optional<ConfigMap> bundle = kubernetes.listConfigMaps(Map.of("app", "enmasse")).stream().filter(cm -> "console-trusted-ca-bundle".equals(cm.getMetadata().getName())).findFirst();
             bundle.ifPresent(cm -> log.info("console-trusted-ca-bundle resource version before rollback : {}", cm.getMetadata().getResourceVersion()));
@@ -1896,12 +1896,22 @@ public abstract class ConsoleTest extends TestBase {
     private void awaitEnMasseConsoleAvailable(String forWhat) {
         TestUtils.waitUntilCondition(forWhat, waitPhase -> {
             try {
-                doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
+                try {
+                    doTestCanOpenConsolePage(resourcesManager.getSharedAddressSpace(), clusterUser, true);
+                } catch (NoSuchSessionException e) {
+                    try {
+                        SeleniumProvider.getInstance().tearDownDrivers();
+                        SeleniumProvider.getInstance().setupDriver(this.getClass().getSimpleName().toLowerCase().contains("chrome") ? TestUtils.getChromeDriver() : TestUtils.getFirefoxDriver());
+                    } catch (Exception exception) {
+                        log.error("Failed to recreate selenium session", e);
+                    }
+                    return false;
+                }
                 return true;
             } catch (Exception e) {
                 if (waitPhase == WaitPhase.LAST_TRY) {
-                    selenium.takeScreenShot();
                     log.error("Failed to await {}", forWhat, e);
+                    selenium.takeScreenShot();
                 }
                 return false;
             }
@@ -1934,17 +1944,20 @@ public abstract class ConsoleTest extends TestBase {
 
         KubeCMDClient.awaitRollout(new TimeoutBudget(3, TimeUnit.MINUTES), oauthDeployment.getMetadata().getNamespace(), oauthDeployment.getMetadata().getName());
 
-        // await for oauth and verify it uses the correct certificate
+        // await for oauth/console and verify they present the correct certificate
         if (ca != null) {
-            String oauthHost = oauthRoute.getSpec().getHost();
-            TestUtils.waitUntilCondition(String.format("Await for oauth http endpoint to become ready: %s", oauthHost), waitPhase -> {
-                List<String> curl = Arrays.asList("curl",
-                        "--cacert", ca.getCert().getAbsolutePath(),
-                        "--verbose", String.format("https://%s", oauthHost));
-                ExecutionResultData consolePing = Exec.execute(curl, true);
-                return consolePing.getRetCode();
-            }, new TimeoutBudget(3, TimeUnit.MINUTES));
+            String oauthHost =  String.format("https://%s", oauthRoute.getSpec().getHost());
+            TestUtils.waitUntilCondition(String.format("Await for oauth http endpoint to present expected cert: %s", oauthHost), waitPhase -> curlConnect(ca, oauthHost), new TimeoutBudget(3, TimeUnit.MINUTES));
+            TestUtils.waitUntilCondition(String.format("Await for console http endpoint to present expected cert: %s", oauthHost), waitPhase -> curlConnect(ca, TestUtils.getGlobalConsoleRoute()), new TimeoutBudget(3, TimeUnit.MINUTES));
         }
+    }
+
+    private static boolean curlConnect(CertPair ca, String host) {
+        List<String> curl = Arrays.asList("curl",
+                "--cacert", ca.getCert().getAbsolutePath(),
+                "--verbose", host);
+        ExecutionResultData consolePing = Exec.execute(curl, true);
+        return consolePing.getRetCode();
     }
 
     //============================================================================================
