@@ -11,6 +11,7 @@ import {
   Button
 } from "@patternfly/react-core";
 import { SwitchWithToggle } from "components";
+import { StyleSheet, css } from "aphrodite";
 
 export interface IIoTCertificateToolbarProps {
   setShowCertificateForm: React.Dispatch<React.SetStateAction<boolean>>;
@@ -31,8 +32,18 @@ export const IoTCertificateToolbar: React.FunctionComponent<IIoTCertificateToolb
     // TODO: Mechanism to upload a certificate
   };
 
+  const styles = StyleSheet.create({
+    toolbar_body: {
+      display: "none"
+    }
+  });
+
   return (
-    <Toolbar id="iot-cert-toolbar" data-codemods="true">
+    <Toolbar
+      className={isJsonView ? css(styles.toolbar_body) : "none"}
+      id="iot-cert-toolbar"
+      data-codemods="true"
+    >
       <ToolbarContent>
         <ToolbarItem data-codemods="true">
           <Button

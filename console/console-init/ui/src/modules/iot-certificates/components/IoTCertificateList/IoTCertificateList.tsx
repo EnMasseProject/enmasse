@@ -14,6 +14,7 @@ import {
   GridItem,
   Grid,
   PageSection,
+  Switch,
   PageSectionVariants
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
@@ -42,6 +43,9 @@ const style = StyleSheet.create({
   },
   no_bottom_padding: {
     paddingBottom: 0
+  },
+  switch_button_align: {
+    float: "right"
   }
 });
 
@@ -88,9 +92,27 @@ export const IoTCertificateList: React.FunctionComponent<IIoTCertificateListProp
             </PageSection>
           )}
           {isJsonView ? (
-            <JsonEditor
-              value={certificates && JSON.stringify(certificates, undefined, 2)}
-            />
+            <Grid>
+              <GridItem span={12}>
+                <Switch
+                  className={css(style.switch_button_align)}
+                  id="iot-cert-edit-json-switch"
+                  aria-label="Switch for edit in Json"
+                  label="Edit in Json"
+                  isChecked={isJsonView}
+                  onChange={handleJsonViewChange}
+                />
+                <br />
+                <br />
+              </GridItem>
+              <GridItem span={12}>
+                <JsonEditor
+                  value={
+                    certificates && JSON.stringify(certificates, undefined, 2)
+                  }
+                />
+              </GridItem>
+            </Grid>
           ) : (
             certificates.map((certificate: IIoTCertificate, index: number) => (
               <IoTCertificate
