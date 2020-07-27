@@ -6,7 +6,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %green([%thread]) %highlight(%-5p) [%c{0}] %m%n</pattern>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} %green([%thread]) %highlight(%-5p) [%c{0}:%L] %m%n</pattern>
         </encoder>
     </appender>
 
@@ -15,7 +15,7 @@
         <append>true</append>
         <immediateFlush>true</immediateFlush>
         <encoder>
-            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} [%thread] %-5p [%c{0}] %m%n</pattern>
+            <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z',GMT} [%thread] %-5p [%c{0}:%L] %m%n</pattern>
         </encoder>
     </appender>
 
