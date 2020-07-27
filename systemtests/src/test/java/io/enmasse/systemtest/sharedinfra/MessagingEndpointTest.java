@@ -23,6 +23,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.ExternalClients;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingEndpointResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import io.enmasse.systemtest.utils.AssertionUtils;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 import org.junit.jupiter.api.Test;
@@ -38,9 +39,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DefaultMessagingProject
 @ExternalClients
 public class MessagingEndpointTest extends TestBase {
+
     @Test
     public void testNodePortEndpoint(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -61,7 +63,7 @@ public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testClusterEndpoint(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -88,7 +90,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpoint(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -119,7 +121,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testLoadBalancerEndpoint(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -146,7 +148,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testIngressEndpoint(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -179,7 +181,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift(version = OpenShiftVersion.OCP4)
     public void testOpenShiftCert(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -204,7 +206,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testSelfsignedCert(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -240,7 +242,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testExternalCert(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         CertBundle messagingCert = SSLUtils.createCertBundle("messaging.example.com");
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -280,7 +282,7 @@ public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testClusterEndpointWebsockets(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -307,7 +309,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @Kubernetes
     public void testIngressEndpointWebsocket(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -329,7 +331,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocket(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -350,7 +352,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsPassthrough(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -375,7 +377,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift(version = OpenShiftVersion.OCP3)
     public void testRouteEndpointWebsocketTlsReencrypt(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
@@ -400,7 +402,7 @@ public class MessagingEndpointTest extends TestBase {
 
     @Test
     public void testMultipleEndpoints(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
 
         MessagingEndpoint endpoint1 = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
@@ -437,7 +439,7 @@ public class MessagingEndpointTest extends TestBase {
     @Test
     @OpenShift
     public void testRouteEndpointWebsocketTlsEdge(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())

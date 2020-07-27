@@ -12,6 +12,7 @@ import io.enmasse.api.model.MessagingProjectCondition;
 import io.enmasse.systemtest.TestBase;
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructure;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -26,6 +27,7 @@ public class MessagingProjectTest extends TestBase {
     @Test
     @DefaultMessagingInfrastructure
     public void testMultipleMessagingProjects(ExtensionContext extensionContext) {
+        MessagingInfrastructure infra = resourceManager.getDefaultResource(ResourceKind.MESSAGING_INFRASTRUCTURE);
         MessagingProject t1 = new MessagingProjectBuilder()
                 .editOrNewMetadata()
                 .withName("default")
@@ -47,7 +49,7 @@ public class MessagingProjectTest extends TestBase {
         MessagingProjectCondition condition = MessagingProjectResourceType.getCondition(t1.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t1.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(infra.getMetadata().getName(), t1.getStatus().getMessagingInfrastructureRef().getName());
         assertEquals(environment.namespace(), t1.getStatus().getMessagingInfrastructureRef().getNamespace());
 
         t2 = MessagingProjectResourceType.getOperation().inNamespace(t2.getMetadata().getNamespace()).withName(t2.getMetadata().getName()).get();
@@ -55,7 +57,7 @@ public class MessagingProjectTest extends TestBase {
         condition = MessagingProjectResourceType.getCondition(t2.getStatus().getConditions(), "Ready");
         assertNotNull(condition);
         assertEquals("True", condition.getStatus());
-        assertEquals("default-infra", t2.getStatus().getMessagingInfrastructureRef().getName());
+        assertEquals(infra.getMetadata().getName(), t2.getStatus().getMessagingInfrastructureRef().getName());
         assertEquals(environment.namespace(), t2.getStatus().getMessagingInfrastructureRef().getNamespace());
     }
 

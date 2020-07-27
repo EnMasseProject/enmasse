@@ -22,26 +22,24 @@ import java.util.List;
 import java.util.Map;
 
 public class MessagingAddressResourceType implements ResourceType<MessagingAddress> {
-    private static final MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> operation =
-            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingAddresses()), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
 
     @Override
     public String getKind() {
-        return "MessagingAddress";
+        return ResourceKind.MESSAGING_ADDRESS;
     }
 
     @Override
     public MessagingAddress get(String namespace, String name) {
-        return operation.inNamespace(namespace).withName(name).get();
+        return getOperation().inNamespace(namespace).withName(name).get();
     }
 
     public static MixedOperation<MessagingAddress, MessagingAddressList, DoneableMessagingAddress, Resource<MessagingAddress, DoneableMessagingAddress>> getOperation() {
-        return operation;
+        return Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingAddresses()), MessagingAddress.class, MessagingAddressList.class, DoneableMessagingAddress.class);
     }
 
     @Override
     public void create(MessagingAddress resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingAddressBuilder(resource)
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingAddressBuilder(resource)
                 .editOrNewMetadata()
                 .withNewResourceVersion("")
                 .endMetadata()
@@ -52,7 +50,7 @@ public class MessagingAddressResourceType implements ResourceType<MessagingAddre
 
     @Override
     public void delete(MessagingAddress resource) throws Exception {
-        operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
     @Override

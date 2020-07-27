@@ -13,6 +13,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructur
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingInfrastructureResourceType;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingProjectResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -26,7 +27,7 @@ public class DefaultsTest extends TestBase {
     @Test
     @DefaultMessagingInfrastructure
     public void testDefaultInfra(ExtensionContext extensionContext) {
-        MessagingInfrastructure infra = resourceManager.getDefaultInfra();
+        MessagingInfrastructure infra = resourceManager.getDefaultResource(ResourceKind.MESSAGING_INFRASTRUCTURE);
 
         resourceManager.waitResourceCondition(infra, i -> {
             MessagingInfrastructureCondition condition = MessagingInfrastructureResourceType.getCondition(i.getStatus().getConditions(), "Ready");
@@ -34,16 +35,16 @@ public class DefaultsTest extends TestBase {
         });
 
 
-        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router")).size());
-        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker")).size());
+        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "router", "infra", infra.getMetadata().getName())).size());
+        assertEquals(1, kubernetes.listPods(infra.getMetadata().getNamespace(), Map.of("component", "broker", "infra", infra.getMetadata().getName())).size());
     }
 
     @Test
     @DefaultMessagingInfrastructure
     @DefaultMessagingProject
     public void testDefaultProject(ExtensionContext extensionContext) {
-        MessagingInfrastructure infra = resourceManager.getDefaultInfra();
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingInfrastructure infra = resourceManager.getDefaultResource(ResourceKind.MESSAGING_INFRASTRUCTURE);
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
 
         assertNotNull(project);
         resourceManager.waitResourceCondition(project, t -> {

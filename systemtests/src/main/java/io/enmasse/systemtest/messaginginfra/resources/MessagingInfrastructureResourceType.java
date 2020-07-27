@@ -24,23 +24,21 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class MessagingInfrastructureResourceType implements ResourceType<MessagingInfrastructure> {
-    private static final MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> operation =
-            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingInfras()), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
 
     @Override
     public String getKind() {
-        return "MessagingInfrastructure";
+        return ResourceKind.MESSAGING_INFRASTRUCTURE;
     }
 
     @Override
     public MessagingInfrastructure get(String namespace, String name) {
-        return operation.inNamespace(namespace).withName(name).get();
+        return getOperation().inNamespace(namespace).withName(name).get();
     }
 
     public static MessagingInfrastructure getDefault() {
         return new MessagingInfrastructureBuilder()
                 .editOrNewMetadata()
-                .withName("default-infra")
+                .withName("default-msginfra")
                 .withNamespace(Environment.getInstance().namespace())
                 .endMetadata()
                 .editOrNewSpec()
@@ -49,12 +47,12 @@ public class MessagingInfrastructureResourceType implements ResourceType<Messagi
     }
 
     public static MixedOperation<MessagingInfrastructure, MessagingInfrastructureList, DoneableMessagingInfrastructure, Resource<MessagingInfrastructure, DoneableMessagingInfrastructure>> getOperation() {
-        return operation;
+        return Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingInfras()), MessagingInfrastructure.class, MessagingInfrastructureList.class, DoneableMessagingInfrastructure.class);
     }
 
     @Override
     public void create(MessagingInfrastructure resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingInfrastructureBuilder(resource)
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingInfrastructureBuilder(resource)
                 .editOrNewMetadata()
                 .withNewResourceVersion("")
                 .endMetadata()
@@ -65,7 +63,7 @@ public class MessagingInfrastructureResourceType implements ResourceType<Messagi
 
     @Override
     public void delete(MessagingInfrastructure resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
     @Override

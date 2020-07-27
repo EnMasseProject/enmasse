@@ -18,17 +18,15 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import java.util.List;
 
 public class MessagingProjectResourceType implements ResourceType<MessagingProject> {
-    private static final MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> operation =
-            Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingProjects()), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
 
     @Override
     public String getKind() {
-        return "MessagingProject";
+        return ResourceKind.MESSAGING_PROJECT;
     }
 
     @Override
     public MessagingProject get(String namespace, String name) {
-        return operation.inNamespace(namespace).withName(name).get();
+        return getOperation().inNamespace(namespace).withName(name).get();
     }
 
     public static MessagingProject getDefault() {
@@ -41,12 +39,12 @@ public class MessagingProjectResourceType implements ResourceType<MessagingProje
     }
 
     public static MixedOperation<MessagingProject, MessagingProjectList, DoneableMessagingProject, Resource<MessagingProject, DoneableMessagingProject>> getOperation() {
-        return operation;
+        return Kubernetes.getClient().customResources(CustomResourceDefinitionContext.fromCrd(CoreCrd.messagingProjects()), MessagingProject.class, MessagingProjectList.class, DoneableMessagingProject.class);
     }
 
     @Override
     public void create(MessagingProject resource) {
-        operation.inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingProjectBuilder(resource)
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).createOrReplace(new MessagingProjectBuilder(resource)
                 .editOrNewMetadata()
                 .withNewResourceVersion("")
                 .endMetadata()
@@ -57,7 +55,7 @@ public class MessagingProjectResourceType implements ResourceType<MessagingProje
 
     @Override
     public void delete(MessagingProject resource) throws InterruptedException {
-        operation.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
+        getOperation().inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName()).cascading(true).delete();
     }
 
     @Override

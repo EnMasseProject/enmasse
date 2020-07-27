@@ -16,6 +16,7 @@ import io.enmasse.systemtest.framework.annotations.DefaultMessagingInfrastructur
 import io.enmasse.systemtest.framework.annotations.DefaultMessagingProject;
 import io.enmasse.systemtest.framework.annotations.SkipResourceLogging;
 import io.enmasse.systemtest.messaginginfra.resources.MessagingAddressResourceType;
+import io.enmasse.systemtest.messaginginfra.resources.ResourceKind;
 import io.enmasse.systemtest.scale.ResultWriter;
 import io.enmasse.systemtest.utils.TestUtils;
 import org.junit.jupiter.api.Tag;
@@ -43,7 +44,7 @@ public class MessagingAddressPerfTest extends TestBase {
     @DefaultMessagingInfrastructure
     @DefaultMessagingProject
     public void testCreateDelete(ExtensionContext extensionContext) throws Exception {
-        MessagingProject project = resourceManager.getDefaultMessagingProject();
+        MessagingProject project = resourceManager.getDefaultResource(ResourceKind.MESSAGING_PROJECT);
         MessagingEndpoint endpoint = new MessagingEndpointBuilder()
                 .editOrNewMetadata()
                 .withNamespace(project.getMetadata().getNamespace())
