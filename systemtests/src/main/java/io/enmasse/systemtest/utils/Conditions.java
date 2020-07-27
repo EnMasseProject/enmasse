@@ -6,13 +6,22 @@
 package io.enmasse.systemtest.utils;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
+import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 public final class Conditions {
+
+    private final static Logger log = LoggerFactory.getLogger(Conditions.class);
 
     private Conditions() {
     }
@@ -54,12 +63,12 @@ public final class Conditions {
             final Object conditionType,
             final boolean expected
     ) {
-           return condition(
-                   client
-                           .inNamespace(resource.getMetadata().getNamespace())
-                           .withName(resource.getMetadata().getName()),
-                   conditionType,
-                   expected);
+        return condition(
+                client
+                        .inNamespace(resource.getMetadata().getNamespace())
+                        .withName(resource.getMetadata().getName()),
+                conditionType,
+                expected);
     }
 
     /**
@@ -96,7 +105,7 @@ public final class Conditions {
 
         var expectedString = expected ? "True" : "False";
 
-        return new BooleanSupplier() {
+        return ignoreKubernetesError(new BooleanSupplier() {
 
             @Override
             public boolean getAsBoolean() {
@@ -109,7 +118,7 @@ public final class Conditions {
             public String toString() {
                 return reasonFromStatus(String.format("Failed to detect condition '%s' as '%s'", conditionType, expectedString), access);
             }
-        };
+        });
 
     }
 
@@ -124,7 +133,7 @@ public final class Conditions {
     static String conditionStatus(final Object current, final Object conditionType) {
         try {
             var statusSection = statusSection(current);
-            if (statusSection.isEmpty()){
+            if (statusSection.isEmpty()) {
                 return null;
             }
             var status = statusSection.get();
@@ -142,8 +151,8 @@ public final class Conditions {
         }
     }
 
-    public static BooleanSupplier gone(final Resource<? extends HasMetadata,?> resource) {
-        return new BooleanSupplier() {
+    public static BooleanSupplier gone(final Resource<? extends HasMetadata, ?> resource) {
+        return ignoreKubernetesError(new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
                 return resource.get() == null;
@@ -153,10 +162,10 @@ public final class Conditions {
             public String toString() {
                 return reasonFromStatus("Resource should be gone, but is not", resource);
             }
-        };
+        });
     }
 
-    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata,?> access) {
+    private static String reasonFromStatus(final String message, final Resource<? extends HasMetadata, ?> access) {
         var resource = access.get();
         var state = statusSection(resource);
         return String.format("%s: '%s/%s' (%s/%s) - finalizers: %s\n%s",
@@ -167,6 +176,31 @@ public final class Conditions {
                 resource.getMetadata().getFinalizers(),
                 state.map(Serialization::toYaml).orElse("<no status>")
         );
+    }
+
+    private static BooleanSupplier ignoreKubernetesError(final BooleanSupplier supplier) {
+        return ignoreKubernetesError(supplier, false);
+    }
+
+    private static BooleanSupplier ignoreKubernetesError(final BooleanSupplier supplier, final boolean defaultValue) {
+        Objects.requireNonNull(supplier);
+
+        return new BooleanSupplier() {
+            @Override
+            public boolean getAsBoolean() {
+                try {
+                    return supplier.getAsBoolean();
+                } catch (KubernetesClientException e) {
+                    log.warn("Ignoring Kubernetes client exception", e);
+                    return defaultValue;
+                }
+            }
+
+            @Override
+            public String toString() {
+                return supplier.toString();
+            }
+        };
     }
 
 }
