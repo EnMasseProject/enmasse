@@ -10,13 +10,11 @@ You must create an infrastructure configuration custom resource to use {ProductN
 
 .Procedure
 
-. From the dropdown menu, select the `{ProductNamespace}` project.
+. In the top right, click the *Plus* icon (+). The Import YAML window opens.
 
-. Click *Catalog > Installed Operators*.
+. From the top left drop-down menu, select the `{ProductNamespace}` project.
 
-. Click *Add > Import YAML*. The Import YAML window opens.
-
-. Copy the following code for `StandardInfraConfig`:
+. Copy the following code:
 +
 [source,yaml,options="nowrap",subs="attributes"]
 ----
@@ -26,11 +24,12 @@ metadata:
   name: default
 ----
 
-. In the Import YAML window, paste the copied code and click *Create*. The StandardInfraConfig Overview page is displayed.
+. In the Import YAML window, paste the copied code and click *Create*. The StandardInfraConfig overview page is displayed.
 
-. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+. Click *Operators > Installed Operators*.
+
+. Click the {ProductName} Operator and click the *Standard Infra Config* tab to verify that its *Status* displays as *Active*.
 
 .Next steps
 
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-address-space-plan-custom-resource-olm-ui-messaging[Create an address space plan custom resource using the {KubePlatform} console]
-
