@@ -184,5 +184,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v1.0.0
         with:
-          name: smoke-test-logs
-          path: iot-logs.zip
+          name: iot-logs
+          path: test-logs.zip
