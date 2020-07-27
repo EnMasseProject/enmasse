@@ -40,7 +40,7 @@ const styles = StyleSheet.create({
 export interface IDeviceInfoProps
   extends Pick<
       ICredentialsViewProps,
-      "credentials" | "onChangeStatus" | "onConfirmPassword"
+      "credentials" | "onConfirmPassword" | "onConfirmCredentialsStatus"
     >,
     IErrorStateAlertProps {
   id: string;
@@ -53,11 +53,10 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
   deviceList,
   metadataList: metadetaJson,
   credentials,
-  onChangeStatus,
-  onConfirmPassword,
   errorState,
   deleteGateways,
-  deleteCredentials
+  deleteCredentials,
+  onConfirmCredentialsStatus
 }) => {
   const [isHidden, setIsHidden] = useState<boolean>(false);
   const { projectname, namespace } = useParams();
@@ -161,10 +160,9 @@ export const DeviceInfo: React.FC<IDeviceInfoProps> = ({
               </Card>
               <br />
               <CredentialsView
-                id={"credentials-view"}
+                id={"deice-info-credentials-view"}
                 credentials={credentials}
-                onChangeStatus={onChangeStatus}
-                onConfirmPassword={onConfirmPassword}
+                onConfirmCredentialsStatus={onConfirmCredentialsStatus}
               />
             </GridItem>
             <GridItem span={7}>

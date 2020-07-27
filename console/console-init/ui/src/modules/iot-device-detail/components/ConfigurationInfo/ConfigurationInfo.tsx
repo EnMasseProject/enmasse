@@ -39,7 +39,10 @@ const style = StyleSheet.create({
 });
 
 export interface IConfigurationInfoProps
-  extends Pick<ICredentialsViewProps, "credentials"> {
+  extends Pick<
+    ICredentialsViewProps,
+    "credentials" | "onConfirmCredentialsStatus"
+  > {
   id: string;
   setFilterType: (value: string) => void;
   setFilterValue: (value: string) => void;
@@ -53,7 +56,8 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
   setFilterType,
   setFilterValue,
   filterType,
-  filterValue
+  filterValue,
+  onConfirmCredentialsStatus
 }) => {
   const [filterOptions, setFilterOptions] = useState<IDropdownOption[]>([]);
 
@@ -189,6 +193,7 @@ export const ConfigurationInfo: React.FC<IConfigurationInfoProps> = ({
               <CredentialsView
                 id="device-detail-config-info-credentials-view"
                 credentials={credentials}
+                onConfirmCredentialsStatus={onConfirmCredentialsStatus}
               />
             </GridItem>
           </Grid>

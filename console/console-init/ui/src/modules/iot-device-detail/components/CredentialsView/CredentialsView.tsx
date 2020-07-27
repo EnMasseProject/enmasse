@@ -13,14 +13,17 @@ import {
   Divider,
   Text,
   TextVariants,
-  CardTitle
+  CardTitle,
+  Switch
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
-import { SwitchWithToggle } from "components";
 import { SecretsView, ISecretsViewProps } from "./SecretsView";
 import { ExtensionsView } from "./ExtensionsView";
 import { hasOwnProperty } from "utils";
+import { DialogTypes } from "constant";
+import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
+import { CheckCircleIcon } from "@patternfly/react-icons";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -44,7 +47,10 @@ interface ICredentialView extends Pick<ISecretsViewProps, "secrets"> {
 }
 
 export interface ICredentialsViewProps
-  extends Pick<ICredentialProps, "onChangeStatus">,
+  extends Pick<
+      ICredentialProps,
+      "toggleCredentialsStatus" | "onConfirmCredentialsStatus"
+    >,
     Pick<ISecretsViewProps, "onConfirmPassword"> {
   id: string;
   credentials: ICredentialView[];
@@ -53,19 +59,29 @@ export interface ICredentialsViewProps
 export interface ICredentialProps
   extends Pick<ISecretsViewProps, "onConfirmPassword"> {
   credential: ICredentialView;
-  onChangeStatus?: (authId: string) => void;
+  toggleCredentialsStatus?: (
+    authId: string,
+    status: boolean,
+    credentialType: string
+  ) => void;
+  onConfirmCredentialsStatus?: (data: any) => Promise<void>;
 }
 
 export const Credential: React.FC<ICredentialProps> = ({
   credential,
-  onChangeStatus,
-  onConfirmPassword
+  onConfirmPassword,
+  toggleCredentialsStatus
 }) => {
-  const { secrets = [], ext = [], type, enabled, "auth-id": authId } =
-    credential || {};
+  const {
+    secrets = [],
+    ext = [],
+    type = "",
+    enabled = false,
+    "auth-id": authId
+  } = credential || {};
 
-  const onChange = () => {
-    onChangeStatus && onChangeStatus(authId);
+  const onChange = (checked: boolean) => {
+    toggleCredentialsStatus && toggleCredentialsStatus(authId, checked, type);
   };
 
   return (
@@ -123,8 +139,8 @@ export const Credential: React.FC<ICredentialProps> = ({
               </Title>
             </GridItem>
             <GridItem span={9}>
-              <SwitchWithToggle
-                id={authId}
+              <Switch
+                id={"credentials-view-status-switch-button"}
                 label={"On"}
                 labelOff={"Off"}
                 isChecked={enabled}
@@ -141,15 +157,40 @@ export const Credential: React.FC<ICredentialProps> = ({
 export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   id,
   credentials,
-  onChangeStatus,
-  onConfirmPassword
+  onConfirmPassword,
+  onConfirmCredentialsStatus
 }) => {
+  const { dispatch } = useStoreContext();
+
   const CredentialsNotFound = () => (
     <Text component={TextVariants.p} id="credentials-view-not-found-text">
       There are no credentials for this device. This device is connected to the
       other devices as gateways.
     </Text>
   );
+
+  const toggleCredentialsStatus = (
+    authId: string,
+    status: boolean,
+    credentialType: string
+  ) => {
+    const dialogType: string = status
+      ? DialogTypes.ENABLE
+      : DialogTypes.DISABLE;
+    dispatch({
+      type: types.SHOW_MODAL,
+      modalType: MODAL_TYPES.UPDATE_DEVICE_CREDENTIAL_STATUS,
+      modalProps: {
+        onConfirm: onConfirmCredentialsStatus,
+        selectedItems: [authId],
+        option: dialogType,
+        data: { authId, status, credentialType },
+        detail: `Are you sure you want to ${dialogType?.toLowerCase()} this credential: ${authId} ?`,
+        header: `${dialogType} this credential ?`,
+        confirmButtonLabel: dialogType
+      }
+    });
+  };
 
   return (
     <Card id={id}>
@@ -167,7 +208,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
                 <Credential
                   credential={credential}
                   key={authId}
-                  onChangeStatus={onChangeStatus}
+                  toggleCredentialsStatus={toggleCredentialsStatus}
                   onConfirmPassword={onConfirmPassword}
                 />
                 {index < credentials.length - 1 && (
