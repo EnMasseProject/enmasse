@@ -8,7 +8,6 @@ package io.enmasse.systemtest.iot;
 import com.google.common.base.MoreObjects;
 import com.google.common.io.BaseEncoding;
 import io.enmasse.systemtest.amqp.AmqpClient;
-import io.enmasse.systemtest.executor.Exec;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.vertx.core.Future;
@@ -39,8 +38,10 @@ import static io.enmasse.systemtest.iot.CommandTester.Commander.fullResponseAddr
 import static io.enmasse.systemtest.iot.MessageType.COMMAND;
 import static io.enmasse.systemtest.iot.MessageType.COMMAND_RESPONSE;
 import static io.vertx.core.Future.succeededFuture;
+import static java.lang.System.lineSeparator;
 import static java.time.Instant.now;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.joining;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class CommandTester {
@@ -602,8 +603,10 @@ public class CommandTester {
                 lastResponseFuture.onComplete(c -> {
 
                     this.vertx.setTimer(this.delay.toMillis(), t -> {
+                        log.info("Timer expired, calling initiator...");
                         var next = this.initiator.initiate(this.context);
                         next
+                                .onComplete(r -> log.info("Initiator completed: {}", r))
                                 .flatMap(x -> nextRun(commander))
                                 .onComplete(r -> log.info("Run completed - {}", r))
                                 .onComplete(x -> scheduleNext(commander));
@@ -827,6 +830,10 @@ public class CommandTester {
             // copy, just in case something append in the background
 
             var result = new ArrayList<>(this.result);
+
+            if (log.isInfoEnabled()) {
+                log.info("Result:{} {}", lineSeparator(), result.stream().map(Object::toString).collect(joining(lineSeparator())));
+            }
 
             // start asserting, append to existing runtime assertions
 
