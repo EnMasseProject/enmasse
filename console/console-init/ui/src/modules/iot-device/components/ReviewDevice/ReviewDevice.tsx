@@ -79,12 +79,12 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   };
 
   const getGateways = () => {
-    const { gateways } = device || {};
+    const { gateways } = device?.gateways || {};
     return (
       <>
         <Text className={css(style.font_size_20)}>Gateways</Text>
-        {gateways && gateways.gateways && gateways.gateways.length
-          ? gateways.gateways.map(gateway => (
+        {gateways && gateways?.length > 0
+          ? gateways.map(gateway => (
               <span key="gateway">
                 <br />
                 {gateway}
@@ -105,7 +105,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
         <br />
         {credentials && (
           <CredentialsView
-            id={"review-device-credntails-list"}
+            id={"review-device-crdentials-list"}
             credentials={credentials}
             enableActions={false}
           />
@@ -117,7 +117,7 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
     device || {};
   return (
     <>
-      <Grid style={{ padding: 10 }}>
+      <Grid>
         <GridItem span={8}>
           {title && title.trim() != "" && (
             <>
