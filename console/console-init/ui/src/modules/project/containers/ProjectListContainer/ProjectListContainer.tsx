@@ -263,7 +263,8 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           creationTimestamp: metadata?.creationTimestamp
         };
       } else {
-        const { metadata, spec, messagingStatus } = project || {};
+        const { metadata, spec, messagingStatus, addresses, connections } =
+          project || {};
 
         const a = {
           projectType: ProjectTypes.MESSAGING,
@@ -274,7 +275,9 @@ export const ProjectListContainer: React.FC<IProjectListContainerProps> = ({
           status: messagingStatus?.phase,
           type: spec?.type,
           authService: spec.authenticationService?.name,
-          plan: spec?.plan?.metadata?.name
+          plan: spec?.plan?.metadata?.name,
+          addressCount: addresses?.total,
+          connectionCount: connections?.total
         };
         return a;
       }

@@ -7,7 +7,7 @@ interface IObject_Metadata {
   namespace?: string;
   creationTimestamp?: string;
 }
-interface IAddressSpaceType {
+export interface IAddressSpaceType {
   kind: string;
   metadata: IObject_Metadata;
   messagingStatus?: {
@@ -28,6 +28,12 @@ interface IAddressSpaceType {
     authenticationService?: {
       name?: string;
     };
+  };
+  addresses?: {
+    total?: number;
+  };
+  connections?: {
+    total?: number;
   };
 }
 
