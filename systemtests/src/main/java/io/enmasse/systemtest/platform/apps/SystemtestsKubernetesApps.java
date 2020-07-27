@@ -8,8 +8,8 @@ package io.enmasse.systemtest.platform.apps;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.certs.BrokerCertBundle;
-import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.framework.LoggerUtils;
+import io.enmasse.systemtest.framework.TestPlanInfo;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
@@ -463,11 +463,8 @@ public class SystemtestsKubernetesApps {
 
         TestUtils.waitUntilCondition(() -> {
             return podLister
-                .list().getItems().stream()
-                .filter(conditionIsTrue("ContainersReady"))
-                .findFirst()
-                .map(p -> true)
-                .orElse(false);
+                    .list().getItems().stream()
+                    .anyMatch(conditionIsTrue("ContainersReady"));
         }, ofMinutes(5), ofSeconds(10));
 
         var pod = podLister

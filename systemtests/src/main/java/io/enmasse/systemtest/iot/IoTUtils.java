@@ -74,7 +74,7 @@ class IoTUtils {
                     .orElse(false),
             "ready");
 
-    static void waitForIoTConfigReady(IoTConfig config) throws Exception {
+    static void waitForIoTConfigReady(IoTConfig config) {
         var budget = new TimeoutBudget(15, TimeUnit.MINUTES);
         var iotConfigAccess = iotConfigs(config.getMetadata().getNamespace()).withName(config.getMetadata().getName());
         TestUtils.waitUntilCondition(() -> {
@@ -87,7 +87,11 @@ class IoTUtils {
                         log.info("IoTConfig is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
                         return true;
                     } else {
-                        log.info("Waiting until IoTConfig: '{}' will be in ready state", config.getMetadata().getName());
+                        log.info("Waiting until IoTConfig: '{}' will be in ready state: {}/{}",
+                                config.getMetadata().getName(),
+                                ofNullable(config.getStatus()).map(IoTConfigStatus::getPhase).orElse("<none>"),
+                                ofNullable(config.getStatus()).map(IoTConfigStatus::getMessage).orElse("<none>")
+                        );
                         return false;
                     }
                 },
@@ -219,7 +223,11 @@ class IoTUtils {
                         log.info("IoTProject is ready - phase: {} -> {}", currentPhase, toJson(false, currentState.getStatus()));
                         return true;
                     } else {
-                        log.info("Waiting until IoTProject: '{}' will be in ready state -> {}", project.getMetadata().getName(), currentPhase);
+                        log.info("Waiting until IoTProject: '{}' will be in ready state: {}/{}",
+                                project.getMetadata().getName(),
+                                ofNullable(project.getStatus()).map(IoTProjectStatus::getPhase).orElse("<none>"),
+                                ofNullable(project.getStatus()).map(IoTProjectStatus::getMessage).orElse("<none>")
+                        );
                         return false;
                     }
                 },
@@ -269,7 +277,7 @@ class IoTUtils {
 
     }
 
-    static void createIoTConfig(IoTConfig config) throws Exception {
+    static void createIoTConfig(IoTConfig config) {
         var name = config.getMetadata().getName();
         log.info("Creating IoTConfig - name: {}", name);
         try (var ignored = startOperation(SystemtestsOperation.CREATE_IOT_CONFIG)) {

@@ -22,6 +22,7 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.message.Message;
 import org.slf4j.Logger;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +35,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static io.enmasse.iot.utils.MoreFutures.await;
+import static java.util.Collections.singletonList;
 
 public class AmqpClient implements AutoCloseable {
     private static final Logger log = LoggerUtils.getLogger();
@@ -66,19 +70,10 @@ public class AmqpClient implements AutoCloseable {
             futures.add(f.future());
         }
 
-        // now wait on the vertx futures ... with the help of Java futures
-        var await = new CompletableFuture<>();
-        CompositeFuture.all(futures).setHandler(ar -> {
-            if (ar.succeeded()) {
-                await.complete(null);
-            } else {
-                await.completeExceptionally(ar.cause());
-            }
-
-            log.info("Close of all vertx instances completed", ar.cause());
-        });
-
-        await.get(10, TimeUnit.SECONDS);
+        await(CompositeFuture
+                        .all(futures)
+                        .onComplete(ar -> log.info("Close of all vertx instances completed", ar.cause())),
+                Duration.ofSeconds(10));
 
     }
 
@@ -162,7 +157,7 @@ public class AmqpClient implements AutoCloseable {
             @Override
             public void close() throws Exception {
                 clients.remove(vertx);
-                closeVertxAndWait(Arrays.asList(vertx));
+                closeVertxAndWait(singletonList(vertx));
             }
 
             @Override
@@ -245,22 +240,22 @@ public class AmqpClient implements AutoCloseable {
         var promise = Promise.<ProtonDelivery>promise();
 
         connectPromise
-                .whenComplete((v,e) -> log.info("Connected - result: {}", v, e))
+                .whenComplete((v, e) -> log.info("Connected - result: {}", v, e))
                 .thenCompose(x -> resultPromise)
-                .whenComplete((v,e) -> log.info("Sent - result: {}", v, e))
+                .whenComplete((v, e) -> log.info("Sent - result: {}", v, e))
                 .whenComplete((v, e) -> {
                     // when we processed the result, we can un-deploy
                     deployed.future().onSuccess(vertx::undeploy);
                 })
-                .whenComplete((v,e) -> {
+                .whenComplete((v, e) -> {
                     context.runOnContext(x -> {
-                        if ( e == null ) {
-                            if ( v.size() > 0) {
+                        if (e == null) {
+                            if (v.size() > 0) {
                                 promise.complete(v.get(0));
                             } else {
                                 promise.fail(new IllegalStateException("Completed without disposition"));
                             }
-                       } else {
+                        } else {
                             promise.fail(e);
                         }
                     });
