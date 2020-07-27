@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import classNames from "classnames";
 import {
   Dropdown,
@@ -113,7 +113,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
   const getItems = (option: IDropdownOption) => {
     if (shouldDisplayLabelAndValue) {
       return (
-        <>
+        <Fragment>
           <span className={dropdowItemCss}>{option.label || option.value}</span>
           <div>{option.value}</div>
           {option.description && (
@@ -121,19 +121,19 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
               {option.description}
             </div>
           )}
-        </>
+        </Fragment>
       );
     }
 
     return (
-      <>
+      <Fragment>
         <span className={dropdowItemCss}>{option.label || option.value}</span>
         {option.description && (
           <div className={css(dropdown_styles.format_description)}>
             {option.description}
           </div>
         )}
-      </>
+      </Fragment>
     );
   };
 
@@ -143,7 +143,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
       items = dropdownItems.map((option: IDropdownOption) => {
         const { key, value, label, separator } = option;
         return (
-          <>
+          <Fragment key={`${key}-fragment`}>
             <DropdownItem
               id={`${dropdownItemIdPrefix || id}${key}`}
               key={key}
@@ -155,7 +155,7 @@ export const DropdownWithToggle: React.FC<IDropdownWithToggleProps &
               {getItems(option)}
             </DropdownItem>
             {separator && <DropdownSeparator key="dropdown separator" />}
-          </>
+          </Fragment>
         );
       });
     }
