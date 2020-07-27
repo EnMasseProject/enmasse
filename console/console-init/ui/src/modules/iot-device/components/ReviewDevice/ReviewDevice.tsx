@@ -23,37 +23,37 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
   title
 }) => {
   const getDeviceInformation = () => {
-    const { deviceInformation } = device || {};
+    const { deviceId, status, metadata } = device?.deviceInformation || {};
     return (
       <>
         <Text className={css(style.font_size_20)}>Device Information</Text>
         <br />
-        {deviceInformation?.deviceId && (
+        {deviceId && (
           <>
             <Title size="lg" headingLevel="h5">
               Device ID
             </Title>
-            {deviceInformation.deviceId}
+            {deviceId}
             <br />
             <br />
           </>
         )}
-        {deviceInformation?.status !== undefined && (
+        {status !== undefined && (
           <>
             <Title size="lg" headingLevel="h5">
               Status
             </Title>
-            {deviceInformation.status ? "Enabled" : "Disabled"}
+            {status ? "Enabled" : "Disabled"}
             <br />
             <br />
           </>
         )}
-        {deviceInformation?.metadata !== undefined && (
+        {metadata !== undefined && (
           <>
             <Title size="lg" headingLevel="h5">
               MetaData
             </Title>
-            {/* {deviceInformation.metadata} */}
+            {/*TODO: {metadata} */}
             --
           </>
         )}
@@ -113,6 +113,8 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
       </>
     );
   };
+  const { deviceInformation, connectionType, credentials, gateways } =
+    device || {};
   return (
     <>
       <Grid style={{ padding: 10 }}>
@@ -126,16 +128,10 @@ const ReviewDevice: React.FunctionComponent<IReviewDeviceProps> = ({
             </>
           )}
           <br />
-          {device && device.deviceInformation && getDeviceInformation()}
-          {device && device.connectionType && getConnectionType()}
-          {device &&
-            device.gateways &&
-            device.gateways.gateways &&
-            getGateways()}
-          {device &&
-            device.credentials &&
-            device.credentials.length > 0 &&
-            getCredentials()}
+          {deviceInformation && getDeviceInformation()}
+          {connectionType && getConnectionType()}
+          {gateways?.gateways && getGateways()}
+          {credentials && credentials.length > 0 && getCredentials()}
         </GridItem>
       </Grid>
     </>

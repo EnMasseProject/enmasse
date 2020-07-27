@@ -4,12 +4,12 @@ import { Form, Title, Radio } from "@patternfly/react-core";
 interface IConnectionTypeProps {
   connectionType?: string;
   showMessage?: boolean;
-  onConnectionChange: (_: any, event: any) => void;
+  onChangeConnection: (_: any, event: any) => void;
 }
 const ConnectionType: React.FunctionComponent<IConnectionTypeProps> = ({
   connectionType,
   showMessage,
-  onConnectionChange
+  onChangeConnection
 }) => {
   return (
     <>
@@ -20,7 +20,7 @@ const ConnectionType: React.FunctionComponent<IConnectionTypeProps> = ({
         <Radio
           value="directly"
           isChecked={connectionType === "directly"}
-          onChange={onConnectionChange}
+          onChange={onChangeConnection}
           label={"Directly connected"}
           name="radio-directly-connected-option"
           id="connection-type-step-directly-connected-radio"
@@ -28,7 +28,7 @@ const ConnectionType: React.FunctionComponent<IConnectionTypeProps> = ({
         <Radio
           value="via-device"
           isChecked={connectionType === "via-device"}
-          onChange={onConnectionChange}
+          onChange={onChangeConnection}
           label={"Connected via other permitted devices as gateways"}
           name="radio-connected-via-gateway-option"
           id="connection-type-step-via-gateway-radio"

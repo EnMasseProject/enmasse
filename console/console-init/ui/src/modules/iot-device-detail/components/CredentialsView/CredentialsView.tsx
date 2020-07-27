@@ -18,12 +18,13 @@ import {
 } from "@patternfly/react-core";
 import { StyleSheet, css } from "aphrodite";
 import { getLabelByKey } from "utils";
+import { StatusLabelWithIcon } from "components";
 import { SecretsView, ISecretsViewProps } from "./SecretsView";
 import { ExtensionsView } from "./ExtensionsView";
 import { hasOwnProperty } from "utils";
 import { DialogTypes } from "constant";
 import { useStoreContext, types, MODAL_TYPES } from "context-state-reducer";
-import { CheckCircleIcon, ExclamationCircleIcon } from "@patternfly/react-icons";
+import { CheckCircleIcon, ExclamationCircleIcon as OffIcon } from "@patternfly/react-icons";
 
 const styles = StyleSheet.create({
   row_margin: {
@@ -39,8 +40,8 @@ const styles = StyleSheet.create({
   },
   card_border: {
     padding: 15,
-    borderColor: "grey",
-    border: "0.05em solid"
+    borderColor: "var(--pf-global--palette--black-300)",
+    border: "0.1em"
   }
 });
 
@@ -161,9 +162,14 @@ export const Credential: React.FC<ICredentialProps> = ({
                   <CheckCircleIcon color="green" /> &nbsp; On
                 </>
               ) : (
-                <>
-                  <ExclamationCircleIcon color="grey" /> &nbsp; Off
-                </>
+                <StatusLabelWithIcon
+                  id="credential-view-status-icon"
+                  key={`credential-view-status-${authId}`}
+                  isEnabled={enabled || false}
+                  disabledTitle={"Off"}
+                  enabledTitle={"On"}
+                  disabledIconColor="var(--pf-global--palette--black-300)"
+                />
               )}
             </GridItem>
           </>
@@ -213,7 +219,7 @@ export const CredentialsView: React.FC<ICredentialsViewProps> = ({
   };
 
   return (
-    <Card id={id} className={enableActions ? "" : css(styles.card_border)}>
+    <Card id={id} className={css(styles.card_border)}>
       {enableActions && (
         <CardTitle>
           <Title id="credentials-view-title" headingLevel="h1" size="2xl">

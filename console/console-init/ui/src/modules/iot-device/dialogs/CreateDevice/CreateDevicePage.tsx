@@ -100,15 +100,15 @@ export default function CreateDevicePage() {
     component: (
       <ReviewDeviceContainer
         device={device}
-        title={"Verify that the followwing information is correct before done"}
+        title={"Verify that the following information is correct before done"}
       />
     )
   };
 
-  const onConnectionChange = (_: boolean, event: any) => {
+  const onChangeConnection = (_: boolean, event: any) => {
     const connectionType = event.target.value;
     if (connectionType) {
-      setDevice({ ...device, connectionType: connectionType });
+      setDevice({ ...device, connectionType });
     }
   };
 
@@ -127,7 +127,7 @@ export default function CreateDevicePage() {
       component: (
         <ConnectionType
           connectionType={device.connectionType}
-          onConnectionChange={onConnectionChange}
+          onChangeConnection={onChangeConnection}
         />
       )
     }

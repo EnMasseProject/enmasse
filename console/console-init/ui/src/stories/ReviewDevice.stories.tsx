@@ -1,3 +1,8 @@
+/*
+ * Copyright 2020, EnMasse authors.
+ * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
+ */
+
 import React from "react";
 import { Page } from "@patternfly/react-core";
 import { ReviewDevice, IDeviceProp } from "modules/iot-device";
@@ -54,7 +59,7 @@ export const ReviewDevicePage = () => {
       <ReviewDevice
         title={text(
           "Title",
-          "Verify that the followwing information is correct before done"
+          "Verify that the following information is correct before done"
         )}
         device={initialDevice}
       />
