@@ -22,16 +22,6 @@ spec:
     - enmasse
     - iot
 
-  additionalPrinterColumns:
-    - name: Hono tenant
-      type: string
-      description: The name of the tenant in Eclipse Hono
-      JSONPath: .status.tenantName
-    - name: Phase
-      type: string
-      description: Phase of the IoT tenant
-      JSONPath: .status.phase
-
   versions:
     - name: v1
       served: true
@@ -39,6 +29,16 @@ spec:
 
       subresources:
         status: {}
+
+      additionalPrinterColumns:
+        - name: Hono tenant
+          type: string
+          description: The name of the tenant in Eclipse Hono
+          jsonPath: .status.tenantName
+        - name: Phase
+          type: string
+          description: Phase of the IoT tenant
+          jsonPath: .status.phase
 
       schema:
         openAPIV3Schema:

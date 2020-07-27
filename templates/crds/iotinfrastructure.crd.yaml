@@ -20,16 +20,6 @@ spec:
     - enmasse
     - iot
 
-  additionalPrinterColumns:
-  - name: Phase
-    type: string
-    description: Phase of the IoT infrastructure
-    JSONPath: .status.phase
-  - name: Message
-    type: string
-    description: Message
-    JSONPath: .status.message
-
   versions:
     - name: v1
       served: true
@@ -37,6 +27,16 @@ spec:
 
       subresources:
         status: {}
+
+      additionalPrinterColumns:
+        - name: Phase
+          type: string
+          description: Phase of the IoT infrastructure
+          jsonPath: .status.phase
+        - name: Message
+          type: string
+          description: Message
+          jsonPath: .status.message
 
       schema:
         openAPIV3Schema:
