@@ -51,6 +51,7 @@ public interface StandardIoTHttpTests extends StandardIoTTests {
                     .consume(MessageSendTester.Consume.BEFORE)
                     .execute();
         }
+
     }
 
     /**
