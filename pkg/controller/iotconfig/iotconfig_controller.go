@@ -665,7 +665,7 @@ func (r *ReconcileIoTConfig) deconstruct(ctx context.Context, reqLogger logr.Log
 		// set ready condition to false
 
 		readyCondition := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
-		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Project is being deleted")
+		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Infrastructure is being deleted")
 
 		// record event
 
