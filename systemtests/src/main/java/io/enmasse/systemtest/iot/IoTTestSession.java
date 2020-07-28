@@ -6,11 +6,9 @@
 package io.enmasse.systemtest.iot;
 
 import com.google.common.collect.Lists;
-import io.enmasse.api.model.MessagingEndpoint;
 import io.enmasse.api.model.MessagingEndpointBuilder;
 import io.enmasse.api.model.MessagingEndpointPort;
 import io.enmasse.api.model.MessagingInfrastructureBuilder;
-import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectBuilder;
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdapterConfigFluent;
@@ -68,7 +66,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static io.enmasse.systemtest.amqp.AmqpConnectOptions.defaultQueue;
-import static io.enmasse.systemtest.condition.OpenShiftVersion.OCP4;
+import static io.enmasse.systemtest.framework.condition.OpenShiftVersion.OCP4;
 import static io.enmasse.systemtest.iot.DeviceManagementApi.createManagementServiceAccount;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.AMQP;
 import static io.enmasse.systemtest.iot.IoTTestSession.Adapter.HTTP;

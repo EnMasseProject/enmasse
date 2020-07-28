@@ -2,7 +2,7 @@
  * Copyright 2019, EnMasse authors.
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
-package io.enmasse.systemtest.condition;
+package io.enmasse.systemtest.framework.condition;
 
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.enmasse.systemtest.platform.cluster.ClusterType;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 import static org.junit.platform.commons.support.AnnotationSupport.findAnnotation;
 
-public class AssumeOpenshiftCondition implements ExecutionCondition {
+public class OpenshiftCondition implements ExecutionCondition {
     @Override
     public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
         Optional<OpenShift> annotation = findAnnotation(context.getElement(), OpenShift.class);
