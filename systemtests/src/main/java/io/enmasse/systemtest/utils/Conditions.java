@@ -9,6 +9,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
+import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,6 +132,14 @@ public final class Conditions {
         }
     }
 
+    private static JsonObject statusJson(final Object current) {
+
+        return statusSection(current)
+                .map(JsonObject::mapFrom)
+                .orElseGet(JsonObject::new);
+
+    }
+
     static String conditionStatus(final Object current, final Object conditionType) {
         try {
             var statusSection = statusSection(current);
@@ -155,7 +165,16 @@ public final class Conditions {
         return ignoreKubernetesError(new BooleanSupplier() {
             @Override
             public boolean getAsBoolean() {
-                return resource.get() == null;
+                var current = resource.get();
+                if (current != null) {
+                    var state = statusJson(resource);
+                    log.info("{} {}/{} exists - phase: {}, finalizers: {}",
+                            current.getKind(), current.getMetadata().getNamespace(), current.getMetadata().getName(),
+                            state.getString("phase", "<unknown>"),
+                            current.getMetadata().getFinalizers()
+                    );
+                }
+                return current == null;
             }
 
             @Override

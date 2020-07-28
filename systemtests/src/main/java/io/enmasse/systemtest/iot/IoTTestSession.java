@@ -35,6 +35,7 @@ import io.enmasse.systemtest.iot.IoTTestSession.Builder.PreDeployProcessor;
 import io.enmasse.systemtest.logs.GlobalLogCollector;
 import io.enmasse.systemtest.platform.KubeCMDClient;
 import io.enmasse.systemtest.platform.Kubernetes;
+import io.enmasse.systemtest.time.TimeoutBudget;
 import io.enmasse.systemtest.utils.TestUtils;
 import io.enmasse.systemtest.utils.ThrowingCallable;
 import io.enmasse.systemtest.utils.ThrowingConsumer;
@@ -44,6 +45,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.Vertx;
+import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +55,7 @@ import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -61,7 +64,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -78,6 +83,7 @@ import static io.enmasse.systemtest.utils.TestUtils.waitUntilConditionOrFail;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
 public final class IoTTestSession implements IoTTestContext {
 
@@ -525,10 +531,10 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT config
 
-                if (shouldCleanup()) {
-                    cleanup.add(() -> IoTUtils.deleteIoTConfigAndWait(config));
-                }
-                IoTUtils.createIoTConfig(config);
+                createDefaultResource(Kubernetes::iotConfigs, config, cleanup,
+                        IoTUtils::assertIoTConfigReady,
+                        IoTUtils::assertIoTConfigGone
+                );
 
                 // create result
 
@@ -670,10 +676,7 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // create IoT project
 
-                if (!Environment.getInstance().skipCleanup()) {
-                    cleanup.add(() -> IoTUtils.deleteIoTProjectAndWait(project));
-                }
-                IoTUtils.createIoTProject(project, this.awaitReady);
+                createDefaultResource(Kubernetes::iotTenants, project, cleanup);
 
                 // create endpoints
 
@@ -1330,25 +1333,62 @@ public final class IoTTestSession implements IoTTestContext {
     private static <T extends HasMetadata, L, D> void createDefaultResource(
             final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
             final T resource,
-            final List<ThrowingCallable> cleanup) {
+            final List<ThrowingCallable> cleanup,
+            final BiConsumer<T, SoftAssertions> assertAfterConstruction,
+            final BiConsumer<T, SoftAssertions> assertAfterDeconstruction) {
+
 
         log.info("Creating {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
 
         var client = clientProvider.apply(resource.getMetadata().getNamespace());
         if (shouldCleanup()) {
             cleanup.add(() -> {
+
                 log.info("Deleting {}/{}: {}/{}", resource.getApiVersion(), resource.getKind(), resource.getMetadata().getNamespace(), resource.getMetadata().getName());
+
                 var access = client.inNamespace(resource.getMetadata().getNamespace()).withName(resource.getMetadata().getName());
                 access
                         .withPropagationPolicy(DeletionPropagation.FOREGROUND)
                         .delete();
+
                 waitUntilConditionOrFail(gone(access), ofMinutes(5), ofSeconds(5));
+
+                if (assertAfterDeconstruction != null) {
+                    log.debug("Asserting deconstruction");
+                    assertSoftly(softly -> {
+                        assertAfterDeconstruction.accept(resource, softly);
+                    });
+                }
+
             });
         }
+
         client.create(resource);
+
+        var access = client
+                .inNamespace(resource.getMetadata().getNamespace())
+                .withName(resource.getMetadata().getName());
+
         waitUntilConditionOrFail(condition(client, resource, "Ready"), ofMinutes(5), ofSeconds(5));
 
         log.info("Creating successful. Resource is ready.");
+
+        if (assertAfterConstruction != null) {
+            log.debug("Asserting construction");
+            assertSoftly(softly -> {
+                assertAfterConstruction.accept(access.get(), softly);
+            });
+        }
+
+
+    }
+
+    private static <T extends HasMetadata, L, D> void createDefaultResource(
+            final Function<String, MixedOperation<T, L, D, Resource<T, D>>> clientProvider,
+            final T resource,
+            final List<ThrowingCallable> cleanup) {
+
+        createDefaultResource(clientProvider, resource, cleanup, null, null);
 
     }
 
