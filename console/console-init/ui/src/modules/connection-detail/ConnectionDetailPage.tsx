@@ -39,7 +39,7 @@ export default function ConnectionDetailPage() {
     () => (
       <Breadcrumb>
         <BreadcrumbItem>
-          <Link id="connection-detail-page-home-link" to={"/"}>
+          <Link id="home-link" to={"/"}>
             Home
           </Link>
         </BreadcrumbItem>
