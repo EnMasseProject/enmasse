@@ -32,19 +32,47 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   setMetadataList,
   rowIndex
 }) => {
-  const metadataRow = metadataList[rowIndex];
+  const currentRow = metadataList[rowIndex];
   const [validationStatus, setValidationStatus] = useState<
     ValidationStatusType.DEFAULT | ValidationStatusType.ERROR
   >(ValidationStatusType.DEFAULT);
 
-  const onSelectType = (typeValue: string) => {
-    const validationStatus = getValidationStatus(typeValue, metadataRow.value);
+  const updateMetadataList = (property: string, value: string) => {
+    let updatedMetadataList = [...metadataList];
+    switch (property) {
+      case "key":
+        updatedMetadataList[rowIndex].key = value;
+        break;
+      case "type":
+        updatedMetadataList[rowIndex].type = value;
+        if (isObjectOrArray(value as any))
+          updatedMetadataList[rowIndex].value = "";
+        break;
+      case "value":
+        updatedMetadataList[rowIndex].value = value;
+        break;
+    }
+    setMetadataList(updatedMetadataList);
+  };
+
+  const handleTypeChange = (type: string) => {
+    const validationStatus = getValidationStatus(type, currentRow.value);
     setValidationStatus(validationStatus);
-    let updatedTypeMetadata = [...metadataList];
-    updatedTypeMetadata[rowIndex].type = typeValue;
-    if (isObjectOrArray(typeValue as any))
-      updatedTypeMetadata[rowIndex].value = "";
-    setMetadataList(updatedTypeMetadata);
+    updateMetadataList("type", type);
+  };
+
+  const handlePropertyChange = (property: string) => {
+    updateMetadataList("key", property);
+  };
+
+  const handleValueChange = (value: string, _: any) => {
+    const validationStatus = getValidationStatus(currentRow.type, value);
+    setValidationStatus(validationStatus);
+    updateMetadataList("value", value);
+  };
+
+  const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
+    return type === DataType.OBJECT || type === DataType.ARRAY;
   };
 
   const getValidationStatus = (type: string, value: string) => {
@@ -80,15 +108,8 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     return validationStatus;
   };
 
-  //TODO: Call graphql queries and populate options in SelectOption
-  const handlePropertyInputChange = async (propertyKey: string) => {
-    let updatedPropertyMetadata = [...metadataList];
-    updatedPropertyMetadata[rowIndex].key = propertyKey;
-    setMetadataList(updatedPropertyMetadata);
-  };
-
-  const handleAddChildRow = (event: any) => {
-    let parentKey: string = metadataRow.key;
+  const handleAddChildRow = (_: any) => {
+    let parentKey: string = currentRow.key;
     let newRow: IMetadataProps = {
       key: parentKey + "/",
       value: "",
@@ -96,30 +117,13 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
     };
     let updatedValueMetadata = [...metadataList];
     updatedValueMetadata[rowIndex].value = newRow;
-    console.log("updatedValueMetadata", updatedValueMetadata);
     setMetadataList(updatedValueMetadata);
-    // setMetadataList([...metadataList, newRow]);
   };
 
   const handleDeleteRow = (index: any) => {
     const deletedRowMetadata = [...metadataList];
     deletedRowMetadata.splice(index, 1);
     setMetadataList(deletedRowMetadata);
-  };
-
-  const handleValueChange = (propertyValue: string, e: any) => {
-    const validationStatus = getValidationStatus(
-      metadataRow.type,
-      propertyValue
-    );
-    setValidationStatus(validationStatus);
-    let updatedValueMetadata = [...metadataList];
-    updatedValueMetadata[rowIndex].value = propertyValue;
-    setMetadataList(updatedValueMetadata);
-  };
-
-  const isObjectOrArray = (type: DataType.ARRAY | DataType.OBJECT) => {
-    return type === DataType.OBJECT || type === DataType.ARRAY;
   };
 
   //TODO: Increase width of type dropdown
@@ -130,12 +134,12 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
           <InputGroup>
             <TextInput
               id="metadata-row-text-parameter-input"
-              value={metadataRow.key}
+              value={currentRow.key}
               type="text"
-              onChange={handlePropertyInputChange}
+              onChange={handlePropertyChange}
               aria-label="text input example"
             />
-            {isObjectOrArray(metadataRow.type) && (
+            {isObjectOrArray(currentRow.type) && (
               <Button
                 id="metadata-row-add-child-button"
                 variant="control"
@@ -152,23 +156,23 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
             id="metadata-row-type-dropdowntoggle"
             toggleId="metadata-row-type-dropdown-toggle"
             position={DropdownPosition.left}
-            onSelectItem={onSelectType}
+            onSelectItem={handleTypeChange}
             dropdownItems={deviceRegistrationTypeOptions}
-            value={metadataRow.type}
+            value={currentRow.type}
             isLabelAndValueNotSame={true}
-            isDisabled={isObjectOrArray(metadataRow.type)}
+            isDisabled={isObjectOrArray(currentRow.type)}
           />
         </GridItem>
         <GridItem span={5}>
           <InputGroup>
             <TextInput
-              id="metadat-row-text-value-input"
-              value={metadataRow.value}
+              id="metadata-row-text-value-input"
+              value={currentRow.value}
               validated={validationStatus}
               type="text"
               onChange={handleValueChange}
               aria-label="text input example"
-              isDisabled={isObjectOrArray(metadataRow.type)}
+              isDisabled={isObjectOrArray(currentRow.type)}
             />
             <Button
               id="metadata-row-delete-button"

@@ -28,7 +28,6 @@ export const CreateMetadata: React.FC = () => {
   const [metadataList, setMetadataList] = useState<IMetadataProps[]>(
     getInitialMetadataState
   );
-  // console.log("metadataList", metadataList);
   const handleAddParentRow = () => {
     setMetadataList([
       ...metadataList,
@@ -40,18 +39,15 @@ export const CreateMetadata: React.FC = () => {
     ]);
   };
   //TODO: Add child rows
-  const getMetadataRows = (metaDataListing: IMetadataProps[]) => {
-    console.log("metadataListing", metaDataListing);
-    return metaDataListing.map((metadataRow, index: number) => {
-      // console.log("metadata row value", metadataRow);
+  const getMetadataRows = (metaDataRows: IMetadataProps[]) => {
+    return metaDataRows.map((metadataRow, index: number) => {
       if (typeof metadataRow.value === "object") {
-        console.log("Object Identified");
         getMetadataRows(metadataRow.value as IMetadataProps[]);
       } else {
         return (
           <MetaDataRow
             key={index}
-            metadataList={metaDataListing}
+            metadataList={metaDataRows}
             setMetadataList={setMetadataList}
             rowIndex={index}
           />
