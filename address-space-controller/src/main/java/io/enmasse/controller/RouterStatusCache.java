@@ -83,6 +83,7 @@ public class RouterStatusCache implements Runnable, Controller {
             // Take a deep copy of address spaces to ensure stable data
             currentAddressSpaces.addAll(addressSpaces.stream()
                     .filter(addressSpace -> "standard".equals(addressSpace.getSpec().getType()))
+                    .filter(addressSpace -> !Controller.isDeleted(addressSpace))
                     .map(addressSpace -> new AddressSpaceBuilder(addressSpace).build())
                     .collect(Collectors.toList()));
         }

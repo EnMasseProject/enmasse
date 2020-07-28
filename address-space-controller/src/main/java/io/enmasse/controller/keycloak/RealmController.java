@@ -103,12 +103,15 @@ public class RealmController implements Controller {
             Set<String> actualRealms = keycloak.getRealmNames(authenticationService);
 
             for (AddressSpace addressSpace : addressSpaces) {
-                String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
-                if (actualRealms.contains(realmName)) {
-                    continue;
+                if (!Controller.isDeleted(addressSpace)) {
+                    String realmName = addressSpace.getAnnotation(AnnotationKeys.REALM_NAME);
+                    if (actualRealms.contains(realmName)) {
+                        continue;
+                    }
+                    log.info("Creating realm {} in authentication service {}", realmName, authenticationService.getMetadata().getName());
+
+                    keycloak.createRealm(authenticationService, addressSpace.getMetadata().getNamespace(), realmName);
                 }
-                log.info("Creating realm {} in authentication service {}", realmName, authenticationService.getMetadata().getName());
-                keycloak.createRealm(authenticationService, addressSpace.getMetadata().getNamespace(), realmName);
             }
         }
     }
