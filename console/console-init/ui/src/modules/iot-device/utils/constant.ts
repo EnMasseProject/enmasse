@@ -95,6 +95,7 @@ const deviceRegistrationTypeOptions: ISelectOption[] = [
   { key: "string", label: "String", value: "string" },
   { key: "number", label: "Numeric", value: "number" },
   { key: "boolean", label: "Boolean", value: "boolean" },
+  { key: "datetime", label: "DateTime", value: "datetime" },
   { key: "object", label: "Object", value: "object" },
   { key: "array", label: "Array", value: "array" }
 ];
@@ -110,6 +111,11 @@ const getInitialMetadataState = () => {
 
 const MAX_DEVICE_LIST_COUNT = 500;
 
+enum ValidationStatusType {
+  DEFAULT = "default",
+  ERROR = "error"
+}
+
 export {
   deviceTypeOptions,
   deviceStatusOptions,
@@ -120,5 +126,6 @@ export {
   credentialTypeOptions,
   deviceRegistrationTypeOptions,
   getInitialMetadataState,
-  MAX_DEVICE_LIST_COUNT
+  MAX_DEVICE_LIST_COUNT,
+  ValidationStatusType
 };

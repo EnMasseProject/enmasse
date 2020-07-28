@@ -3,7 +3,7 @@
  * License: Apache License 2.0 (see the file LICENSE or http://apache.org/licenses/LICENSE-2.0.html).
  */
 
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   GridItem,
@@ -16,6 +16,7 @@ import { DropdownWithToggle } from "components";
 import { PlusIcon, MinusCircleIcon } from "@patternfly/react-icons";
 import { deviceRegistrationTypeOptions } from "modules/iot-device";
 import { DataType } from "constant";
+import { ValidationStatusType } from "modules/iot-device/utils";
 
 export interface IMetaDataRow {
   metadataList: any;
@@ -29,14 +30,51 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   rowIndex
 }) => {
   const metadataRow = metadataList[rowIndex];
-  // console.log("metadataList", metadataList, "type", metadataRow.type);
+  const [validationStatus, setValidationStatus] = useState<
+    ValidationStatusType.DEFAULT | ValidationStatusType.ERROR
+  >(ValidationStatusType.DEFAULT);
 
   const onSelectType = (typeValue: string) => {
+    const validationStatus = getValidationStatus(typeValue, metadataRow.value);
+    setValidationStatus(validationStatus);
     let updatedTypeMetadata = [...metadataList];
     updatedTypeMetadata[rowIndex].type = typeValue;
     if (isObjectOrArray(typeValue as any))
       updatedTypeMetadata[rowIndex].value = "";
     setMetadataList(updatedTypeMetadata);
+  };
+
+  const getValidationStatus = (type: string, value: string) => {
+    let validationStatus:
+      | ValidationStatusType.DEFAULT
+      | ValidationStatusType.ERROR = ValidationStatusType.DEFAULT;
+    switch (type) {
+      case "string":
+        validationStatus =
+          typeof value === "string"
+            ? ValidationStatusType.DEFAULT
+            : ValidationStatusType.ERROR;
+        break;
+      case "number":
+        validationStatus = !isNaN(Number(value))
+          ? ValidationStatusType.DEFAULT
+          : ValidationStatusType.ERROR;
+        break;
+      case "boolean":
+        validationStatus =
+          value &&
+          (value?.toLowerCase() === "true" || value?.toLowerCase() === "false")
+            ? ValidationStatusType.DEFAULT
+            : ValidationStatusType.ERROR;
+        break;
+      case "datetime":
+        validationStatus = !isNaN(Date.parse(value))
+          ? ValidationStatusType.DEFAULT
+          : ValidationStatusType.ERROR;
+        break;
+      default:
+    }
+    return validationStatus;
   };
 
   //TODO: Call graphql queries and populate options in SelectOption
@@ -63,6 +101,11 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
   };
 
   const handleValueChange = (propertyValue: string, e: any) => {
+    const validationStatus = getValidationStatus(
+      metadataRow.type,
+      propertyValue
+    );
+    setValidationStatus(validationStatus);
     let updatedValueMetadata = [...metadataList];
     updatedValueMetadata[rowIndex].value = propertyValue;
     setMetadataList(updatedValueMetadata);
@@ -114,6 +157,7 @@ export const MetaDataRow: React.FC<IMetaDataRow> = ({
             <TextInput
               id="metadat-row-text-value-input"
               value={metadataRow.value}
+              validated={validationStatus}
               type="text"
               onChange={handleValueChange}
               aria-label="text input example"
