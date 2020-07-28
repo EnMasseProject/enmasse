@@ -41,10 +41,9 @@ const NavToolBar: React.FC = () => {
     setIsUserDropdownOpen(!isUserDropdownOpen);
   };
   const dropdownItems = [
-    <a href={process.env.REACT_APP_DOCS}>
+    <a href={process.env.REACT_APP_DOCS} key="help">
       <DropdownItem
         id="nav-toolbar-help-dropdownitem"
-        key="help"
         className={css(styles.navtb_dropdownitem_help)}
       >
         Help
@@ -72,6 +71,7 @@ const NavToolBar: React.FC = () => {
     <React.Fragment>
       <Dropdown
         id="nav-toolbar-help-about-dropdown"
+        key="help-about-dropdown"
         position={DropdownPosition.right}
         toggle={
           <DropdownToggle
@@ -89,6 +89,7 @@ const NavToolBar: React.FC = () => {
       />
       <Dropdown
         id="nav-toolbar-user-dropdown"
+        key="user-dropdown"
         isPlain
         position="right"
         onSelect={onUserDropdownSelect}
