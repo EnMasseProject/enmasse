@@ -25,9 +25,9 @@ import io.enmasse.iot.model.v1.IoTConfigBuilder;
 import io.enmasse.iot.model.v1.IoTConfigFluent.SpecNested;
 import io.enmasse.iot.model.v1.IoTConfigSpec;
 import io.enmasse.iot.model.v1.IoTConfigSpecFluent.AdaptersNested;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectBuilder;
-import io.enmasse.iot.model.v1.ProjectConditionType;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.model.v1.IoTTenantBuilder;
+import io.enmasse.iot.model.v1.TenantConditionType;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.Environment;
 import io.enmasse.systemtest.amqp.AmqpClient;
@@ -87,7 +87,7 @@ import static org.assertj.core.api.SoftAssertions.assertSoftly;
 public final class IoTTestSession implements IoTTestContext {
 
     private static final Logger log = LoggerFactory.getLogger(IoTTestSession.class);
-    private static final String IOT_PROJECT_NAMESPACE = "iot-systemtests";
+    private static final String IOT_TENANT_NAMESPACE = "iot-systemtests";
 
     public enum Adapter {
         AMQP(AdaptersConfig::getAmqp) {
@@ -220,7 +220,7 @@ public final class IoTTestSession implements IoTTestContext {
     private final Set<String> defaultTlsVersions;
     private final List<ThrowingCallable> cleanup;
 
-    private IoTTestContext defaultProject;
+    private IoTTestContext defaultTenant;
 
     private IoTTestSession(
             final Vertx vertx,
@@ -240,12 +240,12 @@ public final class IoTTestSession implements IoTTestContext {
 
     @Override
     public IoTConfig getConfig() {
-        return this.defaultProject.getConfig();
+        return this.defaultTenant.getConfig();
     }
 
     @Override
-    public IoTProject getProject() {
-        return this.defaultProject.getProject();
+    public IoTTenant getTenant() {
+        return this.defaultTenant.getTenant();
     }
 
     private HttpAdapterClient createHttpAdapterClient(final PrivateKey key, final X509Certificate certificate, final Set<String> tlsVersions) throws Exception {
@@ -313,7 +313,7 @@ public final class IoTTestSession implements IoTTestContext {
 
     @Override
     public AmqpClient getConsumerClient() {
-        return this.defaultProject.getConsumerClient();
+        return this.defaultTenant.getConsumerClient();
     }
 
     /**
@@ -371,21 +371,21 @@ public final class IoTTestSession implements IoTTestContext {
 
         @FunctionalInterface
         interface BuildProcessor<T, X extends Throwable> {
-            T process(IoTConfig config, IoTProject project) throws X;
+            T process(IoTConfig config, IoTTenant tenant) throws X;
         }
 
-        private final IoTProjectBuilder project;
+        private final IoTTenantBuilder tenant;
         private final List<PreDeployProcessor> preDeploy = new LinkedList<>();
 
         private IoTConfigBuilder config;
         private Set<String> defaultTlsVersions;
 
         private Consumer<Throwable> exceptionHandler = IoTTestSession::defaultExceptionHandler;
-        private Consumer<ProjectBuilder> defaultProjectCustomizer;
+        private Consumer<TenantBuilder> defaultTenantCustomizer;
 
-        private Builder(final IoTConfigBuilder config, final IoTProjectBuilder project) {
+        private Builder(final IoTConfigBuilder config, final IoTTenantBuilder tenant) {
             this.config = config;
-            this.project = project;
+            this.tenant = tenant;
         }
 
         public Builder config(final ThrowingConsumer<IoTConfigBuilder> configCustomizer) throws Exception {
@@ -403,8 +403,8 @@ public final class IoTTestSession implements IoTTestContext {
             return this;
         }
 
-        public Builder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
-            customizer.accept(this.project);
+        public Builder tenant(final ThrowingConsumer<IoTTenantBuilder> customizer) throws Exception {
+            customizer.accept(this.tenant);
             return this;
         }
 
@@ -441,8 +441,8 @@ public final class IoTTestSession implements IoTTestContext {
             return adapters(EnumSet.copyOf(Arrays.asList(adapters)));
         }
 
-        public Builder defaultProjectCustomizer(final Consumer<ProjectBuilder> customizer) {
-            this.defaultProjectCustomizer = customizer;
+        public Builder defaultTenantCustomizer(final Consumer<TenantBuilder> customizer) {
+            this.defaultTenantCustomizer = customizer;
             return this;
         }
 
@@ -464,7 +464,7 @@ public final class IoTTestSession implements IoTTestContext {
 
         @FunctionalInterface
         public interface PreDeployProcessor {
-            void preDeploy(PreDeployContext context, IoTConfigBuilder config, IoTProjectBuilder project) throws Exception;
+            void preDeploy(PreDeployContext context, IoTConfigBuilder config, IoTTenantBuilder tenant) throws Exception;
         }
 
         /**
@@ -485,7 +485,7 @@ public final class IoTTestSession implements IoTTestContext {
                         public void addCleanup(final ThrowingCallable cleanupTask) {
                             cleanup.add(cleanupTask);
                         }
-                    }, this.config, this.project);
+                    }, this.config, this.tenant);
                 }
 
                 // build objects
@@ -547,16 +547,16 @@ public final class IoTTestSession implements IoTTestContext {
                 cleanup.clear();
                 cleanup.add(result::close);
 
-                // create default project
+                // create default tenant
 
-                var defaultProjectBuilder = result
-                        .newProject(this.project)
+                var defaultTenantBuilder = result
+                        .newTenant(this.tenant)
                         .createNamespace(true);
-                if (this.defaultProjectCustomizer != null) {
-                    this.defaultProjectCustomizer.accept(defaultProjectBuilder);
+                if (this.defaultTenantCustomizer != null) {
+                    this.defaultTenantCustomizer.accept(defaultTenantBuilder);
                 }
-                var defaultProject = defaultProjectBuilder.deploy();
-                result.setDefaultProject(defaultProject);
+                var defaultTenant = defaultTenantBuilder.deploy();
+                result.setDefaultTenant(defaultTenant);
 
                 // done
 
@@ -567,9 +567,9 @@ public final class IoTTestSession implements IoTTestContext {
 
     }
 
-    public class ProjectBuilder {
+    public class TenantBuilder {
 
-        private final IoTProjectBuilder project;
+        private final IoTTenantBuilder tenant;
         private final Consumer<Throwable> exceptionHandler;
         private final Set<String> defaultTlsVersions;
 
@@ -580,51 +580,51 @@ public final class IoTTestSession implements IoTTestContext {
         private ThrowingConsumer<MessagingProjectBuilder> projectCustomizer;
         private ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer;
 
-        private ProjectBuilder(
-                final IoTProjectBuilder project,
+        private TenantBuilder(
+                final IoTTenantBuilder tenant,
                 final Consumer<Throwable> exceptionHandler,
                 final Set<String> defaultTlsVersions
         ) {
-            this.project = project;
+            this.tenant = tenant;
             this.exceptionHandler = exceptionHandler;
             this.defaultTlsVersions = defaultTlsVersions;
         }
 
-        public ProjectBuilder tenant(final ThrowingConsumer<IoTProjectBuilder> customizer) throws Exception {
-            customizer.accept(this.project);
+        public TenantBuilder tenant(final ThrowingConsumer<IoTTenantBuilder> customizer) throws Exception {
+            customizer.accept(this.tenant);
             return this;
         }
 
-        public ProjectBuilder project(final ThrowingConsumer<MessagingProjectBuilder> projectCustomizer) {
+        public TenantBuilder project(final ThrowingConsumer<MessagingProjectBuilder> projectCustomizer) {
             this.projectCustomizer = projectCustomizer;
             return this;
         }
 
-        public ProjectBuilder endpoint(final ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer) {
+        public TenantBuilder endpoint(final ThrowingConsumer<MessagingEndpointBuilder> endpointCustomizer) {
             this.endpointCustomizer = endpointCustomizer;
             return this;
         }
 
-        public ProjectBuilder consumerTlsVersions(final String... consumerTlsVersions) {
+        public TenantBuilder consumerTlsVersions(final String... consumerTlsVersions) {
             return consumerTlsVersions(consumerTlsVersions != null ? Set.of(consumerTlsVersions) : null);
         }
 
-        public ProjectBuilder consumerTlsVersions(final Set<String> consumerTlsVersions) {
+        public TenantBuilder consumerTlsVersions(final Set<String> consumerTlsVersions) {
             this.consumerTlsVersions = consumerTlsVersions;
             return this;
         }
 
-        public ProjectBuilder awaitReady(boolean enabled) {
+        public TenantBuilder awaitReady(boolean enabled) {
             this.awaitReady = enabled;
             return this;
         }
 
-        public ProjectBuilder createNamespace(boolean enabled) {
+        public TenantBuilder createNamespace(boolean enabled) {
             this.createNamespace = enabled;
             return this;
         }
 
-        public ProjectBuilder createNamespace() {
+        public TenantBuilder createNamespace() {
             return createNamespace(true);
         }
 
@@ -632,13 +632,13 @@ public final class IoTTestSession implements IoTTestContext {
 
             return trackingCleanup(this.exceptionHandler, cleanup -> {
 
-                // build the project object
+                // build the tenant object
 
-                var project = this.project.build();
+                var tenant = this.tenant.build();
 
-                // the project namespace
+                // the tenant namespace
 
-                var namespace = project.getMetadata().getNamespace();
+                var namespace = tenant.getMetadata().getNamespace();
 
                 if (this.createNamespace) {
 
@@ -649,7 +649,7 @@ public final class IoTTestSession implements IoTTestContext {
                     }
                     Kubernetes.getInstance().createNamespace(namespace);
 
-                    // create messaging project
+                    // create messaging tenant
 
                     var messagingProject = createDefaultProject(namespace);
                     if (this.projectCustomizer != null) {
@@ -673,10 +673,10 @@ public final class IoTTestSession implements IoTTestContext {
                         .get();
                 var endpointHost = messagingEndpoint.getStatus().getHost();
 
-                // create IoT project
+                // create IoT tenant
 
                 if (this.awaitReady) {
-                    createDefaultResource(Kubernetes::iotTenants, project, ProjectConditionType.READY, cleanup);
+                    createDefaultResource(Kubernetes::iotTenants, tenant, TenantConditionType.READY, cleanup);
                 }
 
                 // create endpoints
@@ -764,7 +764,7 @@ public final class IoTTestSession implements IoTTestContext {
 
                 // we are all set up, register ourselves with the session
 
-                var result = new ProjectInstance(IoTTestSession.this.config, project, registryClient, credentialsClient, client, cleanup);
+                var result = new TenantInstance(IoTTestSession.this.config, tenant, registryClient, credentialsClient, client, cleanup);
                 IoTTestSession.this.cleanup.add(result::close);
 
                 // return result
@@ -803,7 +803,7 @@ public final class IoTTestSession implements IoTTestContext {
         }
     }
 
-    public class ProjectInstance implements IoTTestContext {
+    public class TenantInstance implements IoTTestContext {
 
         public class Device {
 
@@ -818,7 +818,7 @@ public final class IoTTestSession implements IoTTestContext {
             }
 
             public Device register() throws Exception {
-                ProjectInstance.this.registryClient.registerDevice(getTenantId(), this.deviceId);
+                TenantInstance.this.registryClient.registerDevice(getTenantId(), this.deviceId);
                 return this;
             }
 
@@ -837,7 +837,7 @@ public final class IoTTestSession implements IoTTestContext {
                 this.password = password;
 
                 var pwd = CredentialsRegistryClient.createPlainPasswordCredentialsObject(authId, password, null);
-                ProjectInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(pwd));
+                TenantInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(pwd));
                 return this;
             }
 
@@ -873,7 +873,7 @@ public final class IoTTestSession implements IoTTestContext {
                 this.certificate = certificate;
 
                 var x509 = CredentialsRegistryClient.createX509CertificateCredentialsObject(certificate.getSubjectX500Principal().getName(), null);
-                ProjectInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(x509));
+                TenantInstance.this.credentialsClient.setCredentials(getTenantId(), this.deviceId, singletonList(x509));
                 return this;
             }
 
@@ -951,23 +951,23 @@ public final class IoTTestSession implements IoTTestContext {
         }
 
         private final IoTConfig config;
-        private final IoTProject project;
+        private final IoTTenant tenant;
         private final DeviceRegistryClient registryClient;
         private final CredentialsRegistryClient credentialsClient;
         private final AmqpClient consumerClient;
         private final List<ThrowingCallable> cleanup;
         private final AtomicBoolean closed = new AtomicBoolean();
 
-        public ProjectInstance(
+        public TenantInstance(
                 final IoTConfig config,
-                final IoTProject project,
+                final IoTTenant tenant,
                 final DeviceRegistryClient registryClient,
                 final CredentialsRegistryClient credentialsClient,
                 final AmqpClient consumerClient,
                 final List<ThrowingCallable> cleanup) {
 
             this.config = config;
-            this.project = project;
+            this.tenant = tenant;
 
             this.registryClient = registryClient;
             this.credentialsClient = credentialsClient;
@@ -983,8 +983,8 @@ public final class IoTTestSession implements IoTTestContext {
         }
 
         @Override
-        public IoTProject getProject() {
-            return this.project;
+        public IoTTenant getTenant() {
+            return this.tenant;
         }
 
         @Override
@@ -1004,7 +1004,7 @@ public final class IoTTestSession implements IoTTestContext {
                 return;
             }
 
-            log.info("Cleaning up project instance: {}/{}", this.project.getMetadata().getNamespace(), this.project.getMetadata().getName());
+            log.info("Cleaning up tenant instance: {}/{}", this.tenant.getMetadata().getNamespace(), this.tenant.getMetadata().getName());
 
             var e = cleanup(this.cleanup, null);
             if (e != null) {
@@ -1027,17 +1027,17 @@ public final class IoTTestSession implements IoTTestContext {
 
         var config = createDefaultConfig(infraNamespace, isOpenshiftFour);
 
-        // we use the same name for the IoTProject and the AddressSpace
+        // we use the same name for the IoTTenant and the AddressSpace
 
         var name = Names.randomName();
 
-        // create new default project setup
+        // create new default tenant setup
 
-        var project = createDefaultTenant(IOT_PROJECT_NAMESPACE, name);
+        var tenant = createDefaultTenant(IOT_TENANT_NAMESPACE, name);
 
         // done
 
-        return new Builder(config, project);
+        return new Builder(config, tenant);
     }
 
     /**
@@ -1157,10 +1157,10 @@ public final class IoTTestSession implements IoTTestContext {
      *
      * @param namespace The namespace the object should be in.
      * @param name The name of the object
-     * @return The new project instance, ready to be created.
+     * @return The new tenant instance, ready to be created.
      */
-    static IoTProjectBuilder createDefaultTenant(final String namespace, final String name) {
-        return new IoTProjectBuilder()
+    static IoTTenantBuilder createDefaultTenant(final String namespace, final String name) {
+        return new IoTTenantBuilder()
                 .withNewMetadata()
                 .withName(name)
                 .withNamespace(namespace)
@@ -1228,16 +1228,16 @@ public final class IoTTestSession implements IoTTestContext {
         }
     }
 
-    private void setDefaultProject(final IoTTestContext defaultProject) {
-        this.defaultProject = defaultProject;
+    private void setDefaultTenant(final IoTTestContext defaultTenant) {
+        this.defaultTenant = defaultTenant;
     }
 
-    private ProjectBuilder newProject(final IoTProjectBuilder project) {
-        return new ProjectBuilder(project, this.exceptionHandler, this.defaultTlsVersions);
+    private TenantBuilder newTenant(final IoTTenantBuilder tenant) {
+        return new TenantBuilder(tenant, this.exceptionHandler, this.defaultTlsVersions);
     }
 
-    public ProjectBuilder newProject(final String namespace, final String name) {
-        return newProject(createDefaultTenant(namespace, name));
+    public TenantBuilder newTenant(final String namespace, final String name) {
+        return newTenant(createDefaultTenant(namespace, name));
     }
 
     /**
@@ -1245,11 +1245,11 @@ public final class IoTTestSession implements IoTTestContext {
      *
      * @param deviceId The ID of the device to create.
      * @return The new device creation instance. The device will only be created when the
-     * {@link ProjectInstance.Device#register()} method is being called.
+     * {@link TenantInstance.Device#register()} method is being called.
      */
     @Override
-    public ProjectInstance.Device newDevice(final String deviceId) {
-        return this.defaultProject.newDevice(deviceId);
+    public TenantInstance.Device newDevice(final String deviceId) {
+        return this.defaultTenant.newDevice(deviceId);
     }
 
     /**
@@ -1291,7 +1291,7 @@ public final class IoTTestSession implements IoTTestContext {
      * to {@link DefaultDeviceRegistry#deleteDefaultServer()} for cleanup.
      */
     public static PreDeployProcessor withDefaultServices() {
-        return (context, config, project) -> {
+        return (context, config, tenant) -> {
             try {
 
                 if (!Environment.getInstance().isSkipDeployPostgresql()) {

@@ -140,12 +140,12 @@ func main() {
 			globalGvks = append(globalGvks,
 				schema.GroupVersionKind{
 					Group:   "iot.enmasse.io",
-					Version: "v1alpha1",
+					Version: "v1",
 					Kind:    "IoTConfig",
 				},
 				schema.GroupVersionKind{
 					Group:   "iot.enmasse.io",
-					Version: "v1alpha1",
+					Version: "v1",
 					Kind:    "IoTConfigList",
 				})
 		}
@@ -155,13 +155,13 @@ func main() {
 		globalGvks = append(globalGvks,
 			schema.GroupVersionKind{
 				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTProject",
+				Version: "v1",
+				Kind:    "IoTTenant",
 			},
 			schema.GroupVersionKind{
 				Group:   "iot.enmasse.io",
-				Version: "v1alpha1",
-				Kind:    "IoTProjectList",
+				Version: "v1",
+				Kind:    "IoTTenantList",
 			})
 	}
 

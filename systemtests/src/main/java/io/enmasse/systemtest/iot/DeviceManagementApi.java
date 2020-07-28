@@ -66,7 +66,7 @@ public final class DeviceManagementApi {
 
                 .addNewRule()
                 .withApiGroups(IoTCrd.GROUP)
-                .withResources(IoTCrd.project().getSpec().getNames().getPlural().toLowerCase())
+                .withResources(IoTCrd.tenant().getSpec().getNames().getPlural().toLowerCase())
                 .withVerbs("create", "get", "list", "patch", "update", "delete")
                 .endRule()
 

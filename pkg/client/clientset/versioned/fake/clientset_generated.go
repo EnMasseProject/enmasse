@@ -17,8 +17,8 @@ import (
 	fakeenmassev1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1/fake"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
 	fakeenmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1/fake"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
-	fakeiotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1/fake"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1"
+	fakeiotv1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1/fake"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1"
 	fakeuserv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -95,9 +95,9 @@ func (c *Clientset) EnmasseV1() enmassev1.EnmasseV1Interface {
 	return &fakeenmassev1.FakeEnmasseV1{Fake: &c.Fake}
 }
 
-// IotV1alpha1 retrieves the IotV1alpha1Client
-func (c *Clientset) IotV1alpha1() iotv1alpha1.IotV1alpha1Interface {
-	return &fakeiotv1alpha1.FakeIotV1alpha1{Fake: &c.Fake}
+// IotV1 retrieves the IotV1Client
+func (c *Clientset) IotV1() iotv1.IotV1Interface {
+	return &fakeiotv1.FakeIotV1{Fake: &c.Fake}
 }
 
 // UserV1beta1 retrieves the UserV1beta1Client

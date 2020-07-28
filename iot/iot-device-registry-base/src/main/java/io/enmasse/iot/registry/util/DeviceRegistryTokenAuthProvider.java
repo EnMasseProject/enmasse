@@ -53,7 +53,7 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
     private static final HttpStatusException UNAUTHORIZED = new HttpStatusException(401);
 
-    private static final String IOT_PROJECT_PLURAL = IoTCrd.project().getSpec().getNames().getPlural();
+    private static final String IOT_TENANT_PLURAL = IoTCrd.tenant().getSpec().getNames().getPlural();
 
     private final Tracer tracer;
     private final NamespacedKubernetesClient client;
@@ -149,12 +149,12 @@ public class DeviceRegistryTokenAuthProvider implements AuthProvider {
 
         final Span span = TracingHelper.buildChildSpan(this.tracer, parentSpan.context(), "check user roles", getClass().getSimpleName())
                 .withTag("namespace", tenant.getNamespace())
-                .withTag("name", tenant.getProjectName())
+                .withTag("name", tenant.getTenantName())
                 .withTag("tenant.name", tenant.getName())
                 .withTag(Tags.HTTP_METHOD.getKey(), method.name())
                 .start();
 
-        final String role = RbacSecurityContext.rbacToRole(tenant.getNamespace(), verb, IOT_PROJECT_PLURAL, tenant.getProjectName(), IoTCrd.GROUP);
+        final String role = RbacSecurityContext.rbacToRole(tenant.getNamespace(), verb, IOT_TENANT_PLURAL, tenant.getTenantName(), IoTCrd.GROUP);
         final RbacSecurityContext securityContext = new RbacSecurityContext(tokenReview, this.authApi, null);
         var f = this.authorizations
                 .computeIfAbsentAsync(role, authorized -> {

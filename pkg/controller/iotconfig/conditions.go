@@ -8,7 +8,7 @@ package iotconfig
 import (
 	"context"
 	"fmt"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"go.uber.org/multierr"
 	appsv1 "k8s.io/api/apps/v1"

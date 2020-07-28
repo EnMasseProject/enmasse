@@ -6,9 +6,9 @@
 package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
+import io.enmasse.iot.model.v1.DoneableIoTTenant;
 import io.enmasse.iot.model.v1.IoTConfig;
-import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.systemtest.amqp.AmqpClient;
 import io.enmasse.systemtest.platform.Kubernetes;
 import io.fabric8.kubernetes.client.dsl.Resource;
@@ -25,28 +25,28 @@ public interface IoTTestContext extends AutoCloseable, DeviceFactory {
     IoTConfig getConfig();
 
     /**
-     * Get the IoTProject instance that was used during creation.
+     * Get the IoTTenant instance that was used during creation.
      *
-     * If you need to retrieve the current state of the project, use the {@link #tenant()} method.
+     * If you need to retrieve the current state of the tenant, use the {@link #tenant()} method.
      *
      * @return The original instance.
      */
-    IoTProject getProject();
+    IoTTenant getTenant();
     AmqpClient getConsumerClient();
 
     default Resource<IoTConfig, DoneableIoTConfig> config() {
         return Kubernetes.iotConfigs(getConfig().getMetadata().getNamespace()).withName(getConfig().getMetadata().getName());
     }
 
-    default Resource<IoTProject, DoneableIoTProject> tenant() {
-        return Kubernetes.iotTenants(getProject().getMetadata().getNamespace()).withName(getProject().getMetadata().getName());
+    default Resource<IoTTenant, DoneableIoTTenant> tenant() {
+        return Kubernetes.iotTenants(getTenant().getMetadata().getNamespace()).withName(getTenant().getMetadata().getName());
     }
 
     /**
      * Get the Hono tenant ID.
      */
     default String getTenantId() {
-        return IoTUtils.getTenantId(getProject());
+        return IoTUtils.getTenantId(getTenant());
     }
 
 }

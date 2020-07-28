@@ -14,7 +14,7 @@ import (
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/admin/v1beta2"
 	enmassev1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/enmasse/v1beta1"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1alpha1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/iot/v1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned/typed/user/v1beta1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -27,7 +27,7 @@ type Interface interface {
 	AdminV1beta2() adminv1beta2.AdminV1beta2Interface
 	EnmasseV1beta1() enmassev1beta1.EnmasseV1beta1Interface
 	EnmasseV1() enmassev1.EnmasseV1Interface
-	IotV1alpha1() iotv1alpha1.IotV1alpha1Interface
+	IotV1() iotv1.IotV1Interface
 	UserV1beta1() userv1beta1.UserV1beta1Interface
 }
 
@@ -39,7 +39,7 @@ type Clientset struct {
 	adminV1beta2   *adminv1beta2.AdminV1beta2Client
 	enmasseV1beta1 *enmassev1beta1.EnmasseV1beta1Client
 	enmasseV1      *enmassev1.EnmasseV1Client
-	iotV1alpha1    *iotv1alpha1.IotV1alpha1Client
+	iotV1          *iotv1.IotV1Client
 	userV1beta1    *userv1beta1.UserV1beta1Client
 }
 
@@ -63,9 +63,9 @@ func (c *Clientset) EnmasseV1() enmassev1.EnmasseV1Interface {
 	return c.enmasseV1
 }
 
-// IotV1alpha1 retrieves the IotV1alpha1Client
-func (c *Clientset) IotV1alpha1() iotv1alpha1.IotV1alpha1Interface {
-	return c.iotV1alpha1
+// IotV1 retrieves the IotV1Client
+func (c *Clientset) IotV1() iotv1.IotV1Interface {
+	return c.iotV1
 }
 
 // UserV1beta1 retrieves the UserV1beta1Client
@@ -110,7 +110,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	if err != nil {
 		return nil, err
 	}
-	cs.iotV1alpha1, err = iotv1alpha1.NewForConfig(&configShallowCopy)
+	cs.iotV1, err = iotv1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 	cs.adminV1beta2 = adminv1beta2.NewForConfigOrDie(c)
 	cs.enmasseV1beta1 = enmassev1beta1.NewForConfigOrDie(c)
 	cs.enmasseV1 = enmassev1.NewForConfigOrDie(c)
-	cs.iotV1alpha1 = iotv1alpha1.NewForConfigOrDie(c)
+	cs.iotV1 = iotv1.NewForConfigOrDie(c)
 	cs.userV1beta1 = userv1beta1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
@@ -148,7 +148,7 @@ func New(c rest.Interface) *Clientset {
 	cs.adminV1beta2 = adminv1beta2.New(c)
 	cs.enmasseV1beta1 = enmassev1beta1.New(c)
 	cs.enmasseV1 = enmassev1.New(c)
-	cs.iotV1alpha1 = iotv1alpha1.New(c)
+	cs.iotV1 = iotv1.New(c)
 	cs.userV1beta1 = userv1beta1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)

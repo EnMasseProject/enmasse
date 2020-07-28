@@ -5,9 +5,9 @@
 
 package io.enmasse.systemtest.iot.x509;
 
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectStatus;
-import io.enmasse.iot.model.v1.ProjectConditionType;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.model.v1.IoTTenantStatus;
+import io.enmasse.iot.model.v1.TenantConditionType;
 import io.enmasse.systemtest.certs.ssl.SSLUtils;
 import io.enmasse.systemtest.iot.DeviceCertificateManager;
 import io.enmasse.systemtest.iot.DeviceCertificateManager.Mode;
@@ -65,7 +65,7 @@ public class TrustAnchorTest implements IoTTests {
                         .deploy();
 
                 IoTTestContext secondTenant = session
-                        .newProject(ns2, name2)
+                        .newTenant(ns2, name2)
                         .createNamespace(true)
                         .awaitReady(false)
                         .tenant(tenant -> tenant.editOrNewSpec()
@@ -91,10 +91,10 @@ public class TrustAnchorTest implements IoTTests {
                 // wait until the condition 'TrustAnchorsUnique' becomes false
                 return Optional
                         .ofNullable(secondTenant.tenant().get())
-                        .map(IoTProject::getStatus)
-                        .map(IoTProjectStatus::getConditions)
+                        .map(IoTTenant::getStatus)
+                        .map(IoTTenantStatus::getConditions)
                         .flatMap(c -> c.stream()
-                                .filter(condition -> condition.getType() == ProjectConditionType.TRUST_ANCHORS_UNIQUE)
+                                .filter(condition -> condition.getType() == TenantConditionType.TRUST_ANCHORS_UNIQUE)
                                 .findAny())
                         .map(c -> "false".equalsIgnoreCase(c.getStatus()) &&
                                 "DuplicateTrustAnchors".equals(c.getReason()))
@@ -102,7 +102,7 @@ public class TrustAnchorTest implements IoTTests {
 
             }, Duration.ofMinutes(5), Duration.ofSeconds(10), () -> "Condition 'TrustAnchorsUnique' should become 'false'");
 
-            log.info("Successfully detected 'DuplicateTrustAnchors' condition on second project");
+            log.info("Successfully detected 'DuplicateTrustAnchors' condition on second tenant");
 
         }
 

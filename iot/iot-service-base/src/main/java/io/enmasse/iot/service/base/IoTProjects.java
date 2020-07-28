@@ -5,14 +5,14 @@
 
 package io.enmasse.iot.service.base;
 
-import static io.enmasse.iot.model.v1.IoTCrd.project;
+import static io.enmasse.iot.model.v1.IoTCrd.tenant;
 import static java.util.Optional.empty;
 
 import java.util.Optional;
 
 import io.enmasse.iot.model.v1.DoneableIoTProject;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.model.v1.IoTTenantList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -26,17 +26,17 @@ public final class IoTProjects {
 
     private IoTProjects() {}
 
-    public static MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> clientForProject(final KubernetesClient client) {
+    public static MixedOperation<IoTTenant, IoTTenantList, DoneableIoTProject, Resource<IoTTenant, DoneableIoTProject>> clientForProject(final KubernetesClient client) {
         return client
-                .customResources(project(),
-                        IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+                .customResources(tenant(),
+                        IoTTenant.class, IoTTenantList.class, DoneableIoTProject.class);
     }
 
-    public static Optional<IoTProject> getProject(final KubernetesClient client, final String tenantName) {
+    public static Optional<IoTTenant> getProject(final KubernetesClient client, final String tenantName) {
         return getProject(clientForProject(client), tenantName);
    }
 
-    public static Optional<IoTProject> getProject(final MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> projects,
+    public static Optional<IoTTenant> getProject(final MixedOperation<IoTTenant, IoTTenantList, DoneableIoTProject, Resource<IoTTenant, DoneableIoTProject>> projects,
             final String tenantName) {
 
         final String[] toks = tenantName.split("\\.", 2);
@@ -48,7 +48,7 @@ public final class IoTProjects {
         final String namespace = toks[0];
         final String name = toks[1];
 
-        final IoTProject project = projects
+        final IoTTenant project = projects
                 .inNamespace(namespace)
                 .withName(name)
                 .get();

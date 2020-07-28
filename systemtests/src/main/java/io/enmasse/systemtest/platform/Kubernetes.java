@@ -19,12 +19,12 @@ import io.enmasse.api.model.MessagingInfrastructureList;
 import io.enmasse.api.model.MessagingProject;
 import io.enmasse.api.model.MessagingProjectList;
 import io.enmasse.iot.model.v1.DoneableIoTConfig;
-import io.enmasse.iot.model.v1.DoneableIoTProject;
+import io.enmasse.iot.model.v1.DoneableIoTTenant;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigList;
 import io.enmasse.iot.model.v1.IoTCrd;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectList;
+import io.enmasse.iot.model.v1.IoTTenant;
+import io.enmasse.iot.model.v1.IoTTenantList;
 import io.enmasse.model.CustomResourceDefinitions;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.EnmasseInstallType;
@@ -1265,15 +1265,15 @@ public abstract class Kubernetes {
     }
 
     /**
-     * Get a client for {@link IoTProject}s.
+     * Get a client for {@link IoTTenant}s.
      *
      * @param namespace The namespace to bind the client to, may be {@code null} to get a non-namespaced client.
      * @return The client instance.
      */
-    public static MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>> iotTenants(String namespace) {
-        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.project()), IoTProject.class, IoTProjectList.class, DoneableIoTProject.class);
+    public static MixedOperation<IoTTenant, IoTTenantList, DoneableIoTTenant, Resource<IoTTenant, DoneableIoTTenant>> iotTenants(String namespace) {
+        var result = getClient().customResources(CustomResourceDefinitionContext.fromCrd(IoTCrd.tenant()), IoTTenant.class, IoTTenantList.class, DoneableIoTTenant.class);
         if (namespace != null) {
-            result = (MixedOperation<IoTProject, IoTProjectList, DoneableIoTProject, Resource<IoTProject, DoneableIoTProject>>) result.inNamespace(namespace);
+            result = (MixedOperation<IoTTenant, IoTTenantList, DoneableIoTTenant, Resource<IoTTenant, DoneableIoTTenant>>) result.inNamespace(namespace);
         }
         return result;
     }

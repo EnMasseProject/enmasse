@@ -6,51 +6,32 @@ package io.enmasse.systemtest.iot;
 
 import io.enmasse.iot.model.v1.AdapterConfig;
 import io.enmasse.iot.model.v1.AdaptersConfig;
-import io.enmasse.iot.model.v1.DoneableIoTConfig;
 import io.enmasse.iot.model.v1.IoTConfig;
 import io.enmasse.iot.model.v1.IoTConfigSpec;
-import io.enmasse.iot.model.v1.IoTConfigStatus;
-import io.enmasse.iot.model.v1.IoTProject;
-import io.enmasse.iot.model.v1.IoTProjectStatus;
+import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.iot.model.v1.MeshConfig;
 import io.enmasse.iot.model.v1.ServiceConfig;
 import io.enmasse.systemtest.Endpoint;
 import io.enmasse.systemtest.framework.condition.OpenShiftVersion;
 import io.enmasse.systemtest.framework.LoggerUtils;
 import io.enmasse.systemtest.platform.Kubernetes;
-import io.enmasse.systemtest.time.SystemtestsOperation;
-import io.enmasse.systemtest.time.TimeoutBudget;
-import io.enmasse.systemtest.utils.Serialization;
-import io.enmasse.systemtest.utils.TestUtils;
-import io.fabric8.kubernetes.api.model.DeletionPropagation;
-import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import io.fabric8.kubernetes.client.dsl.Resource;
 import io.vertx.core.json.JsonObject;
 import org.assertj.core.api.Condition;
 import org.assertj.core.api.SoftAssertions;
 import org.slf4j.Logger;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static io.enmasse.systemtest.platform.Kubernetes.getClient;
 import static io.enmasse.systemtest.platform.Kubernetes.getInstance;
-import static io.enmasse.systemtest.platform.Kubernetes.iotConfigs;
-import static io.enmasse.systemtest.platform.Kubernetes.iotTenants;
-import static io.enmasse.systemtest.time.TimeMeasuringSystem.Operation.startOperation;
-import static io.enmasse.systemtest.utils.Serialization.toJson;
-import static io.enmasse.systemtest.utils.TestUtils.TimeoutHandler.explain;
 import static java.util.Optional.ofNullable;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -188,8 +169,8 @@ class IoTUtils {
         }
     }
 
-    public static String getTenantId(IoTProject project) {
-        return String.format("%s.%s", project.getMetadata().getNamespace(), project.getMetadata().getName());
+    public static String getTenantId(IoTTenant tenant) {
+        return String.format("%s.%s", tenant.getMetadata().getNamespace(), tenant.getMetadata().getName());
     }
 
     public static void assertCorrectDeviceConnectionType(final String type) {

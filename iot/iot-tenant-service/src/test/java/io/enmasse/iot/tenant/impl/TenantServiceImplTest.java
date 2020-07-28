@@ -21,7 +21,7 @@ import org.eclipse.hono.util.TenantObject;
 import org.eclipse.hono.util.TenantResult;
 import org.junit.jupiter.api.Test;
 
-import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTTenant;
 import io.enmasse.iot.model.v1.IoTProjectBuilder;
 import io.enmasse.iot.utils.MoreFutures;
 import io.opentracing.noop.NoopTracerFactory;
@@ -51,7 +51,7 @@ public class TenantServiceImplTest {
                                 .add(new JsonObject()
                                         .put(TenantConstants.FIELD_PAYLOAD_SUBJECT_DN, name.getName())));
 
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTProjectBuilder()
                 .withNewMetadata()
                 .withNamespace("ns")
                 .withName("iot")
@@ -98,7 +98,7 @@ public class TenantServiceImplTest {
                                         .put("not-after", DateTimeFormatter.ISO_INSTANT.format(now.plus(Duration.ofDays(90))))
                                         ));
 
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTProjectBuilder()
                 .withNewMetadata()
                 .withNamespace("ns")
                 .withName("iot")
@@ -148,7 +148,7 @@ public class TenantServiceImplTest {
                                         .put("not-after", DateTimeFormatter.ISO_INSTANT.format(now.plus(Duration.ofDays(90))))
                                         ));
 
-        final IoTProject project = new IoTProjectBuilder()
+        final IoTTenant project = new IoTProjectBuilder()
                 .withNewMetadata()
                 .withNamespace("ns")
                 .withName("iot")

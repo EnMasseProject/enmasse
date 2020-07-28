@@ -7,7 +7,7 @@ package iotconfig
 
 import (
 	"context"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/stretchr/testify/assert"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

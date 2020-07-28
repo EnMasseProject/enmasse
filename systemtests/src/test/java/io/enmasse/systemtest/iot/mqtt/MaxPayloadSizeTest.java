@@ -7,7 +7,7 @@ package io.enmasse.systemtest.iot.mqtt;
 
 import io.enmasse.systemtest.iot.AbstractMaxPayloadSizeTest;
 import io.enmasse.systemtest.iot.IoTTestSession.Adapter;
-import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.IoTTestSession.TenantInstance.Device;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.Type;
 

@@ -52,40 +52,40 @@ var (
 
 	// endregion
 
-	// region IoTProject
+	// region IoTTenant
 
-	IoTProject = prometheus.NewGauge(
+	IoTTenant = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_projects",
-			Help:        "Number of IoT Projects",
+			Name:        "iot_tenants",
+			Help:        "Number of IoT Tenants",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTProjectActive = prometheus.NewGauge(
+	IoTTenantActive = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_projects_active",
-			Help:        "Number of IoT Projects with status 'active'",
+			Name:        "iot_tenants_active",
+			Help:        "Number of IoT Tenants with status 'active'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTProjectConfiguring = prometheus.NewGauge(
+	IoTTenantConfiguring = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_projects_configuring",
-			Help:        "Number of IoT Projects with status 'configuring'",
+			Name:        "iot_tenants_configuring",
+			Help:        "Number of IoT Tenants with status 'configuring'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTProjectTerminating = prometheus.NewGauge(
+	IoTTenantTerminating = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_projects_terminating",
-			Help:        "Number of IoT Projects with status 'terminating'",
+			Name:        "iot_tenants_terminating",
+			Help:        "Number of IoT Tenants with status 'terminating'",
 			ConstLabels: defaultLabels(),
 		},
 	)
-	IoTProjectFailed = prometheus.NewGauge(
+	IoTTenantFailed = prometheus.NewGauge(
 		prometheus.GaugeOpts{
-			Name:        "iot_projects_failed",
-			Help:        "Number of IoT Projects with status 'failed'",
+			Name:        "iot_tenants_failed",
+			Help:        "Number of IoT Tenants with status 'failed'",
 			ConstLabels: defaultLabels(),
 		},
 	)
@@ -104,10 +104,10 @@ func init() {
 		IoTConfigTerminating,
 		IoTConfigFailed,
 
-		IoTProject,
-		IoTProjectActive,
-		IoTProjectConfiguring,
-		IoTProjectTerminating,
-		IoTProjectFailed,
+		IoTTenant,
+		IoTTenantActive,
+		IoTTenantConfiguring,
+		IoTTenantTerminating,
+		IoTTenantFailed,
 	)
 }

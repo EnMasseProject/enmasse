@@ -4,25 +4,22 @@
  */
 package io.enmasse.iot.model.v1;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.net.URL;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
-import java.io.IOException;
-import java.net.URL;
-import java.nio.ByteBuffer;
-
-import org.junit.jupiter.api.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class IoTProjectTest {
 
     @Test
     void testCreateManaged() {
-        IoTProject project = new IoTProjectBuilder()
+        IoTTenant project = new IoTTenantBuilder()
                 .withNewMetadata()
                 .withName("proj")
                 .endMetadata()
@@ -40,7 +37,7 @@ public class IoTProjectTest {
         final ObjectMapper mapper = new ObjectMapper();
 
         final URL url = IoTProjectTest.class.getResource("resources/simple-project.json");
-        final IoTProject value = mapper.readValue(url, IoTProject.class);
+        final IoTTenant value = mapper.readValue(url, IoTTenant.class);
 
         assertThat(value, notNullValue());
 

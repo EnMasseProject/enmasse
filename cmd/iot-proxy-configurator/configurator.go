@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/util/runtime"
@@ -18,9 +18,9 @@ import (
 	"k8s.io/client-go/util/workqueue"
 
 	clientset "github.com/enmasseproject/enmasse/pkg/client/clientset/versioned"
-	iotinformers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot/v1alpha1"
+	iotinformers "github.com/enmasseproject/enmasse/pkg/client/informers/externalversions/iot/v1"
 
-	iotlisters "github.com/enmasseproject/enmasse/pkg/client/listers/iot/v1alpha1"
+	iotlisters "github.com/enmasseproject/enmasse/pkg/client/listers/iot/v1"
 
 	"github.com/enmasseproject/enmasse/pkg/qdr"
 
@@ -30,7 +30,7 @@ import (
 type Configurator struct {
 	enmasseclientset clientset.Interface
 
-	projectLister  iotlisters.IoTProjectLister
+	projectLister  iotlisters.IoTTenantLister
 	projectsSynced cache.InformerSynced
 
 	workqueue workqueue.RateLimitingInterface
@@ -40,7 +40,7 @@ type Configurator struct {
 
 func NewConfigurator(
 	iotclientset clientset.Interface,
-	projectInformer iotinformers.IoTProjectInformer,
+	projectInformer iotinformers.IoTTenantInformer,
 ) *Configurator {
 
 	controller := &Configurator{
@@ -101,15 +101,15 @@ func shouldQueue(obj, old interface{}) bool {
 		return true
 	}
 
-	prj, ok := obj.(*v1alpha1.IoTProject)
+	prj, ok := obj.(*v1.IoTTenant)
 	if !ok {
-		runtime.HandleError(fmt.Errorf("can only handle objects of type *IoTProject, was: %T", obj))
+		runtime.HandleError(fmt.Errorf("can only handle objects of type *IoTTenant, was: %T", obj))
 		return false
 	}
 
-	oldprj, ok := old.(*v1alpha1.IoTProject)
+	oldprj, ok := old.(*v1.IoTTenant)
 	if !ok {
-		runtime.HandleError(fmt.Errorf("'old' must be of type *IoTProject, was: %T", old))
+		runtime.HandleError(fmt.Errorf("'old' must be of type *IoTTenant, was: %T", old))
 		return false
 	}
 
@@ -232,7 +232,7 @@ func (c *Configurator) syncHandler(key string) error {
 	log := log.WithValues("namespace", namespace, "name", name)
 
 	// read requested state
-	project, err := c.projectLister.IoTProjects(namespace).Get(name)
+	project, err := c.projectLister.IoTTenants(namespace).Get(name)
 	if err != nil {
 
 		// something went wrong
@@ -253,7 +253,7 @@ func (c *Configurator) syncHandler(key string) error {
 
 		}
 
-		log.Error(err, "Failed to read IoTProject")
+		log.Error(err, "Failed to read IoTTenant")
 
 		return err
 	}
@@ -272,9 +272,9 @@ func (c *Configurator) syncHandler(key string) error {
 
 	}
 
-	log.Info("Change on IoTProject: " + project.Namespace + "." + project.Name)
+	log.Info("Change on IoTTenant: " + project.Namespace + "." + project.Name)
 
-	if project.Status.Phase != v1alpha1.ProjectPhaseActive {
+	if project.Status.Phase != v1.TenantPhaseActive {
 		log.Info("Project is not ready yet", "Phase", project.Status.Phase)
 		// project is not ready yet
 		return nil
@@ -286,7 +286,7 @@ func (c *Configurator) syncHandler(key string) error {
 	// something went wrong syncing the project
 	// we will re-queue this by returning the error state
 	if err != nil {
-		log.Error(err, "Failed to sync IoTProject with QDR")
+		log.Error(err, "Failed to sync IoTTenant with QDR")
 		return err
 	}
 

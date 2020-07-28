@@ -21,7 +21,7 @@ var (
 	operatorUuidNamespace uuid.UUID      = uuid.MustParse("1516b246-23aa-11e9-b615-c85b762e5a2c")
 )
 
-// Get an address name from an IoTProject
+// Get an address name from an IoTTenant
 // the name is the prefix (e.g. "telemetry") plus the project name. The name is not encoded in any way.
 func AddressName(object metav1.Object, prefix string) string {
 	return prefix + "/" + TenantNameForObject(object)

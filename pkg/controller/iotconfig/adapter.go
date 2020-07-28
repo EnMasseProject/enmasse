@@ -22,7 +22,7 @@ import (
 
 	"github.com/enmasseproject/enmasse/pkg/util"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 

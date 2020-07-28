@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.enmasse.iot.model.v1.IoTProject;
+import io.enmasse.iot.model.v1.IoTTenant;
 import io.opentracing.Span;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
@@ -39,8 +39,8 @@ public class TenantServiceImpl extends AbstractTenantService {
     private static final Logger logger = LoggerFactory.getLogger(TenantServiceImpl.class);
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Map<X500Principal, IoTProject> projectsByTrustAnchor = new HashMap<>();
-    private final Map<String, Set<X500Principal>> projectToTrustAnchors = new HashMap<>();
+    private final Map<X500Principal, IoTTenant> tenantsByTrustAnchor = new HashMap<>();
+    private final Map<String, Set<X500Principal>> tenantToTrustAnchors = new HashMap<>();
 
     @Override
     public Future<TenantResult<JsonObject>> get(final String tenantName, final Span span) {
@@ -52,32 +52,32 @@ public class TenantServiceImpl extends AbstractTenantService {
                 .put("tenant_id", tenantName)
                 .build());
 
-        return getProject(tenantName)
+        return getTenant(tenantName)
 
-                .map(project -> project
+                .map(tenant -> tenant
                         .map(p -> convertToHono(p, span.context()))
                         .orElse(RESULT_NOT_FOUND));
 
     }
 
     @Override
-    protected void onAdd(final IoTProject project) {
-        super.onAdd(project);
+    protected void onAdd(final IoTTenant tenant) {
+        super.onAdd(tenant);
 
-        final String key = key(project);
-        final Set<X500Principal> trustAnchors = anchors(project);
+        final String key = key(tenant);
+        final Set<X500Principal> trustAnchors = anchors(tenant);
 
         writing(() -> {
 
-            // we add a mapping for each subject dn to the project
+            // we add a mapping for each subject dn to the tenant
 
             for (X500Principal subjectDn : trustAnchors) {
-                this.projectsByTrustAnchor.put(subjectDn, project);
+                this.tenantsByTrustAnchor.put(subjectDn, tenant);
             }
 
-            // and add a link from the project to the trust anchors
+            // and add a link from the tenant to the trust anchors
 
-            this.projectToTrustAnchors.put(key, trustAnchors);
+            this.tenantToTrustAnchors.put(key, trustAnchors);
 
             logger.info("Mapped {} -> {}", key, trustAnchors);
 
@@ -86,26 +86,26 @@ public class TenantServiceImpl extends AbstractTenantService {
     }
 
     @Override
-    protected void onDelete(final IoTProject project) {
+    protected void onDelete(final IoTTenant tenant) {
 
-        super.onDelete(project);
+        super.onDelete(tenant);
 
-        // the project content might already be gone, so only use the key
+        // the tenant content might already be gone, so only use the key
 
-        final String key = key(project);
+        final String key = key(tenant);
 
         writing(() -> {
 
-            // we remove and get the mapped trust anchors for this project
+            // we remove and get the mapped trust anchors for this tenant
 
-            final Set<X500Principal> trustAnchors = this.projectToTrustAnchors.remove(key);
+            final Set<X500Principal> trustAnchors = this.tenantToTrustAnchors.remove(key);
 
             logger.info("Unmapped {} <- {}", key, trustAnchors);
 
             // and remove all trust anchors
 
             if (trustAnchors != null) {
-                trustAnchors.forEach(this.projectsByTrustAnchor::remove);
+                trustAnchors.forEach(this.tenantsByTrustAnchor::remove);
             }
 
         });
@@ -113,35 +113,35 @@ public class TenantServiceImpl extends AbstractTenantService {
     }
 
     @Override
-    protected void onUpdate(IoTProject project) {
+    protected void onUpdate(IoTTenant tenant) {
 
-        super.onUpdate(project);
+        super.onUpdate(tenant);
 
-        // the project content might already be gone, so only use the key and the new trust anchors
-        final String key = key(project);
-        final Set<X500Principal> newTrustAnchors = anchors(project);
+        // the tenant content might already be gone, so only use the key and the new trust anchors
+        final String key = key(tenant);
+        final Set<X500Principal> newTrustAnchors = anchors(tenant);
 
         writing(() -> {
 
-            // we remove and get the mapped trust anchors for this project
+            // we remove and get the mapped trust anchors for this tenant
 
-            final Set<X500Principal> oldTrustAnchors = this.projectToTrustAnchors.remove(key);
+            final Set<X500Principal> oldTrustAnchors = this.tenantToTrustAnchors.remove(key);
 
             // and delete all old trust anchors
 
             if (oldTrustAnchors != null) {
-                oldTrustAnchors.forEach(this.projectsByTrustAnchor::remove);
+                oldTrustAnchors.forEach(this.tenantsByTrustAnchor::remove);
             }
 
-            // now we re-add all new trust anchor mappings to the project
+            // now we re-add all new trust anchor mappings to the tenant
 
             for (X500Principal subjectDn : newTrustAnchors) {
-                this.projectsByTrustAnchor.put(subjectDn, project);
+                this.tenantsByTrustAnchor.put(subjectDn, tenant);
             }
 
-            // and also re-add the mapping from the project to the mapped trust anchors
+            // and also re-add the mapping from the tenant to the mapped trust anchors
 
-            this.projectToTrustAnchors.put(key, newTrustAnchors);
+            this.tenantToTrustAnchors.put(key, newTrustAnchors);
 
             logger.info("Re-mapped {} -> {} -> {}", key, oldTrustAnchors, newTrustAnchors);
 
@@ -149,9 +149,9 @@ public class TenantServiceImpl extends AbstractTenantService {
 
     }
 
-    private Set<X500Principal> anchors(final IoTProject project) {
+    private Set<X500Principal> anchors(final IoTTenant project) {
 
-        if (project != null && project.getStatus() == null
+        if (project == null || project.getStatus() == null
                 || project.getStatus().getAccepted() == null
                 || project.getStatus().getAccepted().getConfiguration() == null) {
 
@@ -199,8 +199,8 @@ public class TenantServiceImpl extends AbstractTenantService {
 
         // get the project
 
-        final Optional<IoTProject> project =
-                reading(() -> ofNullable(this.projectsByTrustAnchor.get(subjectDn)));
+        final Optional<IoTTenant> project =
+                reading(() -> ofNullable(this.tenantsByTrustAnchor.get(subjectDn)));
         logger.debug("Result of get: {}", project);
 
         // convert and return the result

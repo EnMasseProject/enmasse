@@ -8,7 +8,7 @@ package iotconfig
 import (
 	"context"
 	promv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/monitoring"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
@@ -168,40 +168,40 @@ func (r *ReconcileIoTConfig) reconcilePrometheusRule(config *iotv1alpha1.IoTConf
 		},
 	})
 
-	// add check for IoTProjects in status failed
+	// add check for IoTTenants in status failed
 
 	projectHealth.Rules = append(projectHealth.Rules, promv1.Rule{
 		Alert: "IoTProjectHealth",
-		Expr:  intstr.FromString("enmasse_iot_projects_failed > 0"),
+		Expr:  intstr.FromString("enmasse_iot_tenants_failed > 0"),
 		For:   "30s",
 		Annotations: map[string]string{
-			"description": "IoTProjects have been in a failed state for over 30 seconds",
+			"description": "IoTTenants that have been in a failed state for over 30 seconds",
 			"value":       "{{ $value }}",
 			"severity":    "warning",
 		},
 	})
 
-	// add check for IoTProjects in status configuring
+	// add check for IoTTenants in status configuring
 
 	projectHealth.Rules = append(projectHealth.Rules, promv1.Rule{
 		Alert: "IoTProjectHealth",
-		Expr:  intstr.FromString("enmasse_iot_projects_configuring > 0"),
+		Expr:  intstr.FromString("enmasse_iot_tenants_configuring > 0"),
 		For:   "5m",
 		Annotations: map[string]string{
-			"description": "IoTProjects have been in a configuring state for over 5 minutes",
+			"description": "IoTTenants that have been in a configuring state for over 5 minutes",
 			"value":       "{{ $value }}",
 			"severity":    "warning",
 		},
 	})
 
-	// add check for IoTProjects in status terminating
+	// add check for IoTTenants in status terminating
 
 	projectHealth.Rules = append(projectHealth.Rules, promv1.Rule{
 		Alert: "IoTProjectHealth",
-		Expr:  intstr.FromString("enmasse_iot_projects_terminating > 0"),
+		Expr:  intstr.FromString("enmasse_iot_tenants_terminating > 0"),
 		For:   "5m",
 		Annotations: map[string]string{
-			"description": "IoTProjects have been in a terminating state for over 5 minutes",
+			"description": "IoTTenants that have been in a terminating state for over 5 minutes",
 			"value":       "{{ $value }}",
 			"severity":    "critical",
 		},

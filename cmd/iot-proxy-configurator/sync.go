@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/qdr"
 	"github.com/enmasseproject/enmasse/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -128,7 +128,7 @@ var routes = []RouteConfig{
 	{"c_o", "out", "command"},
 }
 
-func (c *Configurator) syncProject(project *v1alpha1.IoTProject) (bool, error) {
+func (c *Configurator) syncProject(project *v1.IoTTenant) (bool, error) {
 
 	log.Info("Sync project", "project", project)
 

@@ -12,7 +12,7 @@ import (
 	"github.com/enmasseproject/enmasse/pkg/util/recon"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	"github.com/enmasseproject/enmasse/pkg/util/install"
 	corev1 "k8s.io/api/core/v1"
 )

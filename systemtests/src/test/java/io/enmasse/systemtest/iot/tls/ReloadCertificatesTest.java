@@ -8,7 +8,7 @@ package io.enmasse.systemtest.iot.tls;
 import io.enmasse.iot.model.v1.ConfigConditionType;
 import io.enmasse.systemtest.framework.condition.OpenShift;
 import io.enmasse.systemtest.iot.IoTTestSession;
-import io.enmasse.systemtest.iot.IoTTestSession.ProjectInstance.Device;
+import io.enmasse.systemtest.iot.IoTTestSession.TenantInstance.Device;
 import io.enmasse.systemtest.iot.IoTTests;
 import io.enmasse.systemtest.iot.MessageSendTester;
 import io.enmasse.systemtest.iot.MessageSendTester.ConsumerFactory;

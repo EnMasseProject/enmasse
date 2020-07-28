@@ -20,7 +20,7 @@ import (
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -28,7 +28,7 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	if err := v1alpha1.SchemeBuilder.AddToScheme(scheme.Scheme); err != nil {
+	if err := iotv1.SchemeBuilder.AddToScheme(scheme.Scheme); err != nil {
 		panic("Failed to register schema")
 	}
 	os.Exit(m.Run())
@@ -56,7 +56,7 @@ func TestRemoveFinalizer(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 
-	project := &v1alpha1.IoTProject{}
+	project := &iotv1.IoTTenant{}
 
 	objs := []runtime.Object{project}
 
@@ -88,7 +88,7 @@ func TestAdd(t *testing.T) {
 func TestRemove1(t *testing.T) {
 
 	ts := v1.Time{}
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			DeletionTimestamp: &ts,
 			Finalizers:        []string{"foo"},
@@ -193,7 +193,7 @@ type FinalizerTestStep struct {
 }
 
 //noinspection GoNilness
-func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, steps []FinalizerTestStep) {
+func RunFinalizerSteps(t *testing.T, project *iotv1.IoTTenant, steps []FinalizerTestStep) {
 	objs := []runtime.Object{project}
 
 	client := fake.NewFakeClientWithScheme(scheme.Scheme, objs...)
@@ -245,7 +245,7 @@ func RunFinalizerSteps(t *testing.T, project *v1alpha1.IoTProject, steps []Final
 func TestFinalizersSimple1(t *testing.T) {
 
 	ts := v1.Time{}
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			DeletionTimestamp: &ts,
 			Finalizers:        []string{"foo"},
@@ -307,7 +307,7 @@ func TestFinalizersSimple1(t *testing.T) {
 // Test running on an object which is not deleted
 func TestFinalizersNotDeleted(t *testing.T) {
 
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			Finalizers: []string{"foo"},
 		},
@@ -337,7 +337,7 @@ func TestFinalizersNotDeleted(t *testing.T) {
 func TestTwoFinalizers(t *testing.T) {
 
 	ts := v1.Time{}
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			Finalizers:        []string{"foo", "bar"},
 			DeletionTimestamp: &ts,
@@ -496,7 +496,7 @@ func TestTwoFinalizers(t *testing.T) {
 func TestTwoFinalizersOneEarly(t *testing.T) {
 
 	ts := v1.Time{}
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			Finalizers:        []string{"foo", "bar"},
 			DeletionTimestamp: &ts,
@@ -586,7 +586,7 @@ func TestTwoFinalizersOneEarly(t *testing.T) {
 func TestTwoFinalizersOneUnknown(t *testing.T) {
 
 	ts := v1.Time{}
-	project := &v1alpha1.IoTProject{
+	project := &iotv1.IoTTenant{
 		ObjectMeta: v1.ObjectMeta{
 			Finalizers:        []string{"foo", "bar"},
 			DeletionTimestamp: &ts,

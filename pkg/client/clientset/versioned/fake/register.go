@@ -12,7 +12,7 @@ import (
 	adminv1beta2 "github.com/enmasseproject/enmasse/pkg/apis/admin/v1beta2"
 	enmassev1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1"
 	enmassev1beta1 "github.com/enmasseproject/enmasse/pkg/apis/enmasse/v1beta1"
-	iotv1alpha1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	iotv1 "github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 	userv1beta1 "github.com/enmasseproject/enmasse/pkg/apis/user/v1beta1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
@@ -29,7 +29,7 @@ var localSchemeBuilder = runtime.SchemeBuilder{
 	adminv1beta2.AddToScheme,
 	enmassev1beta1.AddToScheme,
 	enmassev1.AddToScheme,
-	iotv1alpha1.AddToScheme,
+	iotv1.AddToScheme,
 	userv1beta1.AddToScheme,
 }
 

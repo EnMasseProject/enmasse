@@ -17,12 +17,12 @@ public class TenantInformation extends TenantHandle {
     private final Optional<Tenant> tenant;
 
     private final String namespace;
-    private final String projectName;
+    private final String tenantName;
 
-    protected TenantInformation(final String namespace, final String projectName, final String id, final Tenant tenant) {
-        super(namespace + "." + projectName, id);
+    protected TenantInformation(final String namespace, final String tenantName, final String id, final Tenant tenant) {
+        super(namespace + "." + tenantName, id);
         this.namespace = namespace;
-        this.projectName = projectName;
+        this.tenantName = tenantName;
         this.tenant = Optional.ofNullable(tenant);
     }
 
@@ -34,15 +34,15 @@ public class TenantInformation extends TenantHandle {
         return namespace;
     }
 
-    public String getProjectName() {
-        return projectName;
+    public String getTenantName() {
+        return tenantName;
     }
 
     @Override
     protected ToStringHelper toStringHelper() {
         return super.toStringHelper()
                 .add("namespace", this.namespace)
-                .add("projectName", this.projectName)
+                .add("projectName", this.tenantName)
                 .add("tenant", this.tenant);
     }
 

@@ -9,47 +9,47 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1alpha1"
+	"github.com/enmasseproject/enmasse/pkg/apis/iot/v1"
 )
 
 func TestMerge(t *testing.T) {
 
 	input := []struct {
-		first  *v1alpha1.AdapterOptions
-		second *v1alpha1.AdapterOptions
-		result v1alpha1.AdapterOptions
+		first  *v1.AdapterOptions
+		second *v1.AdapterOptions
+		result v1.AdapterOptions
 	}{
 		{
 			first:  nil,
 			second: nil,
-			result: v1alpha1.AdapterOptions{},
+			result: v1.AdapterOptions{},
 		},
 		{
 			first: nil,
-			second: &v1alpha1.AdapterOptions{
+			second: &v1.AdapterOptions{
 				TenantIdleTimeout: "1m",
 			},
-			result: v1alpha1.AdapterOptions{
+			result: v1.AdapterOptions{
 				TenantIdleTimeout: "1m",
 			},
 		},
 		{
-			first: &v1alpha1.AdapterOptions{
+			first: &v1.AdapterOptions{
 				TenantIdleTimeout: "1m",
 			},
 			second: nil,
-			result: v1alpha1.AdapterOptions{
+			result: v1.AdapterOptions{
 				TenantIdleTimeout: "1m",
 			},
 		},
 		{
-			first: &v1alpha1.AdapterOptions{
+			first: &v1.AdapterOptions{
 				TenantIdleTimeout: "1m",
 			},
-			second: &v1alpha1.AdapterOptions{
+			second: &v1.AdapterOptions{
 				TenantIdleTimeout: "2m",
 			},
-			result: v1alpha1.AdapterOptions{
+			result: v1.AdapterOptions{
 				TenantIdleTimeout: "2m",
 			},
 		},
