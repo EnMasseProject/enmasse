@@ -148,11 +148,9 @@ const DeviceFilterCriteria: React.FunctionComponent<IDeviceFilterCriteriaProps> 
         </GridItem>
         <GridItem span={2}>
           <DropdownWithToggle
-            id={
-              "device-filter-criteria-operator-dropdowntoggle-" + criteria.key
-            }
+            id={"device-filter-criteria-operator-dropdown-" + criteria.key}
             toggleId={
-              "device-filter-criteria-operator-dropdown-toggle-" + criteria.key
+              "device-filter-criteria-operator-dropdowntoggle-" + criteria.key
             }
             name="Filter Criteria Operator"
             onSelectItem={onSelectOperator}

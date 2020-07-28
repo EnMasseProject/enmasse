@@ -163,7 +163,7 @@ const DeviceRegistationManagement: React.FunctionComponent<IDeviceRegistationMan
           <SplitItem isFilled />
           <SplitItem>
             <SwitchWithToggle
-              id="device-reg-view-json-switchtoggle"
+              id="device-reg-view-json-switch"
               aria-label="Switch to view Json format"
               label="View JSON format"
               labelOff="View JSON format"

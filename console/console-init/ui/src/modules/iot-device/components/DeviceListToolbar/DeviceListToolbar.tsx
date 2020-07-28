@@ -62,7 +62,8 @@ export const DeviceListToolbar: React.FunctionComponent<IDeviceListToolbarProps 
           <DropdownWithKebabToggle
             isPlain={true}
             dropdownItems={kebabItems}
-            id="device-list-kebab-dropdowntoggle"
+            toggleId="device-list-kebab-dropdowntoggle"
+            id="device-list-kebab-dropdown"
           />
         </ToolbarItem>
         <ToolbarItem

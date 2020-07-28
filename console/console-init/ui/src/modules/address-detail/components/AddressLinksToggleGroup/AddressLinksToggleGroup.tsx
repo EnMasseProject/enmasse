@@ -175,7 +175,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
             <DropdownWithToggle
               id="addr-toggle-select-role-dropdown"
               aria-label="select role to filter"
-              toggleId="ad-links-filter-select-role"
+              toggleId="addr-toggle-select-role-dropdowntoggle"
               dropdownItemIdPrefix="ad-links-filter-select-option-role"
               position={DropdownPosition.left}
               onSelectItem={onRoleSelect}
@@ -193,6 +193,7 @@ const AddressLinksToggleGroup: React.FunctionComponent<IAddressLinksToggleGroupP
       <ToolbarFilter categoryName="Filter">
         <DropdownWithToggle
           id="addr-toggle-filter-type-dropdown"
+          toggleId="addr-toggle-filter-type-dropdowntoggle"
           dropdownItemIdPrefix={"ad-links-filter-dropdown-item"}
           position={DropdownPosition.left}
           onSelectItem={onFilterSelect}

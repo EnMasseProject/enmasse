@@ -109,8 +109,8 @@ export const ExtensionList: React.FC<IExtensionListProps> = ({
                 </GridItem>
                 <GridItem span={3} className={css(styles.type_margin)}>
                   <DropdownWithToggle
-                    id={`extension-list-type-dropdown-toggle-${id}`}
-                    toggleId={`extension-list-type-dropdown-toggle-${id}`}
+                    id={`extension-list-type-dropdown-${id}`}
+                    toggleId={`extension-list-type-dropdowntoggle-${id}`}
                     name="type"
                     className={css(styles.dropdown_align)}
                     toggleClass={css(styles.dropdown_toggle_align)}

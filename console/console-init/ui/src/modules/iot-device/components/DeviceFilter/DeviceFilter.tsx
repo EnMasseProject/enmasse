@@ -160,7 +160,7 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
         <DropdownWithKebabToggle
           id="device-filter-options-kebab-dropdown"
           isPlain={true}
-          toggleId="device-filter-options-kebab"
+          toggleId="device-filter-options-kebab-dropdowntoggle"
           dropdownItems={kebabDropdownItems}
           isOpen={isKebabOpen}
           position={DropdownPosition.left}
@@ -188,8 +188,8 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
           fieldId="device-filter-type-dropdowntoggle"
         >
           <DropdownWithToggle
-            id={"device-filter-type-dropdowntoggle"}
-            toggleId="device-filter-type-dropdown-toggle"
+            id={"device-filter-type-dropdown"}
+            toggleId="device-filter-type-dropdowntoggle"
             name="Device Type"
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}
@@ -202,8 +202,8 @@ const DeviceFilter: React.FunctionComponent<IDeviceFilterProps> = ({
         </FormGroup>
         <FormGroup label="Status" fieldId="device-filter-status-dropdowntoggle">
           <DropdownWithToggle
-            id={"device-filter-status-dropdowntoggle"}
-            toggleId="device-filter-status-dropdown-toggle"
+            id={"device-filter-status-dropdown"}
+            toggleId="device-filter-status-dropdowntoggle"
             name="Status"
             className={css(styles.dropdown_align)}
             toggleClass={css(styles.dropdown_toggle_align)}

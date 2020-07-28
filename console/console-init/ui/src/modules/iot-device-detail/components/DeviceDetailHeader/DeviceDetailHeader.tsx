@@ -221,7 +221,7 @@ const DeviceDetailHeader: React.FunctionComponent<IDeviceDetailHeaderProps> = ({
         id="device-detail-header-kebab-dropdown"
         isPlain={true}
         position={DropdownPosition.right}
-        toggleId="device-detail-header-dropdown-toggle"
+        toggleId="device-detail-header-dropdowntoggle"
         dropdownItems={dropdownItems}
       />
     );

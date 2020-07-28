@@ -173,8 +173,8 @@ const ProjectToolbarToggleGroup: React.FunctionComponent<IProjectToolbarToggleGr
         >
           {filterSelected && filterSelected.toLowerCase() === "type" && (
             <DropdownWithToggle
-              id={"project-data-togglegrp-type-dropdowntoggle"}
-              toggleId={"project-data-togglegrp-type-dropdown-toggle"}
+              id={"project-data-togglegrp-type-dropdown"}
+              toggleId={"project-data-togglegrp-type-dropdowntoggle"}
               dropdownItemIdPrefix={"al-filter-dropdown-item-type"}
               position={DropdownPosition.left}
               onSelectItem={onSelectType}
