@@ -15,7 +15,7 @@ import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class IoTProjectTest {
+public class IoTTenantTest {
 
     @Test
     void testCreateManaged() {
@@ -36,7 +36,7 @@ public class IoTProjectTest {
     public void testParse() throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
 
-        final URL url = IoTProjectTest.class.getResource("resources/simple-project.json");
+        final URL url = IoTTenantTest.class.getResource("resources/simple-project.json");
         final IoTTenant value = mapper.readValue(url, IoTTenant.class);
 
         assertThat(value, notNullValue());
