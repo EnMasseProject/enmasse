@@ -32,6 +32,10 @@ spec:
       type: string
       description: Phase of the IoT tenant
       JSONPath: .status.phase
+    - name: Message
+      type: string
+      description: Message
+      JSONPath: .status.message
 
   subresources:
     status: {}
