@@ -10,13 +10,11 @@ You must create a custom resource for an authentication service to use {ProductN
 
 .Procedure
 
-. From the dropdown menu, select the `{ProductNamespace}` project.
+. In the top right, click the *Plus* icon (+). The Import YAML window opens.
 
-. Click *Catalog > Installed Operators*.
+. From the top left drop-down menu, select the `{ProductNamespace}` project.
 
-. Click *Add > Import YAML*. The Import YAML window opens.
-
-. Copy the following code: 
+. Copy the following code:
 +
 [source,yaml,options="nowrap",subs="attributes"]
 ----
@@ -28,11 +26,10 @@ spec:
   type: standard
 ----
 
-. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan Overview page is displayed.
+. In the Import YAML window, paste the copied code and click *Create*. The AuthenticationService overview page is displayed.
 
 . Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
 
 .Next steps
 
 * link:{BookUrlBase}{BaseProductVersion}{BookNameUrl}#proc-create-auth-service-custom-resource-olm-ui-messaging[Create an infrastructure configuration custom resource using the {KubePlatform} console]
-

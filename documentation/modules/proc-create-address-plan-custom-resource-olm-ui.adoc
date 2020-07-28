@@ -10,11 +10,10 @@ You must create an address plan custom resource to use {ProductName}. This proce
 
 .Procedure
 
-. From the dropdown menu, select the `{ProductNamespace}` project.
+. In the top right, click the *Plus* icon (+). The Import YAML window opens.
 
-. Click *Catalog > Installed Operators*.
+. From the top left drop-down menu, select the `{ProductNamespace}` project.
 
-. Click *Add > Import YAML*. The Import YAML window opens.
 . Copy the following code:
 +
 [source,yaml,options="nowrap",subs="attributes"]
@@ -30,9 +29,11 @@ spec:
     broker: 0.1
 ----
 
-. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan Overview page is displayed.
+. In the Import YAML window, paste the copied code and click *Create*. The AddressPlan overview page is displayed.
 
-. Click *Workloads > Pods*. In the *Readiness* column, the Pod status is `Ready` when the custom resource has been deployed.
+. Click *Operators > Installed Operators*.
+
+. Click the {ProductName} Operator and click the *Address Plan* tab to verify that its *Status* displays as *Active*.
 
 .Next steps
 
