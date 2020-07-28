@@ -264,9 +264,14 @@ func (r *ReconcileIoTConfig) Reconcile(request reconcile.Request) (reconcile.Res
 		return r.failWrongConfigName(ctx, config)
 	}
 
+	rc := &recon.ReconcileContext{}
+
 	// check for deconstruction
 
-	rc := &recon.ReconcileContext{}
+	if config.DeletionTimestamp != nil && config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
+		reqLogger.Info("Re-queue after setting phase to terminating")
+		return r.markTerminating(ctx, config)
+	}
 	rc.Process(func() (reconcile.Result, error) {
 		return r.checkDeconstruct(ctx, reqLogger, config)
 	})
@@ -663,29 +668,6 @@ func (r *ReconcileIoTConfig) checkDeconstruct(ctx context.Context, reqLogger log
 	rc := recon.ReconcileContext{}
 	original := config.DeepCopy()
 
-	if config.Status.Phase != iotv1alpha1.ConfigPhaseTerminating {
-
-		// set phase and message
-
-		config.Status.Phase = iotv1alpha1.ConfigPhaseTerminating
-		config.Status.Message = "Infrastructure deleted"
-
-		// set ready condition to false
-
-		readyCondition := config.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
-		readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Infrastructure is being deleted")
-
-		// record event
-
-		r.recorder.Event(config, corev1.EventTypeNormal, EventReasonInfrastructureTermination, "Deconstructing IoT infrastructure")
-
-		// store and re-queue
-
-		reqLogger.Info("Re-queue after setting phase to terminating")
-		return reconcile.Result{Requeue: true}, r.client.Status().Update(ctx, config)
-
-	}
-
 	// process finalizers
 
 	rc.Process(func() (result reconcile.Result, e error) {
@@ -714,4 +696,24 @@ func (r *ReconcileIoTConfig) checkDeconstruct(ctx context.Context, reqLogger log
 
 	return rc.Result()
 
+}
+
+func (r *ReconcileIoTConfig) markTerminating(ctx context.Context, infra *iotv1alpha1.IoTConfig) (reconcile.Result, error) {
+	// set phase and message
+
+	infra.Status.Phase = iotv1alpha1.ConfigPhaseTerminating
+	infra.Status.Message = "Infrastructure deleted"
+
+	// set ready condition to false
+
+	readyCondition := infra.Status.GetConfigCondition(iotv1alpha1.ConfigConditionTypeReady)
+	readyCondition.SetStatus(corev1.ConditionFalse, "Deconstructing", "Infrastructure is being deleted")
+
+	// record event
+
+	r.recorder.Event(infra, corev1.EventTypeNormal, EventReasonInfrastructureTermination, "Deconstructing IoT infrastructure")
+
+	// store and re-queue
+
+	return reconcile.Result{Requeue: true}, r.client.Status().Update(ctx, infra)
 }

@@ -122,6 +122,7 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 	} else {
 
+		// FIXME: clean up this mess
 		// eval ready state
 
 		if rc.Error() == nil &&
@@ -130,11 +131,8 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseActive
 			newProject.Status.Message = ""
-
 		} else {
-
 			newProject.Status.Phase = iotv1alpha1.ProjectPhaseConfiguring
-
 		}
 
 		// fill main "ready" condition
@@ -148,8 +146,10 @@ func (r *ReconcileIoTProject) updateProjectStatus(ctx context.Context, originalP
 		}
 		if newProject.Status.Phase == iotv1alpha1.ProjectPhaseActive {
 			status = corev1.ConditionTrue
+			newProject.Status.Message = ""
 		} else {
 			status = corev1.ConditionFalse
+			newProject.Status.Message = message
 		}
 		readyCondition.SetStatus(status, reason, message)
 
@@ -228,6 +228,12 @@ func (r *ReconcileIoTProject) Reconcile(request reconcile.Request) (reconcile.Re
 
 	rc := &recon.ReconcileContext{}
 
+	// check for deconstruction
+
+	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
+		reqLogger.Info("Re-queue after setting phase to terminating")
+		return r.updateProjectStatus(ctx, original, project, rc)
+	}
 	rc.Process(func() (reconcile.Result, error) {
 		return r.checkDeconstruct(ctx, reqLogger, project)
 	})
@@ -260,11 +266,6 @@ func (r *ReconcileIoTProject) checkDeconstruct(ctx context.Context, reqLogger lo
 
 	rc := &recon.ReconcileContext{}
 	original := project.DeepCopy()
-
-	if project.DeletionTimestamp != nil && project.Status.Phase != iotv1alpha1.ProjectPhaseTerminating {
-		reqLogger.Info("Re-queue after setting phase to terminating")
-		return r.updateProjectStatus(ctx, original, project, &recon.ReconcileContext{})
-	}
 
 	// process finalizers
 
