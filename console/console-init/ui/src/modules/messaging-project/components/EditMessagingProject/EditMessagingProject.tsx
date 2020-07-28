@@ -17,9 +17,9 @@ import {
   Button,
   Modal
 } from "@patternfly/react-core";
-import { IAddressSpace } from "modules/messaging-project";
+import { IAddressSpace } from "modules/messaging-project/components";
 
-export interface IEditAddressSpaceProps {
+export interface IEditMessagingProjectProps {
   onCloseDialog: () => void;
   onConfirmDialog: () => void;
   onPlanChange: (plan: string) => void;
@@ -29,7 +29,7 @@ export interface IEditAddressSpaceProps {
   addressSpace: IAddressSpace;
 }
 
-export const EditAddressSpace: React.FC<IEditAddressSpaceProps> = ({
+export const EditMessagingProject: React.FC<IEditMessagingProjectProps> = ({
   onCloseDialog,
   onConfirmDialog,
   onPlanChange,

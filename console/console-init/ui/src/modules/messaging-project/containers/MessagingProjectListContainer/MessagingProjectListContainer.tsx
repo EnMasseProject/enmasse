@@ -29,12 +29,12 @@ import {
   getTableColumns
 } from "modules/messaging-project/utils";
 import {
-  AddressSpaceList,
+  MessagingProjectList,
   IAddressSpace,
-  EmptyAddressSpace
+  EmptyMessagingProject
 } from "modules/messaging-project/components";
 
-export interface IAddressSpaceListContainerProps {
+export interface IMessagingProjectListContainerProps {
   page: number;
   perPage: number;
   setTotalAddressSpaces: (value: number) => void;
@@ -49,10 +49,10 @@ export interface IAddressSpaceListContainerProps {
     dataList: IAddressSpace[],
     isSelected: boolean
   ) => void;
-  selectedAddressSpaces: Array<IAddressSpace>;
+  selectedAddressSpaces: IAddressSpace[];
 }
 
-export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps> = ({
+export const MessagingProjectListContainer: React.FC<IMessagingProjectListContainerProps> = ({
   page,
   perPage,
   setTotalAddressSpaces,
@@ -66,7 +66,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
   onSelectAllAddressSpace,
   selectedAddressSpaces
 }) => {
-  useDocumentTitle("Addressspace List");
+  useDocumentTitle("Messaging Project List");
   useA11yRouteChange();
   const client = useApolloClient();
   const { dispatch } = useStoreContext();
@@ -137,8 +137,8 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
         data: addressSpace,
         onConfirm: onDeleteAddressSpace,
         option: "Delete",
-        detail: `Are you sure you want to delete this addressspace: ${addressSpace.name} ?`,
-        header: "Delete this Address Space ?"
+        detail: `Are you sure you want to delete this messaging project: ${addressSpace.name} ?`,
+        header: "Delete this Messaging Project ?"
       }
     });
   };
@@ -242,7 +242,7 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
 
   return (
     <>
-      <AddressSpaceList
+      <MessagingProjectList
         onSelect={onSelect}
         onSort={onSort}
         rows={tableRows}
@@ -250,7 +250,11 @@ export const AddressSpaceListContainer: React.FC<IAddressSpaceListContainerProps
         sortBy={sortBy}
         actionResolver={actionResolver}
       />
-      {(addressSpaces && addressSpaces.total) > 0 ? "" : <EmptyAddressSpace />}
+      {(addressSpaces && addressSpaces.total) > 0 ? (
+        ""
+      ) : (
+        <EmptyMessagingProject />
+      )}
     </>
   );
 };

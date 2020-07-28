@@ -14,13 +14,13 @@ import {
 import { DropdownItem, Button, ButtonVariant } from "@patternfly/react-core";
 import { DropdownWithKebabToggle } from "components";
 
-export interface IAddressSpaceListKebabProps {
+export interface IMessagingProjectListKebabProps {
   onCreateAddressSpace: () => void;
   isDeleteAllDisabled: boolean;
   onSelectDeleteAll: (event: any) => void;
 }
 
-export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
+export const MessagingProjectListKebab: React.FC<IMessagingProjectListKebabProps> = ({
   isDeleteAllDisabled,
   onCreateAddressSpace,
   onSelectDeleteAll
@@ -49,7 +49,7 @@ export const AddressSpaceListKebab: React.FC<IAddressSpaceListKebabProps> = ({
                 variant={ButtonVariant.primary}
                 onClick={onCreateAddressSpace}
               >
-                Create Address Space
+                Create Messaging Project
               </Button>
             </OverflowMenuItem>
           </OverflowMenuGroup>

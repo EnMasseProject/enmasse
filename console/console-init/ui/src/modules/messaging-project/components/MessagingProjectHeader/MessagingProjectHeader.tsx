@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     marginBottom: 24
   }
 });
-export interface IAddressSpaceHeaderProps {
+export interface IMessagingProjectHeaderProps {
   name: string;
   namespace: string;
   createdOn: string;
@@ -52,7 +52,7 @@ export interface IAddressSpaceHeaderProps {
   onDelete: (data: { name: string; namespace: string }) => void;
   onEdit: () => void;
 }
-export const AddressSpaceHeader: React.FunctionComponent<IAddressSpaceHeaderProps> = ({
+export const MessagingProjectHeader: React.FunctionComponent<IMessagingProjectHeaderProps> = ({
   name,
   namespace,
   createdOn,

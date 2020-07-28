@@ -15,7 +15,7 @@ import {
   ToolbarContent,
   ToolbarContentProps
 } from "@patternfly/react-core";
-import { AddressSpaceListKebab } from "modules/messaging-project/components";
+import { MessagingProjectListKebab } from "modules/messaging-project/components";
 import { ISortBy } from "@patternfly/react-table";
 export interface IMessageToolbarProps
   extends IMessagingToolbarToggleGroupProps {
@@ -107,7 +107,7 @@ const MessagingToolbar: React.FunctionComponent<IMessageToolbarProps &
         )}
       </ToolbarItem>
       <ToolbarItem data-codemods="true">
-        <AddressSpaceListKebab
+        <MessagingProjectListKebab
           onCreateAddressSpace={onCreateAddressSpace}
           onSelectDeleteAll={onSelectDeleteAll}
           isDeleteAllDisabled={isDeleteAllDisabled}

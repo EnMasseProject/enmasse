@@ -20,6 +20,7 @@ import { OutlinedCopyIcon } from "@patternfly/react-icons";
 import { StyleSheet, css } from "aphrodite";
 import { endpointProtocolOptions } from "modules/messaging-project/utils";
 
+// TODO: To be renamed
 export interface IAddressSpaceReviewProps {
   name?: string;
   type?: string;
@@ -95,6 +96,7 @@ const ReviewGridItem: React.FunctionComponent<IReviewGridProps> = ({
     </>
   );
 };
+// TODO: To be renamed
 export const AddressSpaceReview: React.FC<IAddressSpaceReviewProps> = ({
   name,
   type,

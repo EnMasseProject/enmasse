@@ -16,7 +16,7 @@ import { Divider } from "@patternfly/react-core";
 import { ISortBy } from "@patternfly/react-table";
 import { IAddressSpace } from "./components";
 import {
-  AddressSpaceListContainer,
+  MessagingProjectListContainer,
   MessagingToolbarContainer
 } from "./containers";
 import { DELETE_ADDRESS_SPACE } from "graphql-module/queries";
@@ -165,7 +165,7 @@ export default function AddressSpacePage() {
         <GridItem span={5}>{renderPagination()}</GridItem>
       </Grid>
       <Divider />
-      <AddressSpaceListContainer
+      <MessagingProjectListContainer
         page={page}
         perPage={perPage}
         setTotalAddressSpaces={setTotalAddressSpaces}

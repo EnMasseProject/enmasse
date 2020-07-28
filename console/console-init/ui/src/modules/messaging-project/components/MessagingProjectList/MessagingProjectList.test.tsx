@@ -8,11 +8,13 @@ import ReactDom from "react-dom";
 import { MemoryRouter } from "react-router";
 import { render, cleanup } from "@testing-library/react";
 import {
-  AddressSpaceList,
-  IAddressSpace,
+  MessagingProjectList,
+  IAddressSpace
+} from "modules/messaging-project/components/MessagingProjectList";
+import {
   getTableColumns,
   getTableCells
-} from "modules/messaging-project";
+} from "modules/messaging-project/utils";
 
 afterEach(cleanup);
 
@@ -58,16 +60,16 @@ describe("<AddressSpaceList/>", () => {
     const div = document.createElement("div");
     ReactDom.render(
       <MemoryRouter>
-        <AddressSpaceList {...props} />
+        <MessagingProjectList {...props} />
       </MemoryRouter>,
       div
     );
   });
 
-  test("should render a list of address spaces", () => {
+  it("should render a list of messaging projects", () => {
     const { getByText } = render(
       <MemoryRouter>
-        <AddressSpaceList {...props} />
+        <MessagingProjectList {...props} />
       </MemoryRouter>
     );
 

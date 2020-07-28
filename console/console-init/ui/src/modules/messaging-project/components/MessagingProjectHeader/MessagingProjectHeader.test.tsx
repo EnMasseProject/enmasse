@@ -5,14 +5,14 @@
 
 import React from "react";
 import {
-  IAddressSpaceHeaderProps,
-  AddressSpaceHeader
+  IMessagingProjectHeaderProps,
+  MessagingProjectHeader
 } from "./MessagingProjectHeader";
 import { render } from "@testing-library/react";
 
-describe("Address Space Detail", () => {
-  test("it renders address space headers at top", () => {
-    const props: IAddressSpaceHeaderProps = {
+describe("<MessagingProjectHeader />", () => {
+  it("should render messaging project header at top", () => {
+    const props: IMessagingProjectHeaderProps = {
       name: "jBoss",
       namespace: "devops_jbosstest1",
       createdOn: "2019-11-25T05:24:05.755Z",
@@ -22,7 +22,7 @@ describe("Address Space Detail", () => {
       onEdit: () => {}
     };
 
-    const { getByText } = render(<AddressSpaceHeader {...props} />);
+    const { getByText } = render(<MessagingProjectHeader {...props} />);
 
     getByText(props.name);
     getByText(props.namespace);

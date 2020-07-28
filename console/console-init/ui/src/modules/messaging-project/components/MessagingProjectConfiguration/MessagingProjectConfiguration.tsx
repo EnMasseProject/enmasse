@@ -35,6 +35,7 @@ export interface IAuthenticationServiceOptions {
   label: string;
 }
 
+// TODO: To be renamed
 export interface IAddressSpaceConfigurationProps {
   onNameSpaceSelect: (event: any) => void;
   handleNameChange: (name: string) => void;
@@ -54,6 +55,7 @@ export interface IAddressSpaceConfigurationProps {
   handleCustomEndpointChange: (value: boolean) => void;
 }
 
+// TODO: To be renamed
 export const AddressSpaceConfiguration: React.FC<IAddressSpaceConfigurationProps> = ({
   onNameSpaceSelect,
   namespace,

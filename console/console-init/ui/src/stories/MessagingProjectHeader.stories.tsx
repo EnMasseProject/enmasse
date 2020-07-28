@@ -8,8 +8,8 @@ import { text, select } from "@storybook/addon-knobs";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
 import {
-  AddressSpaceHeader,
-  AddressSpaceNavigation
+  MessagingProjectHeader,
+  MessagingProjectNavigation
 } from "modules/messaging-project/components";
 
 export default {
@@ -18,7 +18,7 @@ export default {
 
 export const addressSpaceHeader = () => (
   <MemoryRouter>
-    <AddressSpaceHeader
+    <MessagingProjectHeader
       name={text("Name of Messaging Project", "jBoss")}
       namespace={text("Name space of Messaging Project", "deveops_jbosstest1")}
       type={text("type of Messaging Project", "Brokered")}
@@ -34,7 +34,7 @@ export const addressSpaceHeaderNavigation = () => {
   const options = ["addresses", "connections"];
   return (
     <MemoryRouter>
-      <AddressSpaceNavigation
+      <MessagingProjectNavigation
         activeItem={select("Active Nav Item", options, "addresses")}
       />
     </MemoryRouter>

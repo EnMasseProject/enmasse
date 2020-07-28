@@ -6,7 +6,7 @@
 import React from "react";
 import {
   IAddressSpace,
-  AddressSpaceList
+  MessagingProjectList
 } from "modules/messaging-project/components/MessagingProjectList";
 import { MemoryRouter } from "react-router";
 import { action } from "@storybook/addon-actions";
@@ -16,7 +16,7 @@ import {
 } from "modules/messaging-project/utils";
 
 export default {
-  title: "AddressSpaceList"
+  title: "MessagingProjectList"
 };
 
 const rows: IAddressSpace[] = [
@@ -72,7 +72,7 @@ const rows: IAddressSpace[] = [
 
 export const addressSpaceTable = () => (
   <MemoryRouter>
-    <AddressSpaceList
+    <MessagingProjectList
       onSort={action("handle sorting of column")}
       onSelect={action("handle selecting a row")}
       rows={rows.map(row => getTableCells(row))}

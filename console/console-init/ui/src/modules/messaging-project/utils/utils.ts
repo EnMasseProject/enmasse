@@ -13,18 +13,18 @@ import { TlsCertificateType, EndPointProtocol } from "./constant";
 const getDetailForDeleteDialog = (selectedItems: any[]) => {
   const detail =
     selectedItems.length > 1
-      ? `Are you sure you want to delete all of these address spaces: ${selectedItems.map(
+      ? `Are you sure you want to delete all of these messaging projects: ${selectedItems.map(
           as => " " + as.name
         )} ?`
-      : `Are you sure you want to delete this address space: ${selectedItems[0].name} ?`;
+      : `Are you sure you want to delete this messaging project: ${selectedItems[0].name} ?`;
   return detail;
 };
 
 const getHeaderForDeleteDialog = (selectedItems: any[]) => {
   const header =
     selectedItems.length > 1
-      ? "Delete these Address Spaces ?"
-      : "Delete this Address Space ?";
+      ? "Delete these Messaging Projects ?"
+      : "Delete this Messaging Project ?";
   return header;
 };
 

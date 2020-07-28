@@ -95,7 +95,7 @@ export const projectAccessCredentials = () => {
     url: "https://http.bosch-iot-hub.com",
     username: text("username", "username"),
     password: text("password", "password"),
-    addressSpace: text("Address space", "devops-iottest"),
+    addressSpace: text("Messaging project", "devops-iottest"),
     eventAddress: eventAddress,
     telemetryAddress: telemetryAddress,
     commandAddresses: commandAddresses

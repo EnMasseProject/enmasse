@@ -8,7 +8,7 @@ import { Nav, NavList, NavItem } from "@patternfly/react-core";
 import { NavLink } from "react-router-dom";
 import { StyleSheet, css } from "aphrodite";
 
-export interface AddressSpaceNavigationProps {
+export interface MessagingProjectNavigationProps {
   activeItem: string;
 }
 
@@ -18,7 +18,7 @@ const styles = StyleSheet.create({
   }
 });
 
-export const AddressSpaceNavigation: React.FunctionComponent<AddressSpaceNavigationProps> = ({
+export const MessagingProjectNavigation: React.FunctionComponent<MessagingProjectNavigationProps> = ({
   activeItem
 }) => {
   const [active, setActive] = useState(activeItem);

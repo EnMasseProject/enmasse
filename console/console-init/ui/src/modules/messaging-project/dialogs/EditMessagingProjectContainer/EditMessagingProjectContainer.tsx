@@ -11,7 +11,7 @@ import {
 } from "graphql-module/queries";
 import {
   IAddressSpacePlans,
-  EditAddressSpace
+  EditMessagingProject
 } from "modules/messaging-project";
 import { Loading } from "use-patternfly";
 import { useStoreContext, types } from "context-state-reducer";
@@ -133,7 +133,7 @@ export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
   };
 
   return (
-    <EditAddressSpace
+    <EditMessagingProject
       onConfirmDialog={onConfirmDialog}
       onCloseDialog={onCloseDialog}
       onPlanChange={onPlanChange}

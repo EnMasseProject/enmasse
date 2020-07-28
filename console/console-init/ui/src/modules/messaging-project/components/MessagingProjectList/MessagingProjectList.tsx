@@ -37,12 +37,12 @@ export interface IAddressSpace {
   authenticationService: string;
 }
 
-export interface IAddressSpaceListProps extends TableProps {
+export interface IMessagingPojectListProps extends TableProps {
   actionResolver?: IActionsResolver;
   onSort?: (_event: any, index: number, direction: SortByDirection) => void;
 }
 
-export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> = ({
+export const MessagingProjectList: React.FunctionComponent<IMessagingPojectListProps> = ({
   onSelect,
   onSort,
   rows,
@@ -59,7 +59,7 @@ export const AddressSpaceList: React.FunctionComponent<IAddressSpaceListProps> =
           cells={cells}
           rows={rows}
           actionResolver={actionResolver}
-          aria-label="address space list"
+          aria-label="messaging project list"
           onSort={onSort}
           sortBy={sortBy}
         >

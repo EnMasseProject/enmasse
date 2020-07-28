@@ -21,11 +21,11 @@ import {
   BreadcrumbItem
 } from "@patternfly/react-core";
 import {
-  IAddressSpaceHeaderProps,
-  AddressSpaceHeader,
-  AddressSpaceNavigation,
+  IMessagingProjectHeaderProps,
+  MessagingProjectHeader,
+  MessagingProjectNavigation,
   IAddressSpace
-} from "modules/messaging-project";
+} from "modules/messaging-project/components";
 import {
   DOWNLOAD_CERTIFICATE,
   DELETE_ADDRESS_SPACE,
@@ -177,8 +177,8 @@ export default function AddressSpaceDetailPage() {
         data: addressSpace,
         onConfirm: onDelete,
         option: "Delete",
-        detail: `Are you sure you want to delete this addressspace: ${addressSpaceDetails.name} ?`,
-        header: "Delete this Address Space ?"
+        detail: `Are you sure you want to delete this messaging project: ${addressSpaceDetails.name} ?`,
+        header: "Delete this Messaging Project ?"
       }
     });
   };
@@ -198,7 +198,7 @@ export default function AddressSpaceDetailPage() {
     addressSpaces.addressSpaces[0] &&
     addressSpaces.addressSpaces[0].metadata;
 
-  const addressSpaceDetails: IAddressSpaceHeaderProps = {
+  const addressSpaceDetails: IMessagingProjectHeaderProps = {
     name: metadata && metadata.name,
     namespace: metadata && metadata.namespace,
     createdOn: metadata && metadata.creationTimestamp,
@@ -220,10 +220,10 @@ export default function AddressSpaceDetailPage() {
         variant={PageSectionVariants.light}
         className={css(styles.no_bottom_padding)}
       >
-        <AddressSpaceHeader {...addressSpaceDetails} />
-        <AddressSpaceNavigation
+        <MessagingProjectHeader {...addressSpaceDetails} />
+        <MessagingProjectNavigation
           activeItem={subList || "addresses"}
-        ></AddressSpaceNavigation>
+        ></MessagingProjectNavigation>
       </PageSection>
       <PageSection>
         <Routes />

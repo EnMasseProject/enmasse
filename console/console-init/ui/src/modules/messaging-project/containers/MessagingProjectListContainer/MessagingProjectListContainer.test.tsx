@@ -7,7 +7,7 @@ import React from "react";
 import ReactDom from "react-dom";
 import { render, cleanup, waitFor } from "@testing-library/react";
 import { MockedProvider } from "@apollo/react-testing";
-import { AddressSpaceListContainer } from "./MessagingProjectListContainer";
+import { MessagingProjectListContainer } from "./MessagingProjectListContainer";
 import { RETURN_ALL_ADDRESS_SPACES } from "graphql-module/queries";
 import { MemoryRouter } from "react-router";
 
@@ -17,13 +17,13 @@ const setup = (mocks: any, props: any) => {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
       <MemoryRouter>
-        <AddressSpaceListContainer {...props} />
+        <MessagingProjectListContainer {...props} />
       </MemoryRouter>
     </MockedProvider>
   );
 };
 
-describe("<AddressSpaceListContainer/>", () => {
+describe("<MessagingProjectListContainer/>", () => {
   const props = {
     page: 1,
     perPage: 10,
@@ -72,7 +72,7 @@ describe("<AddressSpaceListContainer/>", () => {
     const div = document.createElement("div");
     ReactDom.render(
       <MockedProvider>
-        <AddressSpaceListContainer {...props} />
+        <MessagingProjectListContainer {...props} />
       </MockedProvider>,
       div
     );
@@ -138,11 +138,11 @@ describe("<AddressSpaceListContainer/>", () => {
     ];
     const { container } = setup(mocks, props);
     await waitFor(() =>
-      expect(container).toHaveTextContent("Create an address space")
+      expect(container).toHaveTextContent("Create a messaging project")
     );
   });
 
-  it("should not render <EmptyAddressSpace/>  component if addressSpace total is greater than zero (0)", async () => {
+  it("should not render <EmptyMessagingProject/>  component if addressSpace total is greater than zero (0)", async () => {
     const mocks = [
       {
         request: {
@@ -162,7 +162,7 @@ describe("<AddressSpaceListContainer/>", () => {
     const { container } = setup(mocks, props);
     cleanup();
     await waitFor(() =>
-      expect(container).not.toHaveTextContent("Create an address space")
+      expect(container).not.toHaveTextContent("Create a messaging project")
     );
   });
 
