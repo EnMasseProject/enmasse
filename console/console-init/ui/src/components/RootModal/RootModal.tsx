@@ -9,7 +9,7 @@ import { DialogPrompt } from "components/DialogPrompt";
 import {
   EditAddressSpaceContainer,
   CreateMessagingProject
-} from "modules/address-space/dialogs";
+} from "modules/messaging-project/dialogs";
 import { EditAddress, CreateAddress } from "modules/address/dialogs";
 import { UpdatePassword } from "components/UpdatePassword";
 import { EditMsgProjectContainer } from "modules/project/dailogs/EditMsgProject";

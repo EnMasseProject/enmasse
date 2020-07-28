@@ -9,31 +9,28 @@ import {
   RETURN_ADDRESS_SPACE_PLANS,
   RETURN_FILTERED_AUTHENTICATION_SERVICES
 } from "graphql-module/queries";
-import { IAddressSpacePlans } from "modules/messaging-project";
+import {
+  IAddressSpacePlans,
+  EditAddressSpace
+} from "modules/messaging-project";
 import { Loading } from "use-patternfly";
 import { useStoreContext, types } from "context-state-reducer";
 import { useMutationQuery } from "hooks";
 import { EDIT_ADDRESS_SPACE } from "graphql-module/queries";
 import { IAddressSpaceAuthService } from "modules/messaging-project/dialogs";
-import {
-  IProject,
-  IPlanOption,
-  IAuthenticationServiceOptions
-} from "modules/project/components";
-import { EditMsgProject } from "modules/messaging-project";
 
 export interface IAddressSpaceAuthServiceResponse {
   addressSpaceSchema_v2: IAddressSpaceAuthService[];
 }
 
-export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
+export const EditAddressSpaceContainer: React.FunctionComponent<{}> = () => {
   const { state, dispatch } = useStoreContext();
   const { modalProps } = (state && state.modal) || {};
   const { onConfirm, onClose } = modalProps || {};
 
-  const [msgProject, setMsgProject] = useState<IProject>(modalProps.project);
-  const refetchQueries: string[] = ["allProjects"];
-  const [setEditMsgProjectQueryVariables] = useMutationQuery(
+  const [addressSpace, setAddressSpace] = useState(modalProps.addressSpace);
+  const refetchQueries: string[] = ["all_address_spaces"];
+  const [setEditAddressSpaceQueryVariables] = useMutationQuery(
     EDIT_ADDRESS_SPACE,
     refetchQueries
   );
@@ -46,7 +43,7 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
     RETURN_FILTERED_AUTHENTICATION_SERVICES,
     {
       variables: {
-        t: msgProject?.type
+        t: addressSpace.type
       }
     }
   ).data || { addressSpaceSchema_v2: [] };
@@ -58,11 +55,11 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   const getPlanOptions = () => {
-    let planOptions: IPlanOption[] = [];
-    if (msgProject.type) {
+    let planOptions: any[] = [];
+    if (addressSpace.type) {
       planOptions =
         addressSpacePlans
-          .filter(plan => plan.spec.addressSpaceType === msgProject.type)
+          .filter(plan => plan.spec.addressSpaceType === addressSpace.type)
           .map(plan => {
             return {
               value: plan.metadata.name,
@@ -75,7 +72,7 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   const getAuthServiceOptions = () => {
-    let authServiceOptions: IAuthenticationServiceOptions[] = [];
+    let authServiceOptions: any[] = [];
     if (authServices.addressSpaceSchema_v2[0])
       authServiceOptions = authServices.addressSpaceSchema_v2[0].spec.authenticationServices.map(
         authService => {
@@ -96,37 +93,37 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   const onPlanChange = (plan: string) => {
-    if (msgProject) {
-      msgProject.plan = plan;
-      setMsgProject({ ...msgProject });
+    if (addressSpace) {
+      addressSpace.planValue = plan;
+      setAddressSpace({ ...addressSpace });
     }
   };
 
   const onAuthServiceChange = (authService: string) => {
-    if (msgProject) {
-      msgProject.authService = authService;
-      setMsgProject({ ...msgProject });
+    if (addressSpace) {
+      addressSpace.authenticationService = authService;
+      setAddressSpace({ ...addressSpace });
     }
   };
 
   const onConfirmDialog = async () => {
-    if (msgProject) {
+    if (addressSpace) {
       const variables = {
         a: {
-          name: msgProject.name,
-          namespace: msgProject.namespace
+          name: addressSpace.name,
+          namespace: addressSpace.nameSpace
         },
         jsonPatch:
           '[{"op":"replace","path":"/spec/plan","value":"' +
-          msgProject.plan +
+          addressSpace.planValue +
           '"},' +
           '{"op":"replace","path":"/spec/authenticationService/name","value":"' +
-          msgProject.authService +
+          addressSpace.authenticationService +
           '"}' +
           "]",
         patchType: "application/json-patch+json"
       };
-      await setEditMsgProjectQueryVariables(variables);
+      await setEditAddressSpaceQueryVariables(variables);
 
       onCloseDialog();
       if (onConfirm) {
@@ -136,14 +133,14 @@ export const EditMsgProjectContainer: React.FunctionComponent<{}> = () => {
   };
 
   return (
-    <EditMsgProject
+    <EditAddressSpace
       onConfirmDialog={onConfirmDialog}
       onCloseDialog={onCloseDialog}
       onPlanChange={onPlanChange}
       onAuthServiceChange={onAuthServiceChange}
       authServiceOptions={getAuthServiceOptions()}
       planOptions={getPlanOptions()}
-      project={msgProject}
+      addressSpace={addressSpace}
     />
   );
 };
