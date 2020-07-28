@@ -61,20 +61,20 @@ class IoTUtils {
                     .orElse(false),
             "ready");
 
-    public static void assertIoTConfigGone(final IoTInfrastructure config, final SoftAssertions softly) {
+    public static void assertIoTConfigGone(final IoTInfrastructure infra, final SoftAssertions softly) {
 
-        var iotPods = getInstance().listPods(config.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap());
+        var iotPods = getInstance().listPods(infra.getMetadata().getNamespace(), IOT_LABELS, Collections.emptyMap());
 
         softly.assertThat(iotPods)
                 .isEmpty();
 
     }
 
-    public static void assertIoTConfigReady(final IoTInfrastructure config, final SoftAssertions softly) {
+    public static void assertIoTConfigReady(final IoTInfrastructure infra, final SoftAssertions softly) {
 
         // gather expected deployments
 
-        final String[] expectedDeployments = getExpectedDeploymentsNames(config);
+        final String[] expectedDeployments = getExpectedDeploymentsNames(infra);
         Arrays.sort(expectedDeployments);
         final String[] expectedStatefulSets = new String[]{IOT_SERVICE_MESH};
         Arrays.sort(expectedStatefulSets);
@@ -106,11 +106,11 @@ class IoTUtils {
 
         var meshStatefulSet = getClient()
                 .apps().statefulSets()
-                .inNamespace(config.getMetadata().getNamespace())
+                .inNamespace(infra.getMetadata().getNamespace())
                 .withName(IOT_SERVICE_MESH)
                 .get();
 
-        var meshReplicas = Optional.of(config)
+        var meshReplicas = Optional.of(infra)
                 .map(IoTInfrastructure::getSpec)
                 .map(IoTInfrastructureSpec::getMesh)
                 .map(MeshConfig::getServiceConfig)
@@ -122,31 +122,31 @@ class IoTUtils {
 
     }
 
-    private static String[] getExpectedDeploymentsNames(IoTInfrastructure config) {
+    private static String[] getExpectedDeploymentsNames(IoTInfrastructure infra) {
 
         final Collection<String> expectedDeployments = new ArrayList<>();
 
         // protocol adapters
 
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getAmqp, IOT_AMQP_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
-        addIfEnabled(expectedDeployments, config, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
+        addIfEnabled(expectedDeployments, infra, AdaptersConfig::getAmqp, IOT_AMQP_ADAPTER);
+        addIfEnabled(expectedDeployments, infra, AdaptersConfig::getHttp, IOT_HTTP_ADAPTER);
+        addIfEnabled(expectedDeployments, infra, AdaptersConfig::getLoraWan, IOT_LORAWAN_ADAPTER);
+        addIfEnabled(expectedDeployments, infra, AdaptersConfig::getMqtt, IOT_MQTT_ADAPTER);
+        addIfEnabled(expectedDeployments, infra, AdaptersConfig::getSigfox, IOT_SIGFOX_ADAPTER);
 
         // device registry
 
         expectedDeployments.add(IOT_DEVICE_REGISTRY);
 
-        if (config.getSpec().getServices() != null &&
-                config.getSpec().getServices().getDeviceRegistry() != null &&
-                config.getSpec().getServices().getDeviceRegistry().getJdbc() != null &&
-                config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry() != null &&
-                !config.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry().isDisabled() &&
-                config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer() != null &&
-                config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal() != null) {
+        if (infra.getSpec().getServices() != null &&
+                infra.getSpec().getServices().getDeviceRegistry() != null &&
+                infra.getSpec().getServices().getDeviceRegistry().getJdbc() != null &&
+                infra.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry() != null &&
+                !infra.getSpec().getServices().getDeviceRegistry().getJdbc().getCommonDeviceRegistry().isDisabled() &&
+                infra.getSpec().getServices().getDeviceRegistry().getJdbc().getServer() != null &&
+                infra.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal() != null) {
 
-            var external = config.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal();
+            var external = infra.getSpec().getServices().getDeviceRegistry().getJdbc().getServer().getExternal();
             if (external.getManagement() != null && external.getAdapter() != null) {
                 expectedDeployments.add(IOT_DEVICE_REGISTRY_MANAGEMENT);
             }
@@ -159,8 +159,8 @@ class IoTUtils {
         return expectedDeployments.toArray(String[]::new);
     }
 
-    private static void addIfEnabled(Collection<String> adapters, IoTInfrastructure config, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
-        Optional<Boolean> enabled = ofNullable(config.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
+    private static void addIfEnabled(Collection<String> adapters, IoTInfrastructure infra, Function<AdaptersConfig, AdapterConfig> adapterGetter, String name) {
+        Optional<Boolean> enabled = ofNullable(infra.getSpec().getAdapters()).map(adapterGetter).map(AdapterConfig::getEnabled);
         if (enabled.orElse(true)) {
             adapters.add(name);
             log.info("{} is enabled", name);

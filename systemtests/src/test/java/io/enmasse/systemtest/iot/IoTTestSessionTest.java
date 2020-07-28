@@ -23,14 +23,14 @@ public class IoTTestSessionTest {
 
     @Test
     public void testNameInDefaultConfig() {
-        var config = IoTTestSession.createDefaultConfig("default-ns", true).build();
+        var config = IoTTestSession.createDefaultInfrastructure("default-ns", true).build();
 
         assertDefaultConfig(config);
     }
 
     @Test
     public void testNameInDefaultConfigAfterChange() {
-        var configBuilder = IoTTestSession.createDefaultConfig("default-ns", true);
+        var configBuilder = IoTTestSession.createDefaultInfrastructure("default-ns", true);
 
         assertDefaultConfig(configBuilder.build());
 
@@ -58,7 +58,7 @@ public class IoTTestSessionTest {
         IoTTestSession
                 .create("default-ns", true)
                 .adapters(Adapter.HTTP)
-                .config(configBuilder -> {
+                .infra(configBuilder -> {
 
                     var config = configBuilder.build();
 

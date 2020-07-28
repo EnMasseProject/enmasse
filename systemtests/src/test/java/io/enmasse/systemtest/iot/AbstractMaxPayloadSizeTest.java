@@ -43,7 +43,7 @@ public abstract class AbstractMaxPayloadSizeTest implements IoTTests {
         IoTTestSession
                 .createDefault()
                 .adapters(adapter())
-                .config(config -> config
+                .infra(config -> config
                         .editOrNewSpec()
                         .editOrNewAdapters()
                         .editOrNewDefaults()
@@ -82,7 +82,7 @@ public abstract class AbstractMaxPayloadSizeTest implements IoTTests {
         IoTTestSession
                 .createDefault()
                 .adapters(adapter())
-                .config(config -> config
+                .infra(config -> config
                         .editOrNewSpec()
                         .editOrNewAdapters()
                         .editOrNewDefaults()

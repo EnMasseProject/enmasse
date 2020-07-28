@@ -48,7 +48,7 @@ public class ReloadCertificatesTest implements IoTTests {
         IoTTestSession
                 .createDefault()
                 .adapters(HTTP)
-                .config(config -> {
+                .infra(config -> {
                     // ensure we are using the service-ca
                     config.editOrNewSpec()
                         .withNewInterServiceCertificates()

@@ -29,7 +29,7 @@ public class TlsVersionTest implements IoTTests {
         IoTTestSession
                 .createDefault()
                 .adapters(Adapter.HTTP)
-                .config(config -> config
+                .infra(config -> config
                         .editOrNewSpec()
                         .editOrNewTls()
                         .withVersions("TLSv1.3")

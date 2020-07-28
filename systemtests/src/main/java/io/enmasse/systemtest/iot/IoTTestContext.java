@@ -22,7 +22,7 @@ public interface IoTTestContext extends AutoCloseable, DeviceFactory {
      *
      * @return The original instance.
      */
-    IoTInfrastructure getConfig();
+    IoTInfrastructure getInfra();
 
     /**
      * Get the IoTTenant instance that was used during creation.
@@ -35,7 +35,7 @@ public interface IoTTestContext extends AutoCloseable, DeviceFactory {
     AmqpClient getConsumerClient();
 
     default Resource<IoTInfrastructure, DoneableIoTInfrastructure> config() {
-        return Kubernetes.iotInfrastructures(getConfig().getMetadata().getNamespace()).withName(getConfig().getMetadata().getName());
+        return Kubernetes.iotInfrastructures(getInfra().getMetadata().getNamespace()).withName(getInfra().getMetadata().getName());
     }
 
     default Resource<IoTTenant, DoneableIoTTenant> tenant() {
