@@ -116,10 +116,16 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 public abstract class Kubernetes {
     private static final Logger log = LoggerUtils.getLogger();
+
+    private static boolean isCRC;
+    private static boolean isOpenshift;
+    private static OpenShiftVersion ocpVersion;
     private static Kubernetes instance;
+    protected static KubeCluster cluster;
+
     protected final KubernetesClient client;
     protected final String infraNamespace;
-    protected static KubeCluster cluster;
+
     private boolean olmAvailable;
     private boolean verboseLog;
 
@@ -162,6 +168,10 @@ public abstract class Kubernetes {
                 log.error("Error checking olm availability", e);
                 instance.olmAvailable = false;
             }
+
+            isCRC = Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
+            isOpenshift = Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
+            ocpVersion = instance.getOcpVersion();
 
             log.info("Is CRC: {}", isCRC());
             log.info("Is OpenShift: {}", isOpenShift());
@@ -206,7 +216,7 @@ public abstract class Kubernetes {
             return true;
         }
 
-        return Kubernetes.getInstance().getOcpVersion() == version;
+        return ocpVersion == version;
 
     }
 
@@ -221,14 +231,14 @@ public abstract class Kubernetes {
      * Check if tests are running on OpenShift (excluding CRC).
      */
     public static boolean isOpenShift() {
-        return Exec.execute(Arrays.asList(Kubernetes.getInstance().getCluster().getKubeCmd(), "api-resources"), false).getStdOut().contains("openshift.io");
+        return isOpenshift;
     }
 
     /**
      * Check if tests are running on OpenShift in CRC.
      */
     public static boolean isCRC() {
-        return Kubernetes.getInstance().getCluster().toString().equals(ClusterType.CRC.toString().toLowerCase());
+        return isCRC;
     }
 
     protected Kubernetes(Supplier<KubernetesClient> clientSupplier) {
